@@ -1,0 +1,5 @@
+[package]
+name = "nami"
+edition = "2024"
+
+[dependencies]
