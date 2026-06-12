@@ -1,379 +1,866 @@
 # Nami Protocol Roadmap
 
-## Vision
+## Overview
 
-Nami is the ultimate interoperable identity layer for gamers.
+Nami is an interoperable gaming identity, reputation, discovery, and communication protocol.
 
-The protocol gives players a persistent identity, passport, reputation, badge history, membership access, squads, guilds, discovery influence, and future communication tools across games, apps, websites, and communities.
+Nami is being built as infrastructure for gamers, developers, guilds, squads, channels, and communities across games, websites, dApps, and future gaming ecosystems.
 
-Nami is not only a chat product.
+Nami is not only a world chat product.
 
-Nami is a gaming identity, trust, progression, and discovery protocol.
-
----
-
-## Phase 0 — Protocol Documentation Foundation
-
-Status: In Progress
-
-Goal:
-
-Define the system before expanding smart contracts, SDKs, backend services, and frontend applications.
-
-Current documentation:
-
-- vision.md
-- protocol.md
-- architecture.md
-- systems.md
-- access-control.md
-- identity.md
-- identity-objects.md
-- passport.md
-- passport-object.md
-- reputation.md
-- verification.md
-- trust-system.md
-- recovery.md
-- events.md
-- resilience.md
-- discovery.md
-- squads.md
-- guilds.md
-- onchain.md
-- sui-layer.md
-
-Needed documentation cleanup:
-
-- Complete passport-object.md
-- Add membership.md
-- Add badge-system.md
-- Add boost-system.md
-- Add roadmap.md
+Nami is the identity and trust layer that world chat, discovery, moderation, customization, guilds, and developer hubs will be built on top of.
 
 ---
 
-## Phase 1 — Core On-Chain Identity Layer
+# Current Status
 
-Status: Active
+## Completed Core Reset
 
-Goal:
+The current Sui Move core has been reset, aligned, built, and tested.
 
-Build the minimum Sui Move protocol foundation.
+Current package path:
 
-Core modules:
+```text
+nami_chat/contracts/nami
+```
 
-- errors.move
-- identity.move
-- passport.move
-- badge.move
-- boost.move
+Current source modules:
 
-Current system responsibilities:
+```text
+sources/
+├── badge.move
+├── boost.move
+├── errors.move
+├── identity.move
+└── passport.move
+```
 
-### Identity
+Current test file:
 
-Represents the user-owned root identity.
+```text
+tests/nami_tests.move
+```
 
-Identity should remain small and stable.
+Current test status:
 
-It should not store XP, badges, reputation, chat data, guild membership, or profile cosmetics.
-
----
-
-### Passport
-
-Represents the gamer journey.
-
-Passport stores:
-
-- XP
-- Level
-- Reputation
-- Badge points
-- Archetype
-- Membership tier
-- Boost score
-
-Important separation:
-
-- Reputation is earned
-- Membership tier controls access
-- Archetype represents onboarding gamer identity
+```text
+6 tests passing
+0 failed
+```
 
 ---
 
-### Membership Tiers
+# Current Working Systems
 
-Membership/access tiers:
+## Identity
 
-- NPC
-- Adventurer
-- Pro
-- Elite
+Status: Implemented Core
 
-NPC is the default unverified/free state.
+Identity is the root ownership layer.
 
-Adventurer is the verified human/basic access state.
+Current responsibilities:
 
-Pro and Elite are higher access tiers.
+* Owner tracking
+* zkLogin / wallet-compatible ownership model
+* Trust tier placeholder
+* Verification level placeholder
+* Passport reference placeholder
+* Creation timestamp
+* Versioning
 
-Future versions will add expiration and renewals.
+Identity should remain minimal and stable.
 
 ---
 
-### Reputation Tiers
+## Passport
 
-Reputation/progression tiers:
+Status: Implemented Core
 
-- Newbie
-- Gamester
-- Goblin
-- Goonie
-- Fiend
+Passport is the gamer journey layer.
 
-Reputation is based on XP, badge points, participation, and future contribution signals.
+Current responsibilities:
+
+* XP
+* Curved level progression
+* Level progress
+* Badge points
+* Reputation rank
+* Membership/access tier
+* Archetype
+* Boost score placeholder
+* Prestige points placeholder
+
+Current default Passport state:
+
+* Level 1
+* 0 XP
+* 0 badge points
+* Newbie reputation
+* NPC membership tier
+* Selected onboarding archetype
+* 0 prestige points
+
+---
+
+## Curved Progression
+
+Status: Implemented Core
+
+Nami no longer uses linear level progression.
+
+XP is earned through badge points.
+
+Current badge XP model:
+
+* Basic Badge = 1 XP
+* Event Badge = 2 XP
+* Completion Badge = 3 XP
+
+Current progression goal:
+
+* Level 100 should require long-term dedication
+* Level 100 should be achievable after roughly 3 months of high dedication
+* Level cycles may reset around 6 months
+* Players who reach Level 100 early can begin earning Prestige progress
+
+Prestige titles will be defined later.
+
+---
+
+## Reputation
+
+Status: Implemented Core
+
+Current reputation ranks:
+
+* Newbie
+* Gamester
+* Goblin
+* Goonie
+* Fiend
+
+Reputation is earned from:
+
+* Badge points
+* XP
+* Level progression
+* Future contribution systems
+
+Reputation is separate from membership.
 
 Reputation cannot be purchased.
 
 ---
 
-### Badges
+## Membership
+
+Status: Implemented Core
+
+Current membership/access tiers:
+
+* NPC
+* Adventurer
+* Pro
+* Elite
+
+Current rules:
+
+* NPC is the default free/unverified tier
+* Adventurer is the verified human/basic access tier
+* Pro is a higher access/supporter tier
+* Elite is the premium supporter tier
+
+Membership controls access.
+
+Membership does not control reputation.
+
+Future versions will add:
+
+* Expiration
+* Renewal
+* Grace periods
+* Active tier checks
+* Subscription-aware access
+
+---
+
+## Badges
+
+Status: Implemented Core
 
 Badges are on-chain achievement proofs.
 
-Initial badge types:
+Current badge types:
 
-- Basic Badge
-- Event Badge
-- Completionist Badge
+* Basic Badge
+* Event Badge
+* Completion Badge
 
-Badges add points to the Passport.
+Badges currently:
 
-Badge points influence reputation.
+* Mint badge objects
+* Add badge points to Passport
+* Add XP through badge points
+* Influence reputation
+
+Badge quality standards are documented.
+
+Starting a game does not qualify as a Completion Badge.
 
 ---
 
-### Boosts
+## Boosts
+
+Status: Implemented Core
 
 Boosts are discovery signals.
 
-Boost power is based on Passport membership tier:
+Current boost access:
 
-- NPC: no boost access
-- Adventurer: 2 boost
-- Pro: 6 boosts
-- Elite: 8 boosts
+* NPC: no boost access
+* Adventurer: 1 boost power
+* Pro: 6 boost power
+* Elite: 8 boost power
 
-Boosts are not governance.
+Boosts are currently represented as boost objects and events.
 
-Boosts do not grant ownership or moderation rights.
+Future versions will add:
 
----
-
-## Phase 2 — Membership Authority Layer
-
-Goal:
-
-Harden membership access.
-
-Planned additions:
-
-- Tier expiration
-- Tier renewal
-- Membership renewal events
-- Effective tier checks
-- Subscription-aware access logic
-- Grace period handling
-
-Important future rule:
-
-A user's visible tier may expire.
-
-Expired Pro or Elite membership should fall back to Adventurer or NPC depending on verification status.
+* Weekly boost limits
+* Weekly reset cycles
+* Per-channel boost caps
+* Anti-abuse rules
+* Discovery scoring integration
 
 ---
 
-## Phase 3 — Verification Layer
+# Phase 0 — Documentation Foundation
+
+Status: Active / Mostly Complete
 
 Goal:
 
-Connect human verification to tier upgrades.
+Define the protocol before expanding smart contracts, SDKs, backend services, and frontend applications.
 
-Planned verification sources:
+Current documentation includes:
 
-- zkLogin
-- X.com verification
-- Sui wallet ownership
-- SuiNS
-- Steam
-- Epic Games
-- Future privacy-preserving verification systems
+* access-control.md
+* architecture.md
+* badge-system.md
+* boost-system.md
+* conduct-system.md
+* customization.md
+* discovery.md
+* events.md
+* guilds.md
+* identity-object.md
+* identity.md
+* membership.md
+* moderation.md
+* onchain.md
+* passport-object.md
+* passport.md
+* protocol.md
+* recovery.md
+* reputation.md
+* resilience.md
+* roadmap.md
+* squads.md
+* sui-layer.md
+* systems.md
+* trust-system.md
+* verification.md
+* vision.md
 
-Verification should allow:
+Remaining documentation cleanup:
 
-- NPC to Adventurer transition
-- improved trust signals
-- reduced sybil risk
-- future recovery support
+* Update boost-system.md with weekly cycle rules
+* Update membership.md with future expiration and renewal logic
+* Update passport-object.md with current fields
+* Update verification.md with NPC to Adventurer rules
+* Update discovery.md with conduct and boost inputs
 
 ---
 
-## Phase 4 — Squad System
+# Phase 1 — Core Move Protocol
+
+Status: Core Complete
 
 Goal:
 
-Create trust-based player sponsorship and onboarding.
+Build and test the first stable Sui Move foundation.
 
-Squad rules:
+Implemented modules:
 
-- NPC: no squad slots
-- Adventurer: no squad slots
-- Pro: limited squad slots
-- Elite: expanded squad slots
+* identity.move
+* passport.move
+* badge.move
+* boost.move
+* errors.move
 
-Squads should support:
+Completed capabilities:
 
-- Sponsoring non-verified members
-- Public squad display
-- Weekly auto-renewal
-- Trust-based onboarding
+* Identity creation
+* Passport creation
+* NPC default tier
+* Badge minting
+* Badge points
+* Curved XP progression
+* Reputation updates
+* Tier upgrade path
+* Boost access by tier
+* NPC boost restriction
+* Passing test suite
 
-Squads are not guilds.
+Next Phase 1 improvements:
 
-Squads are personal trust networks.
+* Add more tests for curved progression
+* Add tests for Prestige points after Level 100
+* Add tests for invalid badge types
+* Add tests for invalid tier transitions
+* Add tests for boost access by Pro and Elite
+* Add test helpers for repeated badge earning
 
 ---
 
-## Phase 5 — Guild System
+# Phase 1.1 — Verification and Membership Authority
+
+Status: Next Code Phase
 
 Goal:
 
-Create persistent gaming communities.
+Move tier authority into cleaner verification and membership systems.
+
+Planned modules:
+
+* verification.move
+* membership.move
+
+Verification should control:
+
+* NPC to Adventurer transition
+* Human verification
+* zkLogin proof integration
+* X.com verification carryover
+* Future Steam / Epic / SuiNS verification
+* Privacy-preserving verification hooks
+
+Membership should control:
+
+* Adventurer to Pro
+* Pro to Elite
+* Expiration
+* Renewal
+* Effective tier checks
+* Grace periods
+* Subscription-aware access
+
+Passport should remain the state object.
+
+Verification and Membership modules should become the authority gates.
+
+---
+
+# Phase 1.2 — Badge Issuer Authority
+
+Status: Planned
+
+Goal:
+
+Prevent badge farming and low-quality badge issuance.
+
+Planned modules:
+
+* badge_issuer.move
+* badge_registry.move
+* badge_review.move
+
+Planned features:
+
+* Approved badge issuers
+* Badge issuer classes
+* Badge type permissions
+* Completion Badge restrictions
+* Issuer limits
+* Issuer suspension
+* Badge review
+* Badge revocation
+
+Issuer classes may include:
+
+* Nami Official
+* Verified Game Developer
+* Verified Channel
+* Approved Guild
+* Approved Event Organizer
+* Partner Community
+
+Core rule:
+
+Badge value must depend on achievement quality, not issuer generosity or payment.
+
+---
+
+# Phase 1.3 — Conduct System
+
+Status: Planned / Documented
+
+Goal:
+
+Add a public Passport Signal layer.
+
+Planned Passport Signals:
+
+* Green
+* Orange
+* Red
+* Black
+
+Green:
+
+Friendly, casual, low-conflict.
+
+Orange:
+
+Competitive but respectful.
+
+Red:
+
+High-intensity, PvP-heavy, trash-talk-tolerant.
+
+Black:
+
+Moderation penalty state.
+
+Public language:
+
+```text
+Passport downed. Respawning in...
+```
+
+Black Signal effects:
+
+* Falls back to NPC-equivalent benefits
+* No boosts
+* No squad slots
+* No guild creation
+* No badge claiming
+* No prestige progress
+* Restricted chat access
+* No discovery influence
+
+Planned module:
+
+* conduct.move
+
+---
+
+# Phase 1.4 — Moderation and Appeals
+
+Status: Planned / Documented
+
+Goal:
+
+Create a fair moderation system that protects communities while avoiding mob punishment.
+
+Planned moderation actions:
+
+* Warning
+* Temporary mute
+* Channel ban
+* Black Passport
+* Permanent restriction
+* Appeal review
+* Anonymous jury review
+
+Planned modules:
+
+* moderation.move
+* appeals.move
+* jury.move
+
+Appeals should protect identity privacy.
+
+Jury review should use anonymized case events.
+
+Potential jury eligibility:
+
+* Pro or Elite membership
+* Good standing
+* No active Black Signal
+* No recent major violations
+* Minimum reputation threshold
+* No conflict of interest
+
+Jury decisions may begin as advisory before becoming protocol-binding.
+
+---
+
+# Phase 1.5 — Channel Access Rules
+
+Status: Planned
+
+Goal:
+
+Give verified channels control over spam, access, and community safety.
+
+Planned features:
+
+* NPC chat toggle
+* Minimum tier requirement
+* Minimum reputation requirement
+* Badge-gated chat
+* Guild-gated chat
+* Squad-gated chat
+* NFT-gated chat
+* Channel-specific bans
+* Channel moderation tools
+
+Core channel toggle:
+
+```text
+Allow NPC Chat: Yes / No
+```
+
+This lets verified channels decide whether free/unverified NPC users can speak in public chat.
+
+---
+
+# Phase 1.6 — Customization System
+
+Status: Planned / Documented
+
+Goal:
+
+Make Nami Passports and profiles expressive, gamer-native, and collectible.
+
+Planned customization categories:
+
+* Profile avatars
+* 2D VTuber-style avatars
+* Profile frames
+* Passport themes
+* Chat overlays
+* Fonts
+* Chat background colors
+* Message frames
+* Badge displays
+* Earned title displays
+* Guild display selection
+* Avatar accessories
+* Prestige effects
+
+Most customization settings should be off-chain.
+
+On-chain should store:
+
+* Unlock proofs
+* Rare cosmetics
+* Prestige cosmetics
+* Badge ownership
+* Seasonal rewards
+
+Planned modules:
+
+* cosmetics.move
+* title.move
+* avatar.move
+* passport_theme.move
+
+---
+
+# Phase 2 — Squad System
+
+Status: Planned
+
+Goal:
+
+Build small trust-based social units.
+
+Squads are personal trust networks, not guilds.
+
+Planned rules:
+
+* NPC: no squad slots
+* Adventurer: no squad slots
+* Pro: limited squad slots
+* Elite: expanded squad slots
+
+Squad sponsorship may help trusted users support unverified or financially limited members.
+
+Sponsored members may receive limited access depending on channel rules.
+
+Sponsored members should not automatically receive:
+
+* Boosts
+* Guild creation rights
+* Puzzle pieces
+* Full reward claims
+* Badge issuer permissions
+
+Planned module:
+
+* squad.move
+
+---
+
+# Phase 3 — Guild System
+
+Status: Planned
+
+Goal:
+
+Build persistent community structures.
 
 Guilds should support:
 
-- Guild identity
-- Guild roles
-- Guild membership
-- Guild reputation
-- Guild discovery
-- Guild badges
-- Future governance
+* Guild identity
+* Guild roles
+* Guild membership
+* Guild reputation
+* Guild events
+* Guild badge permissions
+* Guild discovery
+* Future governance
 
-Guilds are larger community structures.
+Guild creation may require:
 
-Squads are smaller trust/social units.
+* Verification
+* Minimum reputation
+* Founding members
+* No active Black Signal
+* No recent severe moderation history
 
----
+Planned module:
 
-## Phase 6 — Discovery System
-
-Goal:
-
-Use boosts, reputation, trust, and activity to surface channels and communities.
-
-Discovery inputs:
-
-- Boosts
-- Engagement
-- Reputation
-- Badge quality
-- Verified game channels
-- Guild activity
-- Squad activity
-
-Discovery should be community-driven, not ad-driven.
+* guild.move
 
 ---
 
-## Phase 7 — Communication Layer
+# Phase 4 — Discovery System
+
+Status: Planned
 
 Goal:
 
-Add Nami chat, world chat, developer hubs, announcements, and embedded messaging.
+Build community-driven discovery for channels, games, guilds, events, and developers.
 
-Communication should support:
+Discovery inputs may include:
 
-- Main world timeline
-- Developer hubs
-- Game channels
-- Guild channels
-- Squad channels
-- Badge/NFT gated chats
-- Announcement banners
-- SDK integration
+* Boosts
+* Reputation
+* Badge quality
+* Conduct Signal
+* Channel activity
+* Guild activity
+* Squad activity
+* Developer verification
+* Engagement quality
+* Moderation health
 
-Primary messaging should be off-chain for speed.
+Boosts should influence discovery but not fully control it.
 
-Sui should anchor trust, access, ownership, and proof.
+Discovery should not become pay-to-win visibility.
+
+Planned components:
+
+* discovery engine
+* ranking indexer
+* weekly boost cycle processor
+* anti-abuse scoring
+* channel reputation analytics
 
 ---
 
-## Phase 8 — SDK and Integration Layer
+# Phase 5 — Communication Layer
+
+Status: Planned
 
 Goal:
 
-Allow games, websites, dApps, and communities to integrate Nami.
+Build Nami world chat, developer hubs, announcements, and embedded chat.
+
+Planned communication features:
+
+* Main world timeline
+* Developer hubs
+* Game channels
+* Guild channels
+* Squad channels
+* Badge-gated chats
+* NFT-gated chats
+* Announcement banners
+* Embedded SDK chat
+* Channel moderation tools
+
+Messaging should be off-chain for speed.
+
+Sui should anchor identity, access, reputation, badges, and proof.
+
+---
+
+# Phase 6 — SDK and Integration Layer
+
+Status: Planned
+
+Goal:
+
+Let any game, website, dApp, or community integrate Nami.
 
 Planned SDKs:
 
-- Web SDK
-- Game SDK
-- dApp integration layer
-- Future Unity/Unreal support
+* Web SDK
+* Game SDK
+* dApp SDK
+* Future Unity support
+* Future Unreal support
 
 SDK should expose:
 
-- Login
-- Identity
-- Passport
-- Badges
-- Reputation
-- Membership
-- Boosts
-- Squads
-- Guilds
-- Channels
-- Messaging
+* Login
+* Identity
+* Passport
+* Membership
+* Reputation
+* Badges
+* Boosts
+* Conduct Signal
+* Channel access
+* Squads
+* Guilds
+* Messaging
+* Customization
 
 ---
 
-## Phase 9 — Privacy and Recovery
+# Phase 7 — Backend Services
+
+Status: Planned
 
 Goal:
 
-Protect gamer privacy while supporting identity recovery.
+Build scalable off-chain systems that support Nami experiences.
 
-Recovery paths:
+Backend services may include:
 
-- zkLogin recovery
-- Linked social recovery
-- Linked game account recovery
-- Optional email recovery
-- Squad/Guild assisted manual recovery
+* Indexer
+* Profile service
+* Chat service
+* Discovery engine
+* Moderation service
+* Appeal service
+* Jury assignment service
+* Customization service
+* Badge issuer service
+* Recovery service
+* Notification service
 
-Privacy goals:
+Off-chain systems should compute intelligence.
 
-- Verify humanity without exposing unnecessary wallet data
-- Support privacy-conscious gamers
-- Enable proof without public doxxing
+Sui should store proof and ownership.
 
 ---
 
-## Long-Term Goal
+# Phase 8 — Privacy and Recovery
 
-Nami becomes the persistent gaming identity layer used across games, websites, applications, communities, guilds, creators, and developer ecosystems.
+Status: Planned
 
-Players should be able to carry their:
+Goal:
 
-- Identity
-- Passport
-- Badges
-- Reputation
-- Guild history
-- Squad relationships
-- Discovery influence
-- Achievements
+Protect gamer identity while supporting account recovery.
+
+Recovery paths may include:
+
+* zkLogin recovery
+* Linked social recovery
+* Linked game account recovery
+* Optional email recovery
+* Squad support
+* Guild support
+* Manual review
+
+Privacy goals:
+
+* Verify humanity without exposing unnecessary wallet data
+* Protect linked account information
+* Keep appeal juries anonymous
+* Keep case identities private
+* Avoid unnecessary doxxing of gamers
+
+---
+
+# Phase 9 — Seasonal Progression and Prestige
+
+Status: Planned
+
+Goal:
+
+Support long-term engagement through seasons, resets, and prestige.
+
+Current progression direction:
+
+* Level 100 should require dedication
+* Seasons may reset around 6 months
+* Fast early progression should feel rewarding
+* Higher levels should slow down
+* Level 100 users can earn Prestige progress
+
+Future Prestige systems may include:
+
+* Prestige titles
+* Prestige cosmetics
+* Passport effects
+* Profile frames
+* Rare badge effects
+* Seasonal honors
+* Puzzle piece rewards
+
+---
+
+# Phase 10 — Developer and Channel Ecosystem
+
+Status: Planned
+
+Goal:
+
+Support developers, games, and multi-game studios.
+
+Developer systems may include:
+
+* Developer verification
+* Studio profiles
+* Game directories
+* Developer hubs
+* Channel ownership
+* Badge issuer authority
+* Announcement banners
+* Channel branding
+* Game-specific Passport integrations
+
+Multi-game studios should be able to use a directory structure instead of forcing every game into a separate isolated channel.
+
+---
+
+# Long-Term Vision
+
+Nami becomes the persistent identity and trust layer for gaming.
+
+A player should be able to carry their:
+
+* Identity
+* Passport
+* Reputation
+* Badges
+* Titles
+* Conduct Signal
+* Membership access
+* Guild history
+* Squad relationships
+* Customization
+* Prestige
+* Developer relationships
+* Discovery influence
 
 across every connected experience.
+
+Nami should feel like a world gamers enter, not a form they fill out.
