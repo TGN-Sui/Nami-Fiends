@@ -15,6 +15,7 @@ module nami::nami_tests {
     use nami::moderation;
     use nami::admin;
     use nami::appeals;
+    use nami::jury;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -1633,4 +1634,273 @@ module nami::nami_tests {
 
             test_scenario::end(scenario);
         }
+
+            /// ---------------------------------------------------------
+    /// Admin can open a JuryCase for an open appeal.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_open_jury_case_for_appeal() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        admin::issue_warning(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            88,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        appeals::open_appeal(
+            &passport_obj,
+            &record,
+            b"jury-open-reference",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let appeal =
+            test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+        admin::open_jury_case(
+            &admin_cap,
+            &appeal,
+            3,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, appeal);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let jury_case =
+            test_scenario::take_from_sender<jury::JuryCase>(&scenario);
+
+        assert!(jury::is_open(&jury_case), 140);
+        assert!(jury::get_required_votes(&jury_case) == 3, 141);
+        assert!(jury::get_approve_votes(&jury_case) == 0, 142);
+        assert!(jury::get_deny_votes(&jury_case) == 0, 143);
+        assert!(jury::get_modify_votes(&jury_case) == 0, 144);
+
+        test_scenario::return_to_sender(&scenario, jury_case);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Pro juror can vote and admin can close JuryCase.
+    /// This uses APPEAL_DENIED so the reserved constant is no longer unused.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_pro_juror_can_vote_and_admin_closes_jury_case_denied() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == PRO, 145);
+
+        admin::issue_warning(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            99,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        appeals::open_appeal(
+            &passport_obj,
+            &record,
+            b"jury-denied-reference",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let appeal =
+            test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+        admin::open_jury_case(
+            &admin_cap,
+            &appeal,
+            1,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, appeal);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let appeal =
+            test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+        let mut jury_case =
+            test_scenario::take_from_sender<jury::JuryCase>(&scenario);
+
+        assert!(
+            jury::is_eligible_juror(
+                &passport_obj,
+                &status,
+                test_scenario::ctx(&mut scenario)
+            ),
+            146
+        );
+
+        jury::submit_vote(
+            &mut jury_case,
+            &passport_obj,
+            &status,
+            APPEAL_DENIED,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(jury::get_deny_votes(&jury_case) == 1, 147);
+
+        admin::close_jury_case(
+            &admin_cap,
+            &mut jury_case,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(jury::is_closed(&jury_case), 148);
+        assert!(jury::get_final_recommendation(&jury_case) == APPEAL_DENIED, 149);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, appeal);
+        test_scenario::return_to_sender(&scenario, jury_case);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let receipt =
+            test_scenario::take_from_sender<jury::JuryVoteReceipt>(&scenario);
+
+        assert!(jury::get_vote_receipt_vote(&receipt) == APPEAL_DENIED, 150);
+
+        test_scenario::return_to_sender(&scenario, receipt);
+
+        test_scenario::end(scenario);
+    }
 }

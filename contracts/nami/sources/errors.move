@@ -83,6 +83,15 @@ module nami::errors {
     const EInvalidAppealResult: u64 = 122;
 
     // =========================================================
+    // JURY ERRORS
+    // =========================================================
+    const EInvalidJuryVote: u64 = 130;
+    const EJuryCaseClosed: u64 = 131;
+    const EJurorIneligible: u64 = 132;
+    const EJuryNotReady: u64 = 133;
+    const EInvalidRequiredVotes: u64 = 134;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -146,7 +155,15 @@ module nami::errors {
 
     public fun invalid_appeal_result(): u64 { EInvalidAppealResult }
 
+    public fun invalid_jury_vote(): u64 { EInvalidJuryVote }
+
+    public fun jury_case_closed(): u64 { EJuryCaseClosed }
+
+    public fun juror_ineligible(): u64 { EJurorIneligible }
+
+    public fun jury_not_ready(): u64 { EJuryNotReady }
+
+    public fun invalid_required_votes(): u64 { EInvalidRequiredVotes }
 
 
-    
 }
