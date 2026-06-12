@@ -17,6 +17,7 @@ module nami::nami_tests {
     use nami::appeals;
     use nami::jury;
     use nami::squad;
+    use nami::guild;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -2138,6 +2139,210 @@ module nami::nami_tests {
         assert!(squad::get_member_squad_id(&member_record) == squad_id, 164);
         assert!(squad::get_member_sponsor(&member_record) == USER, 165);
         assert!(squad::get_member_address(&member_record) == SPONSORED_USER, 166);
+
+        test_scenario::return_to_sender(&scenario, member_record);
+
+        test_scenario::end(scenario);
+    }
+
+        /// ---------------------------------------------------------
+    /// Adventurer can create a Guild.
+    /// Guilds are larger communities than Squads.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_adventurer_can_create_guild() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        guild::create_guild(
+            &passport_obj,
+            &status,
+            b"goonie-guild",
+            b"Guild for gamers",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let guild_obj =
+            test_scenario::take_from_sender<guild::Guild>(&scenario);
+
+        assert!(guild::get_owner(&guild_obj) == USER, 170);
+        assert!(guild::get_max_members(&guild_obj) == 25, 171);
+        assert!(guild::get_member_count(&guild_obj) == 1, 172);
+        assert!(guild::get_is_public(&guild_obj), 173);
+
+        test_scenario::return_to_sender(&scenario, guild_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// NPC cannot create a Guild.
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_npc_cannot_create_guild() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        guild::create_guild(
+            &passport_obj,
+            &status,
+            b"npc-guild",
+            b"NPC should not create this",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Guild owner can add a member.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_guild_owner_can_add_member() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        guild::create_guild(
+            &passport_obj,
+            &status,
+            b"member-guild",
+            b"Guild with members",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut guild_obj =
+            test_scenario::take_from_sender<guild::Guild>(&scenario);
+
+        guild::add_member(
+            &mut guild_obj,
+            &passport_obj,
+            &status,
+            SPONSORED_USER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(guild::get_member_count(&guild_obj) == 2, 174);
+
+        let guild_id = guild::get_id(&guild_obj);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, guild_obj);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let member_record =
+            test_scenario::take_from_sender<guild::GuildMember>(&scenario);
+
+        assert!(guild::get_member_guild_id(&member_record) == guild_id, 175);
+        assert!(guild::get_member_address(&member_record) == SPONSORED_USER, 176);
+        assert!(guild::get_member_role(&member_record) == 1, 177);
 
         test_scenario::return_to_sender(&scenario, member_record);
 
