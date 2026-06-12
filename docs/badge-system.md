@@ -1,387 +1,337 @@
 # Nami Badge System
 
-## Overview
+## Purpose
 
-Badges are achievement proofs within the Nami ecosystem.
+Badges are on-chain proofs of meaningful activity.
 
-Badges represent meaningful actions, participation, accomplishments, contributions, and milestones.
+They support:
 
-Badges affect:
-
+* Achievement history
 * Passport progression
-* Badge points
 * XP
 * Reputation
-* Public identity
-* Future cosmetic unlocks
-* Future prestige rewards
+* Event participation
+* Completion proof
+* Future discovery quality signals
 
-Badges should reward meaningful activity, not passive presence.
-
----
-
-## Core Principle
-
-Achievement > Presence
-
-Contribution > Activity
-
-Quality > Quantity
-
-Badges should not be issued for actions that are trivial, passive, or easily farmed.
+Badges should reward real participation, not passive actions.
 
 ---
 
-## Badge Types
+## Current Status
 
-Nami initially supports three badge types:
+Current modules:
 
-* Basic Badge
-* Event Badge
-* Completion Badge
+```move
+module nami::badge
+module nami::badge_issuer
+```
 
-Future badge categories may include:
+Current protocol status:
 
-* Contribution Badge
-* Legacy Badge
-* Founder Badge
-* Tournament Badge
-* Creator Badge
-* Guild Badge
-* Channel Badge
-* Prestige Badge
+```text
+33 tests passing
+0 warnings
+```
 
 ---
 
-## Basic Badge
+# Badge Types
 
-Basic Badges represent low-level participation or simple verified actions.
+Current badge types:
 
-Point value:
+```text
+Basic Badge       = 1 point
+Event Badge       = 2 points
+Completion Badge  = 3 points
+```
 
-1 point
+Badge points feed Passport progression.
 
-Examples:
+Current flow:
 
-* Joined an official event
-* Completed onboarding
-* Participated in a verified community activity
-* Attended a channel event
-* Earned a starter badge
-* Chose an onboarding archetype
-
-Basic Badges should be easy to earn but still require a real action.
-
----
-
-## Event Badge
-
-Event Badges represent time-bound or organized participation.
-
-Point value:
-
-2 points
-
-Examples:
-
-* Participated in a tournament
-* Joined a seasonal event
-* Completed a limited-time challenge
-* Participated in a developer-hosted playtest
-* Joined a community quest
-* Helped during a launch event
-
-Event Badges should be tied to a specific event, timeframe, or coordinated activity.
+```text
+Badge minted → Badge points added → XP updated → Reputation recalculated
+```
 
 ---
 
-## Completion Badge
+# Basic Badge
 
-Completion Badges represent meaningful verified completion.
+Basic Badges represent lightweight participation or contribution.
 
-Point value:
+Possible future examples:
 
-3 points
+* Joining a verified event
+* Participating in a community activity
+* Completing a basic task
+* Early onboarding milestone
 
-Examples:
-
-* Finished a game campaign
-* Completed a major questline
-* Completed a verified raid
-* Completed a season pass objective
-* Reached a defined in-game milestone
-* Completed a developer-approved challenge
-
-Completion Badges must require clear evidence of completion.
-
-Starting a new game must never qualify as a Completion Badge.
-
-Launching a game must never qualify as a Completion Badge.
-
-Joining a channel must never qualify as a Completion Badge.
-
-Buying an item must never qualify as a Completion Badge by itself.
+Basic Badges should not be spammed for meaningless actions.
 
 ---
 
-## Badge Quality Standards
+# Event Badge
 
-Badge quality determines whether a badge should be issued and what type it should be.
+Event Badges represent participation in a stronger event or time-based activity.
 
-Badge quality should consider:
-
-* Difficulty
-* Time required
-* Skill required
-* Contribution value
-* Event importance
-* Developer verification
-* Community value
-* Resistance to farming
-
-Badges should not be issued for meaningless actions.
-
----
-
-## Invalid Badge Examples
-
-The following should not qualify as meaningful badge events by default:
-
-* Opening a game
-* Starting a new game
-* Joining a public channel
-* Sending one message
-* Idling in a lobby
-* Remaining online
-* Buying a cosmetic
-* Holding an NFT without activity
-* Clicking a claim button with no achievement behind it
-
-These actions may support onboarding or analytics, but they should not create reputation-weighted badges unless paired with meaningful completion or participation.
-
----
-
-## Channel Badge Issuance
-
-Verified channels may eventually issue badges.
-
-Channel-issued badges must follow Nami badge quality standards.
-
-Channel owners should not be able to freely issue high-value badges without limits, review, or reputation constraints.
-
----
-
-## Verified Channel Badge Classes
-
-### Channel Participation Badge
-
-Equivalent to Basic Badge.
-
-Used for:
-
-* Participating in community events
-* Joining structured activities
-* Helping during channel events
-
----
-
-### Channel Event Badge
-
-Equivalent to Event Badge.
-
-Used for:
+Possible future examples:
 
 * Tournament participation
-* Seasonal event participation
-* Developer-hosted events
-* Community competitions
+* Developer-hosted playtest
+* Community event
+* Seasonal event
+* Guild event
+
+Event Badges should carry more weight than Basic Badges.
 
 ---
 
-### Channel Completion Badge
+# Completion Badge
 
-Equivalent to Completion Badge.
+Completion Badges represent meaningful completion.
 
-Used only when:
+Possible future examples:
 
-* A meaningful objective was completed
-* Completion can be verified
-* The channel has authority to issue that badge
-* The badge aligns with Nami quality rules
+* Completed challenge
+* Completed campaign milestone
+* Completed tournament bracket
+* Completed verified quest
+* Completed developer-approved objective
 
----
-
-## Developer-Issued Badges
-
-Verified game developers may issue badges for their games.
-
-Developer-issued badges may represent:
-
-* Alpha tester participation
-* Beta tester participation
-* Campaign completion
-* Raid completion
-* Tournament participation
-* Community contribution
-* Bug reporting
-* Creator contribution
-
-Developer-issued badges carry strong reputation value because issuer trust matters.
+Completion Badges require stronger issuer permission.
 
 ---
 
-## Issuer Reputation
+# What Should Not Issue Completion Badges
 
-Badge value may eventually depend on issuer quality.
+The following should not issue Completion Badges by themselves:
 
-Possible issuer classes:
+```text
+Opening a game
+Starting a new game
+Joining a channel
+Sending one message
+Logging in
+Idling online
+Clicking a claim button without achievement
+```
 
-* Nami Official
-* Verified Game Developer
-* Verified Channel
-* Guild
-* Event Organizer
-* Partner Community
-
-Higher trust issuers may unlock higher badge issuance limits.
-
-Lower trust issuers may have restricted badge types.
+Completion must mean completion.
 
 ---
 
-## Anti-Abuse Rules
+# Badge Object
 
-Badge systems must resist:
+Current object:
+
+```move
+Badge
+```
+
+Current fields include:
+
+* Owner
+* Badge type
+* Points
+* Source metadata hook
+
+The source field may later reference:
+
+* Game ID
+* Channel ID
+* Event ID
+* Quest ID
+* Guild ID
+* Off-chain metadata hash
+
+---
+
+# Badge Issuer Authority
+
+Badge creation is separated from badge permission.
+
+```text
+badge.move          = creates badge and applies points
+badge_issuer.move   = controls who may issue badge types
+```
+
+This protects reputation from low-quality or abusive badge issuance.
+
+---
+
+# BadgeIssuerCap
+
+Current object:
+
+```move
+BadgeIssuerCap
+```
+
+Current permissions:
+
+```text
+can_issue_basic
+can_issue_event
+can_issue_completion
+```
+
+Only approved issuers should receive BadgeIssuerCap.
+
+---
+
+# Issuer Types
+
+Current issuer categories include:
+
+```text
+Nami Official
+Verified Developer
+Verified Channel
+Approved Guild
+Event Organizer
+Partner Community
+```
+
+Issuer type helps the backend and future review systems understand badge context.
+
+---
+
+# Admin Approval
+
+Badge issuer approval is currently controlled by:
+
+```move
+module nami::admin
+```
+
+AdminCap can approve BadgeIssuerCap objects.
+
+This is the current MVP authority path.
+
+Future versions may support:
+
+* Developer-owned issuer approval
+* Guild issuer authority
+* Channel issuer authority
+* Multi-admin approval
+* Issuer suspension
+* Issuer reputation
+
+---
+
+# Badge Points and Reputation
+
+Badge points affect Passport progression.
+
+Current progression path:
+
+```text
+Badge points → XP → Level progress → Reputation
+```
+
+Reputation is stored in Passport.
+
+Reputation cannot be purchased.
+
+Badge quality matters because badges directly influence earned standing.
+
+---
+
+# Anti-Abuse Rules
+
+The Badge System should resist:
 
 * Badge farming
 * Bot farming
-* Pay-to-reputation schemes
-* Fake completion claims
-* Mass low-quality badge issuance
-* Collusion between channels and users
+* Fake completion badges
+* Issuer collusion
+* Low-quality badge spam
+* Pay-to-reputation behavior
+* Repeated trivial achievements
+* Duplicate reward abuse
 
-High-value badges should be harder to issue than low-value badges.
+Badge issuer authority is the first protection layer.
 
----
-
-## Badge Limits
-
-Future versions may include:
-
-* Daily badge issuance limits
-* Weekly badge issuance limits
-* Per-channel badge limits
-* Per-user badge category limits
-* Developer badge approval systems
-* Badge cooldowns
-* Badge audit trails
+Future protections should include issuer trust, cooldowns, limits, reviews, and revocation.
 
 ---
 
-## Badge Review
+# Current Events
 
-Badges may be reviewed if they appear abusive, low-quality, or incorrectly classified.
+Badge-related events:
 
-Possible outcomes:
+```text
+BadgeMinted
+BadgeIssuerCreated
+BadgeIssuedByIssuer
+BadgePointsAdded
+```
 
-* Badge remains valid
-* Badge downgraded
-* Badge revoked
-* Issuer warned
-* Issuer limited
-* Issuer suspended from badge issuance
+Event details are documented in:
 
----
-
-## Badge Revocation
-
-Badge revocation should be rare but possible.
-
-Reasons may include:
-
-* Fraud
-* Exploits
-* Incorrect issuance
-* Developer mistake
-* Abuse of issuer authority
-* Proven manipulation
-
-Revocation should emit an event in future versions.
+```text
+docs/events.md
+```
 
 ---
 
-## Relationship to Passport
+# Current Test Coverage
 
-Badges affect the Passport through badge points.
+Current tests verify:
 
-Current point model:
-
-* Basic Badge = 1 point
-* Event Badge = 2 points
-* Completion Badge = 3 points
-
-Badge points feed:
-
-* XP
-* Level progression
-* Reputation progression
-
-Badge points do not directly affect membership tier.
-
-Membership is separate from reputation.
+* Badge minting updates Passport badge points
+* Badge points update XP
+* Badge points affect reputation
+* Approved issuer can issue Completion Badge
+* Issuer without Completion permission cannot issue Completion Badge
+* AdminCap can approve BadgeIssuerCap
 
 ---
 
-## Relationship to Reputation
+# Future Work
 
-Reputation is earned through badge quality and progression.
+Planned improvements:
 
-Reputation should not be purchasable.
-
-A user should not be able to buy their way into reputation through low-quality badge issuance.
-
----
-
-## Relationship to Membership
-
-Membership tiers may unlock more features, but they should not automatically increase badge quality.
-
-An Elite member should not receive higher badge value simply because they are Elite.
-
-Badge quality depends on the achievement, not the payer.
-
----
-
-## Future Move Modules
-
-Current module:
-
-* badge.move
-
-Future modules may include:
-
-* badge_issuer.move
-* badge_registry.move
-* badge_review.move
-* badge_revocation.move
+```text
+Badge registry
+Badge metadata standard
+Issuer trust scores
+Issuer limits
+Completion Badge review
+Badge revocation
+Duplicate badge protection
+Seasonal badge categories
+Developer badge dashboards
+Guild badge permissions
+Badge display customization
+```
 
 ---
 
-## Future Events
+# Design Rules
 
-Possible future events:
+Badges should represent meaningful activity.
 
-* BadgeMinted
-* BadgeRevoked
-* BadgeReviewed
-* BadgeIssuerApproved
-* BadgeIssuerSuspended
-* BadgeQualityUpdated
+Badge quality is more important than badge quantity.
+
+Completion Badges require strong authority.
+
+Badge points should support reputation, not replace it.
+
+Payment should not create reputation.
+
+Badge evidence should be referenced, not fully stored on-chain.
 
 ---
 
-## Core Principle
+# Related Docs
 
-Badges are the proof layer of Nami reputation.
-
-They must remain meaningful, verifiable, and resistant to abuse.
+```text
+docs/passport.md
+docs/reputation.md
+docs/events.md
+docs/access-control.md
+docs/admin.md
+docs/trust-system.md
+```
