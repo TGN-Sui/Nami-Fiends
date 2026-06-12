@@ -16,11 +16,13 @@ module nami::nami_tests {
     use nami::admin;
     use nami::appeals;
     use nami::jury;
+    use nami::squad;
 
     /// Test addresses
     const USER: address = @0x1;
     const IDENTITY_ID: address = @0x100;
     const CHANNEL_ID: address = @0x200;
+    const SPONSORED_USER: address = @0x2;
 
     /// Archetypes
     const ARCHETYPE_EXPLORER: u8 = 1;
@@ -1900,6 +1902,244 @@ module nami::nami_tests {
         assert!(jury::get_vote_receipt_vote(&receipt) == APPEAL_DENIED, 150);
 
         test_scenario::return_to_sender(&scenario, receipt);
+
+        test_scenario::end(scenario);
+    }
+
+        /// ---------------------------------------------------------
+    /// Pro member can create a Squad.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_pro_member_can_create_squad() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        squad::create_squad(
+            &passport_obj,
+            &status,
+            b"goonie-squad",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let squad_obj =
+            test_scenario::take_from_sender<squad::Squad>(&scenario);
+
+        assert!(squad::get_owner(&squad_obj) == USER, 160);
+        assert!(squad::get_max_slots(&squad_obj) == 3, 161);
+        assert!(squad::get_member_count(&squad_obj) == 0, 162);
+
+        test_scenario::return_to_sender(&scenario, squad_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// NPC cannot create a Squad.
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_npc_cannot_create_squad() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        squad::create_squad(
+            &passport_obj,
+            &status,
+            b"npc-squad",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Squad owner can sponsor a member.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_squad_owner_can_sponsor_member() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        squad::create_squad(
+            &passport_obj,
+            &status,
+            b"sponsor-squad",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut squad_obj =
+            test_scenario::take_from_sender<squad::Squad>(&scenario);
+
+        squad::sponsor_member(
+            &mut squad_obj,
+            &passport_obj,
+            &status,
+            SPONSORED_USER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(squad::get_member_count(&squad_obj) == 1, 163);
+
+        let squad_id = squad::get_id(&squad_obj);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, squad_obj);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let member_record =
+            test_scenario::take_from_sender<squad::SquadMember>(&scenario);
+
+        assert!(squad::get_member_squad_id(&member_record) == squad_id, 164);
+        assert!(squad::get_member_sponsor(&member_record) == USER, 165);
+        assert!(squad::get_member_address(&member_record) == SPONSORED_USER, 166);
+
+        test_scenario::return_to_sender(&scenario, member_record);
 
         test_scenario::end(scenario);
     }
