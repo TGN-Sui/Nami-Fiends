@@ -13,6 +13,7 @@ module nami::nami_tests {
     use nami::channel_access;
     use nami::conduct;
     use nami::moderation;
+    use nami::admin;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -1297,5 +1298,192 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-    
+        /// ---------------------------------------------------------
+    /// AdminCap can approve a BadgeIssuerCap.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_approve_badge_issuer() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        admin::approve_badge_issuer(
+            &admin_cap,
+            USER,
+            CHANNEL_ID,
+            ISSUER_NAMI_OFFICIAL,
+            true,
+            true,
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let issuer_cap =
+            test_scenario::take_from_sender<badge_issuer::BadgeIssuerCap>(&scenario);
+
+        assert!(badge_issuer::get_issuer_owner(&issuer_cap) == USER, 120);
+        assert!(badge_issuer::get_issuer_id(&issuer_cap) == CHANNEL_ID, 121);
+        assert!(badge_issuer::can_issue_completion(&issuer_cap), 122);
+
+        test_scenario::return_to_sender(&scenario, issuer_cap);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// AdminCap can upgrade Adventurer to Pro and Elite.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_upgrade_membership_to_pro_and_elite() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+        assert!(passport::get_tier(&passport_obj) == ADVENTURER, 123);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == PRO, 124);
+
+        admin::upgrade_to_elite(
+            &admin_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == ELITE, 125);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// AdminCap can issue a mute that blocks channel chat.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_issue_mute_that_blocks_channel_chat() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::issue_mute(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            CHANNEL_ID,
+            99,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        assert!(moderation::is_mute(&record), 126);
+        assert!(
+            !channel_access::can_chat_with_conduct_and_moderation(
+                &passport_obj,
+                &status,
+                &policy,
+                &record,
+                test_scenario::ctx(&mut scenario)
+            ),
+            127
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
 }
