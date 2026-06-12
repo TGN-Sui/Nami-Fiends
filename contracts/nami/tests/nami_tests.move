@@ -20,6 +20,7 @@ module nami::nami_tests {
     use nami::guild;
     use nami::title;
     use nami::cosmetics;
+    use nami::recovery;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -70,6 +71,10 @@ module nami::nami_tests {
     /// Appeal statuses
     const APPEAL_APPROVED: u8 = 2;
     const APPEAL_DENIED: u8 = 3;
+
+    /// Recovery statuses
+    const RECOVERY_APPROVED: u8 = 2;
+    const RECOVERY_DENIED: u8 = 3;
 
     /// ---------------------------------------------------------
     /// Identity + Passport creation
@@ -2870,5 +2875,232 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
+    /// ---------------------------------------------------------
+    /// User can open a recovery request for a linked Identity + Passport.
+    /// Recovery does not transfer ownership during MVP.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_user_can_open_recovery_request() {
+        let mut scenario = test_scenario::begin(USER);
 
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            SPONSORED_USER,
+            b"recovery-reference",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let request =
+            test_scenario::take_from_sender<recovery::RecoveryRequest>(&scenario);
+
+        assert!(recovery::get_requester(&request) == USER, 200);
+        assert!(recovery::get_current_owner(&request) == USER, 201);
+        assert!(recovery::get_requested_new_owner(&request) == SPONSORED_USER, 202);
+        assert!(recovery::is_open(&request), 203);
+
+        test_scenario::return_to_sender(&scenario, request);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Admin can approve a recovery request.
+    /// Approval records decision only. It does not transfer ownership yet.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_approve_recovery_request() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            SPONSORED_USER,
+            b"admin-recovery-reference",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut request =
+            test_scenario::take_from_sender<recovery::RecoveryRequest>(&scenario);
+
+        admin::resolve_recovery_request(
+            &admin_cap,
+            &mut request,
+            RECOVERY_APPROVED,
+            7001,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(recovery::is_approved(&request), 204);
+        assert!(recovery::get_resolution_code(&request) == 7001, 205);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, request);
+
+        test_scenario::end(scenario);
+    }
+
+        /// ---------------------------------------------------------
+    /// Admin can deny a recovery request.
+    /// This uses RECOVERY_DENIED so the reserved constant is active.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_deny_recovery_request() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            SPONSORED_USER,
+            b"denied-recovery-reference",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut request =
+            test_scenario::take_from_sender<recovery::RecoveryRequest>(&scenario);
+
+        admin::resolve_recovery_request(
+            &admin_cap,
+            &mut request,
+            RECOVERY_DENIED,
+            7002,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(recovery::is_denied(&request), 206);
+        assert!(recovery::get_resolution_code(&request) == 7002, 207);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, request);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }

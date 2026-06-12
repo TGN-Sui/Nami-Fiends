@@ -104,6 +104,14 @@ module nami::errors {
     const ECosmeticNotUnlocked: u64 = 151;
 
     // =========================================================
+    // RECOVERY ERRORS
+    // =========================================================
+    const EInvalidRecoveryRequest: u64 = 160;
+    const ERecoveryAlreadyResolved: u64 = 161;
+    const ERecoveryUnauthorized: u64 = 162;
+    const EInvalidRecoveryResult: u64 = 163;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -184,4 +192,15 @@ module nami::errors {
     public fun invalid_cosmetic_type(): u64 { EInvalidCosmeticType }
 
     public fun cosmetic_not_unlocked(): u64 { ECosmeticNotUnlocked }
+
+    public fun invalid_recovery_request(): u64 { EInvalidRecoveryRequest }
+
+    public fun recovery_already_resolved(): u64 { ERecoveryAlreadyResolved }
+
+    public fun recovery_unauthorized(): u64 { ERecoveryUnauthorized }
+
+    public fun invalid_recovery_result(): u64 { EInvalidRecoveryResult }
+
+
+    
 }
