@@ -17,8 +17,6 @@ module nami::nami_tests {
     const ARCHETYPE_EXPLORER: u8 = 1;
 
     /// Badge types
-    const BASIC_BADGE: u8 = 1;
-    const EVENT_BADGE: u8 = 2;
     const COMPLETION_BADGE: u8 = 3;
 
     /// Membership tiers
@@ -29,6 +27,10 @@ module nami::nami_tests {
 
     /// Reputation tiers
     const NEWBIE: u8 = 0;
+    const GAMESTER: u8 = 1;
+    const GOBLIN: u8 = 2;
+    const GOONIE: u8 = 3;
+    const FIEND: u8 = 4;
 
     /// ---------------------------------------------------------
     /// Identity + Passport creation
@@ -58,6 +60,8 @@ module nami::nami_tests {
         assert!(passport::get_reputation(&passport_obj) == NEWBIE, 2);
         assert!(passport::get_xp(&passport_obj) == 0, 3);
         assert!(passport::get_badge_points(&passport_obj) == 0, 4);
+        assert!(passport::get_level_progress(&passport_obj) == 0, 5);
+        assert!(passport::get_prestige_points(&passport_obj) == 0, 6);
 
         test_scenario::return_to_sender(&scenario, identity_obj);
         test_scenario::return_to_sender(&scenario, passport_obj);
@@ -127,7 +131,8 @@ module nami::nami_tests {
         );
 
         assert!(passport::get_badge_points(&passport_obj) == 3, 20);
-        assert!(passport::get_reputation(&passport_obj) == NEWBIE, 21);
+        assert!(passport::get_xp(&passport_obj) == 3, 21);
+        assert!(passport::get_reputation(&passport_obj) == NEWBIE, 22);
 
         test_scenario::return_to_sender(&scenario, passport_obj);
 
@@ -142,7 +147,7 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
-    /// Badge point thresholds update reputation
+    /// Badge point thresholds update reputation using curved model
     /// ---------------------------------------------------------
     #[test]
     fun test_badge_points_update_reputation() {
@@ -159,17 +164,20 @@ module nami::nami_tests {
         let mut passport_obj =
             test_scenario::take_from_sender<passport::Passport>(&scenario);
 
-        passport::apply_badge_points(&mut passport_obj, 51);
-        assert!(passport::get_reputation(&passport_obj) == 1, 30);
+        passport::apply_badge_points(&mut passport_obj, 90);
+        assert!(passport::get_reputation(&passport_obj) == GAMESTER, 30);
 
-        passport::apply_badge_points(&mut passport_obj, 100);
-        assert!(passport::get_reputation(&passport_obj) == 2, 31);
+        passport::apply_badge_points(&mut passport_obj, 335);
+        assert!(passport::get_badge_points(&passport_obj) == 425, 31);
+        assert!(passport::get_reputation(&passport_obj) == GOBLIN, 32);
 
-        passport::apply_badge_points(&mut passport_obj, 150);
-        assert!(passport::get_reputation(&passport_obj) == 3, 32);
+        passport::apply_badge_points(&mut passport_obj, 425);
+        assert!(passport::get_badge_points(&passport_obj) == 850, 33);
+        assert!(passport::get_reputation(&passport_obj) == GOONIE, 34);
 
-        passport::apply_badge_points(&mut passport_obj, 300);
-        assert!(passport::get_reputation(&passport_obj) == 4, 33);
+        passport::apply_badge_points(&mut passport_obj, 750);
+        assert!(passport::get_badge_points(&passport_obj) == 1600, 35);
+        assert!(passport::get_reputation(&passport_obj) == FIEND, 36);
 
         test_scenario::return_to_sender(&scenario, passport_obj);
 

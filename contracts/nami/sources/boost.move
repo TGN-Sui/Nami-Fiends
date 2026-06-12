@@ -51,7 +51,7 @@ module nami::boost {
     // =========================================================
     fun resolve_boost_power(tier: u8): u8 {
         if (tier == ADVENTURER) {
-            1
+            2
         } else if (tier == PRO) {
             6
         } else if (tier == ELITE) {

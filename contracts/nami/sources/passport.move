@@ -24,6 +24,11 @@ module nami::passport {
     const ELITE: u8 = 3;
 
     // =========================================================
+    // LEVEL SYSTEM
+    // =========================================================
+    const MAX_LEVEL: u64 = 100;
+
+    // =========================================================
     // PASSPORT OBJECT
     // =========================================================
     public struct Passport has key {
@@ -31,15 +36,22 @@ module nami::passport {
 
         identity_id: address,
 
-        /// Progression
+        /// Total XP earned during the current season.
         xp: u64,
+
+        /// Current level.
         level: u64,
 
-        /// Reputation scoring
+        /// XP progress toward next level.
+        level_progress: u64,
+
+        /// Badge quality score.
         badge_points: u64,
+
+        /// Reputation rank.
         reputation: u8,
 
-        /// Onboarding gamer archetype
+        /// Onboarding gamer archetype.
         archetype: u8,
 
         /// Access tier.
@@ -47,8 +59,12 @@ module nami::passport {
         /// Tier must only change through controlled functions.
         tier: u8,
 
-        /// Future discovery/influence hook
+        /// Future discovery/influence hook.
         boost_score: u64,
+
+        /// Points earned after reaching Level 100.
+        /// These will later feed Prestige titles.
+        prestige_points: u64,
 
         created_at_ms: u64,
     }
@@ -66,6 +82,7 @@ module nami::passport {
         amount: u64,
         total_xp: u64,
         level: u64,
+        level_progress: u64,
     }
 
     public struct BadgePointsAdded has copy, drop {
@@ -96,6 +113,7 @@ module nami::passport {
 
             xp: 0,
             level: 1,
+            level_progress: 0,
 
             badge_points: 0,
             reputation: NEWBIE,
@@ -106,6 +124,7 @@ module nami::passport {
             tier: NPC,
 
             boost_score: 0,
+            prestige_points: 0,
 
             created_at_ms: tx_context::epoch_timestamp_ms(ctx),
         }
@@ -131,29 +150,83 @@ module nami::passport {
     }
 
     // =========================================================
+    // LEVEL CURVE
+    // =========================================================
+    fun xp_required_for_next_level(level: u64): u64 {
+        if (level < 10) {
+            // Level 1-9: 5-7 XP
+            5 + level / 4
+        } else if (level < 30) {
+            // Level 10-29: 7-11 XP
+            7 + (level - 10) / 4
+        } else if (level < 60) {
+            // Level 30-59: 12-17 XP
+            12 + (level - 30) / 5
+        } else if (level < 90) {
+            // Level 60-89: 18-25 XP
+            18 + (level - 60) / 4
+        } else {
+            // Level 90-99: 26-35 XP
+            26 + (level - 90)
+        }
+    }
+
+    // =========================================================
     // XP SYSTEM
     // Package-only until an authorized XP issuer exists.
+    // Badge points currently also grant XP.
     // =========================================================
     public(package) fun add_xp(
         passport: &mut Passport,
         amount: u64
     ) {
-        passport.xp = passport.xp + amount;
-        passport.level = passport.xp / 100 + 1;
-
-        update_reputation_from_progress(passport);
+        apply_xp(passport, amount);
 
         sui::event::emit(XPAdded {
             passport_id: object::uid_to_address(&passport.id),
             amount,
             total_xp: passport.xp,
             level: passport.level,
+            level_progress: passport.level_progress,
         });
+    }
+
+    fun apply_xp(
+        passport: &mut Passport,
+        amount: u64
+    ) {
+        passport.xp = passport.xp + amount;
+
+        if (passport.level >= MAX_LEVEL) {
+            passport.prestige_points = passport.prestige_points + amount;
+        } else {
+            passport.level_progress = passport.level_progress + amount;
+
+            while (
+                passport.level < MAX_LEVEL &&
+                passport.level_progress >= xp_required_for_next_level(passport.level)
+            ) {
+                let required = xp_required_for_next_level(passport.level);
+
+                passport.level_progress = passport.level_progress - required;
+                passport.level = passport.level + 1;
+            };
+
+            if (passport.level >= MAX_LEVEL) {
+                passport.prestige_points =
+                    passport.prestige_points + passport.level_progress;
+
+                passport.level_progress = 0;
+            };
+        };
+
+        update_reputation_from_progress(passport);
     }
 
     // =========================================================
     // BADGE POINT SYSTEM
     // Package-only so arbitrary users cannot self-award reputation.
+    // Badge points also feed XP progression.
     // =========================================================
     public(package) fun apply_badge_points(
         passport: &mut Passport,
@@ -161,7 +234,7 @@ module nami::passport {
     ) {
         passport.badge_points = passport.badge_points + points;
 
-        update_reputation_from_progress(passport);
+        apply_xp(passport, points);
 
         sui::event::emit(BadgePointsAdded {
             passport_id: object::uid_to_address(&passport.id),
@@ -175,15 +248,18 @@ module nami::passport {
     // REPUTATION LOGIC
     // Reputation is earned from progression and badge quality.
     // Membership tier does not affect reputation.
+    //
+    // These badge thresholds now roughly align with the curved
+    // XP path instead of the older linear thresholds.
     // =========================================================
     fun update_reputation_from_progress(passport: &mut Passport) {
-        if (passport.badge_points > 600 || passport.level >= 100) {
+        if (passport.badge_points >= 1600 || passport.level >= 100) {
             passport.reputation = FIEND;
-        } else if (passport.badge_points > 300 || passport.level >= 70) {
+        } else if (passport.badge_points >= 850 || passport.level >= 70) {
             passport.reputation = GOONIE;
-        } else if (passport.badge_points > 150 || passport.level >= 45) {
+        } else if (passport.badge_points >= 425 || passport.level >= 45) {
             passport.reputation = GOBLIN;
-        } else if (passport.badge_points > 50 || passport.level >= 15) {
+        } else if (passport.badge_points >= 90 || passport.level >= 15) {
             passport.reputation = GAMESTER;
         } else {
             passport.reputation = NEWBIE;
@@ -286,5 +362,13 @@ module nami::passport {
 
     public fun get_xp(passport: &Passport): u64 {
         passport.xp
+    }
+
+    public fun get_level_progress(passport: &Passport): u64 {
+        passport.level_progress
+    }
+
+    public fun get_prestige_points(passport: &Passport): u64 {
+        passport.prestige_points
     }
 }
