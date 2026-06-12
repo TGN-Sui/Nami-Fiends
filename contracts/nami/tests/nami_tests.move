@@ -3384,5 +3384,184 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
+        /// ---------------------------------------------------------
+    /// Channel owner can create an access policy for a real Channel.
+    /// This is the public safe path after channel.move exists.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_channel_owner_can_create_access_policy_for_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"policy-channel",
+            b"Channel with access policy",
+            b"metadata://policy-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let channel_id = channel::get_id(&channel_obj);
+
+        channel_access::create_policy_for_channel(
+            &channel_obj,
+            false,
+            ADVENTURER,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        assert!(channel_access::get_owner(&policy) == USER, 220);
+        assert!(channel_access::get_channel_id(&policy) == channel_id, 221);
+        assert!(!channel_access::get_allow_npc_chat(&policy), 222);
+        assert!(channel_access::get_minimum_tier(&policy) == ADVENTURER, 223);
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Channel owner can update access policy through Channel-aware path.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_channel_owner_can_update_access_policy_for_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"update-policy-channel",
+            b"Channel with updateable access policy",
+            b"metadata://update-policy-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        channel_access::create_policy_for_channel(
+            &channel_obj,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let mut policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        assert!(channel_access::get_allow_npc_chat(&policy), 224);
+
+        channel_access::update_policy_for_channel(
+            &channel_obj,
+            &mut policy,
+            false,
+            ADVENTURER,
+            GAMESTER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(!channel_access::get_allow_npc_chat(&policy), 225);
+        assert!(channel_access::get_minimum_tier(&policy) == ADVENTURER, 226);
+        assert!(channel_access::get_minimum_reputation(&policy) == GAMESTER, 227);
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::end(scenario);
+    }
+
     
 }
