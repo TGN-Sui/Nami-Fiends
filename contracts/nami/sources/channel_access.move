@@ -4,6 +4,7 @@ module nami::channel_access {
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
 
+    use nami::conduct;
     use nami::errors;
     use nami::membership;
     use nami::passport;
@@ -19,22 +20,14 @@ module nami::channel_access {
     public struct ChannelAccessPolicy has key {
         id: UID,
 
-        /// Owner of this policy.
-        /// Future channel ownership will replace this simple owner check.
         owner: address,
 
-        /// Channel, hub, game, guild, or community target.
         channel_id: address,
 
-        /// Core toggle:
-        /// true = NPC users may chat
-        /// false = NPC users may not chat
         allow_npc_chat: bool,
 
-        /// Minimum effective membership tier required to chat.
         minimum_tier: u8,
 
-        /// Minimum reputation rank required to chat.
         minimum_reputation: u8,
 
         created_at_ms: u64,
@@ -127,9 +120,12 @@ module nami::channel_access {
     }
 
     // =========================================================
-    // CHAT ACCESS CHECK
+    // LEGACY / PACKAGE-ONLY CHAT ACCESS CHECK
     // =========================================================
-    public fun can_chat(
+    // Internal package path without Conduct.
+    // Public systems should use conduct-aware functions below.
+    // =========================================================
+    public(package) fun can_chat(
         passport_obj: &passport::Passport,
         policy: &ChannelAccessPolicy
     ): bool {
@@ -147,12 +143,61 @@ module nami::channel_access {
         }
     }
 
-    public fun assert_can_chat(
+    public(package) fun assert_can_chat(
         passport_obj: &passport::Passport,
         policy: &ChannelAccessPolicy
     ) {
         assert!(
             can_chat(passport_obj, policy),
+            errors::insufficient_tier()
+        );
+    }
+
+    // =========================================================
+    // CONDUCT-AWARE CHAT ACCESS CHECK
+    // =========================================================
+    public fun can_chat_with_conduct(
+        passport_obj: &passport::Passport,
+        conduct_status: &conduct::ConductStatus,
+        policy: &ChannelAccessPolicy,
+        ctx: &TxContext
+    ): bool {
+        if (!conduct::has_active_benefits(conduct_status, ctx)) {
+            false
+        } else {
+            let tier = membership::get_effective_tier_with_conduct(
+                passport_obj,
+                conduct_status,
+                ctx
+            );
+
+            let reputation = passport::get_reputation(passport_obj);
+
+            if (tier == NPC && !policy.allow_npc_chat) {
+                false
+            } else if (tier < policy.minimum_tier) {
+                false
+            } else if (reputation < policy.minimum_reputation) {
+                false
+            } else {
+                true
+            }
+        }
+    }
+
+    public fun assert_can_chat_with_conduct(
+        passport_obj: &passport::Passport,
+        conduct_status: &conduct::ConductStatus,
+        policy: &ChannelAccessPolicy,
+        ctx: &TxContext
+    ) {
+        assert!(
+            conduct::has_active_benefits(conduct_status, ctx),
+            errors::conduct_restricted()
+        );
+
+        assert!(
+            can_chat_with_conduct(passport_obj, conduct_status, policy, ctx),
             errors::insufficient_tier()
         );
     }

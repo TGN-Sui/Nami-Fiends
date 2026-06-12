@@ -874,4 +874,137 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+        /// ---------------------------------------------------------
+    /// Black Conduct forces effective tier to NPC.
+    /// This proves Black Passport temporarily removes active benefits.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_black_conduct_forces_effective_tier_to_npc() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        assert!(passport::get_tier(&passport_obj) == ADVENTURER, 90);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        let effective_tier = membership::get_effective_tier_with_conduct(
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(effective_tier == NPC, 91);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Black Conduct blocks channel chat even when NPC chat is allowed.
+    /// Black Passport is stronger than normal channel permissions.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_black_conduct_blocks_channel_chat_even_if_npc_allowed() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(
+            !channel_access::can_chat_with_conduct(
+                &passport_obj,
+                &status,
+                &policy,
+                test_scenario::ctx(&mut scenario)
+            ),
+            92
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
 }
