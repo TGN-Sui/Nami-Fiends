@@ -1,210 +1,563 @@
-# Nami Discovery System v1.0
+# Nami Discovery System
 
 ## Overview
 
-The Discovery System defines how content, channels, hubs, and communities surface within Nami.
+The Nami Discovery System helps users find channels, games, guilds, squads, events, developers, and communities.
 
-It determines what users see, what becomes visible, and what trends across the ecosystem.
+Discovery should be community-driven, not ad-driven.
 
-Discovery is driven by community participation, trust signals, engagement quality, and identity-based boosts.
+Discovery should reward quality, activity, trust, and participation while resisting manipulation from bots, spam, paid farming, and low-quality engagement.
 
 ---
 
-## Core Principle
+## Core Purpose
 
-Discovery in Nami is community-driven, not advertisement-driven.
+Discovery answers:
 
-No entity can purchase guaranteed visibility.
+"What should the Nami community see this cycle?"
 
-All discovery outcomes are the result of combined ecosystem signals.
+Discovery should help surface:
+
+* Quality game channels
+* Active developer hubs
+* Trusted guilds
+* Healthy communities
+* Meaningful events
+* New rising channels
+* Badge-worthy activities
+* Communities supported by real members
 
 ---
 
 ## Discovery Inputs
 
-Channel and content visibility is determined by four primary inputs:
+Nami discovery may use multiple independent signals.
 
-### 1. Engagement Quality
+Planned inputs include:
 
-Measures meaningful interaction within a channel.
-
-Examples:
-
-* Active conversation participation
-* Replies and discussions
+* Boosts
+* Reputation
+* Badge quality
+* Channel activity
+* Guild activity
+* Squad activity
+* Developer verification
+* Channel verification
+* Conduct health
+* Moderation health
 * Event participation
-* Sustained interaction
+* Member retention
+* Engagement quality
 
-Low-quality engagement (spam, AFK activity) is deprioritized.
+No single signal should fully control discovery.
 
 ---
 
-### 2. Activity Signals
+# Boosts
 
-Measures ongoing community activity.
+## Purpose
+
+Boosts are direct community support signals.
+
+Boosts help users show which channels or communities they want others to discover.
+
+Current boost model:
+
+* NPC: 0 boost access
+* Adventurer: 1 boost power
+* Pro: 6 boost power
+* Elite: 8 boost power
+
+Boosts should influence discovery but not fully determine discovery.
+
+---
+
+## Weekly Boost Cycles
+
+Boosts should operate in weekly discovery cycles.
+
+Weekly cycles help:
+
+* Refresh rankings
+* Prevent permanent dominance
+* Encourage new discovery
+* Give smaller communities regular opportunities
+* Create consistent engagement rhythm
+
+Boosts should not roll over between cycles.
+
+Unused boosts expire at the end of the cycle.
+
+---
+
+## Per-Channel Boost Limits
+
+Future rule:
+
+```text
+Each member may boost the same channel up to 3 times per cycle.
+```
+
+Purpose:
+
+* Reduce concentrated influence
+* Encourage discovery variety
+* Prevent one member from overly dominating a single channel
+* Encourage members to support multiple communities
+
+---
+
+# Reputation
+
+## Purpose
+
+Reputation helps discovery understand member quality.
+
+Reputation ranks:
+
+* Newbie
+* Gamester
+* Goblin
+* Goonie
+* Fiend
+
+High-reputation users may have stronger signal quality in discovery analytics.
+
+However, reputation should not automatically overpower all other signals.
+
+---
+
+## Reputation Abuse Prevention
+
+Discovery should avoid over-rewarding reputation alone.
+
+A high-reputation user should not be able to fully control rankings.
+
+Reputation should be one signal among many.
+
+---
+
+# Badge Quality
+
+## Purpose
+
+Badge quality helps discovery understand whether a community produces meaningful activity.
+
+Badges are more valuable when they represent real participation, achievement, or contribution.
+
+Current badge types:
+
+* Basic Badge
+* Event Badge
+* Completion Badge
+
+Badge quality can help surface:
+
+* Developer-hosted events
+* Real community milestones
+* Meaningful completion challenges
+* Active seasonal events
+
+---
+
+## Low-Quality Badge Protection
+
+Starting a game should not issue a Completion Badge.
+
+Opening a game should not issue a Completion Badge.
+
+Joining a channel should not issue a Completion Badge.
+
+Low-quality badge issuance should not boost discovery ranking.
+
+Badge farming should reduce issuer trust.
+
+---
+
+# Channel Activity
+
+## Purpose
+
+Channel activity shows whether a community is alive.
+
+Activity signals may include:
+
+* Active users
+* Message quality
+* Event participation
+* Returning members
+* Developer announcements
+* Badge activity
+* Guild participation
+* Squad participation
+
+Activity should be weighted by quality, not raw spam volume.
+
+---
+
+## Spam Protection
+
+Discovery should not reward:
+
+* Message spam
+* Bot activity
+* Idle farming
+* Artificial activity loops
+* Low-quality engagement
+
+Raw message count should not be enough to rank a channel highly.
+
+---
+
+# Developer Verification
+
+## Purpose
+
+Verified developers and studios should have stronger trust signals.
+
+Developer verification may help discovery prioritize:
+
+* Official game channels
+* Verified studio hubs
+* Legitimate announcements
+* Developer-hosted events
+* Approved badge campaigns
+
+Developer verification should improve trust but not guarantee permanent top ranking.
+
+---
+
+# Channel Verification
+
+## Purpose
+
+Verified channels should be easier to trust.
+
+Verified channels may receive:
+
+* Badge issuer eligibility
+* Better discovery trust
+* Channel customization rights
+* NPC chat toggle controls
+* Announcement tools
+
+Channel verification does not guarantee high ranking.
+
+The channel must still show quality, activity, and healthy moderation.
+
+---
+
+# Conduct Health
+
+## Purpose
+
+Conduct health helps discovery avoid surfacing harmful communities.
+
+Conduct signals include:
+
+* Green
+* Orange
+* Red
+* Black
+
+Discovery should treat Red as high-intensity, not automatically bad.
+
+Black Passport users should not influence discovery while restricted.
+
+---
+
+## Channel Conduct Mix
+
+Channels may naturally attract different conduct types.
 
 Examples:
 
-* Active members in channel
-* Frequency of interactions
-* Recurring participation across time
+* Casual/cozy channels may attract Green users
+* Competitive ranked channels may attract Orange users
+* Hardcore PvP channels may attract Red users
 
-Activity reflects momentum, not raw volume.
+This is acceptable.
 
----
-
-### 3. Trust Signals
-
-Derived from the Trust System.
-
-Includes:
-
-* Presence of Trusted Members
-* Presence of Community Champions
-* Squad endorsements
-* Verified participation patterns
-
-Higher trust signals increase discovery reliability.
+Discovery should not punish Red-heavy channels by default unless moderation health is poor.
 
 ---
 
-### 4. Boost Signals
+# Moderation Health
 
-Identity-bound weekly signals used to amplify discovery visibility.
+## Purpose
 
-Rules:
+Moderation health protects the ecosystem from abusive communities.
 
-* Boosts are allocated weekly
-* Boosts expire at cycle reset
-* Boosts do not roll over
-* Max 3 boosts per channel per identity per cycle
+Moderation health may consider:
 
-Boosts provide temporary visibility amplification, not permanent ranking.
+* Warning frequency
+* Mute frequency
+* Channel bans
+* Black Passport events
+* Appeal outcomes
+* Report volume
+* Repeat offenders
+* Moderator response time
 
----
-
-## Channel Ranking Model (Conceptual)
-
-Channel visibility is determined by a weighted combination of:
-
-* Engagement Quality Score
-* Activity Score
-* Trust Score
-* Boost Score (weekly ephemeral modifier)
-
-Boosts amplify visibility but do not override engagement or trust.
+A channel with high abuse and poor moderation should lose discovery trust.
 
 ---
 
-## Unique Support Rule (Anti-Whale Protection)
+## Appeal Outcomes
 
-To prevent concentrated influence, discovery considers:
+Appeals may affect moderation trust.
 
-### Unique Participation Weight
+If many penalties are overturned, the system may review:
 
-Channels are evaluated based on:
-
-* Number of unique users contributing signals
-* Diversity of engagement sources
-
-This ensures that:
-
-* Broad community support ranks higher than concentrated influence
-* No single group can dominate discovery outcomes
+* Moderator behavior
+* Channel rules
+* Report quality
+* Community bias
+* Jury disagreement patterns
 
 ---
 
-## Time Sensitivity (Freshness Layer)
+# Guild and Squad Activity
 
-Discovery prioritizes recency of activity.
+## Guild Signals
 
-Signals decay over time to ensure:
+Guild activity may influence discovery through:
 
-* New communities can surface
-* Old inactive channels do not dominate rankings
-* Weekly cycles reset attention distribution
-
----
-
-## Hub-Level Discovery
-
-Hubs act as higher-level containers for discovery aggregation.
-
-Hub visibility is influenced by:
-
-* Aggregate channel activity
-* Cross-channel engagement
-* Verified developer presence
-* Community trust distribution
-
-Hubs represent ecosystem-level activity clusters.
+* Active members
+* Events hosted
+* Guild badges
+* Guild reputation
+* Retention
+* Community growth
+* Healthy moderation
 
 ---
 
-## Channel Types and Discovery Weighting
+## Squad Signals
 
-Different channel types receive different discovery weighting models:
+Squads may influence discovery through:
 
-### Public Channels
+* Sponsored member activity
+* Trust relationships
+* Event participation
+* Community engagement
+* Retention of sponsored members
 
-* Fully discoverable
-* Standard ranking model applies
-
-### Gated Channels
-
-* Requires verification, membership, or squad access
-* Discovery is limited but still present
-
-### Event Channels
-
-* Temporarily boosted during active events
-* Strong time-decay after event completion
-
-### Developer Channels
-
-* Weighted by verified developer status
-* Enhanced trust scoring integration
+Squad signals should be carefully weighted to prevent sponsorship farming.
 
 ---
 
-## Anti-Manipulation Principles
+# Event Discovery
 
-The following behaviors are explicitly suppressed in discovery:
+Events may receive temporary discovery boosts.
 
-* AFK activity farming
-* Message spam inflation
-* Artificial engagement loops
-* Purchased visibility guarantees
-* Single-source influence domination
+Event discovery may consider:
 
-Discovery is designed to resist artificial ranking manipulation.
+* Verified host
+* Event badge quality
+* Participation levels
+* Developer involvement
+* Guild involvement
+* Time sensitivity
+* Member interest
 
----
-
-## Discovery Cycle
-
-Discovery operates on a weekly cycle aligned with Boost resets.
-
-Each cycle:
-
-1. Boost signals are reset
-2. Engagement and activity signals recalibrate
-3. Trust signals remain persistent
-4. Rankings are recomputed dynamically
-
-This ensures a constantly evolving ecosystem of visibility.
+Events should not permanently dominate discovery after the event ends.
 
 ---
 
-## Core System Philosophy
+# Channel Access Rules
 
-Discovery is not a leaderboard.
+Channel access rules affect who can participate.
 
-It is a living reflection of:
+Channels may define:
 
-* Community attention
-* Trust distribution
-* Active participation
-* Emerging interest across gaming ecosystems
+* NPC chat allowed
+* NPC chat disabled
+* Adventurer+ chat
+* Pro+ chat
+* Elite-only chat
+* Reputation-gated chat
+* Badge-gated chat
+* Guild-gated chat
+* Squad-gated chat
 
-The goal is to surface meaningful communities, not the loudest ones.
+Discovery should still allow restricted channels to be found when appropriate, but access rules should be clearly visible.
+
+---
+
+# Discovery Ranking Philosophy
+
+Discovery should balance:
+
+* Freshness
+* Quality
+* Trust
+* Activity
+* Boosts
+* Reputation
+* Badge quality
+* Moderation health
+* Developer verification
+* Community momentum
+
+Discovery should not be controlled by:
+
+* Payment alone
+* Spam volume
+* Bot farms
+* Badge farming
+* One whale user
+* One guild network
+* One developer partner
+
+---
+
+# Weekly Discovery Windows
+
+Nami may use weekly discovery windows.
+
+Possible weekly flow:
+
+1. Boost cycle begins
+2. Members boost favorite channels
+3. Events and activity accumulate
+4. Discovery engine ranks channels
+5. Top communities are featured
+6. Cycle resets
+7. Boosts do not roll over
+
+This creates recurring community momentum.
+
+---
+
+# Discovery Categories
+
+Nami may eventually support multiple discovery categories.
+
+Examples:
+
+* Top Boosted
+* Rising Channels
+* New Developer Hubs
+* Cozy Communities
+* Competitive Communities
+* Hardcore PvP
+* Guild Spotlight
+* Event Spotlight
+* Badge Campaigns
+* New Player Friendly
+* Verified Game Channels
+
+Different categories should use different ranking weights.
+
+---
+
+# Anti-Abuse Rules
+
+Discovery must resist:
+
+* Bot activity
+* Fake boosts
+* Badge farming
+* Message spam
+* Mass-report abuse
+* Collusion
+* Boost concentration
+* Low-quality engagement
+* Paid reputation manipulation
+
+Potential safeguards:
+
+* NPC boost restriction
+* Verification gates
+* Weekly reset cycles
+* Per-channel boost limits
+* Badge issuer review
+* Conduct restrictions
+* Moderation health checks
+* Anomaly detection
+* Human review for suspicious spikes
+
+---
+
+# On-Chain vs Off-Chain Design
+
+## On-Chain
+
+Sui should store or emit:
+
+* BoostUsed events
+* BadgeMinted events
+* BadgePointsAdded events
+* TierUpgraded events
+* Conduct updates
+* Channel access rule updates
+* Guild and squad anchors
+* Badge issuer approvals
+* Moderation status proofs
+
+---
+
+## Off-Chain
+
+The backend discovery engine should compute:
+
+* Rankings
+* Weighted scores
+* Trending categories
+* Anti-abuse analysis
+* Moderation health
+* Channel activity quality
+* Event relevance
+* Personalized discovery
+
+Discovery ranking should be computed off-chain for flexibility and scale.
+
+On-chain data should provide trustworthy signals.
+
+---
+
+# Future Discovery Engine
+
+Future backend components may include:
+
+* Event indexer
+* Boost cycle processor
+* Badge quality analyzer
+* Channel ranking engine
+* Guild ranking engine
+* Event discovery engine
+* Moderation health analyzer
+* Anti-abuse detector
+* Personalized recommendation service
+
+---
+
+# Future Events
+
+Discovery-related events may include:
+
+* BoostUsed
+* BoostCycleReset
+* ChannelAccessRuleUpdated
+* ChannelBadgePolicyUpdated
+* BadgeIssuerApproved
+* BadgeIssuerSuspended
+* ConductSignalUpdated
+* PassportDowned
+* GuildCreated
+* SquadMemberSponsored
+
+---
+
+# Core Principles
+
+Discovery should help good communities get found.
+
+Discovery should reward quality, not noise.
+
+Discovery should be influenced by members, not controlled by payment.
+
+Discovery should protect users from abusive spaces.
+
+Discovery should give new and smaller communities a fair chance to rise.
