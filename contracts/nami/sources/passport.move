@@ -371,4 +371,8 @@ module nami::passport {
     public fun get_prestige_points(passport: &Passport): u64 {
         passport.prestige_points
     }
+
+    public fun get_identity_id(passport: &Passport): address {
+    passport.identity_id
+}
 }

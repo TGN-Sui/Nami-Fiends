@@ -73,4 +73,12 @@ module nami::identity {
 
         transfer::transfer(identity, owner);
     }
+
+    public fun get_owner(identity: &Identity): address {
+    identity.owner
+    }
+
+    public fun get_verification_level(identity: &Identity): u8 {
+    identity.verification_level
+    }
 }
