@@ -1,275 +1,437 @@
-# Nami Moderation System
+# Nami Moderation
 
-## Overview
+## Purpose
 
-The Nami Moderation System defines how warnings, restrictions, bans, appeals, and Passport penalties work across the ecosystem.
+Moderation protects users, channels, squads, future guilds, and the wider Nami protocol.
 
-Moderation exists to protect communities while preserving fairness, transparency, privacy, and player voice.
+Moderation should be:
 
-Moderation should be firm enough to prevent abuse, but structured enough to avoid mob punishment.
+* Evidence-based
+* Reviewable
+* Appeal-friendly
+* Resistant to mob punishment
+* Clear to users
+* Strong enough to stop abuse
+
+Moderation actions should restrict harmful behavior without erasing earned history unless severe abuse requires deeper review.
 
 ---
 
-## Moderation Levels
+## Current Status
 
-Nami moderation may include:
+Current moderation-related modules:
 
-* Warning
-* Temporary Mute
-* Channel Ban
-* Black Passport
-* Permanent Restriction
-* Appeal Review
-* Jury Review
+```text
+moderation.move
+conduct.move
+channel_access.move
+appeals.move
+jury.move
+admin.move
+```
+
+Current protocol status:
+
+```text
+33 tests passing
+0 warnings
+```
+
+---
+
+# Current Moderation Actions
+
+Nami currently supports four moderation actions:
+
+```text
+Warning
+Mute
+Channel Ban
+Black Passport
+```
 
 ---
 
 ## Warning
 
-Warnings are low-level moderation actions.
+A Warning creates a moderation record.
 
-Used for:
+Current effect:
 
-* Minor spam
-* Minor toxicity
-* Off-topic disruption
-* First-time guideline violations
+```text
+Record only
+```
 
-Effect:
+Warnings do not currently block access by themselves.
 
-* Warning recorded
-* No Passport death
-* May affect future conduct review
+Warnings may later affect:
 
-Warnings should not immediately downgrade membership or reputation.
+* Trust scoring
+* Appeal context
+* Jury eligibility
+* Repeat-offender escalation
+* Moderation dashboards
 
 ---
 
-## Temporary Mute
+## Mute
 
-Temporary mutes restrict chat participation for a limited time.
+A Mute blocks chat for a matching channel while active.
 
-Used for:
+Current effect:
 
-* Repeated spam
-* Heated arguments
-* Short-term disruption
-* Refusal to follow channel moderation
+```text
+Blocks channel chat
+```
 
-Effect:
+Mute records include:
 
-* User may read
-* User may not speak
-* Duration-based restriction
-* May be global or channel-specific
+* Moderator
+* Target owner
+* Passport ID
+* Channel ID
+* Reason code
+* Expiration timestamp
 
 ---
 
 ## Channel Ban
 
-Channel bans are specific to a channel or hub.
+A Channel Ban blocks chat for a matching channel while active.
 
-Used for:
+Current effect:
 
-* Breaking channel-specific rules
-* Harassing members in a channel
-* Repeated disruption in one community
+```text
+Blocks channel chat
+```
 
-Effect:
-
-* User loses access to that channel
-* User may remain active elsewhere
-* Does not automatically trigger Black Passport
-
-Channel owners should have tools to protect their spaces without forcing global punishment.
+Channel bans are stronger than mutes and may represent removal from a channel/community space.
 
 ---
 
 ## Black Passport
 
-Black Passport is a global temporary penalty.
+Black Passport is the global moderation penalty state.
 
 Public language:
 
-"Passport downed. Respawning in..."
+```text
+Passport downed. Respawning in...
+```
 
-Used for:
+Current effect:
 
-* Serious harassment
-* Scam attempts
-* Bot behavior
-* Ban evasion
-* Repeated major violations
-* Severe community abuse
+```text
+Conduct Signal becomes Black
+Effective tier falls back to NPC-equivalent restrictions
+```
 
-Effect:
+Black Passport currently blocks:
 
-* User falls back to NPC-level benefits
-* Boosts disabled
-* Squad slots disabled
-* Guild creation disabled
-* Badge claiming disabled
-* Prestige progress paused
-* Gated chat access restricted
+* Boosts
+* Channel chat
+* Squad benefits
+* Jury eligibility
+* Premium benefit access through effective tier
 
-Black Passport must always have a duration unless escalated to permanent restriction.
+Black Passport should not erase earned Passport history by default.
 
 ---
 
-## Permanent Restriction
+# Conduct Integration
 
-Permanent restrictions are reserved for severe or repeated harm.
+Moderation uses Conduct to apply Black Passport restrictions.
 
-Used for:
+Related module:
 
-* Fraud
-* Threats
-* Illegal content
-* Coordinated bot networks
-* Repeated severe abuse
-* Malicious account recovery abuse
+```move
+module nami::conduct
+```
 
-Permanent restrictions should require strong evidence and review.
+Current Conduct Signals:
 
----
+```text
+Green
+Orange
+Red
+Black
+```
 
-## Appeals
+Green, Orange, and Red are public interaction signals.
 
-Banned or restricted members may appeal moderation actions.
+Black is reserved for moderation.
 
-Appeals should support:
-
-* Case review
-* Evidence review
-* Privacy protection
-* Moderator decision history
-* Optional anonymous jury review
-
-Appeals should not expose private identities.
+Users cannot select Black themselves.
 
 ---
 
-## Anonymous Jury Review
+# Channel Access Integration
 
-Nami may support anonymous jury-style appeal reviews for selected cases.
+Moderation records are used by channel access checks.
 
-Purpose:
+Related module:
 
-* Give Pro and Elite members a voice
-* Create transparent community accountability
-* Increase engagement
-* Reduce perception of centralized moderation abuse
+```move
+module nami::channel_access
+```
 
-Jury eligibility may require:
+Current chat-blocking inputs:
 
-* Pro or Elite membership
-* Good standing
-* No Black Passport history within a recent window
-* Minimum reputation threshold
-* No conflict of interest with the case
+```text
+Channel policy
+Conduct status
+Moderation record
+```
 
----
+Chat can be blocked by:
 
-## Jury Privacy Rules
-
-Jury cases should keep identities private.
-
-The jury should see:
-
-* Event timeline
-* Rule violations
-* Moderation actions
-* Relevant evidence summaries
-* Appeal statement
-* Prior anonymized conduct history
-
-The jury should not see:
-
-* Wallet address
-* Real name
-* Linked social accounts
-* Private messages unrelated to the case
-* Personal identifying information
+* NPC chat disabled
+* Minimum tier not met
+* Minimum reputation not met
+* Active Black Passport
+* Active mute
+* Active channel ban
 
 ---
 
-## Jury Output
+# Admin Authority
 
-Jury decisions may recommend:
+Moderation actions are currently exposed through AdminCap.
 
-* Uphold penalty
-* Reduce penalty
-* Extend penalty
-* Remove penalty
-* Escalate to manual review
+Related module:
 
-Jury decisions should be advisory at first.
+```move
+module nami::admin
+```
 
-Final execution may remain with protocol moderation authority until the system matures.
+Current AdminCap moderation powers:
 
----
+```text
+Issue warning
+Issue mute
+Issue channel ban
+Issue Black Passport
+```
 
-## Community Voting
+Direct moderation functions remain package-gated.
 
-Community votes should never directly ban a user.
-
-Community votes may:
-
-* Flag behavior
-* Trigger review
-* Support appeal context
-* Influence moderation priority
-
-Community votes must not automatically execute punishment.
-
-This prevents brigading, harassment, and popularity-based abuse.
+This prevents normal users from creating moderation records or downing Passports.
 
 ---
 
-## Moderation Events
+# Moderation Records
 
-Future events may include:
+Current object:
 
-* WarningIssued
-* MuteIssued
-* ChannelBanIssued
-* PassportDowned
-* PassportRespawned
-* AppealOpened
-* AppealReviewed
-* JuryAssigned
-* JuryDecisionSubmitted
+```move
+ModerationRecord
+```
 
----
+Current fields track:
 
-## Future Move Modules
+* Moderator
+* Target owner
+* Passport ID
+* Action type
+* Channel ID
+* Reason code
+* Expiration timestamp
+* Creation timestamp
 
-Potential modules:
+Moderation records support:
 
-* moderation.move
-* appeals.move
-* jury.move
-
-On-chain state should store:
-
-* Penalty status
-* Duration
-* Appeal status
-* Decision proof
-* Public event trail
-
-Off-chain systems should store:
-
-* Evidence
-* Chat logs
-* Screenshots
-* Moderator notes
-* Private case files
+* Appeal creation
+* Access checks
+* Admin audits
+* Backend moderation timelines
 
 ---
 
-## Core Principle
+# Appeals
 
-Moderation should protect the ecosystem without turning Nami into mob rule.
+Users may appeal moderation actions.
 
-Community voice matters, but punishment must be reviewable, evidence-based, and resistant to abuse.
+Related module:
+
+```move
+module nami::appeals
+```
+
+Current appeal flow:
+
+```text
+Moderation action → Appeal opened → Admin resolution
+```
+
+Appeal outcomes:
+
+```text
+Approved
+Denied
+Modified
+```
+
+Private evidence should not be stored directly on-chain.
+
+Appeal cases should reference off-chain evidence, summaries, hashes, or public case labels.
+
+---
+
+# Jury Review
+
+Jury review is currently advisory.
+
+Related module:
+
+```move
+module nami::jury
+```
+
+Current jury flow:
+
+```text
+Appeal → JuryCase → Pro/Elite juror vote → Recommendation
+```
+
+Juror eligibility currently requires:
+
+```text
+Pro or Elite effective tier
+No active Black Passport
+```
+
+Jury recommendations do not automatically override Admin resolution yet.
+
+---
+
+# Privacy Rules
+
+Moderation should avoid exposing unnecessary private data.
+
+Do not store on-chain:
+
+* Private chat logs
+* Private moderation evidence
+* Private appeal evidence
+* Real names
+* Emails
+* Raw linked social accounts
+* Private game account IDs
+
+Use on-chain records for state and references.
+
+Use off-chain systems for sensitive evidence.
+
+---
+
+# Reason Codes
+
+Current moderation functions use numeric reason codes.
+
+Reason codes allow the frontend/backend to map moderation actions to human-readable categories.
+
+Future examples may include:
+
+```text
+Spam
+Harassment
+Scam
+Botting
+Hate speech
+Impersonation
+Exploit abuse
+Channel rule violation
+Protocol rule violation
+```
+
+The code should stay stable while display text can evolve.
+
+---
+
+# Escalation Model
+
+Future moderation escalation may follow:
+
+```text
+Warning
+→ Mute
+→ Channel Ban
+→ Black Passport
+→ Permanent restriction
+```
+
+Escalation should depend on:
+
+* Severity
+* Repetition
+* Evidence quality
+* Channel rules
+* Protocol rules
+* Appeal outcomes
+* Jury recommendation
+* Moderator authority
+
+---
+
+# Community Reports
+
+Community reports should not directly punish users.
+
+Reports may trigger:
+
+* Review
+* Evidence collection
+* Moderator attention
+* Temporary safety limits
+* Jury review eligibility
+
+Punishment should require authority, evidence, and auditability.
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* Warning creation
+* Black Passport issuance
+* Black Passport disables benefits
+* Black Passport blocks chat
+* Mute blocks channel chat
+* Channel ban blocks channel chat
+* AdminCap can issue moderation actions
+* Appeals can be opened from moderation records
+* Jury review can be opened for appeals
+
+---
+
+# Future Work
+
+Planned moderation improvements:
+
+```text
+Moderator roles
+Channel moderator authority
+Guild moderator authority
+Evidence references
+Appeal evidence privacy
+Jury anonymity
+Cooldowns
+Repeat-offender escalation
+Permanent restrictions
+Moderation dashboards
+Emergency pause controls
+```
+
+---
+
+# Related Docs
+
+```text
+docs/conduct-system.md
+docs/access-control.md
+docs/appeals.md
+docs/jury.md
+docs/admin.md
+docs/events.md
+```
