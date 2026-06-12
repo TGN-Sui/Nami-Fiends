@@ -21,6 +21,7 @@ module nami::nami_tests {
     use nami::title;
     use nami::cosmetics;
     use nami::recovery;
+    use nami::channel;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -3098,6 +3099,287 @@ module nami::nami_tests {
 
         test_scenario::return_to_sender(&scenario, admin_cap);
         test_scenario::return_to_sender(&scenario, request);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Adventurer can create a Channel.
+    /// NPC cannot create channels.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_adventurer_can_create_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"main-channel",
+            b"Main gamer channel",
+            b"metadata://main-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        assert!(channel::get_owner(&channel_obj) == USER, 210);
+        assert!(channel::get_is_public(&channel_obj), 211);
+        assert!(!channel::get_is_verified(&channel_obj), 212);
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// NPC cannot create a Channel.
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_npc_cannot_create_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"npc-channel",
+            b"NPC should not create this",
+            b"metadata://npc-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Channel owner can update channel metadata.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_channel_owner_can_update_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"update-channel",
+            b"Before update",
+            b"metadata://before",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        channel::update_channel(
+            &mut channel_obj,
+            &passport_obj,
+            &status,
+            b"updated-channel",
+            b"After update",
+            b"metadata://after",
+            false,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(!channel::get_is_public(&channel_obj), 213);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, channel_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// AdminCap can verify a Channel.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_verify_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"verified-channel",
+            b"Channel to verify",
+            b"metadata://verified",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        assert!(!channel::get_is_verified(&channel_obj), 214);
+
+        admin::verify_channel(
+            &admin_cap,
+            &mut channel_obj,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(channel::get_is_verified(&channel_obj), 215);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, channel_obj);
 
         test_scenario::end(scenario);
     }
