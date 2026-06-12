@@ -5,6 +5,7 @@ module nami::boost {
     use sui::tx_context::{Self, TxContext};
 
     use nami::errors;
+    use nami::membership;
     use nami::passport;
 
     // =========================================================
@@ -25,7 +26,7 @@ module nami::boost {
         channel_id: address,
 
         /// Current model:
-        /// Adventurer = 1
+        /// Adventurer = 2
         /// Pro = 6
         /// Elite = 8
         power: u8,
@@ -85,6 +86,9 @@ module nami::boost {
     // =========================================================
     // USE BOOST
     // NPC cannot boost because NPC resolves to boost_unavailable.
+    //
+    // Boost now reads effective tier through membership.move so future
+    // expiration and Black Passport restrictions can be added cleanly.
     // =========================================================
     public fun use_boost(
         passport_obj: &passport::Passport,
@@ -93,7 +97,8 @@ module nami::boost {
         ctx: &mut TxContext
     ) {
         let owner = tx_context::sender(ctx);
-        let tier = passport::get_tier(passport_obj);
+
+        let tier = membership::get_effective_tier(passport_obj);
 
         let boost = create_boost(
             owner,

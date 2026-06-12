@@ -8,6 +8,7 @@ module nami::nami_tests {
     use nami::badge;
     use nami::boost;
     use nami::verification;
+    use nami::membership;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -229,10 +230,18 @@ module nami::nami_tests {
 
         assert!(passport::get_tier(&passport_obj) == ADVENTURER, 21);
 
-        passport::upgrade_to_pro(&mut passport_obj);
+       membership::upgrade_to_pro(
+    &mut passport_obj,
+    0,
+    test_scenario::ctx(&mut scenario)
+        );
         assert!(passport::get_tier(&passport_obj) == PRO, 22);
 
-        passport::upgrade_to_elite(&mut passport_obj);
+        membership::upgrade_to_elite(
+    &mut passport_obj,
+    0,
+    test_scenario::ctx(&mut scenario)
+        );
         assert!(passport::get_tier(&passport_obj) == ELITE, 23);
 
         test_scenario::return_to_sender(&scenario, identity_obj);
