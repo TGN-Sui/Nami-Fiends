@@ -1,258 +1,718 @@
-# Nami Trust System v1.0
+# Nami Trust System
 
 ## Overview
 
-The Trust System defines how Nami evaluates reliability, social standing, and community credibility.
+The Nami Trust System defines how the protocol evaluates reliability, safety, authenticity, contribution, and community standing.
 
-Trust is separate from Membership and separate from Verification.
+Trust in Nami is not a single score.
 
-* Verification confirms identity
-* Membership defines access level
-* Trust defines influence and social reliability
+Trust is a layered system made from multiple independent signals.
+
+These signals include:
+
+* Verification
+* Membership
+* Reputation
+* Conduct Signal
+* Moderation History
+* Badge Quality
+* Issuer Trust
+* Channel Trust
+* Guild Trust
+* Squad Trust
+* Recovery Trust
+* Appeal Outcomes
+
+Each signal serves a different purpose.
 
 ---
 
 ## Core Principle
 
-Trust is earned, not purchased.
+Trust must be earned, verified, and protected.
 
-Membership may be purchased.
+Trust should never be fully purchasable.
 
-Verification may be obtained.
-
-Trust must be built through sustained positive participation.
+Membership may unlock access, but membership does not automatically create trust.
 
 ---
 
-## Trust Tiers
+# Trust Layers
 
-### Unverified
+Nami trust is built from several separate layers:
 
-* No influence
-* No Boost allocation
-* No Squad Slots
-* Basic participation only
+```text
+Identity Trust
+Verification Trust
+Reputation Trust
+Conduct Trust
+Moderation Trust
+Badge Trust
+Issuer Trust
+Channel Trust
+Guild Trust
+Squad Trust
+Recovery Trust
+```
 
----
-
-### Verified Member
-
-Entry-level trusted identity layer.
-
-Requirements:
-
-* Identity verification via Nami or approved providers (e.g. X.com badge, Sui identity systems)
-
-Capabilities:
-
-* 1 Weekly Boost
-* Basic Passport progression
-* Access to core platform features
-
-Limitations:
-
-* No Squad Slots
-* No Guild creation rights
-* No influence on discovery cycles
+These layers should remain separate so Nami does not accidentally confuse payment, personality, behavior, contribution, and punishment.
 
 ---
 
-### Adventurer (Membership Tier)
+# Identity Trust
 
-Paid access tier (Verified subscription level).
+## Purpose
 
-Capabilities:
+Identity Trust answers:
 
-* 1 Weekly Boost
-* Expanded platform features
+"Does this user have a persistent Nami identity?"
 
-This tier improves experience but does not grant trust influence.
+Identity Trust comes from:
 
----
+* Identity object ownership
+* Passport connection
+* Account age
+* Linked verification sources
+* Recovery history
+* Consistent ownership
 
-### Pro (Membership Tier)
-
-Full access tier.
-
-Capabilities:
-
-* 6 Weekly Boosts
-* 2 Squad Slots
-* Full feature access
-
-This is the first tier where users begin influencing discovery through Boost distribution and Squad participation.
+Identity Trust is the foundation layer.
 
 ---
 
-### Elite (Membership Tier)
+## Identity Risk
 
-Premium access tier.
+Identity risk may increase when:
 
-Capabilities:
+* Ownership changes unexpectedly
+* Recovery is triggered
+* Linked accounts are removed
+* Multiple identities appear tied to the same external account
+* Suspicious wallet behavior appears
 
-* 8 Weekly Boosts
-* 5 Squad Slots
-* Premium cosmetics and personalization
-
-Elite members significantly influence discovery cycles through Boost allocation and Squad systems.
-
----
-
-### Trusted Member (Earned Tier)
-
-First earned trust tier.
-
-Requirements:
-
-* Sustained positive participation
-* Contribution to community
-* Stable reputation history
-
-Capabilities:
-
-* 6 Weekly Boosts
-* 2 Squad Slots
-* Guild creation eligibility (with requirements)
-* Influence in discovery cycles
-
-Trusted Members are recognized as reliable contributors to the ecosystem.
+Identity risk should not automatically punish a user, but it may trigger review or additional verification.
 
 ---
 
-### Community Champion (Earned Tier)
+# Verification Trust
 
-High-trust ecosystem contributor.
+## Purpose
 
-Requirements:
+Verification Trust answers:
 
-* Long-term positive reputation
-* High-quality badge accumulation
-* Strong community impact
+"Has this user proven enough humanity or authenticity?"
 
-Capabilities:
+Verification Trust helps reduce:
 
-* 8 Weekly Boosts
-* 5 Squad Slots
-* Advanced guild permissions
-* Strong influence in discovery systems
-* Enhanced reputation visibility
-
----
-
-## Squad System
-
-Squads represent trust-based onboarding relationships.
-
-### Definition
-
-A Squad is a temporary, renewable endorsement relationship between a trusted member and a non-trusted participant.
+* Bots
+* Sybil accounts
+* Reward farming
+* Boost manipulation
+* Badge farming
+* Fake guild creation
+* Fake channel participation
 
 ---
 
-### Rules
+## Verification Sources
 
-* Only Trusted Members and Community Champions can create Squads
-* Squad Slots reset weekly
-* Squad memberships automatically renew if slots remain available
-* Squad members do not gain trust tier elevation automatically
+Potential verification sources:
 
----
+* zkLogin
+* Sui wallet ownership
+* X.com verification
+* SuiNS
+* Steam
+* Epic Games
+* Email
+* Future proof-of-humanity systems
+* Future privacy-preserving proof systems
 
-### Squad Member Status
-
-A Squad Member is a non-verified or lower-tier participant who has been endorsed by a Trusted Member or higher.
-
-Benefits:
-
-* Expanded access to channels (if allowed by channel rules)
-* Increased subscriptions to communities
-* Additional badge visibility
-* Expanded emote usage
-* Profile enhancement options
-
-Restrictions:
-
-* No Boost allocation
-* No Squad Slots
-* No Guild creation rights
-* No Prestige progression access
+Verification should minimize unnecessary exposure of private identity data.
 
 ---
 
-### Squad Display
+## Verification Boundaries
 
-Squads are visible on user profiles.
+Verification does not mean:
 
-Each Squad displays:
+* High reputation
+* Good conduct
+* Guild authority
+* Badge issuer authority
+* Immunity from moderation
 
-* Squad Leader
-* Squad Members
-* Membership status
+Verification only proves authenticity or humanity.
+
+---
+
+# Membership Trust
+
+## Purpose
+
+Membership controls access, not earned trust.
+
+Membership tiers:
+
+* NPC
+* Adventurer
+* Pro
+* Elite
+
+Membership may increase system confidence because paid or verified users are less likely to be disposable spam accounts.
+
+However, membership does not equal good behavior.
+
+---
+
+## Membership Boundaries
+
+Membership must not:
+
+* Purchase reputation
+* Override moderation
+* Automatically grant badge authority
+* Automatically grant guild authority
+* Automatically grant jury authority without other requirements
+* Prevent Black Passport restrictions
+
+An Elite user can still be restricted.
+
+A Pro user can still be unsafe.
+
+An NPC user can still become valuable over time.
+
+---
+
+# Reputation Trust
+
+## Purpose
+
+Reputation Trust answers:
+
+"What has this user earned through meaningful activity?"
+
+Current reputation ranks:
+
+* Newbie
+* Gamester
+* Goblin
+* Goonie
+* Fiend
+
+Reputation is based on:
+
+* Badge points
+* XP
+* Level progression
+* Meaningful contribution
+* Future participation signals
+
+---
+
+## Reputation Boundaries
+
+Reputation should not be directly purchasable.
+
+Reputation should not be farmable through low-quality badges.
+
+Reputation should not be granted just for idling, opening a game, buying cosmetics, or sending spam messages.
+
+Reputation should reflect earned contribution.
+
+---
+
+# Conduct Trust
+
+## Purpose
+
+Conduct Trust answers:
+
+"What kind of interaction should others expect from this user right now?"
+
+Conduct Signal values:
+
+* Green
+* Orange
+* Red
+* Black
+
+---
+
+## Green Signal
+
+Friendly, casual, low-conflict.
+
+Generally safe for most spaces.
+
+---
+
+## Orange Signal
+
+Competitive but respectful.
+
+Good for serious or focused communities.
+
+---
+
+## Red Signal
+
+High-intensity, PvP-heavy, trash-talk-tolerant.
+
+Red is not punishment.
+
+Red helps users find compatible spaces.
+
+---
+
+## Black Signal
+
+Moderation penalty state.
+
+Public language:
+
+```text
+Passport downed. Respawning in...
+```
+
+Black Signal temporarily reduces the user to NPC-equivalent benefits until the restriction expires or is resolved.
+
+---
+
+## Conduct Boundaries
+
+Conduct is not reputation.
+
+Conduct is not membership.
+
+Red should not be treated as bad behavior by default.
+
+Black is the only punishment signal.
+
+---
+
+# Moderation Trust
+
+## Purpose
+
+Moderation Trust answers:
+
+"Has this user recently violated community or protocol rules?"
+
+Moderation history may include:
+
+* Warnings
+* Mutes
+* Channel bans
+* Black Passport actions
+* Permanent restrictions
+* Appeal outcomes
+
+---
+
+## Moderation Impact
+
+Moderation actions may affect:
+
+* Chat access
+* Boost eligibility
+* Squad eligibility
+* Guild creation
+* Jury eligibility
+* Badge claiming
+* Discovery influence
+* Conduct Signal
+
+---
+
+## Moderation Boundaries
+
+Moderation should be evidence-based.
+
+Community votes should not directly punish users.
+
+Reports and votes may trigger review, but penalties should require rules, evidence, and authority.
+
+---
+
+# Badge Trust
+
+## Purpose
+
+Badge Trust answers:
+
+"Do this user's badges represent meaningful achievement?"
+
+Badge trust depends on:
+
+* Badge type
+* Badge quality
+* Issuer trust
+* Achievement difficulty
+* Completion proof
+* Farming resistance
+* Revocation history
+
+---
+
+## Badge Quality
+
+Current badge types:
+
+* Basic Badge
+* Event Badge
+* Completion Badge
+
+Completion Badges should represent meaningful verified completion.
+
+Starting a game should not issue a Completion Badge.
+
+Opening a game should not issue a Completion Badge.
+
+Joining a channel should not issue a Completion Badge.
+
+---
+
+## Badge Abuse Risk
+
+Badge Trust decreases when:
+
+* Badges are issued too easily
+* Completion Badges are issued for trivial actions
+* Issuers farm reputation
+* Users collude with issuers
+* Badge activity appears automated
+* Badge revocations increase
+
+Badge systems must protect reputation integrity.
+
+---
+
+# Issuer Trust
+
+## Purpose
+
+Issuer Trust answers:
+
+"Can this channel, guild, developer, or event organizer responsibly issue badges?"
+
+Potential issuer types:
+
+* Nami Official
+* Verified Game Developer
+* Verified Channel
+* Approved Guild
+* Approved Event Organizer
+* Partner Community
+
+---
+
+## Issuer Permissions
+
+Issuer Trust may control:
+
+* Allowed badge types
+* Badge issuance limits
+* Completion Badge authority
+* Review requirements
+* Cooldowns
+* Revocation risk
+* Issuer suspension
+
+High-trust issuers may receive stronger badge permissions.
+
+Low-trust or new issuers should be limited.
+
+---
+
+# Channel Trust
+
+## Purpose
+
+Channel Trust answers:
+
+"Is this channel safe, active, useful, and authentic?"
+
+Channel Trust may depend on:
+
 * Verification status
-
-Squads function as visible social trust signals within the ecosystem.
-
----
-
-## Guild Creation Rules
-
-Guilds are persistent community structures.
-
-Requirements:
-
-* At least 1 Trusted Member or higher
-* At least 2 Verified Members
-* Must meet platform integrity requirements
-
-Guild creation is a trust-gated action, not a default privilege.
+* Developer ownership
+* Moderation health
+* Activity quality
+* Badge quality
+* User retention
+* Conduct mix
+* Report history
+* Appeal outcomes
+* Spam levels
 
 ---
 
-## Discovery Influence Rules
+## Channel Trust and NPC Chat
 
-Influence on channel discovery is determined by:
+Verified channels may decide whether NPC users can chat.
 
-* Membership tier (Adventurer, Pro, Elite)
-* Trust tier (Verified, Trusted, Champion)
-* Boost allocation
-* Squad participation
+Core toggle:
 
-Discovery influence is always capped and never absolute.
+```text
+Allow NPC Chat: Yes / No
+```
 
-No single user or group can fully control discovery outcomes.
-
----
-
-## Anti-Abuse Principles
-
-The following are explicitly disallowed as trust inputs:
-
-* Time spent online
-* Message volume alone
-* Purchased assets (NFTs, tokens)
-* Passive engagement metrics
-
-Trust must be derived from meaningful participation and contribution.
+Disabling NPC chat can improve channel safety during spam waves.
 
 ---
 
-## Core System Separation
+# Guild Trust
 
-Nami maintains strict separation between:
+## Purpose
 
-* Verification → identity confirmation
-* Membership → access and subscription
-* Trust → social influence and reliability
-* Reputation → earned status from contributions
-* Boosting → discovery signal system
-* Squads → onboarding trust network
+Guild Trust answers:
+
+"Is this guild a reliable community?"
+
+Guild Trust may depend on:
+
+* Founder verification
+* Member reputation
+* Guild activity
+* Moderation health
+* Event quality
+* Badge quality
+* Retention
+* Abuse history
+* Governance history
 
 ---
 
-## Final Principle
+## Guild Boundaries
 
-Trust in Nami represents social credibility within the ecosystem.
+Guild leaders should manage their guild spaces.
 
-It determines influence, onboarding ability, and community leadership potential.
+Guild leaders should not override global Nami moderation.
 
-Trust is never bought. It is built.
+Guild status should not automatically grant badge authority without approval.
+
+---
+
+# Squad Trust
+
+## Purpose
+
+Squad Trust answers:
+
+"Who personally vouches for this user?"
+
+Squads are small trust networks.
+
+Squad sponsorship may help onboard unverified or financially limited users.
+
+---
+
+## Squad Sponsorship Boundaries
+
+Sponsored users should not automatically receive:
+
+* Boosts
+* Guild creation rights
+* Puzzle pieces
+* Full reward claims
+* Badge issuer authority
+
+Sponsorship is a trust assist, not full verification.
+
+---
+
+# Jury Trust
+
+## Purpose
+
+Jury Trust answers:
+
+"Can this user participate fairly in appeal review?"
+
+Future jury eligibility may require:
+
+* Pro or Elite membership
+* Active membership
+* Good standing
+* No active Black Signal
+* No recent severe violations
+* Minimum reputation
+* No conflict of interest
+
+---
+
+## Jury Privacy
+
+Juries should review anonymized case events.
+
+Juries should not see:
+
+* Wallet addresses
+* Real names
+* Email addresses
+* Linked social accounts
+* Private unrelated messages
+* Personal identifying information
+
+Jury decisions may begin as advisory before becoming protocol-binding.
+
+---
+
+# Recovery Trust
+
+## Purpose
+
+Recovery Trust answers:
+
+"Can this user safely recover their identity?"
+
+Recovery Trust may use:
+
+* zkLogin proof
+* Linked social accounts
+* Linked game accounts
+* Email recovery
+* Wallet ownership
+* Squad support
+* Guild support
+* Manual review
+
+---
+
+## Recovery Risk
+
+Recovery systems must prevent:
+
+* Account theft
+* Fake recovery claims
+* Social engineering
+* Compromised guardian abuse
+* Malicious squad or guild claims
+
+Recovery should use multiple signals when possible.
+
+---
+
+# Trust and Discovery
+
+Discovery may use trust signals to rank channels, guilds, events, and communities.
+
+Discovery may consider:
+
+* Boosts
+* Reputation
+* Badge quality
+* Conduct health
+* Channel trust
+* Guild trust
+* Developer verification
+* Moderation health
+* Engagement quality
+
+Boosts should influence discovery but not fully control it.
+
+---
+
+# Trust and Access Control
+
+Access checks may eventually consider:
+
+```text
+Membership tier
++ Verification status
++ Conduct Signal
++ Moderation status
++ Membership expiration
++ Reputation rank
++ Badge ownership
++ Channel rules
++ Guild roles
++ Squad sponsorship
+```
+
+Raw membership tier alone will not be enough long-term.
+
+Example:
+
+A user may have Elite membership but Black Signal.
+
+In that case, effective benefits should fall back to NPC-equivalent restrictions until respawn.
+
+---
+
+# Trust Events
+
+Future trust-related events may include:
+
+* IdentityVerified
+* VerificationLevelUpdated
+* ConductSignalUpdated
+* PassportDowned
+* PassportRespawned
+* WarningIssued
+* BadgeIssuerApproved
+* BadgeIssuerSuspended
+* BadgeRevoked
+* AppealResolved
+* JuryDecisionSubmitted
+* ChannelTrustUpdated
+* GuildTrustUpdated
+
+---
+
+# Future Trust Modules
+
+Potential future modules:
+
+* verification.move
+* conduct.move
+* moderation.move
+* badge_issuer.move
+* channel_trust.move
+* guild_trust.move
+* jury.move
+* recovery.move
+
+Trust computation may be partly off-chain.
+
+On-chain should anchor important states, proofs, and events.
+
+---
+
+# Anti-Abuse Principles
+
+The Trust System must resist:
+
+* Sybil attacks
+* Bot farming
+* Badge farming
+* Boost manipulation
+* Fake guilds
+* Fake channels
+* Report brigading
+* Jury manipulation
+* Recovery fraud
+* Pay-to-reputation behavior
+
+---
+
+# Core Principles
+
+Trust must be layered.
+
+Verification proves authenticity.
+
+Reputation proves contribution.
+
+Membership controls access.
+
+Conduct communicates interaction state.
+
+Moderation protects communities.
+
+Badges prove meaningful activity.
+
+Community voice matters, but punishment must not be mob-driven.
+
+Nami trust should feel fair, gamer-native, and difficult to fake.
