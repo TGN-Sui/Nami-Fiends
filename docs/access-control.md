@@ -1,489 +1,468 @@
 # Nami Access Control
 
-## Overview
+## Purpose
 
-Access Control defines what users, channels, guilds, squads, developers, and moderators are allowed to do within the Nami ecosystem.
+Access Control defines who can use Nami features and under what conditions.
 
-Nami access is determined by multiple independent layers:
+Nami access is not based on one value.
 
-* Membership Tier
-* Reputation Rank
-* Passport Signal
-* Verification Status
-* Channel Rules
-* Guild Roles
-* Squad Relationships
-* Moderation Status
-* Badge Issuer Authority
+Access is calculated from multiple protocol signals:
 
-These systems must remain separate.
+```text
+Identity
+Passport
+Verification
+Membership
+Conduct
+Moderation
+Channel Policy
+Badge Authority
+Admin Authority
+Squad Eligibility
+Jury Eligibility
+```
 
-Membership controls access.
-
-Reputation reflects contribution.
-
-Passport Signal communicates conduct and interaction style.
-
-Moderation restricts behavior when necessary.
+This prevents a user from bypassing restrictions just because they have a high membership tier.
 
 ---
 
-## Core Identity Layers
+## Current Status
 
-### Membership Tier
+Current Move status:
 
-Membership controls access to features and benefits.
+```text
+33 tests passing
+0 warnings
+```
 
-Current tiers:
+Current access-related modules:
 
-* NPC
-* Adventurer
-* Pro
-* Elite
-
----
-
-### Reputation Rank
-
-Reputation reflects earned contribution and progression.
-
-Current ranks:
-
-* Newbie
-* Gamester
-* Goblin
-* Goonie
-* Fiend
-
-Reputation cannot be purchased.
+```text
+verification.move
+membership.move
+channel_access.move
+conduct.move
+moderation.move
+admin.move
+badge_issuer.move
+jury.move
+squad.move
+```
 
 ---
 
-### Passport Signal
+# Access Layers
 
-Passport Signal communicates public conduct and interaction expectations.
+## Identity Ownership
 
-Current signals:
+Identity proves ownership of a Nami presence.
 
-* Green
-* Orange
-* Red
-* Black
+Used by:
 
-Black is a moderation penalty state.
+* Verification
+* Future recovery
+* Future linked accounts
+* Future developer identity
 
----
-
-## Membership Tiers
-
-### NPC
-
-NPC is the default free and unverified state.
-
-NPC users may:
-
-* Create an identity
-* Own a Passport
-* Select an archetype
-* View public areas
-* Participate where channels allow NPC chat
-* Earn limited progression if allowed by future rules
-
-NPC users may not:
-
-* Use boosts
-* Create guilds
-* Sponsor squad members
-* Issue badges
-* Access verified-only channels
-* Access Pro or Elite gated features
-* Influence discovery
-* Serve on juries
-* Claim premium rewards
-
-NPC is the baseline sandbox tier.
+Identity does not grant reputation or premium benefits by itself.
 
 ---
 
-### Adventurer
+## Passport State
 
-Adventurer represents verified human/basic access.
+Passport stores the player journey and current tier state.
 
-A user may become Adventurer through:
+Current default:
 
-* Approved verification
-* Basic membership
-* X.com verification carryover
-* Future approved identity provider
+```text
+New Passport = NPC
+```
 
-Adventurer users may:
-
-* Access verified channels
-* Use 1 boost per cycle
-* Display basic verified status
-* Claim eligible basic rewards
-* Participate in broader community systems
-
-Adventurer users may not:
-
-* Sponsor squad members
-* Create guilds by default
-* Serve on appeal juries by default
-* Access Pro or Elite cosmetic capacity
-* Issue official badges
+Passport tier is stored on-chain, but most systems should use effective access checks instead of trusting raw tier alone.
 
 ---
 
-### Pro
+## Verification Access
 
-Pro represents full-access supporter membership.
+Verification controls:
 
-Pro users may:
+```text
+NPC → Adventurer
+```
 
-* Use 6 boosts per cycle
-* Access Pro features
-* Gain limited squad sponsorship slots
-* Access expanded customization
-* Become eligible for anonymous jury pools
-* Participate in higher-trust discovery signals
+Current verification requires:
 
-Pro users may not:
+* Sender owns the Identity
+* Passport is linked to the Identity
+* Verification source is supported
 
-* Abuse discovery influence
-* Issue badges
-* Override moderation restrictions
+Verification does not grant reputation.
 
 ---
 
-### Elite
+## Membership Access
 
-Elite represents premium supporter membership.
+Current membership tiers:
 
-Elite users may:
+```text
+0 = NPC
+1 = Adventurer
+2 = Pro
+3 = Elite
+```
 
-* Use 8 boosts per cycle
-* Access premium customization
-* Gain expanded squad sponsorship slots
-* Become eligible for anonymous jury pools
-* Participate in premium community systems
-* Display advanced cosmetic identity
+Membership controls feature access, not earned reputation.
 
-Elite users may not:
+Current benefit examples:
 
-* Bypass conduct penalties
-* Override moderation restrictions
-* Purchase reputation
-* Gain badge issuer authority
+```text
+NPC         = limited access
+Adventurer  = 1 boost
+Pro         = 6 boosts, squad access, jury eligibility
+Elite       = 8 boosts, larger squad access, jury eligibility
+```
 
-Elite provides stronger access and cosmetics, not immunity.
+Future membership work should add:
 
----
-
-## Membership Expiration
-
-Future versions will support tier expiration and renewal.
-
-Planned rules:
-
-* Pro and Elite memberships may expire
-* Expired memberships lose active benefits
-* Expired users fall back to Adventurer if still verified
-* Expired users fall back to NPC if no valid verification remains
-* Expiration should disable boosts, squad slots, premium cosmetics, and jury eligibility
-
-Membership expiration must not delete reputation, badges, or Passport history.
+* Expiration
+* Renewal
+* Grace periods
+* Subscription records
+* Downgrade handling
 
 ---
 
-## Passport Signal Access Effects
+# Effective Tier
 
-### Green Signal
+Raw Passport tier should not be treated as final access.
 
-Green users are in normal standing.
+Current effective tier may consider:
 
-No restrictions.
+```text
+Passport tier
++ Conduct status
+```
 
----
+Black Passport forces effective tier to:
 
-### Orange Signal
+```text
+NPC-equivalent
+```
 
-Orange users are in normal standing.
+Even if the raw Passport tier is Pro or Elite.
 
-No restrictions.
+This currently affects:
 
-Orange communicates competitive but respectful interaction style.
+* Boost access
+* Channel chat
+* Squad creation
+* Jury eligibility
 
----
+Future effective tier may also include:
 
-### Red Signal
-
-Red users are in normal standing.
-
-No restrictions by default.
-
-Red communicates high-intensity gameplay preference.
-
-Red must not be treated as a punishment state.
-
----
-
-### Black Signal
-
-Black Signal represents a moderation penalty.
-
-During Black Signal status, the user temporarily falls back to NPC-equivalent benefits.
-
-Black Signal restrictions may include:
-
-* No boosts
-* No squad sponsorship
-* No guild creation
-* No badge claiming
-* No prestige progress
-* No jury eligibility
-* Restricted chat access
-* No discovery influence
-* No verified gated channel access
-
-Public UI language:
-
-"Passport downed. Respawning in..."
-
-Black Signal must have an expiration unless escalated to permanent restriction.
+* Membership expiration
+* Renewal status
+* Verification status
+* Recovery status
+* Emergency restrictions
 
 ---
 
-## Chat Access Rules
+# Conduct Access
 
-Channels may define who can speak.
+Conduct Signals:
 
-Possible channel modes:
+```text
+Green
+Orange
+Red
+Black
+```
 
-* Public read
-* Public chat
-* NPC chat allowed
+Green, Orange, and Red are public interaction signals.
+
+Black is a restriction state.
+
+Black Passport means:
+
+```text
+Passport downed. Respawning in...
+```
+
+While Black is active:
+
+* Boosts are blocked
+* Channel chat is blocked
+* Squad benefits are blocked
+* Jury eligibility is blocked
+* Premium benefits fall back to NPC-equivalent restrictions
+
+Black does not erase earned Passport history by default.
+
+---
+
+# Channel Access
+
+Channel access is controlled by `ChannelAccessPolicy`.
+
+Current channel rules:
+
+```text
+Allow NPC Chat
+Minimum Tier
+Minimum Reputation
+```
+
+Current channel chat can be blocked by:
+
 * NPC chat disabled
-* Adventurer+ chat
-* Pro+ chat
-* Elite-only chat
-* Reputation-gated chat
-* Badge-gated chat
-* Guild-gated chat
-* Squad-gated chat
+* Minimum tier not met
+* Minimum reputation not met
+* Active Black Passport
+* Active mute
+* Active channel ban
 
-Verified channels should have a simple toggle:
+Core channel toggle:
 
+```text
 Allow NPC Chat: Yes / No
+```
 
-If NPC chat is disabled, NPC users may still read if the channel allows public read.
-
-This helps reduce bot spam while preserving discoverability.
-
----
-
-## Channel Owner Permissions
-
-Verified channel owners may:
-
-* Configure chat access rules
-* Toggle NPC chat
-* Create channel-specific rules
-* Host events
-* Request badge issuer authority
-* Moderate their own channel
-* Ban users from their channel
-
-Channel owners may not:
-
-* Globally ban users
-* Assign Black Passport directly
-* Issue completion badges without badge authority
-* Modify Passport reputation directly
-* Override Nami global moderation
+This lets verified channels reduce spam without removing public discovery.
 
 ---
 
-## Badge Issuer Permissions
+# Moderation Access
 
-Badge issuance should require authorization.
+Moderation actions can restrict access.
 
-Possible issuer classes:
+Current actions:
 
-* Nami Official
-* Verified Game Developer
-* Verified Channel
-* Approved Guild
-* Approved Event Organizer
-* Partner Community
+```text
+Warning
+Mute
+Channel Ban
+Black Passport
+```
 
-Badge issuer permissions may define:
+Current effects:
 
-* Allowed badge types
-* Issuance limits
-* Review requirements
-* Revocation authority
-* Cooldowns
-* Issuer reputation
+```text
+Warning          = record only
+Mute             = blocks chat for matching channel
+Channel Ban      = blocks chat for matching channel
+Black Passport   = global benefit restriction through Conduct
+```
 
-Completion Badges should require higher issuer authority than Basic Badges.
-
-Starting a game, launching a game, or joining a channel must never qualify as a Completion Badge.
+Moderation records are used by channel access checks.
 
 ---
 
-## Boost Permissions
+# Admin Authority
 
-Boost access is based on active membership tier.
+`AdminCap` controls sensitive MVP actions.
 
-Current boost model:
+Current AdminCap permissions:
 
-* NPC: 0 boosts
-* Adventurer: 2 boost
-* Pro: 6 boosts
-* Elite: 8 boosts
+```text
+Approve badge issuers
+Upgrade to Pro
+Upgrade to Elite
+Issue warning
+Issue mute
+Issue channel ban
+Issue Black Passport
+Resolve appeals
+Open jury cases
+Close jury cases
+```
 
-Black Signal users have boost access disabled regardless of tier.
+AdminCap is the current MVP authority model.
 
-Boosts influence discovery but do not grant moderation, governance, or ownership rights.
+It should later evolve into more granular authority:
 
----
-
-## Squad Permissions
-
-Future squad slot model:
-
-* NPC: 0 slots
-* Adventurer: 0 slots
-* Pro: limited slots
-* Elite: expanded slots
-
-Squad sponsorship helps onboard trusted users but should not bypass core restrictions.
-
-Sponsored users may receive limited access depending on channel rules.
-
-Sponsored users should not automatically receive:
-
-* Boosts
-* Guild creation rights
-* Puzzle pieces
-* Full reward claims
-* Badge issuer permissions
-
----
-
-## Guild Permissions
-
-Guild creation should require trust and verification.
-
-Possible future requirements:
-
-* Adventurer or higher
-* Reputation threshold
-* At least 3 verified founding members
-* No active Black Signal
-* No recent severe moderation history
-
-Guild leaders may manage guild membership and guild channels.
-
-Guild leaders may not bypass global Nami moderation.
-
----
-
-## Jury Eligibility
-
-Anonymous jury review is a future feature for appeal cases.
-
-Potential eligibility requirements:
-
-* Pro or Elite membership
-* Active membership
-* Good standing
-* No active Black Signal
-* No recent major violations
-* Minimum reputation threshold
-* No conflict of interest with the case
-
-Jurors should review anonymized case events, not private identity information.
-
-Jury decisions may begin as advisory before becoming protocol-binding.
-
----
-
-## Moderation Permissions
-
-Moderation authority may include:
-
+* Platform admins
 * Channel moderators
 * Guild moderators
-* Nami moderators
-* Protocol-level moderators
-* Future jury review systems
-
-Moderation actions may include:
-
-* Warning
-* Mute
-* Channel ban
-* Black Passport
-* Permanent restriction
-* Appeal review
-
-Channel moderators should only control their own spaces.
-
-Global penalties require higher authority.
+* Developer owners
+* Emergency controls
+* Multi-admin controls
 
 ---
 
-## Customization Access
+# Badge Issuer Access
 
-Customization may be unlocked by:
+Badge minting is separated from badge authority.
 
-* Membership
-* Reputation
-* Badges
-* Events
-* Guild achievements
-* Squad participation
-* Prestige
-* Puzzle completion
-* Developer channel rewards
+`badge.move` handles badge creation.
 
-Membership may increase display capacity.
+`badge_issuer.move` controls who can issue badge types.
 
-Reputation and badges should unlock earned cosmetics.
+Current issuer permissions:
 
-Premium cosmetics should not replace earned achievement.
+```text
+Can issue Basic Badge
+Can issue Event Badge
+Can issue Completion Badge
+```
 
----
+Completion Badge access must be explicitly granted.
 
-## Recovery Access
-
-Recovery actions should require strong proof.
-
-Possible recovery sources:
-
-* zkLogin recovery
-* Linked account verification
-* Email recovery code
-* Squad or guild support
-* Manual review
-
-Recovery must never expose private user information to public juries or communities.
+Starting a game, opening a game, or joining a channel should not issue a Completion Badge.
 
 ---
 
-## Access Control Principles
+# Boost Access
 
-Access can be purchased.
+Current boost access:
 
-Trust must be earned.
+```text
+NPC         = blocked
+Adventurer  = 1
+Pro         = 6
+Elite       = 8
+```
 
-Reputation cannot be bought.
+Boosts use effective tier.
 
-Conduct penalties override benefits.
+A Black Passport user cannot boost, even if their raw tier is Pro or Elite.
 
-Community votes may trigger review but must not directly punish users.
+Boosts are discovery signals only.
 
-Channel owners can protect their spaces but cannot override global protocol rules.
+They are not governance, ownership, moderation power, or reputation.
 
-Membership should enhance Nami without creating pay-to-win reputation.
+---
+
+# Jury Access
+
+Jury eligibility currently requires:
+
+```text
+Pro or Elite effective tier
+No active Black Passport
+```
+
+Jury participation is advisory.
+
+Current jury votes:
+
+```text
+Approved
+Denied
+Modified
+```
+
+Future jury access may also require:
+
+* Minimum reputation
+* No recent severe moderation history
+* No conflict of interest
+* Active membership
+* Juror cooldowns
+
+---
+
+# Squad Access
+
+Squads are limited to Pro and Elite users.
+
+Current slot model:
+
+```text
+Pro   = 3 squad slots
+Elite = 8 squad slots
+```
+
+NPC and Adventurer users cannot create squads.
+
+Black Passport blocks squad benefits through effective tier.
+
+Squad owners can sponsor members until their slot limit is reached.
+
+---
+
+# Appeals Access
+
+Users may open an appeal for their own moderation record.
+
+Appeal opening requires:
+
+* The moderation record targets the sender
+* The record belongs to the sender’s Passport
+
+Appeal resolution is currently AdminCap-controlled.
+
+Private evidence should stay off-chain.
+
+---
+
+# Current Access Matrix
+
+```text
+Feature                         NPC   Adventurer   Pro   Elite   Black
+Create Identity                 Yes   Yes          Yes   Yes     Yes
+Create Passport                 Yes   Yes          Yes   Yes     Yes
+Verify to Adventurer            Yes   N/A          N/A   N/A     Restricted by policy later
+Use Boost                       No    Yes          Yes   Yes     No
+Create Squad                    No    No           Yes   Yes     No
+Sponsor Squad Member            No    No           Yes   Yes     No
+Serve as Juror                  No    No           Yes   Yes     No
+Chat if NPC allowed             Yes   Yes          Yes   Yes     No
+Chat if NPC disabled            No    Yes          Yes   Yes     No
+Chat while muted                No    No           No    No      No
+Chat while channel banned       No    No           No    No      No
+Issue Badges                    No    Cap only     Cap only Cap only No
+Admin Actions                   Cap only
+```
+
+---
+
+# Access Design Rules
+
+Use effective tier for user-facing benefits.
+
+Do not let raw Passport tier bypass Conduct.
+
+Do not let payment grant reputation.
+
+Do not let boosts become governance.
+
+Do not let users self-assign restricted roles.
+
+Do not store private evidence in access objects.
+
+Keep authority paths explicit.
+
+---
+
+# Future Access Work
+
+Planned future access systems:
+
+```text
+Membership expiration
+Renewal checks
+Guild-gated access
+Badge-gated access
+NFT-gated access
+Developer-owned channel roles
+Channel moderator roles
+Guild moderator roles
+Recovery restrictions
+Emergency pause controls
+```
+
+---
+
+# Related Docs
+
+```text
+docs/onchain.md
+docs/systems.md
+docs/membership.md
+docs/conduct-system.md
+docs/moderation.md
+docs/squads.md
+docs/jury.md
+docs/admin.md
+```
