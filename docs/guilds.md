@@ -1,228 +1,301 @@
-# Nami Guild System v1.0
+# Nami Guilds
 
-## Overview
+## Purpose
 
-Guilds are persistent, player-created communities within the Nami ecosystem.
+Guilds are larger persistent communities in Nami.
 
-They represent structured social organizations built around shared goals, games, identities, or creative direction.
+Guilds are different from Squads.
 
-Guilds exist as long-term community anchors within the broader Nami network.
+Squads are small trust and sponsorship groups.
 
----
+Guilds are larger community structures for players, channels, games, creators, and future developer ecosystems.
 
-## Core Principle
+Guilds answer:
 
-Guilds are structured communities, not casual groups.
-
-They are designed for:
-
-* Coordination
-* Identity building
-* Long-term engagement
-* Community leadership
-* Ecosystem contribution
+```text
+What larger community does this player belong to or lead?
+```
 
 ---
 
-## Guild Creation Requirements
+## Current Status
 
-Guild creation is trust-gated.
+Current module:
 
-To create a Guild, the following minimum requirements must be met:
+```move
+module nami::guild
+```
 
-* At least 1 Trusted Member or higher
-* At least 2 Verified Members
-* Guild eligibility validation passed
+Current protocol status:
 
-Guild creation is not a default right. It is an earned capability within the ecosystem.
+```text
+36 tests passing
+0 warnings
+```
 
----
+Guilds are currently integrated with:
 
-## Guild Structure
-
-Each Guild contains:
-
-* Guild Identity
-* Guild Leader(s)
-* Members
-* Roles
-* Channels
-* Events
-* Reputation Score
-* Discovery Presence
+```text
+Passport
+Membership
+Conduct
+Effective tier checks
+```
 
 ---
 
-## Guild Identity
+# Current Guild Rules
 
-Each Guild has a persistent identity within Nami.
+Current Guild creation requirements:
 
-Guild Identity includes:
+```text
+Adventurer, Pro, or Elite effective tier
+No active Black Passport
+```
 
-* Guild Name
-* Guild Tag
-* Guild Description
-* Guild Branding (unlockable over time)
-* Guild Reputation Tier
+NPC users cannot create Guilds.
 
-Guilds are first-class citizens in the Nami ecosystem.
-
----
-
-## Guild Roles
-
-Guilds may define internal roles.
-
-Examples:
-
-* Leader
-* Officer
-* Contributor
-* Member
-* Recruit
-
-Roles are defined by Guild leadership and may evolve over time.
+Black Passport users cannot create or manage Guild membership while restricted, even if their raw tier is Adventurer, Pro, or Elite.
 
 ---
 
-## Guild Progression
+# Current Objects
 
-Guilds develop over time through activity, trust, and participation.
+## Guild
 
-Guild progression is influenced by:
+The `Guild` object represents the community.
 
-* Member activity
-* Engagement quality
-* Guild-based events
-* Reputation of members
-* External recognition (e.g. developer channels, verified hubs)
+Current fields include:
 
----
+* Owner
+* Owner Passport ID
+* Name
+* Description
+* Public/private setting
+* Max members
+* Member count
+* Created timestamp
+* Updated timestamp
 
-## Guild Reputation System
-
-Guilds maintain their own reputation score, separate from individual member reputation.
-
-Guild reputation is influenced by:
-
-* Collective member contributions
-* Event participation
-* Community engagement quality
-* Trust composition (Verified, Trusted, Champion members)
-* Longevity and consistency
-
-Guild reputation determines discovery visibility.
+The Guild owner counts as the first member.
 
 ---
 
-## Guild Discovery
+## GuildMember
 
-Guilds appear in discovery systems based on:
+The `GuildMember` object represents membership proof.
 
-* Guild Reputation Score
-* Member Activity
-* Trust Distribution
-* Event participation
-* Boost Signals (limited influence)
+Current fields include:
 
-Guilds are discoverable entities within the Nami ecosystem.
+* Guild ID
+* Member address
+* Role
+* Joined timestamp
 
----
+Current role model:
 
-## Guild Channels
+```text
+Member
+```
 
-Guilds may host internal channels for:
-
-* Communication
-* Strategy
-* Events
-* Coordination
-* Private discussions
-
-Guild channels are separate from public channels and may have varying access levels.
+Future versions may add owner, admin, moderator, officer, developer, and event roles.
 
 ---
 
-## Guild Events
+# Current Member Limits
 
-Guilds may host events such as:
+Guild size currently scales by effective membership tier:
 
-* Competitive tournaments
-* Community challenges
-* Game-specific activities
-* Collaborative projects
+```text
+Adventurer = 25 members
+Pro        = 100 members
+Elite      = 250 members
+```
 
-Events contribute to Guild reputation and visibility.
-
----
-
-## Guild Rewards
-
-Guilds unlock rewards based on progression milestones.
-
-Examples:
-
-* Guild Badges
-* Guild Frames
-* Guild Themes
-* Guild Emotes
-* Guild Identity Effects
-
-These rewards enhance Guild identity but do not provide gameplay advantages.
+These are MVP limits and may be adjusted later.
 
 ---
 
-## Guild vs Squad Distinction
+# Guild Creation
 
-Guilds and Squads serve different purposes:
+Current flow:
 
-### Squads
+```text
+Passport + ConductStatus
+→ effective tier check
+→ Guild object created
+```
 
-* Trust-based onboarding system
-* Temporary endorsement relationship
-* Weekly renewable
-* Individual-level trust signal
+Guild creation emits:
 
-### Guilds
+```text
+GuildCreated
+```
 
-* Permanent structured communities
-* Multi-member organizations
-* Long-term identity and progression
-* Ecosystem-facing entities
+Event details belong in:
 
-Squads help individuals. Guilds represent communities.
-
----
-
-## Guild Governance
-
-Guild governance is defined internally by each Guild.
-
-However:
-
-* Guild leadership must remain compliant with Nami trust rules
-* Guild members must adhere to platform policies
-* Guild misconduct can affect Guild reputation score
-
-Nami does not centrally govern Guild internal structure beyond baseline rules.
+```text
+docs/events.md
+```
 
 ---
 
-## Anti-Abuse Principles
+# Adding Members
 
-The following are explicitly discouraged in Guild systems:
+Guild owners can add members.
 
-* Artificial member inflation
-* Bot-driven engagement
-* Purchased reputation manipulation
-* Spam Guild creation
+Current flow:
 
-Guild reputation must reflect real participation and community value.
+```text
+Guild owner
+→ add member
+→ GuildMember object transferred to member
+```
+
+Adding a member emits:
+
+```text
+GuildMemberAdded
+```
+
+This is owner-managed for MVP.
+
+Future versions may support:
+
+* Public join requests
+* Invitations
+* Approval queues
+* Role-based invites
+* Channel-specific member permissions
 
 ---
 
-## Core Principle
+# Updating Guilds
 
-Guilds are long-term community civilizations within Nami.
+Guild owners can update:
 
-They represent structured identity, shared purpose, and collective reputation in the gaming ecosystem.
+* Name
+* Description
+* Public/private setting
+
+Updating a Guild emits:
+
+```text
+GuildUpdated
+```
+
+---
+
+# Conduct Integration
+
+Guild actions use conduct-aware effective tier checks.
+
+If a user has active Black Passport status:
+
+```text
+Effective tier = NPC-equivalent
+```
+
+This blocks Guild creation and owner management actions.
+
+Black Passport does not delete Guild history by default.
+
+---
+
+# Membership Integration
+
+Guild access currently starts at Adventurer.
+
+Current relationship:
+
+```text
+Adventurer = small Guild
+Pro        = larger Guild
+Elite      = largest Guild
+```
+
+Future membership expiration should pause or reduce Guild benefits without deleting historical Guild records.
+
+---
+
+# Guilds vs Squads
+
+## Squads
+
+Small trust groups.
+
+Current Pro/Elite benefit.
+
+Used for sponsorship and close-circle trust.
+
+## Guilds
+
+Larger community structures.
+
+Current Adventurer+ benefit.
+
+Used for community identity, membership, and future events/channels.
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* Adventurer can create a Guild
+* NPC cannot create a Guild
+* Guild owner can add a member
+* Guild member receives a GuildMember proof
+* Guild member count increases
+* Adventurer Guild limit is applied
+
+---
+
+# Future Work
+
+Planned Guild improvements:
+
+```text
+Guild roles
+Guild moderators
+Guild invites
+Guild join requests
+Guild channels
+Guild access policies
+Guild badge issuer hooks
+Guild events
+Guild discovery signals
+Guild reputation
+Guild ownership transfer
+Guild member removal
+Guild display on Passport profiles
+```
+
+---
+
+# Design Rules
+
+Guilds are larger than Squads.
+
+Guild creation should require trusted access.
+
+Black Passport should restrict active Guild benefits.
+
+Guild history should not be erased by temporary restriction.
+
+Guild authority should eventually become role-based.
+
+Private Guild moderation evidence should stay off-chain.
+
+---
+
+# Related Docs
+
+```text
+docs/squads.md
+docs/access-control.md
+docs/membership.md
+docs/conduct-system.md
+docs/events.md
+docs/trust-system.md
+```
