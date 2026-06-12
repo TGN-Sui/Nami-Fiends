@@ -22,6 +22,7 @@ module nami::nami_tests {
     use nami::cosmetics;
     use nami::recovery;
     use nami::channel;
+    use nami::profile;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -3563,5 +3564,235 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-    
+    /// ---------------------------------------------------------
+    /// NPC can create a public Profile.
+    /// Profiles are basic identity display objects.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_npc_can_create_public_profile() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let passport_id = passport::get_id(&passport_obj);
+
+        profile::create_profile(
+            &passport_obj,
+            &status,
+            b"NPC Gamer",
+            b"bio://npc-gamer",
+            b"avatar://npc-gamer",
+            b"metadata://npc-profile",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let profile_obj =
+            test_scenario::take_from_sender<profile::Profile>(&scenario);
+
+        assert!(profile::get_owner(&profile_obj) == USER, 230);
+        assert!(profile::get_passport_id(&profile_obj) == passport_id, 231);
+        assert!(profile::get_is_public(&profile_obj), 232);
+
+        test_scenario::return_to_sender(&scenario, profile_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Profile owner can update Profile metadata.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_profile_owner_can_update_profile() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        profile::create_profile(
+            &passport_obj,
+            &status,
+            b"Original Gamer",
+            b"bio://original",
+            b"avatar://original",
+            b"metadata://original",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut profile_obj =
+            test_scenario::take_from_sender<profile::Profile>(&scenario);
+
+        profile::update_profile(
+            &mut profile_obj,
+            &passport_obj,
+            &status,
+            b"Updated Gamer",
+            b"bio://updated",
+            b"avatar://updated",
+            b"metadata://updated",
+            false,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(!profile::get_is_public(&profile_obj), 233);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, profile_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Black Passport cannot update Profile.
+    /// Expected abort:
+    /// conduct_restricted = 101
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 101)]
+    fun test_black_passport_cannot_update_profile() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        profile::create_profile(
+            &passport_obj,
+            &status,
+            b"Restricted Gamer",
+            b"bio://restricted",
+            b"avatar://restricted",
+            b"metadata://restricted",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut profile_obj =
+            test_scenario::take_from_sender<profile::Profile>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        profile::update_profile(
+            &mut profile_obj,
+            &passport_obj,
+            &status,
+            b"Should Fail",
+            b"bio://fail",
+            b"avatar://fail",
+            b"metadata://fail",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, profile_obj);
+
+        test_scenario::end(scenario);
+    }
 }
