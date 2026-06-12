@@ -12,6 +12,7 @@ module nami::nami_tests {
     use nami::badge_issuer;
     use nami::channel_access;
     use nami::conduct;
+    use nami::moderation;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -1004,6 +1005,114 @@ module nami::nami_tests {
         test_scenario::return_to_sender(&scenario, passport_obj);
         test_scenario::return_to_sender(&scenario, policy);
         test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+        /// ---------------------------------------------------------
+    /// Moderation can issue a warning record.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_moderation_can_issue_warning_record() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        moderation::issue_warning(
+            USER,
+            &passport_obj,
+            42,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        assert!(moderation::get_target_owner(&record) == USER, 100);
+        assert!(moderation::get_reason_code(&record) == 42, 101);
+        assert!(moderation::is_warning(&record), 102);
+
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Moderation can issue Black Passport through Conduct.
+    /// This confirms moderation.move is now the authority wrapper.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_moderation_can_issue_black_passport() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        moderation::issue_black_passport(
+            USER,
+            &passport_obj,
+            &mut status,
+            7,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(conduct::is_black(&status), 103);
+        assert!(!conduct::has_active_benefits(
+            &status,
+            test_scenario::ctx(&mut scenario)
+        ), 104);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        assert!(moderation::is_black_passport(&record), 105);
+        assert!(moderation::get_reason_code(&record) == 7, 106);
+        assert!(moderation::get_expires_at_ms(&record) == 999999999999, 107);
+
+        test_scenario::return_to_sender(&scenario, record);
 
         test_scenario::end(scenario);
     }

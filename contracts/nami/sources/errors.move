@@ -70,6 +70,12 @@ module nami::errors {
     const ERespawnNotReady: u64 = 103;
 
     // =========================================================
+    // MODERATION ERRORS
+    // =========================================================
+    const EInvalidModerationAction: u64 = 110;
+    const EInvalidModerationDuration: u64 = 111;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -122,4 +128,8 @@ module nami::errors {
     public fun conduct_not_restricted(): u64 { EConductNotRestricted }
 
     public fun respawn_not_ready(): u64 { ERespawnNotReady }
+
+    public fun invalid_moderation_action(): u64 { EInvalidModerationAction }
+
+    public fun invalid_moderation_duration(): u64 { EInvalidModerationDuration }
 }
