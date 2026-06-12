@@ -1,209 +1,545 @@
-# Nami Passport System v1.0
+# Nami Passport
 
 ## Overview
 
-The Passport is the progression layer of Nami.
+The Nami Passport is the player journey layer of the Nami ecosystem.
 
-It transforms participation, contribution, trust, and discovery into persistent identity growth.
+It represents a gamer’s progression, reputation, membership state, badge history, archetype, and future prestige journey.
 
-The Passport follows a player across games, communities, and experiences integrated with Nami.
+Identity answers:
+
+Who owns this Nami presence?
+
+Passport answers:
+
+What has this player done?
+
+The Passport is designed to become a persistent gaming record that can travel across games, channels, guilds, squads, developer hubs, and future Nami-connected experiences.
 
 ---
 
 ## Core Purpose
 
-The Passport exists to:
+The Passport gives every player a persistent profile of earned activity.
 
-* Reward meaningful participation
-* Encourage positive contribution
-* Build long-term identity value
-* Create progression beyond individual games
-* Establish trust and reputation
+It helps track:
 
----
-
-## Passport Components
-
-Every Passport contains:
-
+* XP
 * Level
-* Experience Points (XP)
-* Reputation Rank
-* Badges
-* Puzzle Pieces
-* Prestige Rewards
-* Cosmetic Unlocks
-* Achievement History
+* Level progress
+* Badge points
+* Reputation
+* Membership tier
+* Archetype
+* Boost-related state
+* Future Prestige progress
+
+Passport data should represent meaningful activity, not passive presence.
 
 ---
 
-## Progression Pillars
+## Passport Creation
 
-XP is generated through four categories.
+Every Nami user can receive a Passport.
 
-### Participation
+A new Passport starts with:
 
-Examples:
+```text
+Level: 1
+XP: 0
+Level Progress: 0
+Badge Points: 0
+Reputation: Newbie
+Membership Tier: NPC
+Prestige Points: 0
+```
 
-* Community engagement
-* Events
-* Discussions
-* Channel activity
+During onboarding, users choose a gamer archetype.
 
----
+The archetype represents identity flavor and playstyle preference.
 
-### Contribution
-
-Examples:
-
-* Helpful responses
-* Community guides
-* Bug reports
-* Beta participation
-* Creator contributions
+It does not grant special access or reputation.
 
 ---
 
-### Trust
+## NPC Default State
 
-Examples:
+Every new Passport starts as NPC.
 
-* Verification
-* Positive standing
-* Account age
-* Community endorsements
+NPC means:
 
----
+* Free user
+* Unverified
+* Limited access
+* No boost access
+* No premium benefits
 
-### Discovery
+NPC allows users to enter Nami easily while protecting the protocol from spam, bots, and abuse.
 
-Examples:
+NPC is not a punishment state.
 
-* Channel boosting
-* Exploring communities
-* Following games
-* Supporting ecosystem growth
+NPC is the default starting point.
 
 ---
 
-## Anti-Abuse Principles
+## Membership Tier
 
-The following actions never directly generate XP:
+Passport stores the current membership/access tier.
 
-* Message quantity alone
-* Money spent
-* NFT ownership alone
-* Token ownership alone
-* Reaction farming
+Current tiers:
 
-XP should reward value, not volume.
+```text
+0 = NPC
+1 = Adventurer
+2 = Pro
+3 = Elite
+```
 
----
+Membership controls access.
 
-## Level Structure
+Membership does not determine reputation.
 
-### Levels 1-20
-
-Fast progression.
-
-Purpose:
-
-* Early excitement
-* Quick rewards
-* Identity attachment
+Membership does not override moderation.
 
 ---
 
-### Levels 21-50
+## Membership Path
 
-Moderate progression.
+The intended membership path is:
 
-Purpose:
+```text
+NPC → Adventurer → Pro → Elite
+```
 
-* Community investment
-* Long-term engagement
+### NPC
 
----
+Default free and unverified state.
 
-### Levels 51-100
+No boosts.
 
-Prestige progression.
-
-Purpose:
-
-* Recognition
-* Status
-* Achievement
+Limited access depending on channel rules.
 
 ---
 
-## Prestige Progression
+### Adventurer
 
-After Level 100, players enter Prestige progression.
+Verified human or basic membership state.
 
-Prestige progression unlocks:
+Current benefit:
 
-* Unique cosmetics
-* Exclusive Passport effects
-* Rare badges
-* Advanced Prestige Rewards
-
-Prestige should remain difficult and meaningful.
+```text
+2 boost per cycle
+```
 
 ---
 
-## Reputation Ranks
+### Pro
 
-Reputation is separate from Level.
+Supporter/full-access tier.
 
-Ranks:
+Current benefit:
 
-* Newbie
-* Gamester
-* Goblin
-* Goonie
-* Fiend
+```text
+6 boosts per cycle
+```
 
-These ranks reflect quality and trust rather than activity alone.
+Future benefits may include limited squad sponsorship slots, expanded customization, and jury eligibility.
 
 ---
 
-## Puzzle Pieces
+### Elite
 
-Puzzle Pieces are collectible achievement fragments.
+Premium supporter tier.
 
-Pieces are earned from different forms of participation.
+Current benefit:
 
-Examples:
+```text
+8 boosts per cycle
+```
 
-* Community Piece
-* Discovery Piece
-* Contribution Piece
-* Trust Piece
-* Event Piece
+Future benefits may include expanded squad sponsorship slots, premium customization, and stronger community participation features.
 
-Completing collections unlocks Prestige Rewards.
+Elite does not grant immunity from moderation.
 
 ---
 
-## Prestige Rewards
+## Membership Expiration
 
-Prestige Rewards represent significant achievements.
+Future versions will support membership expiration and renewal.
 
-Examples:
+Pro and Elite benefits should not remain active forever without renewal.
 
-* Prestige Badges
-* Cosmetic Frames
-* Passport Themes
-* Animated Effects
-* Prestige NFTs
+When membership expires:
 
-Prestige Rewards act as proof of achievement.
+* Boost access should be recalculated
+* Premium benefits should pause
+* Squad slots may become inactive
+* Jury eligibility should be removed
+* Customization capacity may be restricted
+
+If the user remains verified, they may fall back to Adventurer.
+
+If not verified, they may fall back to NPC.
+
+Expiration should not erase Passport history.
 
 ---
 
-## Core Principle
+## Reputation
 
-The Passport transforms participation into identity.
+Passport stores reputation rank.
 
-Players should feel that their Nami Passport represents their gaming journey.
+Current ranks:
+
+```text
+0 = Newbie
+1 = Gamester
+2 = Goblin
+3 = Goonie
+4 = Fiend
+```
+
+Reputation is earned.
+
+Reputation is not purchased.
+
+Reputation reflects meaningful activity, badge quality, and progression.
+
+---
+
+## Reputation vs Membership
+
+Reputation and membership are separate.
+
+A user may be:
+
+* NPC with meaningful history
+* Adventurer with low reputation
+* Pro with low reputation
+* Elite with high reputation
+* Elite with Black Signal
+
+Membership controls access.
+
+Reputation reflects contribution.
+
+---
+
+## Badge Points
+
+Badges are the current primary source of Passport progression.
+
+Current badge point model:
+
+```text
+Basic Badge = 1 point
+Event Badge = 2 points
+Completion Badge = 3 points
+```
+
+Badge points feed:
+
+* XP
+* Level progression
+* Reputation progression
+
+Badge points should come from meaningful activity.
+
+Starting a game should not create a Completion Badge.
+
+Opening a game should not create a Completion Badge.
+
+Joining a channel should not create a Completion Badge.
+
+---
+
+## XP and Level Progression
+
+Nami uses curved level progression.
+
+The goal is:
+
+* Fast early levels
+* Slower higher levels
+* Meaningful long-term progression
+* Level 100 as a dedication milestone
+* Seasonal reset compatibility
+
+XP currently comes from badge points.
+
+Because badges provide 1, 2, or 3 points, the level curve prevents a single badge from creating excessive level jumps.
+
+---
+
+## Level 100
+
+Level 100 is designed to represent meaningful dedication.
+
+Design direction:
+
+```text
+A highly dedicated player may reach Level 100 in roughly 3 months.
+A steady player may take closer to a full season.
+```
+
+Future seasonal cycles may reset around 6 months.
+
+Level 100 should feel like an accomplishment.
+
+---
+
+## Prestige
+
+Prestige is planned for players who reach Level 100 early.
+
+After Level 100, additional XP may become Prestige progress.
+
+Prestige may later unlock:
+
+* Prestige titles
+* Passport effects
+* Profile frames
+* Rare cosmetics
+* Seasonal honors
+* Badge effects
+* Puzzle pieces
+
+Prestige should reward dedication without making new players feel permanently locked out.
+
+---
+
+## Archetype
+
+Archetype represents the type of gamer the user identifies as during onboarding.
+
+Possible archetypes may include:
+
+* Explorer
+* Competitor
+* Collector
+* Social Gamer
+* Creator
+* Wildcard
+
+Archetypes are not reputation.
+
+Archetypes are not membership.
+
+Archetypes are identity flavor.
+
+---
+
+## Boost Relationship
+
+Boosts read the Passport membership tier.
+
+Current boost access:
+
+```text
+NPC = no boost access
+Adventurer = 1 boost
+Pro = 6 boosts
+Elite = 8 boosts
+```
+
+Boosts influence discovery.
+
+Boosts do not grant reputation.
+
+Boosts do not grant governance.
+
+Boosts do not grant moderation power.
+
+---
+
+## Conduct Signal Relationship
+
+Future Passport identity surfaces may display a Conduct Signal.
+
+Planned signals:
+
+* Green
+* Orange
+* Red
+* Black
+
+Green means friendly or casual.
+
+Orange means serious but respectful.
+
+Red means high-intensity or PvP-heavy.
+
+Black means Passport downed due to moderation.
+
+Conduct Signal is separate from reputation and membership.
+
+---
+
+## Black Passport
+
+Black Passport is a future moderation penalty state.
+
+Public language:
+
+```text
+Passport downed. Respawning in...
+```
+
+During Black Signal status, the user temporarily falls back to NPC-equivalent benefits.
+
+Possible restrictions:
+
+* No boosts
+* No squad slots
+* No guild creation
+* No badge claiming
+* No prestige progress
+* Restricted chat access
+* No discovery influence
+
+Black Signal should not permanently erase earned Passport history unless severe abuse requires badge review or revocation.
+
+---
+
+## Seasonal Progression
+
+Future seasons may reset or archive seasonal progression.
+
+Possible seasonal reset targets:
+
+* XP
+* Level
+* Level progress
+* Seasonal prestige progress
+* Seasonal rankings
+
+Seasonal resets should not erase:
+
+* Identity
+* Passport ownership
+* Historical badges
+* Lifetime achievement history
+* Membership history
+* Guild history
+* Squad history
+
+The player journey should continue even when seasons reset.
+
+---
+
+## Passport and Discovery
+
+Passport data may influence discovery.
+
+Possible discovery inputs from Passport:
+
+* Reputation
+* Badge points
+* Boost activity
+* Conduct status
+* Prestige progress
+* Guild participation
+* Squad relationships
+
+Discovery should not be controlled by Passport level alone.
+
+Discovery should balance quality, trust, activity, and community momentum.
+
+---
+
+## Passport and Customization
+
+Passport may eventually display customization.
+
+Future Passport customization may include:
+
+* Passport themes
+* Passport frames
+* Badge display layouts
+* Conduct signal styling
+* Reputation title display
+* Prestige effects
+* Seasonal effects
+
+Most equipped customization should remain off-chain.
+
+On-chain should store unlock proofs for meaningful or rare items.
+
+---
+
+## Passport and Recovery
+
+Passport is a valuable long-term identity asset.
+
+Recovery should help users regain access to their Passport without compromising security.
+
+Future recovery may use:
+
+* zkLogin recovery
+* Linked social recovery
+* Linked game account recovery
+* Optional email recovery
+* Squad support
+* Guild support
+* Manual review
+
+Recovery should preserve Passport history whenever possible.
+
+---
+
+## Current Move Module
+
+Current module:
+
+```move
+module nami::passport
+```
+
+Current source file:
+
+```text
+contracts/nami/sources/passport.move
+```
+
+Technical schema is documented separately in:
+
+```text
+docs/passport-object.md
+```
+
+---
+
+## Current Core Functions
+
+Current Passport logic supports:
+
+* Passport creation
+* XP application
+* Badge point application
+* Curved level progression
+* Reputation updates
+* Tier upgrade state
+* Safe read getters
+* Progression events
+
+Future modules should become authority gates for verification, membership, conduct, moderation, and seasonal resets.
+
+---
+
+## Core Principles
+
+Passport should represent the player journey.
+
+Passport progression should be earned.
+
+Badge quality should matter.
+
+Membership should control access, not reputation.
+
+Conduct should communicate interaction state, not replace reputation.
+
+Season resets should refresh progression without erasing identity.
+
+Prestige should reward dedication beyond Level 100.
+
+The Passport should feel alive, portable, and worth carrying across games.
