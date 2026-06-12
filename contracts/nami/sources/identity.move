@@ -81,4 +81,8 @@ module nami::identity {
     public fun get_verification_level(identity: &Identity): u8 {
     identity.verification_level
     }
+    
+    public fun get_id(identity: &Identity): address {
+    object::uid_to_address(&identity.id)
+}
 }

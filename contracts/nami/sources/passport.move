@@ -374,5 +374,10 @@ module nami::passport {
 
     public fun get_identity_id(passport: &Passport): address {
     passport.identity_id
-}
+    }
+    
+    public fun get_id(passport: &Passport): address {
+    object::uid_to_address(&passport.id)
+    }
+
 }

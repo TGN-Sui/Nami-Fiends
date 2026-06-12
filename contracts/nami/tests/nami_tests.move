@@ -7,6 +7,7 @@ module nami::nami_tests {
     use nami::passport;
     use nami::badge;
     use nami::boost;
+    use nami::verification;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -18,6 +19,10 @@ module nami::nami_tests {
 
     /// Badge types
     const COMPLETION_BADGE: u8 = 3;
+
+    /// Verification sources
+    const SOURCE_NAMI: u8 = 1;
+    const INVALID_SOURCE: u8 = 99;
 
     /// Membership tiers
     const NPC: u8 = 0;
@@ -34,6 +39,7 @@ module nami::nami_tests {
 
     /// ---------------------------------------------------------
     /// Identity + Passport creation
+    /// Passport default tier should be NPC.
     /// ---------------------------------------------------------
     #[test]
     fun test_identity_and_passport_creation() {
@@ -70,42 +76,180 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
-    /// Passport tier upgrade flow:
-    /// NPC -> Adventurer -> Pro -> Elite
+    /// Verification authority flow:
+    /// Identity + Passport starts NPC.
+    /// verification.move upgrades NPC -> Adventurer.
     /// ---------------------------------------------------------
     #[test]
-    fun test_passport_tier_upgrade_flow() {
+    fun test_verification_moves_npc_to_adventurer() {
         let mut scenario = test_scenario::begin(USER);
 
+        identity::init_identity(test_scenario::ctx(&mut scenario));
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
         passport::init_passport(
-            IDENTITY_ID,
+            identity_id,
             ARCHETYPE_EXPLORER,
             test_scenario::ctx(&mut scenario)
         );
 
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
         test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
 
         let mut passport_obj =
             test_scenario::take_from_sender<passport::Passport>(&scenario);
 
         assert!(passport::get_tier(&passport_obj) == NPC, 10);
 
-        passport::verify_to_adventurer(&mut passport_obj);
+        verification::verify_to_adventurer(
+            &identity_obj,
+            &mut passport_obj,
+            SOURCE_NAMI,
+            test_scenario::ctx(&mut scenario)
+        );
+
         assert!(passport::get_tier(&passport_obj) == ADVENTURER, 11);
 
-        passport::upgrade_to_pro(&mut passport_obj);
-        assert!(passport::get_tier(&passport_obj) == PRO, 12);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
 
-        passport::upgrade_to_elite(&mut passport_obj);
-        assert!(passport::get_tier(&passport_obj) == ELITE, 13);
+        test_scenario::next_tx(&mut scenario, USER);
 
+        let record =
+            test_scenario::take_from_sender<verification::VerificationRecord>(&scenario);
+
+        assert!(verification::get_record_owner(&record) == USER, 12);
+        assert!(verification::get_record_source(&record) == SOURCE_NAMI, 13);
+        assert!(verification::get_record_level(&record) == 1, 14);
+
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Invalid verification source should fail.
+    /// Expected abort:
+    /// insufficient_verification = 21
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 21)]
+    fun test_invalid_verification_source_fails() {
+        let mut scenario = test_scenario::begin(USER);
+
+        identity::init_identity(test_scenario::ctx(&mut scenario));
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        verification::verify_to_adventurer(
+            &identity_obj,
+            &mut passport_obj,
+            INVALID_SOURCE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
         test_scenario::return_to_sender(&scenario, passport_obj);
 
         test_scenario::end(scenario);
     }
 
     /// ---------------------------------------------------------
-    /// Badge minting updates Passport badge points
+    /// Passport tier upgrade flow:
+    /// NPC -> Adventurer -> Pro -> Elite
+    /// Adventurer transition goes through verification.move.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_passport_tier_upgrade_flow() {
+        let mut scenario = test_scenario::begin(USER);
+
+        identity::init_identity(test_scenario::ctx(&mut scenario));
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        assert!(passport::get_tier(&passport_obj) == NPC, 20);
+
+        verification::verify_to_adventurer(
+            &identity_obj,
+            &mut passport_obj,
+            SOURCE_NAMI,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == ADVENTURER, 21);
+
+        passport::upgrade_to_pro(&mut passport_obj);
+        assert!(passport::get_tier(&passport_obj) == PRO, 22);
+
+        passport::upgrade_to_elite(&mut passport_obj);
+        assert!(passport::get_tier(&passport_obj) == ELITE, 23);
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let record =
+            test_scenario::take_from_sender<verification::VerificationRecord>(&scenario);
+
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Badge minting updates Passport badge points and XP.
     /// ---------------------------------------------------------
     #[test]
     fun test_badge_mint_updates_passport_points() {
@@ -130,9 +274,9 @@ module nami::nami_tests {
             test_scenario::ctx(&mut scenario)
         );
 
-        assert!(passport::get_badge_points(&passport_obj) == 3, 20);
-        assert!(passport::get_xp(&passport_obj) == 3, 21);
-        assert!(passport::get_reputation(&passport_obj) == NEWBIE, 22);
+        assert!(passport::get_badge_points(&passport_obj) == 3, 30);
+        assert!(passport::get_xp(&passport_obj) == 3, 31);
+        assert!(passport::get_reputation(&passport_obj) == NEWBIE, 32);
 
         test_scenario::return_to_sender(&scenario, passport_obj);
 
@@ -147,7 +291,7 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
-    /// Badge point thresholds update reputation using curved model
+    /// Badge point thresholds update reputation using curved model.
     /// ---------------------------------------------------------
     #[test]
     fun test_badge_points_update_reputation() {
@@ -165,19 +309,19 @@ module nami::nami_tests {
             test_scenario::take_from_sender<passport::Passport>(&scenario);
 
         passport::apply_badge_points(&mut passport_obj, 90);
-        assert!(passport::get_reputation(&passport_obj) == GAMESTER, 30);
+        assert!(passport::get_reputation(&passport_obj) == GAMESTER, 40);
 
         passport::apply_badge_points(&mut passport_obj, 335);
-        assert!(passport::get_badge_points(&passport_obj) == 425, 31);
-        assert!(passport::get_reputation(&passport_obj) == GOBLIN, 32);
+        assert!(passport::get_badge_points(&passport_obj) == 425, 41);
+        assert!(passport::get_reputation(&passport_obj) == GOBLIN, 42);
 
         passport::apply_badge_points(&mut passport_obj, 425);
-        assert!(passport::get_badge_points(&passport_obj) == 850, 33);
-        assert!(passport::get_reputation(&passport_obj) == GOONIE, 34);
+        assert!(passport::get_badge_points(&passport_obj) == 850, 43);
+        assert!(passport::get_reputation(&passport_obj) == GOONIE, 44);
 
         passport::apply_badge_points(&mut passport_obj, 750);
-        assert!(passport::get_badge_points(&passport_obj) == 1600, 35);
-        assert!(passport::get_reputation(&passport_obj) == FIEND, 36);
+        assert!(passport::get_badge_points(&passport_obj) == 1600, 45);
+        assert!(passport::get_reputation(&passport_obj) == FIEND, 46);
 
         test_scenario::return_to_sender(&scenario, passport_obj);
 
@@ -185,8 +329,8 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
-    /// NPC cannot boost
-    /// Expected abort code:
+    /// NPC cannot boost.
+    /// Expected abort:
     /// boost_unavailable = 60
     /// ---------------------------------------------------------
     #[test, expected_failure(abort_code = 60)]
@@ -217,24 +361,45 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
-    /// Adventurer can boost
+    /// Adventurer can boost after verification.
     /// ---------------------------------------------------------
     #[test]
-    fun test_adventurer_can_boost() {
+    fun test_adventurer_can_boost_after_verification() {
         let mut scenario = test_scenario::begin(USER);
 
+        identity::init_identity(test_scenario::ctx(&mut scenario));
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
         passport::init_passport(
-            IDENTITY_ID,
+            identity_id,
             ARCHETYPE_EXPLORER,
             test_scenario::ctx(&mut scenario)
         );
 
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
         test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
 
         let mut passport_obj =
             test_scenario::take_from_sender<passport::Passport>(&scenario);
 
-        passport::verify_to_adventurer(&mut passport_obj);
+        verification::verify_to_adventurer(
+            &identity_obj,
+            &mut passport_obj,
+            SOURCE_NAMI,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == ADVENTURER, 50);
 
         boost::use_boost(
             &passport_obj,
@@ -243,13 +408,18 @@ module nami::nami_tests {
             test_scenario::ctx(&mut scenario)
         );
 
+        test_scenario::return_to_sender(&scenario, identity_obj);
         test_scenario::return_to_sender(&scenario, passport_obj);
 
         test_scenario::next_tx(&mut scenario, USER);
 
+        let record =
+            test_scenario::take_from_sender<verification::VerificationRecord>(&scenario);
+
         let boost_obj =
             test_scenario::take_from_sender<boost::Boost>(&scenario);
 
+        test_scenario::return_to_sender(&scenario, record);
         test_scenario::return_to_sender(&scenario, boost_obj);
 
         test_scenario::end(scenario);
