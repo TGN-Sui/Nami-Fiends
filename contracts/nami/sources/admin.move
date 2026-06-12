@@ -9,6 +9,7 @@ module nami::admin {
     use nami::membership;
     use nami::moderation;
     use nami::passport;
+    use nami::appeals;
 
     // =========================================================
     // ADMIN ACTION TYPES
@@ -20,6 +21,7 @@ module nami::admin {
     const ACTION_MUTE: u8 = 5;
     const ACTION_CHANNEL_BAN: u8 = 6;
     const ACTION_BLACK_PASSPORT: u8 = 7;
+    const ACTION_RESOLVE_APPEAL: u8 = 8;
 
     // =========================================================
     // ADMIN CAPABILITY
@@ -250,6 +252,30 @@ module nami::admin {
     }
 
     // =========================================================
+    // APPEAL AUTHORITY
+    // =========================================================
+        public fun resolve_appeal(
+            admin: &AdminCap,
+            appeal: &mut appeals::AppealCase,
+            result_status: u8,
+            resolution_code: u64,
+            ctx: &TxContext
+        ) {
+            appeals::resolve_appeal(
+                appeal,
+                result_status,
+                resolution_code,
+                ctx
+            );
+
+            emit_admin_action(
+                admin,
+                ACTION_RESOLVE_APPEAL,
+                appeals::get_id(appeal)
+            );
+        }
+
+    // =========================================================
     // GETTERS
     // =========================================================
     public fun get_id(admin: &AdminCap): address {
@@ -259,4 +285,6 @@ module nami::admin {
     public fun get_created_at_ms(admin: &AdminCap): u64 {
         admin.created_at_ms
     }
+
+    
 }

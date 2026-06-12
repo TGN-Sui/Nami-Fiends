@@ -14,6 +14,7 @@ module nami::nami_tests {
     use nami::conduct;
     use nami::moderation;
     use nami::admin;
+    use nami::appeals;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -51,6 +52,10 @@ module nami::nami_tests {
     const GREEN: u8 = 1;
     const RED: u8 = 3;
     const BLACK: u8 = 4;
+
+    /// Appeal statuses
+    const APPEAL_APPROVED: u8 = 2;
+    const APPEAL_DENIED: u8 = 3;
 
     /// ---------------------------------------------------------
     /// Identity + Passport creation
@@ -1486,4 +1491,146 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+    /// ---------------------------------------------------------
+    /// User can open an appeal for their own moderation record.
+    /// ---------------------------------------------------------
+    #[test]
+        fun test_user_can_open_appeal_for_moderation_record() {
+            let mut scenario = test_scenario::begin(USER);
+
+            passport::init_passport(
+                IDENTITY_ID,
+                ARCHETYPE_EXPLORER,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let passport_obj =
+                test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+            moderation::issue_warning(
+                USER,
+                &passport_obj,
+                55,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::return_to_sender(&scenario, passport_obj);
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let passport_obj =
+                test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+            let record =
+                test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+            appeals::open_appeal(
+                &passport_obj,
+                &record,
+                b"appeal-reference",
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::return_to_sender(&scenario, passport_obj);
+            test_scenario::return_to_sender(&scenario, record);
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let appeal =
+                test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+            assert!(appeals::get_appellant(&appeal) == USER, 130);
+            assert!(appeals::get_moderation_reason_code(&appeal) == 55, 131);
+            assert!(appeals::is_open(&appeal), 132);
+
+            test_scenario::return_to_sender(&scenario, appeal);
+
+            test_scenario::end(scenario);
+        }
+
+    /// ---------------------------------------------------------
+    /// Admin can resolve an appeal.
+    /// ---------------------------------------------------------
+    #[test]
+        fun test_admin_can_resolve_appeal() {
+            let mut scenario = test_scenario::begin(USER);
+
+            admin::init_for_testing(
+                test_scenario::ctx(&mut scenario)
+            );
+
+            passport::init_passport(
+                IDENTITY_ID,
+                ARCHETYPE_EXPLORER,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let admin_cap =
+                test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+            let passport_obj =
+                test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+            admin::issue_warning(
+                &admin_cap,
+                USER,
+                &passport_obj,
+                77,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_to_sender(&scenario, passport_obj);
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let admin_cap =
+                test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+            let passport_obj =
+                test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+            let record =
+                test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+            appeals::open_appeal(
+                &passport_obj,
+                &record,
+                b"appeal-admin-resolution",
+                test_scenario::ctx(&mut scenario)
+            );
+
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_to_sender(&scenario, passport_obj);
+            test_scenario::return_to_sender(&scenario, record);
+
+            test_scenario::next_tx(&mut scenario, USER);
+
+            let admin_cap =
+                test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+            let mut appeal =
+                test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+            admin::resolve_appeal(
+                &admin_cap,
+                &mut appeal,
+                APPEAL_APPROVED,
+                9001,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            assert!(appeals::is_approved(&appeal), 133);
+            assert!(appeals::get_resolution_code(&appeal) == 9001, 134);
+
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_to_sender(&scenario, appeal);
+
+            test_scenario::end(scenario);
+        }
 }

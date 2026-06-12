@@ -76,6 +76,13 @@ module nami::errors {
     const EInvalidModerationDuration: u64 = 111;
 
     // =========================================================
+    // APPEAL ERRORS
+    // =========================================================
+    const EAppealUnauthorized: u64 = 120;
+    const EAppealAlreadyResolved: u64 = 121;
+    const EInvalidAppealResult: u64 = 122;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -132,4 +139,14 @@ module nami::errors {
     public fun invalid_moderation_action(): u64 { EInvalidModerationAction }
 
     public fun invalid_moderation_duration(): u64 { EInvalidModerationDuration }
+
+    public fun appeal_unauthorized(): u64 { EAppealUnauthorized }
+
+    public fun appeal_already_resolved(): u64 { EAppealAlreadyResolved }
+
+    public fun invalid_appeal_result(): u64 { EInvalidAppealResult }
+
+
+
+    
 }

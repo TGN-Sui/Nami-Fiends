@@ -381,4 +381,10 @@ module nami::moderation {
     public fun is_black_passport(record: &ModerationRecord): bool {
         record.action_type == ACTION_BLACK_PASSPORT
     }
+
+    public fun get_id(record: &ModerationRecord): address {
+        object::uid_to_address(&record.id)
+    }
+
+
 }
