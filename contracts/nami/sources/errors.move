@@ -55,78 +55,71 @@ module nami::errors {
     const ENotEligibleForTier: u64 = 81;
 
     // =========================================================
+    // BADGE ISSUER ERRORS
+    // =========================================================
+    const EInvalidIssuerType: u64 = 90;
+    const EBadgeIssuerUnauthorized: u64 = 91;
+    const EBadgeIssuerPermissionDenied: u64 = 92;
+
+    // =========================================================
+    // CONDUCT ERRORS
+    // =========================================================
+    const EInvalidConductSignal: u64 = 100;
+    const EConductRestricted: u64 = 101;
+    const EConductNotRestricted: u64 = 102;
+    const ERespawnNotReady: u64 = 103;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
-    public fun identity_exists(): u64 {
-        EIdentityExists
-    }
+    public fun identity_exists(): u64 { EIdentityExists }
 
-    public fun identity_not_found(): u64 {
-        EIdentityNotFound
-    }
+    public fun identity_not_found(): u64 { EIdentityNotFound }
 
-    public fun invalid_owner(): u64 {
-        EInvalidOwner
-    }
+    public fun invalid_owner(): u64 { EInvalidOwner }
 
-    public fun passport_not_found(): u64 {
-        EPassportNotFound
-    }
+    public fun passport_not_found(): u64 { EPassportNotFound }
 
-    public fun passport_already_exists(): u64 {
-        EPassportAlreadyExists
-    }
+    public fun passport_already_exists(): u64 { EPassportAlreadyExists }
 
-    public fun not_verified(): u64 {
-        ENotVerified
-    }
+    public fun not_verified(): u64 { ENotVerified }
 
-    public fun insufficient_verification(): u64 {
-        EInsufficientVerification
-    }
+    public fun insufficient_verification(): u64 { EInsufficientVerification }
 
-    public fun unauthorized(): u64 {
-        EUnauthorized
-    }
+    public fun unauthorized(): u64 { EUnauthorized }
 
-    public fun insufficient_tier(): u64 {
-        EInsufficientTier
-    }
+    public fun insufficient_tier(): u64 { EInsufficientTier }
 
-    public fun guild_not_found(): u64 {
-        EGuildNotFound
-    }
+    public fun guild_not_found(): u64 { EGuildNotFound }
 
-    public fun guild_limit_reached(): u64 {
-        EGuildLimitReached
-    }
+    public fun guild_limit_reached(): u64 { EGuildLimitReached }
 
-    public fun squad_limit_reached(): u64 {
-        ESquadLimitReached
-    }
+    public fun squad_limit_reached(): u64 { ESquadLimitReached }
 
-    public fun squad_unauthorized(): u64 {
-        ESquadUnauthorized
-    }
+    public fun squad_unauthorized(): u64 { ESquadUnauthorized }
 
-    public fun boost_unavailable(): u64 {
-        EBoostUnavailable
-    }
+    public fun boost_unavailable(): u64 { EBoostUnavailable }
 
-    public fun boost_limit_reached(): u64 {
-        EBoostLimitReached
-    }
+    public fun boost_limit_reached(): u64 { EBoostLimitReached }
 
-    public fun invalid_badge_type(): u64 {
-        EInvalidBadgeType
-    }
+    public fun invalid_badge_type(): u64 { EInvalidBadgeType }
 
-    public fun invalid_tier_transition(): u64 {
-        EInvalidTierTransition
-    }
+    public fun invalid_tier_transition(): u64 { EInvalidTierTransition }
 
-    public fun not_eligible_for_tier(): u64 {
-        ENotEligibleForTier
-    }
+    public fun not_eligible_for_tier(): u64 { ENotEligibleForTier }
+
+    public fun invalid_issuer_type(): u64 { EInvalidIssuerType }
+
+    public fun badge_issuer_unauthorized(): u64 { EBadgeIssuerUnauthorized }
+
+    public fun badge_issuer_permission_denied(): u64 { EBadgeIssuerPermissionDenied }
+
+    public fun invalid_conduct_signal(): u64 { EInvalidConductSignal }
+
+    public fun conduct_restricted(): u64 { EConductRestricted }
+
+    public fun conduct_not_restricted(): u64 { EConductNotRestricted }
+
+    public fun respawn_not_ready(): u64 { ERespawnNotReady }
 }

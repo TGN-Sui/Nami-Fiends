@@ -11,6 +11,7 @@ module nami::nami_tests {
     use nami::membership;
     use nami::badge_issuer;
     use nami::channel_access;
+    use nami::conduct;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -43,6 +44,11 @@ module nami::nami_tests {
     const GOBLIN: u8 = 2;
     const GOONIE: u8 = 3;
     const FIEND: u8 = 4;
+
+    /// Conduct signals
+    const GREEN: u8 = 1;
+    const RED: u8 = 3;
+    const BLACK: u8 = 4;
 
     /// ---------------------------------------------------------
     /// Identity + Passport creation
@@ -691,6 +697,180 @@ module nami::nami_tests {
             test_scenario::take_from_sender<verification::VerificationRecord>(&scenario);
 
         test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+        /// ---------------------------------------------------------
+    /// Conduct status can be created with Green signal.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_conduct_status_created_green() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        assert!(conduct::get_signal(&status) == GREEN, 80);
+        assert!(conduct::is_green(&status), 81);
+        assert!(conduct::has_active_benefits(
+            &status,
+            test_scenario::ctx(&mut scenario)
+        ), 82);
+
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// User can update Conduct Signal from Green to Red.
+    /// Red is not punishment.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_user_can_update_conduct_signal_to_red() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::update_signal(
+            &mut status,
+            RED,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(conduct::get_signal(&status) == RED, 83);
+        assert!(conduct::is_red(&status), 84);
+        assert!(conduct::has_active_benefits(
+            &status,
+            test_scenario::ctx(&mut scenario)
+        ), 85);
+
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// User cannot choose Black Signal.
+    /// Expected abort:
+    /// invalid_conduct_signal = 100
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 100)]
+    fun test_user_cannot_select_black_signal() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            BLACK,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Package authority can down Passport into Black Signal.
+    /// Active Black Signal disables active benefits.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_black_conduct_blocks_active_benefits() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(conduct::get_signal(&status) == BLACK, 86);
+        assert!(conduct::is_black(&status), 87);
+        assert!(!conduct::has_active_benefits(
+            &status,
+            test_scenario::ctx(&mut scenario)
+        ), 88);
+
+        test_scenario::return_to_sender(&scenario, status);
 
         test_scenario::end(scenario);
     }
