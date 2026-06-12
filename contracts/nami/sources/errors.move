@@ -92,6 +92,12 @@ module nami::errors {
     const EInvalidRequiredVotes: u64 = 134;
 
     // =========================================================
+    // TITLE ERRORS
+    // =========================================================
+    const EInvalidTitleType: u64 = 140;
+    const ETitleNotEarned: u64 = 141;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -165,5 +171,7 @@ module nami::errors {
 
     public fun invalid_required_votes(): u64 { EInvalidRequiredVotes }
 
+    public fun invalid_title_type(): u64 { EInvalidTitleType }
 
+    public fun title_not_earned(): u64 { ETitleNotEarned }
 }

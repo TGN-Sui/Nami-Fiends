@@ -18,6 +18,7 @@ module nami::nami_tests {
     use nami::jury;
     use nami::squad;
     use nami::guild;
+    use nami::title;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -27,6 +28,10 @@ module nami::nami_tests {
 
     /// Archetypes
     const ARCHETYPE_EXPLORER: u8 = 1;
+
+    /// Title types
+    const TITLE_GAMESTER: u8 = 1;
+    const TITLE_FIEND: u8 = 4;
 
     /// Badge types
     const COMPLETION_BADGE: u8 = 3;
@@ -2348,4 +2353,266 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// User can claim a Gamester title after earning reputation.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_user_can_claim_gamester_title_from_reputation() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::apply_badge_points(&mut passport_obj, 90);
+
+        assert!(passport::get_reputation(&passport_obj) == GAMESTER, 180);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        title::claim_reputation_title(
+            &passport_obj,
+            &status,
+            TITLE_GAMESTER,
+            1,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let earned_title =
+            test_scenario::take_from_sender<title::EarnedTitle>(&scenario);
+
+        assert!(title::get_title_owner(&earned_title) == USER, 181);
+        assert!(title::get_title_type(&earned_title) == TITLE_GAMESTER, 182);
+        assert!(title::get_title_source_code(&earned_title) == 1, 183);
+
+        test_scenario::return_to_sender(&scenario, earned_title);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// User cannot claim a Fiend title without Fiend reputation.
+    /// Expected abort:
+    /// title_not_earned = 141
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 141)]
+    fun test_user_cannot_claim_fiend_title_without_reputation() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        title::claim_reputation_title(
+            &passport_obj,
+            &status,
+            TITLE_FIEND,
+            4,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// User can create a TitleDisplay and equip an owned title.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_user_can_equip_earned_title() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::apply_badge_points(&mut passport_obj, 90);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        title::create_title_display(
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        title::claim_reputation_title(
+            &passport_obj,
+            &status,
+            TITLE_GAMESTER,
+            2,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut display =
+            test_scenario::take_from_sender<title::TitleDisplay>(&scenario);
+
+        let earned_title =
+            test_scenario::take_from_sender<title::EarnedTitle>(&scenario);
+
+        assert!(!title::has_equipped_title(&display), 184);
+
+        title::equip_title(
+            &mut display,
+            &earned_title,
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(title::has_equipped_title(&display), 185);
+        assert!(title::get_equipped_title_type(&display) == TITLE_GAMESTER, 186);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, display);
+        test_scenario::return_to_sender(&scenario, earned_title);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Black Passport cannot claim new titles.
+    /// Expected abort:
+    /// conduct_restricted = 101
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 101)]
+    fun test_black_passport_cannot_claim_title() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::apply_badge_points(&mut passport_obj, 90);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        title::claim_reputation_title(
+            &passport_obj,
+            &status,
+            TITLE_GAMESTER,
+            3,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }
