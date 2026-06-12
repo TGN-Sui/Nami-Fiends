@@ -1,228 +1,352 @@
 # Nami Conduct System
 
-## Overview
+## Purpose
 
-The Nami Conduct System adds a public identity signal layer to the Passport.
+The Conduct System gives each Passport a public interaction signal.
 
-This system helps players quickly understand what type of interaction to expect from another player without confusing conduct with membership or reputation.
+It helps players, channels, squads, jurors, and future guilds understand what kind of interaction to expect from a user.
 
 Conduct is separate from:
 
-* Membership Tier
-* Reputation Rank
-* Gamer Archetype
-* Guild Role
-* Badge History
+* Reputation
+* Membership
+* Verification
+* Archetype
+* Badge history
 
 Conduct answers:
 
-"What kind of interaction should others expect from this player right now?"
+```text
+What kind of interaction should others expect right now?
+```
 
 ---
 
-## Core Conduct Signals
+## Current Status
 
-Nami uses four public Passport Signals:
+Current module:
 
-* Green
-* Orange
-* Red
-* Black
+```move
+module nami::conduct
+```
 
-These signals are visible on public profiles, chat identity surfaces, channel member lists, and future overlays.
+Current protocol status:
+
+```text
+33 tests passing
+0 warnings
+```
+
+Conduct is already wired into effective access checks through Membership, Channel Access, Boosts, Jury eligibility, and Squads.
 
 ---
 
-## Green Signal
+# Conduct Signals
 
-Green represents friendly, casual, low-conflict players.
+Current signals:
+
+```text
+Green
+Orange
+Red
+Black
+```
+
+---
+
+## Green
+
+Green means friendly, casual, low-conflict, and generally safe for most spaces.
 
 Typical meaning:
 
-* Casual gamer
-* Beginner-friendly
-* Cooperative
-* Positive community behavior
-* Low moderation history
+```text
+Friendly / casual / easygoing
+```
 
-Green does not mean the player is highly skilled or high reputation.
-
-Green means the player is likely safe and easy to interact with.
+Green is user-selectable.
 
 ---
 
-## Orange Signal
+## Orange
 
-Orange represents serious but friendly players.
+Orange means serious, competitive, focused, but still respectful.
 
 Typical meaning:
 
-* Competitive but respectful
-* Focused gamer
-* Event participant
-* Ranked or objective-driven player
-* Generally positive standing
+```text
+Competitive / serious / friendly
+```
 
-Orange is intended for players who take games seriously while still respecting community standards.
+Orange is user-selectable.
 
 ---
 
-## Red Signal
+## Red
 
-Red represents high-intensity players.
+Red means high-intensity, PvP-heavy, trash-talk tolerant, or more aggressive gaming style.
 
 Typical meaning:
 
-* Hardcore PvP
-* Competitive trash-talk tolerant
-* High-intensity environments
-* Aggressive gameplay preference
-* Risk-tolerant social spaces
+```text
+Hardcore / PvP / high-intensity
+```
 
-Red does not automatically mean unsafe.
+Red is user-selectable.
 
-Red means the player may prefer intense gameplay and less casual interaction.
-
-Red should never be treated as a punishment state by itself.
+Red is not punishment.
 
 ---
 
-## Black Signal
+## Black
 
-Black represents a moderation penalty.
+Black is a moderation penalty state.
 
-A Black Passport means the player's Passport is temporarily downed.
+Typical meaning:
 
-Public language:
+```text
+Passport downed. Respawning in...
+```
 
-"Passport downed. Respawning in..."
+Black is not user-selectable.
 
-During Black Signal status, the user temporarily falls back to NPC-level benefits.
-
-Restrictions may include:
-
-* No boosts
-* No squad slots
-* No guild creation
-* No badge claiming
-* No prestige progress
-* Limited chat access
-* No discovery influence
-* No verified gated channel access
-
-Black Signal is not a personality label.
-
-Black Signal is a temporary restriction state caused by moderation action.
+Black is applied through moderation authority.
 
 ---
 
-## Conduct vs Reputation
+# Current Object
 
-Conduct and reputation are separate.
+Current object:
 
-A user may have:
+```move
+ConductStatus
+```
 
-* High reputation and Green Signal
-* High reputation and Red Signal
-* Low reputation and Green Signal
-* Black Signal with any prior reputation
+Current purpose:
 
-Reputation reflects long-term contribution.
-
-Conduct reflects current interaction expectations and moderation standing.
-
----
-
-## Conduct vs Membership
-
-Conduct and membership are separate.
-
-A user may be:
-
-* NPC with Green Signal
-* Elite with Red Signal
-* Pro with Black Signal
-* Adventurer with Orange Signal
-
-Membership controls access.
-
-Conduct communicates interaction state.
+* Stores Passport-linked conduct signal
+* Tracks owner
+* Tracks Passport ID
+* Tracks reason code
+* Tracks expiration for Black Passport
+* Tracks created and updated timestamps
 
 ---
 
-## Conduct Assignment
+# User-Controlled Signals
 
-Green, Orange, and Red may be influenced by:
+Users may choose:
 
-* Player self-selection
-* Archetype choices
-* Channel behavior
-* Gameplay preference
-* Community feedback
-* Moderation history
+```text
+Green
+Orange
+Red
+```
 
-Black may only be assigned by moderation systems or authorized moderation processes.
+Users may update between these signals.
 
----
+Users may not choose:
 
-## Community Influence
+```text
+Black
+```
 
-Community feedback may influence Conduct Signals, but community voting should not directly punish users.
-
-Community reports may trigger:
-
-* Review
-* Warning
-* Temporary mute
-* Channel ban
-* Black Passport review
-
-Community feedback is a signal, not an automatic verdict.
+Black is reserved for moderation.
 
 ---
 
-## On-Chain vs Off-Chain Design
+# Black Passport
 
-Conduct status may eventually be anchored on-chain.
+Black Passport represents a temporary penalty state.
 
-Suggested future fields:
+When Black Passport is active:
 
-* conduct_signal
-* conduct_expires_at_ms
-* conduct_reason_code
-* conduct_version
+* Conduct signal becomes Black
+* Effective tier falls back to NPC-equivalent access
+* Boosts are blocked
+* Channel chat is blocked
+* Squad benefits are blocked
+* Jury eligibility is blocked
+* Premium benefits are temporarily restricted
 
-Most evidence should remain off-chain.
+Black Passport does not erase earned history by default.
 
-On-chain state should only store:
-
-* Status
-* Duration
-* Authority
-* Event proof
+Badges, reputation history, identity, and Passport ownership remain intact unless severe abuse requires separate review.
 
 ---
 
-## Future Move Module
+# Respawn
 
-Potential module:
+Black Passport includes a respawn timestamp.
 
-conduct.move
+Once the restriction expires, the user may respawn into a normal public signal:
 
-Possible objects:
+```text
+Green
+Orange
+Red
+```
 
-* ConductStatus
-* ConductAction
-* ConductSignalRecord
+Current function:
 
-Possible events:
+```move
+respawn_if_ready
+```
 
-* ConductSignalUpdated
-* PassportDowned
-* PassportRespawned
+Respawn should restore access only after the active Black period has expired.
 
 ---
 
-## Core Principle
+# Moderation Integration
 
-Conduct should help players choose compatible communities without turning personality, membership, reputation, and punishment into one confusing score.
+Conduct is connected to Moderation.
+
+Related module:
+
+```move
+module nami::moderation
+```
+
+Moderation can issue Black Passport through authority-gated paths.
+
+Current flow:
+
+```text
+Moderation action → Black Passport → Conduct status updated → Benefits restricted
+```
+
+AdminCap currently exposes this action for MVP purposes.
+
+---
+
+# Access Integration
+
+Conduct affects access through effective tier logic.
+
+Related modules:
+
+```text
+membership.move
+boost.move
+channel_access.move
+jury.move
+squad.move
+```
+
+Current effect:
+
+```text
+Black Conduct = NPC-equivalent benefits
+```
+
+This prevents users from bypassing restrictions with Pro or Elite tier.
+
+---
+
+# Conduct and Reputation
+
+Conduct is not reputation.
+
+A user can have high reputation and still receive Black Passport for rule violations.
+
+A user can have Red Conduct without being punished.
+
+Reputation reflects earned contribution.
+
+Conduct reflects interaction style and current restriction state.
+
+---
+
+# Conduct and Membership
+
+Conduct is not membership.
+
+Membership controls feature access.
+
+Conduct can temporarily restrict effective benefits.
+
+Example:
+
+```text
+Raw Tier: Elite
+Conduct: Black
+Effective Access: NPC-equivalent
+```
+
+---
+
+# Current Events
+
+Conduct emits:
+
+```text
+ConductStatusCreated
+ConductSignalUpdated
+PassportDowned
+PassportRespawned
+```
+
+Detailed event fields are documented in:
+
+```text
+docs/events.md
+```
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* Conduct status creation
+* Green signal creation
+* User signal updates
+* User cannot select Black
+* Black Passport disables active benefits
+* Black Passport forces effective tier to NPC
+* Black Passport blocks channel chat
+* Moderation can issue Black Passport
+
+---
+
+# Future Work
+
+Planned improvements:
+
+```text
+Orange-specific UI display
+Red-specific channel matching
+Conduct history views
+Community reporting inputs
+Channel owner conduct preferences
+Automatic conduct recommendations
+Respawn countdown display
+Appeal-linked Black Passport review
+Conduct analytics for discovery
+```
+
+---
+
+# Design Rules
+
+Green, Orange, and Red are identity signals.
+
+Black is the only punishment signal.
+
+Red should not be treated as bad behavior by default.
+
+Black should restrict benefits but not erase history by default.
+
+Conduct should support compatibility between gamers, not just punishment.
+
+---
+
+# Related Docs
+
+```text
+docs/moderation.md
+docs/access-control.md
+docs/events.md
+docs/membership.md
+docs/trust-system.md
+```
