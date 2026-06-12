@@ -1,180 +1,273 @@
-# Nami Squad System
+# Nami Squads
 
-## Overview
+## Purpose
 
-Squads are small collaborative groups within the Nami ecosystem.
+Squads are small gamer-native trust and sponsorship groups.
 
-They allow players to organize around games, content creation, events, competitions, and shared objectives.
+They are designed for close social circles, trusted teammates, and lightweight sponsorship relationships.
 
-Squads are designed for active participation.
+Squads are not guilds.
 
-Guilds are designed for larger communities.
+Squads answer:
 
----
-
-## Squad Purpose
-
-Squads provide:
-
-* Team coordination
-* Group identity
-* Shared progression
-* Community participation
-* Competitive play support
+```text
+Who does this player personally sponsor or trust?
+```
 
 ---
 
-## Squad Structure
+## Current Status
 
-Each Squad contains:
+Current module:
 
-* Squad Leader
-* Members
-* Squad Metadata
-* Squad Reputation
-* Squad Activity Metrics
+```move
+module nami::squad
+```
 
-Future versions may include:
+Current protocol status:
 
-* Shared achievements
-* Shared rewards
-* Squad rankings
-* Squad treasury systems
+```text
+33 tests passing
+0 warnings
+```
 
----
+Squads are currently integrated with:
 
-## Membership Requirements
-
-Players must possess:
-
-* Nami Identity
-* Nami Passport
-
-Optional requirements may include:
-
-* Verification
-* Minimum reputation
-* Minimum membership tier
+```text
+Passport
+Membership
+Conduct
+Admin-controlled membership upgrades
+```
 
 ---
 
-## Squad Roles
+# Core Concept
 
-### Leader
+A Squad is a small group created by a Pro or Elite member.
 
-Creates and manages the Squad.
+The Squad owner can sponsor other users into the Squad until the Squad reaches its slot limit.
 
-Permissions:
+Current slot model:
 
-* Invite members
-* Remove members
-* Update Squad settings
-
----
-
-### Officer (Planned)
-
-Trusted management role.
-
-Permissions:
-
-* Moderate members
-* Organize events
-* Manage activities
+```text
+Pro   = 3 squad slots
+Elite = 8 squad slots
+```
 
 ---
 
-### Member
+# Current Objects
 
-Standard Squad participant.
+## Squad
 
-Permissions:
+The `Squad` object represents the group.
 
-* Participate in Squad activities
-* Earn rewards
-* Contribute to progression
+It currently stores:
 
----
-
-## Squad Progression
-
-Future versions may track:
-
-* Total XP
-* Activity Score
-* Event Participation
-* Wins
-* Achievements
-* Community Contributions
+* Owner
+* Owner Passport ID
+* Name
+* Max slots
+* Member count
+* Creation timestamp
 
 ---
 
-## Squad Reputation
+## SquadMember
 
-Squads may earn reputation separately from individual players.
+The `SquadMember` object represents a sponsored membership proof.
 
-Factors may include:
+It currently stores:
 
-* Activity
-* Retention
-* Event participation
-* Community contribution
-
----
-
-## Squad Limits
-
-Initial implementation may include:
-
-* Maximum member count
-* Membership requirements
-* Activity requirements
-
-Limits may evolve as the protocol grows.
+* Squad ID
+* Sponsor
+* Member
+* Creation timestamp
 
 ---
 
-## Relationship to Guilds
+# Squad Creation
 
-Guilds and Squads are separate systems.
+Current requirements:
 
-Guilds:
+```text
+Pro or Elite effective tier
+No active Black Passport
+```
 
-* Large communities
-* Multiple leaders
-* Broader governance
+NPC users cannot create Squads.
 
-Squads:
+Adventurer users cannot create Squads.
 
-* Smaller groups
-* Tactical collaboration
-* Day-to-day participation
-
-A Squad may eventually belong to a Guild.
-
-Example:
-
-Guild:
-
-* Nami Legends
-
-Squads:
-
-* Raid Team Alpha
-* PvP Squad Bravo
-* Creator Squad Delta
-
-This structure allows communities to scale while maintaining organization.
+Black Passport users cannot create Squads, even if their raw tier is Pro or Elite.
 
 ---
 
-## Design Principles
+# Sponsorship
 
-Squads should be:
+Squad owners can sponsor members.
 
-* Easy to create
-* Easy to manage
-* Resistant to abuse
-* Portable across games
+Current sponsorship rules:
 
-The system is designed to support gamers first while remaining flexible enough for creators, communities, and future applications.
+* Sender must own the Squad
+* Sponsor must still meet Squad benefit requirements
+* Squad must have available slots
+* Sponsored user receives a SquadMember proof object
+
+Sponsorship is a trust signal.
+
+It is not full verification.
+
+It is not membership.
+
+It is not reputation.
+
+---
+
+# Conduct Integration
+
+Squads use conduct-aware access checks.
+
+If a Squad owner has active Black Passport status:
+
+```text
+Effective tier = NPC-equivalent
+```
+
+This blocks:
+
+* Squad creation
+* Squad sponsorship
+* Squad benefit usage
+
+Black Passport does not delete the Squad by default.
+
+Future versions may define how inactive or restricted Squad ownership should be displayed.
+
+---
+
+# Membership Integration
+
+Squad access is tied to effective membership tier.
+
+Current eligibility:
+
+```text
+Pro   = Can create Squad with 3 slots
+Elite = Can create Squad with 8 slots
+```
+
+Future membership expiration should affect Squad benefits.
+
+Example future behavior:
+
+```text
+Expired Pro/Elite → Squad benefits paused
+```
+
+Passport history and existing Squad records should not be silently deleted.
+
+---
+
+# Current Events
+
+Squads currently emit:
+
+```text
+SquadCreated
+SquadMemberSponsored
+```
+
+Event field details are documented in:
+
+```text
+docs/events.md
+```
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* Pro member can create a Squad
+* NPC cannot create a Squad
+* Squad owner can sponsor a member
+* Squad member receives a SquadMember proof
+* Squad member count increases
+* Slot model is applied correctly for Pro
+
+---
+
+# System Boundaries
+
+## Squads Are Not Guilds
+
+Squads are small trust networks.
+
+Guilds will be larger persistent communities with roles, channels, events, and possibly badge permissions.
+
+---
+
+## Squads Are Not Verification
+
+Being sponsored into a Squad should not automatically make a user Adventurer, Pro, or Elite.
+
+Squad sponsorship may later become one signal in trust or recovery systems, but it should not replace verification.
+
+---
+
+## Squads Are Not Reputation
+
+Squad membership should not directly grant reputation.
+
+Reputation must still be earned through meaningful activity.
+
+---
+
+## Squads Are Not Boost Multipliers
+
+Squad membership should not automatically grant extra boosts.
+
+Boost access should remain controlled by Membership, Conduct, and future boost-cycle rules.
+
+---
+
+# Future Work
+
+Planned Squad improvements:
+
+```text
+Squad display on Passport profiles
+Squad member removal
+Squad ownership transfer
+Squad slot updates when membership expires
+Elite expanded Squad utilities
+Squad recovery support
+Squad trust scoring
+Squad invitation flow
+Squad cooldowns
+Anti-abuse checks
+```
+
+Possible future recovery use:
+
+```text
+Squad support may help verify identity recovery claims.
+```
+
+This must be handled carefully to prevent social engineering or account takeover.
+
+---
+
+# Related Docs
+
+```text
+docs/access-control.md
+docs/membership.md
+docs/conduct-system.md
+docs/trust-system.md
+docs/events.md
+docs/guilds.md
+```
