@@ -1,42 +1,16 @@
 # Nami On-Chain Architecture
 
-## Overview
+## Purpose
 
-The Nami on-chain layer is built with Sui Move.
+The Nami on-chain layer anchors ownership, access, proof, progression, moderation state, and protocol events.
 
-The on-chain layer stores ownership, proof, progression state, access state, badge objects, boost events, and future protocol anchors.
+Sui Move is used for the parts of Nami that must be verifiable, portable, and tamper-resistant.
 
-Nami should not store every application detail on-chain.
-
-Sui Move should be used for:
-
-* Identity ownership
-* Passport state
-* Badge ownership
-* Membership access state
-* Boost proof
-* Reputation state
-* Future conduct status proofs
-* Future moderation status proofs
-* Future guild and squad anchors
-* Future recovery proofs
-
-Off-chain systems should handle:
-
-* Chat messages
-* Search
-* Recommendations
-* Moderation evidence
-* Appeal evidence
-* Discovery ranking
-* Profile display settings
-* Avatar configuration
-* Customization layout
-* Notifications
+Off-chain systems will handle scale-heavy experiences such as chat, search, discovery ranking, private evidence, profile rendering, and rich customization.
 
 ---
 
-## Current Move Package
+## Current Status
 
 Current package path:
 
@@ -44,37 +18,32 @@ Current package path:
 nami_chat/contracts/nami
 ```
 
-Current package name:
-
-```move
-nami
-```
-
-Current source path:
+Current status:
 
 ```text
-nami_chat/contracts/nami/sources
+Build passing
+33 tests passing
+0 warnings
 ```
 
-Current test path:
+Current source modules:
 
 ```text
-nami_chat/contracts/nami/tests
-```
-
----
-
-## Current Source Modules
-
-Current implemented modules:
-
-```text
-sources/
-├── badge.move
-├── boost.move
-├── errors.move
-├── identity.move
-└── passport.move
+admin.move
+appeals.move
+badge.move
+badge_issuer.move
+boost.move
+channel_access.move
+conduct.move
+errors.move
+identity.move
+jury.move
+membership.move
+moderation.move
+passport.move
+squad.move
+verification.move
 ```
 
 Current test file:
@@ -83,373 +52,424 @@ Current test file:
 tests/nami_tests.move
 ```
 
-Current status:
+---
 
-```text
-Build passing
-6 tests passing
-0 failed
-```
+## What Belongs On-Chain
+
+Nami should place durable protocol state on-chain.
+
+Current on-chain state includes:
+
+* Identity ownership
+* Passport progression
+* Verification records
+* Membership tier state
+* Badge objects
+* Badge issuer capabilities
+* Boost objects
+* Channel access policies
+* Conduct status
+* Moderation records
+* Admin capability
+* Appeal cases
+* Jury cases
+* Jury vote receipts
+* Squad objects
+* Squad member records
+
+Future on-chain state may include:
+
+* Guild anchors
+* Recovery proofs
+* Cosmetic unlock proofs
+* Title unlock proofs
+* Developer authority records
 
 ---
 
-# Current Module Responsibilities
+## What Belongs Off-Chain
 
-## identity.move
+Nami should keep high-volume, private, or flexible data off-chain.
 
-Identity is the root ownership layer.
+Off-chain systems should handle:
 
-Current responsibilities:
-
-* Create Identity object
-* Store owner
-* Store trust tier placeholder
-* Store verification level placeholder
-* Store Passport reference placeholder
-* Store creation timestamp
-* Store version
-* Emit IdentityCreated event
-
-Identity should remain small and stable.
-
-Identity should not store:
-
-* XP
-* Level
-* Badges
-* Reputation
 * Chat messages
-* Guild membership
-* Squad relationships
-* Moderation evidence
-* Customization settings
+* Chat attachments
+* Private moderation evidence
+* Private appeal evidence
+* Jury evidence packets
+* Discovery ranking
+* Search
+* Notifications
+* Profile display names
+* Avatar configuration
+* Equipped cosmetics
+* Rich media
+* Analytics dashboards
 
----
-
-## passport.move
-
-Passport is the gamer journey and progression layer.
-
-Current responsibilities:
-
-* Create Passport object
-* Store linked identity ID
-* Store XP
-* Store level
-* Store level progress
-* Store badge points
-* Store reputation
-* Store archetype
-* Store membership tier
-* Store boost score placeholder
-* Store prestige points
-* Store creation timestamp
-* Apply badge points
-* Apply XP
-* Update curved level progression
-* Update reputation
-* Store tier state
-* Emit Passport events
-
-Current Passport default state:
-
-```text
-level = 1
-xp = 0
-level_progress = 0
-badge_points = 0
-reputation = Newbie
-tier = NPC
-boost_score = 0
-prestige_points = 0
-```
-
----
-
-## badge.move
-
-Badge is the achievement proof layer.
-
-Current responsibilities:
-
-* Define badge types
-* Create Badge objects
-* Resolve badge point values
-* Mint badge objects
-* Update Passport badge points
-* Emit BadgeMinted event
-
-Current badge types:
-
-```text
-Basic Badge = 1 point
-Event Badge = 2 points
-Completion Badge = 3 points
-```
-
-Badge points feed:
-
-* XP
-* Level progression
-* Reputation
-
----
-
-## boost.move
-
-Boost is the discovery signal layer.
-
-Current responsibilities:
-
-* Read membership tier from Passport
-* Resolve boost power
-* Create Boost objects
-* Emit BoostUsed event
-
-Current boost model:
-
-```text
-NPC = blocked
-Adventurer = 1
-Pro = 6
-Elite = 8
-```
-
-Boosts are discovery signals.
-
-Boosts are not governance rights.
-
-Boosts are not reputation.
-
----
-
-## errors.move
-
-Errors is the shared error code module.
-
-Current responsibilities:
-
-* Define protocol error codes
-* Expose error code getters
-* Support consistent abort codes across modules
-
-Errors should be reused by future modules instead of hardcoded abort numbers where possible.
+Off-chain systems may reference on-chain object IDs and events.
 
 ---
 
 # Current Object Model
 
-## Identity Object
+## Identity
 
-Current Identity object stores:
+Module:
 
-* id
-* owner
-* trust_tier
-* verification_level
-* passport_id
-* created_at_ms
-* version
+```move
+module nami::identity
+```
 
-Identity represents ownership and verification foundation.
+Purpose:
 
----
+Root ownership layer.
 
-## Passport Object
+Stores:
 
-Current Passport object stores:
-
-* id
-* identity_id
-* xp
-* level
-* level_progress
-* badge_points
-* reputation
-* archetype
-* tier
-* boost_score
-* prestige_points
-* created_at_ms
-
-Passport represents progression, access state, and gamer history.
+* Owner
+* Verification placeholder
+* Trust placeholder
+* Passport reference placeholder
+* Created timestamp
+* Version
 
 ---
 
-## Badge Object
+## Passport
 
-Current Badge object stores:
+Module:
 
-* id
-* owner
-* badge_type
-* points
-* source
+```move
+module nami::passport
+```
 
-Badge represents an on-chain proof of achievement or participation.
+Purpose:
+
+Player journey layer.
+
+Stores:
+
+* Linked Identity ID
+* XP
+* Level
+* Level progress
+* Badge points
+* Reputation
+* Archetype
+* Membership tier
+* Boost score placeholder
+* Prestige points placeholder
+
+Default tier:
+
+```text
+NPC
+```
 
 ---
 
-## Boost Object
+## VerificationRecord
 
-Current Boost object stores:
+Module:
 
-* id
-* owner
-* channel_id
-* power
-* week_id
+```move
+module nami::verification
+```
 
-Boost represents a discovery influence action.
+Purpose:
+
+Proof that a user passed a supported verification path.
+
+Controls:
+
+```text
+NPC → Adventurer
+```
+
+---
+
+## Badge
+
+Module:
+
+```move
+module nami::badge
+```
+
+Purpose:
+
+On-chain proof of achievement or participation.
+
+Current badge values:
+
+```text
+Basic = 1
+Event = 2
+Completion = 3
+```
+
+---
+
+## BadgeIssuerCap
+
+Module:
+
+```move
+module nami::badge_issuer
+```
+
+Purpose:
+
+Controls which issuers can mint which badge types.
+
+Protects Completion Badges from low-quality or automated issuance.
+
+---
+
+## Boost
+
+Module:
+
+```move
+module nami::boost
+```
+
+Purpose:
+
+Discovery signal object.
+
+Boost access is based on effective membership tier and Conduct status.
+
+---
+
+## ChannelAccessPolicy
+
+Module:
+
+```move
+module nami::channel_access
+```
+
+Purpose:
+
+Controls chat eligibility for a channel.
+
+Current rules include:
+
+* NPC chat toggle
+* Minimum tier
+* Minimum reputation
+* Conduct-aware checks
+* Moderation-aware checks
+
+---
+
+## ConductStatus
+
+Module:
+
+```move
+module nami::conduct
+```
+
+Purpose:
+
+Public interaction signal and moderation state.
+
+Signals:
+
+```text
+Green
+Orange
+Red
+Black
+```
+
+Black Passport restricts benefits through effective access checks.
+
+---
+
+## ModerationRecord
+
+Module:
+
+```move
+module nami::moderation
+```
+
+Purpose:
+
+Stores moderation actions.
+
+Current actions:
+
+```text
+Warning
+Mute
+Channel Ban
+Black Passport
+```
+
+Mutes and channel bans can block chat.
+
+Black Passport updates Conduct status.
+
+---
+
+## AdminCap
+
+Module:
+
+```move
+module nami::admin
+```
+
+Purpose:
+
+Current MVP authority for sensitive actions.
+
+AdminCap can currently:
+
+* Approve badge issuers
+* Upgrade membership
+* Issue moderation actions
+* Resolve appeals
+* Open jury cases
+* Close jury cases
+
+AdminCap is an MVP authority model, not the final governance model.
+
+---
+
+## AppealCase
+
+Module:
+
+```move
+module nami::appeals
+```
+
+Purpose:
+
+Allows users to appeal moderation actions.
+
+Appeals reference moderation records without storing private evidence directly on-chain.
+
+---
+
+## JuryCase and JuryVoteReceipt
+
+Module:
+
+```move
+module nami::jury
+```
+
+Purpose:
+
+Advisory community review for appeals.
+
+Jurors must be Pro or Elite and must not be restricted by Black Passport status.
+
+---
+
+## Squad and SquadMember
+
+Module:
+
+```move
+module nami::squad
+```
+
+Purpose:
+
+Small trust and sponsorship groups.
+
+Current creation requirements:
+
+```text
+Pro or Elite
+No active Black Passport
+```
+
+---
+
+# Current Authority Flow
+
+Sensitive actions are not exposed directly through their storage modules.
+
+Current authority flow:
+
+```text
+verification.move → NPC to Adventurer
+
+admin.move → Badge issuer approval
+admin.move → Pro / Elite upgrades
+admin.move → Moderation actions
+admin.move → Appeal resolution
+admin.move → Jury case open / close
+```
+
+This keeps state mutation controlled while the protocol is still in MVP.
+
+---
+
+# Effective Access Model
+
+Nami avoids relying only on raw Passport tier.
+
+Current effective access can include:
+
+```text
+Passport tier
++ Conduct status
++ Channel policy
++ Moderation records
+```
+
+Example:
+
+A user may hold Elite tier, but if their Conduct status is Black, effective benefits fall back to NPC-equivalent restrictions until respawn.
+
+This affects:
+
+* Boost access
+* Channel chat
+* Squad access
+* Jury eligibility
 
 ---
 
 # Current Events
 
-## IdentityCreated
+Current event families include:
 
-Emitted by:
-
-```move
-identity.move
-```
-
-Purpose:
-
-Track Identity creation.
-
----
-
-## PassportCreated
-
-Emitted by:
-
-```move
-passport.move
-```
-
-Purpose:
-
-Track Passport creation.
-
----
-
-## XPAdded
-
-Emitted by:
-
-```move
-passport.move
-```
-
-Purpose:
-
-Track XP and level progress updates.
-
----
-
-## BadgePointsAdded
-
-Emitted by:
-
-```move
-passport.move
-```
-
-Purpose:
-
-Track badge point updates and reputation changes.
-
----
-
-## TierUpgraded
-
-Emitted by:
-
-```move
-passport.move
-```
-
-Purpose:
-
-Track membership tier changes.
-
----
-
-## BadgeMinted
-
-Emitted by:
-
-```move
-badge.move
-```
-
-Purpose:
-
-Track badge issuance.
-
----
-
-## BoostUsed
-
-Emitted by:
-
-```move
-boost.move
-```
-
-Purpose:
-
-Track channel boost actions.
-
----
-
-# Current Access Design
-
-Some mutation functions are package-only.
-
-This prevents external users from directly calling sensitive functions.
-
-Package-only functions may include:
-
-* Passport XP updates
+* Identity creation
+* Passport creation
+* XP updates
 * Badge point updates
 * Tier upgrades
+* Verification
 * Badge minting
+* Badge issuer activity
+* Boost usage
+* Channel access policy updates
+* Conduct updates
+* Passport down / respawn
+* Moderation actions
+* Admin actions
+* Appeals
+* Jury cases
+* Jury votes
+* Squad creation
+* Squad sponsorship
 
-This design allows future authority modules to call protected functions while preventing direct user abuse.
-
-Future modules should become the public permission gates.
-
----
-
-# Current Dependency Flow
-
-Current core dependency flow:
-
-```text
-Identity
-  ↓
-Passport
-  ↓
-Badge System
-  ↓
-XP / Level / Reputation
-  ↓
-Boost Access
-```
-
-Current module dependency pattern:
+Detailed event descriptions belong in:
 
 ```text
-badge.move → passport.move
-boost.move → passport.move
-passport.move → errors.move
+docs/events.md
 ```
-
-Boost reads Passport tier through a getter instead of directly accessing Passport fields.
-
-This preserves Move module boundaries.
 
 ---
 
@@ -457,285 +477,47 @@ This preserves Move module boundaries.
 
 Current tests verify:
 
-* Identity creation
-* Passport creation
+* Identity and Passport creation
 * NPC default tier
-* NPC to Adventurer to Pro to Elite tier flow
-* Badge minting updates Passport badge points
-* Curved reputation threshold updates
-* NPC cannot boost
-* Adventurer can boost
+* Verification flow
+* Membership upgrade flow
+* Badge progression
+* Badge issuer permissions
+* Boost access
+* Channel access rules
+* Conduct restrictions
+* Moderation chat blocking
+* Admin authority
+* Appeals
+* Jury flow
+* Squads
 
-Current test result:
+Current status:
 
 ```text
-6 tests passing
-0 failed
+33 tests passing
+0 warnings
 ```
 
 ---
 
-# On-Chain vs Off-Chain Boundaries
+# On-Chain Design Rules
 
-## Should Be On-Chain
+Use Move objects for durable protocol state.
 
-The following should be on-chain or anchored on-chain:
+Use events for indexable protocol history.
 
-* Identity ownership
-* Passport object
-* Badge objects
-* Membership tier state
-* Tier upgrade events
-* Badge issuance events
-* Boost usage events
-* Future conduct status proof
-* Future moderation penalty proof
-* Future recovery proof
-* Future guild object anchors
-* Future squad object anchors
-* Future badge issuer authority
+Use capability objects for sensitive authority.
 
----
+Keep private evidence off-chain.
 
-## Should Be Off-Chain
+Keep chat messages off-chain.
 
-The following should usually be off-chain:
+Do not store raw personal identity data on-chain.
 
-* Chat messages
-* Chat attachments
-* Moderation evidence
-* Appeal evidence
-* Jury evidence packets
-* Discovery ranking calculations
-* Profile display name
-* Avatar configuration
-* Customization layout
-* Search indexing
-* Notifications
-* Analytics dashboards
+Do not make payment equal reputation.
 
-Off-chain data may reference on-chain object IDs and events.
-
----
-
-# Future On-Chain Modules
-
-Planned future modules may include:
-
-```text
-verification.move
-membership.move
-conduct.move
-moderation.move
-appeals.move
-jury.move
-channel_access.move
-squad.move
-guild.move
-badge_issuer.move
-badge_registry.move
-badge_review.move
-cosmetics.move
-title.move
-avatar.move
-recovery.move
-```
-
----
-
-## verification.move
-
-Planned responsibility:
-
-* Control NPC to Adventurer transition
-* Validate human verification
-* Support zkLogin verification hooks
-* Support X.com verification carryover
-* Support Steam / Epic / SuiNS verification hooks
-* Emit verification events
-
----
-
-## membership.move
-
-Planned responsibility:
-
-* Control Pro and Elite membership
-* Support expiration
-* Support renewal
-* Support effective tier checks
-* Support grace periods
-* Prevent expired memberships from retaining benefits
-
----
-
-## conduct.move
-
-Planned responsibility:
-
-* Store or anchor Passport Signal status
-* Support Green, Orange, Red, Black signals
-* Support Black Passport restriction state
-* Support respawn timers
-* Emit conduct events
-
----
-
-## moderation.move
-
-Planned responsibility:
-
-* Issue warnings
-* Issue mutes
-* Issue channel bans
-* Apply Black Passport restrictions
-* Support permanent restriction records
-* Emit moderation events
-
----
-
-## appeals.move
-
-Planned responsibility:
-
-* Open appeal cases
-* Track appeal state
-* Emit appeal events
-* Preserve privacy through case IDs and anonymized references
-
----
-
-## jury.move
-
-Planned responsibility:
-
-* Assign anonymous jury groups
-* Track advisory or binding decisions
-* Support Pro / Elite jury eligibility
-* Avoid exposing private identity data
-
----
-
-## channel_access.move
-
-Planned responsibility:
-
-* Store channel access rules
-* Toggle NPC chat
-* Store minimum tier requirements
-* Store minimum reputation requirements
-* Support badge-gated, guild-gated, squad-gated, and NFT-gated chat
-
----
-
-## squad.move
-
-Planned responsibility:
-
-* Create squads
-* Track sponsorship relationships
-* Manage squad slots
-* Support weekly sponsorship cycles
-* Support squad display
-
----
-
-## guild.move
-
-Planned responsibility:
-
-* Create guilds
-* Track guild membership
-* Track guild roles
-* Anchor guild identity
-* Support guild events and future governance
-
----
-
-## badge_issuer.move
-
-Planned responsibility:
-
-* Approve badge issuers
-* Define issuer classes
-* Define allowed badge types
-* Limit Completion Badge issuance
-* Suspend abusive issuers
-
----
-
-## cosmetics.move
-
-Planned responsibility:
-
-* Store cosmetic unlock proofs
-* Support rare on-chain cosmetics
-* Support prestige unlocks
-* Emit customization unlock events
-
----
-
-# Future Effective Access Checks
-
-Future access should not rely only on raw Passport tier.
-
-Effective access may need to consider:
-
-```text
-membership tier
-+ membership expiration
-+ verification status
-+ conduct status
-+ moderation restrictions
-+ channel rules
-```
-
-Example:
-
-A user may have Elite tier but Black Passport status.
-
-In that case, their effective benefits should fall back to NPC-equivalent restrictions until respawn.
-
----
-
-# Future Seasonal Progression
-
-Future seasonal systems may reset or archive:
-
-* XP
-* Level
-* Level progress
-* Seasonal prestige points
-
-Seasonal resets should not delete:
-
-* Identity
-* Passport
-* Historical badges
-* Lifetime reputation history
-* Membership history
-* Guild history
-* Squad history
-
----
-
-# Future Privacy Design
-
-Nami should avoid exposing unnecessary personal information on-chain.
-
-Sensitive data should remain off-chain or privacy-preserving.
-
-Do not store:
-
-* Real names
-* Private emails
-* Raw linked social handles
-* Private game account identifiers
-* Moderation evidence
-* Private chat logs
-* Recovery secrets
-
-On-chain should store proofs, states, and events.
+Do not let raw tier bypass Conduct or Moderation restrictions.
 
 ---
 
@@ -749,7 +531,7 @@ sui move build
 sui move test
 ```
 
-From the repository root:
+From the repo root:
 
 ```bash
 cd /c/Users/prica/nami_chat
@@ -757,10 +539,16 @@ cd /c/Users/prica/nami_chat
 
 ---
 
-# Core Principle
+# Related Docs
 
-Nami should use Sui Move for ownership, proof, trust, access, and event integrity.
+For broader system descriptions, see:
 
-Nami should use off-chain services for speed, search, chat, personalization, moderation evidence, and discovery ranking.
-
-The on-chain layer should be powerful enough to prove what matters, but small enough to remain maintainable.
+```text
+docs/architecture.md
+docs/systems.md
+docs/access-control.md
+docs/events.md
+docs/moderation.md
+docs/conduct-system.md
+docs/squads.md
+```
