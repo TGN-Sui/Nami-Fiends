@@ -19,6 +19,7 @@ module nami::nami_tests {
     use nami::squad;
     use nami::guild;
     use nami::title;
+    use nami::cosmetics;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -32,6 +33,10 @@ module nami::nami_tests {
     /// Title types
     const TITLE_GAMESTER: u8 = 1;
     const TITLE_FIEND: u8 = 4;
+
+    /// Cosmetic types
+    const COSMETIC_PROFILE_FRAME: u8 = 1;
+    const PROFILE_FRAME_CODE: u64 = 1001;
 
     /// Badge types
     const COMPLETION_BADGE: u8 = 3;
@@ -2614,5 +2619,256 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-    
+        /// ---------------------------------------------------------
+    /// Admin can grant a CosmeticUnlock proof.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_admin_can_grant_cosmetic_unlock() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        admin::grant_cosmetic_unlock(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            COSMETIC_PROFILE_FRAME,
+            PROFILE_FRAME_CODE,
+            1,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let unlock =
+            test_scenario::take_from_sender<cosmetics::CosmeticUnlock>(&scenario);
+
+        assert!(cosmetics::get_unlock_owner(&unlock) == USER, 190);
+        assert!(cosmetics::get_unlock_type(&unlock) == COSMETIC_PROFILE_FRAME, 191);
+        assert!(cosmetics::get_unlock_code(&unlock) == PROFILE_FRAME_CODE, 192);
+        assert!(cosmetics::get_unlock_source_code(&unlock) == 1, 193);
+
+        test_scenario::return_to_sender(&scenario, unlock);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// User can create a CosmeticLoadout and equip an unlocked frame.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_user_can_create_loadout_and_equip_profile_frame() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::grant_cosmetic_unlock(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            COSMETIC_PROFILE_FRAME,
+            PROFILE_FRAME_CODE,
+            2,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        cosmetics::create_loadout(
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut loadout =
+            test_scenario::take_from_sender<cosmetics::CosmeticLoadout>(&scenario);
+
+        let unlock =
+            test_scenario::take_from_sender<cosmetics::CosmeticUnlock>(&scenario);
+
+        assert!(cosmetics::get_profile_frame_code(&loadout) == 0, 194);
+
+        cosmetics::equip_cosmetic(
+            &mut loadout,
+            &unlock,
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(
+            cosmetics::get_profile_frame_code(&loadout) == PROFILE_FRAME_CODE,
+            195
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, loadout);
+        test_scenario::return_to_sender(&scenario, unlock);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Black Passport cannot equip cosmetics.
+    /// Expected abort:
+    /// conduct_restricted = 101
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 101)]
+    fun test_black_passport_cannot_equip_cosmetic() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::grant_cosmetic_unlock(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            COSMETIC_PROFILE_FRAME,
+            PROFILE_FRAME_CODE,
+            3,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        cosmetics::create_loadout(
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut loadout =
+            test_scenario::take_from_sender<cosmetics::CosmeticLoadout>(&scenario);
+
+        let unlock =
+            test_scenario::take_from_sender<cosmetics::CosmeticUnlock>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        cosmetics::equip_cosmetic(
+            &mut loadout,
+            &unlock,
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, loadout);
+        test_scenario::return_to_sender(&scenario, unlock);
+
+        test_scenario::end(scenario);
+    }
+
+
 }

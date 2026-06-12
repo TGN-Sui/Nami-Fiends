@@ -98,6 +98,12 @@ module nami::errors {
     const ETitleNotEarned: u64 = 141;
 
     // =========================================================
+    // COSMETIC ERRORS
+    // =========================================================
+    const EInvalidCosmeticType: u64 = 150;
+    const ECosmeticNotUnlocked: u64 = 151;
+
+    // =========================================================
     // PUBLIC ERROR GETTERS
     // =========================================================
 
@@ -174,4 +180,8 @@ module nami::errors {
     public fun invalid_title_type(): u64 { EInvalidTitleType }
 
     public fun title_not_earned(): u64 { ETitleNotEarned }
+
+    public fun invalid_cosmetic_type(): u64 { EInvalidCosmeticType }
+
+    public fun cosmetic_not_unlocked(): u64 { ECosmeticNotUnlocked }
 }
