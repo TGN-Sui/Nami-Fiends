@@ -9,6 +9,8 @@ module nami::nami_tests {
     use nami::boost;
     use nami::verification;
     use nami::membership;
+    use nami::badge_issuer;
+    use nami::channel_access;
 
     /// Test addresses
     const USER: address = @0x1;
@@ -20,6 +22,10 @@ module nami::nami_tests {
 
     /// Badge types
     const COMPLETION_BADGE: u8 = 3;
+
+    /// Badge Issuer types
+    const ISSUER_NAMI_OFFICIAL: u8 = 1;
+    const ISSUER_VERIFIED_CHANNEL: u8 = 3;
 
     /// Verification sources
     const SOURCE_NAMI: u8 = 1;
@@ -300,6 +306,111 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
+    /// Badge issuer can issue an approved Completion Badge.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_badge_issuer_can_issue_completion_badge() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        badge_issuer::create_issuer_cap(
+            USER,
+            CHANNEL_ID,
+            ISSUER_NAMI_OFFICIAL,
+            true,
+            true,
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let issuer_cap =
+            test_scenario::take_from_sender<badge_issuer::BadgeIssuerCap>(&scenario);
+
+        badge_issuer::issue_badge(
+            &issuer_cap,
+            &mut passport_obj,
+            USER,
+            COMPLETION_BADGE,
+            b"issuer-completion-badge",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_badge_points(&passport_obj) == 3, 60);
+        assert!(passport::get_xp(&passport_obj) == 3, 61);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, issuer_cap);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let badge_obj =
+            test_scenario::take_from_sender<badge::Badge>(&scenario);
+
+        test_scenario::return_to_sender(&scenario, badge_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Badge issuer without Completion permission cannot issue
+    /// Completion Badges.
+    /// Expected abort:
+    /// badge_issuer_permission_denied = 92
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 92)]
+    fun test_badge_issuer_cannot_issue_completion_without_permission() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        badge_issuer::create_issuer_cap(
+            USER,
+            CHANNEL_ID,
+            ISSUER_VERIFIED_CHANNEL,
+            true,
+            true,
+            false,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let issuer_cap =
+            test_scenario::take_from_sender<badge_issuer::BadgeIssuerCap>(&scenario);
+
+        badge_issuer::issue_badge(
+            &issuer_cap,
+            &mut passport_obj,
+            USER,
+            COMPLETION_BADGE,
+            b"blocked-completion-badge",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, issuer_cap);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     /// Badge point thresholds update reputation using curved model.
     /// ---------------------------------------------------------
     #[test]
@@ -430,6 +541,156 @@ module nami::nami_tests {
 
         test_scenario::return_to_sender(&scenario, record);
         test_scenario::return_to_sender(&scenario, boost_obj);
+
+        test_scenario::end(scenario);
+    }
+        /// ---------------------------------------------------------
+    /// Channel policy allows NPC chat when toggle is enabled.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_channel_allows_npc_chat_when_enabled() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        assert!(
+            channel_access::can_chat(&passport_obj, &policy),
+            70
+        );
+
+        channel_access::assert_can_chat(&passport_obj, &policy);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Channel policy blocks NPC chat when toggle is disabled.
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_channel_blocks_npc_chat_when_disabled() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            false,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        channel_access::assert_can_chat(&passport_obj, &policy);
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Adventurer can chat when NPC chat is disabled,
+    /// as long as the minimum tier is Adventurer.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_adventurer_can_chat_when_npc_chat_disabled() {
+        let mut scenario = test_scenario::begin(USER);
+
+        identity::init_identity(test_scenario::ctx(&mut scenario));
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            false,
+            ADVENTURER,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        verification::verify_to_adventurer(
+            &identity_obj,
+            &mut passport_obj,
+            SOURCE_NAMI,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == ADVENTURER, 71);
+        assert!(channel_access::can_chat(&passport_obj, &policy), 72);
+
+        channel_access::assert_can_chat(&passport_obj, &policy);
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let record =
+            test_scenario::take_from_sender<verification::VerificationRecord>(&scenario);
+
+        test_scenario::return_to_sender(&scenario, record);
 
         test_scenario::end(scenario);
     }
