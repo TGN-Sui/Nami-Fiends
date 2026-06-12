@@ -1116,4 +1116,186 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Active mute blocks channel chat.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_moderation_mute_blocks_channel_chat() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        moderation::issue_mute(
+            USER,
+            &passport_obj,
+            CHANNEL_ID,
+            12,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        assert!(
+            moderation::is_active_mute(
+                &record,
+                &passport_obj,
+                CHANNEL_ID,
+                test_scenario::ctx(&mut scenario)
+            ),
+            110
+        );
+
+        assert!(
+            !channel_access::can_chat_with_conduct_and_moderation(
+                &passport_obj,
+                &status,
+                &policy,
+                &record,
+                test_scenario::ctx(&mut scenario)
+            ),
+            111
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Active channel ban blocks channel chat.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_moderation_channel_ban_blocks_channel_chat() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel_access::create_policy(
+            CHANNEL_ID,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        moderation::issue_channel_ban(
+            USER,
+            &passport_obj,
+            CHANNEL_ID,
+            13,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        assert!(
+            moderation::is_active_channel_ban(
+                &record,
+                &passport_obj,
+                CHANNEL_ID,
+                test_scenario::ctx(&mut scenario)
+            ),
+            112
+        );
+
+        assert!(
+            !channel_access::can_chat_with_conduct_and_moderation(
+                &passport_obj,
+                &status,
+                &policy,
+                &record,
+                test_scenario::ctx(&mut scenario)
+            ),
+            113
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, policy);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }

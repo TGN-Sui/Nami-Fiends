@@ -227,7 +227,6 @@ module nami::moderation {
     // =========================================================
     // ISSUE BLACK PASSPORT
     // Package-only until global moderation authority exists.
-    // This calls conduct.move and sets Passport Signal to Black.
     // =========================================================
     public(package) fun issue_black_passport(
         target_owner: address,
@@ -272,6 +271,68 @@ module nami::moderation {
         });
 
         transfer::transfer(record, target_owner);
+    }
+
+    // =========================================================
+    // ACTIVE RESTRICTION CHECKS
+    // =========================================================
+    public fun is_active(
+        record: &ModerationRecord,
+        ctx: &TxContext
+    ): bool {
+        if (record.expires_at_ms == 0) {
+            true
+        } else {
+            record.expires_at_ms > tx_context::epoch_timestamp_ms(ctx)
+        }
+    }
+
+    fun matches_channel(
+        record: &ModerationRecord,
+        channel_id: address
+    ): bool {
+        record.channel_id == channel_id || record.channel_id == @0x0
+    }
+
+    fun matches_passport(
+        record: &ModerationRecord,
+        passport_obj: &passport::Passport
+    ): bool {
+        record.passport_id == passport::get_id(passport_obj)
+    }
+
+    public fun is_active_mute(
+        record: &ModerationRecord,
+        passport_obj: &passport::Passport,
+        channel_id: address,
+        ctx: &TxContext
+    ): bool {
+        record.action_type == ACTION_MUTE &&
+        matches_passport(record, passport_obj) &&
+        matches_channel(record, channel_id) &&
+        is_active(record, ctx)
+    }
+
+    public fun is_active_channel_ban(
+        record: &ModerationRecord,
+        passport_obj: &passport::Passport,
+        channel_id: address,
+        ctx: &TxContext
+    ): bool {
+        record.action_type == ACTION_CHANNEL_BAN &&
+        matches_passport(record, passport_obj) &&
+        matches_channel(record, channel_id) &&
+        is_active(record, ctx)
+    }
+
+    public fun blocks_chat(
+        record: &ModerationRecord,
+        passport_obj: &passport::Passport,
+        channel_id: address,
+        ctx: &TxContext
+    ): bool {
+        is_active_mute(record, passport_obj, channel_id, ctx) ||
+        is_active_channel_ban(record, passport_obj, channel_id, ctx)
     }
 
     // =========================================================

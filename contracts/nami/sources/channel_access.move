@@ -7,6 +7,7 @@ module nami::channel_access {
     use nami::conduct;
     use nami::errors;
     use nami::membership;
+    use nami::moderation;
     use nami::passport;
 
     // =========================================================
@@ -122,9 +123,6 @@ module nami::channel_access {
     // =========================================================
     // LEGACY / PACKAGE-ONLY CHAT ACCESS CHECK
     // =========================================================
-    // Internal package path without Conduct.
-    // Public systems should use conduct-aware functions below.
-    // =========================================================
     public(package) fun can_chat(
         passport_obj: &passport::Passport,
         policy: &ChannelAccessPolicy
@@ -199,6 +197,58 @@ module nami::channel_access {
         assert!(
             can_chat_with_conduct(passport_obj, conduct_status, policy, ctx),
             errors::insufficient_tier()
+        );
+    }
+
+    // =========================================================
+    // CONDUCT + MODERATION CHAT ACCESS CHECK
+    // =========================================================
+    public fun can_chat_with_conduct_and_moderation(
+        passport_obj: &passport::Passport,
+        conduct_status: &conduct::ConductStatus,
+        policy: &ChannelAccessPolicy,
+        moderation_record: &moderation::ModerationRecord,
+        ctx: &TxContext
+    ): bool {
+        if (moderation::blocks_chat(
+            moderation_record,
+            passport_obj,
+            policy.channel_id,
+            ctx
+        )) {
+            false
+        } else {
+            can_chat_with_conduct(
+                passport_obj,
+                conduct_status,
+                policy,
+                ctx
+            )
+        }
+    }
+
+    public fun assert_can_chat_with_conduct_and_moderation(
+        passport_obj: &passport::Passport,
+        conduct_status: &conduct::ConductStatus,
+        policy: &ChannelAccessPolicy,
+        moderation_record: &moderation::ModerationRecord,
+        ctx: &TxContext
+    ) {
+        assert!(
+            !moderation::blocks_chat(
+                moderation_record,
+                passport_obj,
+                policy.channel_id,
+                ctx
+            ),
+            errors::unauthorized()
+        );
+
+        assert_can_chat_with_conduct(
+            passport_obj,
+            conduct_status,
+            policy,
+            ctx
         );
     }
 
