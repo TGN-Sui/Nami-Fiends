@@ -1,407 +1,352 @@
-# Nami Membership System
+# Nami Membership
 
-## Overview
+## Purpose
 
-The Nami Membership System controls access to protocol features, benefits, and supporter capabilities.
+Membership controls feature access and platform benefits.
 
-Membership is separate from Reputation.
+Membership is separate from:
 
-Membership is separate from Conduct Signal.
-
-Membership is separate from Gamer Archetype.
+* Reputation
+* Verification
+* Conduct
+* Badge history
+* Archetype
+* Guild role
+* Squad membership
 
 Membership answers:
 
-"What features can this user access?"
+```text
+What benefits can this user access?
+```
 
 Reputation answers:
 
-"What has this user earned?"
-
-Conduct Signal answers:
-
-"What kind of interaction should others expect from this user?"
+```text
+What has this user earned?
+```
 
 ---
 
-## Core Membership Tiers
+## Current Status
 
-Nami currently defines four membership tiers:
+Current module:
 
-* NPC
-* Adventurer
-* Pro
-* Elite
+```move
+module nami::membership
+```
 
-These tiers are used for access control, boost eligibility, future squad slots, customization capacity, and premium protocol features.
+Current related modules:
 
----
+```text
+passport.move
+verification.move
+conduct.move
+boost.move
+channel_access.move
+squad.move
+jury.move
+admin.move
+```
 
-# NPC
+Current protocol status:
 
-## Description
-
-NPC is the default free and unverified state.
-
-Every new Passport begins as NPC.
-
-NPC users are not verified humans and do not receive membership benefits.
-
----
-
-## NPC Permissions
-
-NPC users may:
-
-* Create an Identity
-* Own a Passport
-* Select an onboarding archetype
-* View public spaces
-* Participate in channels that allow NPC chat
-* Build limited profile history where allowed
+```text
+33 tests passing
+0 warnings
+```
 
 ---
 
-## NPC Restrictions
+# Membership Tiers
 
-NPC users may not:
+Current tiers:
 
-* Use boosts
-* Create guilds
-* Sponsor squad members
-* Serve on juries
-* Issue badges
-* Access verified-only channels
-* Access Pro or Elite features
-* Influence discovery
-* Claim premium rewards
+```text
+0 = NPC
+1 = Adventurer
+2 = Pro
+3 = Elite
+```
 
 ---
 
-## NPC Purpose
+## NPC
 
-NPC exists to allow easy onboarding while limiting spam, bots, and abuse.
+NPC is the default tier for every new Passport.
 
-NPC is a sandbox state.
+NPC means:
 
-Users may explore Nami before becoming verified.
+* Free user
+* Unverified or limited access
+* No boost access
+* No Squad creation
+* No Jury eligibility
+* Channel chat depends on channel policy
 
----
+NPC is not a punishment state.
 
-# Adventurer
-
-## Description
-
-Adventurer is the verified human / basic access tier.
-
-A user may become Adventurer through approved verification or basic membership.
-
----
-
-## Adventurer Requirements
-
-Possible Adventurer paths:
-
-* Nami human verification
-* X.com verification carryover
-* zkLogin-linked verification
-* Future SuiNS verification
-* Future Steam or Epic account verification
-* Future approved identity provider
+NPC is the starting state.
 
 ---
 
-## Adventurer Benefits
+## Adventurer
 
-Adventurer users may:
+Adventurer represents verified-human or basic trusted access.
 
-* Access verified user features
-* Use 2 boost per cycle
-* Access Adventurer+ channels
-* Claim eligible basic rewards
-* Display verified human status
-* Participate in broader community systems
+Current unlock path:
 
----
+```text
+NPC → Adventurer
+```
 
-## Adventurer Restrictions
+This transition is controlled by:
 
-Adventurer users may not:
+```move
+module nami::verification
+```
 
-* Sponsor squad members by default
-* Create guilds by default
-* Serve on anonymous juries by default
-* Issue official badges without approval
-* Access Pro or Elite feature capacity
+Current Adventurer benefit:
 
----
+```text
+1 boost
+```
 
-# Pro
-
-## Description
-
-Pro is the full-access supporter tier.
-
-Pro users support the protocol and gain expanded access.
-
-Pro should increase feature access without purchasing reputation.
+Adventurer users may chat in channels that require Adventurer+ access.
 
 ---
 
-## Pro Benefits
+## Pro
 
-Pro users may:
+Pro is a higher access tier.
 
-* Use 6 boosts per cycle
-* Access Pro features
-* Access expanded customization capacity
-* Become eligible for limited squad sponsorship slots
-* Become eligible for anonymous jury pools
-* Participate in higher-trust community systems
+Current unlock path:
 
----
+```text
+Adventurer → Pro
+```
 
-## Pro Restrictions
+This transition is currently controlled through AdminCap.
 
-Pro users may not:
+Current Pro benefits:
 
-* Purchase reputation
-* Bypass moderation
-* Issue badges without issuer approval
-* Override channel rules
-* Skip conduct penalties
+```text
+6 boosts
+Squad creation
+3 squad slots
+Jury eligibility
+```
 
 ---
 
-# Elite
+## Elite
 
-## Description
+Elite is the highest current membership tier.
 
-Elite is the premium supporter tier.
+Current unlock path:
 
-Elite users receive the highest membership access and cosmetic capacity.
+```text
+Pro → Elite
+```
 
-Elite should feel premium without becoming pay-to-win.
+This transition is currently controlled through AdminCap.
 
----
+Current Elite benefits:
 
-## Elite Benefits
+```text
+8 boosts
+Squad creation
+8 squad slots
+Jury eligibility
+```
 
-Elite users may:
-
-* Use 8 boosts per cycle
-* Access premium customization systems
-* Access expanded squad sponsorship slots
-* Become eligible for anonymous jury pools
-* Display premium cosmetics
-* Participate in premium community features
-
----
-
-## Elite Restrictions
-
-Elite users may not:
-
-* Purchase reputation
-* Avoid Black Passport restrictions
-* Override moderation actions
-* Automatically gain badge issuer authority
-* Control discovery alone
-* Bypass guild, squad, or channel requirements
-
-Elite grants access, not immunity.
+Elite does not override moderation.
 
 ---
 
-# Boost Access
+# Effective Tier
 
-Boost access is based on active membership tier.
+Nami uses effective tier checks instead of relying only on raw Passport tier.
 
-Current model:
+Current effective tier considers:
 
-* NPC: 0 boosts
-* Adventurer: 1 boost
-* Pro: 6 boosts
-* Elite: 8 boosts
+```text
+Passport tier
++ Conduct status
+```
 
-Boosts are discovery signals.
+When Conduct is Black:
 
-Boosts are not governance rights.
+```text
+Effective tier = NPC-equivalent
+```
 
-Boosts do not grant ownership, moderation, or badge authority.
+This prevents restricted users from using premium benefits while their Passport is downed.
 
 ---
 
-# Membership and Reputation
+# Black Passport Effect
 
-Membership and Reputation must remain separate.
+Black Passport means:
 
-A user may be:
+```text
+Passport downed. Respawning in...
+```
 
-* NPC with high reputation
-* Adventurer with low reputation
-* Pro with low reputation
-* Elite with high reputation
-* Elite with Black Signal
+While Black Passport is active, the user temporarily loses active benefits.
 
-Reputation is earned.
+Current affected systems:
+
+* Boosts
+* Channel chat
+* Squad creation
+* Squad sponsorship
+* Jury eligibility
+* Premium benefit access
+
+Black Passport should not erase membership history, reputation, badges, or Passport ownership by default.
+
+---
+
+# Current Access Summary
+
+```text
+Feature                     NPC   Adventurer   Pro   Elite   Black
+Boost                       No    1            6     8       No
+Create Squad                No    No           Yes   Yes     No
+Squad Slots                 0     0            3     8       0 active
+Jury Eligibility            No    No           Yes   Yes     No
+Chat if NPC Allowed         Yes   Yes          Yes   Yes     No
+Chat if NPC Disabled        No    Yes          Yes   Yes     No
+```
+
+Channel mutes and channel bans can still block chat regardless of tier.
+
+---
+
+# Verification Relationship
+
+Verification controls the first trusted transition:
+
+```text
+NPC → Adventurer
+```
+
+Verification does not grant reputation.
+
+Verification does not automatically grant Pro or Elite.
+
+Verification proves enough authenticity to unlock basic trusted access.
+
+---
+
+# Reputation Relationship
+
+Membership does not create reputation.
+
+A paid member can still have low reputation.
+
+A high-reputation user can still be NPC if they are not verified or not actively subscribed.
+
+A Pro or Elite user can still be restricted by moderation.
+
+---
+
+# Admin Authority
+
+Current Pro and Elite upgrades are exposed through:
+
+```move
+module nami::admin
+```
+
+AdminCap currently controls:
+
+* Upgrade to Pro
+* Upgrade to Elite
+
+This is the MVP authority model.
+
+Future versions should replace this with subscription-aware membership logic.
+
+---
+
+# Future Expiration and Renewal
+
+Membership expiration is planned.
+
+Future membership should support:
+
+```text
+Expiration timestamp
+Renewal status
+Grace period
+Downgrade rules
+Membership history
+Subscription proof
+```
+
+Possible future behavior:
+
+```text
+Expired Elite → fallback to Adventurer if still verified
+Expired Pro → fallback to Adventurer if still verified
+Expired verified status → fallback to NPC
+```
+
+Expiration should not delete:
+
+* Identity
+* Passport
+* Badge history
+* Reputation history
+* Appeal history
+* Squad history
+
+---
+
+# Future Membership Records
+
+A future `MembershipRecord` object may track:
+
+* Owner
+* Passport ID
+* Tier
+* Started timestamp
+* Expiration timestamp
+* Renewal timestamp
+* Payment/subscription reference
+* Active status
+
+This would make membership history easier to index and audit.
+
+---
+
+# Design Rules
 
 Membership controls access.
 
-Membership should never directly increase reputation.
+Membership does not buy reputation.
+
+Membership does not bypass moderation.
+
+Membership benefits should use effective tier checks.
+
+Black Passport overrides active benefits while restricted.
+
+Expiration should pause benefits without erasing history.
 
 ---
 
-# Membership and Conduct Signal
+# Related Docs
 
-Conduct penalties override membership benefits.
-
-If a user has Black Signal:
-
-* Boosts are disabled
-* Squad slots are disabled
-* Guild creation is disabled
-* Badge claiming may be paused
-* Prestige progress may be paused
-* Verified gated access may be restricted
-
-A Black Passport temporarily falls back to NPC-equivalent benefits until respawn.
-
----
-
-# Membership Expiration
-
-Future versions will support membership expiration.
-
-Expiration is important because Pro and Elite benefits should not remain active forever without renewal.
-
-Planned fields may include:
-
-* tier
-* expires_at_ms
-* renewed_at_ms
-* grace_period_until_ms
-* previous_tier
-
----
-
-## Expiration Rules
-
-When a paid membership expires:
-
-* Pro benefits are disabled
-* Elite benefits are disabled
-* Boost access is recalculated
-* Squad slots may expire or become inactive
-* Premium customization capacity may be restricted
-* Jury eligibility is removed
-
-If the user remains verified, they may fall back to Adventurer.
-
-If the user is no longer verified, they may fall back to NPC.
-
----
-
-## Renewal Rules
-
-Renewal should restore access according to the renewed tier.
-
-Renewal should not reset:
-
-* Passport history
-* Reputation
-* Badges
-* XP
-* Level
-* Archetype
-* Guild history
-* Squad history
-
-Renewal restores access, not earned reputation.
-
----
-
-# Grace Periods
-
-Nami may support short grace periods for expired memberships.
-
-Grace periods may allow:
-
-* Temporary display retention
-* Renewal reminders
-* Cosmetic unequip delay
-* Squad slot transition delay
-
-Grace periods should not allow discovery abuse or boost carryover.
-
-Boost access should end immediately or at the end of the active cycle depending on final policy.
-
----
-
-# Membership Upgrade Path
-
-The intended membership path is:
-
-NPC → Adventurer → Pro → Elite
-
-Users should not skip required verification paths unless approved by protocol rules.
-
-NPC to Adventurer should require verification.
-
-Pro and Elite should require active membership status.
-
----
-
-# Membership Authority
-
-Passport stores membership tier state.
-
-Future authority modules should control tier changes.
-
-Planned modules:
-
-* verification.move
-* membership.move
-
-Verification should control:
-
-* NPC to Adventurer
-
-Membership should control:
-
-* Adventurer to Pro
-* Pro to Elite
-* Expiration
-* Renewal
-* Effective tier checks
-
-Passport should remain the state object.
-
-Verification and Membership modules should become the permission gates.
-
----
-
-# Future Events
-
-Membership-related events may include:
-
-* TierUpgraded
-* MembershipRenewed
-* MembershipExpired
-* MembershipGracePeriodStarted
-* MembershipDowngraded
-* EffectiveTierUpdated
-
----
-
-# Core Principles
-
-Access can be purchased.
-
-Reputation must be earned.
-
-Membership should improve experience, not create unfair social power.
-
-Membership must never override moderation.
-
-Membership must remain understandable to gamers.
+```text
+docs/access-control.md
+docs/passport.md
+docs/verification.md
+docs/conduct-system.md
+docs/moderation.md
+docs/squads.md
+docs/jury.md
+docs/admin.md
+```
