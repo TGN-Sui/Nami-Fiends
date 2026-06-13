@@ -4,13 +4,11 @@
 
 Nami events make protocol activity indexable.
 
-Events allow the backend, frontend, analytics, discovery engine, moderation tools, and future SDKs to reconstruct user-facing timelines without storing every derived view on-chain.
-
-Events should be treated as protocol history.
-
-Objects store state.
+Objects store current state.
 
 Events describe important state changes.
+
+The backend, frontend, analytics tools, moderation dashboards, appeal flows, jury flows, discovery systems, and SDK integrations should use events to build user-facing timelines.
 
 ---
 
@@ -22,10 +20,10 @@ Current Move package:
 contracts/nami
 ```
 
-Current status:
+Current protocol status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -38,6 +36,7 @@ verification.move
 badge.move
 badge_issuer.move
 boost.move
+channel.move
 channel_access.move
 conduct.move
 moderation.move
@@ -45,18 +44,23 @@ admin.move
 appeals.move
 jury.move
 squad.move
+guild.move
+title.move
+cosmetics.move
+profile.move
+recovery.move
 ```
 
 ---
 
-# Event Design Rules
+# Event Rules
 
 Events should be:
 
 * Small
+* Public-safe
 * Indexable
 * Useful to backend services
-* Safe to expose publicly
 * Free of private evidence
 * Free of raw personal identity data
 
@@ -65,33 +69,20 @@ Events should not include:
 * Private chat logs
 * Private moderation evidence
 * Private appeal evidence
+* Private recovery evidence
 * Emails
 * Real names
 * Raw linked social account data
-* Recovery secrets
+* Seed phrases
+* Private game account IDs
 
 ---
 
-# Identity Events
+# Identity and Passport Events
 
 ## IdentityCreated
 
-Module:
-
-```move
-identity.move
-```
-
-Purpose:
-
-Tracks new Identity creation.
-
-Used by:
-
-* Profile indexing
-* Identity lookup
-* Onboarding analytics
-* Future recovery workflows
+Tracks Identity creation.
 
 Core fields:
 
@@ -102,25 +93,9 @@ owner
 
 ---
 
-# Passport Events
-
 ## PassportCreated
 
-Module:
-
-```move
-passport.move
-```
-
-Purpose:
-
 Tracks Passport creation.
-
-Used by:
-
-* Passport profile indexing
-* Onboarding timelines
-* Identity-to-Passport mapping
 
 Core fields:
 
@@ -133,22 +108,7 @@ identity_id
 
 ## XPAdded
 
-Module:
-
-```move
-passport.move
-```
-
-Purpose:
-
 Tracks XP updates.
-
-Used by:
-
-* Progression timeline
-* Level display
-* Seasonal stats
-* Future prestige analytics
 
 Core fields:
 
@@ -161,21 +121,7 @@ amount
 
 ## BadgePointsAdded
 
-Module:
-
-```move
-passport.move
-```
-
-Purpose:
-
 Tracks badge point updates.
-
-Used by:
-
-* Reputation timeline
-* Badge contribution analytics
-* Progression display
 
 Core fields:
 
@@ -189,21 +135,7 @@ total
 
 ## TierUpgraded
 
-Module:
-
-```move
-passport.move
-```
-
-Purpose:
-
 Tracks membership tier changes.
-
-Used by:
-
-* Access history
-* Membership display
-* Admin audit views
 
 Core fields:
 
@@ -219,21 +151,7 @@ new_tier
 
 ## IdentityVerified
 
-Module:
-
-```move
-verification.move
-```
-
-Purpose:
-
 Tracks successful verification.
-
-Used by:
-
-* NPC to Adventurer history
-* Verification dashboards
-* Trust-system indexing
 
 Core fields:
 
@@ -245,28 +163,19 @@ source
 verification_level
 ```
 
+Used for:
+
+```text
+NPC → Adventurer
+```
+
 ---
 
 # Badge Events
 
 ## BadgeMinted
 
-Module:
-
-```move
-badge.move
-```
-
-Purpose:
-
 Tracks Badge object creation.
-
-Used by:
-
-* Badge history
-* Profile display
-* Reputation inputs
-* Achievement timelines
 
 Core fields:
 
@@ -280,21 +189,7 @@ points
 
 ## BadgeIssuerCreated
 
-Module:
-
-```move
-badge_issuer.move
-```
-
-Purpose:
-
-Tracks approved badge issuer capability creation.
-
-Used by:
-
-* Issuer registry
-* Admin audit trail
-* Badge quality review
+Tracks BadgeIssuerCap creation.
 
 Core fields:
 
@@ -311,22 +206,7 @@ can_issue_completion
 
 ## BadgeIssuedByIssuer
 
-Module:
-
-```move
-badge_issuer.move
-```
-
-Purpose:
-
-Tracks badge issuance through an approved issuer.
-
-Used by:
-
-* Badge issuer analytics
-* Badge quality scoring
-* Anti-abuse review
-* Reputation integrity checks
+Tracks badge issuance through approved issuer authority.
 
 Core fields:
 
@@ -343,22 +223,7 @@ badge_type
 
 ## BoostUsed
 
-Module:
-
-```move
-boost.move
-```
-
-Purpose:
-
-Tracks channel/community boost usage.
-
-Used by:
-
-* Discovery ranking
-* Weekly boost cycles
-* Channel momentum
-* Anti-abuse checks
+Tracks boost usage.
 
 Core fields:
 
@@ -370,27 +235,63 @@ tier
 week_id
 ```
 
+Boosts are discovery signals.
+
+They are not reputation or governance.
+
+---
+
+# Channel Events
+
+## ChannelCreated
+
+Tracks Channel object creation.
+
+Core fields:
+
+```text
+channel_id
+owner
+owner_passport_id
+is_public
+```
+
+---
+
+## ChannelUpdated
+
+Tracks Channel metadata and visibility updates.
+
+Core fields:
+
+```text
+channel_id
+owner
+is_public
+```
+
+---
+
+## ChannelVerified
+
+Tracks AdminCap channel verification.
+
+Core fields:
+
+```text
+channel_id
+owner
+```
+
+Verified channels may receive stronger trust and discovery treatment in frontend/backend systems.
+
 ---
 
 # Channel Access Events
 
 ## ChannelAccessPolicyCreated
 
-Module:
-
-```move
-channel_access.move
-```
-
-Purpose:
-
 Tracks channel access policy creation.
-
-Used by:
-
-* Channel settings UI
-* Access indexing
-* Developer/channel dashboards
 
 Core fields:
 
@@ -406,22 +307,7 @@ minimum_reputation
 
 ## ChannelAccessRuleUpdated
 
-Module:
-
-```move
-channel_access.move
-```
-
-Purpose:
-
-Tracks channel access policy changes.
-
-Used by:
-
-* Audit logs
-* Channel settings history
-* Moderation review
-* Access debugging
+Tracks channel access policy updates.
 
 Core fields:
 
@@ -433,27 +319,15 @@ minimum_tier
 minimum_reputation
 ```
 
+Channel access now supports a Channel-aware creation/update path tied to real Channel ownership.
+
 ---
 
 # Conduct Events
 
 ## ConductStatusCreated
 
-Module:
-
-```move
-conduct.move
-```
-
-Purpose:
-
-Tracks initial Conduct Signal setup.
-
-Used by:
-
-* Profile display
-* Conduct timeline
-* Trust-system indexing
+Tracks ConductStatus creation.
 
 Core fields:
 
@@ -467,21 +341,7 @@ signal
 
 ## ConductSignalUpdated
 
-Module:
-
-```move
-conduct.move
-```
-
-Purpose:
-
 Tracks Conduct Signal changes.
-
-Used by:
-
-* Public profile updates
-* Conduct history
-* Moderation audit trails
 
 Core fields:
 
@@ -498,21 +358,7 @@ expires_at_ms
 
 ## PassportDowned
 
-Module:
-
-```move
-conduct.move
-```
-
-Purpose:
-
 Tracks Black Passport status.
-
-Used by:
-
-* Moderation dashboard
-* Benefit restriction checks
-* Public respawn display
 
 Core fields:
 
@@ -533,21 +379,7 @@ Passport downed. Respawning in...
 
 ## PassportRespawned
 
-Module:
-
-```move
-conduct.move
-```
-
-Purpose:
-
 Tracks restoration from Black Passport status.
-
-Used by:
-
-* Conduct timeline
-* Profile display
-* Moderation history
 
 Core fields:
 
@@ -563,21 +395,7 @@ restored_signal
 
 ## WarningIssued
 
-Module:
-
-```move
-moderation.move
-```
-
-Purpose:
-
 Tracks warning actions.
-
-Used by:
-
-* Moderation history
-* Appeal eligibility
-* Admin review
 
 Core fields:
 
@@ -592,21 +410,7 @@ reason_code
 
 ## MuteIssued
 
-Module:
-
-```move
-moderation.move
-```
-
-Purpose:
-
-Tracks temporary chat mute actions.
-
-Used by:
-
-* Chat access checks
-* Channel moderation dashboards
-* Appeal workflows
+Tracks temporary mute actions.
 
 Core fields:
 
@@ -623,21 +427,7 @@ expires_at_ms
 
 ## ChannelBanIssued
 
-Module:
-
-```move
-moderation.move
-```
-
-Purpose:
-
 Tracks channel ban actions.
-
-Used by:
-
-* Channel access checks
-* Channel moderation history
-* Appeal workflows
 
 Core fields:
 
@@ -654,22 +444,7 @@ expires_at_ms
 
 ## BlackPassportIssued
 
-Module:
-
-```move
-moderation.move
-```
-
-Purpose:
-
-Tracks formal moderation action that causes Black Passport status.
-
-Used by:
-
-* Global moderation history
-* Appeals
-* Trust-system analysis
-* Respawn display
+Tracks formal moderation action that applies Black Passport.
 
 Core fields:
 
@@ -687,22 +462,7 @@ respawn_at_ms
 
 ## AdminAction
 
-Module:
-
-```move
-admin.move
-```
-
-Purpose:
-
 Tracks sensitive protocol authority actions.
-
-Used by:
-
-* Admin audit logs
-* Security review
-* Internal dashboards
-* Future governance migration
 
 Core fields:
 
@@ -712,7 +472,7 @@ action_type
 target
 ```
 
-Admin actions currently include:
+Current AdminAction categories include:
 
 ```text
 Badge issuer approval
@@ -725,6 +485,9 @@ Black Passport
 Appeal resolution
 Jury case opening
 Jury case closing
+Cosmetic unlock grant
+Recovery resolution
+Channel verification
 ```
 
 ---
@@ -733,21 +496,7 @@ Jury case closing
 
 ## AppealOpened
 
-Module:
-
-```move
-appeals.move
-```
-
-Purpose:
-
 Tracks appeal case creation.
-
-Used by:
-
-* Appeal dashboard
-* Moderation review
-* Jury routing
 
 Core fields:
 
@@ -764,21 +513,7 @@ moderation_reason_code
 
 ## AppealResolved
 
-Module:
-
-```move
-appeals.move
-```
-
-Purpose:
-
 Tracks appeal resolution.
-
-Used by:
-
-* Appeal timeline
-* Moderation history
-* Trust review
 
 Core fields:
 
@@ -804,21 +539,7 @@ Modified
 
 ## JuryCaseOpened
 
-Module:
-
-```move
-jury.move
-```
-
-Purpose:
-
 Tracks advisory jury case creation.
-
-Used by:
-
-* Jury dashboard
-* Appeal review
-* Community review timelines
 
 Core fields:
 
@@ -834,21 +555,7 @@ required_votes
 
 ## JuryVoteSubmitted
 
-Module:
-
-```move
-jury.move
-```
-
-Purpose:
-
 Tracks juror vote submission.
-
-Used by:
-
-* Jury vote counting
-* Advisory review dashboards
-* Anti-abuse monitoring
 
 Core fields:
 
@@ -858,29 +565,11 @@ appeal_id
 vote
 ```
 
-Note:
-
-Juror identity should be handled carefully in the UI and backend.
-
 ---
 
 ## JuryCaseClosed
 
-Module:
-
-```move
-jury.move
-```
-
-Purpose:
-
 Tracks final advisory jury recommendation.
-
-Used by:
-
-* Appeal review
-* Admin resolution support
-* Community transparency
 
 Core fields:
 
@@ -899,21 +588,7 @@ modify_votes
 
 ## SquadCreated
 
-Module:
-
-```move
-squad.move
-```
-
-Purpose:
-
 Tracks Squad creation.
-
-Used by:
-
-* Squad profile indexing
-* Social graph views
-* Membership benefit analytics
 
 Core fields:
 
@@ -928,21 +603,7 @@ max_slots
 
 ## SquadMemberSponsored
 
-Module:
-
-```move
-squad.move
-```
-
-Purpose:
-
 Tracks Squad sponsorship.
-
-Used by:
-
-* Squad membership display
-* Sponsorship history
-* Trust graph analysis
 
 Core fields:
 
@@ -951,6 +612,225 @@ squad_id
 sponsor
 member
 ```
+
+---
+
+# Guild Events
+
+## GuildCreated
+
+Tracks Guild creation.
+
+Core fields:
+
+```text
+guild_id
+owner
+owner_passport_id
+max_members
+is_public
+```
+
+---
+
+## GuildMemberAdded
+
+Tracks Guild member additions.
+
+Core fields:
+
+```text
+guild_id
+owner
+member
+role
+```
+
+---
+
+## GuildUpdated
+
+Tracks Guild metadata and visibility updates.
+
+Core fields:
+
+```text
+guild_id
+owner
+is_public
+```
+
+---
+
+# Profile Events
+
+## ProfileCreated
+
+Tracks public Profile object creation.
+
+Core fields:
+
+```text
+profile_id
+owner
+passport_id
+is_public
+```
+
+---
+
+## ProfileUpdated
+
+Tracks Profile metadata and visibility updates.
+
+Core fields:
+
+```text
+profile_id
+owner
+passport_id
+is_public
+```
+
+Profile media and long-form metadata should remain off-chain.
+
+---
+
+# Title Events
+
+## TitleClaimed
+
+Tracks earned title proof creation.
+
+Core fields:
+
+```text
+owner
+passport_id
+title_type
+source_code
+```
+
+---
+
+## TitleDisplayCreated
+
+Tracks TitleDisplay creation.
+
+Core fields:
+
+```text
+owner
+passport_id
+```
+
+---
+
+## TitleEquipped
+
+Tracks equipped title changes.
+
+Core fields:
+
+```text
+owner
+passport_id
+title_type
+```
+
+Titles are earned display identity.
+
+They are not membership or authority.
+
+---
+
+# Cosmetic Events
+
+## CosmeticUnlocked
+
+Tracks CosmeticUnlock proof creation.
+
+Core fields:
+
+```text
+owner
+passport_id
+cosmetic_type
+cosmetic_code
+source_code
+```
+
+---
+
+## CosmeticLoadoutCreated
+
+Tracks CosmeticLoadout creation.
+
+Core fields:
+
+```text
+owner
+passport_id
+```
+
+---
+
+## CosmeticEquipped
+
+Tracks equipped cosmetic changes.
+
+Core fields:
+
+```text
+owner
+passport_id
+cosmetic_type
+cosmetic_code
+```
+
+Cosmetics are display customization.
+
+They do not grant reputation, verification, or moderation power.
+
+---
+
+# Recovery Events
+
+## RecoveryRequested
+
+Tracks recovery request creation.
+
+Core fields:
+
+```text
+recovery_id
+requester
+identity_id
+passport_id
+current_owner
+requested_new_owner
+```
+
+Recovery evidence should stay off-chain or encrypted.
+
+---
+
+## RecoveryResolved
+
+Tracks recovery request resolution.
+
+Core fields:
+
+```text
+recovery_id
+requester
+identity_id
+passport_id
+result_status
+resolution_code
+```
+
+Current recovery resolution does not transfer ownership yet.
 
 ---
 
@@ -965,6 +845,10 @@ IdentityVerified
 BadgeMinted
 BadgeIssuedByIssuer
 BoostUsed
+ChannelCreated
+ChannelVerified
+ChannelAccessPolicyCreated
+ChannelAccessRuleUpdated
 ConductSignalUpdated
 PassportDowned
 PassportRespawned
@@ -979,25 +863,48 @@ JuryVoteSubmitted
 JuryCaseClosed
 SquadCreated
 SquadMemberSponsored
+GuildCreated
+GuildMemberAdded
+ProfileCreated
+ProfileUpdated
+TitleClaimed
+TitleEquipped
+CosmeticUnlocked
+CosmeticEquipped
+RecoveryRequested
+RecoveryResolved
 ```
 
-These events are enough to power an early Passport profile, moderation dashboard, appeal dashboard, jury dashboard, squad display, and discovery prototype.
+These events are enough to power early:
+
+```text
+Passport profiles
+Channel pages
+Access policy views
+Badge history
+Boost history
+Moderation dashboards
+Appeal dashboards
+Jury review dashboards
+Squad and Guild displays
+Profile customization
+Recovery review dashboards
+```
 
 ---
 
 # Event Privacy Rules
 
-Events may expose protocol state.
+On-chain events may expose protocol state.
 
-Events should not expose sensitive evidence.
+They should not expose sensitive evidence.
 
-Private evidence should be stored off-chain, encrypted, or referenced through hashes/URIs.
-
-For appeals and jury:
+For moderation, appeals, jury, and recovery:
 
 * Store case IDs and public references on-chain
 * Keep private evidence off-chain
-* Avoid revealing wallet-linked identity context unnecessarily in public UI
+* Use encrypted or controlled storage where needed
+* Avoid exposing unnecessary wallet-linked identity context in public UI
 
 ---
 
@@ -1006,29 +913,28 @@ For appeals and jury:
 Future modules may add events for:
 
 ```text
-GuildCreated
-GuildMemberJoined
-GuildRoleUpdated
-CosmeticUnlocked
-TitleUnlocked
-RecoveryRequested
-RecoveryCompleted
 MembershipRenewed
 MembershipExpired
 BoostCycleClosed
 DiscoverySnapshotCreated
+DeveloperVerified
+GuildRoleUpdated
+GuildMemberRemoved
+CosmeticRevoked
+TitleRevoked
+RecoveryOwnershipTransferred
 ```
 
 ---
 
 # Related Docs
 
-For object schemas and system boundaries, see:
-
 ```text
 docs/onchain.md
 docs/systems.md
+docs/access-control.md
 docs/moderation.md
 docs/conduct-system.md
-docs/access-control.md
+docs/customization.md
+docs/recovery.md
 ```
