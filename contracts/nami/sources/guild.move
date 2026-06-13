@@ -199,9 +199,14 @@ module nami::guild {
     ) {
         let sender = tx_context::sender(ctx);
 
-        assert!(
+               assert!(
             sender == guild.owner,
             errors::unauthorized()
+        );
+
+        assert!(
+            guild.owner_passport_id == passport::get_id(passport_obj),
+            errors::invalid_owner()
         );
 
         assert_can_use_guild_benefits(

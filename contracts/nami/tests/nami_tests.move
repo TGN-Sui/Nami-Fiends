@@ -5176,5 +5176,163 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
-    
+
+        /// ---------------------------------------------------------
+    /// Guild member add rejects wrong Passport pairing.
+    ///
+    /// Attack attempt:
+    /// - User owns Passport A and Passport B
+    /// - User creates a Guild linked to Passport A
+    /// - User attempts to add a member using Passport B + ConductStatus B
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_guild_add_member_rejects_wrong_passport_pairing() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_one);
+        passport::verify_to_adventurer(&mut passport_two);
+
+        conduct::create_status(
+            &passport_one,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_two,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_one =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_two =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        // Create the Guild with passport_one and whichever ConductStatus belongs to it.
+        if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_one)) {
+            guild::create_guild(
+                &passport_one,
+                &status_one,
+                b"passport-pairing-guild",
+                b"Guild for Passport pairing attack test",
+                true,
+                test_scenario::ctx(&mut scenario)
+            );
+        } else {
+            guild::create_guild(
+                &passport_one,
+                &status_two,
+                b"passport-pairing-guild",
+                b"Guild for Passport pairing attack test",
+                true,
+                test_scenario::ctx(&mut scenario)
+            );
+        };
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+        test_scenario::return_to_sender(&scenario, status_one);
+        test_scenario::return_to_sender(&scenario, status_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_one =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_two =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut guild_obj =
+            test_scenario::take_from_sender<guild::Guild>(&scenario);
+
+        // Attack: use the Passport that is NOT linked to the Guild,
+        // paired with that wrong Passport's own ConductStatus.
+        if (passport::get_id(&passport_one) == guild::get_owner_passport_id(&guild_obj)) {
+            if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_two)) {
+                guild::add_member(
+                    &mut guild_obj,
+                    &passport_two,
+                    &status_one,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            } else {
+                guild::add_member(
+                    &mut guild_obj,
+                    &passport_two,
+                    &status_two,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            };
+        } else {
+            if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_one)) {
+                guild::add_member(
+                    &mut guild_obj,
+                    &passport_one,
+                    &status_one,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            } else {
+                guild::add_member(
+                    &mut guild_obj,
+                    &passport_one,
+                    &status_two,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            };
+        };
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+        test_scenario::return_to_sender(&scenario, status_one);
+        test_scenario::return_to_sender(&scenario, status_two);
+        test_scenario::return_to_sender(&scenario, guild_obj);
+
+        test_scenario::end(scenario);
+    }
 }
