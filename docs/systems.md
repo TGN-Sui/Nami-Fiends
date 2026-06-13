@@ -1,84 +1,16 @@
 # Nami Systems Overview
 
-## Overview
+## Purpose
 
-Nami is a modular gaming identity, reputation, access, moderation, and social protocol.
+Nami is a modular gaming identity, reputation, access, moderation, customization, and social protocol.
 
-Each Nami system has a specific responsibility.
+Each system owns a clear responsibility.
 
-The goal is to avoid mixing identity, reputation, membership, moderation, conduct, and social systems into one confusing object.
-
-Nami should remain clear, scalable, and easy to extend.
+Nami should avoid mixing ownership, progression, access, reputation, conduct, moderation, customization, and recovery into one object.
 
 ---
 
-# Core Principle
-
-Each system should answer one primary question.
-
-Identity answers:
-
-```text
-Who owns this presence?
-```
-
-Passport answers:
-
-```text
-What has this player done?
-```
-
-Verification answers:
-
-```text
-Has this player proven enough authenticity to unlock trusted access?
-```
-
-Membership answers:
-
-```text
-What benefits can this player access?
-```
-
-Reputation answers:
-
-```text
-What has this player earned?
-```
-
-Conduct answers:
-
-```text
-What kind of interaction should others expect?
-```
-
-Moderation answers:
-
-```text
-What restrictions are currently applied?
-```
-
-Appeals answer:
-
-```text
-How can a player challenge a moderation action?
-```
-
-Jury answers:
-
-```text
-How can trusted community members provide advisory review?
-```
-
-Squads answer:
-
-```text
-Who does this player personally sponsor or trust?
-```
-
----
-
-# Current Protocol Status
+## Current Status
 
 Current package:
 
@@ -86,596 +18,266 @@ Current package:
 contracts/nami
 ```
 
-Current source modules:
+Current protocol status:
 
 ```text
-sources/
-├── admin.move
-├── appeals.move
-├── badge.move
-├── badge_issuer.move
-├── boost.move
-├── channel_access.move
-├── conduct.move
-├── errors.move
-├── identity.move
-├── jury.move
-├── membership.move
-├── moderation.move
-├── passport.move
-├── squad.move
-└── verification.move
-```
-
-Current test status:
-
-```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
----
+Current MVP progress:
 
-# System Map
-
-Current implemented systems:
-
-* Identity System
-* Passport System
-* Verification System
-* Membership System
-* Reputation System
-* Badge System
-* Badge Issuer System
-* Boost System
-* Channel Access System
-* Conduct System
-* Moderation System
-* Admin Authority System
-* Appeals System
-* Jury System
-* Squad System
-* Error System
-
-Planned future systems:
-
-* Guild System
-* Customization System
-* Title System
-* Recovery System
-* Discovery System
-* Backend Indexer
-* Frontend App
-* SDK Layer
-* zkLogin Production Flow
+```text
+[██████████████░░░░░░] 71%
+```
 
 ---
 
-# Identity System
+# Current Systems
 
-## Purpose
+Implemented systems:
+
+```text
+Identity
+Passport
+Verification
+Membership
+Reputation
+Badge
+Badge Issuer
+Boost
+Channel
+Channel Access
+Conduct
+Moderation
+Admin Authority
+Appeals
+Jury
+Squads
+Guilds
+Profile
+Titles
+Cosmetics
+Recovery
+Errors
+```
+
+Current Move modules:
+
+```text
+admin.move
+appeals.move
+badge.move
+badge_issuer.move
+boost.move
+channel.move
+channel_access.move
+conduct.move
+cosmetics.move
+errors.move
+guild.move
+identity.move
+jury.move
+membership.move
+moderation.move
+passport.move
+profile.move
+recovery.move
+squad.move
+title.move
+verification.move
+```
+
+---
+
+# System Responsibility Map
+
+## Identity
+
+Answers:
+
+```text
+Who owns this Nami presence?
+```
 
 Identity is the root ownership layer.
 
-Identity represents the owner-controlled Nami presence.
+It should stay small and stable.
 
 ---
 
-## Current Module
+## Passport
 
-```move
-module nami::identity
-```
-
----
-
-## Current Responsibilities
-
-Identity currently supports:
-
-* Identity object creation
-* Owner tracking
-* Verification level placeholder
-* Trust tier placeholder
-* Passport reference placeholder
-* Creation timestamp
-* Versioning
-* Safe getters
-
----
-
-## Should Not Handle
-
-Identity should not store:
-
-* XP
-* Level
-* Reputation
-* Badge points
-* Membership tier
-* Conduct Signal
-* Moderation evidence
-* Appeals
-* Jury votes
-* Chat messages
-* Guild memberships
-* Squad memberships
-* Customization settings
-
-Identity should remain small and stable.
-
----
-
-# Passport System
-
-## Purpose
-
-Passport is the gamer journey layer.
-
-Passport stores progression, reputation, membership state, archetype, and future prestige state.
-
----
-
-## Current Module
-
-```move
-module nami::passport
-```
-
----
-
-## Current Responsibilities
-
-Passport currently supports:
-
-* Passport object creation
-* Linked Identity ID
-* XP
-* Curved level progression
-* Level progress
-* Badge points
-* Reputation
-* Archetype
-* Membership tier
-* Boost score placeholder
-* Prestige points placeholder
-* Safe getters
-* Package-only state mutation hooks
-
----
-
-## Default State
-
-A new Passport starts as:
+Answers:
 
 ```text
-Level: 1
-XP: 0
-Level Progress: 0
-Badge Points: 0
-Reputation: Newbie
-Membership Tier: NPC
-Prestige Points: 0
+What has this player done?
 ```
 
-Everyone starts as NPC.
+Passport stores progression, XP, level, badge points, reputation, archetype, membership tier, and future prestige hooks.
 
-A new Passport should not automatically start as Adventurer.
+New Passports start as:
 
----
-
-# Verification System
-
-## Purpose
-
-Verification controls the transition from free/unverified access to verified-human/basic access.
-
----
-
-## Current Module
-
-```move
-module nami::verification
+```text
+NPC
 ```
 
 ---
 
-## Current Transition
+## Verification
+
+Answers:
+
+```text
+Has this user proven enough authenticity to unlock trusted access?
+```
+
+Verification currently controls:
 
 ```text
 NPC → Adventurer
 ```
 
----
-
-## Current Responsibilities
-
-Verification currently supports:
-
-* VerificationRecord object
-* Verification source codes
-* Identity ownership check
-* Passport-to-Identity link check
-* NPC to Adventurer upgrade
-* IdentityVerified event
-* Verification record getters
+Verification does not create reputation.
 
 ---
 
-## Future Verification Sources
+## Membership
 
-Potential future verification sources:
-
-* zkLogin
-* X.com
-* Steam
-* Epic Games
-* SuiNS
-* Email
-* Google
-* Apple
-* Privacy-preserving proof systems
-
----
-
-# Membership System
-
-## Purpose
-
-Membership controls access and benefits.
-
-Membership does not represent reputation.
-
-Membership does not override moderation.
-
----
-
-## Current Module
-
-```move
-module nami::membership
-```
-
----
-
-## Current Tiers
+Answers:
 
 ```text
-0 = NPC
-1 = Adventurer
-2 = Pro
-3 = Elite
+What benefits can this user access?
 ```
 
----
-
-## Current Responsibilities
-
-Membership currently supports:
-
-* Raw effective tier reads
-* Conduct-aware effective tier reads
-* Adventurer to Pro upgrade through package authority
-* Pro to Elite upgrade through package authority
-* Black Passport fallback to NPC-equivalent tier
-
----
-
-## Current Authority Path
-
-Membership upgrades are currently exposed through:
-
-```move
-module nami::admin
-```
-
-AdminCap controls Pro and Elite upgrades.
-
----
-
-## Future Responsibilities
-
-Future membership work should include:
-
-* Expiration
-* Renewal
-* Grace periods
-* Subscription proof
-* Active membership records
-* Downgrade handling
-* Membership history
-
----
-
-# Reputation System
-
-## Purpose
-
-Reputation reflects earned activity and contribution.
-
-Reputation cannot be purchased.
-
----
-
-## Current Location
-
-Reputation is currently stored in:
-
-```move
-module nami::passport
-```
-
----
-
-## Current Ranks
+Current tiers:
 
 ```text
-0 = Newbie
-1 = Gamester
-2 = Goblin
-3 = Goonie
-4 = Fiend
+NPC
+Adventurer
+Pro
+Elite
 ```
+
+Membership controls access, not reputation.
 
 ---
 
-## Current Inputs
+## Reputation
 
-Current reputation inputs:
+Answers:
+
+```text
+What has this user earned?
+```
+
+Reputation is stored in Passport.
+
+Current inputs include:
 
 * Badge points
 * XP
 * Level progression
 
----
-
-## Current Direction
-
-Reputation uses curved progression.
-
-Higher reputation should require meaningful contribution.
-
-Badge quality matters.
-
-Completion Badges should represent real completion.
+Reputation cannot be purchased.
 
 ---
 
-# Badge System
+## Badge
 
-## Purpose
-
-Badges are on-chain proof of achievement, participation, or contribution.
-
----
-
-## Current Module
-
-```move
-module nami::badge
-```
-
----
-
-## Current Badge Types
+Answers:
 
 ```text
-Basic Badge = 1 point
-Event Badge = 2 points
-Completion Badge = 3 points
+What achievement or activity proof has this user earned?
 ```
 
----
+Current badge types:
 
-## Current Responsibilities
-
-Badge currently supports:
-
-* Badge object creation
-* Badge point resolution
-* Badge minting
-* Passport badge point updates
-* XP updates
-* Reputation updates
-* BadgeMinted event
-
----
-
-## Boundary
-
-Badge logic creates and applies badge value.
-
-Badge authority is handled separately by Badge Issuer.
-
----
-
-# Badge Issuer System
-
-## Purpose
-
-Badge Issuer controls who can issue badges.
-
-This protects reputation integrity.
-
----
-
-## Current Module
-
-```move
-module nami::badge_issuer
+```text
+Basic
+Event
+Completion
 ```
 
----
-
-## Current Responsibilities
-
-Badge Issuer currently supports:
-
-* BadgeIssuerCap object
-* Issuer type classification
-* Basic Badge permission
-* Event Badge permission
-* Completion Badge permission
-* Permission-gated badge issuance
-* BadgeIssuedByIssuer event
+Badge points feed Passport progression and reputation.
 
 ---
 
-## Current Authority Path
+## Badge Issuer
 
-Badge issuer approval is controlled through:
+Answers:
 
-```move
-module nami::admin
+```text
+Who is allowed to issue badge types?
 ```
 
-AdminCap can approve badge issuers.
+Badge Issuer authority protects reputation quality.
+
+Completion Badge permission must be explicit.
 
 ---
 
-## Core Rule
+## Boost
 
-Starting a game should not issue a Completion Badge.
+Answers:
 
-Opening a game should not issue a Completion Badge.
-
-Joining a channel should not issue a Completion Badge.
-
-Completion Badge authority must be explicitly granted.
-
----
-
-# Boost System
-
-## Purpose
+```text
+What discovery signal has this user spent?
+```
 
 Boosts are discovery signals.
 
-Boosts help members support channels, games, guilds, events, and communities.
+Boosts are not governance, reputation, moderation power, or ownership.
 
 ---
 
-## Current Module
+## Channel
 
-```move
-module nami::boost
-```
-
----
-
-## Current Boost Model
+Answers:
 
 ```text
-NPC = blocked
-Adventurer = 1
-Pro = 6
-Elite = 8
+What public or private community/channel space exists?
 ```
 
----
+Channels are creator/community spaces.
 
-## Current Responsibilities
+Channels support owner, metadata references, visibility, and verification.
 
-Boost currently supports:
-
-* Boost object creation
-* Boost power resolution
-* BoostUsed event
-* Raw effective tier boost path
-* Conduct-aware boost path
-* NPC boost blocking
-* Black Passport boost blocking
+Verified Channels are currently approved through AdminCap.
 
 ---
 
-## Boundary
+## Channel Access
 
-Boosts are not:
-
-* Reputation
-* Governance
-* Ownership
-* Moderation power
-* Badge authority
-
-Boosts influence discovery only.
-
----
-
-# Channel Access System
-
-## Purpose
-
-Channel Access controls who can chat in a channel.
-
----
-
-## Current Module
-
-```move
-module nami::channel_access
-```
-
----
-
-## Current Responsibilities
-
-Channel Access currently supports:
-
-* ChannelAccessPolicy object
-* Channel owner field
-* Channel ID field
-* NPC chat toggle
-* Minimum tier requirement
-* Minimum reputation requirement
-* Raw chat access checks
-* Conduct-aware chat checks
-* Conduct + moderation-aware chat checks
-
----
-
-## Current Channel Controls
-
-A channel can currently define:
+Answers:
 
 ```text
-Allow NPC Chat: Yes / No
+Who can chat in this Channel?
+```
+
+Channel Access policies now use real Channel ownership.
+
+Current policy controls:
+
+```text
+Allow NPC Chat
 Minimum Tier
 Minimum Reputation
 ```
 
----
-
-## Current Blocking Conditions
-
-Channel chat can currently be blocked by:
-
-* NPC chat disabled
-* Minimum tier not met
-* Minimum reputation not met
-* Active Black Passport
-* Active mute
-* Active channel ban
+Chat can also be blocked by Conduct and Moderation.
 
 ---
 
-# Conduct System
+## Conduct
 
-## Purpose
+Answers:
 
-Conduct communicates interaction style and moderation standing.
-
----
-
-## Current Module
-
-```move
-module nami::conduct
+```text
+What kind of interaction should others expect right now?
 ```
 
----
-
-## Current Signals
+Current signals:
 
 ```text
 Green
@@ -684,80 +286,19 @@ Red
 Black
 ```
 
----
-
-## Signal Meaning
-
-Green:
-
-Friendly, casual, low-conflict.
-
-Orange:
-
-Serious, competitive, but respectful.
-
-Red:
-
-High-intensity, PvP-heavy, trash-talk tolerant.
-
-Black:
-
-Moderation penalty state.
+Black Passport restricts active benefits.
 
 ---
 
-## Current Responsibilities
+## Moderation
 
-Conduct currently supports:
-
-* ConductStatus object
-* User-selectable Green, Orange, Red
-* Black reserved for moderation
-* User cannot select Black
-* PassportDowned event
-* PassportRespawned event
-* Active benefits check
-* Black Passport benefit restriction
-
----
-
-## Black Passport
-
-Public language:
+Answers:
 
 ```text
-Passport downed. Respawning in...
+What restrictions are currently applied?
 ```
 
-Black Passport currently causes:
-
-* Effective tier fallback to NPC
-* Boost restriction
-* Chat restriction
-* Squad benefit restriction
-* Jury eligibility restriction
-
-Black Passport should not erase earned history by default.
-
----
-
-# Moderation System
-
-## Purpose
-
-Moderation protects users, channels, and the protocol.
-
----
-
-## Current Module
-
-```move
-module nami::moderation
-```
-
----
-
-## Current Actions
+Current moderation actions:
 
 ```text
 Warning
@@ -766,581 +307,238 @@ Channel Ban
 Black Passport
 ```
 
----
+Mutes and channel bans block chat.
 
-## Current Responsibilities
-
-Moderation currently supports:
-
-* ModerationRecord object
-* Warning records
-* Mute records
-* Channel ban records
-* Black Passport records
-* Active restriction checks
-* Active mute checks
-* Active channel ban checks
-* Chat-blocking checks
-* Integration with Conduct
-* Integration with Channel Access
+Black Passport restricts broader benefits through Conduct.
 
 ---
 
-## Authority Path
+## Admin Authority
 
-Moderation actions are package-gated and exposed through:
+Answers:
 
-```move
-module nami::admin
+```text
+Who can perform sensitive MVP actions?
 ```
 
-AdminCap is the current MVP authority.
+AdminCap currently controls:
 
----
-
-# Admin Authority System
-
-## Purpose
-
-AdminCap controls sensitive protocol actions during the MVP phase.
-
----
-
-## Current Module
-
-```move
-module nami::admin
+```text
+Badge issuer approval
+Pro / Elite upgrades
+Moderation actions
+Appeal resolution
+Jury case open / close
+Cosmetic unlock grants
+Recovery resolution
+Channel verification
 ```
 
----
-
-## Current Responsibilities
-
-Admin currently supports:
-
-* AdminCap creation on package init
-* Test AdminCap creation
-* Badge issuer approval
-* Upgrade to Pro
-* Upgrade to Elite
-* Issue warning
-* Issue mute
-* Issue channel ban
-* Issue Black Passport
-* Resolve appeals
-* Open jury cases
-* Close jury cases
-* AdminAction events
+AdminCap is the MVP authority model, not the final governance model.
 
 ---
 
-## Boundary
+## Appeals
 
-AdminCap is the current safe MVP authority model.
+Answers:
 
-AdminCap is not the final decentralization model.
-
-Future systems may replace or extend AdminCap with:
-
-* Role-based moderators
-* Channel owner permissions
-* Guild authority
-* DAO-like governance
-* Multi-admin controls
-* Timelocks
-* Emergency controls
-
----
-
-# Appeals System
-
-## Purpose
-
-Appeals create a fairness loop after moderation actions.
-
----
-
-## Current Module
-
-```move
-module nami::appeals
+```text
+How can a user challenge a moderation action?
 ```
 
----
-
-## Current Flow
+Current flow:
 
 ```text
 Moderation action → Appeal opened → Admin resolution
 ```
 
+Private evidence should stay off-chain.
+
 ---
 
-## Current Statuses
+## Jury
+
+Answers:
 
 ```text
-Open
-Approved
-Denied
-Modified
+What does the trusted community recommend for this appeal?
 ```
 
----
-
-## Current Responsibilities
-
-Appeals currently supports:
-
-* AppealCase object
-* AppealOpened event
-* AppealResolved event
-* Open appeal for own moderation record
-* Validate moderation record ownership
-* Reference moderation record ID
-* Store public reference
-* Admin-controlled resolution path
-
----
-
-## Privacy Boundary
-
-Appeal evidence should not be stored directly on-chain.
-
-On-chain appeal data should use:
-
-* Public reference
-* Case label
-* Evidence hash
-* Off-chain storage reference
-* Anonymized summary reference
-
-Private evidence belongs off-chain or encrypted.
-
----
-
-# Jury System
-
-## Purpose
-
-Jury creates advisory community review for appeals.
-
----
-
-## Current Module
-
-```move
-module nami::jury
-```
-
----
-
-## Current Flow
+Current flow:
 
 ```text
-Appeal → JuryCase → Pro/Elite juror vote → Jury recommendation
+Appeal → JuryCase → Pro/Elite vote → Recommendation
 ```
+
+Jury is advisory during MVP.
 
 ---
 
-## Current Jury Results
+## Squads
+
+Answers:
 
 ```text
-Approved
-Denied
-Modified
+Who does this player personally sponsor or trust?
 ```
-
----
-
-## Current Responsibilities
-
-Jury currently supports:
-
-* JuryCase object
-* JuryVoteReceipt object
-* Admin-opened jury case
-* Required vote count
-* Pro/Elite juror eligibility
-* Conduct-aware juror eligibility
-* Black Passport juror blocking
-* Vote submission
-* Final recommendation calculation
-* Admin-closed jury case
-
----
-
-## Boundary
-
-Jury is advisory at this stage.
-
-Admin still performs final appeal resolution.
-
-Future versions may allow stronger jury influence once abuse prevention and privacy systems are mature.
-
----
-
-# Squad System
-
-## Purpose
 
 Squads are small trust and sponsorship groups.
 
-Squads are gamer-native social structures.
-
----
-
-## Current Module
-
-```move
-module nami::squad
-```
-
----
-
-## Current Slot Model
+Current eligibility:
 
 ```text
-Pro = 3 squad slots
-Elite = 8 squad slots
+Pro or Elite
+No active Black Passport
 ```
 
 ---
 
-## Current Responsibilities
+## Guilds
 
-Squad currently supports:
-
-* Squad object
-* SquadMember object
-* Pro squad creation
-* Elite squad creation
-* NPC squad creation blocked
-* Conduct-aware squad eligibility
-* Black Passport squad blocking
-* Squad owner sponsorship
-* Slot limit enforcement
-* SquadCreated event
-* SquadMemberSponsored event
-
----
-
-## Boundary
-
-Squads are not guilds.
-
-Squads are small trust networks.
-
-Guilds will be larger persistent community structures.
-
----
-
-# Error System
-
-## Purpose
-
-The Error System centralizes abort codes.
-
----
-
-## Current Module
-
-```move
-module nami::errors
-```
-
----
-
-## Current Error Categories
-
-Current error categories include:
-
-* Identity
-* Passport
-* Verification
-* Access Control
-* Guilds
-* Squads
-* Boosts
-* Badges
-* Membership
-* Badge Issuers
-* Conduct
-* Moderation
-* Appeals
-* Jury
-
----
-
-## Rule
-
-Modules should use shared error getter functions where possible.
-
-This keeps abort behavior consistent across the protocol.
-
----
-
-# Current System Dependency Map
-
-## Core Dependency Flow
+Answers:
 
 ```text
-Identity
-  ↓
-Passport
-  ├── Verification
-  ├── Membership
-  ├── Reputation
-  ├── Badges
-  ├── Boosts
-  ├── Channel Access
-  ├── Conduct
-  ├── Moderation
-  ├── Appeals
-  ├── Jury
-  └── Squads
+What larger community does this player belong to or lead?
 ```
 
----
+Guilds are larger persistent communities.
 
-## Authority Dependency Flow
+Current eligibility:
 
 ```text
-AdminCap
-  ├── Badge Issuer Approval
-  ├── Membership Upgrades
-  ├── Moderation Actions
-  ├── Appeal Resolution
-  ├── Jury Case Opening
-  └── Jury Case Closing
+Adventurer, Pro, or Elite
+No active Black Passport
 ```
+
+Guilds are separate from Squads.
 
 ---
 
-## Social/Trust Dependency Flow
+## Profile
+
+Answers:
 
 ```text
-Passport
-  ↓
-Membership + Conduct
-  ↓
-Squad Eligibility
-
-Appeal
-  ↓
-JuryCase
-  ↓
-Pro/Elite Juror Vote
-  ↓
-Recommendation
+How does this Passport appear publicly?
 ```
 
----
-
-# Current Test Coverage
-
-Current test count:
+Profiles store public display references:
 
 ```text
-33 tests passing
-0 warnings
+Display name
+Bio reference
+Avatar reference
+Metadata reference
+Public/private setting
 ```
 
-Current tests cover:
+NPC users may create Profiles.
 
-* Identity creation
-* Passport creation
-* NPC default tier
-* Verification NPC to Adventurer flow
-* Invalid verification source failure
-* Membership upgrades
-* Badge minting
-* Badge point reputation updates
-* Badge issuer permissions
-* NPC boost restriction
-* Adventurer boost access
-* Channel NPC chat toggle
-* Channel tier requirements
-* Conduct creation
-* Conduct signal updates
-* User cannot select Black
-* Black Passport disables benefits
-* Black Passport affects effective tier
-* Black Passport blocks chat
-* Moderation warnings
-* Moderation Black Passport action
-* Moderation mute blocks chat
-* Moderation channel ban blocks chat
-* AdminCap issuer approval
-* AdminCap membership upgrades
-* AdminCap moderation actions
-* Appeal opening
-* Appeal resolution
-* Jury case opening
-* Jury voting
-* Jury case closing
-* Squad creation
-* NPC squad restriction
-* Squad sponsorship
+Black Passport blocks Profile updates.
 
 ---
 
-# Future System: Guilds
+## Titles
 
-## Purpose
+Answers:
 
-Guilds will be larger persistent community structures.
+```text
+What earned identity label is this user displaying?
+```
 
-Guilds may support:
+Current title flow:
 
-* Guild object
-* Founder
-* Roles
-* Members
-* Guild reputation
-* Guild events
-* Guild channels
-* Guild badge permissions
-* Guild discovery signals
+```text
+Passport reputation → EarnedTitle → TitleDisplay
+```
 
-Guilds should not replace Squads.
+Titles are display recognition.
+
+Titles do not grant membership or authority.
 
 ---
 
-# Future System: Customization
+## Cosmetics
 
-## Purpose
+Answers:
 
-Customization allows identity expression.
+```text
+What visual customization has this user unlocked or equipped?
+```
 
-Planned customization includes:
+Current cosmetic flow:
 
-* 2D avatars
-* Profile frames
-* Passport themes
-* Chat overlays
-* Fonts
-* Badge displays
-* Earned title displays
-* Guild display selection
-* Prestige effects
+```text
+AdminCap grants CosmeticUnlock
+User creates CosmeticLoadout
+User equips owned unlock
+```
 
-Most customization settings should live off-chain.
+Cosmetics are display customization only.
 
-Meaningful unlock proofs may live on-chain.
+They do not grant reputation, verification, membership, or authority.
 
 ---
 
-# Future System: Recovery
+## Recovery
 
-## Purpose
+Answers:
 
-Recovery helps users regain access safely.
+```text
+How can a user request help regaining access?
+```
 
-Possible recovery signals:
+Current flow:
 
-* zkLogin
-* Linked social accounts
-* Linked game accounts
-* Optional email
-* Squad support
-* Guild support
-* Manual review
+```text
+Identity + Passport → RecoveryRequest → Admin resolution
+```
 
-Recovery must prevent account takeover.
+Recovery does not transfer ownership yet.
 
 ---
 
-# Future System: Discovery
+## Errors
 
-## Purpose
+Answers:
 
-Discovery helps users find quality communities.
+```text
+What shared abort codes are used across the protocol?
+```
 
-Discovery may use:
+The Error System centralizes abort codes and getter functions.
 
-* Boosts
-* Reputation
-* Badge quality
-* Conduct health
-* Moderation health
-* Channel activity
-* Guild activity
-* Squad activity
-* Developer verification
-* Channel verification
-
-Discovery should be computed mostly off-chain.
-
-Sui should anchor trusted inputs.
+Modules should use shared error getters where possible.
 
 ---
 
-# Future System: Backend Indexer
+# Effective Access Model
 
-## Purpose
+Nami does not rely only on raw Passport tier.
 
-The backend indexer will read events and build user-facing data.
+Effective access may include:
 
-The indexer should power:
+```text
+Passport tier
++ Conduct status
++ Channel policy
++ Moderation records
+```
 
-* Passport profiles
-* Badge history
-* Boost history
-* Moderation timelines
-* Appeal timelines
-* Jury timelines
-* Squad profiles
-* Discovery rankings
+Black Passport forces active benefits into NPC-equivalent restrictions while active.
 
-Derived backend data should be rebuildable from on-chain events where possible.
+This currently affects:
 
----
-
-# Future System: Frontend App
-
-## Purpose
-
-The frontend will make Nami usable.
-
-Minimum frontend surfaces:
-
-* Sign-in
-* Create Identity
-* Create Passport
-* View Passport
-* View reputation
-* View membership
-* View Conduct Signal
-* View badges
-* View squads
-* Channel access demo
-* Moderation/admin demo
-* Appeals demo
-* Jury demo
-
-The frontend should feel like a gamer platform, not a blockchain explorer.
-
----
-
-# Future System: SDK
-
-## Purpose
-
-The SDK lets external games and communities integrate Nami.
-
-The SDK should support:
-
-* Identity reads
-* Passport reads
-* Membership reads
-* Reputation reads
-* Badge reads
-* Conduct reads
-* Channel access checks
-* Boost helpers
-* Squad reads
-* Event subscriptions
-* Future zkLogin helpers
+```text
+Boosts
+Channel chat
+Squad access
+Guild actions
+Jury eligibility
+Profile updates
+Title claiming/equipping
+Cosmetic equipping
+```
 
 ---
 
@@ -1380,6 +578,22 @@ Boosts do not grant ownership, moderation power, or governance rights.
 
 ---
 
+## Cosmetics Are Not Reputation
+
+Cosmetics express identity.
+
+Cosmetics do not create trust, authority, or earned standing.
+
+---
+
+## Titles Are Not Membership
+
+Titles show earned recognition.
+
+Titles do not unlock premium benefits by themselves.
+
+---
+
 ## Squads Are Not Guilds
 
 Squads are small trust groups.
@@ -1396,32 +610,71 @@ Private evidence should stay off-chain or encrypted.
 
 ---
 
-# MVP System Status
+## Recovery Is Not Ownership Transfer Yet
 
-Current presentable MVP progress:
+Recovery currently records requests and resolutions.
+
+Ownership transfer should wait for a mature security model.
+
+---
+
+# Current Test Coverage
+
+Current status:
 
 ```text
-[███████████░░░░░░░░░] 55%
+55 tests passing
+0 warnings
 ```
 
-Current breakdown:
+Tests currently cover:
 
 ```text
-On-chain protocol foundation:   ~93% done
-Documentation architecture:     ~85% done
-Backend/indexer:                 0% done
-Frontend/profile UI:             0% done
-SDK integration:                 0% done
-zkLogin production flow:          0% done
+Identity and Passport creation
+NPC default state
+Verification
+Membership upgrades
+Badge progression
+Badge issuer permissions
+Boost access
+Channel creation/update/verification
+Channel access policy ownership
+Conduct restrictions
+Moderation enforcement
+Admin authority
+Appeals
+Jury review
+Squads
+Guilds
+Profiles
+Titles
+Cosmetics
+Recovery
 ```
 
 ---
 
-# Core Principles
+# Future Systems
 
-Nami should be modular.
+Planned or likely future systems:
 
-Each system should own one responsibility.
+```text
+Backend event indexer
+Frontend Passport/Profile UI
+SDK helpers
+zkLogin production flow
+Developer identity
+Membership records
+Guild roles
+Discovery anchors
+Cosmetic registry
+Recovery ownership transfer
+Scenario/adversarial test suite
+```
+
+---
+
+# Design Principles
 
 Identity owns presence.
 
@@ -1435,13 +688,9 @@ Reputation is earned.
 
 Badges prove meaningful activity.
 
-Badge issuers protect quality.
-
-Boosts signal discovery.
-
-Channel Access controls participation.
-
 Conduct communicates interaction state.
+
+Black Passport restricts active benefits.
 
 Moderation protects communities.
 
@@ -1451,10 +700,22 @@ Jury adds community voice.
 
 Squads create small trust networks.
 
-AdminCap protects sensitive MVP actions.
+Guilds create larger communities.
 
-Future backend services power scale.
+Profiles display identity.
 
-Future frontend creates the gamer experience.
+Titles recognize earned status.
 
-Future SDK expands Nami beyond its own app.
+Cosmetics express style.
+
+Recovery protects continuity.
+
+AdminCap secures MVP authority.
+
+Backend powers scale.
+
+Frontend creates the gamer experience.
+
+SDK expands the ecosystem.
+
+Sui anchors proof.
