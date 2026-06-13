@@ -168,9 +168,14 @@ module nami::squad {
     ) {
         let sender = tx_context::sender(ctx);
 
-        assert!(
+              assert!(
             sender == squad.owner,
             errors::squad_unauthorized()
+        );
+
+        assert!(
+            squad.owner_passport_id == passport::get_id(passport_obj),
+            errors::invalid_owner()
         );
 
         assert_can_use_squad_benefits(
@@ -178,7 +183,7 @@ module nami::squad {
             conduct_status,
             ctx
         );
-
+        
         assert!(
             squad.member_count < squad.max_slots,
             errors::squad_limit_reached()

@@ -4618,7 +4618,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-         /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// TitleDisplay cannot equip an EarnedTitle from another Passport.
     ///
     /// Attack attempt:
@@ -4873,7 +4873,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// ChannelAccessPolicy cannot be updated with the wrong Channel.
     ///
     /// Attack attempt:
@@ -5000,5 +5000,181 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
+    /// ---------------------------------------------------------
+    /// Squad sponsorship rejects wrong Passport pairing.
+    ///
+    /// Attack attempt:
+    /// - User owns Passport A and Passport B
+    /// - User creates a Squad linked to Passport A
+    /// - User attempts to sponsor a member using Passport B + ConductStatus B
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_squad_sponsor_rejects_wrong_passport_pairing() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_one);
+        passport::verify_to_adventurer(&mut passport_two);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_one,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_two,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_one,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_two,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_one =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_two =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        // Create the Squad with passport_one and whichever ConductStatus belongs to it.
+        if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_one)) {
+            squad::create_squad(
+                &passport_one,
+                &status_one,
+                b"passport-pairing-squad",
+                test_scenario::ctx(&mut scenario)
+            );
+        } else {
+            squad::create_squad(
+                &passport_one,
+                &status_two,
+                b"passport-pairing-squad",
+                test_scenario::ctx(&mut scenario)
+            );
+        };
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+        test_scenario::return_to_sender(&scenario, status_one);
+        test_scenario::return_to_sender(&scenario, status_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_one =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_two =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut squad_obj =
+            test_scenario::take_from_sender<squad::Squad>(&scenario);
+
+        // Attack: use the Passport that is NOT linked to the Squad,
+        // paired with that wrong Passport's own ConductStatus.
+        if (passport::get_id(&passport_one) == squad::get_owner_passport_id(&squad_obj)) {
+            if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_two)) {
+                squad::sponsor_member(
+                    &mut squad_obj,
+                    &passport_two,
+                    &status_one,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            } else {
+                squad::sponsor_member(
+                    &mut squad_obj,
+                    &passport_two,
+                    &status_two,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            };
+        } else {
+            if (conduct::get_passport_id(&status_one) == passport::get_id(&passport_one)) {
+                squad::sponsor_member(
+                    &mut squad_obj,
+                    &passport_one,
+                    &status_one,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            } else {
+                squad::sponsor_member(
+                    &mut squad_obj,
+                    &passport_one,
+                    &status_two,
+                    SPONSORED_USER,
+                    test_scenario::ctx(&mut scenario)
+                );
+            };
+        };
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+        test_scenario::return_to_sender(&scenario, status_one);
+        test_scenario::return_to_sender(&scenario, status_two);
+        test_scenario::return_to_sender(&scenario, squad_obj);
+
+        test_scenario::end(scenario);
+    }
     
 }
