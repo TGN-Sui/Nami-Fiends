@@ -3795,4 +3795,114 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Profile cannot be updated with a mismatched Passport.
+    ///
+    /// Attack attempt:
+    /// - User owns Profile linked to Passport A
+    /// - User also owns Passport B
+    /// - User tries to update Profile A using Passport B
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_profile_update_rejects_wrong_passport_pairing() {
+        let mut scenario = test_scenario::begin(USER);
+
+        // Create Passport A
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // Create Passport B with a different linked identity id.
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        // ConductStatus is created for Passport A.
+        conduct::create_status(
+            &passport_a,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        // Profile is created for Passport A.
+        profile::create_profile(
+            &passport_a,
+            &status_a,
+            b"Pairing Test",
+            b"bio://pairing-test",
+            b"avatar://pairing-test",
+            b"metadata://pairing-test",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut profile_obj =
+            test_scenario::take_from_sender<profile::Profile>(&scenario);
+
+        // Attack: update Profile A using Passport B and ConductStatus A.
+        // This should fail because profile.passport_id != passport_b.id.
+        profile::update_profile(
+            &mut profile_obj,
+            &passport_b,
+            &status_a,
+            b"Bad Update",
+            b"bio://bad",
+            b"avatar://bad",
+            b"metadata://bad",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+        test_scenario::return_to_sender(&scenario, profile_obj);
+
+        test_scenario::end(scenario);
+    }
 }
