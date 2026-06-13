@@ -1,88 +1,293 @@
-# Nami Recovery System
+# Nami Recovery
 
-## Overview
+## Purpose
 
-The Nami Recovery System is designed to help users regain access to their Identity and Passport without compromising ownership or security.
+Recovery gives users a formal path to request help regaining access to their Nami Identity and Passport.
 
-Recovery should be:
+Recovery must be careful.
 
-* Secure
-* Transparent
-* Difficult to abuse
-* Easy to understand
-
-The protocol prioritizes ownership while minimizing account loss.
+It should protect users from account loss while also preventing account takeover.
 
 ---
 
-## Recovery Goals
+## Current Status
 
-The system should allow users to recover:
+Current module:
 
-* Identity
-* Passport
-* Reputation
-* Membership Status
-* Badges
-* Future Assets
+```move
+module nami::recovery
+```
 
-without requiring centralized intervention whenever possible.
+Related modules:
 
----
+```text
+identity.move
+passport.move
+admin.move
+events
+```
 
-## Recovery Methods
+Current protocol status:
 
-### Social Recovery (Planned)
-
-Trusted Guardians may approve a recovery request.
-
-Requirements:
-
-* Multiple guardian approvals
-* Recovery waiting period
-* On-chain audit trail
+```text
+55 tests passing
+0 warnings
+```
 
 ---
 
-### Verified Account Recovery (Planned)
+# Current Recovery Model
 
-Users who connect verified external accounts may use those accounts to assist with recovery.
+The current Recovery System is intentionally conservative.
 
-Examples:
+Current flow:
 
-* X Verification
-* Email Verification
-* Future Identity Providers
+```text
+Identity + Passport
+→ RecoveryRequest
+→ Admin resolution
+```
 
----
+Important:
 
-### Multi-Device Recovery (Planned)
+```text
+Recovery does not transfer Identity or Passport ownership yet.
+```
 
-Users may designate trusted devices or wallets.
+The current system records the request and the review decision only.
 
-Approved devices can assist in account restoration.
-
----
-
-## Recovery Security
-
-Recovery requests should include:
-
-* Cooldown periods
-* Delayed execution
-* User notifications
-* On-chain events
-
-This prevents instant theft through compromised credentials.
+Ownership transfer will be added later after stronger security, evidence, and policy rules exist.
 
 ---
 
-## Recovery Principles
+# RecoveryRequest
 
-Ownership remains with the user.
+Current object:
 
-Recovery should never bypass protocol security.
+```move
+RecoveryRequest
+```
 
-All recovery actions should be transparent and auditable.
+Current fields include:
 
-No recovery method should allow immediate account seizure.
+* Requester
+* Identity ID
+* Passport ID
+* Current owner
+* Requested new owner
+* Status
+* Public reference
+* Resolution code
+* Created timestamp
+* Resolved timestamp
+
+---
+
+# Recovery Statuses
+
+Current statuses:
+
+```text
+Open
+Approved
+Denied
+Modified
+```
+
+## Open
+
+The request has been submitted and is waiting for review.
+
+## Approved
+
+The request was accepted.
+
+During MVP, approval records a decision only.
+
+It does not automatically transfer ownership.
+
+## Denied
+
+The request was rejected.
+
+## Modified
+
+The request resulted in a changed or partial decision.
+
+This may later support staged recovery, additional evidence requirements, or limited restoration.
+
+---
+
+# Opening a Recovery Request
+
+A user may open a recovery request for a linked Identity and Passport.
+
+Current checks:
+
+```text
+Passport must be linked to the Identity
+Requested new owner cannot be 0x0
+```
+
+The request stores:
+
+```text
+Current owner
+Requested new owner
+Public reference
+```
+
+---
+
+# Public Reference
+
+Recovery includes a `public_reference` field.
+
+This should be used for:
+
+```text
+Case label
+Off-chain evidence reference
+Evidence hash
+Encrypted storage reference
+Support ticket reference
+```
+
+It should not contain:
+
+```text
+Private documents
+Email addresses
+Real names
+Passwords
+Seed phrases
+Private account details
+Raw social login data
+Government ID data
+```
+
+Private recovery evidence belongs off-chain, encrypted, or inside a controlled support system.
+
+---
+
+# Admin Resolution
+
+Recovery resolution is currently exposed through:
+
+```move
+module nami::admin
+```
+
+AdminCap can resolve a RecoveryRequest as:
+
+```text
+Approved
+Denied
+Modified
+```
+
+This is the MVP authority path.
+
+Future recovery authority should be more cautious than normal admin actions.
+
+---
+
+# What Recovery Does Not Do Yet
+
+Current recovery does not:
+
+```text
+Transfer Identity ownership
+Transfer Passport ownership
+Rotate keys
+Change linked wallet
+Erase moderation history
+Erase badge history
+Bypass Black Passport
+Bypass appeals
+```
+
+This is intentional.
+
+Recovery should become more powerful only after stronger rules exist.
+
+---
+
+# Future Recovery Direction
+
+Future recovery may support:
+
+```text
+zkLogin recovery
+Linked social account recovery
+Linked game account recovery
+Squad-supported recovery
+Guild-supported recovery
+Manual review
+Multi-step recovery
+Cooling-off periods
+Challenge periods
+Admin multi-approval
+Evidence hash verification
+Ownership transfer
+```
+
+---
+
+# Security Rules
+
+Recovery should avoid instant ownership transfer.
+
+Recovery should require review and evidence.
+
+Recovery should protect against social engineering.
+
+Recovery should preserve audit history.
+
+Recovery should not expose private evidence on-chain.
+
+Recovery should not let attackers bypass moderation or ownership checks.
+
+---
+
+# Current Events
+
+Recovery emits:
+
+```text
+RecoveryRequested
+RecoveryResolved
+```
+
+Detailed event fields belong in:
+
+```text
+docs/events.md
+```
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* User can open a recovery request
+* Recovery request links Identity and Passport
+* Requested new owner is stored
+* Recovery starts open
+* Admin can approve recovery request
+* Admin can deny recovery request
+* Resolution code is stored
+
+---
+
+# Related Docs
+
+```text
+docs/identity.md
+docs/passport.md
+docs/admin.md
+docs/access-control.md
+docs/events.md
+docs/resilience.md
+```
