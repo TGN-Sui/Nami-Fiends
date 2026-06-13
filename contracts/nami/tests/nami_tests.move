@@ -3905,4 +3905,59 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Recovery must reject an unlinked Identity + Passport pair.
+    ///
+    /// Attack attempt:
+    /// - User owns a valid Identity
+    /// - User creates a Passport linked to a different identity id
+    /// - User tries to open recovery using the mismatched pair
+    ///
+    /// Expected abort:
+    /// invalid_recovery_request = 160
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 160)]
+    fun test_recovery_rejects_unlinked_identity_and_passport() {
+        let mut scenario = test_scenario::begin(USER);
+
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        // Create a Passport linked to the wrong Identity ID.
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            SPONSORED_USER,
+            b"bad-recovery-link",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::end(scenario);
+    }
 }
