@@ -4617,4 +4617,8 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+     
+
+
 }
