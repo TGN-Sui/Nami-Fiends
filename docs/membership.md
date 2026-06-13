@@ -11,8 +11,10 @@ Membership is separate from:
 * Conduct
 * Badge history
 * Archetype
-* Guild role
 * Squad membership
+* Guild role
+* Cosmetic ownership
+* Title ownership
 
 Membership answers:
 
@@ -36,24 +38,29 @@ Current module:
 module nami::membership
 ```
 
-Current related modules:
+Current protocol status:
+
+```text
+55 tests passing
+0 warnings
+```
+
+Related modules:
 
 ```text
 passport.move
 verification.move
 conduct.move
 boost.move
+channel.move
 channel_access.move
 squad.move
+guild.move
 jury.move
+profile.move
+title.move
+cosmetics.move
 admin.move
-```
-
-Current protocol status:
-
-```text
-33 tests passing
-0 warnings
 ```
 
 ---
@@ -78,13 +85,16 @@ NPC is the default tier for every new Passport.
 NPC means:
 
 * Free user
-* Unverified or limited access
+* Limited access
 * No boost access
-* No Squad creation
-* No Jury eligibility
+* No channel creation
+* No squad creation
+* No guild creation
+* No jury eligibility
 * Channel chat depends on channel policy
+* Profile creation is allowed
 
-NPC is not a punishment state.
+NPC is not punishment.
 
 NPC is the starting state.
 
@@ -106,13 +116,17 @@ This transition is controlled by:
 module nami::verification
 ```
 
-Current Adventurer benefit:
+Current Adventurer benefits:
 
 ```text
 1 boost
+Channel creation
+Guild creation
+Adventurer-sized Guild limit
+Chat in Adventurer+ channels
 ```
 
-Adventurer users may chat in channels that require Adventurer+ access.
+Adventurer does not grant Squad creation or Jury eligibility.
 
 ---
 
@@ -132,8 +146,11 @@ Current Pro benefits:
 
 ```text
 6 boosts
+Channel creation
+Guild creation
+100-member Guild limit
 Squad creation
-3 squad slots
+3 Squad slots
 Jury eligibility
 ```
 
@@ -155,8 +172,11 @@ Current Elite benefits:
 
 ```text
 8 boosts
+Channel creation
+Guild creation
+250-member Guild limit
 Squad creation
-8 squad slots
+8 Squad slots
 Jury eligibility
 ```
 
@@ -197,14 +217,22 @@ While Black Passport is active, the user temporarily loses active benefits.
 
 Current affected systems:
 
-* Boosts
-* Channel chat
-* Squad creation
-* Squad sponsorship
-* Jury eligibility
-* Premium benefit access
+```text
+Boosts
+Channel creation
+Channel chat
+Squad creation
+Squad sponsorship
+Guild creation
+Guild member management
+Jury eligibility
+Profile updates
+Title claiming
+Title equipping
+Cosmetic equipping
+```
 
-Black Passport should not erase membership history, reputation, badges, or Passport ownership by default.
+Black Passport should not erase membership history, reputation, badges, titles, cosmetics, or Passport ownership by default.
 
 ---
 
@@ -212,7 +240,12 @@ Black Passport should not erase membership history, reputation, badges, or Passp
 
 ```text
 Feature                     NPC   Adventurer   Pro   Elite   Black
+Create Profile              Yes   Yes          Yes   Yes     No
+Update Profile              Yes   Yes          Yes   Yes     No
 Boost                       No    1            6     8       No
+Create Channel              No    Yes          Yes   Yes     No
+Create Guild                No    Yes          Yes   Yes     No
+Guild Limit                 0     25           100   250     0 active
 Create Squad                No    No           Yes   Yes     No
 Squad Slots                 0     0            3     8       0 active
 Jury Eligibility            No    No           Yes   Yes     No
@@ -252,6 +285,20 @@ A Pro or Elite user can still be restricted by moderation.
 
 ---
 
+# Profiles, Titles, and Cosmetics
+
+Membership does not control earned identity display by itself.
+
+Profiles are basic display anchors.
+
+Titles are earned through reputation.
+
+Cosmetics are unlock proofs and equipped loadouts.
+
+Black Passport can block updates or equipping, but existing history should remain intact by default.
+
+---
+
 # Admin Authority
 
 Current Pro and Elite upgrades are exposed through:
@@ -262,8 +309,10 @@ module nami::admin
 
 AdminCap currently controls:
 
-* Upgrade to Pro
-* Upgrade to Elite
+```text
+Upgrade to Pro
+Upgrade to Elite
+```
 
 This is the MVP authority model.
 
@@ -296,12 +345,19 @@ Expired verified status → fallback to NPC
 
 Expiration should not delete:
 
-* Identity
-* Passport
-* Badge history
-* Reputation history
-* Appeal history
-* Squad history
+```text
+Identity
+Passport
+Profile
+Badge history
+Reputation history
+Title history
+Cosmetic unlocks
+Appeal history
+Squad history
+Guild history
+Recovery history
+```
 
 ---
 
@@ -336,6 +392,8 @@ Black Passport overrides active benefits while restricted.
 
 Expiration should pause benefits without erasing history.
 
+Payment should add features, not trust status.
+
 ---
 
 # Related Docs
@@ -347,6 +405,8 @@ docs/verification.md
 docs/conduct-system.md
 docs/moderation.md
 docs/squads.md
+docs/guilds.md
 docs/jury.md
+docs/customization.md
 docs/admin.md
 ```
