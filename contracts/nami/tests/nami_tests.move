@@ -4217,4 +4217,66 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Black Passport cannot create a TitleDisplay.
+    ///
+    /// Attack attempt:
+    /// - User owns a valid Passport
+    /// - User receives valid ConductStatus
+    /// - ConductStatus is downed to Black Passport
+    /// - User attempts to create a TitleDisplay anyway
+    ///
+    /// Expected abort:
+    /// conduct_restricted = 101
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 101)]
+    fun test_black_passport_cannot_create_title_display() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        title::create_title_display(
+            &passport_obj,
+            &status,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
 }
