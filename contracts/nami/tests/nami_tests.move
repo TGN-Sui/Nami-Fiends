@@ -4872,4 +4872,133 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// ChannelAccessPolicy cannot be updated with the wrong Channel.
+    ///
+    /// Attack attempt:
+    /// - User owns Channel A and Channel B
+    /// - User creates a ChannelAccessPolicy for one Channel
+    /// - User attempts to update that Policy through the other Channel
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_channel_access_policy_rejects_wrong_channel_pairing() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"policy-channel-a",
+            b"First policy pairing channel",
+            b"metadata://policy-channel-a",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"policy-channel-b",
+            b"Second policy pairing channel",
+            b"metadata://policy-channel-b",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_one =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let channel_two =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        // Create the policy for whichever Channel object we took first.
+        channel_access::create_policy_for_channel(
+            &channel_one,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, channel_one);
+        test_scenario::return_to_sender(&scenario, channel_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_one =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let channel_two =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        let mut policy =
+            test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
+
+        // Object ordering for same-type objects is not a security assumption.
+        // Select the Channel that does NOT match the policy's channel_id.
+        if (channel_access::get_channel_id(&policy) == channel::get_id(&channel_one)) {
+            channel_access::update_policy_for_channel(
+                &channel_two,
+                &mut policy,
+                false,
+                ADVENTURER,
+                GAMESTER,
+                test_scenario::ctx(&mut scenario)
+            );
+        } else {
+            channel_access::update_policy_for_channel(
+                &channel_one,
+                &mut policy,
+                false,
+                ADVENTURER,
+                GAMESTER,
+                test_scenario::ctx(&mut scenario)
+            );
+        };
+
+        test_scenario::return_to_sender(&scenario, channel_one);
+        test_scenario::return_to_sender(&scenario, channel_two);
+        test_scenario::return_to_sender(&scenario, policy);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }
