@@ -2,11 +2,11 @@
 
 ## Purpose
 
-The Nami on-chain layer anchors ownership, access, proof, progression, moderation state, and protocol events.
+The Nami on-chain layer anchors durable protocol state.
 
-Sui Move is used for the parts of Nami that must be verifiable, portable, and tamper-resistant.
+Sui Move is used for ownership, access, proof, progression, moderation, appeals, jury review, squads, guilds, channels, profiles, customization unlocks, and recovery requests.
 
-Off-chain systems will handle scale-heavy experiences such as chat, search, discovery ranking, private evidence, profile rendering, and rich customization.
+High-volume or private data should remain off-chain.
 
 ---
 
@@ -22,9 +22,13 @@ Current status:
 
 ```text
 Build passing
-33 tests passing
+55 tests passing
 0 warnings
 ```
+
+---
+
+# Current Move Modules
 
 Current source modules:
 
@@ -34,15 +38,21 @@ appeals.move
 badge.move
 badge_issuer.move
 boost.move
+channel.move
 channel_access.move
 conduct.move
+cosmetics.move
 errors.move
+guild.move
 identity.move
 jury.move
 membership.move
 moderation.move
 passport.move
+profile.move
+recovery.move
 squad.move
+title.move
 verification.move
 ```
 
@@ -54,9 +64,9 @@ tests/nami_tests.move
 
 ---
 
-## What Belongs On-Chain
+# What Belongs On-Chain
 
-Nami should place durable protocol state on-chain.
+Nami should place durable, verifiable protocol state on-chain.
 
 Current on-chain state includes:
 
@@ -67,6 +77,7 @@ Current on-chain state includes:
 * Badge objects
 * Badge issuer capabilities
 * Boost objects
+* Channel objects
 * Channel access policies
 * Conduct status
 * Moderation records
@@ -76,18 +87,27 @@ Current on-chain state includes:
 * Jury vote receipts
 * Squad objects
 * Squad member records
+* Guild objects
+* Guild member records
+* Profile objects
+* Earned title proofs
+* Title display objects
+* Cosmetic unlock proofs
+* Cosmetic loadouts
+* Recovery requests
 
 Future on-chain state may include:
 
-* Guild anchors
-* Recovery proofs
-* Cosmetic unlock proofs
-* Title unlock proofs
-* Developer authority records
+* Membership renewal records
+* Guild roles
+* Developer identity records
+* Cosmetic metadata registries
+* Recovery ownership transfer proofs
+* Discovery anchor snapshots
 
 ---
 
-## What Belongs Off-Chain
+# What Belongs Off-Chain
 
 Nami should keep high-volume, private, or flexible data off-chain.
 
@@ -97,21 +117,22 @@ Off-chain systems should handle:
 * Chat attachments
 * Private moderation evidence
 * Private appeal evidence
-* Jury evidence packets
+* Private jury evidence
+* Private recovery evidence
 * Discovery ranking
 * Search
 * Notifications
-* Profile display names
+* Profile media
 * Avatar configuration
-* Equipped cosmetics
-* Rich media
+* Long bios
+* Rich customization assets
 * Analytics dashboards
 
-Off-chain systems may reference on-chain object IDs and events.
+Off-chain systems may reference on-chain object IDs, events, hashes, encrypted storage references, or Walrus references.
 
 ---
 
-# Current Object Model
+# Core Object Model
 
 ## Identity
 
@@ -125,14 +146,7 @@ Purpose:
 
 Root ownership layer.
 
-Stores:
-
-* Owner
-* Verification placeholder
-* Trust placeholder
-* Passport reference placeholder
-* Created timestamp
-* Version
+Identity should remain small and stable.
 
 ---
 
@@ -148,7 +162,7 @@ Purpose:
 
 Player journey layer.
 
-Stores:
+Passport stores:
 
 * Linked Identity ID
 * XP
@@ -181,7 +195,7 @@ Purpose:
 
 Proof that a user passed a supported verification path.
 
-Controls:
+Current transition:
 
 ```text
 NPC → Adventurer
@@ -199,7 +213,7 @@ module nami::badge
 
 Purpose:
 
-On-chain proof of achievement or participation.
+On-chain achievement or participation proof.
 
 Current badge values:
 
@@ -221,9 +235,9 @@ module nami::badge_issuer
 
 Purpose:
 
-Controls which issuers can mint which badge types.
+Controls who may issue badge types.
 
-Protects Completion Badges from low-quality or automated issuance.
+Completion Badge authority must be explicit.
 
 ---
 
@@ -239,7 +253,33 @@ Purpose:
 
 Discovery signal object.
 
-Boost access is based on effective membership tier and Conduct status.
+Boost access uses effective tier and Conduct status.
+
+---
+
+## Channel
+
+Module:
+
+```move
+module nami::channel
+```
+
+Purpose:
+
+Creator or community channel object.
+
+Channels support:
+
+* Owner
+* Owner Passport ID
+* Name
+* Description
+* Metadata reference
+* Public/private setting
+* Verification flag
+
+Verified channels are controlled through AdminCap during MVP.
 
 ---
 
@@ -253,7 +293,7 @@ module nami::channel_access
 
 Purpose:
 
-Controls chat eligibility for a channel.
+Controls chat eligibility for a Channel.
 
 Current rules include:
 
@@ -262,6 +302,7 @@ Current rules include:
 * Minimum reputation
 * Conduct-aware checks
 * Moderation-aware checks
+* Channel ownership-aware policy creation and updates
 
 ---
 
@@ -311,10 +352,6 @@ Channel Ban
 Black Passport
 ```
 
-Mutes and channel bans can block chat.
-
-Black Passport updates Conduct status.
-
 ---
 
 ## AdminCap
@@ -327,18 +364,18 @@ module nami::admin
 
 Purpose:
 
-Current MVP authority for sensitive actions.
+Current MVP authority layer for sensitive actions.
 
-AdminCap can currently:
+AdminCap currently controls:
 
-* Approve badge issuers
-* Upgrade membership
-* Issue moderation actions
-* Resolve appeals
-* Open jury cases
-* Close jury cases
-
-AdminCap is an MVP authority model, not the final governance model.
+* Badge issuer approval
+* Membership upgrades
+* Moderation actions
+* Appeal resolution
+* Jury case opening and closing
+* Cosmetic unlock grants
+* Recovery resolution
+* Channel verification
 
 ---
 
@@ -354,7 +391,7 @@ Purpose:
 
 Allows users to appeal moderation actions.
 
-Appeals reference moderation records without storing private evidence directly on-chain.
+Private evidence should remain off-chain.
 
 ---
 
@@ -370,7 +407,7 @@ Purpose:
 
 Advisory community review for appeals.
 
-Jurors must be Pro or Elite and must not be restricted by Black Passport status.
+Jurors must be Pro or Elite by effective tier.
 
 ---
 
@@ -386,7 +423,7 @@ Purpose:
 
 Small trust and sponsorship groups.
 
-Current creation requirements:
+Current eligibility:
 
 ```text
 Pro or Elite
@@ -395,11 +432,116 @@ No active Black Passport
 
 ---
 
+## Guild and GuildMember
+
+Module:
+
+```move
+module nami::guild
+```
+
+Purpose:
+
+Larger persistent community structures.
+
+Current eligibility:
+
+```text
+Adventurer, Pro, or Elite
+No active Black Passport
+```
+
+---
+
+## Profile
+
+Module:
+
+```move
+module nami::profile
+```
+
+Purpose:
+
+Public Passport display anchor.
+
+Profiles store references for:
+
+* Display name
+* Bio
+* Avatar
+* Metadata
+
+Media should remain off-chain.
+
+---
+
+## EarnedTitle and TitleDisplay
+
+Module:
+
+```move
+module nami::title
+```
+
+Purpose:
+
+Earned title proofs and equipped title display.
+
+Current title source:
+
+```text
+Passport reputation
+```
+
+---
+
+## CosmeticUnlock and CosmeticLoadout
+
+Module:
+
+```move
+module nami::cosmetics
+```
+
+Purpose:
+
+Customization unlock proofs and equipped cosmetic state.
+
+Current cosmetic categories:
+
+```text
+Profile Frame
+Passport Theme
+Chat Overlay
+Avatar Style
+Badge Display
+Title Effect
+```
+
+---
+
+## RecoveryRequest
+
+Module:
+
+```move
+module nami::recovery
+```
+
+Purpose:
+
+Formal account recovery request and admin resolution flow.
+
+Current recovery does not transfer ownership yet.
+
+---
+
 # Current Authority Flow
 
-Sensitive actions are not exposed directly through their storage modules.
+Sensitive actions are not exposed directly to ordinary users.
 
-Current authority flow:
+Current authority paths:
 
 ```text
 verification.move → NPC to Adventurer
@@ -409,9 +551,10 @@ admin.move → Pro / Elite upgrades
 admin.move → Moderation actions
 admin.move → Appeal resolution
 admin.move → Jury case open / close
+admin.move → Cosmetic unlock grants
+admin.move → Recovery resolution
+admin.move → Channel verification
 ```
-
-This keeps state mutation controlled while the protocol is still in MVP.
 
 ---
 
@@ -419,7 +562,7 @@ This keeps state mutation controlled while the protocol is still in MVP.
 
 Nami avoids relying only on raw Passport tier.
 
-Current effective access can include:
+Effective access may include:
 
 ```text
 Passport tier
@@ -428,16 +571,18 @@ Passport tier
 + Moderation records
 ```
 
-Example:
-
-A user may hold Elite tier, but if their Conduct status is Black, effective benefits fall back to NPC-equivalent restrictions until respawn.
+Black Passport forces active benefits into NPC-equivalent restrictions while active.
 
 This affects:
 
 * Boost access
 * Channel chat
 * Squad access
+* Guild actions
 * Jury eligibility
+* Profile updates
+* Title claiming and equipping
+* Cosmetic equipping
 
 ---
 
@@ -454,6 +599,7 @@ Current event families include:
 * Badge minting
 * Badge issuer activity
 * Boost usage
+* Channel creation and verification
 * Channel access policy updates
 * Conduct updates
 * Passport down / respawn
@@ -462,8 +608,12 @@ Current event families include:
 * Appeals
 * Jury cases
 * Jury votes
-* Squad creation
-* Squad sponsorship
+* Squad creation and sponsorship
+* Guild creation and membership
+* Profile creation and updates
+* Title claiming and equipping
+* Cosmetic unlocks and equipping
+* Recovery requests and resolutions
 
 Detailed event descriptions belong in:
 
@@ -484,18 +634,24 @@ Current tests verify:
 * Badge progression
 * Badge issuer permissions
 * Boost access
-* Channel access rules
+* Channel creation, updates, and verification
+* Channel access policy ownership
 * Conduct restrictions
 * Moderation chat blocking
 * Admin authority
 * Appeals
 * Jury flow
 * Squads
+* Guilds
+* Profiles
+* Titles
+* Cosmetics
+* Recovery
 
 Current status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -519,6 +675,10 @@ Do not make payment equal reputation.
 
 Do not let raw tier bypass Conduct or Moderation restrictions.
 
+Do not let cosmetics, titles, or boosts become authority.
+
+Do not transfer recovery ownership automatically until the safety model is mature.
+
 ---
 
 # Development Commands
@@ -541,14 +701,13 @@ cd /c/Users/prica/nami_chat
 
 # Related Docs
 
-For broader system descriptions, see:
-
 ```text
 docs/architecture.md
 docs/systems.md
-docs/access-control.md
 docs/events.md
+docs/access-control.md
+docs/customization.md
+docs/recovery.md
 docs/moderation.md
 docs/conduct-system.md
-docs/squads.md
 ```
