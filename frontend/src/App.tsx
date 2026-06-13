@@ -15,6 +15,13 @@ import type {
   TitleSummary
 } from './types.js';
 
+import {
+  createConfiguredNamiClient,
+  getConfiguredNetwork,
+  getConfiguredPackageId,
+  hasConfiguredPackageId
+} from './nami.js';
+
 const samplePassport: PassportSummary = {
   owner: '0xUSER',
   passportId: '0xPASSPORT',
@@ -139,9 +146,14 @@ function Section(props: {
 
 export function App(): ReactElement {
   const [walletAddress, setWalletAddress] = useState('');
-  const [packageId, setPackageId] = useState(
-    import.meta.env.VITE_NAMI_PACKAGE_ID ?? ''
-  );
+  const [packageId, setPackageId] = useState(getConfiguredPackageId());
+
+    const configuredNetwork = getConfiguredNetwork();
+    const isPackageConfigured = hasConfiguredPackageId();
+
+    const sdkClient = useMemo(() => {
+    return createConfiguredNamiClient();
+    }, []);
 
   const activePassport = useMemo<PassportSummary>(() => {
     if (walletAddress.trim() === '') {
@@ -197,10 +209,10 @@ export function App(): ReactElement {
               onChange={(event) => setPackageId(event.target.value)}
             />
 
-            <p>
-              This screen is currently a UI foundation. SDK and backend data
-              wiring comes next.
-            </p>
+                <p>
+                Network: {configuredNetwork}. SDK client:{' '}
+                {sdkClient && isPackageConfigured ? 'configured' : 'waiting for package ID'}.
+                </p>
           </div>
         </div>
       </header>
@@ -328,7 +340,7 @@ export function App(): ReactElement {
         <div>
           <strong>Next wiring step</strong>
           <span>
-            Connect this UI to the SDK read helpers and backend indexed events.
+            SDK wiring is now present. Next step is reading owned Passport/Profile objects.
           </span>
         </div>
 
