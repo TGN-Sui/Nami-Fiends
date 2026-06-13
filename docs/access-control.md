@@ -16,10 +16,13 @@ Membership
 Conduct
 Moderation
 Channel Policy
-Badge Authority
 Admin Authority
-Squad Eligibility
+Badge Issuer Authority
 Jury Eligibility
+Squad Eligibility
+Guild Eligibility
+Customization Access
+Recovery Review
 ```
 
 This prevents a user from bypassing restrictions just because they have a high membership tier.
@@ -31,7 +34,7 @@ This prevents a user from bypassing restrictions just because they have a high m
 Current Move status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -40,6 +43,7 @@ Current access-related modules:
 ```text
 verification.move
 membership.move
+channel.move
 channel_access.move
 conduct.move
 moderation.move
@@ -47,6 +51,11 @@ admin.move
 badge_issuer.move
 jury.move
 squad.move
+guild.move
+profile.move
+title.move
+cosmetics.move
+recovery.move
 ```
 
 ---
@@ -60,25 +69,25 @@ Identity proves ownership of a Nami presence.
 Used by:
 
 * Verification
-* Future recovery
+* Recovery
 * Future linked accounts
 * Future developer identity
 
-Identity does not grant reputation or premium benefits by itself.
+Identity does not grant reputation, membership benefits, or moderation authority by itself.
 
 ---
 
 ## Passport State
 
-Passport stores the player journey and current tier state.
+Passport stores the player journey and raw membership tier.
 
-Current default:
+Default state:
 
 ```text
 New Passport = NPC
 ```
 
-Passport tier is stored on-chain, but most systems should use effective access checks instead of trusting raw tier alone.
+Most systems should use effective access checks instead of trusting raw Passport tier alone.
 
 ---
 
@@ -116,27 +125,21 @@ Membership controls feature access, not earned reputation.
 Current benefit examples:
 
 ```text
-NPC         = limited access
-Adventurer  = 1 boost
+NPC         = profile access, limited channel access
+Adventurer  = channel creation, guild creation, 1 boost
 Pro         = 6 boosts, squad access, jury eligibility
 Elite       = 8 boosts, larger squad access, jury eligibility
 ```
 
-Future membership work should add:
-
-* Expiration
-* Renewal
-* Grace periods
-* Subscription records
-* Downgrade handling
+Future membership work should add expiration, renewal, grace periods, and subscription records.
 
 ---
 
 # Effective Tier
 
-Raw Passport tier should not be treated as final access.
+Raw Passport tier is not final access.
 
-Current effective tier may consider:
+Current effective tier considers:
 
 ```text
 Passport tier
@@ -149,22 +152,18 @@ Black Passport forces effective tier to:
 NPC-equivalent
 ```
 
-Even if the raw Passport tier is Pro or Elite.
+Even if the raw Passport tier is Adventurer, Pro, or Elite.
 
 This currently affects:
 
 * Boost access
 * Channel chat
 * Squad creation
+* Guild actions
 * Jury eligibility
-
-Future effective tier may also include:
-
-* Membership expiration
-* Renewal status
-* Verification status
-* Recovery status
-* Emergency restrictions
+* Profile updates
+* Title claiming and equipping
+* Cosmetic equipping
 
 ---
 
@@ -194,7 +193,11 @@ While Black is active:
 * Boosts are blocked
 * Channel chat is blocked
 * Squad benefits are blocked
+* Guild actions are blocked
 * Jury eligibility is blocked
+* Profile updates are blocked
+* Title claiming/equipping is blocked
+* Cosmetic equipping is blocked
 * Premium benefits fall back to NPC-equivalent restrictions
 
 Black does not erase earned Passport history by default.
@@ -203,9 +206,25 @@ Black does not erase earned Passport history by default.
 
 # Channel Access
 
-Channel access is controlled by `ChannelAccessPolicy`.
+Channels are real on-chain objects.
 
-Current channel rules:
+Related modules:
+
+```text
+channel.move
+channel_access.move
+```
+
+Channel creation requires:
+
+```text
+Adventurer or higher effective tier
+No active Black Passport
+```
+
+Channel access policies are now tied to real Channel ownership.
+
+Current channel policy rules:
 
 ```text
 Allow NPC Chat
@@ -222,13 +241,80 @@ Current channel chat can be blocked by:
 * Active mute
 * Active channel ban
 
-Core channel toggle:
+Verified Channels are currently approved through AdminCap.
+
+---
+
+# Profile Access
+
+Profiles are public display anchors for Passports.
+
+Related module:
 
 ```text
-Allow NPC Chat: Yes / No
+profile.move
 ```
 
-This lets verified channels reduce spam without removing public discovery.
+Current rules:
+
+```text
+NPC may create Profile
+Profile owner may update Profile
+Black Passport blocks Profile updates
+```
+
+Profile media and long-form metadata should remain off-chain.
+
+---
+
+# Title Access
+
+Titles are earned display proofs.
+
+Related module:
+
+```text
+title.move
+```
+
+Current title access:
+
+```text
+Passport reputation → EarnedTitle → TitleDisplay
+```
+
+Users may claim reputation titles only when their Passport has enough reputation.
+
+Black Passport blocks:
+
+* Claiming titles
+* Equipping titles
+
+Titles do not grant membership, moderation authority, or reputation by themselves.
+
+---
+
+# Cosmetic Access
+
+Cosmetics are display customization proofs.
+
+Related module:
+
+```text
+cosmetics.move
+```
+
+Current cosmetic access:
+
+```text
+AdminCap grants CosmeticUnlock
+User creates CosmeticLoadout
+User equips owned CosmeticUnlock
+```
+
+Black Passport blocks cosmetic equipping.
+
+Cosmetics do not grant reputation, verification, membership, or authority.
 
 ---
 
@@ -275,6 +361,9 @@ Issue Black Passport
 Resolve appeals
 Open jury cases
 Close jury cases
+Grant cosmetic unlocks
+Resolve recovery requests
+Verify channels
 ```
 
 AdminCap is the current MVP authority model.
@@ -294,9 +383,10 @@ It should later evolve into more granular authority:
 
 Badge minting is separated from badge authority.
 
-`badge.move` handles badge creation.
-
-`badge_issuer.move` controls who can issue badge types.
+```text
+badge.move        = creates badges and applies points
+badge_issuer.move = controls who may issue badge types
+```
 
 Current issuer permissions:
 
@@ -352,13 +442,7 @@ Denied
 Modified
 ```
 
-Future jury access may also require:
-
-* Minimum reputation
-* No recent severe moderation history
-* No conflict of interest
-* Active membership
-* Juror cooldowns
+Future jury access may also require minimum reputation, no recent severe moderation history, no conflict of interest, active membership, and cooldowns.
 
 ---
 
@@ -381,6 +465,31 @@ Squad owners can sponsor members until their slot limit is reached.
 
 ---
 
+# Guild Access
+
+Guilds are larger community structures.
+
+Current Guild creation requirements:
+
+```text
+Adventurer, Pro, or Elite effective tier
+No active Black Passport
+```
+
+Current member limits:
+
+```text
+Adventurer = 25 members
+Pro        = 100 members
+Elite      = 250 members
+```
+
+Black Passport blocks Guild creation and Guild member management.
+
+Guild history is not deleted by temporary restriction.
+
+---
+
 # Appeals Access
 
 Users may open an appeal for their own moderation record.
@@ -396,23 +505,50 @@ Private evidence should stay off-chain.
 
 ---
 
+# Recovery Access
+
+Recovery requests are formal account-safety records.
+
+Current recovery flow:
+
+```text
+Identity + Passport → RecoveryRequest → Admin resolution
+```
+
+Current recovery does not transfer ownership automatically.
+
+Recovery resolution is AdminCap-controlled.
+
+Private recovery evidence should stay off-chain or encrypted.
+
+---
+
 # Current Access Matrix
 
 ```text
 Feature                         NPC   Adventurer   Pro   Elite   Black
 Create Identity                 Yes   Yes          Yes   Yes     Yes
 Create Passport                 Yes   Yes          Yes   Yes     Yes
+Create Profile                  Yes   Yes          Yes   Yes     No
+Update Profile                  Yes   Yes          Yes   Yes     No
 Verify to Adventurer            Yes   N/A          N/A   N/A     Restricted by policy later
+Create Channel                  No    Yes          Yes   Yes     No
+Verify Channel                  AdminCap only
 Use Boost                       No    Yes          Yes   Yes     No
+Create Guild                    No    Yes          Yes   Yes     No
 Create Squad                    No    No           Yes   Yes     No
 Sponsor Squad Member            No    No           Yes   Yes     No
 Serve as Juror                  No    No           Yes   Yes     No
+Claim Title                     Earned reputation required; blocked if Black
+Equip Cosmetic                  Unlock required; blocked if Black
 Chat if NPC allowed             Yes   Yes          Yes   Yes     No
 Chat if NPC disabled            No    Yes          Yes   Yes     No
 Chat while muted                No    No           No    No      No
 Chat while channel banned       No    No           No    No      No
-Issue Badges                    No    Cap only     Cap only Cap only No
+Issue Badges                    Cap only
 Admin Actions                   Cap only
+Open Recovery Request           Yes   Yes          Yes   Yes     Yes
+Resolve Recovery Request        AdminCap only
 ```
 
 ---
@@ -427,11 +563,15 @@ Do not let payment grant reputation.
 
 Do not let boosts become governance.
 
+Do not let cosmetics or titles become authority.
+
 Do not let users self-assign restricted roles.
 
 Do not store private evidence in access objects.
 
 Keep authority paths explicit.
+
+Do not automatically transfer recovery ownership until the security model is mature.
 
 ---
 
@@ -450,6 +590,7 @@ Channel moderator roles
 Guild moderator roles
 Recovery restrictions
 Emergency pause controls
+Multi-admin authority
 ```
 
 ---
@@ -463,6 +604,9 @@ docs/membership.md
 docs/conduct-system.md
 docs/moderation.md
 docs/squads.md
+docs/guilds.md
+docs/customization.md
+docs/recovery.md
 docs/jury.md
 docs/admin.md
 ```
