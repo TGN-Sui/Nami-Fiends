@@ -18,7 +18,7 @@ sui client switch --env testnet
 sui move build --build-env testnet
 
 sui client publish \
-  --gas-budget 100000000 \
+  --gas-budget 500000000 \
   --json \
   > "$OUT_DIR/publish-$TIMESTAMP.json"
 
