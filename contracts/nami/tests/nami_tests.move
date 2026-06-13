@@ -5336,7 +5336,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Appeal rejects wrong Passport / ModerationRecord pairing.
     ///
     /// Attack attempt:
@@ -5414,6 +5414,106 @@ module nami::nami_tests {
         test_scenario::return_to_sender(&scenario, passport_one);
         test_scenario::return_to_sender(&scenario, passport_two);
         test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Appeal cannot be resolved twice.
+    ///
+    /// Attack attempt:
+    /// - Admin resolves an open appeal once
+    /// - Admin attempts to resolve the same appeal again
+    ///
+    /// Expected abort:
+    /// appeal_already_resolved = 121
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 121)]
+    fun test_appeal_cannot_be_resolved_twice() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        admin::issue_warning(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            2501,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        appeals::open_appeal(
+            &passport_obj,
+            &record,
+            b"double-resolution-appeal",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut appeal =
+            test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+        // First resolution succeeds.
+        admin::resolve_appeal(
+            &admin_cap,
+            &mut appeal,
+            APPEAL_APPROVED,
+            2502,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(appeals::is_approved(&appeal), 250);
+        assert!(appeals::get_resolution_code(&appeal) == 2502, 251);
+
+        // Attack: second resolution of the same AppealCase must fail.
+        admin::resolve_appeal(
+            &admin_cap,
+            &mut appeal,
+            APPEAL_APPROVED,
+            2503,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, appeal);
 
         test_scenario::end(scenario);
     }
