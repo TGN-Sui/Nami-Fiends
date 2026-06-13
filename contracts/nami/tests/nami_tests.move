@@ -5335,4 +5335,88 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Appeal rejects wrong Passport / ModerationRecord pairing.
+    ///
+    /// Attack attempt:
+    /// - User owns Passport A and Passport B
+    /// - ModerationRecord is issued against Passport A
+    /// - User tries to open appeal using Passport B + Passport A's record
+    ///
+    /// Expected abort:
+    /// appeal_unauthorized = 120
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 120)]
+    fun test_appeal_rejects_wrong_passport_moderation_record_pairing() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        // Issue the moderation record against passport_one.
+        moderation::issue_warning(
+            USER,
+            &passport_one,
+            2401,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_one =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_two =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        // Object ordering is not a security assumption.
+        // Select the Passport that does NOT match the ModerationRecord.
+        if (moderation::get_passport_id(&record) == passport::get_id(&passport_one)) {
+            appeals::open_appeal(
+                &passport_two,
+                &record,
+                b"wrong-passport-appeal",
+                test_scenario::ctx(&mut scenario)
+            );
+        } else {
+            appeals::open_appeal(
+                &passport_one,
+                &record,
+                b"wrong-passport-appeal",
+                test_scenario::ctx(&mut scenario)
+            );
+        };
+
+        test_scenario::return_to_sender(&scenario, passport_one);
+        test_scenario::return_to_sender(&scenario, passport_two);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }
