@@ -199,7 +199,7 @@ module nami::guild {
     ) {
         let sender = tx_context::sender(ctx);
 
-               assert!(
+        assert!(
             sender == guild.owner,
             errors::unauthorized()
         );
