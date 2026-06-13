@@ -4527,4 +4527,94 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Black Passport cannot add Guild members.
+    ///
+    /// Attack attempt:
+    /// - User verifies to Adventurer
+    /// - User creates a Guild while in good standing
+    /// - ConductStatus is later downed to Black Passport
+    /// - User attempts to add a Guild member anyway
+    ///
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_black_passport_cannot_add_guild_member() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        guild::create_guild(
+            &passport_obj,
+            &status,
+            b"black-member-guild",
+            b"Guild created before Black Passport",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut guild_obj =
+            test_scenario::take_from_sender<guild::Guild>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        guild::add_member(
+            &mut guild_obj,
+            &passport_obj,
+            &status,
+            SPONSORED_USER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+        test_scenario::return_to_sender(&scenario, guild_obj);
+
+        test_scenario::end(scenario);
+    }
 }
