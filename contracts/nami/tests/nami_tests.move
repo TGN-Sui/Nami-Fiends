@@ -3960,4 +3960,59 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// Recovery must reject requested_new_owner = 0x0.
+    ///
+    /// Attack attempt:
+    /// - User owns a valid linked Identity + Passport
+    /// - User tries to open recovery to the zero address
+    ///
+    /// Expected abort:
+    /// invalid_recovery_request = 160
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 160)]
+    fun test_recovery_rejects_zero_requested_owner() {
+        let mut scenario = test_scenario::begin(USER);
+
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            @0x0,
+            b"zero-owner-recovery",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::end(scenario);
+    }
 }
