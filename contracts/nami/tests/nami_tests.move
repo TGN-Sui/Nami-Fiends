@@ -4618,7 +4618,136 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-     
+         /// ---------------------------------------------------------
+    /// TitleDisplay cannot equip an EarnedTitle from another Passport.
+    ///
+    /// Attack attempt:
+    /// - User owns Passport A and Passport B
+    /// - User creates TitleDisplay for Passport A
+    /// - User claims EarnedTitle for Passport B
+    /// - User tries to equip Passport B's EarnedTitle into Passport A's display
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_title_display_rejects_mismatched_earned_title() {
+        let mut scenario = test_scenario::begin(USER);
+
+        // Create Passport A.
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // Create Passport B.
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+              let mut passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        // Both Passports earn enough reputation so object ordering cannot
+        // cause the test to fail early with title_not_earned.
+        passport::apply_badge_points(&mut passport_a, 90);
+        passport::apply_badge_points(&mut passport_b, 90);
+        conduct::create_status(
+            &passport_a,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        conduct::create_status(
+            &passport_b,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_b =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        // TitleDisplay is linked to Passport A.
+        title::create_title_display(
+            &passport_a,
+            &status_a,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // EarnedTitle is linked to Passport B.
+        title::claim_reputation_title(
+            &passport_b,
+            &status_b,
+            TITLE_GAMESTER,
+            2201,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+        test_scenario::return_to_sender(&scenario, status_b);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let status_b =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut display =
+            test_scenario::take_from_sender<title::TitleDisplay>(&scenario);
+
+        let earned_title =
+            test_scenario::take_from_sender<title::EarnedTitle>(&scenario);
+
+        // Attack: use Passport A + Status A, but EarnedTitle belongs to Passport B.
+        title::equip_title(
+            &mut display,
+            &earned_title,
+            &passport_a,
+            &status_a,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+        test_scenario::return_to_sender(&scenario, status_b);
+        test_scenario::return_to_sender(&scenario, display);
+        test_scenario::return_to_sender(&scenario, earned_title);
+
+        test_scenario::end(scenario);
+    }
 
 
 }
