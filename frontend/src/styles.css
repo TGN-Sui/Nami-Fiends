@@ -330,12 +330,146 @@ input {
   line-height: 1.5;
 }
 
+.onboarding-panel {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.onboarding-copy,
+.onboarding-card {
+  border: 1px solid rgba(166, 220, 255, 0.16);
+  border-radius: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+}
+
+.onboarding-copy h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  letter-spacing: -0.04em;
+}
+
+.onboarding-copy p {
+  color: #9db1c7;
+  line-height: 1.6;
+}
+
+.onboarding-card {
+  display: grid;
+  gap: 16px;
+}
+
+.method-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.method-toggle button {
+  cursor: pointer;
+  border: 1px solid rgba(166, 220, 255, 0.16);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(4, 13, 27, 0.6);
+  color: #ccecff;
+  font-weight: 800;
+}
+
+.method-toggle button.active {
+  border-color: rgba(107, 228, 255, 0.72);
+  background: rgba(107, 228, 255, 0.14);
+  color: #f7fbff;
+}
+
+.onboarding-status {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.onboarding-status div,
+.onboarding-package {
+  border: 1px solid rgba(166, 220, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(4, 13, 27, 0.44);
+}
+
+.onboarding-status span,
+.onboarding-package span {
+  display: block;
+  color: #9db1c7;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.onboarding-status strong {
+  display: block;
+  margin-top: 6px;
+}
+
+.onboarding-package code {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: #6be4ff;
+}
+
+.onboarding-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.onboarding-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid rgba(166, 220, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(4, 13, 27, 0.34);
+}
+
+.onboarding-step p {
+  margin: 4px 0 0;
+  color: #9db1c7;
+  line-height: 1.45;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: #9db1c7;
+}
+
+.step-ready {
+  background: #9fffc4;
+}
+
+.step-next {
+  background: #6be4ff;
+}
+
+.step-future {
+  background: #ffd39c;
+}
+
 @media (max-width: 900px) {
-  .hero-grid,
-  .content-grid,
-  .roadmap-strip {
-    grid-template-columns: 1fr;
-  }
+ .hero-grid,
+.onboarding-panel,
+.content-grid,
+.roadmap-strip {
+  grid-template-columns: 1fr;
+}
+.onboarding-status {
+  grid-template-columns: 1fr;
+}
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -345,6 +479,8 @@ input {
     grid-template-columns: 1fr;
   }
 }
+
+
 
 @media (max-width: 560px) {
   .top-nav,

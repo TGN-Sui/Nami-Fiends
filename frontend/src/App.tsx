@@ -22,6 +22,8 @@ import {
   hasConfiguredPackageId
 } from './nami.js';
 
+import { OnboardingPanel } from './OnboardingPanel.js';
+
 const samplePassport: PassportSummary = {
   owner: '0xUSER',
   passportId: '0xPASSPORT',
@@ -215,7 +217,14 @@ export function App(): ReactElement {
                 </p>
           </div>
         </div>
-      </header>
+        
+    </header>
+
+      <OnboardingPanel
+        packageId={packageId}
+        network={configuredNetwork}
+        isPackageConfigured={isPackageConfigured}
+      />
 
       <section className="passport-card">
         <div className="avatar-orb">🎮</div>

@@ -21,6 +21,8 @@ Current frontend capabilities:
 - Channel preview
 - Package ID input
 - Wallet address input
+- Wallet / zkLogin / demo onboarding placeholder
+- Network and package configuration display
 
 This UI is not connected to Sui yet.
 
