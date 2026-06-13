@@ -4749,5 +4749,127 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
+    /// ---------------------------------------------------------
+    /// CosmeticLoadout cannot equip a CosmeticUnlock from another Passport.
+    ///
+    /// Attack attempt:
+    /// - User owns Passport A and Passport B
+    /// - User creates CosmeticLoadout for Passport A
+    /// - Admin grants CosmeticUnlock linked to Passport B
+    /// - User tries to equip Passport B's CosmeticUnlock into Passport A's loadout
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_cosmetic_loadout_rejects_mismatched_unlock() {
+        let mut scenario = test_scenario::begin(USER);
 
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // Create Passport A.
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // Create Passport B.
+        passport::init_passport(
+            @0x999,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        // ConductStatus is linked to Passport A.
+        conduct::create_status(
+            &passport_a,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // CosmeticUnlock is linked to Passport B.
+        admin::grant_cosmetic_unlock(
+            &admin_cap,
+            USER,
+            &passport_b,
+            COSMETIC_PROFILE_FRAME,
+            PROFILE_FRAME_CODE,
+            2301,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        // CosmeticLoadout is linked to Passport A.
+        cosmetics::create_loadout(
+            &passport_a,
+            &status_a,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_a =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let passport_b =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status_a =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        let mut loadout =
+            test_scenario::take_from_sender<cosmetics::CosmeticLoadout>(&scenario);
+
+        let unlock =
+            test_scenario::take_from_sender<cosmetics::CosmeticUnlock>(&scenario);
+
+        // Attack: use Passport A + Status A, but CosmeticUnlock belongs to Passport B.
+        cosmetics::equip_cosmetic(
+            &mut loadout,
+            &unlock,
+            &passport_a,
+            &status_a,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_a);
+        test_scenario::return_to_sender(&scenario, passport_b);
+        test_scenario::return_to_sender(&scenario, status_a);
+        test_scenario::return_to_sender(&scenario, loadout);
+        test_scenario::return_to_sender(&scenario, unlock);
+
+        test_scenario::end(scenario);
+    }
 }
