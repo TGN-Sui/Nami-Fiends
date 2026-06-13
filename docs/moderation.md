@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Moderation protects users, channels, squads, future guilds, and the wider Nami protocol.
+Moderation protects users, channels, squads, guilds, profiles, and the wider Nami protocol.
 
 Moderation should be:
 
@@ -28,12 +28,16 @@ channel_access.move
 appeals.move
 jury.move
 admin.move
+profile.move
+title.move
+cosmetics.move
+recovery.move
 ```
 
 Current protocol status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -71,6 +75,7 @@ Warnings may later affect:
 * Jury eligibility
 * Repeat-offender escalation
 * Moderation dashboards
+* Discovery health signals
 
 ---
 
@@ -93,6 +98,8 @@ Mute records include:
 * Reason code
 * Expiration timestamp
 
+Mutes do not currently block profile updates, titles, cosmetics, squads, or guilds.
+
 ---
 
 ## Channel Ban
@@ -105,7 +112,9 @@ Current effect:
 Blocks channel chat
 ```
 
-Channel bans are stronger than mutes and may represent removal from a channel/community space.
+Channel bans are stronger than mutes and may represent removal from a specific channel/community space.
+
+Channel bans do not currently apply globally unless paired with Black Passport or other future restrictions.
 
 ---
 
@@ -130,11 +139,19 @@ Black Passport currently blocks:
 
 * Boosts
 * Channel chat
+* Channel creation
 * Squad benefits
+* Guild actions
 * Jury eligibility
+* Profile updates
+* Title claiming
+* Title equipping
+* Cosmetic equipping
 * Premium benefit access through effective tier
 
 Black Passport should not erase earned Passport history by default.
+
+Badges, reputation, titles, cosmetics, guild history, squad history, appeals, and recovery history should remain intact unless severe abuse requires separate review.
 
 ---
 
@@ -192,6 +209,8 @@ Chat can be blocked by:
 * Active mute
 * Active channel ban
 
+Channel access policies are now tied to real Channel ownership.
+
 ---
 
 # Admin Authority
@@ -244,6 +263,7 @@ Moderation records support:
 * Access checks
 * Admin audits
 * Backend moderation timelines
+* Future repeat-offender logic
 
 ---
 
@@ -273,7 +293,7 @@ Modified
 
 Private evidence should not be stored directly on-chain.
 
-Appeal cases should reference off-chain evidence, summaries, hashes, or public case labels.
+Appeal cases should reference off-chain evidence, summaries, hashes, encrypted references, or public case labels.
 
 ---
 
@@ -304,19 +324,68 @@ Jury recommendations do not automatically override Admin resolution yet.
 
 ---
 
+# Profile, Titles, and Cosmetics
+
+Moderation affects customization through Black Passport.
+
+Related modules:
+
+```text
+profile.move
+title.move
+cosmetics.move
+```
+
+While Black Passport is active:
+
+```text
+Profile updates are blocked
+Title claiming is blocked
+Title equipping is blocked
+Cosmetic equipping is blocked
+```
+
+Existing Profiles, EarnedTitles, CosmeticUnlocks, and CosmeticLoadouts are not deleted by default.
+
+---
+
+# Recovery Relationship
+
+Recovery is separate from moderation.
+
+Related module:
+
+```move
+module nami::recovery
+```
+
+A user may open a RecoveryRequest even if moderation history exists.
+
+Recovery should not be used to bypass moderation.
+
+Current recovery does not transfer ownership automatically.
+
+Future recovery review should consider active severe moderation restrictions before approving any ownership transfer.
+
+---
+
 # Privacy Rules
 
 Moderation should avoid exposing unnecessary private data.
 
 Do not store on-chain:
 
-* Private chat logs
-* Private moderation evidence
-* Private appeal evidence
-* Real names
-* Emails
-* Raw linked social accounts
-* Private game account IDs
+```text
+Private chat logs
+Private moderation evidence
+Private appeal evidence
+Private recovery evidence
+Real names
+Emails
+Raw linked social accounts
+Private game account IDs
+Personal documents
+```
 
 Use on-chain records for state and references.
 
@@ -328,7 +397,7 @@ Use off-chain systems for sensitive evidence.
 
 Current moderation functions use numeric reason codes.
 
-Reason codes allow the frontend/backend to map moderation actions to human-readable categories.
+Reason codes allow frontend/backend systems to map moderation actions to human-readable categories.
 
 Future examples may include:
 
@@ -344,7 +413,7 @@ Channel rule violation
 Protocol rule violation
 ```
 
-The code should stay stable while display text can evolve.
+Reason code values should stay stable while display text can evolve.
 
 ---
 
@@ -383,6 +452,7 @@ Reports may trigger:
 * Evidence collection
 * Moderator attention
 * Temporary safety limits
+* Appeal context
 * Jury review eligibility
 
 Punishment should require authority, evidence, and auditability.
@@ -393,15 +463,22 @@ Punishment should require authority, evidence, and auditability.
 
 Current tests verify:
 
-* Warning creation
-* Black Passport issuance
-* Black Passport disables benefits
-* Black Passport blocks chat
-* Mute blocks channel chat
-* Channel ban blocks channel chat
-* AdminCap can issue moderation actions
-* Appeals can be opened from moderation records
-* Jury review can be opened for appeals
+```text
+Warning creation
+Mute creation
+Channel ban creation
+Black Passport issuance
+Black Passport disables benefits
+Black Passport blocks chat
+Mute blocks channel chat
+Channel ban blocks channel chat
+AdminCap can issue moderation actions
+Appeals can be opened from moderation records
+Jury review can be opened for appeals
+Black Passport blocks Profile updates
+Black Passport blocks Title claiming
+Black Passport blocks Cosmetic equipping
+```
 
 ---
 
@@ -421,7 +498,28 @@ Repeat-offender escalation
 Permanent restrictions
 Moderation dashboards
 Emergency pause controls
+Recovery-aware moderation review
 ```
+
+---
+
+# Design Rules
+
+Moderation should protect users without becoming arbitrary.
+
+Black Passport should restrict active benefits without erasing history by default.
+
+Warnings should create context, not automatic punishment.
+
+Mutes and channel bans should be channel-specific.
+
+Appeals should be available and reviewable.
+
+Jury should begin advisory before becoming binding.
+
+Private evidence should stay off-chain or encrypted.
+
+Recovery should not bypass moderation.
 
 ---
 
@@ -434,4 +532,6 @@ docs/appeals.md
 docs/jury.md
 docs/admin.md
 docs/events.md
+docs/customization.md
+docs/recovery.md
 ```
