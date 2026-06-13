@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The Conduct System gives each Passport a public interaction signal.
+The Conduct System gives each Passport a public interaction signal and restriction state.
 
-It helps players, channels, squads, jurors, and future guilds understand what kind of interaction to expect from a user.
+Conduct helps players, channels, squads, guilds, jurors, and future discovery systems understand how a user is currently positioned socially and behaviorally.
 
 Conduct is separate from:
 
@@ -13,6 +13,10 @@ Conduct is separate from:
 * Verification
 * Archetype
 * Badge history
+* Titles
+* Cosmetics
+* Squad membership
+* Guild membership
 
 Conduct answers:
 
@@ -33,11 +37,25 @@ module nami::conduct
 Current protocol status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
-Conduct is already wired into effective access checks through Membership, Channel Access, Boosts, Jury eligibility, and Squads.
+Conduct is currently integrated with:
+
+```text
+membership.move
+boost.move
+channel.move
+channel_access.move
+moderation.move
+jury.move
+squad.move
+guild.move
+profile.move
+title.move
+cosmetics.move
+```
 
 ---
 
@@ -124,7 +142,7 @@ ConductStatus
 
 Current purpose:
 
-* Stores Passport-linked conduct signal
+* Stores Passport-linked Conduct Signal
 * Tracks owner
 * Tracks Passport ID
 * Tracks reason code
@@ -161,17 +179,28 @@ Black Passport represents a temporary penalty state.
 
 When Black Passport is active:
 
-* Conduct signal becomes Black
-* Effective tier falls back to NPC-equivalent access
-* Boosts are blocked
-* Channel chat is blocked
-* Squad benefits are blocked
-* Jury eligibility is blocked
-* Premium benefits are temporarily restricted
+```text
+Conduct Signal = Black
+Effective access = NPC-equivalent restrictions
+```
+
+Current Black Passport restrictions include:
+
+* Boosts blocked
+* Channel chat blocked
+* Channel creation blocked
+* Squad benefits blocked
+* Guild actions blocked
+* Jury eligibility blocked
+* Profile updates blocked
+* Title claiming blocked
+* Title equipping blocked
+* Cosmetic equipping blocked
+* Premium benefits temporarily restricted
 
 Black Passport does not erase earned history by default.
 
-Badges, reputation history, identity, and Passport ownership remain intact unless severe abuse requires separate review.
+Badges, reputation, titles, cosmetics, profiles, guild history, squad history, appeals, and recovery history should remain intact unless severe abuse requires separate review.
 
 ---
 
@@ -193,7 +222,7 @@ Current function:
 respawn_if_ready
 ```
 
-Respawn should restore access only after the active Black period has expired.
+Respawn should restore active benefits only after the Black Passport period has expired.
 
 ---
 
@@ -207,39 +236,130 @@ Related module:
 module nami::moderation
 ```
 
-Moderation can issue Black Passport through authority-gated paths.
-
 Current flow:
 
 ```text
-Moderation action → Black Passport → Conduct status updated → Benefits restricted
+Moderation action
+→ Black Passport
+→ Conduct status updated
+→ Active benefits restricted
 ```
 
 AdminCap currently exposes this action for MVP purposes.
 
 ---
 
-# Access Integration
+# Membership Integration
 
-Conduct affects access through effective tier logic.
+Conduct affects effective tier logic.
+
+Related module:
+
+```move
+module nami::membership
+```
+
+Example:
+
+```text
+Raw Tier: Elite
+Conduct: Black
+Effective Access: NPC-equivalent
+```
+
+This prevents users from bypassing restrictions with paid or elevated membership.
+
+---
+
+# Channel Integration
+
+Conduct affects both channel creation and channel chat.
 
 Related modules:
 
 ```text
-membership.move
-boost.move
+channel.move
 channel_access.move
-jury.move
-squad.move
 ```
 
-Current effect:
+Black Passport blocks:
 
 ```text
-Black Conduct = NPC-equivalent benefits
+Channel creation
+Channel chat
 ```
 
-This prevents users from bypassing restrictions with Pro or Elite tier.
+Mutes and channel bans are handled through Moderation records and Channel Access checks.
+
+---
+
+# Squad and Guild Integration
+
+Conduct affects social/community actions.
+
+Related modules:
+
+```text
+squad.move
+guild.move
+```
+
+Black Passport blocks:
+
+```text
+Squad creation
+Squad sponsorship
+Guild creation
+Guild member management
+```
+
+Black Passport should not automatically delete existing Squads or Guilds.
+
+---
+
+# Jury Integration
+
+Conduct affects jury eligibility.
+
+Related module:
+
+```move
+module nami::jury
+```
+
+Current juror eligibility requires:
+
+```text
+Pro or Elite effective tier
+No active Black Passport
+```
+
+Green, Orange, and Red do not block jury eligibility by themselves.
+
+---
+
+# Profile, Titles, and Cosmetics
+
+Conduct affects customization updates.
+
+Related modules:
+
+```text
+profile.move
+title.move
+cosmetics.move
+```
+
+Black Passport blocks:
+
+```text
+Profile updates
+Title claiming
+Title equipping
+Cosmetic equipping
+```
+
+Existing profile objects, title proofs, and cosmetic unlocks are not deleted by default.
 
 ---
 
@@ -265,13 +385,7 @@ Membership controls feature access.
 
 Conduct can temporarily restrict effective benefits.
 
-Example:
-
-```text
-Raw Tier: Elite
-Conduct: Black
-Effective Access: NPC-equivalent
-```
+Payment should not bypass Conduct restrictions.
 
 ---
 
@@ -298,14 +412,19 @@ docs/events.md
 
 Current tests verify:
 
-* Conduct status creation
-* Green signal creation
-* User signal updates
-* User cannot select Black
-* Black Passport disables active benefits
-* Black Passport forces effective tier to NPC
-* Black Passport blocks channel chat
-* Moderation can issue Black Passport
+```text
+Conduct status creation
+Green signal creation
+User signal updates
+User cannot select Black
+Black Passport disables active benefits
+Black Passport forces effective tier to NPC
+Black Passport blocks channel chat
+Moderation can issue Black Passport
+Black Passport blocks Profile updates
+Black Passport blocks Title claiming
+Black Passport blocks Cosmetic equipping
+```
 
 ---
 
@@ -319,6 +438,7 @@ Red-specific channel matching
 Conduct history views
 Community reporting inputs
 Channel owner conduct preferences
+Guild conduct preferences
 Automatic conduct recommendations
 Respawn countdown display
 Appeal-linked Black Passport review
@@ -335,9 +455,11 @@ Black is the only punishment signal.
 
 Red should not be treated as bad behavior by default.
 
-Black should restrict benefits but not erase history by default.
+Black should restrict active benefits but not erase history by default.
 
 Conduct should support compatibility between gamers, not just punishment.
+
+Conduct restrictions must apply through effective access checks.
 
 ---
 
@@ -348,5 +470,6 @@ docs/moderation.md
 docs/access-control.md
 docs/events.md
 docs/membership.md
+docs/customization.md
 docs/trust-system.md
 ```
