@@ -578,7 +578,7 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Channel policy allows NPC chat when toggle is enabled.
     /// ---------------------------------------------------------
     #[test]
@@ -3088,7 +3088,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Admin can deny a recovery request.
     /// This uses RECOVERY_DENIED so the reserved constant is active.
     /// ---------------------------------------------------------
@@ -3452,7 +3452,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Channel owner can create an access policy for a real Channel.
     /// This is the public safe path after channel.move exists.
     /// ---------------------------------------------------------
@@ -4083,7 +4083,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Black Passport cannot create a Channel.
     ///
     /// Attack attempt:
@@ -4141,6 +4141,73 @@ module nami::nami_tests {
             b"black-passport-channel",
             b"Should not be created",
             b"metadata://black-passport-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Black Passport cannot create a Profile.
+    ///
+    /// Attack attempt:
+    /// - User owns a valid Passport
+    /// - User receives valid ConductStatus
+    /// - ConductStatus is downed to Black Passport
+    /// - User attempts to create a Profile anyway
+    ///
+    /// Expected abort:
+    /// conduct_restricted = 101
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 101)]
+    fun test_black_passport_cannot_create_profile() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        profile::create_profile(
+            &passport_obj,
+            &status,
+            b"Black Passport Profile",
+            b"bio://black-passport",
+            b"avatar://black-passport",
+            b"metadata://black-passport",
             true,
             test_scenario::ctx(&mut scenario)
         );
