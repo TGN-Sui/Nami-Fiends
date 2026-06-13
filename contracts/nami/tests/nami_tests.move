@@ -5616,4 +5616,106 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
+
+        /// ---------------------------------------------------------
+    /// JuryCase cannot be opened from a resolved Appeal.
+    ///
+    /// Attack attempt:
+    /// - User opens a valid AppealCase
+    /// - Admin resolves the AppealCase
+    /// - Admin attempts to open a JuryCase from the resolved AppealCase
+    ///
+    /// Expected abort:
+    /// appeal_already_resolved = 121
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 121)]
+    fun test_jury_case_rejects_resolved_appeal() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        admin::issue_warning(
+            &admin_cap,
+            USER,
+            &passport_obj,
+            2601,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let record =
+            test_scenario::take_from_sender<moderation::ModerationRecord>(&scenario);
+
+        appeals::open_appeal(
+            &passport_obj,
+            &record,
+            b"resolved-appeal-jury-test",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, record);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut appeal =
+            test_scenario::take_from_sender<appeals::AppealCase>(&scenario);
+
+        // First resolve the AppealCase.
+        admin::resolve_appeal(
+            &admin_cap,
+            &mut appeal,
+            APPEAL_APPROVED,
+            2602,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(appeals::is_approved(&appeal), 270);
+        assert!(appeals::get_resolution_code(&appeal) == 2602, 271);
+
+        // Attack: resolved AppealCase must not be eligible for JuryCase creation.
+        admin::open_jury_case(
+            &admin_cap,
+            &appeal,
+            3,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, appeal);
+
+        test_scenario::end(scenario);
+    }
+
+    
 }
