@@ -728,7 +728,7 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Conduct status can be created with Green signal.
     /// ---------------------------------------------------------
     #[test]
@@ -902,7 +902,7 @@ module nami::nami_tests {
 
         test_scenario::end(scenario);
     }
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Black Conduct forces effective tier to NPC.
     /// This proves Black Passport temporarily removes active benefits.
     /// ---------------------------------------------------------
@@ -1036,7 +1036,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Moderation can issue a warning record.
     /// ---------------------------------------------------------
     #[test]
@@ -1144,7 +1144,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Active mute blocks channel chat.
     /// ---------------------------------------------------------
     #[test]
@@ -1324,7 +1324,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// AdminCap can approve a BadgeIssuerCap.
     /// ---------------------------------------------------------
     #[test]
@@ -1655,7 +1655,7 @@ module nami::nami_tests {
             test_scenario::end(scenario);
         }
 
-            /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Admin can open a JuryCase for an open appeal.
     /// ---------------------------------------------------------
     #[test]
@@ -1924,7 +1924,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Pro member can create a Squad.
     /// ---------------------------------------------------------
     #[test]
@@ -2162,7 +2162,7 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-        /// ---------------------------------------------------------
+    /// ---------------------------------------------------------
     /// Adventurer can create a Guild.
     /// Guilds are larger communities than Squads.
     /// ---------------------------------------------------------
@@ -2367,6 +2367,73 @@ module nami::nami_tests {
     }
 
         /// ---------------------------------------------------------
+    /// Black Passport cannot create a Guild.
+    ///
+    /// Attack attempt:
+    /// - User verifies to Adventurer
+    /// - User receives valid ConductStatus
+    /// - ConductStatus is downed to Black Passport
+    /// - User attempts to create a Guild anyway
+    ///
+    /// Expected abort:
+    /// insufficient_tier = 31
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 31)]
+    fun test_black_passport_cannot_create_guild() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let mut status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        conduct::down_passport(
+            &mut status,
+            1,
+            999999999999,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        guild::create_guild(
+            &passport_obj,
+            &status,
+            b"black-passport-guild",
+            b"Should not be created",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     /// User can claim a Gamester title after earning reputation.
     /// ---------------------------------------------------------
     #[test]
