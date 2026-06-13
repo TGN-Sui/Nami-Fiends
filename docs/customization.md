@@ -1,247 +1,293 @@
-# Nami Customization System
+# Nami Customization
 
-## Overview
+## Purpose
 
-The Nami Customization System defines cosmetic identity, profile expression, chat personalization, and unlockable visual rewards.
+Customization gives players visible identity expression on top of their Passport.
 
-Customization should make Nami feel like a living gamer identity world.
+This layer supports profile presentation, earned titles, cosmetic unlocks, and future avatar/display systems.
 
-Customization must not provide unfair gameplay advantage.
-
-Customization is separate from:
-
-* Reputation
-* Membership
-* Conduct
-* Verification
-* Moderation
+Customization should make Nami feel gamer-native without turning cosmetics into reputation, trust, or authority.
 
 ---
 
-## Customization Categories
+## Current Status
 
-Nami customization includes:
+Implemented modules:
 
-* Profile cosmetics
-* Passport cosmetics
-* Chat cosmetics
-* Channel cosmetics
-* Badge display cosmetics
-* Guild display cosmetics
-* Avatar cosmetics
-* Prestige cosmetics
+```text
+profile.move
+title.move
+cosmetics.move
+```
 
----
+Current protocol status:
 
-## Profile Customization
-
-Profiles may support:
-
-* Profile avatar
-* 2D avatar
-* VTuber-style avatar
-* Profile banner
-* Profile frame
-* Nameplate
-* Bio
-* Favorite games
-* Featured badges
-* Featured title
-* Featured guild
-* Featured squad
-
-Members may eventually select which guild appears publicly if they belong to multiple guilds.
+```text
+55 tests passing
+0 warnings
+```
 
 ---
 
-## Passport Customization
+# Profile System
 
-Passport customization may include:
+Current module:
 
-* Passport theme
-* Passport frame
-* Passport background
-* Passport animation
-* Passport signal styling
-* Badge layout
-* Reputation title display
-* Seasonal effects
-* Prestige effects
+```move
+module nami::profile
+```
 
-Passport customization should represent identity and achievement.
+The Profile object is the public display anchor for a Passport.
 
----
+Current profile fields include:
 
-## Chat Customization
+* Owner
+* Passport ID
+* Display name
+* Bio reference
+* Avatar reference
+* Metadata reference
+* Public/private setting
 
-Chat customization may include:
+Profiles store references, not rich media directly.
 
-* Chat overlay
-* Font style
-* Message bubble frame
-* Chat background color
-* Chat border
-* Username style
-* Badge effects
-* Title effects
-* Avatar popups
-* Channel-specific theme compatibility
-
-Chat customization should remain readable and accessible.
+Profile media, long bios, and avatar configuration should live off-chain.
 
 ---
 
-## Channel Customization
+## Profile Rules
 
-Verified channels and developer hubs may unlock:
+NPC users may create Profiles.
 
-* Branded color schemes
-* Announcement styling
-* Hub banners
-* Channel frames
-* Custom background themes
-* Event overlays
-* Game-specific visual identity
+Black Passport users cannot create or update Profiles while restricted.
 
-Channel customization should help developers make their hubs feel native to their games.
+Profile updates require:
 
----
-
-## Badge Displays
-
-Users may display earned badges publicly.
-
-Badge display options may include:
-
-* Featured badge slot
-* Multiple badge slots
-* Badge carousel
-* Rare badge highlight
-* Animated badge effects
-* Badge category filters
-
-Badge display limits may depend on membership, reputation, or unlocks.
+```text
+Profile owner
+Matching Passport
+Matching ConductStatus
+Active benefits
+```
 
 ---
 
-## Title Displays
+# Title System
 
-Users may equip earned titles.
+Current module:
 
-Title examples:
+```move
+module nami::title
+```
 
-* Wayfinder
-* Challenger
-* Relic Hunter
-* Campfire Keeper
-* Worldshaper
-* Wanderer
-* Gamester
-* Goblin
-* Goonie
-* Fiend
+Titles are earned display proofs.
 
-Titles should be earned through onboarding, badges, reputation, events, guilds, or prestige.
+Current title flow:
 
----
+```text
+Passport reputation → EarnedTitle → TitleDisplay
+```
 
-## Avatar System
+Current reputation-based title types:
 
-Nami may support 2D avatars for a VTuber-inspired identity feel.
+```text
+Gamester
+Goblin
+Goonie
+Fiend
+```
 
-Avatar features may include:
-
-* Base avatar
-* Outfit layers
-* Accessories
-* Expressions
-* Idle animations
-* Event cosmetics
-* Guild cosmetics
-* Prestige cosmetics
-
-Avatar ownership and unlock proofs may eventually be connected to on-chain assets.
+A user must have enough Passport reputation to claim the matching title.
 
 ---
 
-## Unlock Sources
+## Title Rules
 
-Customization may be unlocked through:
+Users may claim titles they have earned.
 
-* Reputation
-* Badges
-* Events
-* Membership
-* Guild achievements
-* Squad participation
-* Puzzle pieces
-* Prestige milestones
-* Developer channel rewards
+Users may equip an owned EarnedTitle into their TitleDisplay.
 
-Membership may unlock more display capacity or cosmetic options.
+Black Passport users cannot claim or equip titles while restricted.
 
-Membership should not replace earned achievement.
+Titles are not membership.
+
+Titles are not moderation authority.
+
+Titles are display identity and earned recognition.
 
 ---
 
-## On-Chain vs Off-Chain Design
+# Cosmetic System
 
-Most customization settings should live off-chain for flexibility.
+Current module:
 
-On-chain should store:
+```move
+module nami::cosmetics
+```
 
-* Unlock proofs
-* Rare cosmetics
-* Prestige cosmetics
-* Badge ownership
-* Special seasonal rewards
+Cosmetics are unlock proofs and equipped display settings.
 
-Off-chain should store:
+Current objects:
 
-* Equipped theme
-* Display layout
-* Avatar configuration
-* UI preferences
-* Chat style preferences
+```text
+CosmeticUnlock
+CosmeticLoadout
+```
 
----
+Current cosmetic types:
 
-## Future Move Modules
-
-Potential modules:
-
-* cosmetics.move
-* profile_theme.move
-* avatar.move
-* title.move
-
-Potential objects:
-
-* CosmeticUnlock
-* TitleUnlock
-* AvatarPart
-* PassportTheme
-* ProfileFrame
-
-Potential events:
-
-* CustomizationUnlocked
-* CustomizationEquipped
-* TitleEquipped
-* AvatarUpdated
-* PassportThemeEquipped
+```text
+Profile Frame
+Passport Theme
+Chat Overlay
+Avatar Style
+Badge Display
+Title Effect
+```
 
 ---
 
-## Design Principles
+## Cosmetic Rules
 
-Customization should:
+AdminCap may grant CosmeticUnlock proofs during MVP.
 
-* Reward identity
-* Encourage expression
-* Preserve readability
-* Avoid pay-to-win mechanics
-* Support gamer culture
-* Support developer branding
+Users may create a CosmeticLoadout.
 
-The goal is to let players feel like their Passport is alive, personal, and worth carrying across games.
+Users may equip cosmetics only if they own the matching CosmeticUnlock.
+
+Black Passport users cannot equip cosmetics while restricted.
+
+Cosmetic unlocks do not grant reputation, membership, verification, or authority.
+
+---
+
+# Conduct Integration
+
+Customization uses Conduct checks.
+
+Black Passport means:
+
+```text
+Passport downed. Respawning in...
+```
+
+While Black Passport is active:
+
+* Profile updates are blocked
+* Title claiming is blocked
+* Title equipping is blocked
+* Cosmetic equipping is blocked
+
+Black Passport should not delete existing Profiles, Titles, or CosmeticUnlocks by default.
+
+---
+
+# Off-Chain Media
+
+Most customization media should stay off-chain.
+
+Examples:
+
+```text
+Profile images
+Avatar art
+VTuber-style avatar config
+Theme assets
+Overlay images
+Fonts
+Long bios
+Animation files
+Display metadata
+```
+
+On-chain objects should store proofs and references.
+
+---
+
+# Current Events
+
+Current customization-related events include:
+
+```text
+ProfileCreated
+ProfileUpdated
+TitleClaimed
+TitleDisplayCreated
+TitleEquipped
+CosmeticUnlocked
+CosmeticLoadoutCreated
+CosmeticEquipped
+```
+
+Event field details should be kept in:
+
+```text
+docs/events.md
+```
+
+---
+
+# Current Test Coverage
+
+Current tests verify:
+
+* NPC can create a public Profile
+* Profile owner can update Profile
+* Black Passport cannot update Profile
+* User can claim a Gamester title
+* User cannot claim Fiend title without reputation
+* User can create TitleDisplay and equip title
+* Black Passport cannot claim title
+* Admin can grant CosmeticUnlock
+* User can create CosmeticLoadout
+* User can equip unlocked Profile Frame
+* Black Passport cannot equip cosmetics
+
+---
+
+# Future Work
+
+Planned improvements:
+
+```text
+Avatar customization
+Profile frame marketplace
+Passport themes
+Chat overlays
+Badge display selection
+Title effects
+Seasonal cosmetics
+Prestige cosmetics
+Guild cosmetics
+Developer/game cosmetics
+Cosmetic metadata registry
+```
+
+---
+
+# Design Rules
+
+Customization should express identity.
+
+Customization should not create reputation.
+
+Customization should not bypass moderation.
+
+Customization should use off-chain media references.
+
+Rare cosmetics may be on-chain unlock proofs.
+
+Black Passport should pause active customization changes, not erase history by default.
+
+---
+
+# Related Docs
+
+```text
+docs/passport.md
+docs/reputation.md
+docs/conduct-system.md
+docs/access-control.md
+docs/events.md
+docs/admin.md
+```
