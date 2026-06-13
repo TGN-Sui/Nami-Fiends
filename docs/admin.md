@@ -23,7 +23,7 @@ module nami::admin
 Current protocol status:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -35,6 +35,9 @@ membership.move
 moderation.move
 appeals.move
 jury.move
+cosmetics.move
+recovery.move
+channel.move
 passport.move
 conduct.move
 ```
@@ -60,7 +63,7 @@ Package init
 Test-only init_for_testing
 ```
 
-In production, AdminCap custody should be handled carefully.
+In production, AdminCap custody must be handled carefully.
 
 ---
 
@@ -79,13 +82,16 @@ Issue Black Passport
 Resolve appeal
 Open jury case
 Close jury case
+Grant cosmetic unlock
+Resolve recovery request
+Verify channel
 ```
 
-These actions are emitted through `AdminAction` events for indexing and audit trails.
+These actions emit `AdminAction` events for indexing and audit trails.
 
 ---
 
-# Badge Issuer Approval
+# Badge Issuer Authority
 
 AdminCap can approve BadgeIssuerCap objects.
 
@@ -217,6 +223,82 @@ Future versions may increase jury influence after privacy, anti-abuse, and gover
 
 ---
 
+# Cosmetic Authority
+
+AdminCap can grant CosmeticUnlock proofs.
+
+Related module:
+
+```move
+module nami::cosmetics
+```
+
+Current cosmetic categories include:
+
+```text
+Profile Frame
+Passport Theme
+Chat Overlay
+Avatar Style
+Badge Display
+Title Effect
+```
+
+Cosmetic unlocks are display customization only.
+
+They do not grant reputation, membership, verification, moderation authority, or governance rights.
+
+---
+
+# Recovery Authority
+
+AdminCap can resolve RecoveryRequest objects.
+
+Related module:
+
+```move
+module nami::recovery
+```
+
+Current recovery outcomes:
+
+```text
+Approved
+Denied
+Modified
+```
+
+Current recovery resolution does not transfer ownership.
+
+This is intentional until the recovery security model is mature.
+
+Recovery evidence should stay off-chain or encrypted.
+
+---
+
+# Channel Authority
+
+AdminCap can verify Channels.
+
+Related module:
+
+```move
+module nami::channel
+```
+
+Channel verification may be used by frontend/backend systems for:
+
+```text
+Trust display
+Discovery weighting
+Developer/community credibility
+Reduced impersonation risk
+```
+
+Channel verification does not grant moderation authority by itself.
+
+---
+
 # AdminAction Event
 
 Admin actions emit:
@@ -251,12 +333,17 @@ AdminCap should not be treated casually.
 
 AdminCap controls actions that affect:
 
-* Membership upgrades
-* Badge issuer authority
-* Moderation records
-* Black Passport
-* Appeals
-* Jury cases
+```text
+Membership upgrades
+Badge issuer authority
+Moderation records
+Black Passport
+Appeals
+Jury cases
+Cosmetic unlocks
+Recovery requests
+Channel verification
+```
 
 Production deployment should define:
 
@@ -274,13 +361,18 @@ How future authority is decentralized
 
 Current tests verify that AdminCap can:
 
-* Approve badge issuers
-* Upgrade membership to Pro and Elite
-* Issue moderation actions
-* Issue mute records that block channel chat
-* Resolve appeals
-* Open jury cases
-* Close jury cases
+```text
+Approve badge issuers
+Upgrade membership to Pro and Elite
+Issue moderation actions
+Issue mute records that block channel chat
+Resolve appeals
+Open jury cases
+Close jury cases
+Grant cosmetic unlocks
+Resolve recovery requests
+Verify channels
+```
 
 ---
 
@@ -315,7 +407,13 @@ Ordinary users should not issue moderation records.
 
 Ordinary users should not approve badge issuers.
 
-Admin actions should be emitted as events.
+Ordinary users should not verify channels.
+
+Ordinary users should not grant cosmetics.
+
+Ordinary users should not resolve recovery requests.
+
+Admin actions should emit events.
 
 AdminCap is acceptable for MVP, but not the final trust model.
 
@@ -330,5 +428,7 @@ docs/appeals.md
 docs/jury.md
 docs/badge-system.md
 docs/membership.md
+docs/customization.md
+docs/recovery.md
 docs/events.md
 ```
