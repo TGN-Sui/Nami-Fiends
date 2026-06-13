@@ -1,8 +1,8 @@
 # Nami Chat
 
-Nami Chat is a Sui-powered gaming identity, reputation, access, moderation, and social protocol.
+Nami Chat is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol.
 
-Nami is designed for gamers, developers, squads, guilds, verified channels, and future game-connected communities.
+Nami is designed for gamers, developers, channels, squads, guilds, creators, and future game-connected communities.
 
 The goal is not only to build a chat app.
 
@@ -14,9 +14,10 @@ The goal is to build a portable gamer identity and trust layer.
 
 ```text
 Move build: passing
-Move tests: 33 passing
+Move tests: 55 passing
 Warnings: 0
-Documentation: synced
+Documentation: synced/in-progress mini-sync
+MVP progress: 71%
 ```
 
 Current Move package:
@@ -54,15 +55,21 @@ appeals.move
 badge.move
 badge_issuer.move
 boost.move
+channel.move
 channel_access.move
 conduct.move
+cosmetics.move
 errors.move
+guild.move
 identity.move
 jury.move
 membership.move
 moderation.move
 passport.move
+profile.move
+recovery.move
 squad.move
+title.move
 verification.move
 ```
 
@@ -76,19 +83,22 @@ Nami currently includes:
 * Passport progression
 * Verification from NPC to Adventurer
 * Membership tiers
-* Curved XP and reputation
-* Badge issuance
-* Badge issuer authority
+* Reputation
+* Badges and badge issuer authority
 * Boosts
-* Channel access policies
-* NPC chat toggle
+* Channels and channel access policies
 * Conduct Signals
 * Black Passport restrictions
 * Moderation records
 * AdminCap authority
 * Appeals
 * Advisory jury review
-* Squads and sponsorship
+* Squads
+* Guilds
+* Public Profiles
+* Earned Titles
+* Cosmetic unlocks and loadouts
+* Recovery requests
 
 ---
 
@@ -145,6 +155,70 @@ This means a Pro or Elite member can still be restricted if their Passport is Bl
 
 ---
 
+## Channels
+
+Channels are on-chain community or creator spaces.
+
+Current Channel features:
+
+* Channel creation
+* Channel metadata references
+* Public/private setting
+* AdminCap channel verification
+* Channel-aware access policy creation
+* NPC chat toggle
+* Minimum tier and reputation rules
+
+---
+
+## Profiles and Customization
+
+Profiles are public Passport display anchors.
+
+Current customization features:
+
+* Profile metadata references
+* Earned reputation titles
+* Title display object
+* Cosmetic unlock proofs
+* Cosmetic loadout object
+* Profile frame equip flow
+
+Most rich media should stay off-chain.
+
+---
+
+## Moderation and Fairness
+
+Current moderation actions:
+
+```text
+Warning
+Mute
+Channel Ban
+Black Passport
+```
+
+Appeals allow users to challenge moderation actions.
+
+Jury review allows eligible Pro and Elite members to provide advisory recommendations.
+
+---
+
+## Recovery
+
+Recovery currently supports:
+
+```text
+Identity + Passport → RecoveryRequest → Admin resolution
+```
+
+Recovery does not transfer ownership yet.
+
+This is intentional until the recovery security model is mature.
+
+---
+
 ## Build and Test
 
 From the Move package:
@@ -158,7 +232,7 @@ sui move test
 Expected current result:
 
 ```text
-33 tests passing
+55 tests passing
 0 warnings
 ```
 
@@ -166,7 +240,7 @@ Expected current result:
 
 ## Documentation
 
-Main docs:
+Core docs:
 
 ```text
 docs/roadmap.md
@@ -191,6 +265,7 @@ docs/appeals.md
 docs/jury.md
 docs/squads.md
 docs/guilds.md
+docs/customization.md
 docs/recovery.md
 docs/resilience.md
 docs/sui-layer.md
@@ -205,14 +280,14 @@ docs/vision.md
 ```text
 Nami Presentable MVP Progress
 
-[████████████░░░░░░░░] 58%
+[██████████████░░░░░░] 71%
 ```
 
 Current breakdown:
 
 ```text
-On-chain protocol foundation:   ~93% done
-Documentation architecture:     100% synced
+On-chain protocol foundation:   ~98% done
+Documentation architecture:     Mini-sync in progress
 Backend/indexer:                 0% done
 Frontend/profile UI:             0% done
 SDK integration:                 0% done
@@ -223,26 +298,18 @@ zkLogin production flow:          0% done
 
 ## Next Development Targets
 
-Planned next modules and systems:
+Recommended next phases:
 
 ```text
-guild.move
-customization / cosmetics
-titles
-recovery
-backend event indexer
-frontend Passport UI
-SDK helpers
+Finish mini documentation sync
+Protocol hardening tests
+Scenario/adversarial test suite
+Backend event indexer
+Frontend Passport/Profile UI
+SDK read helpers
 zkLogin production flow
+Testnet deployment scripts
 ```
-
-The next recommended code module is:
-
-```text
-guild.move
-```
-
-Guilds will become larger persistent communities, while Squads remain small trust and sponsorship groups.
 
 ---
 
@@ -252,9 +319,13 @@ Identity owns presence.
 
 Passport owns journey.
 
+Verification unlocks trusted entry.
+
 Membership controls access.
 
 Reputation is earned.
+
+Badges prove meaningful activity.
 
 Conduct communicates interaction style.
 
@@ -266,10 +337,16 @@ Jury adds community voice.
 
 Squads create small trust networks.
 
+Guilds create larger communities.
+
+Profiles display identity.
+
+Titles recognize earned status.
+
+Cosmetics express style.
+
+Recovery protects continuity.
+
 Sui anchors proof.
 
 Nami should feel like a world gamers enter, not a form they fill out.
-
-
-# Nami-Fiends
-One identity. Every game.
