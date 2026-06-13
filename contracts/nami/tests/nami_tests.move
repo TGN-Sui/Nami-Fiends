@@ -5518,5 +5518,102 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
-    
+        /// ---------------------------------------------------------
+    /// Recovery request cannot be resolved twice.
+    ///
+    /// Attack attempt:
+    /// - Admin resolves an open RecoveryRequest once
+    /// - Admin attempts to resolve the same RecoveryRequest again
+    ///
+    /// Expected abort:
+    /// recovery_already_resolved = 161
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 161)]
+    fun test_recovery_request_cannot_be_resolved_twice() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        identity::init_identity(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let identity_id = identity::get_id(&identity_obj);
+
+        passport::init_passport(
+            identity_id,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let identity_obj =
+            test_scenario::take_from_sender<identity::Identity>(&scenario);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        recovery::open_recovery_request(
+            &identity_obj,
+            &passport_obj,
+            SPONSORED_USER,
+            b"double-resolution-recovery",
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, identity_obj);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut request =
+            test_scenario::take_from_sender<recovery::RecoveryRequest>(&scenario);
+
+        // First resolution succeeds.
+        admin::resolve_recovery_request(
+            &admin_cap,
+            &mut request,
+            RECOVERY_APPROVED,
+            7101,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(recovery::is_approved(&request), 260);
+        assert!(recovery::get_resolution_code(&request) == 7101, 261);
+
+        // Attack: second resolution of the same RecoveryRequest must fail.
+        admin::resolve_recovery_request(
+            &admin_cap,
+            &mut request,
+            RECOVERY_APPROVED,
+            7102,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, request);
+
+        test_scenario::end(scenario);
+    }
 }
