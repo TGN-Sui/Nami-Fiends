@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type ReactElement, useEffect } from 'react';
+import { useMemo, useState, type CSSProperties, type ReactElement, useEffect , useRef} from 'react';
 
 import {
   channels,
@@ -1088,7 +1088,8 @@ function ChannelProfile(props: {
 
   function renderProfilePanel(panelName: string): ReactElement | null {
     if (panelName === 'Channel Modules') {
-      return (
+
+  return (
         <article className="panel profile-module-manager">
           <div className="profile-panel-heading">
             <h2>Channel Modules</h2>
@@ -1278,6 +1279,37 @@ function ChannelProfile(props: {
     return null;
   }
 
+  const [channelBrandPalette, setChannelBrandPalette] = useState<string[]>(() => {
+    return readChannelBrandPalette();
+  });
+  const [selectedChannelBrandColor, setSelectedChannelBrandColor] = useState(() => {
+    const savedColor = readSelectedChannelBrandColor();
+    const palette = readChannelBrandPalette();
+
+    return palette.includes(savedColor) ? savedColor : palette[0] ?? '#4da3ff';
+  });
+
+  function updateChannelBrandColor(index: number, color: string): void {
+    const nextPalette = channelBrandPalette.map((currentColor, currentIndex) => {
+      return currentIndex === index ? color : currentColor;
+    }).slice(0, 4);
+
+    setChannelBrandPalette(nextPalette);
+    saveChannelBrandPalette(nextPalette);
+
+    if (!nextPalette.includes(selectedChannelBrandColor)) {
+      const nextSelectedColor = nextPalette[0] ?? color;
+
+      setSelectedChannelBrandColor(nextSelectedColor);
+      saveSelectedChannelBrandColor(nextSelectedColor);
+    }
+  }
+
+  function chooseChannelBrandColor(color: string): void {
+    setSelectedChannelBrandColor(color);
+    saveSelectedChannelBrandColor(color);
+  }
+
   return (
     <>
       <header className="page-title">
@@ -1346,10 +1378,7 @@ function ChannelProfile(props: {
             </div>
           </article>
 
-          <article className="profile-stat-card">
-            <span>Genre</span>
-            <strong>{props.channel.genre}</strong>
-          </article>
+          
 
           <article className="profile-stat-card">
             <span>Platforms</span>
@@ -1357,109 +1386,56 @@ function ChannelProfile(props: {
           </article>
         </section>
 
-        <article className="panel game-banner-preview">
-          <div>
-            <span className="mini-badge">Customizable Banner</span>
-            <h2>{props.channel.name} Channel Banner</h2>
-            <p>
-              This area becomes the developer-controlled game/channel banner with paid
-              cosmetic slots, official artwork, and event callouts.
-            </p>
-          </div>
+                  <article className="panel channel-brand-colors channel-brand-colors-condensed">
+            <div className="channel-brand-copy">
+              <span className="mini-badge">Brand Palette</span>
+              <h2>Channel Brand Colors</h2>
+              <p>
+                Owners set up to four approved brand colors. Members can only choose from
+                those approved colors.
+              </p>
+            </div>
 
-          <div className="banner-badge-row">
-            <span>{props.channel.genre}</span>
-            <span>{props.channel.signal}</span>
-            <span>{props.channel.platforms[0] ?? 'Cross-platform'}</span>
-          </div>
-        </article>
-
-        <section className="profile-layout-control-panel">
-          <div>
-            <span className="mini-badge">Personalized UX Layout</span>
-            <h2>Profile Sections</h2>
-            <p>Drag section tabs to reposition panels. Collapse panels into tabs for a cleaner profile.</p>
-          </div>
-
-          <div className="profile-module-save-row">
-            <button
-              className="module-save-button"
-              onClick={saveProfileLayout}
-              type="button"
-            >
-              Save Page Layout
-            </button>
-            <span>{layoutSaved ? 'Saved' : 'Unsaved changes'}</span>
-          </div>
-        </section>
-
-        <section className="brand-control-panel">
-          <div>
-            <h2>Channel Brand Colors</h2>
-            <p>Channel owners can theme the profile surface with branded colors.</p>
-          </div>
-
-          <div className="brand-choice-row">
-            {profileBrandThemes.map((theme) => (
-              <button
-                className={theme.key === brandKey ? 'brand-choice is-selected-brand' : 'brand-choice'}
-                key={theme.key}
-                onClick={() => {
-                  setBrandKey(theme.key);
-                  window.localStorage.setItem(brandStorageKey, theme.key);
-                  applyChannelBrandToDocument(theme);
-                  setBrandSaved(true);
-                }}
-                style={{
-                  '--brand-primary': theme.primary,
-                  '--brand-secondary': theme.secondary
-                } as CSSProperties}
-                type="button"
-              >
-                <i />
-                <span>{theme.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="profile-panel-tab-tray">
-          {profilePanels.map((panelName) => {
-            const isCollapsed = collapsedPanels.includes(panelName);
-
-            return (
-              <div
-                className={
-                  'profile-panel-tab' +
-                  (isCollapsed ? ' is-collapsed-tab' : ' is-expanded-tab') +
-                  (panelName === draggedPanel ? ' is-dragging-panel-tab' : '')
-                }
-                draggable
-                key={panelName}
-                onDragEnd={() => setDraggedPanel(null)}
-                onDragOver={(event) => event.preventDefault()}
-                onDragStart={() => setDraggedPanel(panelName)}
-                onDrop={() => dropPanel(panelName)}
-              >
-                <i>⋮⋮</i>
-                <button onClick={() => togglePanel(panelName)} type="button">
-                  <strong>{panelName}</strong>
-                  <span>{isCollapsed ? 'Collapsed' : 'Expanded'}</span>
-                </button>
+            <div className="channel-brand-color-tools">
+              <div className="channel-owner-color-editor">
+                <strong>Owner colors</strong>
+                <div className="channel-owner-color-grid">
+                  {channelBrandPalette.slice(0, 4).map((color, index) => (
+                    <label className="channel-color-input-chip" key={index}>
+                      <span style={{ backgroundColor: color }} />
+                      <input
+                        aria-label={'Brand color ' + (index + 1)}
+                        onChange={(event) => updateChannelBrandColor(index, event.target.value)}
+                        type="color"
+                        value={color}
+                      />
+                      <small>{color}</small>
+                    </label>
+                  ))}
+                </div>
               </div>
-            );
-          })}
-        </section>
 
-        <section className={expandedPanels.length === 0 ? 'profile-panel-workspace is-empty-workspace' : 'profile-panel-workspace'}>
-          {expandedPanels.length === 0 && (
-            <article className="panel profile-empty-panel-note">
-              <h2>All panels collapsed</h2>
-              <p>Your profile sections are now acting like a repositionable tab list above.</p>
-            </article>
-          )}
+              <div className="channel-member-color-picker">
+                <strong>Member choice</strong>
+                <div className="channel-member-color-grid">
+                  {channelBrandPalette.slice(0, 4).map((color) => (
+                    <button
+                      className={selectedChannelBrandColor === color ? 'is-selected-channel-brand-color' : ''}
+                      key={color}
+                      onClick={() => chooseChannelBrandColor(color)}
+                      type="button"
+                    >
+                      <span style={{ backgroundColor: color }} />
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
 
-          {expandedPanels.map((panelName) => {
+          <section className="profile-section-grid">
+            {expandedPanels.map((panelName) => {
             const panel = renderProfilePanel(panelName);
 
             if (!panel) {
@@ -1978,6 +1954,25 @@ function GameChat(props: {
           </article>
 
           <aside className="chat-side-panel">
+
+            <section className="gated-access-panel">
+              <div className="profile-panel-heading">
+                <h2>Gated Access</h2>
+                <p>Passport proofs will unlock verified rooms, holder chats, and guild areas.</p>
+              </div>
+
+              <div className="gated-access-mini-list">
+                <span>Wallet linked</span>
+                <span>SuiNS verified</span>
+                <span>Guild standing clear</span>
+              </div>
+
+              <span className="nami-profile-passport-action-note">
+                Use the stable Passport button above the card to manage identity privacy.
+              </span>
+            </section>
+
+
             <section className="chat-filter-panel">
               <button
                 className="filter-collapse-button"
@@ -2867,13 +2862,303 @@ function Subscriptions(props: {
   );
 }
 
+function readWalletPublicDisplay(): boolean {
+  try {
+    return window.localStorage.getItem('nami-wallet-public-display') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function saveWalletPublicDisplay(isPublic: boolean): void {
+  window.localStorage.setItem('nami-wallet-public-display', isPublic ? 'true' : 'false');
+}
+
+function readSuiNsPublicDisplay(): boolean {
+  try {
+    return window.localStorage.getItem('nami-suins-public-display') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function saveSuiNsPublicDisplay(isPublic: boolean): void {
+  window.localStorage.setItem('nami-suins-public-display', isPublic ? 'true' : 'false');
+}
+
+function PassportScreen(props: {
+  onNavigate: (page: NamiPage) => void;
+  onOpenProfile: (channel: NamiChannel) => void;
+}): ReactElement {
+  const profileMember = members[0]!;
+  const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
+
+  const passportProofs = [
+    {
+      title: 'Wallet Linked',
+      status: 'Verified',
+      detail: 'Wallet remains an owner-only identity anchor by default.',
+      category: 'Identity'
+    },
+    {
+      title: 'SuiNS / Subname',
+      status: 'Verified',
+      detail: 'npcgamer.sui is connected, but hidden publicly until enabled.',
+      category: 'Name Proof'
+    },
+    {
+      title: 'Developer Approval',
+      status: 'Not Requested',
+      detail: 'Developer trust is approval-based and never purchased by subscription.',
+      category: 'Developer Trust'
+    },
+    {
+      title: 'Game Ownership',
+      status: 'Pending',
+      detail: 'Future Sui object, NFT, or license proof for gated rooms.',
+      category: 'Access'
+    },
+    {
+      title: 'Guild Standing',
+      status: 'Verified',
+      detail: 'Guild participation and channel conduct are in good standing.',
+      category: 'Social'
+    },
+    {
+      title: 'Moderation Standing',
+      status: 'Clear',
+      detail: 'No unresolved enforcement actions on this mock passport.',
+      category: 'Safety'
+    }
+  ];
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Wallet identity, proofs, and gated access</p>
+        <h1>Nami Passport</h1>
+      </header>
+
+      <section className="passport-page">
+        <article className="panel passport-hero-card passport-hero-card-refined">
+          <div className="passport-owner-block">
+            <div className={'member-profile-avatar ' + signalClass(profileMember.signal)}>
+              {profileMember.name.slice(0, 2).toUpperCase()}
+            </div>
+
+            <div className="passport-owner-copy">
+              <span className="mini-badge">Sui Identity Layer</span>
+              <h2>{profileMember.name} Passport</h2>
+              <p>
+                Nami Passport connects SuiNS identity, wallet ownership, developer approvals,
+                guild standing, conduct reputation, and access-gated community surfaces.
+              </p>
+
+              <div className="passport-wallet-grid passport-wallet-grid-refined">
+                <span>Owner Wallet</span>
+                <strong>Private identity anchor</strong>
+                <span>SuiNS</span>
+                <strong>{suiNsPublic ? 'npcgamer.sui visible publicly' : 'Hidden publicly'}</strong>
+                <span>Signal</span>
+                <strong>{profileMember.signal}</strong>
+                <span>Trust Source</span>
+                <strong>Proofs + conduct, not payment</strong>
+              </div>
+            </div>
+          </div>
+
+          <aside className="passport-privacy-card">
+            <span className="mini-badge">Privacy</span>
+            <h3>SuiNS Visibility</h3>
+            <p>
+              SuiNS is a readable wallet identity. It stays hidden publicly unless you
+              choose to display it.
+            </p>
+
+            <button
+              className={suiNsPublic ? 'is-wallet-public' : ''}
+              onClick={() => {
+                const nextValue = !suiNsPublic;
+                setSuiNsPublic(nextValue);
+                saveSuiNsPublicDisplay(nextValue);
+              }}
+              type="button"
+            >
+              {suiNsPublic ? 'Hide SuiNS Publicly' : 'Display SuiNS Publicly'}
+            </button>
+
+            <button onClick={() => props.onNavigate('userProfile')} type="button">
+              Back to My Profile
+            </button>
+          </aside>
+        </article>
+
+        <section className="passport-grid">
+          <article className="panel passport-proof-panel">
+            <div className="profile-panel-heading">
+              <h2>Verification Proofs</h2>
+              <p>Trust and verification are based on proofs, reputation, and approval.</p>
+            </div>
+
+            <div className="passport-proof-grid">
+              {passportProofs.map((proof) => (
+                <div className="passport-proof-card" key={proof.title}>
+                  <span className="mini-badge">{proof.category}</span>
+                  <strong>{proof.title}</strong>
+                  <i>{proof.status}</i>
+                  <p>{proof.detail}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel passport-access-panel">
+            <div className="profile-panel-heading">
+              <h2>Access-Gated Surfaces</h2>
+              <p>Future channel rooms unlocked by wallet and proof checks.</p>
+            </div>
+
+            <div className="passport-access-stack">
+              {channels.slice(0, 3).map((channel, index) => (
+                <div className="passport-access-card" key={channel.id}>
+                  <div className="passport-access-title-row">
+                    <ChannelAvatar channel={channel} size="sm" />
+                    <div>
+                      <strong>
+                        {index === 0
+                          ? 'Verified Holder Chat'
+                          : index === 1
+                            ? 'Developer Alpha Room'
+                            : 'Guild Strategy Room'}
+                      </strong>
+                      <span>{channel.name}</span>
+                    </div>
+                  </div>
+
+                  <p>
+                    {index === 0
+                      ? 'Requires wallet plus SuiNS proof.'
+                      : index === 1
+                        ? 'Requires developer approval badge.'
+                        : 'Requires guild standing plus channel subscription.'}
+                  </p>
+
+                  <button
+                    className={index === 0 ? 'is-unlocked-gate' : ''}
+                    onClick={() => props.onOpenProfile(channel)}
+                    type="button"
+                  >
+                    {index === 0 ? 'Unlocked' : index === 1 ? 'Locked' : 'Pending'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+      </section>
+    </>
+  );
+}
+
+
+
+
+
+
+type ProfileCardLayout = 'vertical' | 'horizontal';
+
+function readProfileCardLayout(): ProfileCardLayout {
+  try {
+    const savedLayout = window.localStorage.getItem('nami-profile-card-layout');
+
+    return savedLayout === 'horizontal' ? 'horizontal' : 'vertical';
+  } catch {
+    return 'vertical';
+  }
+}
+
+function saveProfileCardLayout(layout: ProfileCardLayout): void {
+  window.localStorage.setItem('nami-profile-card-layout', layout);
+}
+
+function readChannelBrandPalette(): string[] {
+  try {
+    const savedPalette = window.localStorage.getItem('nami-channel-brand-palette');
+
+    if (!savedPalette) {
+      return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
+    }
+
+    const parsedPalette = JSON.parse(savedPalette);
+
+    if (!Array.isArray(parsedPalette)) {
+      return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
+    }
+
+    return parsedPalette
+      .filter((color): color is string => typeof color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(color))
+      .slice(0, 4);
+  } catch {
+    return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
+  }
+}
+
+function saveChannelBrandPalette(palette: string[]): void {
+  window.localStorage.setItem('nami-channel-brand-palette', JSON.stringify(palette.slice(0, 4)));
+}
+
+function readSelectedChannelBrandColor(): string {
+  try {
+    return window.localStorage.getItem('nami-selected-channel-brand-color') ?? '#4da3ff';
+  } catch {
+    return '#4da3ff';
+  }
+}
+
+function saveSelectedChannelBrandColor(color: string): void {
+  window.localStorage.setItem('nami-selected-channel-brand-color', color);
+}
+
 function UserProfileScreen(props: {
   onOpenProfile?: (channel: NamiChannel) => void;
   onNavigate?: (page: NamiPage) => void;
 } = {}): ReactElement {
   const profileMember = members[0]!;
+  const suiNsPublic = readSuiNsPublicDisplay();
+  const profileCardFrameRef = useRef<HTMLDivElement | null>(null);
+  const foilFrameRef = useRef<number | null>(null);
+  const foilStateRef = useRef({
+    current: {
+      foilX: 50,
+      foilY: 18,
+      cardTiltX: 0,
+      cardTiltY: 0,
+      lightX: 0,
+      lightY: 0,
+      cardOpacity: 0.36,
+      passportLightX: 0,
+      passportLightY: 0,
+      passportOpacity: 0.22
+    },
+    target: {
+      foilX: 50,
+      foilY: 18,
+      cardTiltX: 0,
+      cardTiltY: 0,
+      lightX: 0,
+      lightY: 0,
+      cardOpacity: 0.36,
+      passportLightX: 0,
+      passportLightY: 0,
+      passportOpacity: 0.22
+    }
+  });
+  const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>(() => {
+    return readProfileCardLayout();
+  });
   const mySubscriptions = channels.slice(0, 4);
-const myGuilds = [
+
+  const myGuilds = [
     {
       name: 'Wave Raiders',
       role: 'Guild Ally',
@@ -2894,6 +3179,148 @@ const myGuilds = [
     }
   ];
 
+  function writeFoilStyles(card: HTMLElement): void {
+    const current = foilStateRef.current.current;
+
+    card.style.setProperty('--card-foil-x', current.foilX.toFixed(2) + '%');
+    card.style.setProperty('--card-foil-y', current.foilY.toFixed(2) + '%');
+    card.style.setProperty('--card-body-tilt-x', current.cardTiltX.toFixed(3) + 'deg');
+    card.style.setProperty('--card-body-tilt-y', current.cardTiltY.toFixed(3) + 'deg');
+    card.style.setProperty('--card-light-x', current.lightX.toFixed(2) + 'px');
+    card.style.setProperty('--card-light-y', current.lightY.toFixed(2) + 'px');
+    card.style.setProperty('--card-foil-opacity', current.cardOpacity.toFixed(3));
+    card.style.setProperty('--passport-light-x', current.passportLightX.toFixed(2) + 'px');
+    card.style.setProperty('--passport-light-y', current.passportLightY.toFixed(2) + 'px');
+    card.style.setProperty('--passport-foil-opacity', current.passportOpacity.toFixed(3));
+  }
+
+  function animateFoil(card: HTMLElement): void {
+    const state = foilStateRef.current;
+    const current = state.current;
+    const target = state.target;
+    const smoothing = 0.105;
+
+    current.foilX += (target.foilX - current.foilX) * smoothing;
+    current.foilY += (target.foilY - current.foilY) * smoothing;
+    current.cardTiltX += (target.cardTiltX - current.cardTiltX) * smoothing;
+    current.cardTiltY += (target.cardTiltY - current.cardTiltY) * smoothing;
+    current.lightX += (target.lightX - current.lightX) * smoothing;
+    current.lightY += (target.lightY - current.lightY) * smoothing;
+    current.cardOpacity += (target.cardOpacity - current.cardOpacity) * smoothing;
+    current.passportLightX += (target.passportLightX - current.passportLightX) * smoothing;
+    current.passportLightY += (target.passportLightY - current.passportLightY) * smoothing;
+    current.passportOpacity += (target.passportOpacity - current.passportOpacity) * smoothing;
+
+    writeFoilStyles(card);
+
+    const remaining = Math.max(
+      Math.abs(target.foilX - current.foilX),
+      Math.abs(target.foilY - current.foilY),
+      Math.abs(target.cardTiltX - current.cardTiltX),
+      Math.abs(target.cardTiltY - current.cardTiltY),
+      Math.abs(target.lightX - current.lightX),
+      Math.abs(target.lightY - current.lightY),
+      Math.abs(target.cardOpacity - current.cardOpacity),
+      Math.abs(target.passportLightX - current.passportLightX),
+      Math.abs(target.passportLightY - current.passportLightY),
+      Math.abs(target.passportOpacity - current.passportOpacity)
+    );
+
+    if (remaining > 0.01) {
+      foilFrameRef.current = window.requestAnimationFrame(() => animateFoil(card));
+      return;
+    }
+
+    Object.assign(current, target);
+    writeFoilStyles(card);
+    foilFrameRef.current = null;
+  }
+
+  function startFoilAnimation(card: HTMLElement): void {
+    if (foilFrameRef.current !== null) {
+      return;
+    }
+
+    foilFrameRef.current = window.requestAnimationFrame(() => animateFoil(card));
+  }
+
+  function updateCardFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
+    const card = profileCardFrameRef.current;
+
+    if (!card) {
+      return;
+    }
+
+    const shell = event.currentTarget;
+    const rect = shell.getBoundingClientRect();
+
+    const pointerX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const pointerY = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+
+    const fromCenterX = pointerX - 0.5;
+    const fromCenterY = pointerY - 0.5;
+    const deadZone = 0.08;
+
+    const easedX =
+      Math.sign(fromCenterX) *
+      Math.max(0, Math.abs(fromCenterX) - deadZone) /
+      (0.5 - deadZone);
+
+    const easedY =
+      Math.sign(fromCenterY) *
+      Math.max(0, Math.abs(fromCenterY) - deadZone) /
+      (0.5 - deadZone);
+
+    const clampedX = Math.max(-1, Math.min(1, easedX));
+    const clampedY = Math.max(-1, Math.min(1, easedY));
+
+    const tiltStrength = 1.55;
+    const lightStrength = 13;
+
+    foilStateRef.current.target = {
+      foilX: pointerX * 100,
+      foilY: pointerY * 100,
+      cardTiltX: -clampedY * tiltStrength,
+      cardTiltY: clampedX * tiltStrength,
+      lightX: clampedX * lightStrength,
+      lightY: clampedY * lightStrength,
+      cardOpacity: 0.58,
+      passportLightX: clampedX * 9,
+      passportLightY: clampedY * 9,
+      passportOpacity: 0.34
+    };
+
+    startFoilAnimation(card);
+  }
+
+  function resetCardFoil(): void {
+    const card = profileCardFrameRef.current;
+
+    if (!card) {
+      return;
+    }
+
+    foilStateRef.current.target = {
+      foilX: 50,
+      foilY: 18,
+      cardTiltX: 0,
+      cardTiltY: 0,
+      lightX: 0,
+      lightY: 0,
+      cardOpacity: 0.36,
+      passportLightX: 0,
+      passportLightY: 0,
+      passportOpacity: 0.22
+    };
+
+    startFoilAnimation(card);
+  }
+
+  function chooseProfileCardLayout(layout: ProfileCardLayout): void {
+    setProfileCardLayout(layout);
+    saveProfileCardLayout(layout);
+  }
+
   return (
     <>
       <header className="page-title">
@@ -2902,42 +3329,134 @@ const myGuilds = [
       </header>
 
       <section className="user-profile-page">
-        <article className="user-profile-card user-profile-card-expanded">
-          <div className={'user-avatar-large ' + signalClass(profileMember.signal)}>
-            {profileMember.name.slice(0, 2).toUpperCase()}
+        <div className={'nami-profile-stable-controls nami-profile-stable-controls-' + profileCardLayout}>
+          <div className="nami-profile-toolbar-actions">
+            <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
+              {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+                <button
+                  className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
+                  key={layout}
+                  onClick={() => chooseProfileCardLayout(layout)}
+                  type="button"
+                >
+                  {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
 
-          <div>
-            <div className="profile-signal-badge-row">
-              <span className={'profile-signal-chip ' + signalClass(profileMember.signal)}>
-                <i />
-                {profileMember.signal}
-              </span>
-
-              <span className="profile-badge-icon profile-badge-icon-custom" title="Adventurer">
-                A
-              </span>
-
-              <span className="profile-badge-icon profile-badge-icon-custom" title="Gamester">
-                G
-              </span>
+        <article
+          aria-label="Open Nami Passport"
+          className={
+            'nami-profile-card-shell ' +
+            (profileCardLayout === 'horizontal'
+              ? 'nami-profile-card-shell-horizontal'
+              : 'nami-profile-card-shell-vertical')
+          }
+          onClick={() => props.onNavigate?.('passport')}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              props.onNavigate?.('passport');
+            }
+          }}
+          onPointerLeave={resetCardFoil}
+          onPointerMove={updateCardFoil}
+          role="button"
+          tabIndex={0}
+        >
+          <div
+            className={
+              'nami-profile-card-frame ' +
+              (profileCardLayout === 'horizontal'
+                ? 'nami-profile-card-frame-horizontal'
+                : 'nami-profile-card-frame-vertical')
+            }
+            ref={profileCardFrameRef}
+          >
+            <div className="nami-profile-card-header">
+              <span className="mini-badge">Nami Passport</span>
+              <strong>Identity Card</strong>
             </div>
 
-            <h2>{profileMember.name}</h2>
-            <p>
-              Portable gamer identity powered by Sui. This is the user-owned profile area,
-              separate from channel/game profiles.
-            </p>
+            <div className={'nami-profile-card-avatar ' + signalClass(profileMember.signal)}>
+              {profileMember.name.slice(0, 2).toUpperCase()}
+            </div>
 
-            <div className="passport-detail-grid">
-              <span>Handle</span>
-              <strong>@npcgamer</strong>
-              <span>Wallet</span>
-              <strong>0xUSER</strong>
-              <span>Passport</span>
-              <strong>0xPASSPORT</strong>
-              <span>Profile Status</span>
-              <strong>Public Passport</strong>
+            <div className="nami-profile-card-nameplate">
+              <div className="profile-signal-badge-row">
+                <span className={'profile-signal-chip ' + signalClass(profileMember.signal)}>
+                  <i />
+                  {profileMember.signal}
+                </span>
+
+                <span className="profile-badge-icon profile-badge-icon-custom" title="Adventurer">
+                  A
+                </span>
+
+                <span className="profile-badge-icon profile-badge-icon-custom" title="Gamester">
+                  G
+                </span>
+              </div>
+
+              <h2>{profileMember.name}</h2>
+              <p>
+                Portable gamer identity powered by Sui. Your Nami Passport connects
+                SuiNS identity, proofs, guild standing, and gated-access readiness.
+              </p>
+            </div>
+
+            <div className="nami-profile-card-stats">
+              <div>
+                <span>Signal</span>
+                <strong>{profileMember.signal}</strong>
+              </div>
+
+              <div>
+                <span>Tier</span>
+                <strong>Adventurer</strong>
+              </div>
+
+              <div>
+                <span>Rep</span>
+                <strong>Gamester</strong>
+              </div>
+            </div>
+
+            <div className="nami-profile-card-details">
+              <div>
+                <span>Handle</span>
+                <strong>@npcgamer</strong>
+              </div>
+
+              <div>
+                <span>SuiNS</span>
+                <strong>{suiNsPublic ? 'npcgamer.sui' : 'Hidden publicly'}</strong>
+              </div>
+
+              <div>
+                <span>Passport</span>
+                <strong>Proof-based, not payment-based</strong>
+              </div>
+
+              <div>
+                <span>Public Identity</span>
+                <strong>{suiNsPublic ? 'SuiNS visible' : 'SuiNS hidden by default'}</strong>
+              </div>
+            </div>
+
+            <div className="nami-profile-passport-surface">
+              <span className="mini-badge">Privacy</span>
+              <strong>SuiNS stays private by default.</strong>
+              <p>
+                You decide whether your readable identity is visible on public-facing
+                profile surfaces.
+              </p>
+
+              <span className="nami-profile-passport-action-note">
+                Click the foil card to open Nami Passport.
+              </span>
             </div>
           </div>
         </article>
@@ -2954,7 +3473,10 @@ const myGuilds = [
                 <button
                   className="profile-mini-channel-card"
                   key={channel.id}
-                  onClick={() => props.onOpenProfile?.(channel)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    props.onOpenProfile?.(channel);
+                  }}
                   type="button"
                 >
                   <ChannelAvatar channel={channel} size="sm" />
@@ -2972,7 +3494,7 @@ const myGuilds = [
               onClick={() => props.onNavigate?.('subscriptions')}
               type="button"
             >
-              Open full subscription manager
+              Manage Subs
             </button>
           </article>
 
@@ -2999,7 +3521,7 @@ const myGuilds = [
               onClick={() => props.onNavigate?.('guilds')}
               type="button"
             >
-              Open full guild manager
+              Manage Guilds
             </button>
           </article>
 
@@ -3430,6 +3952,18 @@ export function App(): ReactElement {
       }
       onNavigate={setActivePage}
     />;
+  }
+
+  if (activePage === 'passport') {
+    return (
+      <PassportScreen
+        onNavigate={setActivePage}
+        onOpenProfile={(channel) => {
+          setSelectedChannel(channel);
+          setActivePage('channelProfile');
+        }}
+      />
+    );
   }
 
 if (activePage === 'userProfile') {

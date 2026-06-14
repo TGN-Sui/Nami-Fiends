@@ -5,6 +5,7 @@ export type NamiPage =
   | 'gamehub'
   | 'subscriptions'
   | 'userProfile'
+  | 'passport'
   | 'channelProfile'
   | 'chat'
   | 'channelEvents'
