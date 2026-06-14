@@ -6898,3 +6898,417 @@ button:disabled {
     max-width: none;
   }
 }
+
+
+/* =========================================================
+   UI-A10A — Game Profile visual density cleanup
+   ========================================================= */
+
+.channel-profile-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.58fr) minmax(320px, 0.82fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.channel-profile-top-grid > article {
+  margin: 0;
+}
+
+.channel-profile-top-grid .channel-brand-colors-condensed {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+
+.channel-profile-top-grid .channel-brand-copy p {
+  max-width: 46ch;
+}
+
+.channel-profile-top-grid .channel-owner-color-grid,
+.channel-profile-top-grid .channel-member-color-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-stat-grid {
+  margin-bottom: 18px;
+}
+
+.profile-stat-card {
+  min-height: 118px;
+}
+
+.profile-section-shell {
+  height: 100%;
+}
+
+.profile-section-shell > .panel,
+.profile-embedded-card,
+.profile-quick-grid > .panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-section-shell > .panel .profile-secondary-link,
+.profile-embedded-card .profile-secondary-link,
+.profile-quick-grid > .panel .profile-secondary-link,
+.profile-section-shell > .panel button:last-child {
+  margin-top: auto;
+}
+
+.profile-section-drag-bar button {
+  min-width: 92px;
+}
+
+.channel-brand-colors-condensed .channel-brand-color-tools {
+  align-self: end;
+}
+
+@media (max-width: 980px) {
+  .channel-profile-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .channel-profile-top-grid .channel-owner-color-grid,
+  .channel-profile-top-grid .channel-member-color-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .channel-profile-top-grid .channel-owner-color-grid,
+  .channel-profile-top-grid .channel-member-color-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   UI-A10B — compact game profile panels and settings-owned colors
+   ========================================================= */
+
+/* Hero gets a foil/light feel without card tilt. */
+.channel-profile-top-grid > article:first-child {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.channel-profile-top-grid > article:first-child::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.28), transparent 18%),
+    linear-gradient(125deg, transparent 18%, rgba(117, 215, 255, 0.16), transparent 42%, rgba(67, 245, 167, 0.12), transparent 72%);
+  transition: opacity 180ms ease, transform 420ms ease;
+}
+
+.channel-profile-top-grid > article:first-child:hover::before {
+  opacity: 1;
+  transform: translate3d(4%, -3%, 0);
+}
+
+.channel-profile-top-grid > article:first-child > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Public Game Profile only shows member-facing approved colors. */
+.channel-brand-colors-public {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-content: start;
+}
+
+.channel-brand-colors-public .channel-brand-copy p {
+  max-width: 34ch;
+}
+
+.channel-member-brand-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.channel-member-brand-dot {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(5, 9, 15, 0.42);
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.channel-member-brand-dot:hover,
+.channel-member-brand-dot.is-selected-channel-brand-color {
+  border-color: rgba(67, 245, 167, 0.58);
+  box-shadow: 0 0 18px rgba(67, 245, 167, 0.16);
+  transform: translateY(-1px);
+}
+
+.channel-member-brand-dot span {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  box-shadow: 0 0 18px currentColor;
+}
+
+/* Owner color picker belongs in Settings. */
+.settings-channel-brand-palette {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.settings-channel-brand-palette h2,
+.settings-channel-brand-palette p {
+  margin: 0;
+}
+
+.settings-channel-brand-palette h2 {
+  margin-top: 8px;
+}
+
+.settings-channel-brand-palette p {
+  margin-top: 8px;
+  color: #9fb5ca;
+  line-height: 1.45;
+}
+
+.settings-brand-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settings-brand-color-chip {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.36);
+  color: #dff6ff;
+  font-weight: 900;
+}
+
+.settings-brand-color-chip span {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.settings-brand-color-chip input {
+  width: 44px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.settings-brand-color-chip small {
+  font-size: 0.7rem;
+}
+
+/* Stop expanded/collapsed profile sections from stretching into huge blank panels. */
+.profile-section-grid {
+  align-items: start !important;
+  grid-auto-rows: auto !important;
+}
+
+.profile-section-shell {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+.profile-section-shell > .panel {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.profile-section-drag-bar {
+  min-height: 48px;
+}
+
+.profile-section-drag-bar button {
+  min-width: 86px;
+}
+
+/* Collapsed/section controls should remain visible and compact. */
+.profile-layout-editor,
+.channel-layout-editor {
+  align-items: start !important;
+}
+
+.profile-layout-editor .panel,
+.channel-layout-editor .panel {
+  min-height: 0 !important;
+}
+
+@media (max-width: 980px) {
+  .settings-channel-brand-palette {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .settings-brand-color-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   UI-A10C — full hero and compact channel colors row
+   ========================================================= */
+
+/* Hero takes the full row again. */
+[data-channel-hero='true'] {
+  width: 100%;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Subtle foil/light cursor feel without tilt. */
+[data-channel-hero='true']::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.24), transparent 18%),
+    linear-gradient(125deg, transparent 18%, rgba(117, 215, 255, 0.15), transparent 44%, rgba(67, 245, 167, 0.1), transparent 76%);
+  transition: opacity 180ms ease, transform 420ms ease;
+}
+
+[data-channel-hero='true']:hover::before {
+  opacity: 1;
+  transform: translate3d(3%, -3%, 0);
+}
+
+[data-channel-hero='true'] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Stat row now includes Channel Colors as a same-size card. */
+.profile-stat-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(170px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+  margin-bottom: 18px !important;
+}
+
+.profile-stat-card,
+.channel-colors-stat-card {
+  min-height: 104px !important;
+  height: auto !important;
+}
+
+.channel-colors-stat-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.channel-member-brand-strip-compact {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.channel-member-brand-strip-compact .channel-member-brand-dot {
+  width: 34px;
+  height: 34px;
+}
+
+.channel-member-brand-strip-compact .channel-member-brand-dot span {
+  width: 20px;
+  height: 20px;
+}
+
+/* Remove repeated SECTION + panel-name header clutter. */
+.profile-section-drag-bar {
+  justify-content: flex-end !important;
+  min-height: 44px !important;
+  padding: 10px 14px !important;
+}
+
+.profile-section-drag-bar > span,
+.profile-section-drag-bar > strong {
+  display: none !important;
+}
+
+/* Keep the actual panel title readable and centered. */
+.profile-section-shell > .panel > h2:first-child,
+.profile-section-shell > .panel .profile-panel-heading h2 {
+  text-align: center;
+}
+
+/* Center module cards / tiles without relying on a single exact class name. */
+.channel-module-tile,
+.channel-module-card,
+.profile-module-tile,
+.profile-module-card,
+.module-tile,
+.module-card {
+  text-align: center !important;
+  justify-items: center !important;
+  align-items: center !important;
+}
+
+.channel-module-tile strong,
+.channel-module-card strong,
+.profile-module-tile strong,
+.profile-module-card strong,
+.module-tile strong,
+.module-card strong {
+  text-align: center !important;
+}
+
+/* No giant blank collapsed/expanded sections. */
+.profile-section-grid {
+  align-items: start !important;
+  grid-auto-rows: auto !important;
+}
+
+.profile-section-shell,
+.profile-section-shell > .panel {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+@media (max-width: 1020px) {
+  .profile-stat-grid {
+    grid-template-columns: repeat(2, minmax(190px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -1318,7 +1318,8 @@ function ChannelProfile(props: {
       </header>
 
       <section className="channel-profile-page" style={profileBrandStyle}>
-        <article className="profile-hero-panel">
+                  
+            <article data-channel-hero="true" className="profile-hero-panel">
           <div className="profile-hero-main">
             <ChannelAvatar channel={props.channel} size="lg" />
 
@@ -1356,7 +1357,7 @@ function ChannelProfile(props: {
               onClick={() => props.onNavigate('chat')}
               type="button"
             >
-              Join Main Chat
+              Join Chat
             </button>
 
             <button className="secondary-action" type="button">
@@ -1364,6 +1365,9 @@ function ChannelProfile(props: {
             </button>
           </div>
         </article>
+
+                      
+          
 
         <section className="profile-stat-grid">
           <article className="profile-stat-card">
@@ -1384,55 +1388,29 @@ function ChannelProfile(props: {
             <span>Platforms</span>
             <strong>{props.channel.platforms.length}</strong>
           </article>
-        </section>
+        
 
-                  <article className="panel channel-brand-colors channel-brand-colors-condensed">
-            <div className="channel-brand-copy">
-              <span className="mini-badge">Brand Palette</span>
-              <h2>Channel Brand Colors</h2>
-              <p>
-                Owners set up to four approved brand colors. Members can only choose from
-                those approved colors.
-              </p>
-            </div>
-
-            <div className="channel-brand-color-tools">
-              <div className="channel-owner-color-editor">
-                <strong>Owner colors</strong>
-                <div className="channel-owner-color-grid">
-                  {channelBrandPalette.slice(0, 4).map((color, index) => (
-                    <label className="channel-color-input-chip" key={index}>
-                      <span style={{ backgroundColor: color }} />
-                      <input
-                        aria-label={'Brand color ' + (index + 1)}
-                        onChange={(event) => updateChannelBrandColor(index, event.target.value)}
-                        type="color"
-                        value={color}
-                      />
-                      <small>{color}</small>
-                    </label>
-                  ))}
-                </div>
+            <article className="profile-stat-card channel-colors-stat-card">
+              <span>Channel Colors</span>
+              <div className="channel-member-brand-strip channel-member-brand-strip-compact">
+                {channelBrandPalette.slice(0, 4).map((color: string) => (
+                  <button
+                    aria-label={'Use channel brand color ' + color}
+                    className={
+                      'channel-member-brand-dot' +
+                      (selectedChannelBrandColor === color ? ' is-selected-channel-brand-color' : '')
+                    }
+                    key={color}
+                    onClick={() => chooseChannelBrandColor(color)}
+                    type="button"
+                  >
+                    <span style={{ backgroundColor: color }} />
+                  </button>
+                ))}
               </div>
+            </article></section>
 
-              <div className="channel-member-color-picker">
-                <strong>Member choice</strong>
-                <div className="channel-member-color-grid">
-                  {channelBrandPalette.slice(0, 4).map((color) => (
-                    <button
-                      className={selectedChannelBrandColor === color ? 'is-selected-channel-brand-color' : ''}
-                      key={color}
-                      onClick={() => chooseChannelBrandColor(color)}
-                      type="button"
-                    >
-                      <span style={{ backgroundColor: color }} />
-                      {color}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </article>
+                  
 
           <section className="profile-section-grid">
             {expandedPanels.map((panelName) => {
@@ -1458,8 +1436,6 @@ function ChannelProfile(props: {
                   onDragEnd={() => setDraggedPanel(null)}
                   onDragStart={() => setDraggedPanel(panelName)}
                 >
-                  <span>Section</span>
-                  <strong>{panelName}</strong>
                   <button onClick={() => togglePanel(panelName)} type="button">
                     Collapse
                   </button>
@@ -3778,12 +3754,57 @@ function SettingsScreen(props: {
   const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
   const reportCount = readSafetyReports().length;
 
+  const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
+    return readChannelBrandPalette();
+  });
+
+  function updateSettingsChannelBrandColor(index: number, color: string): void {
+    const nextPalette = settingsChannelBrandPalette.map((currentColor, currentIndex) => {
+      return currentIndex === index ? color : currentColor;
+    }).slice(0, 4);
+
+    setSettingsChannelBrandPalette(nextPalette);
+    saveChannelBrandPalette(nextPalette);
+
+    const selectedColor = readSelectedChannelBrandColor();
+
+    if (!nextPalette.includes(selectedColor)) {
+      saveSelectedChannelBrandColor(nextPalette[0] ?? color);
+    }
+  }
+
   return (
     <>
       <header className="page-title">
         <p>Account preferences and controls</p>
         <h1>Settings</h1>
       </header>
+
+      <section className="panel settings-channel-brand-palette">
+        <div>
+          <span className="mini-badge">Channel Owner Branding</span>
+          <h2>Approved Brand Colors</h2>
+          <p>
+            Set up to four channel-approved colors. Members can only choose from
+            this palette on the public Game Profile.
+          </p>
+        </div>
+
+        <div className="settings-brand-color-grid">
+          {settingsChannelBrandPalette.slice(0, 4).map((color: string, index: number) => (
+            <label className="settings-brand-color-chip" key={index}>
+              <span style={{ backgroundColor: color }} />
+              <input
+                aria-label={'Approved channel brand color ' + (index + 1)}
+                onChange={(event) => updateSettingsChannelBrandColor(index, event.target.value)}
+                type="color"
+                value={color}
+              />
+              <small>{color}</small>
+            </label>
+          ))}
+        </div>
+      </section>
 
       <section className="settings-page">
         <article className="panel settings-hero-panel">
