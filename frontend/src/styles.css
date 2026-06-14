@@ -7685,3 +7685,277 @@ body::before {
     transition: none;
   }
 }
+
+/* =========================================================
+   UI-A10G — Global responsive polish
+   ========================================================= */
+
+/* Keep every major surface above the ambient grid and prevent accidental overflow. */
+.sidebar,
+.nami-app,
+.panel,
+.chat-window,
+.chat-side-panel,
+.profile-hero-panel,
+.member-profile-hero,
+.passport-hero-card-refined {
+  position: relative;
+  z-index: 1;
+}
+
+.nami-app,
+.panel,
+.chat-window,
+.message-bubble,
+.profile-hero-panel,
+.member-profile-hero,
+.passport-hero-card-refined {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* Prevent long titles, handles, SuiNS labels, or channel copy from forcing overflow. */
+h1,
+h2,
+h3,
+p,
+strong,
+span,
+small,
+button {
+  overflow-wrap: anywhere;
+}
+
+/* Safer global panel rhythm at tablet/half-width sizes. */
+@media (max-width: 1180px) {
+  .nami-app {
+    padding-inline: clamp(14px, 2.4vw, 26px);
+  }
+
+  .panel {
+    border-radius: 22px;
+  }
+
+  .profile-stat-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  }
+
+  .channel-tab-row,
+  .tab-row {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .channel-tab-row button,
+  .tab-row button {
+    white-space: nowrap;
+  }
+}
+
+/* Chat layout: keep the right rail usable without squeezing the main chat. */
+@media (max-width: 1060px) {
+  .chat-layout,
+  .chat-layout-buildout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .chat-side-panel,
+  .chat-side-panel-collapsible {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    display: grid;
+    gap: 12px;
+  }
+
+  .chat-window {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 720px) {
+  .chat-side-panel,
+  .chat-side-panel-collapsible {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-presence-rail {
+    gap: 12px;
+  }
+
+  .chat-member-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chat-window-heading,
+  .chat-heading-actions,
+  .chat-input-placeholder {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chat-heading-actions button,
+  .chat-input-placeholder button {
+    width: 100%;
+  }
+}
+
+/* Game Profile: full hero and stat row should breathe at half-width. */
+@media (max-width: 860px) {
+  [data-channel-hero='true'],
+  .profile-hero-panel {
+    padding: 22px !important;
+  }
+
+  .profile-hero-main {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  .profile-hero-copy,
+  .profile-hero-actions {
+    align-items: center;
+  }
+
+  .profile-hero-actions {
+    justify-content: center;
+  }
+
+  .profile-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .channel-member-brand-strip-compact {
+    justify-content: center;
+  }
+}
+
+/* Member profile: avoid action buttons crushing the hero at smaller widths. */
+@media (max-width: 920px) {
+  .member-profile-hero {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  .member-profile-avatar {
+    margin-inline: auto;
+  }
+
+  .member-profile-copy,
+  .member-profile-actions {
+    align-items: center;
+  }
+
+  .member-profile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    width: 100%;
+  }
+
+  .member-profile-meta-row {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .member-profile-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .member-profile-meta-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Settings: brand controls stay readable at reduced widths. */
+@media (max-width: 760px) {
+  .settings-channel-owner-controls,
+  .settings-channel-brand-palette {
+    padding: 18px !important;
+  }
+
+  .settings-brand-preview-row {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .settings-brand-color-grid,
+  .settings-brand-color-grid-polished {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .settings-brand-color-grid,
+  .settings-brand-color-grid-polished {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* My Profile foil card: keep layout controls and card width stable on narrow screens. */
+@media (max-width: 680px) {
+  .nami-profile-stable-controls,
+  .nami-profile-stable-controls-vertical,
+  .nami-profile-stable-controls-horizontal {
+    width: 100% !important;
+  }
+
+  .nami-profile-stable-layout-switch {
+    min-width: 0;
+  }
+
+  .nami-profile-card-shell,
+  .nami-profile-card-shell-vertical,
+  .nami-profile-card-shell-horizontal {
+    width: 100% !important;
+  }
+
+  .profile-quick-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Ambient grid remains behind everything and becomes quieter on small screens. */
+@media (max-width: 760px) {
+  body::before {
+    opacity: 0.72;
+    background-size: 36px 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none !important;
+  }
+}
+
+/* =========================================================
+   UI-A10H — Settings palette label and sidebar spacing fix
+   ========================================================= */
+
+.settings-brand-color-number {
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.settings-brand-color-chip-polished {
+  min-width: 0;
+}
+
+.sidebar-brand {
+  margin-bottom: 18px !important;
+}
+
+.sidebar-brand + button,
+.sidebar-brand + .sidebar-toggle,
+.sidebar-brand + .sidebar-collapse-button {
+  margin-top: 10px !important;
+}
