@@ -3773,6 +3773,14 @@ function SettingsScreen(props: {
     }
   }
 
+  function resetSettingsChannelBrandPalette(): void {
+    const defaultPalette = ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
+
+    setSettingsChannelBrandPalette(defaultPalette);
+    saveChannelBrandPalette(defaultPalette);
+    saveSelectedChannelBrandColor(defaultPalette[0]!);
+  }
+
   return (
     <>
       <header className="page-title">
@@ -3780,31 +3788,56 @@ function SettingsScreen(props: {
         <h1>Settings</h1>
       </header>
 
-      <section className="panel settings-channel-brand-palette">
-        <div>
-          <span className="mini-badge">Channel Owner Branding</span>
-          <h2>Approved Brand Colors</h2>
-          <p>
-            Set up to four channel-approved colors. Members can only choose from
-            this palette on the public Game Profile.
-          </p>
-        </div>
+              <section className="panel settings-channel-brand-palette settings-channel-owner-controls">
+          <div className="settings-brand-header">
+            <div>
+              <span className="mini-badge">Channel Owner Controls</span>
+              <h2>Brand Palette</h2>
+              <p>
+                Set up to four approved colors for this channel. Members only see
+                these choices on the public Game Profile.
+              </p>
+            </div>
 
-        <div className="settings-brand-color-grid">
-          {settingsChannelBrandPalette.slice(0, 4).map((color: string, index: number) => (
-            <label className="settings-brand-color-chip" key={index}>
-              <span style={{ backgroundColor: color }} />
-              <input
-                aria-label={'Approved channel brand color ' + (index + 1)}
-                onChange={(event) => updateSettingsChannelBrandColor(index, event.target.value)}
-                type="color"
-                value={color}
+            <button
+              className="profile-secondary-link settings-brand-reset-button"
+              onClick={resetSettingsChannelBrandPalette}
+              type="button"
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="settings-brand-preview-row" aria-label="Approved brand color preview">
+            {settingsChannelBrandPalette.slice(0, 4).map((color: string) => (
+              <span
+                className="settings-brand-preview-dot"
+                key={color}
+                style={{ backgroundColor: color }}
               />
-              <small>{color}</small>
-            </label>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+
+          <div className="settings-brand-color-grid settings-brand-color-grid-polished">
+            {settingsChannelBrandPalette.slice(0, 4).map((color: string, index: number) => (
+              <label className="settings-brand-color-chip settings-brand-color-chip-polished" key={index}>
+                <span className="settings-brand-color-number">Color {index + 1}</span>
+                <span className="settings-brand-color-preview" style={{ backgroundColor: color }} />
+                <input
+                  aria-label={'Approved channel brand color ' + (index + 1)}
+                  onChange={(event) => updateSettingsChannelBrandColor(index, event.target.value)}
+                  type="color"
+                  value={color}
+                />
+                <small>{color.toUpperCase()}</small>
+              </label>
+            ))}
+          </div>
+
+          <p className="settings-brand-footnote">
+            Public Game Profile keeps this simple by showing members only the approved color dots.
+          </p>
+        </section>
 
       <section className="settings-page">
         <article className="panel settings-hero-panel">

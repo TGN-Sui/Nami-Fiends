@@ -7312,3 +7312,138 @@ button:disabled {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* =========================================================
+   UI-A10D — Settings owner brand palette polish
+   ========================================================= */
+
+.settings-channel-owner-controls {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.settings-brand-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.settings-brand-header h2,
+.settings-brand-header p,
+.settings-brand-footnote {
+  margin: 0;
+}
+
+.settings-brand-header h2 {
+  margin-top: 8px;
+}
+
+.settings-brand-header p,
+.settings-brand-footnote {
+  margin-top: 8px;
+  color: #9fb5ca;
+  line-height: 1.45;
+  max-width: 62ch;
+}
+
+.settings-brand-reset-button {
+  width: auto !important;
+  min-width: 104px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.settings-brand-preview-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(117, 215, 255, 0.05);
+}
+
+.settings-brand-preview-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+  box-shadow: 0 0 22px rgba(117, 215, 255, 0.18);
+}
+
+.settings-brand-color-grid-polished {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-brand-color-chip-polished {
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+  padding: 14px 12px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.12), transparent 34%),
+    rgba(5, 9, 15, 0.38);
+}
+
+.settings-brand-color-number {
+  color: #dff6ff;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-brand-color-preview {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 20px rgba(117, 215, 255, 0.16);
+}
+
+.settings-brand-color-chip-polished input {
+  width: 58px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-brand-color-chip-polished small {
+  color: #9fb5ca;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.settings-brand-footnote {
+  padding-top: 2px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 860px) {
+  .settings-brand-header {
+    flex-direction: column;
+  }
+
+  .settings-brand-reset-button {
+    width: 100% !important;
+  }
+
+  .settings-brand-color-grid-polished {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .settings-brand-color-grid-polished {
+    grid-template-columns: 1fr;
+  }
+}
