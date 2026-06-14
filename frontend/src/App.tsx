@@ -1500,6 +1500,87 @@ function ChannelProfile(props: {
   );
 }
 
+type MemberPreferenceState = {
+  muted: boolean;
+  blocked: boolean;
+};
+
+type SafetyReport = {
+  id: string;
+  source: 'message' | 'member';
+  targetId: string;
+  targetName: string;
+  reason: string;
+  channelName: string;
+  createdAt: string;
+  status: 'Queued' | 'Reviewing' | 'Escalated';
+};
+
+function readMemberPreference(memberId: string): MemberPreferenceState {
+  try {
+    const savedPreference = window.localStorage.getItem('nami-member-preferences-' + memberId);
+
+    if (!savedPreference) {
+      return {
+        muted: false,
+        blocked: false
+      };
+    }
+
+    const parsedPreference = JSON.parse(savedPreference);
+
+    return {
+      muted: Boolean(parsedPreference.muted),
+      blocked: Boolean(parsedPreference.blocked)
+    };
+  } catch {
+    return {
+      muted: false,
+      blocked: false
+    };
+  }
+}
+
+function readSafetyReports(): SafetyReport[] {
+  try {
+    const savedReports = window.localStorage.getItem('nami-safety-reports');
+
+    if (!savedReports) {
+      return [];
+    }
+
+    const parsedReports = JSON.parse(savedReports);
+
+    if (!Array.isArray(parsedReports)) {
+      return [];
+    }
+
+    return parsedReports.filter((report): report is SafetyReport => {
+      return (
+        typeof report === 'object' &&
+        report !== null &&
+        typeof report.id === 'string' &&
+        typeof report.targetId === 'string' &&
+        typeof report.targetName === 'string'
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+function saveSafetyReport(report: Omit<SafetyReport, 'id' | 'createdAt' | 'status'>): void {
+  const nextReport: SafetyReport = {
+    ...report,
+    id: 'report-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+    createdAt: new Date().toLocaleString(),
+    status: 'Queued'
+  };
+
+  const reports = readSafetyReports();
+  window.localStorage.setItem('nami-safety-reports', JSON.stringify([nextReport, ...reports]));
+}
+
 function GameChat(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
@@ -1510,6 +1591,7 @@ function GameChat(props: {
   const [proEliteOnly, setProEliteOnly] = useState(false);
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
+  const [reportPulse, setReportPulse] = useState('');
 
   const channelBrandTheme = useMemo(() => {
     return getStoredChannelBrandTheme(props.channel.id);
@@ -1520,6 +1602,11 @@ function GameChat(props: {
   }, [channelBrandTheme, props.channel.id]);
 
   const chatEligibleMembers = members.filter((member) => member.signal !== 'Black');
+
+  const visibleChatMembers = chatEligibleMembers.filter((member) => {
+    return !readMemberPreference(member.id).blocked;
+  });
+
   const memberByName = new Map(chatEligibleMembers.map((member) => [member.name, member]));
 
   const visibleMessages = chatMessages.filter((message) => {
@@ -1528,6 +1615,7 @@ function GameChat(props: {
     const member = memberByName.get(message.author);
 
     if (!member) return false;
+    if (readMemberPreference(member.id).blocked) return false;
     if (hideNpc && member.tier === 'NPC') return false;
     if (hideRed && message.signal === 'Red') return false;
     if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
@@ -1535,8 +1623,20 @@ function GameChat(props: {
     return true;
   });
 
-  const onlineMembers = chatEligibleMembers.slice(0, 4);
-  const offlineMembers = chatEligibleMembers.slice(4);
+  const onlineMembers = visibleChatMembers.slice(0, 4);
+  const offlineMembers = visibleChatMembers.slice(4);
+
+  function reportMessage(member: (typeof members)[number], messageBody: string): void {
+    saveSafetyReport({
+      source: 'message',
+      targetId: member.id,
+      targetName: member.name,
+      reason: messageBody,
+      channelName: props.channel.name
+    });
+
+    setReportPulse('Report queued for ' + member.name);
+  }
 
   return (
     <>
@@ -1558,35 +1658,49 @@ function GameChat(props: {
         </div>
 
         <div className="chat-member-strip">
-          {onlineMembers.map((member) => (
-            <button
-              className="chat-member-card"
-              key={member.id}
-              onClick={() => props.onOpenMember(member)}
-              type="button"
-            >
-              <div className={'chat-member-avatar ' + signalClass(member.signal)}>
-                {member.name.slice(0, 2).toUpperCase()}
-              </div>
-              <strong>{member.name}</strong>
-              <span>{member.tier}</span>
-            </button>
-          ))}
+          {onlineMembers.map((member) => {
+            const preference = readMemberPreference(member.id);
 
-          {offlineMembers.map((member) => (
-            <button
-              className="chat-member-card is-offline"
-              key={member.id}
-              onClick={() => props.onOpenMember(member)}
-              type="button"
-            >
-              <div className={'chat-member-avatar ' + signalClass(member.signal)}>
-                {member.name.slice(0, 2).toUpperCase()}
-              </div>
-              <strong>{member.name}</strong>
-              <span>Offline</span>
-            </button>
-          ))}
+            return (
+              <button
+                className={
+                  'chat-member-card' +
+                  (preference.muted ? ' is-muted-member-card' : '')
+                }
+                key={member.id}
+                onClick={() => props.onOpenMember(member)}
+                type="button"
+              >
+                <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                  {member.name.slice(0, 2).toUpperCase()}
+                </div>
+                <strong>{member.name}</strong>
+                <span>{preference.muted ? 'Muted' : member.tier}</span>
+              </button>
+            );
+          })}
+
+          {offlineMembers.map((member) => {
+            const preference = readMemberPreference(member.id);
+
+            return (
+              <button
+                className={
+                  'chat-member-card is-offline' +
+                  (preference.muted ? ' is-muted-member-card' : '')
+                }
+                key={member.id}
+                onClick={() => props.onOpenMember(member)}
+                type="button"
+              >
+                <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                  {member.name.slice(0, 2).toUpperCase()}
+                </div>
+                <strong>{member.name}</strong>
+                <span>{preference.muted ? 'Muted' : 'Offline'}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -1634,11 +1748,16 @@ function GameChat(props: {
               <div>
                 <h2>{props.channel.name} Main Chat</h2>
                 <p>
-                  {visibleMessages.length} visible messages · {chatEligibleMembers.length} chat-ready members
+                  {visibleMessages.length} visible messages · {visibleChatMembers.length} visible members
                 </p>
               </div>
 
-              <span className="mini-badge">MVP Mock Chat</span>
+              <div className="chat-heading-actions">
+                {reportPulse && <span className="report-pulse">{reportPulse}</span>}
+                <button onClick={() => props.onNavigate('safetyCenter')} type="button">
+                  Safety Center
+                </button>
+              </div>
             </div>
 
             <div className="message-stack">
@@ -1649,8 +1768,16 @@ function GameChat(props: {
                   return null;
                 }
 
+                const preference = readMemberPreference(member.id);
+
                 return (
-                  <div className="chat-message-row" key={message.id}>
+                  <div
+                    className={
+                      'chat-message-row' +
+                      (preference.muted ? ' is-muted-chat-row' : '')
+                    }
+                    key={message.id}
+                  >
                     <button
                       className={'message-avatar message-avatar-button ' + signalClass(message.signal)}
                       onClick={() => props.onOpenMember(member)}
@@ -1670,8 +1797,16 @@ function GameChat(props: {
                         </button>
 
                         <span>{message.time}</span>
-                        <i>{member.tier}</i>
+                        <i>{preference.muted ? 'Muted' : member.tier}</i>
                         <i>{message.signal}</i>
+
+                        <button
+                          className="message-report-button"
+                          onClick={() => reportMessage(member, message.body)}
+                          type="button"
+                        >
+                          Report
+                        </button>
                       </div>
 
                       <p>{message.body}</p>
@@ -1770,8 +1905,8 @@ function GameChat(props: {
                   </div>
 
                   <div className="customization-note">
-                    Pro / Elite controls for fonts, overlays, message skins, and animation
-                    intensity will live here. Color selection stays on the Game Profile.
+                    Safety preferences now affect chat visibility. Blocked members are hidden,
+                    while muted members stay visible but visually quieted.
                   </div>
                 </div>
               )}
@@ -1790,6 +1925,7 @@ function MemberProfileScreen(props: {
   const preferenceStorageKey = 'nami-member-preferences-' + props.member.id;
   const [isMuted, setIsMuted] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [reportQueued, setReportQueued] = useState(false);
 
   useEffect(() => {
     window.scrollTo({
@@ -1798,23 +1934,11 @@ function MemberProfileScreen(props: {
       behavior: 'smooth'
     });
 
-    try {
-      const savedPreference = window.localStorage.getItem(preferenceStorageKey);
+    const savedPreference = readMemberPreference(props.member.id);
 
-      if (!savedPreference) {
-        setIsMuted(false);
-        setIsBlocked(false);
-        return;
-      }
-
-      const parsedPreference = JSON.parse(savedPreference);
-
-      setIsMuted(Boolean(parsedPreference.muted));
-      setIsBlocked(Boolean(parsedPreference.blocked));
-    } catch {
-      setIsMuted(false);
-      setIsBlocked(false);
-    }
+    setIsMuted(savedPreference.muted);
+    setIsBlocked(savedPreference.blocked);
+    setReportQueued(false);
   }, [preferenceStorageKey, props.member.id]);
 
   function savePreference(nextMuted: boolean, nextBlocked: boolean): void {
@@ -1828,6 +1952,18 @@ function MemberProfileScreen(props: {
         blocked: nextBlocked
       })
     );
+  }
+
+  function reportMember(): void {
+    saveSafetyReport({
+      source: 'member',
+      targetId: props.member.id,
+      targetName: props.member.name,
+      reason: 'Member profile report',
+      channelName: 'Nami Chat'
+    });
+
+    setReportQueued(true);
   }
 
   return (
@@ -1867,6 +2003,8 @@ function MemberProfileScreen(props: {
               <span>Status</span>
               <strong>{isBlocked ? 'Blocked' : isMuted ? 'Muted' : 'Open'}</strong>
             </div>
+
+            {reportQueued && <p className="report-pulse">Report added to moderation queue.</p>}
           </div>
 
           <div className="member-profile-actions">
@@ -1884,6 +2022,22 @@ function MemberProfileScreen(props: {
               type="button"
             >
               {isBlocked ? 'Blocked' : 'Block'}
+            </button>
+
+            <button
+              className="preference-button report-preference"
+              onClick={reportMember}
+              type="button"
+            >
+              Report
+            </button>
+
+            <button
+              className="secondary-action"
+              onClick={() => props.onNavigate('safetyCenter')}
+              type="button"
+            >
+              Safety Center
             </button>
 
             <button
@@ -1911,7 +2065,12 @@ function MemberProfileScreen(props: {
 
               <div>
                 <strong>Block</strong>
-                <span>Prevent unwanted interaction from this member in future UX flows.</span>
+                <span>Hide this member from chat and reduce unwanted interaction.</span>
+              </div>
+
+              <div>
+                <strong>Report</strong>
+                <span>Adds this member or message to a moderation review queue.</span>
               </div>
             </div>
           </article>
@@ -1938,6 +2097,168 @@ function MemberProfileScreen(props: {
                   <i className={signalClass(channel.signal)}>{channel.signal}</i>
                 </button>
               ))}
+            </div>
+          </article>
+        </section>
+      </section>
+    </>
+  );
+}
+
+function SafetyCenterScreen(props: {
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
+  const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
+  const reports = useMemo(() => readSafetyReports(), [refreshKey]);
+
+  function openMember(member: (typeof members)[number]): void {
+    window.localStorage.setItem('nami-selected-member-id', member.id);
+    props.onNavigate('memberProfile');
+  }
+
+  function clearReports(): void {
+    window.localStorage.setItem('nami-safety-reports', JSON.stringify([]));
+    setRefreshKey((value) => value + 1);
+  }
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Safety preferences and moderation</p>
+        <h1>Safety Center</h1>
+      </header>
+
+      <section className="safety-center-page">
+        <article className="panel safety-hero-panel">
+          <div>
+            <span className="mini-badge">UI-A8 Safety Layer</span>
+            <h2>Conflict control without turning safety into payment</h2>
+            <p>
+              Muting, blocking, reporting, and moderation queues are user-preference and
+              channel-health tools. They are separate from subscription or verification status.
+            </p>
+          </div>
+
+          <button
+            className="secondary-action"
+            onClick={() => props.onNavigate('userProfile')}
+            type="button"
+          >
+            Back to My Profile
+          </button>
+        </article>
+
+        <section className="safety-grid">
+          <article className="panel safety-list-panel">
+            <div className="profile-panel-heading">
+              <h2>Muted Members</h2>
+              <p>Muted members stay visible, but appear quieter in Game Chat.</p>
+            </div>
+
+            <div className="safety-member-list">
+              {mutedMembers.length === 0 && <span className="empty-safety-note">No muted members yet.</span>}
+
+              {mutedMembers.map((member) => (
+                <button
+                  className="safety-member-row"
+                  key={member.id}
+                  onClick={() => openMember(member)}
+                  type="button"
+                >
+                  <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                    {member.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <span>{member.tier} · {member.signal}</span>
+                  </div>
+                  <i>Muted</i>
+                </button>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel safety-list-panel">
+            <div className="profile-panel-heading">
+              <h2>Blocked Members</h2>
+              <p>Blocked members are hidden from Game Chat surfaces.</p>
+            </div>
+
+            <div className="safety-member-list">
+              {blockedMembers.length === 0 && <span className="empty-safety-note">No blocked members yet.</span>}
+
+              {blockedMembers.map((member) => (
+                <button
+                  className="safety-member-row is-blocked-safety-row"
+                  key={member.id}
+                  onClick={() => openMember(member)}
+                  type="button"
+                >
+                  <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                    {member.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <span>{member.tier} · {member.signal}</span>
+                  </div>
+                  <i>Blocked</i>
+                </button>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="moderation-queue-grid">
+          <article className="panel moderation-queue-panel">
+            <div className="profile-panel-heading">
+              <h2>Report Queue</h2>
+              <p>Reports from member profiles and messages appear here for review.</p>
+            </div>
+
+            <div className="moderation-report-stack">
+              {reports.length === 0 && <span className="empty-safety-note">No reports queued.</span>}
+
+              {reports.map((report) => (
+                <div className="moderation-report-card" key={report.id}>
+                  <div>
+                    <span className="mini-badge">{report.source}</span>
+                    <strong>{report.targetName}</strong>
+                    <p>{report.reason}</p>
+                    <small>{report.channelName} · {report.createdAt}</small>
+                  </div>
+
+                  <div className="moderation-action-row">
+                    <button type="button">Review</button>
+                    <button type="button">Timeout</button>
+                    <button type="button">Escalate</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {reports.length > 0 && (
+              <button className="profile-secondary-link" onClick={clearReports} type="button">
+                Clear mock queue
+              </button>
+            )}
+          </article>
+
+          <article className="panel moderation-queue-panel">
+            <div className="profile-panel-heading">
+              <h2>Channel Owner Tools</h2>
+              <p>Mock moderation actions for future developer/channel owner dashboards.</p>
+            </div>
+
+            <div className="owner-tool-grid">
+              <button type="button">Warn Member</button>
+              <button type="button">Timeout Member</button>
+              <button type="button">Review Signal</button>
+              <button type="button">Escalate to Nami</button>
+              <button type="button">Lock Thread</button>
+              <button type="button">Open Audit Log</button>
             </div>
           </article>
         </section>
@@ -2199,6 +2520,8 @@ function UserProfileScreen(props: {
 } = {}): ReactElement {
   const profileMember = members[0]!;
   const mySubscriptions = channels.slice(0, 4);
+  const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
+  const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
 
   const myGuilds = [
     {
@@ -2263,8 +2586,8 @@ function UserProfileScreen(props: {
               <strong>0xUSER</strong>
               <span>Passport</span>
               <strong>0xPASSPORT</strong>
-              <span>Level / XP</span>
-              <strong>18 / 1840</strong>
+              <span>Safety State</span>
+              <strong>{mutedMembers.length} muted · {blockedMembers.length} blocked</strong>
             </div>
           </div>
         </article>
@@ -2330,19 +2653,25 @@ function UserProfileScreen(props: {
             </button>
           </article>
 
-          <article className="panel">
+          <article className="panel profile-embedded-card">
             <div className="profile-panel-heading">
-              <h2>My Badges</h2>
-              <p>Owned user badges from Passport progression and community activity.</p>
+              <h2>Safety Center</h2>
+              <p>Manage muted members, blocked members, reports, and moderation preferences.</p>
             </div>
 
-            <div className="profile-badge-icon-row">
-              {['Q', 'C', 'V', 'G', 'F'].map((badge) => (
-                <span className="profile-badge-icon profile-badge-icon-official" key={badge}>
-                  {badge}
-                </span>
-              ))}
+            <div className="safety-summary-row">
+              <span>{mutedMembers.length} muted</span>
+              <span>{blockedMembers.length} blocked</span>
+              <span>{readSafetyReports().length} reports</span>
             </div>
+
+            <button
+              className="profile-secondary-link"
+              onClick={() => props.onNavigate?.('safetyCenter')}
+              type="button"
+            >
+              Open Safety Center
+            </button>
           </article>
 
           <article className="panel">
@@ -2707,6 +3036,10 @@ export function App(): ReactElement {
 
   if (activePage === 'channelEvents') {
     return <ChannelEventsScreen channel={selectedChannel} onNavigate={setActivePage} />;
+  }
+
+  if (activePage === 'safetyCenter') {
+    return <SafetyCenterScreen onNavigate={setActivePage} />;
   }
 
   if (activePage === 'memberProfile') {

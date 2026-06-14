@@ -9,6 +9,7 @@ export type NamiPage =
   | 'chat'
   | 'channelEvents'
   | 'memberProfile'
+  | 'safetyCenter'
   | 'guilds'
   | 'messages'
   | 'events'
