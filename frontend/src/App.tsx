@@ -50,14 +50,144 @@ function ChannelAvatar(props: {
   );
 }
 
+type NamiProgressionSnapshot = {
+  level: number;
+  levelPercent: number;
+  currentXp: number;
+  nextLevelXp: number;
+  seasonXp: number;
+  guilds: string[];
+  squads: string[];
+};
+
+const namiSeasonLevelMarkers = [1, 15, 30, 45, 60, 75, 90, 100] as const;
+
+function memberInitials(member: (typeof members)[number]): string {
+  return member.name.slice(0, 2).toUpperCase();
+}
+
+function percentForNamiLevel(level: number, currentXp = 0, nextLevelXp = 1000): number {
+  const safeLevel = Math.min(100, Math.max(1, level));
+  const safeXpPercent = Math.min(1, Math.max(0, currentXp / nextLevelXp));
+  const preciseLevel = safeLevel - 1 + safeXpPercent;
+
+  return Math.min(100, Math.max(0, (preciseLevel / 99) * 100));
+}
+
+function getNamiProgression(member: (typeof members)[number], tick = Date.now()): NamiProgressionSnapshot {
+  const memberIndex = Math.max(0, members.findIndex((currentMember) => currentMember.id === member.id));
+  const baseLevel = Math.min(100, 18 + memberIndex * 9 + (member.name.length % 8));
+  const nextLevelXp = 1000;
+  const liveXpPulse = Math.floor((tick / 1000) % 120);
+  const currentXp = Math.min(nextLevelXp - 1, 420 + memberIndex * 73 + liveXpPulse);
+  const levelPercent = percentForNamiLevel(baseLevel, currentXp, nextLevelXp);
+
+  const guildSets = [
+    ['Wave Raiders', 'Creator Circle'],
+    ['Night Market PvP', 'Retro Arena'],
+    ['Builder League', 'Sui Creators'],
+    ['Ocean Mint Crew', 'Signal Watch']
+  ];
+
+  const squadSets = [
+    ['Alpha Squad', 'Mint Watch'],
+    ['Raid Team', 'Patch Crew'],
+    ['Builder Squad', 'Event Ops'],
+    ['Support Squad', 'Lore Team']
+  ];
+
+  return {
+    level: baseLevel,
+    levelPercent,
+    currentXp,
+    nextLevelXp,
+    seasonXp: baseLevel * nextLevelXp + currentXp,
+    guilds: guildSets[memberIndex % guildSets.length] ?? guildSets[0]!,
+    squads: squadSets[memberIndex % squadSets.length] ?? squadSets[0]!
+  };
+}
+
+function NamiSeasonProgressBar(props: {
+  member: (typeof members)[number];
+}): ReactElement {
+  const [progressTick, setProgressTick] = useState(() => Date.now());
+  const progression = getNamiProgression(props.member, progressTick);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setProgressTick(Date.now());
+    }, 3000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  return (
+    <section className="nami-season-progress" aria-label="Nami seasonal reputation progress">
+      <div className="nami-season-progress-copy">
+        <span>Season Reputation</span>
+        <strong>Level {progression.level}</strong>
+        <small>{progression.currentXp} / {progression.nextLevelXp} XP</small>
+      </div>
+
+      <div className="nami-season-track">
+        <div
+          className="nami-season-fill"
+          style={{ width: progression.levelPercent + '%' }}
+        />
+
+        {namiSeasonLevelMarkers.map((level) => (
+          <span
+            className="nami-season-marker"
+            key={level}
+            style={{ left: percentForNamiLevel(level) + '%' }}
+          >
+            <i>{level}</i>
+          </span>
+        ))}
+
+        <div
+          className="nami-season-avatar-marker"
+          style={{ left: progression.levelPercent + '%' }}
+        >
+          <span className={'nami-season-avatar ' + signalClass(props.member.signal)}>
+            {memberInitials(props.member)}
+          </span>
+          <strong>{progression.level}</strong>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Sidebar(props: {
   activePage: NamiPage;
   collapsed: boolean;
   onNavigate: (page: NamiPage) => void;
   onToggle: () => void;
 }): ReactElement {
+  const sidebarMember = members[0]!;
+  const sidebarProgression = getNamiProgression(sidebarMember);
+
   return (
     <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
+
+      <div className="sidebar-player-progress">
+        <div className={'sidebar-player-avatar ' + signalClass(sidebarMember.signal)}>
+          {memberInitials(sidebarMember)}
+          <strong>{sidebarProgression.level}</strong>
+        </div>
+
+        {!props.collapsed && (
+          <div className="sidebar-player-copy">
+            <span>{sidebarMember.name}</span>
+            <small>Lv {sidebarProgression.level} · {sidebarProgression.currentXp} XP</small>
+            <div className="sidebar-xp-track">
+              <i style={{ width: (sidebarProgression.currentXp / sidebarProgression.nextLevelXp) * 100 + '%' }} />
+            </div>
+          </div>
+        )}
+      </div>
+
       <button
         className="sidebar-brand"
         onClick={() => props.onNavigate('gamehub')}
@@ -2131,6 +2261,9 @@ function MemberProfileScreen(props: {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
+  const memberProgression = getNamiProgression(props.member);
+  const memberVerificationStatus =
+    reviewedSignal === 'Green' ? 'Verified' : reviewedSignal + ' Review';
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
   }, [props.member.id, refreshKey]);
@@ -2291,6 +2424,34 @@ function MemberProfileScreen(props: {
         </article>
 
         <section className="member-profile-grid">
+            <article className="panel member-affiliation-panel">
+              <div className="profile-panel-heading">
+                <h2>Guilds & Squads</h2>
+                <p>Current guild standing, squad identity, and seasonal level.</p>
+              </div>
+
+              <div className="nami-affiliation-grid">
+                <div>
+                  <span>Guilds</span>
+                  {memberProgression.guilds.map((guild) => (
+                    <strong key={guild}>{guild}</strong>
+                  ))}
+                </div>
+
+                <div>
+                  <span>Squads</span>
+                  {memberProgression.squads.map((squad) => (
+                    <strong key={squad}>{squad}</strong>
+                  ))}
+                </div>
+
+                <div>
+                  <span>Season XP</span>
+                  <strong>{memberProgression.seasonXp.toLocaleString()}</strong>
+                  <small>Lv {memberProgression.level} Nami Reputation</small>
+                </div>
+              </div>
+            </article>
           <article className="panel">
             <div className="profile-panel-heading">
               <h2>Safety History</h2>
@@ -2935,6 +3096,7 @@ function PassportScreen(props: {
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
   const profileMember = members[0]!;
+  const passportProgression = getNamiProgression(profileMember);
   const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
 
   const passportProofs = [
@@ -2987,8 +3149,9 @@ function PassportScreen(props: {
         <article className="panel passport-hero-card passport-hero-card-refined">
           <div className="passport-owner-block">
             <div className={'member-profile-avatar ' + signalClass(profileMember.signal)}>
-              {profileMember.name.slice(0, 2).toUpperCase()}
-            </div>
+                {memberInitials(profileMember)}
+                <span className="profile-level-badge">Lv {passportProgression.level}</span>
+              </div>
 
             <div className="passport-owner-copy">
               <span className="mini-badge">Sui Identity Layer</span>
@@ -3038,6 +3201,34 @@ function PassportScreen(props: {
         </article>
 
         <section className="passport-grid">
+            <article className="panel passport-affiliation-panel">
+              <div className="profile-panel-heading">
+                <h2>Guilds & Squads</h2>
+                <p>Passport social standing across guilds, squads, and seasonal reputation.</p>
+              </div>
+
+              <div className="nami-affiliation-grid">
+                <div>
+                  <span>Guilds</span>
+                  {passportProgression.guilds.map((guild) => (
+                    <strong key={guild}>{guild}</strong>
+                  ))}
+                </div>
+
+                <div>
+                  <span>Squads</span>
+                  {passportProgression.squads.map((squad) => (
+                    <strong key={squad}>{squad}</strong>
+                  ))}
+                </div>
+
+                <div>
+                  <span>Season XP</span>
+                  <strong>{passportProgression.seasonXp.toLocaleString()}</strong>
+                  <small>Level {passportProgression.level} reputation marker</small>
+                </div>
+              </div>
+            </article>
           <article className="panel passport-proof-panel">
             <div className="profile-panel-heading">
               <h2>Verification Proofs</h2>
@@ -3168,6 +3359,9 @@ function UserProfileScreen(props: {
   onNavigate?: (page: NamiPage) => void;
 } = {}): ReactElement {
   const profileMember = members[0]!;
+  const profileProgression = getNamiProgression(profileMember);
+  const profileVerificationStatus =
+    profileMember.signal === 'Green' ? 'Verified' : profileMember.signal + ' Review';
   const suiNsPublic = readSuiNsPublicDisplay();
   const profileCardFrameRef = useRef<HTMLDivElement | null>(null);
   const foilFrameRef = useRef<number | null>(null);
@@ -3480,6 +3674,8 @@ function UserProfileScreen(props: {
               </div>
 
               <div>
+                <span>Verification</span>
+                <strong>{profileVerificationStatus}</strong>
                 <span>Passport</span>
                 <strong>Proof-based, not payment-based</strong>
               </div>
@@ -4127,7 +4323,8 @@ if (activePage === 'userProfile') {
         onToggle={() => setSidebarCollapsed((value) => !value)}
       />
 
-      <section className="main-stage">{screen}</section>
+      <section className="main-stage"><NamiSeasonProgressBar member={members[0]!} />
+        {screen}</section>
     </main>
   );
 }
