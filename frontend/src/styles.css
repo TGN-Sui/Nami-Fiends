@@ -7561,3 +7561,127 @@ button:disabled {
 .customization-collapse-button {
   width: 100%;
 }
+
+
+/* =========================================================
+   UI-A10F — ambient background grid and member profile foil
+   ========================================================= */
+
+/* Site-wide living grid. It sits behind every panel and content surface. */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -18%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+  background-image:
+    linear-gradient(rgba(1, 9, 18, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(1, 9, 18, 0.1) 1px, transparent 1px);
+  background-size: 42px 42px;
+  background-position: 0 0;
+  transform-origin: center;
+  animation: namiLivingGrid 34s ease-in-out infinite;
+}
+
+#root,
+.sidebar,
+.nami-app {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes namiLivingGrid {
+  0% {
+    background-position: 0 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  28% {
+    background-position: 16px 10px;
+    transform: translate3d(-0.8%, 0.5%, 0) scale(1.006);
+  }
+
+  54% {
+    background-position: 30px 24px;
+    transform: translate3d(0.6%, -0.7%, 0) scale(1.012);
+  }
+
+  78% {
+    background-position: 12px 36px;
+    transform: translate3d(0.3%, 0.8%, 0) scale(1.004);
+  }
+
+  100% {
+    background-position: 0 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Member Profile hero gets foil/light movement with no tilt. */
+[data-member-hero='true'] {
+  --member-hero-foil-x: 50%;
+  --member-hero-foil-y: 18%;
+  --member-hero-light-x: 0px;
+  --member-hero-light-y: 0px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-member-hero='true']::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    radial-gradient(
+      circle at var(--member-hero-foil-x) var(--member-hero-foil-y),
+      rgba(255, 255, 255, 0.18),
+      transparent 18%
+    ),
+    linear-gradient(
+      125deg,
+      transparent 18%,
+      rgba(117, 215, 255, 0.14),
+      transparent 43%,
+      rgba(67, 245, 167, 0.1),
+      transparent 76%
+    );
+  transform:
+    translate3d(var(--member-hero-light-x), var(--member-hero-light-y), 0)
+    scale(1.03);
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+[data-member-hero='true']:hover::before {
+  opacity: 0.78;
+}
+
+[data-member-hero='true'] > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    transform: none;
+  }
+
+  [data-member-hero='true']::before {
+    transition: none;
+  }
+}

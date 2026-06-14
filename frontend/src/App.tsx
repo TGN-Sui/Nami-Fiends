@@ -2179,6 +2179,23 @@ function MemberProfileScreen(props: {
     setReportQueued(true);
     setRefreshKey((value) => value + 1);
   }
+  function updateMemberHeroFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const pointerX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const pointerY = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+
+    event.currentTarget.style.setProperty('--member-hero-foil-x', (pointerX * 100).toFixed(2) + '%');
+    event.currentTarget.style.setProperty('--member-hero-foil-y', (pointerY * 100).toFixed(2) + '%');
+    event.currentTarget.style.setProperty('--member-hero-light-x', ((pointerX - 0.5) * 18).toFixed(2) + 'px');
+    event.currentTarget.style.setProperty('--member-hero-light-y', ((pointerY - 0.5) * 18).toFixed(2) + 'px');
+  }
+
+  function resetMemberHeroFoil(event: { currentTarget: HTMLElement }): void {
+    event.currentTarget.style.setProperty('--member-hero-foil-x', '50%');
+    event.currentTarget.style.setProperty('--member-hero-foil-y', '18%');
+    event.currentTarget.style.setProperty('--member-hero-light-x', '0px');
+    event.currentTarget.style.setProperty('--member-hero-light-y', '0px');
+  }
 
   return (
     <>
@@ -2188,7 +2205,12 @@ function MemberProfileScreen(props: {
       </header>
 
       <section className="member-profile-page">
-        <article className="member-profile-hero panel">
+        <article
+            className="member-profile-hero panel"
+            data-member-hero="true"
+            onPointerLeave={resetMemberHeroFoil}
+            onPointerMove={updateMemberHeroFoil}
+          >
           <div className={'member-profile-avatar ' + signalClass(reviewedSignal)}>
             {props.member.name.slice(0, 2).toUpperCase()}
           </div>
