@@ -184,8 +184,6 @@ export const navItems: Array<{
   shortLabel: string;
 }> = [
   { page: 'hub', label: 'Nami Hub', shortLabel: 'Hub' },
-  { page: 'gamehub', label: 'GameHub', shortLabel: 'Games' },
   { page: 'subscriptions', label: 'My Subscriptions', shortLabel: 'Subs' },
-  { page: 'profile', label: 'Game Profile', shortLabel: 'Profile' },
-  { page: 'chat', label: 'Game Chat', shortLabel: 'Chat' }
+  { page: 'profile', label: 'Game Profile', shortLabel: 'Profile' }
 ];

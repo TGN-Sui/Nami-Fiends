@@ -103,7 +103,12 @@ function FeaturedRail(props: {
   );
 }
 
-function ChannelInfoCard(props: { channel: NamiChannel }): ReactElement {
+function ChannelInfoCard(props: {
+  channel: NamiChannel;
+  onSubscribe?: () => void;
+  onJoinChat?: () => void;
+  onGetBanners?: () => void;
+}): ReactElement {
   return (
     <article className="channel-info-card">
       <ChannelAvatar channel={props.channel} size="lg" />
@@ -111,7 +116,7 @@ function ChannelInfoCard(props: { channel: NamiChannel }): ReactElement {
         <div className="badge-row">
           {props.channel.verified && <span className="mini-badge">Verified</span>}
           {props.channel.partner && <span className="mini-badge">Partner</span>}
-          <span className={`mini-badge signal-text-${props.channel.signal.toLowerCase()}`}>
+          <span className={'mini-badge signal-text-' + props.channel.signal.toLowerCase()}>
             {props.channel.signal}
           </span>
         </div>
@@ -139,16 +144,19 @@ function ChannelInfoCard(props: { channel: NamiChannel }): ReactElement {
         </dl>
 
         <div className="action-row">
-          <button type="button">Subscribe</button>
-          <button type="button">Join Chat</button>
-          <button type="button">Get Banners</button>
+          <button onClick={props.onSubscribe} type="button">Subscribe</button>
+          <button onClick={props.onJoinChat} type="button">Join Chat</button>
+          <button onClick={props.onGetBanners} type="button">Get Banners</button>
         </div>
       </div>
     </article>
   );
 }
 
-function ModuleGrid(props: { channel: NamiChannel }): ReactElement {
+function ModuleGrid(props: {
+  channel: NamiChannel;
+  onNavigate?: (page: NamiPage) => void;
+}): ReactElement {
   const modules =
     props.channel.modules.length > 0
       ? props.channel.modules
@@ -157,7 +165,20 @@ function ModuleGrid(props: { channel: NamiChannel }): ReactElement {
   return (
     <div className="module-grid">
       {modules.map((module) => (
-        <button className="module-card" key={module.label} type="button">
+        <button
+          className="module-card"
+          key={module.label}
+          onClick={() => {
+            const label = module.label.toLowerCase();
+
+            if (label.includes('chat')) {
+              props.onNavigate?.('chat');
+            } else if (label.includes('profile')) {
+              props.onNavigate?.('profile');
+            }
+          }}
+          type="button"
+        >
           <strong>{module.label}</strong>
           <span>{module.description}</span>
         </button>
@@ -237,6 +258,7 @@ function NamiHub(props: {
 function GameHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
+  onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
   return (
     <>
@@ -266,8 +288,8 @@ function GameHub(props: {
           {channels.concat(channels, channels).map((channel, index) => (
             <button
               className="discovery-card"
-              key={`${channel.id}-${index}`}
-              onClick={() => props.onSelect(channel)}
+              key={channel.id + '-' + index}
+              onClick={() => props.onOpenProfile(channel)}
               type="button"
             >
               <ChannelAvatar channel={channel} size="sm" />
@@ -286,7 +308,10 @@ function GameHub(props: {
   );
 }
 
-function ChannelProfile(props: { channel: NamiChannel }): ReactElement {
+function ChannelProfile(props: {
+  channel: NamiChannel;
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
   return (
     <>
       <header className="page-title">
@@ -302,7 +327,12 @@ function ChannelProfile(props: { channel: NamiChannel }): ReactElement {
 
       <section className="profile-layout">
         <div>
-          <ChannelInfoCard channel={props.channel} />
+          <ChannelInfoCard
+            channel={props.channel}
+            onSubscribe={() => props.onNavigate('subscriptions')}
+            onJoinChat={() => props.onNavigate('chat')}
+            onGetBanners={() => props.onNavigate('subscriptions')}
+          />
           <article className="panel announcement-panel">
             <h2>Official Announcements</h2>
             <p>Latest verified posts, patch notices, and channel updates will appear here.</p>
@@ -313,14 +343,17 @@ function ChannelProfile(props: { channel: NamiChannel }): ReactElement {
           <article className="hero-banner">
             <span>{props.channel.banner}</span>
           </article>
-          <ModuleGrid channel={props.channel} />
+          <ModuleGrid channel={props.channel} onNavigate={props.onNavigate} />
         </div>
       </section>
     </>
   );
 }
 
-function GameChat(props: { channel: NamiChannel }): ReactElement {
+function GameChat(props: {
+  channel: NamiChannel;
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
   const [hideNpc, setHideNpc] = useState(false);
   const [hideRed, setHideRed] = useState(false);
 
@@ -339,7 +372,7 @@ function GameChat(props: { channel: NamiChannel }): ReactElement {
       <section className="member-rail">
         <ChannelAvatar channel={props.channel} size="lg" />
         {members.map((member) => (
-          <div className={`member-dot ${signalClass(member.signal)}`} key={member.id}>
+          <div className={'member-dot ' + signalClass(member.signal)} key={member.id}>
             <span>{member.name.slice(0, 2).toUpperCase()}</span>
             <small>{member.name}</small>
           </div>
@@ -350,7 +383,15 @@ function GameChat(props: { channel: NamiChannel }): ReactElement {
         <div className="tab-row">
           {['Profile', 'Timeline', 'Guilds', 'Events', 'Esports', 'Party', 'Notes', 'Gated', 'Badges', 'Support'].map(
             (tab) => (
-              <button key={tab} type="button">
+              <button
+                key={tab}
+                onClick={() => {
+                  if (tab === 'Profile') {
+                    props.onNavigate('profile');
+                  }
+                }}
+                type="button"
+              >
                 {tab}
               </button>
             )
@@ -363,7 +404,7 @@ function GameChat(props: { channel: NamiChannel }): ReactElement {
             {visibleMessages.map((message) => (
               <div className="chat-message" key={message.id}>
                 <span>{message.time}</span>
-                <strong className={`signal-text-${message.signal.toLowerCase()}`}>
+                <strong className={'signal-text-' + message.signal.toLowerCase()}>
                   {message.author}
                 </strong>
                 <p>{message.body}</p>
@@ -404,6 +445,7 @@ function GameChat(props: { channel: NamiChannel }): ReactElement {
 function Subscriptions(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
+  onNavigate: (page: NamiPage) => void;
 }): ReactElement {
   return (
     <>
@@ -421,14 +463,19 @@ function Subscriptions(props: {
 
       <section className="profile-layout">
         <div>
-          <ChannelInfoCard channel={props.selectedChannel} />
+          <ChannelInfoCard
+            channel={props.selectedChannel}
+            onSubscribe={() => props.onSelect(props.selectedChannel)}
+            onJoinChat={() => props.onNavigate('chat')}
+            onGetBanners={() => undefined}
+          />
           <article className="panel announcement-panel">
             <h2>Official Announcements</h2>
             <p>Unread banners, followed channel updates, and subscribed alerts live here.</p>
           </article>
         </div>
 
-        <ModuleGrid channel={props.selectedChannel} />
+        <ModuleGrid channel={props.selectedChannel} onNavigate={props.onNavigate} />
       </section>
     </>
   );
@@ -447,26 +494,41 @@ export function App(): ReactElement {
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const openChannelProfile = (channel: NamiChannel): void => {
+    setSelectedChannel(channel);
+    setActivePage('profile');
+  };
+
   const screen = useMemo(() => {
     if (activePage === 'hub') {
       return <NamiHub selectedChannel={selectedChannel} onSelect={setSelectedChannel} />;
     }
 
     if (activePage === 'gamehub') {
-      return <GameHub selectedChannel={selectedChannel} onSelect={setSelectedChannel} />;
+      return (
+        <GameHub
+          selectedChannel={selectedChannel}
+          onSelect={setSelectedChannel}
+          onOpenProfile={openChannelProfile}
+        />
+      );
     }
 
     if (activePage === 'subscriptions') {
       return (
-        <Subscriptions selectedChannel={selectedChannel} onSelect={setSelectedChannel} />
+        <Subscriptions
+          selectedChannel={selectedChannel}
+          onSelect={setSelectedChannel}
+          onNavigate={setActivePage}
+        />
       );
     }
 
     if (activePage === 'profile') {
-      return <ChannelProfile channel={selectedChannel} />;
+      return <ChannelProfile channel={selectedChannel} onNavigate={setActivePage} />;
     }
 
-    return <GameChat channel={selectedChannel} />;
+    return <GameChat channel={selectedChannel} onNavigate={setActivePage} />;
   }, [activePage, selectedChannel]);
 
   return (
