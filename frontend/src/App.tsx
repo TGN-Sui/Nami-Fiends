@@ -1513,8 +1513,88 @@ type SafetyReport = {
   reason: string;
   channelName: string;
   createdAt: string;
-  status: 'Queued' | 'Reviewing' | 'Escalated';
+  status: 'Queued' | 'Reviewing' | 'Warned' | 'Timed Out' | 'Escalated' | 'Resolved';
 };
+
+type SafetyActionRecord = {
+  id: string;
+  reportId: string;
+  targetId: string;
+  targetName: string;
+  action: 'Review' | 'Warn' | 'Timeout' | 'Escalate' | 'Resolve' | 'Signal Review';
+  note: string;
+  channelName: string;
+  createdAt: string;
+};
+
+function readMemberSignalReviews(): Record<string, NamiChannel['signal']> {
+  try {
+    const savedReviews = window.localStorage.getItem('nami-member-signal-reviews');
+
+    if (!savedReviews) {
+      return {};
+    }
+
+    const parsedReviews = JSON.parse(savedReviews);
+
+    if (typeof parsedReviews !== 'object' || parsedReviews === null) {
+      return {};
+    }
+
+    return parsedReviews as Record<string, NamiChannel['signal']>;
+  } catch {
+    return {};
+  }
+}
+
+function readMemberSignalReview(
+  memberId: string,
+  fallbackSignal: NamiChannel['signal']
+): NamiChannel['signal'] {
+  return readMemberSignalReviews()[memberId] ?? fallbackSignal;
+}
+
+function saveMemberSignalReview(memberId: string, signal: NamiChannel['signal']): void {
+  const reviews = readMemberSignalReviews();
+
+  window.localStorage.setItem(
+    'nami-member-signal-reviews',
+    JSON.stringify({
+      ...reviews,
+      [memberId]: signal
+    })
+  );
+}
+
+const conductLanguageTerms = [
+  'nsfw',
+  'explicit',
+  'adult-only',
+  '18+',
+  'xxx',
+  'sexual',
+  'harassment',
+  'threat'
+];
+
+function hasAdultLanguage(content: string): boolean {
+  const normalizedContent = content.toLowerCase();
+
+  return conductLanguageTerms.some((term) => normalizedContent.includes(term));
+}
+
+function censorAdultLanguage(content: string): string {
+  return conductLanguageTerms.reduce((censoredContent, term) => {
+    const charactersToEscape = '\\^$.*+?()[]{}|';
+    const escapedTerm = term
+      .split('')
+      .map((character) => (charactersToEscape.includes(character) ? '\\' + character : character))
+      .join('');
+    const termPattern = new RegExp(escapedTerm, 'gi');
+
+    return censoredContent.replace(termPattern, (match) => '•'.repeat(Math.max(4, match.length)));
+  }, content);
+}
 
 function readMemberPreference(memberId: string): MemberPreferenceState {
   try {
@@ -1569,6 +1649,51 @@ function readSafetyReports(): SafetyReport[] {
   }
 }
 
+function saveSafetyReports(reports: SafetyReport[]): void {
+  window.localStorage.setItem('nami-safety-reports', JSON.stringify(reports));
+}
+
+function readSafetyActions(): SafetyActionRecord[] {
+  try {
+    const savedActions = window.localStorage.getItem('nami-safety-actions');
+
+    if (!savedActions) {
+      return [];
+    }
+
+    const parsedActions = JSON.parse(savedActions);
+
+    if (!Array.isArray(parsedActions)) {
+      return [];
+    }
+
+    return parsedActions.filter((action): action is SafetyActionRecord => {
+      return (
+        typeof action === 'object' &&
+        action !== null &&
+        typeof action.id === 'string' &&
+        typeof action.reportId === 'string' &&
+        typeof action.targetId === 'string'
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+function saveSafetyAction(action: Omit<SafetyActionRecord, 'id' | 'createdAt'>): void {
+  const nextAction: SafetyActionRecord = {
+    ...action,
+    id: 'action-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+    createdAt: new Date().toLocaleString()
+  };
+
+  window.localStorage.setItem(
+    'nami-safety-actions',
+    JSON.stringify([nextAction, ...readSafetyActions()])
+  );
+}
+
 function saveSafetyReport(report: Omit<SafetyReport, 'id' | 'createdAt' | 'status'>): void {
   const nextReport: SafetyReport = {
     ...report,
@@ -1592,6 +1717,7 @@ function GameChat(props: {
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
   const [reportPulse, setReportPulse] = useState('');
+  const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
 
   const channelBrandTheme = useMemo(() => {
     return getStoredChannelBrandTheme(props.channel.id);
@@ -1611,6 +1737,7 @@ function GameChat(props: {
 
   const visibleMessages = chatMessages.filter((message) => {
     if (message.signal === 'Black') return false;
+    if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
 
     const member = memberByName.get(message.author);
 
@@ -1809,7 +1936,11 @@ function GameChat(props: {
                         </button>
                       </div>
 
-                      <p>{message.body}</p>
+                      <p>
+                        {adultLanguageMode === 'censor'
+                          ? censorAdultLanguage(message.body)
+                          : message.body}
+                      </p>
                     </div>
                   </div>
                 );
@@ -1863,6 +1994,36 @@ function GameChat(props: {
                   </label>
                 </div>
               )}
+            </section>
+
+
+            <section className="adult-language-settings-panel">
+              <div className="profile-panel-heading">
+                <h2>Adult Language Controls</h2>
+                <p>Channel owner moderation setting. Default behavior is censoring.</p>
+              </div>
+
+              <div className="adult-language-control">
+                <strong>Adult Language Mode</strong>
+
+                <div className="adult-language-mode-row">
+                  {(['censor', 'filter', 'show'] as const).map((mode) => (
+                    <button
+                      className={adultLanguageMode === mode ? 'is-active-adult-mode' : ''}
+                      key={mode}
+                      onClick={() => setAdultLanguageMode(mode)}
+                      type="button"
+                    >
+                      {mode === 'censor' ? 'Censor' : mode === 'filter' ? 'Filter Out' : 'Show'}
+                    </button>
+                  ))}
+                </div>
+
+                <small>
+                  Censor masks matching words. Filter Out removes matching messages.
+                  Show displays original text.
+                </small>
+              </div>
             </section>
 
             <section
@@ -1926,6 +2087,16 @@ function MemberProfileScreen(props: {
   const [isMuted, setIsMuted] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [reportQueued, setReportQueued] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
+  const memberReports = useMemo(() => {
+    return readSafetyReports().filter((report) => report.targetId === props.member.id);
+  }, [props.member.id, refreshKey]);
+
+  const memberActions = useMemo(() => {
+    return readSafetyActions().filter((action) => action.targetId === props.member.id);
+  }, [props.member.id, refreshKey]);
 
   useEffect(() => {
     window.scrollTo({
@@ -1939,6 +2110,7 @@ function MemberProfileScreen(props: {
     setIsMuted(savedPreference.muted);
     setIsBlocked(savedPreference.blocked);
     setReportQueued(false);
+    setRefreshKey((value) => value + 1);
   }, [preferenceStorageKey, props.member.id]);
 
   function savePreference(nextMuted: boolean, nextBlocked: boolean): void {
@@ -1964,26 +2136,27 @@ function MemberProfileScreen(props: {
     });
 
     setReportQueued(true);
+    setRefreshKey((value) => value + 1);
   }
 
   return (
     <>
       <header className="page-title">
-        <p>Member profile and preference controls</p>
+        <p>Member profile, history, and preference controls</p>
         <h1>{props.member.name}</h1>
       </header>
 
       <section className="member-profile-page">
         <article className="member-profile-hero panel">
-          <div className={'member-profile-avatar ' + signalClass(props.member.signal)}>
+          <div className={'member-profile-avatar ' + signalClass(reviewedSignal)}>
             {props.member.name.slice(0, 2).toUpperCase()}
           </div>
 
           <div className="member-profile-copy">
             <div className="profile-signal-badge-row">
-              <span className={'profile-signal-chip ' + signalClass(props.member.signal)}>
+              <span className={'profile-signal-chip ' + signalClass(reviewedSignal)}>
                 <i />
-                {props.member.signal} Signal
+                {reviewedSignal} Signal
               </span>
 
               <span className="profile-badge-icon profile-badge-icon-custom" title={props.member.tier}>
@@ -1993,8 +2166,8 @@ function MemberProfileScreen(props: {
 
             <h2>{props.member.name}</h2>
             <p>
-              Member profile preview for chat discovery, preference controls, and future
-              passport-driven reputation surfaces.
+              Member profile preview for chat discovery, preference controls, moderation
+              history, and future passport-driven reputation surfaces.
             </p>
 
             <div className="member-profile-meta-row">
@@ -2002,6 +2175,10 @@ function MemberProfileScreen(props: {
               <strong>{props.member.tier}</strong>
               <span>Status</span>
               <strong>{isBlocked ? 'Blocked' : isMuted ? 'Muted' : 'Open'}</strong>
+              <span>Reports</span>
+              <strong>{memberReports.length}</strong>
+              <span>Actions</span>
+              <strong>{memberActions.length}</strong>
             </div>
 
             {reportQueued && <p className="report-pulse">Report added to moderation queue.</p>}
@@ -2053,8 +2230,39 @@ function MemberProfileScreen(props: {
         <section className="member-profile-grid">
           <article className="panel">
             <div className="profile-panel-heading">
+              <h2>Safety History</h2>
+              <p>Reports and moderator actions connected to this member.</p>
+            </div>
+
+            <div className="member-history-stack">
+              {memberReports.length === 0 && memberActions.length === 0 && (
+                <span className="empty-safety-note">No safety history for this member.</span>
+              )}
+
+              {memberReports.map((report) => (
+                <div className="member-history-card" key={report.id}>
+                  <span className="mini-badge">{report.status}</span>
+                  <strong>{report.source} report</strong>
+                  <p>{report.reason}</p>
+                  <small>{report.channelName} · {report.createdAt}</small>
+                </div>
+              ))}
+
+              {memberActions.map((action) => (
+                <div className="member-history-card" key={action.id}>
+                  <span className="mini-badge">{action.action}</span>
+                  <strong>{action.note}</strong>
+                  <p>{action.channelName}</p>
+                  <small>{action.createdAt}</small>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
               <h2>Preference Notes</h2>
-              <p>Mute and Block are local user preference controls in this UI mock.</p>
+              <p>Mute, Block, and Report are user-owned preference controls in this UI mock.</p>
             </div>
 
             <div className="preference-note-stack">
@@ -2074,31 +2282,6 @@ function MemberProfileScreen(props: {
               </div>
             </div>
           </article>
-
-          <article className="panel">
-            <div className="profile-panel-heading">
-              <h2>Shared Channels</h2>
-              <p>Communities where you may encounter this member.</p>
-            </div>
-
-            <div className="profile-subscription-mini-grid">
-              {channels.slice(0, 3).map((channel) => (
-                <button
-                  className="profile-mini-channel-card"
-                  key={channel.id}
-                  onClick={() => props.onNavigate('channelProfile')}
-                  type="button"
-                >
-                  <ChannelAvatar channel={channel} size="sm" />
-                  <div>
-                    <strong>{channel.name}</strong>
-                    <span>{channel.genre}</span>
-                  </div>
-                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
-                </button>
-              ))}
-            </div>
-          </article>
         </section>
       </section>
     </>
@@ -2109,18 +2292,108 @@ function SafetyCenterScreen(props: {
   onNavigate: (page: NamiPage) => void;
 }): ReactElement {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<'All' | SafetyReport['status']>('All');
+  const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
+  const [moderationRole, setModerationRole] = useState<
+    'Member' | 'Channel Owner' | 'Nami Moderator' | 'Nami Dev'
+  >('Channel Owner');
+const reports = useMemo(() => readSafetyReports(), [refreshKey]);
+  const actions = useMemo(() => readSafetyActions(), [refreshKey]);
 
   const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
   const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
-  const reports = useMemo(() => readSafetyReports(), [refreshKey]);
+
+  const canManuallyReviewSignals =
+    moderationRole === 'Nami Moderator' || moderationRole === 'Nami Dev';
+
+  const filteredReports = reports.filter((report) => {
+    return statusFilter === 'All' || report.status === statusFilter;
+  });
+
+  const reportStatusFilters: Array<'All' | SafetyReport['status']> = [
+    'All',
+    'Queued',
+    'Reviewing',
+    'Warned',
+    'Timed Out',
+    'Escalated',
+    'Resolved'
+  ];
+
+  const moderationRoles = ['Member', 'Channel Owner', 'Nami Moderator', 'Nami Dev'] as const;
 
   function openMember(member: (typeof members)[number]): void {
     window.localStorage.setItem('nami-selected-member-id', member.id);
     props.onNavigate('memberProfile');
   }
 
+  function noteFor(reportId: string): string {
+    return moderationNotes[reportId] ?? '';
+  }
+
+  function updateReportStatus(
+    report: SafetyReport,
+    status: SafetyReport['status'],
+    action: SafetyActionRecord['action'],
+    fallbackNote: string
+  ): void {
+    const note = noteFor(report.id).trim() || fallbackNote;
+    const nextReports = readSafetyReports().map((currentReport) => {
+      if (currentReport.id !== report.id) {
+        return currentReport;
+      }
+
+      return {
+        ...currentReport,
+        status
+      };
+    });
+
+    saveSafetyReports(nextReports);
+
+    saveSafetyAction({
+      reportId: report.id,
+      targetId: report.targetId,
+      targetName: report.targetName,
+      action,
+      note,
+      channelName: report.channelName
+    });
+
+    setModerationNotes((currentNotes) => ({
+      ...currentNotes,
+      [report.id]: ''
+    }));
+
+    setRefreshKey((value) => value + 1);
+  }
+
+  function reviewMemberSignal(member: (typeof members)[number], signal: NamiChannel['signal']): void {
+    if (!canManuallyReviewSignals) {
+      return;
+    }
+
+    saveMemberSignalReview(member.id, signal);
+
+    saveSafetyAction({
+      reportId: 'signal-review-' + member.id,
+      targetId: member.id,
+      targetName: member.name,
+      action: 'Signal Review',
+      note: 'Signal manually reviewed as ' + signal + ' by ' + moderationRole,
+      channelName: 'Nami Conduct Review'
+    });
+
+    setRefreshKey((value) => value + 1);
+  }
+
   function clearReports(): void {
     window.localStorage.setItem('nami-safety-reports', JSON.stringify([]));
+    setRefreshKey((value) => value + 1);
+  }
+
+  function clearActions(): void {
+    window.localStorage.setItem('nami-safety-actions', JSON.stringify([]));
     setRefreshKey((value) => value + 1);
   }
 
@@ -2131,24 +2404,75 @@ function SafetyCenterScreen(props: {
         <h1>Safety Center</h1>
       </header>
 
-      <section className="safety-center-page">
+      <section className={canManuallyReviewSignals ? 'safety-center-page has-signal-review-access' : 'safety-center-page'}>
         <article className="panel safety-hero-panel">
           <div>
-            <span className="mini-badge">UI-A8 Safety Layer</span>
-            <h2>Conflict control without turning safety into payment</h2>
+            <span className="mini-badge">UI-A8B Moderation Layer</span>
+            <h2>Conduct-based Color Signals</h2>
             <p>
-              Muting, blocking, reporting, and moderation queues are user-preference and
-              channel-health tools. They are separate from subscription or verification status.
+              Color Signals are primarily determined by conduct and language safety. Manual
+              signal changes are restricted to Nami Devs and Nami Moderators.
             </p>
           </div>
 
           <button
             className="secondary-action"
-            onClick={() => props.onNavigate('userProfile')}
+            onClick={() => props.onNavigate('settings')}
             type="button"
           >
-            Back to My Profile
+            Back to Settings
           </button>
+        </article>
+
+        <article className="panel conduct-policy-panel">
+          <div className="profile-panel-heading">
+            <h2>Conduct Signal Policy</h2>
+            <p>
+              Channel owners can review reports and take moderation actions, but they cannot
+              manually change Color Signals. Adult language and conduct violations are filtered
+              from chat and routed toward safety review.
+            </p>
+          </div>
+
+          <div className="conduct-policy-grid">
+            <span>Auto conduct filter</span>
+            <strong>Adult language removed from chat surfaces</strong>
+
+            <span>Signal authority</span>
+            <strong>Nami Devs / Nami Moderators only</strong>
+
+            <span>Channel owner role</span>
+            <strong>Review, warn, timeout, escalate</strong>
+
+            <span>User controls</span>
+            <strong>Mute, block, report</strong>
+          </div>
+        </article>
+
+        <article className="panel moderation-role-panel">
+          <div className="profile-panel-heading">
+            <h2>Mock Access Role</h2>
+            <p>Switch roles to preview who can manually review Color Signals.</p>
+          </div>
+
+          <div className="moderation-role-row">
+            {moderationRoles.map((role) => (
+              <button
+                className={role === moderationRole ? 'is-selected-role' : ''}
+                key={role}
+                onClick={() => setModerationRole(role)}
+                type="button"
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+
+          <p className={canManuallyReviewSignals ? 'signal-access-note is-unlocked' : 'signal-access-note'}>
+            {canManuallyReviewSignals
+              ? 'Manual Color Signal review is unlocked for this role.'
+              : 'Nami Moderator Signal Review is hidden for this role.'}
+          </p>
         </article>
 
         <section className="safety-grid">
@@ -2168,12 +2492,12 @@ function SafetyCenterScreen(props: {
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                  <div className={'chat-member-avatar ' + signalClass(readMemberSignalReview(member.id, member.signal))}>
                     {member.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <strong>{member.name}</strong>
-                    <span>{member.tier} · {member.signal}</span>
+                    <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
                   </div>
                   <i>Muted</i>
                 </button>
@@ -2197,12 +2521,12 @@ function SafetyCenterScreen(props: {
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                  <div className={'chat-member-avatar ' + signalClass(readMemberSignalReview(member.id, member.signal))}>
                     {member.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <strong>{member.name}</strong>
-                    <span>{member.tier} · {member.signal}</span>
+                    <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
                   </div>
                   <i>Blocked</i>
                 </button>
@@ -2215,28 +2539,93 @@ function SafetyCenterScreen(props: {
           <article className="panel moderation-queue-panel">
             <div className="profile-panel-heading">
               <h2>Report Queue</h2>
-              <p>Reports from member profiles and messages appear here for review.</p>
+              <p>Channel owners can review reports, but signal changes remain Nami-controlled.</p>
+            </div>
+
+            <div className="moderation-status-filter-row">
+              {reportStatusFilters.map((filter) => (
+                <button
+                  className={filter === statusFilter ? 'is-active-filter' : ''}
+                  key={filter}
+                  onClick={() => setStatusFilter(filter)}
+                  type="button"
+                >
+                  {filter}
+                </button>
+              ))}
             </div>
 
             <div className="moderation-report-stack">
-              {reports.length === 0 && <span className="empty-safety-note">No reports queued.</span>}
+              {filteredReports.length === 0 && <span className="empty-safety-note">No reports match this filter.</span>}
 
-              {reports.map((report) => (
-                <div className="moderation-report-card" key={report.id}>
-                  <div>
-                    <span className="mini-badge">{report.source}</span>
-                    <strong>{report.targetName}</strong>
-                    <p>{report.reason}</p>
-                    <small>{report.channelName} · {report.createdAt}</small>
-                  </div>
+              {filteredReports.map((report) => {
+                const reportActions = actions.filter((action) => action.reportId === report.id);
 
-                  <div className="moderation-action-row">
-                    <button type="button">Review</button>
-                    <button type="button">Timeout</button>
-                    <button type="button">Escalate</button>
+                return (
+                  <div className="moderation-report-card is-expanded-report-card" key={report.id}>
+                    <div>
+                      <span className="mini-badge">{report.status}</span>
+                      <strong>{report.targetName}</strong>
+                      <p>{report.reason}</p>
+                      <small>{report.channelName} · {report.createdAt}</small>
+
+                      <textarea
+                        onChange={(event) => {
+                          setModerationNotes((currentNotes) => ({
+                            ...currentNotes,
+                            [report.id]: event.target.value
+                          }));
+                        }}
+                        placeholder="Add moderator note..."
+                        value={noteFor(report.id)}
+                      />
+
+                      <div className="report-action-history">
+                        {reportActions.length === 0 && <span>No action history yet.</span>}
+
+                        {reportActions.map((action) => (
+                          <small key={action.id}>
+                            {action.action}: {action.note} · {action.createdAt}
+                          </small>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="moderation-action-row">
+                      <button
+                        onClick={() => updateReportStatus(report, 'Reviewing', 'Review', 'Report moved to review.')}
+                        type="button"
+                      >
+                        Review
+                      </button>
+                      <button
+                        onClick={() => updateReportStatus(report, 'Warned', 'Warn', 'Warning issued.')}
+                        type="button"
+                      >
+                        Warn
+                      </button>
+                      <button
+                        onClick={() => updateReportStatus(report, 'Timed Out', 'Timeout', 'Temporary timeout applied.')}
+                        type="button"
+                      >
+                        Timeout
+                      </button>
+                      <button
+                        onClick={() => updateReportStatus(report, 'Escalated', 'Escalate', 'Report escalated to Nami review.')}
+                        type="button"
+                      >
+                        Escalate
+                      </button>
+                      <button
+                        onClick={() => updateReportStatus(report, 'Resolved', 'Resolve', 'Report resolved.')}
+                        type="button"
+                      >
+                        Resolve
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {reports.length > 0 && (
@@ -2246,22 +2635,96 @@ function SafetyCenterScreen(props: {
             )}
           </article>
 
-          <article className="panel moderation-queue-panel">
+          {canManuallyReviewSignals && (
+            <article className="panel moderation-queue-panel">
             <div className="profile-panel-heading">
-              <h2>Channel Owner Tools</h2>
-              <p>Mock moderation actions for future developer/channel owner dashboards.</p>
+              <h2>Nami Moderator Signal Review</h2>
+              <p>Manual Color Signal changes are locked unless the active role is Nami Moderator or Nami Dev.</p>
+            </div>
+
+            <div className="signal-review-stack">
+              {members
+                .filter((member) => member.signal !== 'Black')
+                .map((member) => {
+                  const reviewedSignal = readMemberSignalReview(member.id, member.signal);
+
+                  return (
+                    <div className="signal-review-card" key={member.id}>
+                      <button
+                        className="signal-review-member-button"
+                        onClick={() => openMember(member)}
+                        type="button"
+                      >
+                        <div className={'chat-member-avatar ' + signalClass(reviewedSignal)}>
+                          {member.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <strong>{member.name}</strong>
+                          <span>{member.tier} · {reviewedSignal}</span>
+                        </div>
+                      </button>
+
+                      <div className="signal-review-action-row">
+                        {(['Green', 'Orange', 'Red'] as Array<NamiChannel['signal']>).map((signal) => (
+                          <button
+                            className={
+                              signal === reviewedSignal
+                                ? 'is-selected-signal-review'
+                                : canManuallyReviewSignals
+                                  ? ''
+                                  : 'is-locked-signal-review'
+                            }
+                            disabled={!canManuallyReviewSignals}
+                            key={signal}
+                            onClick={() => reviewMemberSignal(member, signal)}
+                            type="button"
+                          >
+                            {signal}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             <div className="owner-tool-grid">
-              <button type="button">Warn Member</button>
-              <button type="button">Timeout Member</button>
-              <button type="button">Review Signal</button>
-              <button type="button">Escalate to Nami</button>
               <button type="button">Lock Thread</button>
               <button type="button">Open Audit Log</button>
+              <button type="button">Review Guild</button>
+              <button type="button">Escalate to Nami</button>
             </div>
           </article>
+          )}
         </section>
+
+        <article className="panel moderation-queue-panel">
+          <div className="profile-panel-heading">
+            <h2>Action History</h2>
+            <p>Moderator actions are kept separate from payment, verification, and subscriptions.</p>
+          </div>
+
+          <div className="moderation-report-stack">
+            {actions.length === 0 && <span className="empty-safety-note">No moderation actions yet.</span>}
+
+            {actions.map((action) => (
+              <div className="moderation-report-card" key={action.id}>
+                <div>
+                  <span className="mini-badge">{action.action}</span>
+                  <strong>{action.targetName}</strong>
+                  <p>{action.note}</p>
+                  <small>{action.channelName} · {action.createdAt}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {actions.length > 0 && (
+            <button className="profile-secondary-link" onClick={clearActions} type="button">
+              Clear mock action history
+            </button>
+          )}
+        </article>
       </section>
     </>
   );
@@ -2270,242 +2733,108 @@ function SafetyCenterScreen(props: {
 function Subscriptions(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
-  onOpenProfile?: (channel: NamiChannel) => void;
+  onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
-  const [subscriptionTheme, setSubscriptionTheme] = useState<'default' | 'ocean' | 'ember'>('ocean');
-
   const subscribedChannels = channels.slice(0, 4);
-  const recommendedChannels = channels.slice(1, 5);
-
-  const currentPlan = {
-    name: 'Pro',
-    cap: 12,
-    used: subscribedChannels.length,
-    colorSlots: 3,
-    bannerSlots: 2
-  };
-
-  const usagePercent = Math.min(100, Math.round((currentPlan.used / currentPlan.cap) * 100));
-
-  const tierCards = [
-    {
-      tier: 'Basic',
-      cap: '4 active channels',
-      perks: 'Follow, subscribe, basic notification controls.'
-    },
-    {
-      tier: 'Pro',
-      cap: '12 active channels',
-      perks: 'Theme colors, pinned favorites, custom subscription rail.'
-    },
-    {
-      tier: 'Elite',
-      cap: '50 active channels',
-      perks: 'Animated rail, premium profile frames, expanded channel slots.'
-    }
-  ];
-
-  const signalLegend: Array<{
-    signal: NamiChannel['signal'];
-    title: string;
-    note: string;
-  }> = [
-    {
-      signal: 'Green',
-      title: 'Friendly',
-      note: 'Casual, social, low-pressure community.'
-    },
-    {
-      signal: 'Orange',
-      title: 'Focused',
-      note: 'Serious but friendly, structured play.'
-    },
-    {
-      signal: 'Red',
-      title: 'High intensity',
-      note: 'PvP, hardcore, competitive, risk-tolerant spaces.'
-    },
-    {
-      signal: 'Black',
-      title: 'Restricted',
-      note: 'Passport-down or respawn state. Not chat-visible until restored.'
-    }
-  ];
-
-  function openChannel(channel: NamiChannel): void {
-    props.onSelect(channel);
-
-    if (props.onOpenProfile) {
-      props.onOpenProfile(channel);
-    }
-  }
+  const recommendedChannels = channels.slice(2);
 
   return (
     <>
       <header className="page-title">
-        <p>Account-level channel management</p>
+        <p>Account subscriptions</p>
         <h1>My Subscriptions</h1>
       </header>
 
-      <section className={'subscriptions-page subscription-theme-' + subscriptionTheme}>
-        <article className="subscription-hero-panel">
+      <section className="subscriptions-page">
+        <article className="panel subscription-hero-panel">
           <div>
-            <span className="mini-badge">Current Plan: {currentPlan.name}</span>
-            <h2>Your subscribed channels</h2>
+            <span className="mini-badge">Subscription Manager</span>
+            <h2>Manage your channel access</h2>
             <p>
-              The top rail only shows channels you subscribe to. Higher tiers unlock more active
-              channel slots, visual themes, and profile rail customization.
+              Subscriptions add convenience, personalization, and expanded platform features.
+              They do not replace trust, verification, or reputation.
             </p>
           </div>
 
           <div className="subscription-cap-card">
-            <span>Active channel slots</span>
-            <strong>
-              {currentPlan.used}/{currentPlan.cap}
-            </strong>
-            <div className="subscription-cap-meter">
-              <i style={{ width: String(usagePercent) + '%' }} />
-            </div>
-            <small>
-              {currentPlan.colorSlots} theme slots · {currentPlan.bannerSlots} banner slots
-            </small>
+            <span>Current Plan</span>
+            <strong>Free Explorer</strong>
+            <p>{subscribedChannels.length}/5 followed channels</p>
           </div>
         </article>
 
-        <section className="subscribed-rail-panel">
-          <div className="profile-panel-heading">
-            <h2>Subscribed Channel Rail</h2>
-            <p>Only subscribed communities appear here.</p>
-          </div>
-
-          <div className="subscribed-channel-rail">
-            {subscribedChannels.map((channel, index) => (
-              <button
-                className={
-                  'subscribed-channel-card ' +
-                  signalClass(channel.signal) +
-                  (props.selectedChannel.id === channel.id ? ' is-selected-subscription' : '')
-                }
-                key={channel.id}
-                onClick={() => openChannel(channel)}
-                type="button"
-              >
-                <ChannelAvatar channel={channel} size="lg" />
-                <span>#{index + 1} subscribed</span>
-                <strong>{channel.name}</strong>
-                <small>{channel.genre} · {channel.platforms.join(' / ')}</small>
-
-                <div className="subscription-card-footer">
-                  <i>{channel.signal}</i>
-                  <em>{channel.subscribers.toLocaleString()} subs</em>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="subscriptions-grid">
-          <article className="panel subscription-settings-panel">
-            <div className="profile-panel-heading">
-              <h2>Rail Theme</h2>
-              <p>Pro / Elite cosmetic control placeholder.</p>
-            </div>
-
-            <div className="theme-choice-grid subscription-theme-grid">
-              <button
-                className={subscriptionTheme === 'default' ? 'is-selected-theme' : ''}
-                onClick={() => setSubscriptionTheme('default')}
-                type="button"
-              >
-                Default
-              </button>
-
-              <button
-                className={subscriptionTheme === 'ocean' ? 'is-selected-theme' : ''}
-                onClick={() => setSubscriptionTheme('ocean')}
-                type="button"
-              >
-                Ocean
-              </button>
-
-              <button
-                className={subscriptionTheme === 'ember' ? 'is-selected-theme' : ''}
-                onClick={() => setSubscriptionTheme('ember')}
-                type="button"
-              >
-                Ember
-              </button>
-            </div>
-
-            <div className="subscription-feature-list">
-              <span>Custom rail color</span>
-              <span>Favorite channel pinning</span>
-              <span>Signal-aware sorting</span>
-              <span>Animated banner slot</span>
-            </div>
-          </article>
-
+        <section className="subscription-layout">
           <article className="panel">
             <div className="profile-panel-heading">
-              <h2>Signal Legend</h2>
-              <p>Signals appear on channel cards, member icons, and profile surfaces.</p>
+              <h2>Subscribed Channels</h2>
+              <p>Your active game and community subscriptions.</p>
             </div>
 
-            <div className="signal-legend-stack">
-              {signalLegend.map((item) => (
-                <div className="signal-legend-row" key={item.signal}>
-                  <span className={'legend-dot ' + signalClass(item.signal)} />
-                  <div>
-                    <strong>{item.signal} · {item.title}</strong>
-                    <p>{item.note}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel subscription-tier-panel">
-            <div className="profile-panel-heading">
-              <h2>Tier Caps</h2>
-              <p>Subscriptions add capacity and customization, not trust status.</p>
-            </div>
-
-            <div className="tier-card-stack">
-              {tierCards.map((tier) => (
-                <div
-                  className={tier.tier === currentPlan.name ? 'tier-card is-current-tier' : 'tier-card'}
-                  key={tier.tier}
-                >
-                  <strong>{tier.tier}</strong>
-                  <span>{tier.cap}</span>
-                  <p>{tier.perks}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel">
-            <div className="profile-panel-heading">
-              <h2>Recommended from your subs</h2>
-              <p>Discovery suggestions based on subscribed categories.</p>
-            </div>
-
-            <div className="recommended-subscription-stack">
-              {recommendedChannels.map((channel) => (
+            <div className="subscription-channel-stack">
+              {subscribedChannels.map((channel) => (
                 <button
-                  className="recommended-subscription-card"
+                  className={
+                    channel.id === props.selectedChannel.id
+                      ? 'subscription-channel-card is-selected-subscription'
+                      : 'subscription-channel-card'
+                  }
                   key={channel.id}
-                  onClick={() => openChannel(channel)}
+                  onClick={() => {
+                    props.onSelect(channel);
+                    props.onOpenProfile(channel);
+                  }}
                   type="button"
                 >
                   <ChannelAvatar channel={channel} size="sm" />
                   <div>
                     <strong>{channel.name}</strong>
-                    <span>{channel.genre}</span>
+                    <span>{channel.genre} · {channel.platforms.join(' / ')}</span>
                   </div>
                   <i className={signalClass(channel.signal)}>{channel.signal}</i>
                 </button>
               ))}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Recommended Channels</h2>
+              <p>Discover channels that match your current interests.</p>
+            </div>
+
+            <div className="subscription-recommendation-grid">
+              {recommendedChannels.map((channel) => (
+                <button
+                  className="subscription-recommendation-card"
+                  key={channel.id}
+                  onClick={() => {
+                    props.onSelect(channel);
+                    props.onOpenProfile(channel);
+                  }}
+                  type="button"
+                >
+                  <ChannelAvatar channel={channel} size="sm" />
+                  <strong>{channel.name}</strong>
+                  <span>{channel.tagline}</span>
+                  <i>{channel.subscribers.toLocaleString()} members</i>
+                </button>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Subscription Features</h2>
+              <p>Paid tiers expand features without buying trust status.</p>
+            </div>
+
+            <div className="subscription-feature-list">
+              <span>More followed channels</span>
+              <span>Profile cosmetics</span>
+              <span>Banner slots</span>
+              <span>Layout presets</span>
+              <span>Advanced filters</span>
+              <span>Premium reactions</span>
             </div>
           </article>
         </section>
@@ -2520,10 +2849,7 @@ function UserProfileScreen(props: {
 } = {}): ReactElement {
   const profileMember = members[0]!;
   const mySubscriptions = channels.slice(0, 4);
-  const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
-  const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
-
-  const myGuilds = [
+const myGuilds = [
     {
       name: 'Wave Raiders',
       role: 'Guild Ally',
@@ -2586,8 +2912,8 @@ function UserProfileScreen(props: {
               <strong>0xUSER</strong>
               <span>Passport</span>
               <strong>0xPASSPORT</strong>
-              <span>Safety State</span>
-              <strong>{mutedMembers.length} muted · {blockedMembers.length} blocked</strong>
+              <span>Profile Status</span>
+              <strong>Public Passport</strong>
             </div>
           </div>
         </article>
@@ -2650,27 +2976,6 @@ function UserProfileScreen(props: {
               type="button"
             >
               Open full guild manager
-            </button>
-          </article>
-
-          <article className="panel profile-embedded-card">
-            <div className="profile-panel-heading">
-              <h2>Safety Center</h2>
-              <p>Manage muted members, blocked members, reports, and moderation preferences.</p>
-            </div>
-
-            <div className="safety-summary-row">
-              <span>{mutedMembers.length} muted</span>
-              <span>{blockedMembers.length} blocked</span>
-              <span>{readSafetyReports().length} reports</span>
-            </div>
-
-            <button
-              className="profile-secondary-link"
-              onClick={() => props.onNavigate?.('safetyCenter')}
-              type="button"
-            >
-              Open Safety Center
             </button>
           </article>
 
@@ -2920,52 +3225,102 @@ function EventsScreen(): ReactElement {
   );
 }
 
-function SettingsScreen(): ReactElement {
-  const settings = [
-    {
-      title: 'Profile Privacy',
-      description: 'Control public profile visibility and Passport display.'
-    },
-    {
-      title: 'Chat Preferences',
-      description: 'Manage filters, muted signals, and message visibility.'
-    },
-    {
-      title: 'Theme Customization',
-      description: 'Pro / Elite fonts, colors, backgrounds, and animations.'
-    },
-    {
-      title: 'Recovery & Security',
-      description: 'Recovery keys, connected wallets, and account safety.'
-    }
-  ];
+function SettingsScreen(props: {
+  onNavigate?: (page: NamiPage) => void;
+} = {}): ReactElement {
+  const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
+  const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
+  const reportCount = readSafetyReports().length;
 
   return (
     <>
       <header className="page-title">
-        <p>Account controls and personalization</p>
+        <p>Account preferences and controls</p>
         <h1>Settings</h1>
       </header>
 
-      <section className="account-grid uniform-card-grid">
-        {settings.map((setting) => (
-          <article className="profile-panel account-card fixed-card settings-card" key={setting.title}>
-            <div className="fixed-card-body">
-              <div className="fixed-card-copy">
-                <h2>{setting.title}</h2>
-                <p>{setting.description}</p>
-              </div>
+      <section className="settings-page">
+        <article className="panel settings-hero-panel">
+          <div>
+            <span className="mini-badge">Account Settings</span>
+            <h2>Control your Nami experience</h2>
+            <p>
+              Settings is the home for safety preferences, notifications, privacy,
+              accessibility, and account-level controls.
+            </p>
+          </div>
+        </article>
+
+        <section className="settings-grid">
+          <article className="panel settings-card safety-settings-card">
+            <div className="profile-panel-heading">
+              <h2>Safety Center</h2>
+              <p>
+                Manage muted members, blocked members, reports, moderation history,
+                and conduct-based Color Signal review.
+              </p>
             </div>
 
-            <div className="fixed-card-footer">
-              <button type="button">Open</button>
+            <div className="safety-summary-row">
+              <span>{mutedMembers.length} muted</span>
+              <span>{blockedMembers.length} blocked</span>
+              <span>{reportCount} reports</span>
+            </div>
+
+            <button
+              className="profile-secondary-link"
+              onClick={() => props.onNavigate?.('safetyCenter')}
+              type="button"
+            >
+              Open Safety Center
+            </button>
+          </article>
+
+          <article className="panel settings-card">
+            <div className="profile-panel-heading">
+              <h2>Privacy</h2>
+              <p>Control profile visibility, message permissions, and discovery surfaces.</p>
+            </div>
+
+            <div className="settings-toggle-list">
+              <span>Public profile enabled</span>
+              <span>Allow channel recommendations</span>
+              <span>Hide wallet details by default</span>
             </div>
           </article>
-        ))}
+
+          <article className="panel settings-card">
+            <div className="profile-panel-heading">
+              <h2>Notifications</h2>
+              <p>Manage event alerts, guild updates, and channel announcements.</p>
+            </div>
+
+            <div className="settings-toggle-list">
+              <span>Game event reminders</span>
+              <span>Guild announcements</span>
+              <span>Moderation status updates</span>
+            </div>
+          </article>
+
+          <article className="panel settings-card">
+            <div className="profile-panel-heading">
+              <h2>Accessibility</h2>
+              <p>Customize animation intensity, contrast, and compact layout preferences.</p>
+            </div>
+
+            <div className="settings-toggle-list">
+              <span>Reduced motion mode</span>
+              <span>High contrast signal badges</span>
+              <span>Compact chat density</span>
+            </div>
+          </article>
+        </section>
       </section>
     </>
   );
 }
+
+
 
 export function App(): ReactElement {
   const [activePage, setActivePage] = useState<NamiPage>('hub');
@@ -3073,7 +3428,7 @@ if (activePage === 'userProfile') {
     }
 
     if (activePage === 'settings') {
-      return <SettingsScreen />;
+      return <SettingsScreen onNavigate={setActivePage} />;
     }
 
     return <NamiHub
