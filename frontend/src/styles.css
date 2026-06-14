@@ -1796,3 +1796,289 @@ dd {
   align-items: flex-start;
   line-height: 1.25;
 }
+
+/* UI-A6 My Subscriptions buildout */
+.subscriptions-page {
+  display: grid;
+  gap: 22px;
+}
+
+.subscription-hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: stretch;
+  padding: 20px;
+  border: 1px solid rgba(117, 188, 224, 0.42);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    rgba(22, 25, 42, 0.88);
+}
+
+.subscription-hero-panel h2,
+.subscription-hero-panel p {
+  margin: 8px 0 0;
+}
+
+.subscription-hero-panel p {
+  max-width: 760px;
+  color: #9fb5ca;
+  line-height: 1.5;
+}
+
+.subscription-cap-card {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+  padding: 16px;
+  border: 1px solid rgba(67, 245, 167, 0.28);
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.48);
+}
+
+.subscription-cap-card span,
+.subscription-cap-card small {
+  color: #9fb5ca;
+}
+
+.subscription-cap-card strong {
+  color: #eef7ff;
+  font-size: 2rem;
+}
+
+.subscription-cap-meter {
+  overflow: hidden;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+}
+
+.subscription-cap-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #43f5a7, #75d7ff);
+}
+
+.subscribed-rail-panel {
+  padding: 18px;
+  border: 1px solid rgba(31, 101, 255, 0.58);
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.42);
+}
+
+.subscribed-channel-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.subscribed-channel-card {
+  display: grid;
+  justify-items: start;
+  gap: 9px;
+  min-height: 240px;
+  padding: 16px;
+  border: 1px solid rgba(117, 188, 224, 0.2);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(117,188,224,0.12), transparent 12rem),
+    rgba(5, 9, 15, 0.58);
+  color: #eef7ff;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.subscribed-channel-card:hover,
+.subscribed-channel-card.is-selected-subscription {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.48);
+  box-shadow: 0 18px 42px rgba(0,0,0,0.28);
+}
+
+.subscribed-channel-card span,
+.subscribed-channel-card small {
+  color: #9fb5ca;
+}
+
+.subscribed-channel-card strong {
+  font-size: 1.05rem;
+}
+
+.subscription-card-footer {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.subscription-card-footer i,
+.subscription-card-footer em {
+  color: #dff6ff;
+  font-size: 0.78rem;
+  font-style: normal;
+}
+
+.subscriptions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.subscription-theme-default .subscribed-rail-panel {
+  background:
+    radial-gradient(circle at top, rgba(31,101,255,0.13), transparent 24rem),
+    rgba(5,9,15,0.44);
+}
+
+.subscription-theme-ocean .subscribed-rail-panel {
+  background:
+    radial-gradient(circle at top, rgba(67,245,167,0.15), transparent 24rem),
+    rgba(3,20,30,0.56);
+}
+
+.subscription-theme-ember .subscribed-rail-panel {
+  background:
+    radial-gradient(circle at top, rgba(255,49,82,0.15), transparent 24rem),
+    rgba(25,9,14,0.58);
+}
+
+.subscription-theme-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.subscription-feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.subscription-feature-list span {
+  padding: 10px;
+  border: 1px solid rgba(117, 188, 224, 0.14);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.045);
+  color: #dff6ff;
+}
+
+.signal-legend-stack,
+.tier-card-stack,
+.recommended-subscription-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.signal-legend-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.045);
+}
+
+.legend-dot {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.signal-legend-row strong,
+.signal-legend-row p {
+  margin: 0;
+}
+
+.signal-legend-row p {
+  margin-top: 4px;
+  color: #9fb5ca;
+  line-height: 1.35;
+}
+
+.tier-card {
+  padding: 14px;
+  border: 1px solid rgba(117, 188, 224, 0.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.045);
+}
+
+.tier-card.is-current-tier {
+  border-color: rgba(67, 245, 167, 0.42);
+  box-shadow: 0 0 22px rgba(67, 245, 167, 0.1);
+}
+
+.tier-card strong,
+.tier-card span,
+.tier-card p {
+  display: block;
+  margin: 0;
+}
+
+.tier-card span {
+  margin-top: 5px;
+  color: #75d7ff;
+}
+
+.tier-card p {
+  margin-top: 8px;
+  color: #9fb5ca;
+  line-height: 1.4;
+}
+
+.recommended-subscription-card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.045);
+  color: #eef7ff;
+  text-align: left;
+}
+
+.recommended-subscription-card span {
+  display: block;
+  margin-top: 4px;
+  color: #9fb5ca;
+}
+
+.recommended-subscription-card i {
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+@media (max-width: 1100px) {
+  .subscribed-channel-rail,
+  .subscriptions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .subscription-hero-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .subscribed-channel-rail,
+  .subscriptions-grid,
+  .subscription-feature-list {
+    grid-template-columns: 1fr;
+  }
+}

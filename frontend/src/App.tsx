@@ -1017,42 +1017,249 @@ function GameChat(props: {
 function Subscriptions(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
-  onNavigate: (page: NamiPage) => void;
+  onOpenProfile?: (channel: NamiChannel) => void;
 }): ReactElement {
+  const [subscriptionTheme, setSubscriptionTheme] = useState<'default' | 'ocean' | 'ember'>('ocean');
+
+  const subscribedChannels = channels.slice(0, 4);
+  const recommendedChannels = channels.slice(1, 5);
+
+  const currentPlan = {
+    name: 'Pro',
+    cap: 12,
+    used: subscribedChannels.length,
+    colorSlots: 3,
+    bannerSlots: 2
+  };
+
+  const usagePercent = Math.min(100, Math.round((currentPlan.used / currentPlan.cap) * 100));
+
+  const tierCards = [
+    {
+      tier: 'Basic',
+      cap: '4 active channels',
+      perks: 'Follow, subscribe, basic notification controls.'
+    },
+    {
+      tier: 'Pro',
+      cap: '12 active channels',
+      perks: 'Theme colors, pinned favorites, custom subscription rail.'
+    },
+    {
+      tier: 'Elite',
+      cap: '50 active channels',
+      perks: 'Animated rail, premium profile frames, expanded channel slots.'
+    }
+  ];
+
+  const signalLegend: Array<{
+    signal: NamiChannel['signal'];
+    title: string;
+    note: string;
+  }> = [
+    {
+      signal: 'Green',
+      title: 'Friendly',
+      note: 'Casual, social, low-pressure community.'
+    },
+    {
+      signal: 'Orange',
+      title: 'Focused',
+      note: 'Serious but friendly, structured play.'
+    },
+    {
+      signal: 'Red',
+      title: 'High intensity',
+      note: 'PvP, hardcore, competitive, risk-tolerant spaces.'
+    },
+    {
+      signal: 'Black',
+      title: 'Restricted',
+      note: 'Passport-down or respawn state. Not chat-visible until restored.'
+    }
+  ];
+
+  function openChannel(channel: NamiChannel): void {
+    props.onSelect(channel);
+
+    if (props.onOpenProfile) {
+      props.onOpenProfile(channel);
+    }
+  }
+
   return (
     <>
       <header className="page-title">
-        <p>Personal channel library</p>
+        <p>Account-level channel management</p>
         <h1>My Subscriptions</h1>
       </header>
 
-      <FeaturedRail
-        title="Subscribed Channels"
-        selectedChannel={props.selectedChannel}
-        onSelect={props.onSelect}
-        onlySubscribed
-      />
+      <section className={'subscriptions-page subscription-theme-' + subscriptionTheme}>
+        <article className="subscription-hero-panel">
+          <div>
+            <span className="mini-badge">Current Plan: {currentPlan.name}</span>
+            <h2>Your subscribed channels</h2>
+            <p>
+              The top rail only shows channels you subscribe to. Higher tiers unlock more active
+              channel slots, visual themes, and profile rail customization.
+            </p>
+          </div>
 
-      <section className="profile-layout">
-        <div>
-          <ChannelInfoCard
-            channel={props.selectedChannel}
-            onSubscribe={() => props.onSelect(props.selectedChannel)}
-            onJoinChat={() => props.onNavigate('chat')}
-            onGetBanners={() => undefined}
-          />
-          <article className="panel announcement-panel">
-            <h2>Official Announcements</h2>
-            <p>Unread banners, followed channel updates, and subscribed alerts live here.</p>
+          <div className="subscription-cap-card">
+            <span>Active channel slots</span>
+            <strong>
+              {currentPlan.used}/{currentPlan.cap}
+            </strong>
+            <div className="subscription-cap-meter">
+              <i style={{ width: String(usagePercent) + '%' }} />
+            </div>
+            <small>
+              {currentPlan.colorSlots} theme slots · {currentPlan.bannerSlots} banner slots
+            </small>
+          </div>
+        </article>
+
+        <section className="subscribed-rail-panel">
+          <div className="profile-panel-heading">
+            <h2>Subscribed Channel Rail</h2>
+            <p>Only subscribed communities appear here.</p>
+          </div>
+
+          <div className="subscribed-channel-rail">
+            {subscribedChannels.map((channel, index) => (
+              <button
+                className={
+                  'subscribed-channel-card ' +
+                  signalClass(channel.signal) +
+                  (props.selectedChannel.id === channel.id ? ' is-selected-subscription' : '')
+                }
+                key={channel.id}
+                onClick={() => openChannel(channel)}
+                type="button"
+              >
+                <ChannelAvatar channel={channel} size="lg" />
+                <span>#{index + 1} subscribed</span>
+                <strong>{channel.name}</strong>
+                <small>{channel.genre} · {channel.platforms.join(' / ')}</small>
+
+                <div className="subscription-card-footer">
+                  <i>{channel.signal}</i>
+                  <em>{channel.subscribers.toLocaleString()} subs</em>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="subscriptions-grid">
+          <article className="panel subscription-settings-panel">
+            <div className="profile-panel-heading">
+              <h2>Rail Theme</h2>
+              <p>Pro / Elite cosmetic control placeholder.</p>
+            </div>
+
+            <div className="theme-choice-grid subscription-theme-grid">
+              <button
+                className={subscriptionTheme === 'default' ? 'is-selected-theme' : ''}
+                onClick={() => setSubscriptionTheme('default')}
+                type="button"
+              >
+                Default
+              </button>
+
+              <button
+                className={subscriptionTheme === 'ocean' ? 'is-selected-theme' : ''}
+                onClick={() => setSubscriptionTheme('ocean')}
+                type="button"
+              >
+                Ocean
+              </button>
+
+              <button
+                className={subscriptionTheme === 'ember' ? 'is-selected-theme' : ''}
+                onClick={() => setSubscriptionTheme('ember')}
+                type="button"
+              >
+                Ember
+              </button>
+            </div>
+
+            <div className="subscription-feature-list">
+              <span>Custom rail color</span>
+              <span>Favorite channel pinning</span>
+              <span>Signal-aware sorting</span>
+              <span>Animated banner slot</span>
+            </div>
           </article>
-        </div>
 
-        <ModuleGrid channel={props.selectedChannel} onNavigate={props.onNavigate} />
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Signal Legend</h2>
+              <p>Signals appear on channel cards, member icons, and profile surfaces.</p>
+            </div>
+
+            <div className="signal-legend-stack">
+              {signalLegend.map((item) => (
+                <div className="signal-legend-row" key={item.signal}>
+                  <span className={'legend-dot ' + signalClass(item.signal)} />
+                  <div>
+                    <strong>{item.signal} · {item.title}</strong>
+                    <p>{item.note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel subscription-tier-panel">
+            <div className="profile-panel-heading">
+              <h2>Tier Caps</h2>
+              <p>Subscriptions add capacity and customization, not trust status.</p>
+            </div>
+
+            <div className="tier-card-stack">
+              {tierCards.map((tier) => (
+                <div
+                  className={tier.tier === currentPlan.name ? 'tier-card is-current-tier' : 'tier-card'}
+                  key={tier.tier}
+                >
+                  <strong>{tier.tier}</strong>
+                  <span>{tier.cap}</span>
+                  <p>{tier.perks}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Recommended from your subs</h2>
+              <p>Discovery suggestions based on subscribed categories.</p>
+            </div>
+
+            <div className="recommended-subscription-stack">
+              {recommendedChannels.map((channel) => (
+                <button
+                  className="recommended-subscription-card"
+                  key={channel.id}
+                  onClick={() => openChannel(channel)}
+                  type="button"
+                >
+                  <ChannelAvatar channel={channel} size="sm" />
+                  <div>
+                    <strong>{channel.name}</strong>
+                    <span>{channel.genre}</span>
+                  </div>
+                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
+                </button>
+              ))}
+            </div>
+          </article>
+        </section>
       </section>
     </>
   );
 }
-
 
 function UserProfileScreen(): ReactElement {
   return (
@@ -1331,7 +1538,7 @@ export function App(): ReactElement {
         <Subscriptions
           selectedChannel={selectedChannel}
           onSelect={setSelectedChannel}
-          onNavigate={setActivePage}
+          onOpenProfile={openChannelProfile}
         />
       );
     }
