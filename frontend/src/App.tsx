@@ -1566,6 +1566,30 @@ function saveMemberSignalReview(memberId: string, signal: NamiChannel['signal'])
   );
 }
 
+type AdultLanguageMode = 'censor' | 'filter' | 'show';
+
+function isAdultLanguageMode(value: unknown): value is AdultLanguageMode {
+  return value === 'censor' || value === 'filter' || value === 'show';
+}
+
+function readChannelAdultLanguageMode(channelId: string): AdultLanguageMode {
+  try {
+    const savedMode = window.localStorage.getItem('nami-channel-adult-language-mode-' + channelId);
+
+    if (isAdultLanguageMode(savedMode)) {
+      return savedMode;
+    }
+
+    return 'censor';
+  } catch {
+    return 'censor';
+  }
+}
+
+function saveChannelAdultLanguageMode(channelId: string, mode: AdultLanguageMode): void {
+  window.localStorage.setItem('nami-channel-adult-language-mode-' + channelId, mode);
+}
+
 const conductLanguageTerms = [
   'nsfw',
   'explicit',

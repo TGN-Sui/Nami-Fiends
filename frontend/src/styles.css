@@ -4250,3 +4250,63 @@ button:disabled {
   color: #43f5a7;
   box-shadow: 0 0 16px rgba(67, 245, 167, 0.14);
 }
+
+/* UI-A8C: persistent channel moderation defaults in Settings */
+.channel-moderation-settings-card {
+  border-color: rgba(255, 184, 77, 0.28);
+  box-shadow: 0 0 22px rgba(255, 184, 77, 0.08);
+}
+
+.channel-moderation-settings-list {
+  display: grid;
+  gap: 12px;
+}
+
+.channel-moderation-settings-row {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.14);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.045);
+}
+
+.settings-channel-title {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.settings-channel-title strong,
+.settings-channel-title span {
+  display: block;
+}
+
+.settings-channel-title span {
+  margin-top: 4px;
+  color: #9fb5ca;
+  font-size: 0.78rem;
+}
+
+.settings-channel-mode-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.settings-channel-mode-row button {
+  min-height: 34px;
+  border: 1px solid rgba(255, 184, 77, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 184, 77, 0.08);
+  color: #ffb84d;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.settings-channel-mode-row button.is-selected-channel-mode {
+  border-color: #43f5a7;
+  color: #43f5a7;
+  box-shadow: 0 0 16px rgba(67, 245, 167, 0.14);
+}
