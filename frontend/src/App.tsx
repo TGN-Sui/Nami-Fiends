@@ -1692,6 +1692,8 @@ function GameChat(props: {
   const [proEliteOnly, setProEliteOnly] = useState(false);
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
+  const [gatedAccessCollapsed, setGatedAccessCollapsed] = useState(false);
+  const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(false);
   const [reportPulse, setReportPulse] = useState('');
   const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
 
@@ -1841,10 +1843,7 @@ function GameChat(props: {
         </div>
 
         <div
-          className={
-            'chat-layout chat-layout-buildout' +
-            (customizationCollapsed ? ' is-customization-collapsed' : '')
-          }
+          className="chat-layout chat-layout-buildout"
         >
           <article className="chat-window chat-window-buildout chat-theme-channel-brand">
             <div className="chat-window-heading">
@@ -1929,38 +1928,63 @@ function GameChat(props: {
             </div>
           </article>
 
-          <aside className="chat-side-panel">
+                    <aside className="chat-side-panel chat-side-panel-collapsible">
+            <section
+              className={
+                'gated-access-panel chat-rail-collapsible-panel' +
+                (gatedAccessCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setGatedAccessCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Gated Access</span>
+                <strong>{gatedAccessCollapsed ? '+' : '−'}</strong>
+              </button>
 
-            <section className="gated-access-panel">
-              <div className="profile-panel-heading">
-                <h2>Gated Access</h2>
-                <p>Passport proofs will unlock verified rooms, holder chats, and guild areas.</p>
-              </div>
+              {!gatedAccessCollapsed && (
+                <div className="chat-rail-panel-body">
+                  <div className="profile-panel-heading">
+                    <h2>Passport Gates</h2>
+                    <p>Proof-based access for verified rooms, holder chats, and guild areas.</p>
+                  </div>
 
-              <div className="gated-access-mini-list">
-                <span>Wallet linked</span>
-                <span>SuiNS verified</span>
-                <span>Guild standing clear</span>
-              </div>
+                  <div className="gated-access-mini-list">
+                    <span>Wallet linked</span>
+                    <span>SuiNS verified</span>
+                    <span>Guild standing clear</span>
+                  </div>
 
-              <span className="nami-profile-passport-action-note">
-                Use the stable Passport button above the card to manage identity privacy.
-              </span>
+                  <button
+                    className="profile-secondary-link chat-rail-action-button"
+                    onClick={() => props.onNavigate('passport')}
+                    type="button"
+                  >
+                    Passport
+                  </button>
+                </div>
+              )}
             </section>
 
-
-            <section className="chat-filter-panel">
+            <section
+              className={
+                'chat-filter-panel chat-rail-collapsible-panel' +
+                (filtersCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
               <button
-                className="filter-collapse-button"
+                className="chat-rail-collapse-button"
                 onClick={() => setFiltersCollapsed((value) => !value)}
                 type="button"
               >
-                <span>Filter Options</span>
+                <span>Filters</span>
                 <strong>{filtersCollapsed ? '+' : '−'}</strong>
               </button>
 
               {!filtersCollapsed && (
-                <div className="filter-options-stack">
+                <div className="chat-rail-panel-body filter-options-stack">
                   <label>
                     <input
                       checked={hideNpc}
@@ -1991,59 +2015,75 @@ function GameChat(props: {
               )}
             </section>
 
+            <section
+              className={
+                'adult-language-settings-panel chat-rail-collapsible-panel' +
+                (adultLanguageCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setAdultLanguageCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Language</span>
+                <strong>{adultLanguageCollapsed ? '+' : '−'}</strong>
+              </button>
 
-            <section className="adult-language-settings-panel">
-              <div className="profile-panel-heading">
-                <h2>Adult Language Controls</h2>
-                <p>Channel owner moderation setting. Default behavior is censoring.</p>
-              </div>
+              {!adultLanguageCollapsed && (
+                <div className="chat-rail-panel-body">
+                  <div className="profile-panel-heading">
+                    <h2>Adult Language</h2>
+                    <p>Channel owner moderation setting. Default behavior is censoring.</p>
+                  </div>
 
-              <div className="adult-language-control">
-                <strong>Adult Language Mode</strong>
+                  <div className="adult-language-control">
+                    <strong>Mode</strong>
 
-                <div className="adult-language-mode-row">
-                  {(['censor', 'filter', 'show'] as const).map((mode) => (
-                    <button
-                      className={adultLanguageMode === mode ? 'is-active-adult-mode' : ''}
-                      key={mode}
-                      onClick={() => setAdultLanguageMode(mode)}
-                      type="button"
-                    >
-                      {mode === 'censor' ? 'Censor' : mode === 'filter' ? 'Filter Out' : 'Show'}
-                    </button>
-                  ))}
+                    <div className="adult-language-mode-row">
+                      {(['censor', 'filter', 'show'] as const).map((mode) => (
+                        <button
+                          className={adultLanguageMode === mode ? 'is-active-adult-mode' : ''}
+                          key={mode}
+                          onClick={() => setAdultLanguageMode(mode)}
+                          type="button"
+                        >
+                          {mode === 'censor' ? 'Censor' : mode === 'filter' ? 'Filter' : 'Show'}
+                        </button>
+                      ))}
+                    </div>
+
+                    <small>
+                      Censor masks matching words. Filter removes matching messages.
+                    </small>
+                  </div>
                 </div>
-
-                <small>
-                  Censor masks matching words. Filter Out removes matching messages.
-                  Show displays original text.
-                </small>
-              </div>
+              )}
             </section>
 
             <section
               className={
-                'chat-customization-panel' +
-                (customizationCollapsed ? ' is-collapsed-customization' : '')
+                'chat-customization-panel chat-rail-collapsible-panel' +
+                (customizationCollapsed ? ' is-chat-rail-collapsed is-collapsed-customization' : '')
               }
             >
               <button
-                className="customization-collapse-button"
+                className="chat-rail-collapse-button"
                 onClick={() => setCustomizationCollapsed((value) => !value)}
                 type="button"
               >
-                <span>Chat Customization</span>
+                <span>Chat Style</span>
                 <strong>{customizationCollapsed ? '+' : '−'}</strong>
               </button>
 
               {!customizationCollapsed && (
-                <div className="chat-customization-body">
+                <div className="chat-rail-panel-body chat-customization-body chat-style-body">
                   <div className="profile-panel-heading">
-                    <h2>Inherited Channel Brand</h2>
-                    <p>Chat colors are controlled from the Game Profile brand settings.</p>
+                    <h2>Chat Box Style</h2>
+                    <p>Use channel-approved accents and future earned cosmetic rewards.</p>
                   </div>
 
-                  <div className="chat-inherited-brand-card">
+                  <div className="chat-style-brand-card">
                     <span
                       style={{
                         background:
@@ -2056,13 +2096,19 @@ function GameChat(props: {
                     />
                     <div>
                       <strong>{channelBrandTheme.label}</strong>
-                      <small>Managed from Game Profile</small>
+                      <small>Channel-approved accent</small>
                     </div>
                   </div>
 
+                  <div className="chat-style-reward-grid">
+                    <span>Default Bubble</span>
+                    <span>Wave Frame</span>
+                    <span>Signal Glow</span>
+                  </div>
+
                   <div className="customization-note">
-                    Safety preferences now affect chat visibility. Blocked members are hidden,
-                    while muted members stay visible but visually quieted.
+                    Cosmetic rewards will unlock fonts, overlays, message skins, and animation
+                    intensity. Owner brand colors stay in Settings.
                   </div>
                 </div>
               )}

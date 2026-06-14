@@ -7447,3 +7447,117 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   UI-A10E — Game Chat collapsible right rail
+   ========================================================= */
+
+.chat-side-panel-collapsible {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.chat-rail-collapsible-panel {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.chat-rail-collapse-button {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid rgba(117, 215, 255, 0.12);
+  background: rgba(117, 215, 255, 0.06);
+  color: #eef7ff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.chat-rail-collapse-button span {
+  letter-spacing: 0.04em;
+}
+
+.chat-rail-collapse-button strong {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(117, 215, 255, 0.2);
+  border-radius: 999px;
+  color: #7ee6ff;
+}
+
+.chat-rail-panel-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.is-chat-rail-collapsed {
+  min-height: 46px;
+}
+
+.chat-rail-action-button {
+  width: 100% !important;
+  justify-content: center;
+}
+
+.chat-style-brand-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.34);
+}
+
+.chat-style-brand-card > span {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  box-shadow: 0 0 22px rgba(117, 215, 255, 0.18);
+}
+
+.chat-style-brand-card strong,
+.chat-style-brand-card small {
+  display: block;
+}
+
+.chat-style-brand-card small {
+  margin-top: 2px;
+  color: #9fb5ca;
+}
+
+.chat-style-reward-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.chat-style-reward-grid span {
+  padding: 9px 10px;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(117, 215, 255, 0.05);
+  color: #dff6ff;
+  font-weight: 800;
+}
+
+.chat-customization-body.chat-style-body .customization-note {
+  margin: 0;
+}
+
+/* Keep legacy collapse buttons visually aligned if any old class remains. */
+.filter-collapse-button,
+.customization-collapse-button {
+  width: 100%;
+}
