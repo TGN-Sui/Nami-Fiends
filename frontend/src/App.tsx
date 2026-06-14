@@ -11,7 +11,7 @@ import {
 } from './uiMockData.js';
 
 function signalClass(signal: ConductSignal): string {
-  return `signal-ring signal-${signal.toLowerCase()}`;
+  return 'signal-ring signal-' + signal.toLowerCase();
 }
 
 function ChannelAvatar(props: {
@@ -20,17 +20,32 @@ function ChannelAvatar(props: {
   selected?: boolean;
   onClick?: () => void;
 }): ReactElement {
+  const className =
+    'channel-avatar channel-avatar-' +
+    (props.size ?? 'md') +
+    ' ' +
+    signalClass(props.channel.signal) +
+    (props.selected ? ' is-selected' : '');
+
+  const label = props.channel.name.slice(0, 2).toUpperCase();
+
+  if (props.onClick) {
+    return (
+      <button
+        className={className}
+        onClick={props.onClick}
+        type="button"
+        title={props.channel.name}
+      >
+        <span>{label}</span>
+      </button>
+    );
+  }
+
   return (
-    <button
-      className={`channel-avatar channel-avatar-${props.size ?? 'md'} ${signalClass(
-        props.channel.signal
-      )} ${props.selected ? 'is-selected' : ''}`}
-      onClick={props.onClick}
-      type="button"
-      title={props.channel.name}
-    >
-      <span>{props.channel.name.slice(0, 2).toUpperCase()}</span>
-    </button>
+    <div className={className} title={props.channel.name}>
+      <span>{label}</span>
+    </div>
   );
 }
 
@@ -41,7 +56,7 @@ function Sidebar(props: {
   onToggle: () => void;
 }): ReactElement {
   return (
-    <aside className={`sidebar ${props.collapsed ? 'is-collapsed' : ''}`}>
+    <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
       <button
         className="sidebar-brand"
         onClick={() => props.onNavigate('gamehub')}
@@ -216,7 +231,7 @@ function NamiHub(props: {
             <div className="growth-row" key={channel.id}>
               <span>{channel.handle}</span>
               <div>
-                <i style={{ width: `${92 - index * 12}%` }} />
+                <i style={{ width: String(92 - index * 12) + '%' }} />
               </div>
               <strong>{channel.subscribers.toLocaleString()}</strong>
             </div>
@@ -228,11 +243,11 @@ function NamiHub(props: {
           <div className="bubble-map">
             {channels.map((channel, index) => (
               <button
-                className={`bubble ${signalClass(channel.signal)}`}
+                className={'bubble ' + signalClass(channel.signal)}
                 key={channel.id}
                 onClick={() => props.onSelect(channel)}
                 type="button"
-                style={{ '--bubble-size': `${72 - index * 5}px` } as CSSProperties}
+                style={{ '--bubble-size': String(72 - index * 5) + 'px' } as CSSProperties}
               >
                 {index + 1}
                 <span>{channel.name}</span>
@@ -260,6 +275,12 @@ function GameHub(props: {
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
+  const partnerChannels = channels.filter((channel) => channel.partner);
+  const topChannels = [...channels]
+    .sort((left, right) => right.subscribers - left.subscribers)
+    .slice(0, 4);
+  const browserChannels = channels.concat(channels, channels);
+
   return (
     <>
       <header className="page-title">
@@ -267,42 +288,136 @@ function GameHub(props: {
         <h1>GameHub</h1>
       </header>
 
-      <FeaturedRail
-        title="Partner and Top Channels"
-        selectedChannel={props.selectedChannel}
-        onSelect={props.onSelect}
-      />
+      <section className="gamehub-top-panel">
+        <article className="gamehub-feature-card partner-feature">
+          <span className="feature-label">Partner Channels</span>
+          <h2>Featured official spaces</h2>
+          <div className="compact-channel-list">
+            {partnerChannels.map((channel) => (
+              <button
+                key={channel.id}
+                onClick={() => props.onSelect(channel)}
+                type="button"
+              >
+                <ChannelAvatar channel={channel} size="sm" />
+                <span>
+                  <strong>{channel.name}</strong>
+                  <small>{channel.genre}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </article>
 
-      <section className="panel">
+        <article className="gamehub-feature-card">
+          <span className="feature-label">Top Channels</span>
+          <h2>Trending by activity</h2>
+          <div className="compact-channel-list">
+            {topChannels.map((channel, index) => (
+              <button
+                key={channel.id}
+                onClick={() => props.onSelect(channel)}
+                type="button"
+              >
+                <strong className="rank-badge">#{index + 1}</strong>
+                <span>
+                  <strong>{channel.name}</strong>
+                  <small>{channel.subscribers.toLocaleString()} subscribers</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </article>
+
+        <article className="gamehub-feature-card paid-feature">
+          <span className="feature-label">Featured Placement</span>
+          <h2>Pro / Elite channel boosts</h2>
+          <p>
+            Paid placement should increase discovery visibility, not trust status.
+            Verification and reputation remain identity-based.
+          </p>
+          <button
+            onClick={() => props.onOpenProfile(props.selectedChannel)}
+            type="button"
+          >
+            View selected channel
+          </button>
+        </article>
+      </section>
+
+      <section className="panel gamehub-browser">
+        <div className="browser-heading">
+          <div>
+            <h2>Channel Browser</h2>
+            <p>Randomized discovery cards with signal rings and channel metadata.</p>
+          </div>
+          <div className="selected-channel-chip">
+            Selected: <strong>{props.selectedChannel.name}</strong>
+          </div>
+        </div>
+
         <div className="filter-row">
+          <button type="button">All</button>
           <button type="button">Games</button>
           <button type="button">IRL</button>
           <button type="button">Music & DJs</button>
           <button type="button">Creative</button>
           <button type="button">Esports</button>
           <button type="button">Verified</button>
-          <button type="button">Platform</button>
+          <button type="button">PC</button>
+          <button type="button">Console</button>
+          <button type="button">Mobile</button>
         </div>
 
         <div className="discovery-grid">
-          {channels.concat(channels, channels).map((channel, index) => (
+          {browserChannels.map((channel, index) => (
             <button
-              className="discovery-card"
+              className="discovery-card discovery-card-expanded"
               key={channel.id + '-' + index}
               onClick={() => props.onOpenProfile(channel)}
               type="button"
             >
-              <ChannelAvatar channel={channel} size="sm" />
+              <div className="discovery-card-top">
+                <ChannelAvatar channel={channel} size="sm" />
+                <span className={'mini-badge signal-text-' + channel.signal.toLowerCase()}>
+                  {channel.signal}
+                </span>
+              </div>
+
               <strong>{channel.name}</strong>
               <span>{channel.genre}</span>
-              <small>{channel.subscribers.toLocaleString()} subscribers</small>
+              <small>{channel.platforms.join(' / ')}</small>
+
+              <div className="card-meta-row">
+                {channel.verified && <i>Verified</i>}
+                {channel.partner && <i>Partner</i>}
+                <i>{channel.subscribers.toLocaleString()}</i>
+              </div>
             </button>
           ))}
         </div>
 
-        <button className="add-module-button" type="button">
-          + Add Section / Module
-        </button>
+        <div className="interest-tracker">
+          <div>
+            <h3>Preferred Channels & Interests</h3>
+            <p>
+              Future personalization module for pinned genres, preferred platforms,
+              favorite signal types, and followed channel categories.
+            </p>
+          </div>
+
+          <div className="interest-tags">
+            <span>Gaming</span>
+            <span>Verified</span>
+            <span>PC</span>
+            <span>Guilds</span>
+            <span>Events</span>
+          </div>
+
+          <button className="add-module-button" type="button">
+            + Add Section / Module
+          </button>
+        </div>
       </section>
     </>
   );

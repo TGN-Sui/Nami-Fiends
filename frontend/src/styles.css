@@ -624,3 +624,211 @@ dd {
     grid-template-columns: 1fr;
   }
 }
+
+.gamehub-top-panel {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.9fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.gamehub-feature-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 246px;
+  padding: 20px;
+  border: 1px solid rgba(31, 101, 255, 0.75);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)),
+    rgba(22, 25, 42, 0.88);
+  box-shadow: 0 0 24px rgba(16, 86, 255, 0.14);
+}
+
+.partner-feature {
+  border-color: rgba(67, 245, 167, 0.72);
+}
+
+.paid-feature {
+  border-color: rgba(255, 199, 76, 0.72);
+}
+
+.feature-label {
+  color: #75bce0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.gamehub-feature-card h2,
+.gamehub-feature-card p {
+  margin: 0;
+}
+
+.gamehub-feature-card p {
+  color: #b9c9d8;
+  line-height: 1.55;
+}
+
+.gamehub-feature-card > button {
+  min-height: 42px;
+  border-radius: 10px;
+  background: #fffdf5;
+  color: #080b10;
+  font-weight: 900;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.gamehub-feature-card > button:hover,
+.compact-channel-list button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 18px rgba(63, 162, 255, 0.28);
+}
+
+.compact-channel-list {
+  display: grid;
+  gap: 10px;
+  max-height: 164px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.compact-channel-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.62);
+  color: #eef7ff;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.compact-channel-list button span {
+  display: grid;
+  gap: 2px;
+}
+
+.compact-channel-list small {
+  color: #9fb5ca;
+}
+
+.rank-badge {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: #ffc74c;
+}
+
+.gamehub-browser {
+  display: grid;
+  gap: 18px;
+}
+
+.browser-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.browser-heading h2,
+.browser-heading p {
+  margin: 0;
+}
+
+.browser-heading p {
+  color: #9fb5ca;
+}
+
+.selected-channel-chip {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: #b9c9d8;
+}
+
+.discovery-card-expanded {
+  align-content: start;
+  min-height: 210px;
+}
+
+.discovery-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.card-meta-row i {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.09);
+  color: #cfe7f8;
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.interest-tracker {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border: 1px dashed rgba(117, 188, 224, 0.45);
+  border-radius: 14px;
+  background: rgba(5, 9, 15, 0.46);
+}
+
+.interest-tracker h3,
+.interest-tracker p {
+  margin: 0;
+}
+
+.interest-tracker p {
+  color: #9fb5ca;
+}
+
+.interest-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.interest-tags span {
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,0.08);
+  color: #dff6ff;
+  font-weight: 800;
+}
+
+@media (max-width: 1000px) {
+  .gamehub-top-panel,
+  .interest-tracker {
+    grid-template-columns: 1fr;
+  }
+
+  .browser-heading {
+    display: grid;
+  }
+}
