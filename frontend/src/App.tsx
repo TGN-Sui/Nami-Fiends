@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type ReactElement } from 'react';
+import { useMemo, useState, type CSSProperties, type ReactElement, useEffect } from 'react';
 
 import {
   channels,
@@ -641,117 +641,859 @@ function GameHub(props: {
   );
 }
 
+type ChannelBrandTheme = {
+  key: string;
+  label: string;
+  primary: string;
+  secondary: string;
+  glow: string;
+};
+
+const channelBrandThemes: ChannelBrandTheme[] = [
+  {
+    key: 'nami',
+    label: 'Nami Blue',
+    primary: '#75d7ff',
+    secondary: '#1f65ff',
+    glow: 'rgba(117, 215, 255, 0.2)'
+  },
+  {
+    key: 'fiends',
+    label: 'Fiends Red',
+    primary: '#ff3152',
+    secondary: '#a01c30',
+    glow: 'rgba(255, 49, 82, 0.2)'
+  },
+  {
+    key: 'ocean',
+    label: 'Ocean Mint',
+    primary: '#43f5a7',
+    secondary: '#0c7f65',
+    glow: 'rgba(67, 245, 167, 0.2)'
+  },
+  {
+    key: 'ember',
+    label: 'Ember Gold',
+    primary: '#ffb84d',
+    secondary: '#ff3152',
+    glow: 'rgba(255, 184, 77, 0.2)'
+  }
+];
+
+function getDefaultChannelBrandTheme(): ChannelBrandTheme {
+  return channelBrandThemes[0]!;
+}
+
+function getChannelBrandThemeByKey(key: string | null): ChannelBrandTheme {
+  return channelBrandThemes.find((theme) => theme.key === key) ?? getDefaultChannelBrandTheme();
+}
+
+function getStoredChannelBrandTheme(channelId: string): ChannelBrandTheme {
+  try {
+    return getChannelBrandThemeByKey(
+      window.localStorage.getItem('nami-profile-brand-theme-' + channelId)
+    );
+  } catch {
+    return getDefaultChannelBrandTheme();
+  }
+}
+
+function applyChannelBrandToDocument(theme: ChannelBrandTheme): void {
+  document.documentElement.style.setProperty('--active-channel-brand-primary', theme.primary);
+  document.documentElement.style.setProperty('--active-channel-brand-secondary', theme.secondary);
+  document.documentElement.style.setProperty('--active-channel-brand-glow', theme.glow);
+}
+
 function ChannelProfile(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
-  onOpenProfile: (channel: NamiChannel) => void;
+  onOpenProfile?: (channel: NamiChannel) => void;
 }): ReactElement {
+  const profileModuleDefaults = [
+    'Main Chat',
+    'Timeline',
+    'Guilds',
+    'Events',
+    'Patch Notes',
+    'Support',
+    'Esports',
+    'Gated Rooms'
+  ];
+
+  const profilePanelDefaults = [
+    'Channel Modules',
+    'Official Announcements',
+    'Official Links',
+    'Official Badges',
+    'Custom Badges',
+    'Profile Customization',
+    'Related Channels'
+  ];
+
+  const profileBrandThemes = [
+    {
+      key: 'nami',
+      label: 'Nami Blue',
+      primary: '#75d7ff',
+      secondary: '#1f65ff',
+      glow: 'rgba(117, 215, 255, 0.2)'
+    },
+    {
+      key: 'fiends',
+      label: 'Fiends Red',
+      primary: '#ff3152',
+      secondary: '#a01c30',
+      glow: 'rgba(255, 49, 82, 0.2)'
+    },
+    {
+      key: 'ocean',
+      label: 'Ocean Mint',
+      primary: '#43f5a7',
+      secondary: '#0c7f65',
+      glow: 'rgba(67, 245, 167, 0.2)'
+    },
+    {
+      key: 'ember',
+      label: 'Ember Gold',
+      primary: '#ffb84d',
+      secondary: '#ff3152',
+      glow: 'rgba(255, 184, 77, 0.2)'
+    }
+  ];
+
+  const [profileModules, setProfileModules] = useState(profileModuleDefaults);
+  const [profilePanels, setProfilePanels] = useState(profilePanelDefaults);
+  const [collapsedPanels, setCollapsedPanels] = useState<string[]>([]);
+  const [draggedModule, setDraggedModule] = useState<string | null>(null);
+  const [draggedPanel, setDraggedPanel] = useState<string | null>(null);
+  const defaultBrandTheme = profileBrandThemes[0]!;
+
+  const [brandKey, setBrandKey] = useState(defaultBrandTheme.key);
+  const [moduleOrderSaved, setModuleOrderSaved] = useState(false);
+  const [panelOrderSaved, setPanelOrderSaved] = useState(false);
+  const [collapsedPanelsSaved, setCollapsedPanelsSaved] = useState(false);
+  const [brandSaved, setBrandSaved] = useState(false);
+
+  const relatedChannels = channels
+    .filter((channel) => channel.id !== props.channel.id)
+    .slice(0, 4);
+
+  const officialBadgeIcons = [
+    { icon: '✓', label: 'Verified Channel' },
+    { icon: '◇', label: 'SuiNS Linked' },
+    { icon: 'N', label: 'Nami Approved' },
+    { icon: '!', label: 'Official Announcements' }
+  ];
+
+  const customBadgeIcons = [
+    { icon: 'L', label: 'Launch Crew' },
+    { icon: 'G', label: 'Guild Friendly' },
+    { icon: 'E', label: 'Event Host' },
+    { icon: '★', label: 'Creator Pick' }
+  ];
+
+  const verifiedLinks = [
+    {
+      icon: 'S',
+      label: 'SuiNS',
+      value: props.channel.handle + '.sui',
+      status: 'Verified'
+    },
+    {
+      icon: 'D',
+      label: 'Developer',
+      value: 'Owner proof linked',
+      status: 'Verified'
+    },
+    {
+      icon: 'W',
+      label: 'Website',
+      value: props.channel.name + ' profile hub',
+      status: 'Verified'
+    }
+  ];
+
+  const announcements = [
+    {
+      title: 'Official event board is live',
+      body: 'The latest community event banner, guild schedule, and reward notes are now available from this profile.',
+      tag: 'Official'
+    },
+    {
+      title: 'Patch notes synced',
+      body: 'Developer notes and support updates can be surfaced here without burying them inside main chat.',
+      tag: 'Update'
+    },
+    {
+      title: 'Custom banner slot available',
+      body: 'Higher-tier channel owners can rotate profile banners, frames, and featured modules.',
+      tag: 'Pro / Elite'
+    }
+  ];
+
+  const moduleStorageKey = 'nami-profile-module-order-' + props.channel.id;
+  const panelStorageKey = 'nami-profile-panel-order-' + props.channel.id;
+  const collapsedStorageKey = 'nami-profile-collapsed-panels-' + props.channel.id;
+  const brandStorageKey = 'nami-profile-brand-theme-' + props.channel.id;
+  const layoutSaved = moduleOrderSaved && panelOrderSaved && collapsedPanelsSaved && brandSaved;
+
+  const selectedBrandTheme =
+    profileBrandThemes.find((theme) => theme.key === brandKey) ?? defaultBrandTheme;
+
+  const profileBrandStyle = {
+    '--profile-brand-primary': selectedBrandTheme.primary,
+    '--profile-brand-secondary': selectedBrandTheme.secondary,
+    '--profile-brand-glow': selectedBrandTheme.glow
+  } as CSSProperties;
+
+  useEffect(() => {
+    applyChannelBrandToDocument(selectedBrandTheme);
+  }, [brandKey, selectedBrandTheme]);
+
+  const expandedPanels = profilePanels.filter((panelName) => {
+    return !collapsedPanels.includes(panelName);
+  });
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+
+    function loadSavedOrder(
+      savedValue: string | null,
+      defaultItems: string[]
+    ): {
+      items: string[];
+      saved: boolean;
+    } {
+      if (!savedValue) {
+        return {
+          items: [...defaultItems],
+          saved: false
+        };
+      }
+
+      try {
+        const parsedValue = JSON.parse(savedValue);
+
+        if (!Array.isArray(parsedValue)) {
+          return {
+            items: [...defaultItems],
+            saved: false
+          };
+        }
+
+        const validSavedItems = parsedValue.filter((item): item is string => {
+          return typeof item === 'string' && defaultItems.includes(item);
+        });
+
+        const missingItems = defaultItems.filter((item) => {
+          return !validSavedItems.includes(item);
+        });
+
+        return {
+          items: [...validSavedItems, ...missingItems],
+          saved: validSavedItems.length > 0
+        };
+      } catch {
+        return {
+          items: [...defaultItems],
+          saved: false
+        };
+      }
+    }
+
+    function loadCollapsedPanels(savedValue: string | null): {
+      items: string[];
+      saved: boolean;
+    } {
+      if (!savedValue) {
+        return {
+          items: [],
+          saved: false
+        };
+      }
+
+      try {
+        const parsedValue = JSON.parse(savedValue);
+
+        if (!Array.isArray(parsedValue)) {
+          return {
+            items: [],
+            saved: false
+          };
+        }
+
+        return {
+          items: parsedValue.filter((panelName): panelName is string => {
+            return typeof panelName === 'string' && profilePanelDefaults.includes(panelName);
+          }),
+          saved: true
+        };
+      } catch {
+        return {
+          items: [],
+          saved: false
+        };
+      }
+    }
+
+    const savedModules = loadSavedOrder(
+      window.localStorage.getItem(moduleStorageKey),
+      profileModuleDefaults
+    );
+
+    const savedPanels = loadSavedOrder(
+      window.localStorage.getItem(panelStorageKey),
+      profilePanelDefaults
+    );
+
+    const savedCollapsedPanels = loadCollapsedPanels(
+      window.localStorage.getItem(collapsedStorageKey)
+    );
+
+    const savedBrandKey = window.localStorage.getItem(brandStorageKey);
+    const savedBrandIsValid = profileBrandThemes.some((theme) => theme.key === savedBrandKey);
+
+    setProfileModules(savedModules.items);
+    setProfilePanels(savedPanels.items);
+    setCollapsedPanels(savedCollapsedPanels.items);
+    setBrandKey(savedBrandIsValid && savedBrandKey ? savedBrandKey : defaultBrandTheme.key);
+    setModuleOrderSaved(savedModules.saved);
+    setPanelOrderSaved(savedPanels.saved);
+    setCollapsedPanelsSaved(savedCollapsedPanels.saved);
+    setBrandSaved(savedBrandIsValid);
+  }, [moduleStorageKey, panelStorageKey, collapsedStorageKey, brandStorageKey, props.channel.id]);
+
+  function openModule(moduleName: string): void {
+    if (moduleName === 'Main Chat') {
+      props.onNavigate('chat');
+      return;
+    }
+
+    if (moduleName === 'Events') {
+      props.onNavigate('channelEvents');
+    }
+  }
+
+  function dropModule(targetModule: string): void {
+    const movingModule = draggedModule;
+
+    if (!movingModule || movingModule === targetModule) {
+      setDraggedModule(null);
+      return;
+    }
+
+    setProfileModules((currentModules) => {
+      const nextModules = currentModules.filter((moduleName) => moduleName !== movingModule);
+      const targetIndex = nextModules.indexOf(targetModule);
+
+      if (targetIndex === -1) {
+        return currentModules;
+      }
+
+      nextModules.splice(targetIndex, 0, movingModule);
+      return nextModules;
+    });
+
+    setDraggedModule(null);
+    setModuleOrderSaved(false);
+  }
+
+  function dropPanel(targetPanel: string): void {
+    const movingPanel = draggedPanel;
+
+    if (!movingPanel || movingPanel === targetPanel) {
+      setDraggedPanel(null);
+      return;
+    }
+
+    setProfilePanels((currentPanels) => {
+      const nextPanels = currentPanels.filter((panelName) => panelName !== movingPanel);
+      const targetIndex = nextPanels.indexOf(targetPanel);
+
+      if (targetIndex === -1) {
+        return currentPanels;
+      }
+
+      nextPanels.splice(targetIndex, 0, movingPanel);
+      return nextPanels;
+    });
+
+    setDraggedPanel(null);
+    setPanelOrderSaved(false);
+  }
+
+  function togglePanel(panelName: string): void {
+    setCollapsedPanels((currentPanels) => {
+      if (currentPanels.includes(panelName)) {
+        return currentPanels.filter((currentPanel) => currentPanel !== panelName);
+      }
+
+      return [...currentPanels, panelName];
+    });
+
+    setCollapsedPanelsSaved(false);
+  }
+
+  function saveProfileLayout(): void {
+    window.localStorage.setItem(moduleStorageKey, JSON.stringify(profileModules));
+    window.localStorage.setItem(panelStorageKey, JSON.stringify(profilePanels));
+    window.localStorage.setItem(collapsedStorageKey, JSON.stringify(collapsedPanels));
+    window.localStorage.setItem(brandStorageKey, brandKey);
+    setModuleOrderSaved(true);
+    setPanelOrderSaved(true);
+    setCollapsedPanelsSaved(true);
+    setBrandSaved(true);
+  }
+
+  function renderBadgeIcon(
+    badge: {
+      icon: string;
+      label: string;
+    },
+    badgeType: 'official' | 'custom'
+  ): ReactElement {
+    return (
+      <span
+        className={'profile-badge-icon profile-badge-icon-' + badgeType}
+        key={badge.label}
+        title={badge.label}
+      >
+        {badge.icon}
+      </span>
+    );
+  }
+
+  function renderOfficialLinkIcon(link: {
+    icon: string;
+    label: string;
+    value: string;
+    status: string;
+  }): ReactElement {
+    return (
+      <button
+        className="profile-link-icon"
+        key={link.label}
+        title={link.label + ': ' + link.value}
+        type="button"
+      >
+        <span>{link.icon}</span>
+        <small>{link.label}</small>
+      </button>
+    );
+  }
+
+  function renderProfilePanel(panelName: string): ReactElement | null {
+    if (panelName === 'Channel Modules') {
+      return (
+        <article className="panel profile-module-manager">
+          <div className="profile-panel-heading">
+            <h2>Channel Modules</h2>
+            <p>Drag module tiles to personalize this channel layout.</p>
+          </div>
+
+          <div className="profile-module-grid is-reorderable">
+            {profileModules.map((moduleName) => (
+              <div
+                className={
+                  'profile-module-tile' +
+                  (moduleName === draggedModule ? ' is-dragging-module' : '')
+                }
+                draggable
+                key={moduleName}
+                onDragEnd={() => setDraggedModule(null)}
+                onDragOver={(event) => event.preventDefault()}
+                onDragStart={() => setDraggedModule(moduleName)}
+                onDrop={() => dropModule(moduleName)}
+              >
+                <button
+                  className={
+                    moduleName === 'Main Chat'
+                      ? 'profile-module-main-button is-primary-module'
+                      : 'profile-module-main-button'
+                  }
+                  onClick={() => openModule(moduleName)}
+                  type="button"
+                >
+                  <span className="profile-module-title-line">
+                    <i className="module-dot-handle">⋮⋮</i>
+                    <strong>{moduleName}</strong>
+                  </span>
+
+                  <span>
+                    {moduleName === 'Main Chat'
+                      ? 'Open live room'
+                      : 'Module placeholder'}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Official Announcements') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Official Announcements</h2>
+            <p>Developer-owned updates remain separate from normal community chat.</p>
+          </div>
+
+          <div className="profile-announcement-stack">
+            {announcements.map((announcement) => (
+              <div className="announcement-card" key={announcement.title}>
+                <span>{announcement.tag}</span>
+                <strong>{announcement.title}</strong>
+                <p>{announcement.body}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Official Links') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Official Links</h2>
+            <p>Verified identity links displayed as clickable profile icons.</p>
+          </div>
+
+          <div className="verified-link-grid">
+            {verifiedLinks.map((link) => (
+              <button className="verified-link-card verified-link-button" key={link.label} type="button">
+                <span>{link.label}</span>
+                <strong>{link.value}</strong>
+                <i>{link.status}</i>
+              </button>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Official Badges') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Official Badges</h2>
+            <p>Nami-issued badges are locked and cannot be faked.</p>
+          </div>
+
+          <div className="profile-badge-icon-grid">
+            {officialBadgeIcons.map((badge) => (
+              <div className="profile-badge-detail-card" key={badge.label}>
+                {renderBadgeIcon(badge, 'official')}
+                <strong>{badge.label}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Custom Badges') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Custom Badges</h2>
+            <p>Cosmetic badge slots for community flavor.</p>
+          </div>
+
+          <div className="profile-badge-icon-grid">
+            {customBadgeIcons.map((badge) => (
+              <div className="profile-badge-detail-card" key={badge.label}>
+                {renderBadgeIcon(badge, 'custom')}
+                <strong>{badge.label}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Profile Customization') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Profile Customization</h2>
+            <p>Paid upgrades add cosmetic control, not verification.</p>
+          </div>
+
+          <div className="customization-control-grid">
+            <div className="locked-badge-card">
+              <strong>Profile Frame</strong>
+              <span>Pro / Elite</span>
+            </div>
+
+            <div className="locked-badge-card">
+              <strong>Banner Rotation</strong>
+              <span>Elite</span>
+            </div>
+
+            <div className="locked-badge-card">
+              <strong>Badge Layout</strong>
+              <span>Pro / Elite</span>
+            </div>
+          </div>
+        </article>
+      );
+    }
+
+    if (panelName === 'Related Channels') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Related Channels</h2>
+            <p>Same network, genre, or community overlap.</p>
+          </div>
+
+          <div className="related-channel-stack">
+            {relatedChannels.map((channel) => (
+              <button
+                className="related-channel-card"
+                key={channel.id}
+                onClick={() => props.onOpenProfile?.(channel)}
+                type="button"
+              >
+                <ChannelAvatar channel={channel} size="sm" />
+                <div>
+                  <strong>{channel.name}</strong>
+                  <span>{channel.genre}</span>
+                </div>
+                <i className={signalClass(channel.signal)}>{channel.signal}</i>
+              </button>
+            ))}
+          </div>
+        </article>
+      );
+    }
+
+    return null;
+  }
+
   return (
     <>
       <header className="page-title">
-        <p>Official community landing page</p>
+        <p>Contextual channel profile</p>
         <h1>Game Profile</h1>
       </header>
 
-      <FeaturedRail
-        title="Same Genre / Related Channels"
-        selectedChannel={props.channel}
-        onSelect={props.onOpenProfile}
-      />
-
-      <section className="channel-profile-buildout">
-        <aside className="profile-left-stack">
-          <ChannelInfoCard
-            channel={props.channel}
-            onSubscribe={() => props.onNavigate('subscriptions')}
-            onJoinChat={() => props.onNavigate('chat')}
-            onGetBanners={() => props.onNavigate('subscriptions')}
-          />
-
-          <article className="profile-panel verified-links-panel">
-            <div className="profile-panel-heading">
-              <h2>Verified Links</h2>
-              <p>Official destinations connected to this channel.</p>
-            </div>
-
-            <div className="verified-link-list">
-              {props.channel.verifiedLinks.map((link) => (
-                <button key={link.label} type="button">
-                  <strong>{link.label}</strong>
-                  <span>{link.verified ? 'Verified' : 'Pending verification'}</span>
-                </button>
-              ))}
-            </div>
-          </article>
-
-          <article className="profile-panel badge-zone">
-            <div className="profile-panel-heading">
-              <h2>Badges</h2>
-              <p>Official Nami badges are locked. Channel badges are customizable.</p>
-            </div>
-
-            <div className="badge-columns">
-              <div>
-                <h3>Official Nami</h3>
-                {props.channel.officialBadges.map((badge) => (
-                  <span className="profile-badge official-badge" key={badge}>
-                    {badge}
-                  </span>
-                ))}
-              </div>
-
-              <div>
-                <h3>Channel Custom</h3>
-                {props.channel.customBadges.map((badge) => (
-                  <span className="profile-badge custom-badge" key={badge}>
-                    {badge}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </article>
-        </aside>
-
-        <section className="profile-main-stack">
-          <article className="channel-hero-buildout">
-            <div>
-              <span className={'mini-badge signal-text-' + props.channel.signal.toLowerCase()}>
-                {props.channel.signal} Channel Signal
-              </span>
-              <h2>{props.channel.banner}</h2>
-              <p>
-                Customizable channel banner area for tone, featured art, event
-                campaigns, and Pro / Elite visual personalization.
-              </p>
-            </div>
-
+      <section className="channel-profile-page" style={profileBrandStyle}>
+        <article className="profile-hero-panel">
+          <div className="profile-hero-main">
             <ChannelAvatar channel={props.channel} size="lg" />
+
+            <div className="profile-hero-copy">
+              <div className="profile-signal-badge-row">
+                <span className={'profile-signal-chip ' + signalClass(props.channel.signal)}>
+                  <i />
+                  {props.channel.signal} Signal
+                </span>
+
+                <div className="profile-badge-icon-row" aria-label="Channel badge icons">
+                  {officialBadgeIcons.slice(0, 4).map((badge) => renderBadgeIcon(badge, 'official'))}
+                  {customBadgeIcons.slice(0, 2).map((badge) => renderBadgeIcon(badge, 'custom'))}
+                </div>
+              </div>
+
+              <h2>{props.channel.name}</h2>
+              <p>{props.channel.tagline}</p>
+
+              <div className="profile-meta-row">
+                <span>{props.channel.handle}</span>
+                <span>{props.channel.genre}</span>
+                <span>{props.channel.platforms.join(' / ')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-hero-actions">
+            <button className="primary-action" type="button">
+              Subscribe
+            </button>
+
+            <button
+              className="secondary-action"
+              onClick={() => props.onNavigate('chat')}
+              type="button"
+            >
+              Join Main Chat
+            </button>
+
+            <button className="secondary-action" type="button">
+              Get Banners
+            </button>
+          </div>
+        </article>
+
+        <section className="profile-stat-grid">
+          <article className="profile-stat-card">
+            <span>Subscribers</span>
+            <strong>{props.channel.subscribers.toLocaleString()}</strong>
           </article>
 
-          <article className="profile-panel official-announcements-buildout">
-            <div className="profile-panel-heading">
-              <h2>Official Announcements</h2>
-              <p>Verified posts from channel owners, developers, or approved moderators.</p>
+          <article className="profile-stat-card profile-link-stat-card">
+            <span>Official Links</span>
+            <div className="profile-link-icon-row">
+              {verifiedLinks.map((link) => renderOfficialLinkIcon(link))}
             </div>
+          </article>
 
-            <div className="announcement-list">
-              {props.channel.announcements.map((announcement, index) => (
-                <button key={announcement} type="button">
-                  <span>Announcement {index + 1}</span>
-                  <strong>{announcement}</strong>
+          <article className="profile-stat-card">
+            <span>Genre</span>
+            <strong>{props.channel.genre}</strong>
+          </article>
+
+          <article className="profile-stat-card">
+            <span>Platforms</span>
+            <strong>{props.channel.platforms.length}</strong>
+          </article>
+        </section>
+
+        <article className="panel game-banner-preview">
+          <div>
+            <span className="mini-badge">Customizable Banner</span>
+            <h2>{props.channel.name} Channel Banner</h2>
+            <p>
+              This area becomes the developer-controlled game/channel banner with paid
+              cosmetic slots, official artwork, and event callouts.
+            </p>
+          </div>
+
+          <div className="banner-badge-row">
+            <span>{props.channel.genre}</span>
+            <span>{props.channel.signal}</span>
+            <span>{props.channel.platforms[0] ?? 'Cross-platform'}</span>
+          </div>
+        </article>
+
+        <section className="profile-layout-control-panel">
+          <div>
+            <span className="mini-badge">Personalized UX Layout</span>
+            <h2>Profile Sections</h2>
+            <p>Drag section tabs to reposition panels. Collapse panels into tabs for a cleaner profile.</p>
+          </div>
+
+          <div className="profile-module-save-row">
+            <button
+              className="module-save-button"
+              onClick={saveProfileLayout}
+              type="button"
+            >
+              Save Page Layout
+            </button>
+            <span>{layoutSaved ? 'Saved' : 'Unsaved changes'}</span>
+          </div>
+        </section>
+
+        <section className="brand-control-panel">
+          <div>
+            <h2>Channel Brand Colors</h2>
+            <p>Channel owners can theme the profile surface with branded colors.</p>
+          </div>
+
+          <div className="brand-choice-row">
+            {profileBrandThemes.map((theme) => (
+              <button
+                className={theme.key === brandKey ? 'brand-choice is-selected-brand' : 'brand-choice'}
+                key={theme.key}
+                onClick={() => {
+                  setBrandKey(theme.key);
+                  window.localStorage.setItem(brandStorageKey, theme.key);
+                  applyChannelBrandToDocument(theme);
+                  setBrandSaved(true);
+                }}
+                style={{
+                  '--brand-primary': theme.primary,
+                  '--brand-secondary': theme.secondary
+                } as CSSProperties}
+                type="button"
+              >
+                <i />
+                <span>{theme.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="profile-panel-tab-tray">
+          {profilePanels.map((panelName) => {
+            const isCollapsed = collapsedPanels.includes(panelName);
+
+            return (
+              <div
+                className={
+                  'profile-panel-tab' +
+                  (isCollapsed ? ' is-collapsed-tab' : ' is-expanded-tab') +
+                  (panelName === draggedPanel ? ' is-dragging-panel-tab' : '')
+                }
+                draggable
+                key={panelName}
+                onDragEnd={() => setDraggedPanel(null)}
+                onDragOver={(event) => event.preventDefault()}
+                onDragStart={() => setDraggedPanel(panelName)}
+                onDrop={() => dropPanel(panelName)}
+              >
+                <i>⋮⋮</i>
+                <button onClick={() => togglePanel(panelName)} type="button">
+                  <strong>{panelName}</strong>
+                  <span>{isCollapsed ? 'Collapsed' : 'Expanded'}</span>
                 </button>
-              ))}
-            </div>
-          </article>
+              </div>
+            );
+          })}
+        </section>
 
-          <article className="profile-panel profile-module-panel">
-            <div className="profile-panel-heading">
-              <h2>Channel Sections</h2>
-              <p>Curated tabs and deeper spaces for this game or community.</p>
-            </div>
+        <section className={expandedPanels.length === 0 ? 'profile-panel-workspace is-empty-workspace' : 'profile-panel-workspace'}>
+          {expandedPanels.length === 0 && (
+            <article className="panel profile-empty-panel-note">
+              <h2>All panels collapsed</h2>
+              <p>Your profile sections are now acting like a repositionable tab list above.</p>
+            </article>
+          )}
 
-            <ModuleGrid channel={props.channel} onNavigate={props.onNavigate} />
-          </article>
+          {expandedPanels.map((panelName) => {
+            const panel = renderProfilePanel(panelName);
+
+            if (!panel) {
+              return null;
+            }
+
+            return (
+              <div
+                className={
+                  'profile-section-shell' +
+                  (panelName === draggedPanel ? ' is-dragging-panel' : '')
+                }
+                key={panelName}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => dropPanel(panelName)}
+              >
+                <div
+                  className="profile-section-drag-bar"
+                  draggable
+                  onDragEnd={() => setDraggedPanel(null)}
+                  onDragStart={() => setDraggedPanel(panelName)}
+                >
+                  <span>Section</span>
+                  <strong>{panelName}</strong>
+                  <button onClick={() => togglePanel(panelName)} type="button">
+                    Collapse
+                  </button>
+                  <i>⋮⋮</i>
+                </div>
+
+                {panel}
+              </div>
+            );
+          })}
         </section>
       </section>
     </>
@@ -761,13 +1503,21 @@ function ChannelProfile(props: {
 function GameChat(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
+  onOpenMember: (member: (typeof members)[number]) => void;
 }): ReactElement {
   const [hideNpc, setHideNpc] = useState(false);
   const [hideRed, setHideRed] = useState(false);
   const [proEliteOnly, setProEliteOnly] = useState(false);
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
-  const [chatTheme, setChatTheme] = useState<'default' | 'ocean' | 'ember'>('default');
+
+  const channelBrandTheme = useMemo(() => {
+    return getStoredChannelBrandTheme(props.channel.id);
+  }, [props.channel.id]);
+
+  useEffect(() => {
+    applyChannelBrandToDocument(channelBrandTheme);
+  }, [channelBrandTheme, props.channel.id]);
 
   const chatEligibleMembers = members.filter((member) => member.signal !== 'Black');
   const memberByName = new Map(chatEligibleMembers.map((member) => [member.name, member]));
@@ -809,7 +1559,12 @@ function GameChat(props: {
 
         <div className="chat-member-strip">
           {onlineMembers.map((member) => (
-            <button className="chat-member-card" key={member.id} type="button">
+            <button
+              className="chat-member-card"
+              key={member.id}
+              onClick={() => props.onOpenMember(member)}
+              type="button"
+            >
               <div className={'chat-member-avatar ' + signalClass(member.signal)}>
                 {member.name.slice(0, 2).toUpperCase()}
               </div>
@@ -819,7 +1574,12 @@ function GameChat(props: {
           ))}
 
           {offlineMembers.map((member) => (
-            <button className="chat-member-card is-offline" key={member.id} type="button">
+            <button
+              className="chat-member-card is-offline"
+              key={member.id}
+              onClick={() => props.onOpenMember(member)}
+              type="button"
+            >
               <div className={'chat-member-avatar ' + signalClass(member.signal)}>
                 {member.name.slice(0, 2).toUpperCase()}
               </div>
@@ -851,6 +1611,10 @@ function GameChat(props: {
                 if (tab === 'Profile') {
                   props.onNavigate('channelProfile');
                 }
+
+                if (tab === 'Events') {
+                  props.onNavigate('channelEvents');
+                }
               }}
               type="button"
             >
@@ -865,7 +1629,7 @@ function GameChat(props: {
             (customizationCollapsed ? ' is-customization-collapsed' : '')
           }
         >
-          <article className={'chat-window chat-window-buildout chat-theme-' + chatTheme}>
+          <article className="chat-window chat-window-buildout chat-theme-channel-brand">
             <div className="chat-window-heading">
               <div>
                 <h2>{props.channel.name} Main Chat</h2>
@@ -881,19 +1645,32 @@ function GameChat(props: {
               {visibleMessages.map((message) => {
                 const member = memberByName.get(message.author);
 
+                if (!member) {
+                  return null;
+                }
+
                 return (
                   <div className="chat-message-row" key={message.id}>
-                    <div className={'message-avatar ' + signalClass(message.signal)}>
+                    <button
+                      className={'message-avatar message-avatar-button ' + signalClass(message.signal)}
+                      onClick={() => props.onOpenMember(member)}
+                      type="button"
+                    >
                       {message.author.slice(0, 2).toUpperCase()}
-                    </div>
+                    </button>
 
                     <div className="message-bubble">
                       <div className="message-meta">
-                        <strong className={'signal-text-' + message.signal.toLowerCase()}>
+                        <button
+                          className={'message-author-button signal-text-' + message.signal.toLowerCase()}
+                          onClick={() => props.onOpenMember(member)}
+                          type="button"
+                        >
                           {message.author}
-                        </strong>
+                        </button>
+
                         <span>{message.time}</span>
-                        {member && <i>{member.tier}</i>}
+                        <i>{member.tier}</i>
                         <i>{message.signal}</i>
                       </div>
 
@@ -971,44 +1748,199 @@ function GameChat(props: {
               {!customizationCollapsed && (
                 <div className="chat-customization-body">
                   <div className="profile-panel-heading">
-                    <h2>Pro / Elite Controls</h2>
-                    <p>Cosmetic controls placeholder.</p>
+                    <h2>Inherited Channel Brand</h2>
+                    <p>Chat colors are controlled from the Game Profile brand settings.</p>
                   </div>
 
-                  <div className="theme-choice-grid">
-                    <button
-                      className={chatTheme === 'default' ? 'is-selected-theme' : ''}
-                      onClick={() => setChatTheme('default')}
-                      type="button"
-                    >
-                      Default
-                    </button>
-
-                    <button
-                      className={chatTheme === 'ocean' ? 'is-selected-theme' : ''}
-                      onClick={() => setChatTheme('ocean')}
-                      type="button"
-                    >
-                      Ocean
-                    </button>
-
-                    <button
-                      className={chatTheme === 'ember' ? 'is-selected-theme' : ''}
-                      onClick={() => setChatTheme('ember')}
-                      type="button"
-                    >
-                      Ember
-                    </button>
+                  <div className="chat-inherited-brand-card">
+                    <span
+                      style={{
+                        background:
+                          'linear-gradient(135deg, ' +
+                          channelBrandTheme.primary +
+                          ', ' +
+                          channelBrandTheme.secondary +
+                          ')'
+                      }}
+                    />
+                    <div>
+                      <strong>{channelBrandTheme.label}</strong>
+                      <small>Managed from Game Profile</small>
+                    </div>
                   </div>
 
                   <div className="customization-note">
-                    Fonts, text background, overlays, and animation intensity will live here.
+                    Pro / Elite controls for fonts, overlays, message skins, and animation
+                    intensity will live here. Color selection stays on the Game Profile.
                   </div>
                 </div>
               )}
             </section>
           </aside>
         </div>
+      </section>
+    </>
+  );
+}
+
+function MemberProfileScreen(props: {
+  member: (typeof members)[number];
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
+  const preferenceStorageKey = 'nami-member-preferences-' + props.member.id;
+  const [isMuted, setIsMuted] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+
+    try {
+      const savedPreference = window.localStorage.getItem(preferenceStorageKey);
+
+      if (!savedPreference) {
+        setIsMuted(false);
+        setIsBlocked(false);
+        return;
+      }
+
+      const parsedPreference = JSON.parse(savedPreference);
+
+      setIsMuted(Boolean(parsedPreference.muted));
+      setIsBlocked(Boolean(parsedPreference.blocked));
+    } catch {
+      setIsMuted(false);
+      setIsBlocked(false);
+    }
+  }, [preferenceStorageKey, props.member.id]);
+
+  function savePreference(nextMuted: boolean, nextBlocked: boolean): void {
+    setIsMuted(nextMuted);
+    setIsBlocked(nextBlocked);
+
+    window.localStorage.setItem(
+      preferenceStorageKey,
+      JSON.stringify({
+        muted: nextMuted,
+        blocked: nextBlocked
+      })
+    );
+  }
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Member profile and preference controls</p>
+        <h1>{props.member.name}</h1>
+      </header>
+
+      <section className="member-profile-page">
+        <article className="member-profile-hero panel">
+          <div className={'member-profile-avatar ' + signalClass(props.member.signal)}>
+            {props.member.name.slice(0, 2).toUpperCase()}
+          </div>
+
+          <div className="member-profile-copy">
+            <div className="profile-signal-badge-row">
+              <span className={'profile-signal-chip ' + signalClass(props.member.signal)}>
+                <i />
+                {props.member.signal} Signal
+              </span>
+
+              <span className="profile-badge-icon profile-badge-icon-custom" title={props.member.tier}>
+                {props.member.tier.slice(0, 1)}
+              </span>
+            </div>
+
+            <h2>{props.member.name}</h2>
+            <p>
+              Member profile preview for chat discovery, preference controls, and future
+              passport-driven reputation surfaces.
+            </p>
+
+            <div className="member-profile-meta-row">
+              <span>Tier</span>
+              <strong>{props.member.tier}</strong>
+              <span>Status</span>
+              <strong>{isBlocked ? 'Blocked' : isMuted ? 'Muted' : 'Open'}</strong>
+            </div>
+          </div>
+
+          <div className="member-profile-actions">
+            <button
+              className={isMuted ? 'preference-button is-muted-active' : 'preference-button'}
+              onClick={() => savePreference(!isMuted, isBlocked)}
+              type="button"
+            >
+              {isMuted ? 'Muted' : 'Mute'}
+            </button>
+
+            <button
+              className={isBlocked ? 'preference-button is-blocked-active' : 'preference-button danger-preference'}
+              onClick={() => savePreference(isMuted, !isBlocked)}
+              type="button"
+            >
+              {isBlocked ? 'Blocked' : 'Block'}
+            </button>
+
+            <button
+              className="secondary-action"
+              onClick={() => props.onNavigate('chat')}
+              type="button"
+            >
+              Back to Chat
+            </button>
+          </div>
+        </article>
+
+        <section className="member-profile-grid">
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Preference Notes</h2>
+              <p>Mute and Block are local user preference controls in this UI mock.</p>
+            </div>
+
+            <div className="preference-note-stack">
+              <div>
+                <strong>Mute</strong>
+                <span>Quiet this member’s messages and reduce future notifications.</span>
+              </div>
+
+              <div>
+                <strong>Block</strong>
+                <span>Prevent unwanted interaction from this member in future UX flows.</span>
+              </div>
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Shared Channels</h2>
+              <p>Communities where you may encounter this member.</p>
+            </div>
+
+            <div className="profile-subscription-mini-grid">
+              {channels.slice(0, 3).map((channel) => (
+                <button
+                  className="profile-mini-channel-card"
+                  key={channel.id}
+                  onClick={() => props.onNavigate('channelProfile')}
+                  type="button"
+                >
+                  <ChannelAvatar channel={channel} size="sm" />
+                  <div>
+                    <strong>{channel.name}</strong>
+                    <span>{channel.genre}</span>
+                  </div>
+                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
+                </button>
+              ))}
+            </div>
+          </article>
+        </section>
       </section>
     </>
   );
@@ -1261,76 +2193,174 @@ function Subscriptions(props: {
   );
 }
 
-function UserProfileScreen(): ReactElement {
+function UserProfileScreen(props: {
+  onOpenProfile?: (channel: NamiChannel) => void;
+  onNavigate?: (page: NamiPage) => void;
+} = {}): ReactElement {
+  const profileMember = members[0]!;
+  const mySubscriptions = channels.slice(0, 4);
+
+  const myGuilds = [
+    {
+      name: 'Wave Raiders',
+      role: 'Guild Ally',
+      signal: 'Green',
+      members: 128
+    },
+    {
+      name: 'Night Market PvP',
+      role: 'Event Squad',
+      signal: 'Orange',
+      members: 84
+    },
+    {
+      name: 'Creator Circle',
+      role: 'Cosmetic Crew',
+      signal: 'Green',
+      members: 42
+    }
+  ];
+
   return (
     <>
       <header className="page-title">
-        <p>Member identity and Passport</p>
+        <p>Member identity and passport</p>
         <h1>My Profile</h1>
       </header>
 
-      <section className="account-layout">
-        <article className="profile-panel user-profile-card">
-          <div className={'user-avatar-large ' + signalClass(userProfile.conductSignal)}>
-            {userProfile.displayName.slice(0, 2).toUpperCase()}
+      <section className="user-profile-page">
+        <article className="user-profile-card user-profile-card-expanded">
+          <div className={'user-avatar-large ' + signalClass(profileMember.signal)}>
+            {profileMember.name.slice(0, 2).toUpperCase()}
           </div>
 
           <div>
-            <div className="badge-row">
-              <span className={'mini-badge signal-text-' + userProfile.conductSignal.toLowerCase()}>
-                {userProfile.conductSignal}
+            <div className="profile-signal-badge-row">
+              <span className={'profile-signal-chip ' + signalClass(profileMember.signal)}>
+                <i />
+                {profileMember.signal}
               </span>
-              <span className="mini-badge">{userProfile.tier}</span>
-              <span className="mini-badge">{userProfile.reputation}</span>
+
+              <span className="profile-badge-icon profile-badge-icon-custom" title="Adventurer">
+                A
+              </span>
+
+              <span className="profile-badge-icon profile-badge-icon-custom" title="Gamester">
+                G
+              </span>
             </div>
 
-            <h2>{userProfile.displayName}</h2>
-            <p>{userProfile.bio}</p>
+            <h2>{profileMember.name}</h2>
+            <p>
+              Portable gamer identity powered by Sui. This is the user-owned profile area,
+              separate from channel/game profiles.
+            </p>
 
-            <dl>
-              <div>
-                <dt>Handle</dt>
-                <dd>{userProfile.handle}</dd>
-              </div>
-              <div>
-                <dt>Wallet</dt>
-                <dd>{userProfile.wallet}</dd>
-              </div>
-              <div>
-                <dt>Passport</dt>
-                <dd>{userProfile.passportId}</dd>
-              </div>
-              <div>
-                <dt>Level / XP</dt>
-                <dd>{userProfile.level} / {userProfile.xp}</dd>
-              </div>
-            </dl>
+            <div className="passport-detail-grid">
+              <span>Handle</span>
+              <strong>@npcgamer</strong>
+              <span>Wallet</span>
+              <strong>0xUSER</strong>
+              <span>Passport</span>
+              <strong>0xPASSPORT</strong>
+              <span>Level / XP</span>
+              <strong>18 / 1840</strong>
+            </div>
           </div>
         </article>
 
-        <article className="profile-panel">
-          <div className="profile-panel-heading">
-            <h2>My Badges</h2>
-            <p>Owned user badges from Passport progression and community activity.</p>
-          </div>
-          <div className="interest-tags">
-            {userProfile.ownedBadges.map((badge) => (
-              <span key={badge}>{badge}</span>
-            ))}
-          </div>
-        </article>
+        <section className="profile-quick-grid">
+          <article className="panel profile-embedded-card">
+            <div className="profile-panel-heading">
+              <h2>My Subscriptions</h2>
+              <p>Your subscribed channels now live inside your profile hub.</p>
+            </div>
 
-        <article className="profile-panel">
-          <div className="profile-panel-heading">
-            <h2>Titles & Cosmetics</h2>
-            <p>Equipped identity visuals, titles, frames, and premium personalization.</p>
-          </div>
-          <div className="interest-tags">
-            {userProfile.titles.concat(userProfile.cosmetics).map((item) => (
-              <span key={item}>{item}</span>
-            ))}
-          </div>
-        </article>
+            <div className="profile-subscription-mini-grid">
+              {mySubscriptions.map((channel) => (
+                <button
+                  className="profile-mini-channel-card"
+                  key={channel.id}
+                  onClick={() => props.onOpenProfile?.(channel)}
+                  type="button"
+                >
+                  <ChannelAvatar channel={channel} size="sm" />
+                  <div>
+                    <strong>{channel.name}</strong>
+                    <span>{channel.genre}</span>
+                  </div>
+                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="profile-secondary-link"
+              onClick={() => props.onNavigate?.('subscriptions')}
+              type="button"
+            >
+              Open full subscription manager
+            </button>
+          </article>
+
+          <article className="panel profile-embedded-card">
+            <div className="profile-panel-heading">
+              <h2>My Guilds</h2>
+              <p>Guild memberships and social groups connected to your passport.</p>
+            </div>
+
+            <div className="profile-guild-mini-grid">
+              {myGuilds.map((guild) => (
+                <button className="profile-mini-guild-card" key={guild.name} type="button">
+                  <span className={'legend-dot ' + signalClass(guild.signal as NamiChannel['signal'])} />
+                  <div>
+                    <strong>{guild.name}</strong>
+                    <small>{guild.role} · {guild.members} members</small>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="profile-secondary-link"
+              onClick={() => props.onNavigate?.('guilds')}
+              type="button"
+            >
+              Open full guild manager
+            </button>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>My Badges</h2>
+              <p>Owned user badges from Passport progression and community activity.</p>
+            </div>
+
+            <div className="profile-badge-icon-row">
+              {['Q', 'C', 'V', 'G', 'F'].map((badge) => (
+                <span className="profile-badge-icon profile-badge-icon-official" key={badge}>
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="profile-panel-heading">
+              <h2>Titles & Cosmetics</h2>
+              <p>Equipped identity visuals, titles, frames, and premium personalization.</p>
+            </div>
+
+            <div className="subscription-feature-list">
+              <span>Gamester</span>
+              <span>Goblin</span>
+              <span>Guild Ally</span>
+              <span>Genesis Frame</span>
+              <span>Wave Passport Theme</span>
+              <span>Signal Ring</span>
+            </div>
+          </article>
+        </section>
       </section>
     </>
   );
@@ -1391,6 +2421,118 @@ function MessagesScreen(): ReactElement {
             </span>
           </article>
         ))}
+      </section>
+    </>
+  );
+}
+
+function ChannelEventsScreen(props: {
+  channel: NamiChannel;
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
+  const channelBrandTheme = useMemo(() => {
+    return getStoredChannelBrandTheme(props.channel.id);
+  }, [props.channel.id]);
+
+  useEffect(() => {
+    applyChannelBrandToDocument(channelBrandTheme);
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [channelBrandTheme, props.channel.id]);
+
+  const gameEvents = [
+    {
+      title: props.channel.name + ' Launch Tournament',
+      status: 'Registration open',
+      date: 'Tonight · 8:00 PM',
+      type: 'Competitive',
+      seats: '42/64'
+    },
+    {
+      title: 'Guild Recruitment Night',
+      status: 'Live lobby',
+      date: 'Tomorrow · 7:30 PM',
+      type: 'Social',
+      seats: '18/40'
+    },
+    {
+      title: 'Developer AMA',
+      status: 'Official',
+      date: 'Friday · 6:00 PM',
+      type: 'Announcement',
+      seats: 'Unlimited'
+    },
+    {
+      title: 'Patch Notes Watch Party',
+      status: 'Scheduled',
+      date: 'Saturday · 4:00 PM',
+      type: 'Community',
+      seats: '26/100'
+    }
+  ];
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Selected game events</p>
+        <h1>{props.channel.name} Events</h1>
+      </header>
+
+      <section className="channel-events-page channel-subsection-surface">
+        <article className="channel-events-hero panel">
+          <div className="chat-presence-channel">
+            <ChannelAvatar channel={props.channel} size="lg" />
+            <div>
+              <span className="mini-badge">Channel Events</span>
+              <h2>{props.channel.name}</h2>
+              <p>
+                Events shown here belong to this selected game/channel, not your account-level
+                My Events page.
+              </p>
+            </div>
+          </div>
+
+          <div className="profile-hero-actions">
+            <button
+              className="secondary-action"
+              onClick={() => props.onNavigate('channelProfile')}
+              type="button"
+            >
+              Back to Game Profile
+            </button>
+
+            <button
+              className="primary-action"
+              onClick={() => props.onNavigate('chat')}
+              type="button"
+            >
+              Open Main Chat
+            </button>
+          </div>
+        </article>
+
+        <section className="channel-event-grid">
+          {gameEvents.map((event) => (
+            <article className="channel-event-card panel" key={event.title}>
+              <div>
+                <span className="mini-badge">{event.type}</span>
+                <h2>{event.title}</h2>
+                <p>{event.date}</p>
+              </div>
+
+              <div className="channel-event-meta-row">
+                <span>{event.status}</span>
+                <strong>{event.seats}</strong>
+              </div>
+
+              <button type="button">View Event</button>
+            </article>
+          ))}
+        </section>
       </section>
     </>
   );
@@ -1500,7 +2642,6 @@ export function App(): ReactElement {
   const [activePage, setActivePage] = useState<NamiPage>('hub');
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
     const defaultChannel = channels[0];
-
     if (!defaultChannel) {
       throw new Error('Nami mock channels must include at least one channel.');
     }
@@ -1554,11 +2695,36 @@ export function App(): ReactElement {
     }
 
     if (activePage === 'chat') {
-      return <GameChat channel={selectedChannel} onNavigate={setActivePage} />;
-    }
+    return <GameChat
+        channel={selectedChannel}
+        onNavigate={setActivePage}
+        onOpenMember={(member) => {
+          window.localStorage.setItem('nami-selected-member-id', member.id);
+          setActivePage('memberProfile');
+        }}
+      />;
+  }
 
-    if (activePage === 'userProfile') {
-      return <UserProfileScreen />;
+  if (activePage === 'channelEvents') {
+    return <ChannelEventsScreen channel={selectedChannel} onNavigate={setActivePage} />;
+  }
+
+  if (activePage === 'memberProfile') {
+    return <MemberProfileScreen
+      member={
+        members.find((member) => {
+          return member.id === window.localStorage.getItem('nami-selected-member-id');
+        }) ?? members[0]!
+      }
+      onNavigate={setActivePage}
+    />;
+  }
+
+if (activePage === 'userProfile') {
+      return <UserProfileScreen
+          onOpenProfile={openChannelProfile}
+          onNavigate={setActivePage}
+        />;
     }
 
     if (activePage === 'guilds') {

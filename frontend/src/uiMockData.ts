@@ -7,6 +7,8 @@ export type NamiPage =
   | 'userProfile'
   | 'channelProfile'
   | 'chat'
+  | 'channelEvents'
+  | 'memberProfile'
   | 'guilds'
   | 'messages'
   | 'events'
@@ -298,9 +300,7 @@ export const navItems: Array<{
   shortLabel: string;
 }> = [
   { page: 'hub', label: 'Nami Hub', shortLabel: 'Hub' },
-  { page: 'subscriptions', label: 'My Subscriptions', shortLabel: 'Subs' },
   { page: 'userProfile', label: 'My Profile', shortLabel: 'Profile' },
-  { page: 'guilds', label: 'My Guilds', shortLabel: 'Guilds' },
   { page: 'messages', label: 'Messages', shortLabel: 'Messages' },
   { page: 'events', label: 'My Events', shortLabel: 'Events' },
   { page: 'settings', label: 'Settings', shortLabel: 'Settings' }
