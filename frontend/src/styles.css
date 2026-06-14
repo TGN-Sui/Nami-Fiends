@@ -832,3 +832,645 @@ dd {
     display: grid;
   }
 }
+
+.channel-profile-buildout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+}
+
+.profile-left-stack,
+.profile-main-stack {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.profile-panel {
+  padding: 20px;
+  border: 1px solid rgba(31, 101, 255, 0.75);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)),
+    rgba(22, 25, 42, 0.88);
+  box-shadow: 0 0 24px rgba(16, 86, 255, 0.12);
+}
+
+.profile-panel-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.profile-panel-heading h2,
+.profile-panel-heading p {
+  margin: 0;
+}
+
+.profile-panel-heading p {
+  color: #9fb5ca;
+}
+
+.verified-link-list,
+.announcement-list {
+  display: grid;
+  gap: 10px;
+}
+
+.verified-link-list button,
+.announcement-list button {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.62);
+  color: #eef7ff;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.verified-link-list button:hover,
+.announcement-list button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 18px rgba(63, 162, 255, 0.28);
+}
+
+.verified-link-list span,
+.announcement-list span {
+  color: #75bce0;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.badge-columns {
+  display: grid;
+  gap: 18px;
+}
+
+.badge-columns h3 {
+  margin: 0 0 10px;
+  color: #ffc74c;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.profile-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  margin: 0 8px 8px 0;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.official-badge {
+  background: rgba(255, 199, 76, 0.14);
+  color: #ffc74c;
+  border: 1px solid rgba(255, 199, 76, 0.34);
+}
+
+.custom-badge {
+  background: rgba(67, 245, 167, 0.12);
+  color: #43f5a7;
+  border: 1px solid rgba(67, 245, 167, 0.28);
+}
+
+.channel-hero-buildout {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  min-height: 220px;
+  padding: 24px;
+  border: 1px solid rgba(67, 245, 167, 0.58);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 245, 167, 0.18), transparent 18rem),
+    linear-gradient(135deg, rgba(255,0,95,0.18), rgba(0,255,179,0.12)),
+    #111827;
+}
+
+.channel-hero-buildout h2 {
+  margin: 14px 0 8px;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+}
+
+.channel-hero-buildout p {
+  max-width: 620px;
+  margin: 0;
+  color: #b9c9d8;
+  line-height: 1.6;
+}
+
+.official-announcements-buildout {
+  border-color: rgba(255, 199, 76, 0.58);
+}
+
+.profile-module-panel {
+  border-color: rgba(117, 188, 224, 0.58);
+}
+
+@media (max-width: 1000px) {
+  .channel-profile-buildout {
+    grid-template-columns: 1fr;
+  }
+
+  .channel-hero-buildout {
+    display: grid;
+  }
+}
+
+.account-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.user-profile-card {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.user-avatar-large {
+  display: grid;
+  width: 138px;
+  height: 138px;
+  place-items: center;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.account-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 190px;
+}
+
+.account-card h2,
+.account-card p {
+  margin: 0;
+}
+
+.account-card p {
+  color: #9fb5ca;
+}
+
+@media (max-width: 760px) {
+  .user-profile-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* UI-A4 fix: account nav needs more room than the early mock sidebar */
+.sidebar {
+  width: 176px;
+  padding: 14px;
+}
+
+.sidebar.is-collapsed {
+  width: 76px;
+}
+
+.sidebar-brand,
+.sidebar-nav button,
+.sidebar-toggle {
+  width: 100%;
+}
+
+.sidebar-nav button {
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar.is-collapsed .sidebar-nav button {
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar.is-collapsed .sidebar-brand {
+  display: grid;
+  place-items: center;
+}
+
+.sidebar.is-collapsed .diamond-mark {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 82px;
+  }
+
+  .sidebar.is-collapsed {
+    width: 76px;
+  }
+
+  .sidebar-nav button {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+/* UI-A4 polish: unify account-page buttons and sidebar nav icons */
+.sidebar-nav button {
+  border: 1px solid transparent;
+}
+
+.sidebar-nav button .nav-icon {
+  background: rgba(117, 188, 224, 0.12);
+  color: #75d7ff;
+  box-shadow: inset 0 0 0 1px rgba(117, 188, 224, 0.08);
+}
+
+.sidebar-nav button.is-active {
+  border-color: rgba(255, 255, 255, 0.82);
+  background: rgba(160, 28, 48, 0.88);
+  color: #ffffff;
+}
+
+.sidebar-nav button.is-active .nav-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.account-card .add-module-button,
+.settings-action-button,
+.account-card button {
+  min-height: 42px;
+  width: 100%;
+  margin-top: auto;
+  border: 1px solid rgba(117, 188, 224, 0.38);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(117, 188, 224, 0.14), rgba(31, 101, 255, 0.08)),
+    rgba(5, 9, 15, 0.68);
+  color: #dff6ff;
+  font-weight: 900;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.account-card .add-module-button:hover,
+.account-card button:hover {
+  transform: scale(1.02);
+  border-color: rgba(117, 188, 224, 0.78);
+  background:
+    linear-gradient(135deg, rgba(117, 188, 224, 0.2), rgba(31, 101, 255, 0.14)),
+    rgba(5, 9, 15, 0.78);
+  box-shadow: 0 0 18px rgba(63, 162, 255, 0.24);
+}
+
+.account-card .channel-avatar {
+  box-shadow: none;
+}
+
+.account-card .mini-badge {
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  background: rgba(117, 188, 224, 0.08);
+}
+
+.account-grid .profile-panel {
+  border-color: rgba(31, 101, 255, 0.72);
+}
+
+.account-grid .profile-panel:hover {
+  box-shadow: 0 0 24px rgba(63, 162, 255, 0.16);
+}
+
+/* UI-A4 full page replacement polish: fixed cards for Guilds / Events / Settings */
+.uniform-card-grid {
+  align-items: stretch;
+}
+
+.fixed-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 228px;
+  padding: 20px;
+}
+
+.fixed-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fixed-card-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.fixed-card-copy h2,
+.fixed-card-copy p {
+  margin: 0;
+}
+
+.fixed-card-copy h2 {
+  line-height: 1.08;
+}
+
+.fixed-card-copy p {
+  color: #9fc8f8;
+  line-height: 1.35;
+}
+
+.fixed-card-footer {
+  display: grid;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.fixed-card-footer button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(117, 188, 224, 0.42);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(117, 188, 224, 0.14), rgba(31, 101, 255, 0.08)),
+    rgba(5, 9, 15, 0.76);
+  color: #eef7ff;
+  font-weight: 900;
+}
+
+.fixed-card-footer button:hover {
+  transform: scale(1.02);
+  border-color: rgba(117, 188, 224, 0.82);
+  box-shadow: 0 0 18px rgba(63, 162, 255, 0.24);
+}
+
+.guild-card-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 3px solid currentColor;
+  border-radius: 14px;
+  background: rgba(5, 9, 15, 0.42);
+  font-weight: 900;
+}
+
+.guild-icon-green {
+  color: #43f5a7;
+}
+
+.guild-icon-orange {
+  color: #ffab3d;
+}
+
+.guild-icon-red {
+  color: #ff3152;
+}
+
+.guild-icon-black {
+  color: #9b9ba5;
+}
+
+.guild-signal-pill {
+  display: flex;
+  width: 100%;
+  min-height: 26px;
+  align-items: center;
+  border: 1px solid rgba(117, 188, 224, 0.28);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: rgba(117, 188, 224, 0.08);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.guild-signal-green {
+  color: #43f5a7;
+}
+
+.guild-signal-orange {
+  color: #ffab3d;
+}
+
+.guild-signal-red {
+  color: #ff3152;
+}
+
+.guild-signal-black {
+  color: #9b9ba5;
+}
+
+.event-card,
+.settings-card,
+.guild-card {
+  justify-content: stretch;
+}
+
+/* UI polish: cursor-reactive Top Communities bubbles */
+.bubble-field {
+  position: relative;
+  display: block;
+  min-height: 310px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(31, 101, 255, 0.13), transparent 18rem),
+    rgba(5, 9, 15, 0.36);
+}
+
+.bubble-field::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 14px;
+  background-image:
+    linear-gradient(rgba(117, 188, 224, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 188, 224, 0.05) 1px, transparent 1px);
+  background-size: 34px 34px;
+  pointer-events: none;
+}
+
+.interactive-bubble {
+  position: absolute;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.2), transparent 28%),
+    radial-gradient(circle at center, rgba(117, 188, 224, 0.16), rgba(5, 9, 15, 0.86));
+  color: #dff6ff;
+  text-align: center;
+  transition:
+    transform 90ms ease-out,
+    box-shadow 90ms ease-out,
+    filter 120ms ease,
+    border-color 120ms ease;
+  will-change: transform;
+}
+
+.interactive-bubble strong {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.interactive-bubble span {
+  max-width: 86%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.interactive-bubble small {
+  color: rgba(223, 246, 255, 0.72);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.interactive-bubble:hover {
+  filter: brightness(1.18);
+  border-color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-bubble {
+    transition: none;
+  }
+}
+
+/* UI-A4 bubble refinement: full-width smoother Top 50 community map */
+.dashboard-grid-compact {
+  grid-template-columns: 1fr 0.75fr;
+}
+
+.bubble-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.bubble-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.bubble-panel-heading h2,
+.bubble-panel-heading p {
+  margin: 0;
+}
+
+.bubble-panel-heading p {
+  color: #9fb5ca;
+}
+
+.bubble-field-wide {
+  min-height: 560px;
+}
+
+.interactive-bubble {
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 180ms ease,
+    border-color 180ms ease;
+}
+
+.interactive-bubble strong {
+  font-size: clamp(0.74rem, 1.2vw, 1rem);
+}
+
+.interactive-bubble span {
+  font-size: clamp(0.56rem, 0.9vw, 0.72rem);
+}
+
+.interactive-bubble small {
+  font-size: clamp(0.48rem, 0.75vw, 0.62rem);
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .bubble-field-wide {
+    min-height: 680px;
+  }
+
+  .bubble-panel-heading {
+    display: grid;
+  }
+}
+
+/* UI-A4 bubble refinement: smoother randomized ranked bubble map */
+.interactive-bubble {
+  transition:
+    transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 380ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 220ms ease,
+    border-color 220ms ease;
+}
+
+.bubble-field-wide {
+  min-height: 620px;
+}
+
+/* UI-A4 bubble refinement: wider radius needs slightly slower easing */
+.interactive-bubble {
+  transition:
+    transform 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 240ms ease,
+    border-color 240ms ease;
+}
+
+/* UI-A4 bubble refinement: stronger curved zoom response */
+.interactive-bubble {
+  transition:
+    transform 520ms cubic-bezier(0.18, 1.25, 0.28, 1),
+    box-shadow 520ms cubic-bezier(0.18, 1.25, 0.28, 1),
+    filter 260ms ease,
+    border-color 260ms ease;
+}
+
+/* UI-A4 bubble physics: collision movement needs slightly softer settling */
+.interactive-bubble {
+  transition:
+    left 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    top 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 560ms cubic-bezier(0.18, 1.18, 0.28, 1),
+    box-shadow 560ms cubic-bezier(0.18, 1.18, 0.28, 1),
+    filter 260ms ease,
+    border-color 260ms ease;
+}
+
+/* UI-A4 bubble physics: keep bubbles feeling clickable */
+.interactive-bubble {
+  cursor: pointer;
+}

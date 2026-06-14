@@ -4,12 +4,22 @@ export type NamiPage =
   | 'hub'
   | 'gamehub'
   | 'subscriptions'
-  | 'profile'
-  | 'chat';
+  | 'userProfile'
+  | 'channelProfile'
+  | 'chat'
+  | 'guilds'
+  | 'messages'
+  | 'events'
+  | 'settings';
 
 export type ChannelModule = {
   label: string;
   description: string;
+};
+
+export type VerifiedLink = {
+  label: string;
+  verified: boolean;
 };
 
 export type NamiChannel = {
@@ -27,6 +37,27 @@ export type NamiChannel = {
   banner: string;
   theme: string;
   modules: ChannelModule[];
+  officialBadges: string[];
+  customBadges: string[];
+  verifiedLinks: VerifiedLink[];
+  announcements: string[];
+};
+
+export type UserProfile = {
+  displayName: string;
+  handle: string;
+  wallet: string;
+  passportId: string;
+  tier: 'NPC' | 'Adventurer' | 'Pro' | 'Elite';
+  level: number;
+  xp: number;
+  reputation: string;
+  conductSignal: ConductSignal;
+  bio: string;
+  favoritePlatforms: string[];
+  ownedBadges: string[];
+  titles: string[];
+  cosmetics: string[];
 };
 
 export type NamiMember = {
@@ -45,6 +76,19 @@ export type ChatMessage = {
   body: string;
 };
 
+const defaultModules: ChannelModule[] = [
+  { label: 'Game Chat', description: 'Main live community chat.' },
+  { label: 'Timeline', description: 'Official posts and community updates.' },
+  { label: 'Guilds', description: 'Guilds created inside this channel.' },
+  { label: 'Events', description: 'Upcoming events and tournaments.' },
+  { label: 'Esports', description: 'Competitive channel space.' },
+  { label: 'Party Chats', description: 'Find squads and party members.' },
+  { label: 'Patch Notes', description: 'Official change logs and notes.' },
+  { label: 'Support', description: 'Support links and help channels.' },
+  { label: 'Badges', description: 'Channel badge progression.' },
+  { label: 'Badge Gated', description: 'Badge-gated channel areas.' }
+];
+
 export const channels: NamiChannel[] = [
   {
     id: 'fiends',
@@ -60,17 +104,18 @@ export const channels: NamiChannel[] = [
     tagline: 'Discuss, vibe, and game out with the rest of the squad.',
     banner: 'Official cyber alley banner',
     theme: 'crimson',
-    modules: [
-      { label: 'Game Chat', description: 'Main live community chat.' },
-      { label: 'Timeline', description: 'Official posts and community updates.' },
-      { label: 'Guilds', description: 'Guilds created inside this channel.' },
-      { label: 'Events', description: 'Upcoming events and tournaments.' },
-      { label: 'Esports', description: 'Competitive channel space.' },
-      { label: 'Party Chats', description: 'Find squads and party members.' },
-      { label: 'Patch Notes', description: 'Official change logs and notes.' },
-      { label: 'Support', description: 'Support links and help channels.' },
-      { label: 'Badges', description: 'Channel badge progression.' },
-      { label: 'Badge Gated', description: 'Badge-gated channel areas.' }
+    modules: defaultModules,
+    officialBadges: ['Verified Channel', '1 Year Channel', 'Top 10 Channel'],
+    customBadges: ['Founder Room', 'Guild Ally', 'Event Regular'],
+    verifiedLinks: [
+      { label: 'Official Website', verified: true },
+      { label: 'X / Social', verified: true },
+      { label: 'Discord Mirror', verified: true }
+    ],
+    announcements: [
+      'Official event banner is live for this weekend.',
+      'Guild recruitment window opens Friday.',
+      'New badge-gated chat areas are being prepared.'
     ]
   },
   {
@@ -87,7 +132,18 @@ export const channels: NamiChannel[] = [
     tagline: 'Serious co-op crews, friendly strategy, and raids.',
     banner: 'Ocean raid banner',
     theme: 'blue',
-    modules: []
+    modules: defaultModules,
+    officialBadges: ['Verified Channel', 'Raid Partner'],
+    customBadges: ['Deep Diver', 'Squad Captain', 'Loot Runner'],
+    verifiedLinks: [
+      { label: 'Official Website', verified: true },
+      { label: 'Raid Calendar', verified: true }
+    ],
+    announcements: [
+      'Raid schedule updated for the next cycle.',
+      'New orange-signal strategy rooms are available.',
+      'Support tickets now route through the channel support tab.'
+    ]
   },
   {
     id: 'pawtato',
@@ -103,7 +159,18 @@ export const channels: NamiChannel[] = [
     tagline: 'Casual community for cozy players and collectors.',
     banner: 'Cozy forest banner',
     theme: 'green',
-    modules: []
+    modules: defaultModules,
+    officialBadges: ['Community Favorite'],
+    customBadges: ['Collector', 'Cozy Crew', 'Garden Friend'],
+    verifiedLinks: [
+      { label: 'Community Page', verified: false },
+      { label: 'Event Board', verified: false }
+    ],
+    announcements: [
+      'Cozy night starts Saturday.',
+      'Collector badge submissions are open.',
+      'New player welcome thread is pinned.'
+    ]
   },
   {
     id: 'retro',
@@ -119,7 +186,18 @@ export const channels: NamiChannel[] = [
     tagline: 'High-intensity retro PvP and arcade events.',
     banner: 'Neon arcade banner',
     theme: 'violet',
-    modules: []
+    modules: defaultModules,
+    officialBadges: ['PvP Arena'],
+    customBadges: ['Combo Master', 'Arena Regular', 'Boss Rush'],
+    verifiedLinks: [
+      { label: 'Tournament Board', verified: false },
+      { label: 'Match Rules', verified: false }
+    ],
+    announcements: [
+      'PvP bracket opens tonight.',
+      'Red-signal rooms are high intensity by default.',
+      'Arena badge rewards rotate weekly.'
+    ]
   },
   {
     id: 'pebble',
@@ -135,9 +213,38 @@ export const channels: NamiChannel[] = [
     tagline: 'Builder community with verified creative channels.',
     banner: 'Builder wave banner',
     theme: 'teal',
-    modules: []
+    modules: defaultModules,
+    officialBadges: ['Verified Channel', 'Partner Channel', 'Builder Hub'],
+    customBadges: ['Creator', 'Module Maker', 'Early Builder'],
+    verifiedLinks: [
+      { label: 'Official Website', verified: true },
+      { label: 'Builder Docs', verified: true },
+      { label: 'Social Updates', verified: true }
+    ],
+    announcements: [
+      'Builder showcase submissions are open.',
+      'Partner spotlight starts next week.',
+      'Creative guilds can now request featured placement.'
+    ]
   }
 ];
+
+export const userProfile: UserProfile = {
+  displayName: 'NPC Gamer',
+  handle: '@npcgamer',
+  wallet: '0xUSER',
+  passportId: '0xPASSPORT',
+  tier: 'Adventurer',
+  level: 18,
+  xp: 1840,
+  reputation: 'Gamester',
+  conductSignal: 'Green',
+  bio: 'Portable gamer identity powered by Sui. This is the user-owned profile area, separate from channel/game profiles.',
+  favoritePlatforms: ['PC', 'Sui', 'Console'],
+  ownedBadges: ['First Quest', 'Community Event', 'Verified Completion'],
+  titles: ['Gamester', 'Goblin', 'Guild Ally'],
+  cosmetics: ['Genesis Frame', 'Wave Passport Theme', 'Signal Ring']
+};
 
 export const members: NamiMember[] = [
   { id: 'm1', name: 'Nozomi', signal: 'Green', tier: 'Pro', badge: 'Top Helper' },
@@ -185,5 +292,9 @@ export const navItems: Array<{
 }> = [
   { page: 'hub', label: 'Nami Hub', shortLabel: 'Hub' },
   { page: 'subscriptions', label: 'My Subscriptions', shortLabel: 'Subs' },
-  { page: 'profile', label: 'Game Profile', shortLabel: 'Profile' }
+  { page: 'userProfile', label: 'My Profile', shortLabel: 'Profile' },
+  { page: 'guilds', label: 'My Guilds', shortLabel: 'Guilds' },
+  { page: 'messages', label: 'Messages', shortLabel: 'Messages' },
+  { page: 'events', label: 'My Events', shortLabel: 'Events' },
+  { page: 'settings', label: 'Settings', shortLabel: 'Settings' }
 ];
