@@ -258,7 +258,7 @@ export const chatMessages: ChatMessage[] = [
   {
     id: 'c1',
     time: '02:22',
-    author: 'Slowdown',
+    author: 'Nozomi',
     signal: 'Green',
     body: 'Looking for members for tonight’s guild run.'
   },
@@ -279,6 +279,13 @@ export const chatMessages: ChatMessage[] = [
   {
     id: 'c4',
     time: '02:25',
+    author: 'PebbleFan',
+    signal: 'Green',
+    body: 'NPC check-in. I am here for the cozy event board.'
+  },
+  {
+    id: 'c5',
+    time: '02:27',
     author: 'Nozomi',
     signal: 'Green',
     body: 'Official event banner just dropped. Check announcements.'

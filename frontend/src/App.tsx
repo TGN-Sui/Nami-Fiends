@@ -764,11 +764,29 @@ function GameChat(props: {
 }): ReactElement {
   const [hideNpc, setHideNpc] = useState(false);
   const [hideRed, setHideRed] = useState(false);
+  const [proEliteOnly, setProEliteOnly] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
+  const [chatTheme, setChatTheme] = useState<'default' | 'ocean' | 'ember'>('default');
+
+  const chatEligibleMembers = members.filter((member) => member.signal !== 'Black');
+  const memberByName = new Map(chatEligibleMembers.map((member) => [member.name, member]));
 
   const visibleMessages = chatMessages.filter((message) => {
+    if (message.signal === 'Black') return false;
+
+    const member = memberByName.get(message.author);
+
+    if (!member) return false;
+    if (hideNpc && member.tier === 'NPC') return false;
     if (hideRed && message.signal === 'Red') return false;
+    if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
+
     return true;
   });
+
+  const onlineMembers = chatEligibleMembers.slice(0, 4);
+  const offlineMembers = chatEligibleMembers.slice(4);
 
   return (
     <>
@@ -777,72 +795,218 @@ function GameChat(props: {
         <h1>Game Chat</h1>
       </header>
 
-      <section className="member-rail">
-        <ChannelAvatar channel={props.channel} size="lg" />
-        {members.map((member) => (
-          <div className={'member-dot ' + signalClass(member.signal)} key={member.id}>
-            <span>{member.name.slice(0, 2).toUpperCase()}</span>
-            <small>{member.name}</small>
+      <section className="chat-presence-rail">
+        <div className="chat-presence-channel">
+          <ChannelAvatar channel={props.channel} size="lg" />
+          <div>
+            <span className={'mini-badge signal-text-' + props.channel.signal.toLowerCase()}>
+              {props.channel.signal} Channel
+            </span>
+            <h2>{props.channel.name}</h2>
+            <p>{props.channel.tagline}</p>
           </div>
-        ))}
-      </section>
-
-      <section className="chat-shell">
-        <div className="tab-row">
-          {['Profile', 'Timeline', 'Guilds', 'Events', 'Esports', 'Party', 'Notes', 'Gated', 'Badges', 'Support'].map(
-            (tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  if (tab === 'Profile') {
-                    props.onNavigate('channelProfile');
-                  }
-                }}
-                type="button"
-              >
-                {tab}
-              </button>
-            )
-          )}
         </div>
 
-        <div className="chat-layout">
-          <article className="chat-window">
-            <h2>{props.channel.name} Chat</h2>
-            {visibleMessages.map((message) => (
-              <div className="chat-message" key={message.id}>
-                <span>{message.time}</span>
-                <strong className={'signal-text-' + message.signal.toLowerCase()}>
-                  {message.author}
-                </strong>
-                <p>{message.body}</p>
+        <div className="chat-member-strip">
+          {onlineMembers.map((member) => (
+            <button className="chat-member-card" key={member.id} type="button">
+              <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                {member.name.slice(0, 2).toUpperCase()}
               </div>
-            ))}
+              <strong>{member.name}</strong>
+              <span>{member.tier}</span>
+            </button>
+          ))}
+
+          {offlineMembers.map((member) => (
+            <button className="chat-member-card is-offline" key={member.id} type="button">
+              <div className={'chat-member-avatar ' + signalClass(member.signal)}>
+                {member.name.slice(0, 2).toUpperCase()}
+              </div>
+              <strong>{member.name}</strong>
+              <span>Offline</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="chat-shell chat-shell-buildout">
+        <div className="tab-row channel-tab-row">
+          {[
+            'Profile',
+            'Timeline',
+            'Guilds',
+            'Events',
+            'Main Chat',
+            'Esports',
+            'Party',
+            'Patch Notes',
+            'Gated',
+            'Support'
+          ].map((tab) => (
+            <button
+              className={tab === 'Main Chat' ? 'is-active-tab' : ''}
+              key={tab}
+              onClick={() => {
+                if (tab === 'Profile') {
+                  props.onNavigate('channelProfile');
+                }
+              }}
+              type="button"
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div
+          className={
+            'chat-layout chat-layout-buildout' +
+            (customizationCollapsed ? ' is-customization-collapsed' : '')
+          }
+        >
+          <article className={'chat-window chat-window-buildout chat-theme-' + chatTheme}>
+            <div className="chat-window-heading">
+              <div>
+                <h2>{props.channel.name} Main Chat</h2>
+                <p>
+                  {visibleMessages.length} visible messages · {chatEligibleMembers.length} chat-ready members
+                </p>
+              </div>
+
+              <span className="mini-badge">MVP Mock Chat</span>
+            </div>
+
+            <div className="message-stack">
+              {visibleMessages.map((message) => {
+                const member = memberByName.get(message.author);
+
+                return (
+                  <div className="chat-message-row" key={message.id}>
+                    <div className={'message-avatar ' + signalClass(message.signal)}>
+                      {message.author.slice(0, 2).toUpperCase()}
+                    </div>
+
+                    <div className="message-bubble">
+                      <div className="message-meta">
+                        <strong className={'signal-text-' + message.signal.toLowerCase()}>
+                          {message.author}
+                        </strong>
+                        <span>{message.time}</span>
+                        {member && <i>{member.tier}</i>}
+                        <i>{message.signal}</i>
+                      </div>
+
+                      <p>{message.body}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="chat-input-placeholder">
+              <span>Message {props.channel.name}</span>
+              <button type="button">Send</button>
+            </div>
           </article>
 
-          <aside className="chat-filters">
-            <h3>Filter Options</h3>
+          <aside className="chat-side-panel">
+            <section className="chat-filter-panel">
+              <button
+                className="filter-collapse-button"
+                onClick={() => setFiltersCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Filter Options</span>
+                <strong>{filtersCollapsed ? '+' : '−'}</strong>
+              </button>
 
-            <label>
-              <input
-                checked={hideNpc}
-                onChange={(event) => setHideNpc(event.target.checked)}
-                type="checkbox"
-              />
-              Hide NPCs
-            </label>
+              {!filtersCollapsed && (
+                <div className="filter-options-stack">
+                  <label>
+                    <input
+                      checked={hideNpc}
+                      onChange={(event) => setHideNpc(event.target.checked)}
+                      type="checkbox"
+                    />
+                    Hide NPCs
+                  </label>
 
-            <label>
-              <input
-                checked={hideRed}
-                onChange={(event) => setHideRed(event.target.checked)}
-                type="checkbox"
-              />
-              Hide Red Signal
-            </label>
+                  <label>
+                    <input
+                      checked={hideRed}
+                      onChange={(event) => setHideRed(event.target.checked)}
+                      type="checkbox"
+                    />
+                    Hide Red Signal
+                  </label>
 
-            <button type="button">Save Preset</button>
-            <button type="button">Customize Chat</button>
+                  <label>
+                    <input
+                      checked={proEliteOnly}
+                      onChange={(event) => setProEliteOnly(event.target.checked)}
+                      type="checkbox"
+                    />
+                    Pro / Elite only
+                  </label>
+                </div>
+              )}
+            </section>
+
+            <section
+              className={
+                'chat-customization-panel' +
+                (customizationCollapsed ? ' is-collapsed-customization' : '')
+              }
+            >
+              <button
+                className="customization-collapse-button"
+                onClick={() => setCustomizationCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Chat Customization</span>
+                <strong>{customizationCollapsed ? '+' : '−'}</strong>
+              </button>
+
+              {!customizationCollapsed && (
+                <div className="chat-customization-body">
+                  <div className="profile-panel-heading">
+                    <h2>Pro / Elite Controls</h2>
+                    <p>Cosmetic controls placeholder.</p>
+                  </div>
+
+                  <div className="theme-choice-grid">
+                    <button
+                      className={chatTheme === 'default' ? 'is-selected-theme' : ''}
+                      onClick={() => setChatTheme('default')}
+                      type="button"
+                    >
+                      Default
+                    </button>
+
+                    <button
+                      className={chatTheme === 'ocean' ? 'is-selected-theme' : ''}
+                      onClick={() => setChatTheme('ocean')}
+                      type="button"
+                    >
+                      Ocean
+                    </button>
+
+                    <button
+                      className={chatTheme === 'ember' ? 'is-selected-theme' : ''}
+                      onClick={() => setChatTheme('ember')}
+                      type="button"
+                    >
+                      Ember
+                    </button>
+                  </div>
+
+                  <div className="customization-note">
+                    Fonts, text background, overlays, and animation intensity will live here.
+                  </div>
+                </div>
+              )}
+            </section>
           </aside>
         </div>
       </section>
