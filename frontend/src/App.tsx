@@ -1,373 +1,484 @@
-import {
-  useMemo,
-  useState,
-  type ReactElement,
-  type ReactNode
-} from 'react';
-
-import type {
-  BadgeSummary,
-  ChannelSummary,
-  CommunitySummary,
-  CosmeticSummary,
-  PassportSummary,
-  ProfileSummary,
-  TitleSummary
-} from './types.js';
+import { useMemo, useState, type CSSProperties, type ReactElement } from 'react';
 
 import {
-  createConfiguredNamiClient,
-  getConfiguredNetwork,
-  getConfiguredPackageId,
-  hasConfiguredPackageId
-} from './nami.js';
+  channels,
+  chatMessages,
+  members,
+  navItems,
+  type ConductSignal,
+  type NamiChannel,
+  type NamiPage
+} from './uiMockData.js';
 
-import { OnboardingPanel } from './OnboardingPanel.js';
-
-const samplePassport: PassportSummary = {
-  owner: '0xUSER',
-  passportId: '0xPASSPORT',
-  identityId: '0xIDENTITY',
-  level: 18,
-  xp: 1840,
-  reputation: 'Gamester',
-  membershipTier: 'Adventurer',
-  conductSignal: 'Green'
-};
-
-const sampleProfile: ProfileSummary = {
-  displayName: 'NPC Gamer',
-  bio: 'Portable gamer identity powered by Sui.',
-  avatarRef: 'avatar://nami-default',
-  isPublic: true
-};
-
-const sampleBadges: BadgeSummary[] = [
-  {
-    label: 'First Quest',
-    badgeType: 'Basic',
-    points: 1
-  },
-  {
-    label: 'Community Event',
-    badgeType: 'Event',
-    points: 2
-  },
-  {
-    label: 'Verified Completion',
-    badgeType: 'Completion',
-    points: 3
-  }
-];
-
-const sampleTitles: TitleSummary[] = [
-  {
-    label: 'Gamester',
-    equipped: true
-  },
-  {
-    label: 'Goblin',
-    equipped: false
-  }
-];
-
-const sampleCosmetics: CosmeticSummary[] = [
-  {
-    label: 'Genesis Frame',
-    cosmeticType: 'Profile Frame',
-    equipped: true
-  },
-  {
-    label: 'Wave Passport Theme',
-    cosmeticType: 'Passport Theme',
-    equipped: false
-  }
-];
-
-const sampleChannels: ChannelSummary[] = [
-  {
-    name: 'Main Channel',
-    verified: true,
-    allowNpcChat: false
-  },
-  {
-    name: 'Casual Lobby',
-    verified: false,
-    allowNpcChat: true
-  }
-];
-
-const sampleCommunity: CommunitySummary = {
-  squads: 1,
-  guilds: 2
-};
-
-function signalClass(signal: PassportSummary['conductSignal']): string {
-  return `signal signal-${signal.toLowerCase()}`;
+function signalClass(signal: ConductSignal): string {
+  return `signal-ring signal-${signal.toLowerCase()}`;
 }
 
-function tierLabel(tier: PassportSummary['membershipTier']): string {
-  if (tier === 'NPC') {
-    return 'NPC / Free';
-  }
-
-  return tier;
-}
-
-function StatCard(props: {
-  label: string;
-  value: string | number;
-  note: string;
+function ChannelAvatar(props: {
+  channel: NamiChannel;
+  size?: 'sm' | 'md' | 'lg';
+  selected?: boolean;
+  onClick?: () => void;
 }): ReactElement {
   return (
-    <article className="stat-card">
-      <span>{props.label}</span>
-      <strong>{props.value}</strong>
-      <p>{props.note}</p>
-    </article>
+    <button
+      className={`channel-avatar channel-avatar-${props.size ?? 'md'} ${signalClass(
+        props.channel.signal
+      )} ${props.selected ? 'is-selected' : ''}`}
+      onClick={props.onClick}
+      type="button"
+      title={props.channel.name}
+    >
+      <span>{props.channel.name.slice(0, 2).toUpperCase()}</span>
+    </button>
   );
 }
 
-function Section(props: {
-  title: string;
-  description: string;
-  children: ReactNode;
+function Sidebar(props: {
+  activePage: NamiPage;
+  collapsed: boolean;
+  onNavigate: (page: NamiPage) => void;
+  onToggle: () => void;
 }): ReactElement {
   return (
-    <section className="panel">
-      <div className="section-heading">
-        <div>
-          <h2>{props.title}</h2>
-          <p>{props.description}</p>
-        </div>
+    <aside className={`sidebar ${props.collapsed ? 'is-collapsed' : ''}`}>
+      <button
+        className="sidebar-brand"
+        onClick={() => props.onNavigate('gamehub')}
+        type="button"
+      >
+        <div className="diamond-mark">N</div>
+        {!props.collapsed && <span>Game Hub</span>}
+      </button>
+
+      <button className="sidebar-toggle" onClick={props.onToggle} type="button">
+        {props.collapsed ? '→' : '←'}
+      </button>
+
+      <nav className="sidebar-nav">
+        {navItems.map((item) => (
+          <button
+            key={item.page}
+            className={props.activePage === item.page ? 'is-active' : ''}
+            onClick={() => props.onNavigate(item.page)}
+            type="button"
+          >
+            <span className="nav-icon">{item.shortLabel.slice(0, 1)}</span>
+            {!props.collapsed && <span>{item.shortLabel}</span>}
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+function FeaturedRail(props: {
+  title: string;
+  selectedChannel: NamiChannel;
+  onSelect: (channel: NamiChannel) => void;
+  onlySubscribed?: boolean;
+}): ReactElement {
+  const visibleChannels = props.onlySubscribed ? channels.slice(0, 4) : channels;
+
+  return (
+    <section className="feature-rail">
+      <div className="rail-heading">
+        <h2>{props.title}</h2>
+        <p>{props.onlySubscribed ? 'Your pinned channels' : 'Featured discovery'}</p>
       </div>
-      {props.children}
+
+      <div className="rail-scroll">
+        {visibleChannels.map((channel) => (
+          <div className="rail-item" key={channel.id}>
+            <ChannelAvatar
+              channel={channel}
+              selected={channel.id === props.selectedChannel.id}
+              onClick={() => props.onSelect(channel)}
+            />
+            <span>{channel.name}</span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
 
-export function App(): ReactElement {
-  const [walletAddress, setWalletAddress] = useState('');
-  const [packageId, setPackageId] = useState(getConfiguredPackageId());
+function ChannelInfoCard(props: { channel: NamiChannel }): ReactElement {
+  return (
+    <article className="channel-info-card">
+      <ChannelAvatar channel={props.channel} size="lg" />
+      <div>
+        <div className="badge-row">
+          {props.channel.verified && <span className="mini-badge">Verified</span>}
+          {props.channel.partner && <span className="mini-badge">Partner</span>}
+          <span className={`mini-badge signal-text-${props.channel.signal.toLowerCase()}`}>
+            {props.channel.signal}
+          </span>
+        </div>
 
-    const configuredNetwork = getConfiguredNetwork();
-    const isPackageConfigured = hasConfiguredPackageId();
+        <h2>{props.channel.name}</h2>
+        <p>{props.channel.tagline}</p>
 
-    const sdkClient = useMemo(() => {
-    return createConfiguredNamiClient();
-    }, []);
+        <dl>
+          <div>
+            <dt>Owner</dt>
+            <dd>{props.channel.owner}</dd>
+          </div>
+          <div>
+            <dt>Genre</dt>
+            <dd>{props.channel.genre}</dd>
+          </div>
+          <div>
+            <dt>Platforms</dt>
+            <dd>{props.channel.platforms.join(', ')}</dd>
+          </div>
+          <div>
+            <dt>Subscribers</dt>
+            <dd>{props.channel.subscribers.toLocaleString()}</dd>
+          </div>
+        </dl>
 
-  const activePassport = useMemo<PassportSummary>(() => {
-    if (walletAddress.trim() === '') {
-      return samplePassport;
-    }
+        <div className="action-row">
+          <button type="button">Subscribe</button>
+          <button type="button">Join Chat</button>
+          <button type="button">Get Banners</button>
+        </div>
+      </div>
+    </article>
+  );
+}
 
-    return {
-      ...samplePassport,
-      owner: walletAddress.trim()
-    };
-  }, [walletAddress]);
+function ModuleGrid(props: { channel: NamiChannel }): ReactElement {
+  const modules =
+    props.channel.modules.length > 0
+      ? props.channel.modules
+      : channels.find((channel) => channel.id === 'fiends')?.modules ?? [];
 
   return (
-    <main className="app-shell">
-      <header className="hero">
-        <nav className="top-nav">
-          <div className="brand">
-            <div className="brand-mark">N</div>
-            <div>
-              <span>Nami Chat</span>
-              <small>Gaming identity protocol</small>
-            </div>
-          </div>
+    <div className="module-grid">
+      {modules.map((module) => (
+        <button className="module-card" key={module.label} type="button">
+          <strong>{module.label}</strong>
+          <span>{module.description}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
-          <div className="status-pill">MVP Preview</div>
-        </nav>
+function NamiHub(props: {
+  selectedChannel: NamiChannel;
+  onSelect: (channel: NamiChannel) => void;
+}): ReactElement {
+  return (
+    <>
+      <header className="page-title">
+        <p>Signed-in dashboard</p>
+        <h1>Nami Hub</h1>
+      </header>
 
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">Portable gamer identity</p>
-            <h1>Your Passport for gaming communities.</h1>
-            <p>
-              Nami connects Identity, Passport, reputation, conduct, channels,
-              squads, guilds, profiles, titles, cosmetics, recovery, and
-              moderation into one gamer-native trust layer.
-            </p>
-          </div>
+      <section className="banner-panel">
+        <span>Featured Partner Banner Carousel</span>
+        <strong>{props.selectedChannel.name}</strong>
+      </section>
 
-          <div className="connect-card">
-            <label htmlFor="walletAddress">Wallet / zkLogin Address</label>
-            <input
-              id="walletAddress"
-              placeholder="0x..."
-              value={walletAddress}
-              onChange={(event) => setWalletAddress(event.target.value)}
-            />
-
-            <label htmlFor="packageId">Nami Package ID</label>
-            <input
-              id="packageId"
-              placeholder="0x..."
-              value={packageId}
-              onChange={(event) => setPackageId(event.target.value)}
-            />
-
-                <p>
-                Network: {configuredNetwork}. SDK client:{' '}
-                {sdkClient && isPackageConfigured ? 'configured' : 'waiting for package ID'}.
-                </p>
-          </div>
-        </div>
-        
-    </header>
-
-      <OnboardingPanel
-        packageId={packageId}
-        network={configuredNetwork}
-        isPackageConfigured={isPackageConfigured}
+      <FeaturedRail
+        title="Community Showcase"
+        selectedChannel={props.selectedChannel}
+        onSelect={props.onSelect}
       />
 
-      <section className="passport-card">
-        <div className="avatar-orb">🎮</div>
-
-        <div className="passport-main">
-          <div className="profile-title-row">
-            <div>
-              <p className="eyebrow">Public Profile</p>
-              <h2>{sampleProfile.displayName}</h2>
-              <p>{sampleProfile.bio}</p>
+      <section className="dashboard-grid">
+        <article className="panel">
+          <h2>Community Growth</h2>
+          {channels.map((channel, index) => (
+            <div className="growth-row" key={channel.id}>
+              <span>{channel.handle}</span>
+              <div>
+                <i style={{ width: `${92 - index * 12}%` }} />
+              </div>
+              <strong>{channel.subscribers.toLocaleString()}</strong>
             </div>
+          ))}
+        </article>
 
-            <span className={signalClass(activePassport.conductSignal)}>
-              {activePassport.conductSignal}
-            </span>
+        <article className="panel">
+          <h2>Top Communities</h2>
+          <div className="bubble-map">
+            {channels.map((channel, index) => (
+              <button
+                className={`bubble ${signalClass(channel.signal)}`}
+                key={channel.id}
+                onClick={() => props.onSelect(channel)}
+                type="button"
+                style={{ '--bubble-size': `${72 - index * 5}px` } as CSSProperties}
+              >
+                {index + 1}
+                <span>{channel.name}</span>
+              </button>
+            ))}
           </div>
+        </article>
 
-          <div className="passport-meta">
-            <span>Owner: {activePassport.owner}</span>
-            <span>Passport: {activePassport.passportId}</span>
-            <span>Identity: {activePassport.identityId}</span>
-          </div>
+        <article className="panel">
+          <h2>Latest Names</h2>
+          <ul className="simple-list">
+            <li>exavil@talise</li>
+            <li>mint85@talise</li>
+            <li>rom378@talise</li>
+            <li>victory@talise</li>
+          </ul>
+        </article>
+      </section>
+    </>
+  );
+}
+
+function GameHub(props: {
+  selectedChannel: NamiChannel;
+  onSelect: (channel: NamiChannel) => void;
+}): ReactElement {
+  return (
+    <>
+      <header className="page-title">
+        <p>Browse and discover</p>
+        <h1>GameHub</h1>
+      </header>
+
+      <FeaturedRail
+        title="Partner and Top Channels"
+        selectedChannel={props.selectedChannel}
+        onSelect={props.onSelect}
+      />
+
+      <section className="panel">
+        <div className="filter-row">
+          <button type="button">Games</button>
+          <button type="button">IRL</button>
+          <button type="button">Music & DJs</button>
+          <button type="button">Creative</button>
+          <button type="button">Esports</button>
+          <button type="button">Verified</button>
+          <button type="button">Platform</button>
         </div>
+
+        <div className="discovery-grid">
+          {channels.concat(channels, channels).map((channel, index) => (
+            <button
+              className="discovery-card"
+              key={`${channel.id}-${index}`}
+              onClick={() => props.onSelect(channel)}
+              type="button"
+            >
+              <ChannelAvatar channel={channel} size="sm" />
+              <strong>{channel.name}</strong>
+              <span>{channel.genre}</span>
+              <small>{channel.subscribers.toLocaleString()} subscribers</small>
+            </button>
+          ))}
+        </div>
+
+        <button className="add-module-button" type="button">
+          + Add Section / Module
+        </button>
       </section>
+    </>
+  );
+}
 
-      <section className="stats-grid">
-        <StatCard
-          label="Membership"
-          value={tierLabel(activePassport.membershipTier)}
-          note="Access benefits are based on effective tier."
-        />
-        <StatCard
-          label="Level"
-          value={activePassport.level}
-          note={`${activePassport.xp.toLocaleString()} XP earned`}
-        />
-        <StatCard
-          label="Reputation"
-          value={activePassport.reputation}
-          note="Earned through meaningful activity."
-        />
-        <StatCard
-          label="Communities"
-          value={`${sampleCommunity.squads} Squad / ${sampleCommunity.guilds} Guilds`}
-          note="Small trust groups and larger communities."
-        />
-      </section>
+function ChannelProfile(props: { channel: NamiChannel }): ReactElement {
+  return (
+    <>
+      <header className="page-title">
+        <p>Channel destination</p>
+        <h1>Game Profile</h1>
+      </header>
 
-      <div className="content-grid">
-        <Section
-          title="Badges"
-          description="Achievement and participation proofs."
-        >
-          <div className="list-stack">
-            {sampleBadges.map((badge) => (
-              <div className="list-row" key={badge.label}>
-                <div>
-                  <strong>{badge.label}</strong>
-                  <span>{badge.badgeType} Badge</span>
-                </div>
-                <span>{badge.points} pts</span>
-              </div>
-            ))}
-          </div>
-        </Section>
+      <FeaturedRail
+        title="Same Genre / Related Channels"
+        selectedChannel={props.channel}
+        onSelect={() => undefined}
+      />
 
-        <Section
-          title="Titles"
-          description="Earned identity labels from reputation."
-        >
-          <div className="list-stack">
-            {sampleTitles.map((title) => (
-              <div className="list-row" key={title.label}>
-                <div>
-                  <strong>{title.label}</strong>
-                  <span>{title.equipped ? 'Equipped' : 'Unlocked'}</span>
-                </div>
-                <span>{title.equipped ? 'Active' : 'Idle'}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          title="Cosmetics"
-          description="Profile identity and visual customization."
-        >
-          <div className="list-stack">
-            {sampleCosmetics.map((cosmetic) => (
-              <div className="list-row" key={cosmetic.label}>
-                <div>
-                  <strong>{cosmetic.label}</strong>
-                  <span>{cosmetic.cosmeticType}</span>
-                </div>
-                <span>{cosmetic.equipped ? 'Equipped' : 'Unlocked'}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          title="Channels"
-          description="Creator and community spaces with access rules."
-        >
-          <div className="list-stack">
-            {sampleChannels.map((channel) => (
-              <div className="list-row" key={channel.name}>
-                <div>
-                  <strong>{channel.name}</strong>
-                  <span>
-                    {channel.verified ? 'Verified Channel' : 'Unverified Channel'}
-                  </span>
-                </div>
-                <span>{channel.allowNpcChat ? 'NPC Chat On' : 'NPC Chat Off'}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
-
-      <section className="roadmap-strip">
+      <section className="profile-layout">
         <div>
-          <strong>Next wiring step</strong>
-          <span>
-            SDK wiring is now present. Next step is reading owned Passport/Profile objects.
-          </span>
+          <ChannelInfoCard channel={props.channel} />
+          <article className="panel announcement-panel">
+            <h2>Official Announcements</h2>
+            <p>Latest verified posts, patch notices, and channel updates will appear here.</p>
+          </article>
         </div>
 
         <div>
-          <strong>Safety rule</strong>
-          <span>
-            Black Passport pauses active benefits without erasing earned
-            history.
-          </span>
-        </div>
-
-        <div>
-          <strong>MVP direction</strong>
-          <span>
-            Build product surface first, then run the Break-the-System suite.
-          </span>
+          <article className="hero-banner">
+            <span>{props.channel.banner}</span>
+          </article>
+          <ModuleGrid channel={props.channel} />
         </div>
       </section>
+    </>
+  );
+}
+
+function GameChat(props: { channel: NamiChannel }): ReactElement {
+  const [hideNpc, setHideNpc] = useState(false);
+  const [hideRed, setHideRed] = useState(false);
+
+  const visibleMessages = chatMessages.filter((message) => {
+    if (hideRed && message.signal === 'Red') return false;
+    return true;
+  });
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Live community room</p>
+        <h1>Game Chat</h1>
+      </header>
+
+      <section className="member-rail">
+        <ChannelAvatar channel={props.channel} size="lg" />
+        {members.map((member) => (
+          <div className={`member-dot ${signalClass(member.signal)}`} key={member.id}>
+            <span>{member.name.slice(0, 2).toUpperCase()}</span>
+            <small>{member.name}</small>
+          </div>
+        ))}
+      </section>
+
+      <section className="chat-shell">
+        <div className="tab-row">
+          {['Profile', 'Timeline', 'Guilds', 'Events', 'Esports', 'Party', 'Notes', 'Gated', 'Badges', 'Support'].map(
+            (tab) => (
+              <button key={tab} type="button">
+                {tab}
+              </button>
+            )
+          )}
+        </div>
+
+        <div className="chat-layout">
+          <article className="chat-window">
+            <h2>{props.channel.name} Chat</h2>
+            {visibleMessages.map((message) => (
+              <div className="chat-message" key={message.id}>
+                <span>{message.time}</span>
+                <strong className={`signal-text-${message.signal.toLowerCase()}`}>
+                  {message.author}
+                </strong>
+                <p>{message.body}</p>
+              </div>
+            ))}
+          </article>
+
+          <aside className="chat-filters">
+            <h3>Filter Options</h3>
+
+            <label>
+              <input
+                checked={hideNpc}
+                onChange={(event) => setHideNpc(event.target.checked)}
+                type="checkbox"
+              />
+              Hide NPCs
+            </label>
+
+            <label>
+              <input
+                checked={hideRed}
+                onChange={(event) => setHideRed(event.target.checked)}
+                type="checkbox"
+              />
+              Hide Red Signal
+            </label>
+
+            <button type="button">Save Preset</button>
+            <button type="button">Customize Chat</button>
+          </aside>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function Subscriptions(props: {
+  selectedChannel: NamiChannel;
+  onSelect: (channel: NamiChannel) => void;
+}): ReactElement {
+  return (
+    <>
+      <header className="page-title">
+        <p>Personal channel library</p>
+        <h1>My Subscriptions</h1>
+      </header>
+
+      <FeaturedRail
+        title="Subscribed Channels"
+        selectedChannel={props.selectedChannel}
+        onSelect={props.onSelect}
+        onlySubscribed
+      />
+
+      <section className="profile-layout">
+        <div>
+          <ChannelInfoCard channel={props.selectedChannel} />
+          <article className="panel announcement-panel">
+            <h2>Official Announcements</h2>
+            <p>Unread banners, followed channel updates, and subscribed alerts live here.</p>
+          </article>
+        </div>
+
+        <ModuleGrid channel={props.selectedChannel} />
+      </section>
+    </>
+  );
+}
+
+export function App(): ReactElement {
+  const [activePage, setActivePage] = useState<NamiPage>('hub');
+  const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
+    const defaultChannel = channels[0];
+
+    if (!defaultChannel) {
+      throw new Error('Nami mock channels must include at least one channel.');
+    }
+
+    return defaultChannel;
+  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const screen = useMemo(() => {
+    if (activePage === 'hub') {
+      return <NamiHub selectedChannel={selectedChannel} onSelect={setSelectedChannel} />;
+    }
+
+    if (activePage === 'gamehub') {
+      return <GameHub selectedChannel={selectedChannel} onSelect={setSelectedChannel} />;
+    }
+
+    if (activePage === 'subscriptions') {
+      return (
+        <Subscriptions selectedChannel={selectedChannel} onSelect={setSelectedChannel} />
+      );
+    }
+
+    if (activePage === 'profile') {
+      return <ChannelProfile channel={selectedChannel} />;
+    }
+
+    return <GameChat channel={selectedChannel} />;
+  }, [activePage, selectedChannel]);
+
+  return (
+    <main className="nami-app">
+      <Sidebar
+        activePage={activePage}
+        collapsed={sidebarCollapsed}
+        onNavigate={setActivePage}
+        onToggle={() => setSidebarCollapsed((value) => !value)}
+      />
+
+      <section className="main-stage">{screen}</section>
     </main>
   );
 }
