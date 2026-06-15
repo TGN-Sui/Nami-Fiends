@@ -1256,22 +1256,68 @@ function NamiHub(props: {
     };
   });
 
-  const verifiedSpotlightSource = members.filter((member) => member.signal === 'Green');
-  const spotlightSource = verifiedSpotlightSource.length > 0 ? verifiedSpotlightSource : members;
+  const [spotlightFoilPhase, setSpotlightFoilPhase] = useState(0);
+
+  useEffect(() => {
+    let animationFrameId = 0;
+
+    function updateSpotlightFoil(timestamp: number): void {
+      const spotlightFoilCycle = (timestamp % 7600) / 7600;
+      const spotlightFoilBounce =
+        spotlightFoilCycle <= 0.5
+          ? spotlightFoilCycle * 2
+          : (1 - spotlightFoilCycle) * 2;
+      const spotlightFoilEase = 0.5 - Math.cos(spotlightFoilBounce * Math.PI) / 2;
+
+      setSpotlightFoilPhase(spotlightFoilEase);
+      animationFrameId = window.requestAnimationFrame(updateSpotlightFoil);
+    }
+
+    animationFrameId = window.requestAnimationFrame(updateSpotlightFoil);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  const spotlightEligibleMembers = members.filter((member) => {
+    return member.tier !== 'NPC' && member.signal !== 'Black';
+  });
+
+  const eliteSpotlightMembers = spotlightEligibleMembers.filter((member) => member.tier === 'Elite');
+  const rotatingSpotlightSource = spotlightEligibleMembers.filter((member) => member.tier !== 'Elite');
+
   const spotlightDayOffset =
-    spotlightSource.length > 0 ? Math.floor(Date.now() / 86400000) % spotlightSource.length : 0;
+    rotatingSpotlightSource.length > 0
+      ? Math.floor(Date.now() / 86400000) % rotatingSpotlightSource.length
+      : 0;
 
-  const spotlightMembers =
-    spotlightSource.length > 0
-      ? Array.from({ length: 18 }, (_, index) => {
-          const member = spotlightSource[(index + spotlightDayOffset) % spotlightSource.length]!;
+  const eliteSpotlightSlots = eliteSpotlightMembers.slice(0, 1).map((member, index) => {
+    return {
+      member,
+      slotId: member.id + '-elite-spotlight-' + index
+    };
+  });
 
-          return {
-            member,
-            slotId: member.id + '-spotlight-' + index
-          };
-        })
+  const rotatingSpotlightSlots =
+    rotatingSpotlightSource.length > 0
+      ? Array.from(
+          { length: Math.min(4 - eliteSpotlightSlots.length, rotatingSpotlightSource.length) },
+          (_, index) => {
+            const member =
+              rotatingSpotlightSource[
+                (index + spotlightDayOffset) % rotatingSpotlightSource.length
+              ]!;
+
+            return {
+              member,
+              slotId: member.id + '-spotlight-' + index
+            };
+          }
+        )
       : [];
+
+  const spotlightMembers = [...eliteSpotlightSlots, ...rotatingSpotlightSlots].slice(0, 4);
 
   useEffect(() => {
     if (hoveredShowcaseChannelId !== null || featuredShowcaseChannels.length === 0) {
@@ -1379,15 +1425,34 @@ function NamiHub(props: {
           <div className="member-spotlight-grid">
             {spotlightMembers.map(({ member, slotId }) => {
               const progression = getNamiProgression(member);
+                const memberSpotlightFoilLeft = Math.round(spotlightFoilPhase * 132 - 38);
+                const memberSpotlightFoilStyle =
+                  member.tier === 'Elite'
+                    ? ({
+                        '--member-spotlight-foil-left': String(memberSpotlightFoilLeft) + '%'
+                      } as CSSProperties)
+                    : undefined;
+
 
               return (
                 <button
-                  className="member-spotlight-card"
+                  className={
+                      'member-spotlight-card ' +
+                      (member.tier === 'Elite'
+                        ? 'is-elite-spotlight-member is-elite-surface '
+                        : member.tier === 'Pro'
+                          ? 'is-pro-spotlight-member is-pro-surface '
+                          : '') +
+                      (member.tier === 'NPC' || member.signal === 'Black' ? 'is-npc-member ' : '') +
+                      (member.signal !== 'Black' && member.tier !== 'NPC' ? 'is-verified-spotlight-member' : '')
+                    }
                   key={slotId}
                   onClick={() => props.onOpenMember(member)}
                   type="button"
                 >
-                  <div className="member-spotlight-left">
+                  <span className="member-spotlight-foil" aria-hidden="true" style={memberSpotlightFoilStyle} />
+
+                    <div className="member-spotlight-left">
                     <MemberVisualAvatar className="member-spotlight-avatar" member={member}>
                       <span className="member-spotlight-level">{progression.level}</span>
                     </MemberVisualAvatar>
@@ -1398,7 +1463,15 @@ function NamiHub(props: {
                     </div>
                   </div>
 
-                  <span className="member-spotlight-verified">Verified</span>
+                  {member.signal !== 'Black' && member.tier !== 'NPC' && (
+                      <span
+                        className="verification-check-chip"
+                        aria-label="Verified member"
+                        title="Verified member"
+                      >
+                        ✓
+                      </span>
+                    )}
                 </button>
               );
             })}
