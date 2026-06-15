@@ -1,4 +1,11 @@
-import { useMemo, useState, type CSSProperties, type ReactElement, useEffect , useRef} from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactElement
+} from 'react';
 
 import {
   channels,
@@ -167,11 +174,39 @@ function Sidebar(props: {
 }): ReactElement {
   const sidebarMember = members[0]!;
   const sidebarProgression = getNamiProgression(sidebarMember);
+  const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false);
+
+  function updateSidebarProfileFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const pointerX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const pointerY = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+    const tiltX = ((0.5 - pointerY) * 8).toFixed(2) + 'deg';
+    const tiltY = ((pointerX - 0.5) * 8).toFixed(2) + 'deg';
+
+    event.currentTarget.style.setProperty('--sidebar-profile-x', (pointerX * 100).toFixed(2) + '%');
+    event.currentTarget.style.setProperty('--sidebar-profile-y', (pointerY * 100).toFixed(2) + '%');
+    event.currentTarget.style.setProperty('--sidebar-profile-tilt-x', tiltX);
+    event.currentTarget.style.setProperty('--sidebar-profile-tilt-y', tiltY);
+  }
+
+  function resetSidebarProfileFoil(event: { currentTarget: HTMLElement }): void {
+    event.currentTarget.style.setProperty('--sidebar-profile-x', '50%');
+    event.currentTarget.style.setProperty('--sidebar-profile-y', '18%');
+    event.currentTarget.style.setProperty('--sidebar-profile-tilt-x', '0deg');
+    event.currentTarget.style.setProperty('--sidebar-profile-tilt-y', '0deg');
+  }
 
   return (
     <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
 
-      <div className="sidebar-player-progress">
+      <div className="sidebar-profile-shell">
+        <button
+          className="sidebar-player-progress sidebar-player-progress-button"
+          onClick={() => setSidebarProfileMenuOpen((value) => !value)}
+          onPointerLeave={resetSidebarProfileFoil}
+          onPointerMove={updateSidebarProfileFoil}
+          type="button"
+        >
         <div className={'sidebar-player-avatar ' + signalClass(sidebarMember.signal)}>
           {memberInitials(sidebarMember)}
           <strong>{sidebarProgression.level}</strong>
@@ -186,23 +221,50 @@ function Sidebar(props: {
             </div>
           </div>
         )}
+        </button>
+
+        {sidebarProfileMenuOpen && (
+          <div className="sidebar-profile-menu">
+            <button onClick={() => props.onNavigate('userProfile')} type="button">
+              Edit Avatar
+            </button>
+            <button onClick={() => props.onNavigate('passport')} type="button">
+              Share Passport
+            </button>
+            <button onClick={() => setSidebarProfileMenuOpen(false)} type="button">
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
 
-      <button
-        className="sidebar-brand"
-        onClick={() => props.onNavigate('gamehub')}
+      <button className={'sidebar-brand' + (props.activePage === 'hub' ? ' is-active-sidebar-brand' : '')}
+        onClick={() => props.onNavigate('hub')}
         type="button"
       >
         <div className="diamond-mark">N</div>
-        {!props.collapsed && <span>Game Hub</span>}
+        {!props.collapsed && <span>Nami Hub</span>}
       </button>
 
       <button className="sidebar-toggle" onClick={props.onToggle} type="button">
         {props.collapsed ? '→' : '←'}
       </button>
 
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
+      
+        <button
+          className={
+            'sidebar-gamehub-shortcut' +
+            (props.activePage === 'gamehub' ? ' is-active-gamehub-shortcut' : '')
+          }
+          onClick={() => props.onNavigate('gamehub')}
+          type="button"
+        >
+          <span className="nav-icon">G</span>
+          {!props.collapsed && <span>Game Hub</span>}
+        </button>
+
+        <nav className="sidebar-nav">
+        {navItems.filter((item) => item.page !== 'hub').map((item) => (
           <button
             key={item.page}
             className={props.activePage === item.page ? 'is-active' : ''}
@@ -256,7 +318,7 @@ function ChannelInfoCard(props: {
   onGetBanners?: () => void;
 }): ReactElement {
   return (
-    <article className="channel-info-card">
+    <article className="featured-partner-banner-card channel-info-card">
       <ChannelAvatar channel={props.channel} size="lg" />
       <div>
         <div className="badge-row">
@@ -333,194 +395,569 @@ function ModuleGrid(props: {
   );
 }
 
+type BubbleChannelEntry = {
+  channel: NamiChannel;
+  slotId: string;
+};
+
+type BubbleNode = {
+  id: string;
+  channel: NamiChannel;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  baseX: number;
+  baseY: number;
+  radius: number;
+  baseRadius: number;
+  scale: number;
+  mass: number;
+};
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 999.91) * 43758.5453123;
+  return x - Math.floor(x);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+/* UI-A11C.14 loose crypto marble helpers */
+
+type NamiCryptoBubbleEntry = {
+  channel: NamiChannel;
+  slotId: string;
+};
+
+type NamiCryptoBubbleNode = {
+  id: string;
+  channel: NamiChannel;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  baseX: number;
+  baseY: number;
+  radius: number;
+  baseRadius: number;
+  scale: number;
+  mass: number;
+  collisionStress: number;
+};
+
+function namiSeededRandom(seed: number): number {
+  const value = Math.sin(seed * 999.91) * 43758.5453123;
+
+  return value - Math.floor(value);
+}
+
+function namiClamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function namiSmoothFalloff(value: number): number {
+  const clampedValue = namiClamp(value, 0, 1);
+
+  return clampedValue * clampedValue * (3 - 2 * clampedValue);
+}
+
+function namiReadableBubbleRadius(
+  node: Pick<NamiCryptoBubbleNode, 'radius' | 'baseRadius' | 'scale'>
+): number {
+  const visualRadius = node.radius * node.scale;
+  const softMoat = node.baseRadius >= 50 ? 6 : node.baseRadius >= 40 ? 5 : 4;
+
+  return visualRadius * 0.82 + softMoat;
+}
+
+function buildNamiCryptoBubbleNodes(entries: NamiCryptoBubbleEntry[]): NamiCryptoBubbleNode[] {
+  const virtualWidth = 1160;
+  const virtualHeight = 720;
+  const placedNodes: NamiCryptoBubbleNode[] = [];
+
+  return entries.map((entry, index) => {
+    const rank = index + 1;
+    const randomScale = namiSeededRandom(index + 211);
+    const randomMass = namiSeededRandom(index + 311);
+
+    const baseRadius =
+      rank <= 5
+        ? 56 + randomScale * 12
+        : rank <= 12
+          ? 47 + randomScale * 10
+          : rank <= 24
+            ? 37 + randomScale * 9
+            : 27 + randomScale * 8;
+
+    const scale = 0.88 + randomScale * 0.3;
+    const visualRadius = baseRadius * scale;
+    const softMoat = baseRadius >= 50 ? 6 : baseRadius >= 40 ? 5 : 4;
+    const candidateRadius = visualRadius * 0.82 + softMoat;
+    const padX = candidateRadius / virtualWidth;
+    const padY = candidateRadius / virtualHeight;
+
+    let bestX = 0.5;
+    let bestY = 0.5;
+    let bestScore = Number.NEGATIVE_INFINITY;
+
+    for (let attempt = 0; attempt < 72; attempt += 1) {
+      const randomX = namiSeededRandom(index * 101 + attempt * 17 + 3);
+      const randomY = namiSeededRandom(index * 137 + attempt * 19 + 7);
+
+      const candidateX = namiClamp(0.04 + randomX * 0.92, padX, 1 - padX);
+      const candidateY = namiClamp(0.06 + randomY * 0.88, padY, 1 - padY);
+      const candidatePixelX = candidateX * virtualWidth;
+      const candidatePixelY = candidateY * virtualHeight;
+
+      let closestGap = Number.POSITIVE_INFINITY;
+
+      for (const placedNode of placedNodes) {
+        const dx = candidatePixelX - placedNode.x * virtualWidth;
+        const dy = candidatePixelY - placedNode.y * virtualHeight;
+        const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+        const minimumDistance = candidateRadius + namiReadableBubbleRadius(placedNode);
+
+        closestGap = Math.min(closestGap, distance - minimumDistance);
+      }
+
+      const edgeComfort =
+        Math.min(candidateX, 1 - candidateX) * 0.35 +
+        Math.min(candidateY, 1 - candidateY) * 0.45;
+
+      const score =
+        (placedNodes.length === 0 ? 80 : closestGap * 0.55) +
+        edgeComfort * 54 +
+        namiSeededRandom(index * 197 + attempt * 23) * 22;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestX = candidateX;
+        bestY = candidateY;
+      }
+    }
+
+    const node: NamiCryptoBubbleNode = {
+      id: entry.slotId,
+      channel: entry.channel,
+      x: bestX,
+      y: bestY,
+      vx: 0,
+      vy: 0,
+      baseX: bestX,
+      baseY: bestY,
+      radius: baseRadius,
+      baseRadius,
+      scale,
+      mass: 0.9 + randomMass * 1.8,
+      collisionStress: 0
+    };
+
+    placedNodes.push(node);
+
+    return node;
+  });
+}
+
+function CryptoBubbleBoard(props: {
+  entries: NamiCryptoBubbleEntry[];
+  activeChannelId: string;
+  onOpenChannel: (channel: NamiChannel) => void;
+  onHoverChannel: (channelId: string | null) => void;
+}): ReactElement {
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const pointerRef = useRef({
+    x: 0.5,
+    y: 0.5,
+    inside: false
+  });
+
+  const [renderTick, setRenderTick] = useState(0);
+  const entriesSignature = props.entries.map((entry) => entry.slotId).join('|');
+  const nodesRef = useRef<NamiCryptoBubbleNode[]>(buildNamiCryptoBubbleNodes(props.entries));
+  const maxSubscribers = Math.max(1, ...props.entries.map((entry) => entry.channel.subscribers));
+
+  useEffect(() => {
+    nodesRef.current = buildNamiCryptoBubbleNodes(props.entries);
+  }, [entriesSignature]);
+
+  useEffect(() => {
+    let lastRenderTime = 0;
+    let lastFrameTime = 0;
+
+    function effectiveMass(node: NamiCryptoBubbleNode): number {
+      return node.mass * Math.max(0.85, node.baseRadius / 42);
+    }
+
+    function limitVelocity(node: NamiCryptoBubbleNode, maxVelocity: number): void {
+      const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
+
+      if (speed > maxVelocity) {
+        const ratio = maxVelocity / speed;
+
+        node.vx *= ratio;
+        node.vy *= ratio;
+      }
+    }
+
+    const step = (time: number) => {
+      const board = boardRef.current;
+      const nodes = nodesRef.current;
+
+      if (!board || nodes.length === 0) {
+        animationRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
+      const frameDelta = lastFrameTime === 0 ? 1 : namiClamp((time - lastFrameTime) / 16.67, 0.55, 1.55);
+      lastFrameTime = time;
+
+      const rect = board.getBoundingClientRect();
+      const width = Math.max(rect.width, 1);
+      const height = Math.max(rect.height, 1);
+      const cursorX = pointerRef.current.x * width;
+      const cursorY = pointerRef.current.y * height;
+      const pointerInside = pointerRef.current.inside;
+      const influenceRadius = Math.min(width, height) * 0.35;
+
+      for (const node of nodes) {
+        node.collisionStress = 0;
+
+        const px = node.x * width;
+        const py = node.y * height;
+        const anchorX = node.baseX * width;
+        const anchorY = node.baseY * height;
+
+        node.vx += (anchorX - px) * 0.00085 * frameDelta;
+        node.vy += (anchorY - py) * 0.00085 * frameDelta;
+
+        if (pointerInside) {
+          const dx = px - cursorX;
+          const dy = py - cursorY;
+          const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+
+          if (distance < influenceRadius) {
+            const normalized = 1 - distance / influenceRadius;
+            const falloff = namiSmoothFalloff(normalized);
+            const nx = dx / distance;
+            const ny = dy / distance;
+            const isLargeBubble = node.baseRadius * node.scale >= 48;
+            const proximityForce = isLargeBubble ? 0.23 * falloff : -0.105 * falloff;
+
+            node.vx += nx * proximityForce * frameDelta;
+            node.vy += ny * proximityForce * frameDelta;
+
+            const radiusTarget =
+              node.baseRadius * (isLargeBubble ? 1 + falloff * 0.045 : 1 + falloff * 0.09);
+
+            node.radius += (radiusTarget - node.radius) * 0.09;
+          } else {
+            node.radius += (node.baseRadius - node.radius) * 0.065;
+          }
+        } else {
+          node.radius += (node.baseRadius - node.radius) * 0.065;
+        }
+      }
+
+      for (let solverPass = 0; solverPass < 2; solverPass += 1) {
+        for (let index = 0; index < nodes.length; index += 1) {
+          for (let nextIndex = index + 1; nextIndex < nodes.length; nextIndex += 1) {
+            const left = nodes[index]!;
+            const right = nodes[nextIndex]!;
+            const leftX = left.x * width;
+            const leftY = left.y * height;
+            const rightX = right.x * width;
+            const rightY = right.y * height;
+            const dx = rightX - leftX;
+            const dy = rightY - leftY;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+            const nx = dx / distance;
+            const ny = dy / distance;
+
+            const contactDistance = namiReadableBubbleRadius(left) + namiReadableBubbleRadius(right);
+            const nearFieldDistance = contactDistance * 1.16;
+            const leftMass = effectiveMass(left);
+            const rightMass = effectiveMass(right);
+            const inverseLeftMass = 1 / leftMass;
+            const inverseRightMass = 1 / rightMass;
+            const inverseMassTotal = inverseLeftMass + inverseRightMass;
+
+            if (distance < nearFieldDistance && distance > contactDistance) {
+              const normalized = 1 - (distance - contactDistance) / (nearFieldDistance - contactDistance);
+              const falloff = namiSmoothFalloff(normalized);
+              const softForce = falloff * 0.0045 * frameDelta;
+
+              left.vx -= nx * softForce * (inverseLeftMass / inverseMassTotal);
+              left.vy -= ny * softForce * (inverseLeftMass / inverseMassTotal);
+              right.vx += nx * softForce * (inverseRightMass / inverseMassTotal);
+              right.vy += ny * softForce * (inverseRightMass / inverseMassTotal);
+            }
+
+            if (distance < contactDistance) {
+              const overlap = contactDistance - distance;
+              const contactSlop = 8;
+
+              if (overlap > contactSlop) {
+                const correction = (overlap - contactSlop) * (solverPass === 0 ? 0.16 : 0.08);
+
+                left.x -= (nx * correction * inverseLeftMass) / inverseMassTotal / width;
+                left.y -= (ny * correction * inverseLeftMass) / inverseMassTotal / height;
+                right.x += (nx * correction * inverseRightMass) / inverseMassTotal / width;
+                right.y += (ny * correction * inverseRightMass) / inverseMassTotal / height;
+              }
+
+              const relativeVelocityX = right.vx - left.vx;
+              const relativeVelocityY = right.vy - left.vy;
+              const velocityAlongNormal = relativeVelocityX * nx + relativeVelocityY * ny;
+
+              if (velocityAlongNormal < -0.12) {
+                const restitution = 0.36;
+                const impulseMagnitude =
+                  (-(1 + restitution) * velocityAlongNormal) / inverseMassTotal;
+
+                const impulseX = impulseMagnitude * nx;
+                const impulseY = impulseMagnitude * ny;
+
+                left.vx -= impulseX * inverseLeftMass;
+                left.vy -= impulseY * inverseLeftMass;
+                right.vx += impulseX * inverseRightMass;
+                right.vy += impulseY * inverseRightMass;
+              } else if (overlap > contactSlop) {
+                const separationImpulse = (overlap - contactSlop) * 0.0018;
+
+                left.vx -= nx * separationImpulse * inverseLeftMass;
+                left.vy -= ny * separationImpulse * inverseLeftMass;
+                right.vx += nx * separationImpulse * inverseRightMass;
+                right.vy += ny * separationImpulse * inverseRightMass;
+              }
+
+              left.collisionStress += Math.max(0, overlap - contactSlop);
+              right.collisionStress += Math.max(0, overlap - contactSlop);
+            }
+          }
+        }
+      }
+
+      for (const node of nodes) {
+        if (node.collisionStress > node.baseRadius * 1.05) {
+          const awayFromCenterX = node.x - 0.5;
+          const awayFromCenterY = node.y - 0.5;
+          const awayDistance =
+            Math.sqrt(awayFromCenterX * awayFromCenterX + awayFromCenterY * awayFromCenterY) || 0.0001;
+          const stressMove = Math.min(node.collisionStress / 12000, 0.0017);
+
+          node.baseX = namiClamp(
+            node.baseX + (awayFromCenterX / awayDistance) * stressMove,
+            0.07,
+            0.93
+          );
+          node.baseY = namiClamp(
+            node.baseY + (awayFromCenterY / awayDistance) * stressMove,
+            0.09,
+            0.91
+          );
+        }
+
+        node.vx *= 0.925;
+        node.vy *= 0.925;
+
+        if (Math.abs(node.vx) < 0.012) node.vx *= 0.35;
+        if (Math.abs(node.vy) < 0.012) node.vy *= 0.35;
+
+        limitVelocity(node, 18);
+
+        node.x += (node.vx / width) * frameDelta;
+        node.y += (node.vy / height) * frameDelta;
+
+        const padX = namiReadableBubbleRadius(node) / width;
+        const padY = namiReadableBubbleRadius(node) / height;
+
+        if (node.x < padX) {
+          node.x = padX;
+          node.vx = Math.abs(node.vx) * 0.42;
+        }
+
+        if (node.x > 1 - padX) {
+          node.x = 1 - padX;
+          node.vx = -Math.abs(node.vx) * 0.42;
+        }
+
+        if (node.y < padY) {
+          node.y = padY;
+          node.vy = Math.abs(node.vy) * 0.42;
+        }
+
+        if (node.y > 1 - padY) {
+          node.y = 1 - padY;
+          node.vy = -Math.abs(node.vy) * 0.42;
+        }
+      }
+
+      if (time - lastRenderTime > 22) {
+        lastRenderTime = time;
+        setRenderTick((value) => (value + 1) % 100000);
+      }
+
+      animationRef.current = window.requestAnimationFrame(step);
+    };
+
+    animationRef.current = window.requestAnimationFrame(step);
+
+    return () => {
+      if (animationRef.current !== null) {
+        window.cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <section className="panel nami-hub-top50-panel crypto-bubbles-panel">
+      <div className="browser-heading">
+        <div>
+          <h2>Top 50 Communities</h2>
+          <p>Live community board with loose marble physics and smooth cursor falloff.</p>
+        </div>
+        <span>Top 50 board</span>
+      </div>
+
+      <div
+        className="crypto-bubbles-board"
+        data-physics-tick={renderTick}
+        onPointerLeave={() => {
+          pointerRef.current.inside = false;
+          props.onHoverChannel(null);
+        }}
+        onPointerMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+
+          pointerRef.current.inside = true;
+          pointerRef.current.x = namiClamp((event.clientX - rect.left) / rect.width, 0, 1);
+          pointerRef.current.y = namiClamp((event.clientY - rect.top) / rect.height, 0, 1);
+
+          event.currentTarget.style.setProperty('--crypto-cursor-x', pointerRef.current.x * 100 + '%');
+          event.currentTarget.style.setProperty('--crypto-cursor-y', pointerRef.current.y * 100 + '%');
+        }}
+        ref={boardRef}
+      >
+        {nodesRef.current.map((node, index) => {
+          const growthPercent = Math.max(
+            8,
+            Math.min(100, (node.channel.subscribers / maxSubscribers) * 100)
+          );
+
+          return (
+            <button
+              className={
+                'crypto-community-bubble' +
+                (node.channel.id === props.activeChannelId ? ' is-active-crypto-bubble' : '')
+              }
+              key={node.id}
+              onClick={() => props.onOpenChannel(node.channel)}
+              onMouseEnter={() => props.onHoverChannel(node.channel.id)}
+              onMouseLeave={() => props.onHoverChannel(null)}
+              style={
+                {
+                  '--bubble-size': node.radius * 2 + 'px',
+                  '--bubble-x': node.x * 100 + '%',
+                  '--bubble-y': node.y * 100 + '%',
+                  '--bubble-scale': node.scale.toFixed(3),
+                  '--bubble-growth': growthPercent + '%'
+                } as CSSProperties
+              }
+              type="button"
+            >
+              <span className="crypto-bubble-rank">#{index + 1}</span>
+              <strong>{node.channel.name}</strong>
+              <small>{node.channel.genre}</small>
+              <em>{node.channel.subscribers.toLocaleString()}</em>
+              <i>
+                <b style={{ width: growthPercent + '%' }} />
+              </i>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
 function NamiHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
-  const [bubbleCursor, setBubbleCursor] = useState({
-    x: 50,
-    y: 50,
-    active: false
+  const featuredShowcaseChannels = channels.slice(0, 8);
+  const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
+  const [hoveredShowcaseChannelId, setHoveredShowcaseChannelId] = useState<string | null>(null);
+
+  const activeFeaturedChannel =
+    hoveredShowcaseChannelId !== null
+      ? featuredShowcaseChannels.find((channel) => channel.id === hoveredShowcaseChannelId) ??
+        featuredShowcaseChannels[activeShowcaseIndex] ??
+        props.selectedChannel
+      : featuredShowcaseChannels[activeShowcaseIndex] ?? props.selectedChannel;
+
+  const sortedGrowthChannels = [...channels].sort((left, right) => {
+    return right.subscribers - left.subscribers;
   });
 
-  const bubbleSeed = useMemo(() => {
-    return Math.floor(Math.random() * 100000);
-  }, []);
+  const growthChannels = Array.from({ length: 14 }, (_, index) => {
+    return sortedGrowthChannels[index % sortedGrowthChannels.length]!;
+  });
 
-  const topCommunities = useMemo(() => {
-    const items: Array<{
-      channel: NamiChannel;
-      rank: number;
-    }> = [];
+  const maxCommunitySubscribers = Math.max(
+    1,
+    ...growthChannels.map((channel) => channel.subscribers)
+  );
 
-    for (let index = 0; index < 50; index += 1) {
-      const channel = channels[index % channels.length];
-
-      if (channel) {
-        items.push({
-          channel,
-          rank: index + 1
-        });
-      }
-    }
-
-    return items;
-  }, []);
-
-  function clamp(value: number, min: number, max: number): number {
-    return Math.min(max, Math.max(min, value));
-  }
-
-  function seededFraction(seed: number): number {
-    const value = Math.sin((seed + bubbleSeed) * 12.9898) * 43758.5453;
-    return value - Math.floor(value);
-  }
-
-  function getBubbleLayout(index: number): {
-    x: number;
-    y: number;
-    size: number;
-  } {
-    const columns = 10;
-    const rows = 5;
-    const totalSlots = columns * rows;
-    const randomizedSlot = (index * 37 + bubbleSeed) % totalSlots;
-    const column = randomizedSlot % columns;
-    const row = Math.floor(randomizedSlot / columns);
-
-    const rankScore = 1 - index / Math.max(topCommunities.length - 1, 1);
-    const rankScale = Math.pow(rankScore, 1.85);
-
-    const jitterX = (seededFraction(index + 11) - 0.5) * 5.5;
-    const jitterY = (seededFraction(index + 29) - 0.5) * 7.5;
+  const topCommunityBubbles = Array.from({ length: 50 }, (_, index) => {
+    const channel = sortedGrowthChannels[index % sortedGrowthChannels.length]!;
 
     return {
-      x: clamp(((column + 0.5) / columns) * 100 + jitterX, 5, 95),
-      y: clamp(((row + 0.5) / rows) * 100 + jitterY, 8, 92),
-      size: 38 + rankScale * 78
+      channel,
+      slotId: channel.id + '-top-community-' + index
     };
+  });
+
+  const verifiedSpotlightSource = members.filter((member) => member.signal === 'Green');
+  const spotlightSource = verifiedSpotlightSource.length > 0 ? verifiedSpotlightSource : members;
+  const spotlightDayOffset =
+    spotlightSource.length > 0 ? Math.floor(Date.now() / 86400000) % spotlightSource.length : 0;
+
+  const spotlightMembers =
+    spotlightSource.length > 0
+      ? Array.from({ length: 18 }, (_, index) => {
+          const member = spotlightSource[(index + spotlightDayOffset) % spotlightSource.length]!;
+
+          return {
+            member,
+            slotId: member.id + '-spotlight-' + index
+          };
+        })
+      : [];
+
+  useEffect(() => {
+    if (hoveredShowcaseChannelId !== null || featuredShowcaseChannels.length === 0) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveShowcaseIndex((value) => (value + 1) % featuredShowcaseChannels.length);
+    }, 2600);
+
+    return () => window.clearInterval(intervalId);
+  }, [featuredShowcaseChannels.length, hoveredShowcaseChannelId]);
+
+  function openFeaturedChannel(channel: NamiChannel): void {
+    props.onSelect(channel);
+    props.onOpenProfile(channel);
   }
 
-  const bubblePhysicsNodes = useMemo(() => {
-    const nodes = topCommunities.map((item, index) => {
-      const layout = getBubbleLayout(index);
-      const dx = layout.x - bubbleCursor.x;
-      const dy = layout.y - bubbleCursor.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const safeDistance = distance === 0 ? 1 : distance;
-
-      const rawInfluence = bubbleCursor.active
-        ? Math.max(0, 1 - distance / 34)
-        : 0;
-
-      const easedInfluence =
-        rawInfluence * rawInfluence * (3 - 2 * rawInfluence);
-
-      const zoomCurve =
-        easedInfluence === 0
-          ? 0
-          : 1 - Math.pow(1 - easedInfluence, 2.65);
-
-      const cursorPushCurve =
-        easedInfluence * (1 - Math.pow(easedInfluence, 2.15) * 0.48);
-
-      const closeRangeDamping = Math.max(0.28, distance / 34);
-
-      const isSmallBubble = layout.size <= 58 || item.rank > 18;
-
-      const cursorForce = isSmallBubble
-        ? 9 * cursorPushCurve * closeRangeDamping
-        : 13 * cursorPushCurve * closeRangeDamping;
-
-      const direction = isSmallBubble ? -1 : 1;
-
-      const translateX = direction * (dx / safeDistance) * cursorForce;
-      const translateY = direction * (dy / safeDistance) * cursorForce;
-
-      const scale = 1 + zoomCurve * (isSmallBubble ? 0.36 : 0.28);
-      const radius = (layout.size / 15) * scale;
-
-      return {
-        channel: item.channel,
-        rank: item.rank,
-        index,
-        x: clamp(layout.x + translateX, 4, 96),
-        y: clamp(layout.y + translateY, 6, 94),
-        size: layout.size,
-        radius,
-        scale,
-        influence: easedInfluence,
-        glow: 10 + zoomCurve * (isSmallBubble ? 48 : 42),
-        insetGlow: 5 + zoomCurve * (isSmallBubble ? 24 : 20)
-      };
-    });
-
-    for (let iteration = 0; iteration < 6; iteration += 1) {
-      for (let leftIndex = 0; leftIndex < nodes.length; leftIndex += 1) {
-        for (let rightIndex = leftIndex + 1; rightIndex < nodes.length; rightIndex += 1) {
-          const left = nodes[leftIndex];
-          const right = nodes[rightIndex];
-
-          if (!left || !right) {
-            continue;
-          }
-
-          const dx = right.x - left.x;
-          const dy = right.y - left.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const safeDistance = distance === 0 ? 0.01 : distance;
-          const minimumDistance = left.radius + right.radius + 1.1;
-
-          if (safeDistance >= minimumDistance) {
-            continue;
-          }
-
-          const overlap = minimumDistance - safeDistance;
-          const normalX = dx / safeDistance;
-          const normalY = dy / safeDistance;
-
-          const leftMass = 1 + (topCommunities.length - left.index) / topCommunities.length;
-          const rightMass = 1 + (topCommunities.length - right.index) / topCommunities.length;
-
-          const leftMove = overlap * (rightMass / (leftMass + rightMass)) * 0.72;
-          const rightMove = overlap * (leftMass / (leftMass + rightMass)) * 0.72;
-
-          left.x = clamp(left.x - normalX * leftMove, 4, 96);
-          left.y = clamp(left.y - normalY * leftMove, 6, 94);
-          right.x = clamp(right.x + normalX * rightMove, 4, 96);
-          right.y = clamp(right.y + normalY * rightMove, 6, 94);
-        }
-      }
-    }
-
-    return nodes;
-  }, [bubbleCursor, bubbleSeed, topCommunities]);
-
-  function getBubbleStyle(index: number): CSSProperties {
-    const node = bubblePhysicsNodes[index];
-
-    if (!node) {
-      return {};
-    }
-
-    return {
-      left: String(node.x) + '%',
-      top: String(node.y) + '%',
-      width: String(node.size) + 'px',
-      height: String(node.size) + 'px',
-      transform:
-        'translate(-50%, -50%) scale(' +
-        node.scale.toFixed(3) +
-        ')',
-      zIndex: Math.round(10 + node.influence * 50 + (50 - index) / 8),
-      boxShadow:
-        '0 0 ' +
-        node.glow.toFixed(0) +
-        'px currentColor, inset 0 0 ' +
-        node.insetGlow.toFixed(0) +
-        'px rgba(255,255,255,0.08)'
-    };
+  function channelHandle(channel: NamiChannel): string {
+    return channel.handle.startsWith('@') ? channel.handle : '@' + channel.handle;
   }
 
   return (
@@ -530,93 +967,110 @@ function NamiHub(props: {
         <h1>Nami Hub</h1>
       </header>
 
-      <section className="banner-panel">
+      <button
+        className="banner-panel featured-banner-carousel nami-hub-rotating-banner"
+        onClick={() => openFeaturedChannel(activeFeaturedChannel)}
+        onMouseEnter={() => setHoveredShowcaseChannelId(activeFeaturedChannel.id)}
+        onMouseLeave={() => setHoveredShowcaseChannelId(null)}
+        type="button"
+      >
         <span>Featured Partner Banner Carousel</span>
-        <strong>{props.selectedChannel.name}</strong>
-      </section>
+        <strong>{activeFeaturedChannel.name}</strong>
+        <small>{activeFeaturedChannel.genre}</small>
+      </button>
 
-      <FeaturedRail
-        title="Community Showcase"
-        selectedChannel={props.selectedChannel}
-        onSelect={props.onSelect}
+      <CryptoBubbleBoard
+        activeChannelId={activeFeaturedChannel.id}
+        entries={topCommunityBubbles}
+        onHoverChannel={setHoveredShowcaseChannelId}
+        onOpenChannel={openFeaturedChannel}
       />
 
-      <section className="dashboard-grid dashboard-grid-compact">
-        <article className="panel">
-          <h2>Community Growth</h2>
-          {channels.map((channel, index) => (
-            <div className="growth-row" key={channel.id}>
-              <span>{channel.handle}</span>
-              <div>
-                <i style={{ width: String(92 - index * 12) + '%' }} />
-              </div>
-              <strong>{channel.subscribers.toLocaleString()}</strong>
-            </div>
-          ))}
-        </article>
 
-        <article className="panel">
-          <h2>Latest Names</h2>
-          <ul className="simple-list">
-            <li>exavil@talise</li>
-            <li>mint85@talise</li>
-            <li>rom378@talise</li>
-            <li>victory@talise</li>
-          </ul>
-        </article>
 
-        <article className="panel bubble-panel-wide">
-          <div className="bubble-panel-heading">
-            <div>
-              <h2>Top 50 Communities</h2>
-              <p>Randomized ranked community map with small-bubble attraction, cursor push, and bubble collision.</p>
-            </div>
-
-            <span className="selected-channel-chip">
-              Selected: <strong>{props.selectedChannel.name}</strong>
-            </span>
+      <section className="nami-hub-lower-grid">
+        <article className="panel community-growth-panel">
+          <div className="profile-panel-heading">
+            <h2>Community Growth</h2>
+            <p>Clickable channel growth rows with subscriber momentum.</p>
           </div>
 
-          <div
-            className="bubble-map bubble-field bubble-field-wide"
-            onMouseLeave={() => {
-              setBubbleCursor({
-                x: 50,
-                y: 50,
-                active: false
-              });
-            }}
-            onMouseMove={(event) => {
-              const rect = event.currentTarget.getBoundingClientRect();
-              const width = Math.max(rect.width, 1);
-              const height = Math.max(rect.height, 1);
+          <div className="community-growth-list">
+            {growthChannels.map((channel, index) => {
+              const growthPercent = Math.max(
+                8,
+                (channel.subscribers / maxCommunitySubscribers) * 100
+              );
 
-              setBubbleCursor({
-                x: ((event.clientX - rect.left) / width) * 100,
-                y: ((event.clientY - rect.top) / height) * 100,
-                active: true
-              });
-            }}
-          >
-            {topCommunities.map((item, index) => (
-              <button
-                className={'interactive-bubble ' + signalClass(item.channel.signal)}
-                key={item.channel.id + '-bubble-' + item.rank}
-                onClick={() => props.onOpenProfile(item.channel)}
-                style={getBubbleStyle(index)}
-                type="button"
-              >
-                <strong>{item.rank}</strong>
-                <span>{item.channel.name}</span>
-                <small>{item.channel.subscribers.toLocaleString()}</small>
-              </button>
-            ))}
+              return (
+                <button
+                  className="community-growth-row"
+                  key={channel.id + '-growth-' + index}
+                  onClick={() => openFeaturedChannel(channel)}
+                  type="button"
+                >
+                  <span className="community-growth-handle">{channelHandle(channel)}</span>
+
+                  <div className="community-growth-bar-shell">
+                    <div
+                      className="community-growth-bar"
+                      style={{ width: growthPercent + '%' }}
+                    />
+                  </div>
+
+                  <strong className="community-growth-value">
+                    {channel.subscribers.toLocaleString()}
+                  </strong>
+                </button>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="panel member-spotlight-panel">
+          <div className="profile-panel-heading member-spotlight-header">
+            <h2>Member Spotlight</h2>
+            <p>Verified members cycle daily with their highlight badge and current level.</p>
+          </div>
+
+          <div className="member-spotlight-grid">
+            {spotlightMembers.map(({ member, slotId }) => {
+              const progression = getNamiProgression(member);
+
+              return (
+                <button
+                  className="member-spotlight-card"
+                  key={slotId}
+                  onClick={() => {
+                    window.localStorage.setItem('nami-selected-member-id', member.id);
+                  }}
+                  type="button"
+                >
+                  <div className="member-spotlight-left">
+                    <div className={'member-spotlight-avatar ' + signalClass(member.signal)}>
+                      {memberInitials(member)}
+                      <span className="member-spotlight-level">{progression.level}</span>
+                    </div>
+
+                    <div className="member-spotlight-copy">
+                      <strong>{member.name}</strong>
+                      <span>{member.tier} · Lv {progression.level}</span>
+                    </div>
+                  </div>
+
+                  <span className="member-spotlight-verified">Verified</span>
+                </button>
+              );
+            })}
           </div>
         </article>
       </section>
     </>
   );
 }
+
+
+
 
 function GameHub(props: {
   selectedChannel: NamiChannel;
@@ -854,8 +1308,8 @@ function ChannelProfile(props: {
     'Channel Modules',
     'Official Announcements',
     'Official Links',
-    'Official Badges',
-    'Custom Badges',
+    'Nami Badges',
+    'Channel Badges',
     'Profile Customization',
     'Related Channels'
   ];

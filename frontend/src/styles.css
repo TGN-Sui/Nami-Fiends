@@ -8389,3 +8389,3002 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   UI-A11C — interactive motion polish
+   ========================================================= */
+
+/* Sidebar profile card: clickable foil, cursor tilt, and looping idle shine. */
+.sidebar-profile-shell {
+  position: relative;
+  width: 100%;
+  perspective: 720px;
+}
+
+.sidebar-player-progress-button {
+  --sidebar-profile-x: 50%;
+  --sidebar-profile-y: 18%;
+  --sidebar-profile-tilt-x: 0deg;
+  --sidebar-profile-tilt-y: 0deg;
+  width: 100%;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transform:
+    perspective(720px)
+    rotateX(var(--sidebar-profile-tilt-x))
+    rotateY(var(--sidebar-profile-tilt-y));
+  transform-style: preserve-3d;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.sidebar-player-progress-button::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    radial-gradient(
+      circle at var(--sidebar-profile-x) var(--sidebar-profile-y),
+      rgba(255, 255, 255, 0.26),
+      transparent 17%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 18%,
+      rgba(117, 215, 255, 0.18),
+      transparent 44%,
+      rgba(67, 245, 167, 0.12),
+      transparent 72%
+    );
+  animation: sidebarProfileFoilLoop 6.5s ease-in-out infinite;
+}
+
+.sidebar-player-progress-button:hover {
+  border-color: rgba(117, 215, 255, 0.36);
+  box-shadow: 0 0 28px rgba(117, 215, 255, 0.12);
+}
+
+.sidebar-player-progress-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes sidebarProfileFoilLoop {
+  0% {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(4%, 3%, 0) rotate(4deg);
+  }
+
+  100% {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg);
+  }
+}
+
+.sidebar-profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.96);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.3);
+  z-index: 80;
+}
+
+.sidebar-profile-menu button {
+  min-height: 34px;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(117, 215, 255, 0.06);
+  color: #dff6ff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.sidebar-profile-menu button:hover {
+  border-color: rgba(117, 215, 255, 0.28);
+  box-shadow: 0 0 18px rgba(117, 215, 255, 0.1);
+}
+
+.sidebar.is-collapsed .sidebar-profile-menu {
+  top: 0;
+  left: calc(100% + 10px);
+  width: 166px;
+}
+
+/* Featured partner / placement cards: looping foil and traveling neon edge. */
+.partner-feature,
+.paid-feature,
+.featured-partner-banner-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.partner-feature::before,
+.paid-feature::before,
+.featured-partner-banner-card::before {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.2), transparent 18%),
+    linear-gradient(120deg, transparent 18%, rgba(117, 215, 255, 0.18), transparent 45%, rgba(67, 245, 167, 0.12), transparent 74%);
+  animation: featuredFoilSweep 8s ease-in-out infinite;
+}
+
+.partner-feature::after,
+.paid-feature::after,
+.featured-partner-banner-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  padding: 1px;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from var(--featured-edge-angle, 0deg),
+      rgba(117, 215, 255, 0.08),
+      rgba(117, 215, 255, 0.9),
+      rgba(67, 245, 167, 0.48),
+      rgba(255, 184, 77, 0.62),
+      rgba(117, 215, 255, 0.08)
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: featuredNeonEdge 4.8s linear infinite;
+}
+
+.partner-feature > *,
+.paid-feature > *,
+.featured-partner-banner-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes featuredFoilSweep {
+  0% {
+    transform: translate3d(-5%, -3%, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(6%, 4%, 0) rotate(5deg);
+  }
+
+  100% {
+    transform: translate3d(-5%, -3%, 0) rotate(0deg);
+  }
+}
+
+@property --featured-edge-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes featuredNeonEdge {
+  to {
+    --featured-edge-angle: 360deg;
+  }
+}
+
+/* Consistent hover life across cards, modules, and panels. */
+.panel,
+.gamehub-feature-card,
+.discovery-card,
+.module-card,
+.profile-stat-card,
+.channel-info-card,
+.passport-proof-card,
+.passport-access-card,
+.member-history-card,
+.profile-mini-channel-card,
+.profile-mini-guild-card,
+.chat-rail-collapsible-panel,
+.settings-brand-color-chip-polished {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.panel:hover,
+.gamehub-feature-card:hover,
+.discovery-card:hover,
+.module-card:hover,
+.profile-stat-card:hover,
+.channel-info-card:hover,
+.passport-proof-card:hover,
+.passport-access-card:hover,
+.member-history-card:hover,
+.profile-mini-channel-card:hover,
+.profile-mini-guild-card:hover,
+.chat-rail-collapsible-panel:hover,
+.settings-brand-color-chip-polished:hover {
+  transform: translateY(-2px);
+  border-color: rgba(117, 215, 255, 0.26);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2), 0 0 22px rgba(117, 215, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-player-progress-button,
+  .partner-feature::before,
+  .paid-feature::before,
+  .featured-partner-banner-card::before,
+  .partner-feature::after,
+  .paid-feature::after,
+  .featured-partner-banner-card::after,
+  .panel,
+  .gamehub-feature-card,
+  .discovery-card,
+  .module-card,
+  .profile-stat-card,
+  .channel-info-card,
+  .passport-proof-card,
+  .passport-access-card,
+  .member-history-card,
+  .profile-mini-channel-card,
+  .profile-mini-guild-card,
+  .chat-rail-collapsible-panel,
+  .settings-brand-color-chip-polished {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================
+   UI-A11C.1 — stronger neon featured borders + living grid lens
+   ========================================================= */
+
+/* Stronger visible traveling neon edge for featured GameHub cards. */
+.partner-feature,
+.paid-feature,
+.featured-partner-banner-card {
+  border-color: transparent !important;
+}
+
+.partner-feature::after,
+.paid-feature::after,
+.featured-partner-banner-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: 1;
+  pointer-events: none;
+  padding: 2px;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(117, 215, 255, 0.05) 0deg,
+      rgba(117, 215, 255, 0.96) 34deg,
+      rgba(67, 245, 167, 0.76) 72deg,
+      rgba(255, 184, 77, 0.88) 112deg,
+      rgba(117, 215, 255, 0.08) 158deg,
+      rgba(117, 215, 255, 0.05) 360deg
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: namiNeonBorderTravel 3.8s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(117, 215, 255, 0.42));
+}
+
+.partner-feature:hover::after,
+.paid-feature:hover::after,
+.featured-partner-banner-card:hover::after {
+  filter:
+    drop-shadow(0 0 10px rgba(117, 215, 255, 0.58))
+    drop-shadow(0 0 16px rgba(67, 245, 167, 0.22));
+}
+
+@keyframes namiNeonBorderTravel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Living background lens: subtle glow, curved zoom feeling, and organic motion behind panels. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -16%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(117, 215, 255, 0.14) 0,
+      rgba(67, 245, 167, 0.075) 18%,
+      rgba(5, 9, 15, 0.04) 31%,
+      transparent 44%
+    );
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  transform-origin: center;
+  animation: namiGridOrganicLens 28s ease-in-out infinite;
+}
+
+@keyframes namiGridOrganicLens {
+  0% {
+    transform: translate3d(-22%, -14%, 0) scale(0.82);
+    opacity: 0.18;
+  }
+
+  18% {
+    transform: translate3d(16%, -8%, 0) scale(1.08);
+    opacity: 0.31;
+  }
+
+  39% {
+    transform: translate3d(24%, 18%, 0) scale(0.92);
+    opacity: 0.24;
+  }
+
+  58% {
+    transform: translate3d(-6%, 24%, 0) scale(1.16);
+    opacity: 0.36;
+  }
+
+  79% {
+    transform: translate3d(-26%, 6%, 0) scale(0.96);
+    opacity: 0.26;
+  }
+
+  100% {
+    transform: translate3d(-22%, -14%, 0) scale(0.82);
+    opacity: 0.18;
+  }
+}
+
+/* Make sure UI remains above both animated background layers. */
+#root,
+.sidebar,
+.nami-app,
+.panel,
+.chat-window,
+.chat-side-panel {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep motion accessible. */
+@media (prefers-reduced-motion: reduce) {
+  .partner-feature::after,
+  .paid-feature::after,
+  .featured-partner-banner-card::after,
+  body::after {
+    animation: none !important;
+  }
+}
+
+/* =========================================================
+   UI-A11C.2 — motion correction pass
+   - living grid lens with color/tint + falloff
+   - stationary neon border with traveling color
+   - sidebar profile menu reveals to the right
+   ========================================================= */
+
+/* -----------------------------------------
+   1) Living grid lens
+   ----------------------------------------- */
+
+/* Keep all main UI above background effects */
+#root,
+.nami-app,
+.sidebar,
+.panel,
+.profile-panel,
+.chat-window,
+.chat-side-panel,
+.channel-browser,
+.community-showcase {
+  position: relative;
+  z-index: 1;
+}
+
+/* Secondary animated lens that tints the grid and gives a subtle
+   warped / curved zoom feel without overpowering the interface. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -18%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  mix-blend-mode: screen;
+  transform-origin: center center;
+  background:
+    radial-gradient(
+      circle at 22% 18%,
+      rgba(116, 215, 255, 0.18) 0%,
+      rgba(116, 215, 255, 0.10) 10%,
+      rgba(67, 245, 167, 0.06) 18%,
+      rgba(0, 0, 0, 0) 34%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0) 0 34px,
+      rgba(116, 215, 255, 0.12) 34px 35px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 0 34px,
+      rgba(67, 245, 167, 0.10) 34px 35px
+    );
+  mask-image: radial-gradient(
+    circle at 22% 18%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.56) 24%,
+    rgba(0, 0, 0, 0.16) 34%,
+    rgba(0, 0, 0, 0) 46%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle at 22% 18%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.92) 12%,
+    rgba(0, 0, 0, 0.56) 24%,
+    rgba(0, 0, 0, 0.16) 34%,
+    rgba(0, 0, 0, 0) 46%
+  );
+  filter: blur(0.4px) saturate(116%);
+  animation: namiOrganicGridLens 24s ease-in-out infinite;
+}
+
+@keyframes namiOrganicGridLens {
+  0% {
+    transform: translate3d(-12%, -10%, 0) scale(0.96);
+    background-position:
+      0 0,
+      0 0,
+      0 0;
+  }
+
+  20% {
+    transform: translate3d(8%, -4%, 0) scale(1.08);
+    background-position:
+      0 0,
+      8px 0,
+      0 8px;
+  }
+
+  42% {
+    transform: translate3d(20%, 8%, 0) scale(1.2);
+    background-position:
+      0 0,
+      14px 0,
+      0 14px;
+  }
+
+  62% {
+    transform: translate3d(6%, 18%, 0) scale(1.12);
+    background-position:
+      0 0,
+      9px 0,
+      0 9px;
+  }
+
+  82% {
+    transform: translate3d(-10%, 10%, 0) scale(1.02);
+    background-position:
+      0 0,
+      4px 0,
+      0 4px;
+  }
+
+  100% {
+    transform: translate3d(-12%, -10%, 0) scale(0.96);
+    background-position:
+      0 0,
+      0 0,
+      0 0;
+  }
+}
+
+/* -----------------------------------------
+   2) Featured partner stationary border
+   ----------------------------------------- */
+
+/* Remove the rotating-ring behavior */
+.partner-feature::after,
+.paid-feature::after,
+.featured-partner-banner-card::after {
+  transform: none !important;
+  animation: namiNeonBorderFlow 4.4s linear infinite !important;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(117, 215, 255, 0.00) 0%,
+      rgba(117, 215, 255, 0.95) 14%,
+      rgba(67, 245, 167, 0.82) 30%,
+      rgba(255, 184, 77, 0.88) 48%,
+      rgba(117, 215, 255, 0.95) 66%,
+      rgba(67, 245, 167, 0.82) 82%,
+      rgba(117, 215, 255, 0.00) 100%
+    );
+  background-size: 240% 100%;
+  background-position: 0% 50%;
+  filter: drop-shadow(0 0 8px rgba(117, 215, 255, 0.36));
+}
+
+/* Make sure the border itself stays fixed while only the color shifts */
+@keyframes namiNeonBorderFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 240% 50%;
+  }
+}
+
+/* -----------------------------------------
+   3) Sidebar profile menu reveal to the right
+   ----------------------------------------- */
+
+/* Support either class name if both exist during refactors */
+.sidebar-profile-shell,
+.sidebar-profile-card,
+.sidebar-profile-trigger {
+  position: relative;
+  overflow: visible;
+}
+
+.sidebar-profile-menu,
+.sidebar-profile-popover {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.75rem);
+  right: auto;
+  transform: translateY(-50%);
+  z-index: 50;
+  min-width: 12rem;
+  max-width: min(14rem, calc(100vw - 6rem));
+}
+
+/* Optional small-screen fallback */
+@media (max-width: 900px) {
+  .sidebar-profile-menu,
+  .sidebar-profile-popover {
+    top: 0;
+    left: calc(100% + 0.5rem);
+    transform: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  body::after,
+  .partner-feature::after,
+  .paid-feature::after,
+  .featured-partner-banner-card::after {
+    animation: none !important;
+  }
+}
+
+/* =========================================================
+   UI-A11C.3 — Featured banner foil + pulse polish
+   - restores featured banner neon border
+   - adds looping foil effect
+   - adds subtle pulse scale curve (no tilt)
+   ========================================================= */
+
+:is(
+  .featured-partner-banner-card,
+  .featured-partner-banner,
+  .partner-banner-carousel,
+  .hub-featured-banner,
+  .nami-banner-carousel,
+  .hub-banner-carousel,
+  .featured-banner-carousel
+) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 184, 77, 0.62);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(86, 10, 10, 0.96) 0%,
+      rgba(126, 7, 7, 0.96) 48%,
+      rgba(92, 14, 14, 0.96) 100%
+    );
+  box-shadow:
+    0 0 0 1px rgba(255, 184, 77, 0.12),
+    0 18px 40px rgba(0, 0, 0, 0.28);
+  transform-origin: center center;
+  will-change: transform;
+  animation: namiFeaturedBannerPulse 5.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+:is(
+  .featured-partner-banner-card,
+  .featured-partner-banner,
+  .partner-banner-carousel,
+  .hub-featured-banner,
+  .nami-banner-carousel,
+  .hub-banner-carousel,
+  .featured-banner-carousel
+) > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Looping foil sheen */
+:is(
+  .featured-partner-banner-card,
+  .featured-partner-banner,
+  .partner-banner-carousel,
+  .hub-featured-banner,
+  .nami-banner-carousel,
+  .hub-banner-carousel,
+  .featured-banner-carousel
+)::before {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(120, 220, 255, 0.10) 18%,
+      rgba(255, 210, 120, 0.18) 34%,
+      rgba(120, 255, 210, 0.12) 48%,
+      rgba(255, 255, 255, 0) 66%
+    ),
+    radial-gradient(
+      circle at 24% 42%,
+      rgba(255, 210, 120, 0.12) 0%,
+      rgba(255, 210, 120, 0) 36%
+    ),
+    radial-gradient(
+      circle at 76% 58%,
+      rgba(120, 220, 255, 0.12) 0%,
+      rgba(120, 220, 255, 0) 38%
+    );
+  filter: blur(2px) saturate(120%);
+  transform: translate3d(-6%, 0, 0) scale(1.02);
+  will-change: transform, opacity;
+  animation: namiFeaturedBannerFoil 7.4s ease-in-out infinite;
+}
+
+/* Stationary border with traveling neon color */
+:is(
+  .featured-partner-banner-card,
+  .featured-partner-banner,
+  .partner-banner-carousel,
+  .hub-featured-banner,
+  .nami-banner-carousel,
+  .hub-banner-carousel,
+  .featured-banner-carousel
+)::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 184, 77, 0.00) 0%,
+      rgba(255, 184, 77, 0.92) 12%,
+      rgba(116, 215, 255, 0.96) 28%,
+      rgba(67, 245, 167, 0.88) 44%,
+      rgba(255, 184, 77, 0.96) 60%,
+      rgba(116, 215, 255, 0.96) 76%,
+      rgba(255, 184, 77, 0.00) 100%
+    );
+  background-size: 260% 100%;
+  background-position: 0% 50%;
+  filter: drop-shadow(0 0 10px rgba(255, 184, 77, 0.18))
+          drop-shadow(0 0 14px rgba(116, 215, 255, 0.14));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: namiFeaturedBorderTravel 3.8s linear infinite;
+}
+
+@keyframes namiFeaturedBannerPulse {
+  0% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(1.008);
+  }
+  42% {
+    transform: scale(1.018);
+  }
+  62% {
+    transform: scale(1.01);
+  }
+  82% {
+    transform: scale(1.004);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes namiFeaturedBannerFoil {
+  0% {
+    transform: translate3d(-8%, -1%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+  20% {
+    transform: translate3d(2%, -2%, 0) scale(1.035);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate3d(8%, 1%, 0) scale(1.045);
+    opacity: 0.52;
+  }
+  78% {
+    transform: translate3d(1%, 2%, 0) scale(1.025);
+    opacity: 0.36;
+  }
+  100% {
+    transform: translate3d(-8%, -1%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+}
+
+@keyframes namiFeaturedBorderTravel {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 260% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .featured-partner-banner-card,
+    .featured-partner-banner,
+    .partner-banner-carousel,
+    .hub-featured-banner,
+    .nami-banner-carousel,
+    .hub-banner-carousel,
+    .featured-banner-carousel
+  ) {
+    animation: none;
+  }
+
+  :is(
+    .featured-partner-banner-card,
+    .featured-partner-banner,
+    .partner-banner-carousel,
+    .hub-featured-banner,
+    .nami-banner-carousel,
+    .hub-banner-carousel,
+    .featured-banner-carousel
+  )::before,
+  :is(
+    .featured-partner-banner-card,
+    .featured-partner-banner,
+    .partner-banner-carousel,
+    .hub-featured-banner,
+    .nami-banner-carousel,
+    .hub-banner-carousel,
+    .featured-banner-carousel
+  )::after {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   UI-A11C.4 — exact banner-panel foil + reliable traveling border
+   ========================================================= */
+
+/* Exact live Nami Hub banner carousel class. */
+.banner-panel {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  border: 2px solid transparent !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(92, 6, 6, 0.98),
+      rgba(126, 7, 7, 0.98) 48%,
+      rgba(76, 8, 8, 0.98)
+    ) padding-box,
+    linear-gradient(
+      90deg,
+      rgba(255, 184, 77, 0.15),
+      rgba(255, 184, 77, 1),
+      rgba(117, 215, 255, 0.95),
+      rgba(67, 245, 167, 0.92),
+      rgba(255, 184, 77, 1),
+      rgba(255, 184, 77, 0.15)
+    ) border-box !important;
+  background-size: 100% 100%, 320% 100% !important;
+  background-position: 0 0, 0% 50% !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 184, 77, 0.12),
+    0 0 26px rgba(255, 184, 77, 0.1),
+    0 18px 40px rgba(0, 0, 0, 0.28) !important;
+  transform-origin: center center;
+  will-change: transform, background-position;
+  animation:
+    namiBannerBorderFlow 3.8s linear infinite,
+    namiBannerPulseScale 5.4s cubic-bezier(0.22, 1, 0.36, 1) infinite !important;
+}
+
+/* Keep banner content above foil layers. */
+.banner-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Foil sheen on the actual banner. */
+.banner-panel::before {
+  content: '';
+  position: absolute;
+  inset: -24%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      rgba(117, 215, 255, 0.12) 18%,
+      rgba(255, 225, 150, 0.22) 34%,
+      rgba(67, 245, 167, 0.12) 48%,
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 24% 42%,
+      rgba(255, 184, 77, 0.16),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 76% 58%,
+      rgba(117, 215, 255, 0.14),
+      transparent 38%
+    );
+  filter: blur(1.5px) saturate(120%);
+  animation: namiBannerFoilSweep 7.2s ease-in-out infinite !important;
+}
+
+/* Extra thin inner glow so the border is visibly present at rest. */
+.banner-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 184, 77, 0.42),
+    inset 0 0 22px rgba(255, 184, 77, 0.08);
+}
+
+/* Also make GameHub featured cards use a reliable border-box traveling gradient. */
+.partner-feature,
+.paid-feature,
+.featured-partner-banner-card {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  border: 2px solid transparent !important;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(16, 28, 42, 0.96),
+      rgba(25, 29, 47, 0.96)
+    ) padding-box,
+    linear-gradient(
+      90deg,
+      rgba(117, 215, 255, 0.12),
+      rgba(117, 215, 255, 0.95),
+      rgba(67, 245, 167, 0.78),
+      rgba(255, 184, 77, 0.86),
+      rgba(117, 215, 255, 0.95),
+      rgba(117, 215, 255, 0.12)
+    ) border-box !important;
+  background-size: 100% 100%, 320% 100% !important;
+  background-position: 0 0, 0% 50% !important;
+  animation: namiFeaturedCardBorderFlow 4.2s linear infinite !important;
+}
+
+/* Disable old pseudo border masks on these cards so they do not hide the new border. */
+.partner-feature::after,
+.paid-feature::after,
+.featured-partner-banner-card::after {
+  display: none !important;
+}
+
+@keyframes namiBannerBorderFlow {
+  0% {
+    background-position: 0 0, 0% 50%;
+  }
+
+  100% {
+    background-position: 0 0, 320% 50%;
+  }
+}
+
+@keyframes namiFeaturedCardBorderFlow {
+  0% {
+    background-position: 0 0, 0% 50%;
+  }
+
+  100% {
+    background-position: 0 0, 320% 50%;
+  }
+}
+
+@keyframes namiBannerPulseScale {
+  0% {
+    transform: scale(1);
+  }
+
+  22% {
+    transform: scale(1.006);
+  }
+
+  48% {
+    transform: scale(1.016);
+  }
+
+  68% {
+    transform: scale(1.008);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes namiBannerFoilSweep {
+  0% {
+    transform: translate3d(-10%, -2%, 0) scale(1.01);
+    opacity: 0.26;
+  }
+
+  30% {
+    transform: translate3d(2%, -3%, 0) scale(1.035);
+    opacity: 0.42;
+  }
+
+  58% {
+    transform: translate3d(10%, 2%, 0) scale(1.05);
+    opacity: 0.56;
+  }
+
+  82% {
+    transform: translate3d(1%, 3%, 0) scale(1.025);
+    opacity: 0.38;
+  }
+
+  100% {
+    transform: translate3d(-10%, -2%, 0) scale(1.01);
+    opacity: 0.26;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-panel,
+  .banner-panel::before,
+  .partner-feature,
+  .paid-feature,
+  .featured-partner-banner-card {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.5 — Nami Hub sidebar and spotlight polish
+   ========================================================= */
+
+/* Nami Hub now owns the top diamond/brand position. */
+.sidebar-brand.is-active-sidebar-brand {
+  border-color: rgba(117, 215, 255, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(117, 215, 255, 0.12),
+    0 0 26px rgba(117, 215, 255, 0.12);
+}
+
+.sidebar-brand.is-active-sidebar-brand .diamond-mark {
+  box-shadow:
+    0 0 0 1px rgba(117, 215, 255, 0.14),
+    0 0 24px rgba(117, 215, 255, 0.12);
+}
+
+/* Banner breathing curve: slower, smoother, less jarring. */
+.banner-panel {
+  animation:
+    namiBannerBorderFlow 3.8s linear infinite,
+    namiBannerBreathingPulseSoft 9.6s cubic-bezier(0.45, 0, 0.55, 1) infinite !important;
+}
+
+/* Foil wipe is about 30% faster than the previous 7.2s pass. */
+.banner-panel::before {
+  animation: namiBannerFoilWipeFast 5s ease-in-out infinite !important;
+}
+
+@keyframes namiBannerBreathingPulseSoft {
+  0% {
+    transform: scale(1);
+  }
+
+  20% {
+    transform: scale(1.003);
+  }
+
+  42% {
+    transform: scale(1.011);
+  }
+
+  58% {
+    transform: scale(1.014);
+  }
+
+  76% {
+    transform: scale(1.006);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes namiBannerFoilWipeFast {
+  0% {
+    transform: translate3d(-12%, -2%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+
+  24% {
+    transform: translate3d(0%, -3%, 0) scale(1.035);
+    opacity: 0.42;
+  }
+
+  52% {
+    transform: translate3d(12%, 2%, 0) scale(1.05);
+    opacity: 0.56;
+  }
+
+  76% {
+    transform: translate3d(2%, 3%, 0) scale(1.025);
+    opacity: 0.38;
+  }
+
+  100% {
+    transform: translate3d(-12%, -2%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+}
+
+/* Member Spotlight verified cards. */
+.member-spotlight-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.member-spotlight-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.member-spotlight-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(5, 9, 15, 0.34);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.member-spotlight-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(67, 245, 167, 0.34);
+  box-shadow: 0 0 22px rgba(67, 245, 167, 0.08);
+}
+
+.member-spotlight-avatar {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.78);
+  color: #eef7ff;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.member-spotlight-avatar span {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.35);
+  background: #07111d;
+  color: #7ee6ff;
+  font-size: 0.62rem;
+}
+
+.member-spotlight-card strong,
+.member-spotlight-card small {
+  display: block;
+}
+
+.member-spotlight-card strong {
+  color: #eef7ff;
+  font-size: 0.95rem;
+}
+
+.member-spotlight-card small {
+  margin-top: 2px;
+  color: #9fb5ca;
+  font-size: 0.78rem;
+}
+
+.member-spotlight-highlight {
+  min-height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(67, 245, 167, 0.28);
+  background: rgba(67, 245, 167, 0.08);
+  color: #8effca;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+@media (max-width: 640px) {
+  .member-spotlight-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .member-spotlight-highlight {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-panel,
+  .banner-panel::before {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.6 — rotating showcase and spotlight expansion
+   ========================================================= */
+
+/* Member Spotlight: 8 visible cards, 18 total verified entries scrollable. */
+.member-spotlight-panel {
+  max-height: 660px;
+  overflow: hidden;
+}
+
+.member-spotlight-grid {
+  max-height: 516px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+}
+
+.member-spotlight-grid::-webkit-scrollbar,
+.community-growth-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.member-spotlight-grid::-webkit-scrollbar-thumb,
+.community-growth-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.24);
+}
+
+.member-spotlight-card {
+  min-height: 54px;
+}
+
+/* Community Growth: clickable rows and hover-scaled bars. */
+.community-growth-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.community-growth-list {
+  display: grid;
+  gap: 10px;
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.community-growth-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(78px, 0.6fr) minmax(160px, 1.8fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.community-growth-row:hover {
+  transform: translateX(4px);
+  border-color: rgba(117, 215, 255, 0.14);
+  background: rgba(117, 215, 255, 0.05);
+}
+
+.community-growth-row span {
+  color: #dff6ff;
+  font-weight: 900;
+}
+
+.community-growth-row strong {
+  color: #eef7ff;
+  font-weight: 950;
+}
+
+.community-growth-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  transform-origin: left center;
+}
+
+.community-growth-track i {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(67, 245, 167, 0.92), rgba(232, 81, 242, 0.86));
+  transform-origin: left center;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease;
+}
+
+.community-growth-row:hover .community-growth-track i {
+  transform: scaleX(1.045);
+  filter: drop-shadow(0 0 10px rgba(67, 245, 167, 0.22));
+}
+
+/* Community Showcase: auto-rotating featured channel carousel. */
+.community-showcase-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.community-showcase-carousel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(112px, 1fr));
+  gap: 14px;
+}
+
+.community-showcase-card {
+  min-height: 132px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(5, 9, 15, 0.36);
+  color: #eef7ff;
+  cursor: pointer;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.community-showcase-card:hover,
+.community-showcase-card.is-active-showcase-card {
+  transform: translateY(-4px) scale(1.018);
+  border-color: rgba(67, 245, 167, 0.52);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.22),
+    0 0 28px rgba(67, 245, 167, 0.12);
+}
+
+.community-showcase-card strong {
+  font-size: 0.96rem;
+}
+
+.community-showcase-card small {
+  color: #9fb5ca;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(3, minmax(112px, 1fr));
+  }
+
+  .community-growth-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(2, minmax(112px, 1fr));
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.7 — full Nami Hub rotation replacement
+   ========================================================= */
+
+.nami-hub-rotating-banner {
+  width: 100%;
+  min-height: 152px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: #fff8f4;
+  text-align: center;
+  cursor: pointer;
+}
+
+.nami-hub-rotating-banner span {
+  color: #ffd36d;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.nami-hub-rotating-banner strong {
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+}
+
+.nami-hub-rotating-banner small {
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 900;
+}
+
+/* Smoother banner breathing and faster foil wipe. */
+.banner-panel {
+  animation:
+    namiBannerBorderFlow 3.8s linear infinite,
+    namiBannerBreathingPulseSoft 9.6s cubic-bezier(0.45, 0, 0.55, 1) infinite !important;
+}
+
+.banner-panel::before {
+  animation: namiBannerFoilWipeFast 5s ease-in-out infinite !important;
+}
+
+@keyframes namiBannerBreathingPulseSoft {
+  0% {
+    transform: scale(1);
+  }
+
+  20% {
+    transform: scale(1.003);
+  }
+
+  42% {
+    transform: scale(1.011);
+  }
+
+  58% {
+    transform: scale(1.014);
+  }
+
+  76% {
+    transform: scale(1.006);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes namiBannerFoilWipeFast {
+  0% {
+    transform: translate3d(-12%, -2%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+
+  24% {
+    transform: translate3d(0%, -3%, 0) scale(1.035);
+    opacity: 0.42;
+  }
+
+  52% {
+    transform: translate3d(12%, 2%, 0) scale(1.05);
+    opacity: 0.56;
+  }
+
+  76% {
+    transform: translate3d(2%, 3%, 0) scale(1.025);
+    opacity: 0.38;
+  }
+
+  100% {
+    transform: translate3d(-12%, -2%, 0) scale(1.01);
+    opacity: 0.28;
+  }
+}
+
+/* Nami Hub lower panels align in height. */
+.nami-hub-lower-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.nami-hub-lower-grid > .panel {
+  min-height: 610px;
+}
+
+/* Community Showcase rotates and pauses on hover. */
+.community-showcase-panel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.community-showcase-carousel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(112px, 1fr));
+  gap: 14px;
+}
+
+.community-showcase-card {
+  min-height: 132px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(5, 9, 15, 0.36);
+  color: #eef7ff;
+  cursor: pointer;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.community-showcase-card:hover,
+.community-showcase-card.is-active-showcase-card {
+  transform: translateY(-4px) scale(1.018);
+  border-color: rgba(67, 245, 167, 0.52);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.22),
+    0 0 28px rgba(67, 245, 167, 0.12);
+}
+
+.community-showcase-card strong {
+  font-size: 0.96rem;
+}
+
+.community-showcase-card small {
+  color: #9fb5ca;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Community Growth: clickable rows, more rows, no text clipping. */
+.community-growth-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.community-growth-list {
+  display: grid;
+  gap: 10px;
+  max-height: 505px;
+  overflow-y: auto;
+  padding: 2px 8px 2px 2px;
+}
+
+.community-growth-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.community-growth-row:hover {
+  transform: scale(1.012);
+  border-color: rgba(117, 215, 255, 0.28);
+  box-shadow: 0 0 18px rgba(90, 190, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.community-growth-handle,
+.community-growth-value {
+  position: relative;
+  z-index: 2;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.community-growth-handle {
+  color: #dff6ff;
+  font-weight: 950;
+}
+
+.community-growth-value {
+  color: #eef7ff;
+  font-weight: 950;
+}
+
+.community-growth-bar-shell {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(125, 125, 180, 0.18);
+}
+
+.community-growth-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(77, 235, 180, 0.95),
+    rgba(164, 211, 255, 0.92),
+    rgba(222, 97, 244, 0.92)
+  );
+  transition:
+    width 220ms ease,
+    transform 220ms ease,
+    filter 220ms ease;
+  transform-origin: left center;
+}
+
+.community-growth-row:hover .community-growth-bar {
+  transform: scaleY(1.16);
+  filter: brightness(1.08) drop-shadow(0 0 10px rgba(67, 245, 167, 0.18));
+}
+
+/* Member Spotlight: 2 columns, 8 visible, 18 scrollable. */
+.member-spotlight-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.member-spotlight-header {
+  flex: 0 0 auto;
+}
+
+.member-spotlight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 505px;
+  overflow-y: auto;
+  padding: 2px 8px 2px 2px;
+  scroll-behavior: smooth;
+}
+
+.member-spotlight-card {
+  width: 100%;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(102, 178, 255, 0.16);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(6, 10, 28, 0.68);
+  color: #eef7ff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.member-spotlight-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(120, 210, 255, 0.38);
+  box-shadow: 0 0 18px rgba(85, 180, 255, 0.12);
+}
+
+.member-spotlight-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.member-spotlight-avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+}
+
+.member-spotlight-level {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(115, 205, 255, 0.45);
+  background: #06111f;
+  color: #7ee6ff;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.member-spotlight-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.member-spotlight-copy strong,
+.member-spotlight-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-spotlight-copy strong {
+  color: #eef7ff;
+  font-size: 0.9rem;
+}
+
+.member-spotlight-copy span {
+  color: #9fb5ca;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.member-spotlight-verified {
+  flex: 0 0 auto;
+  min-height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(86, 255, 180, 0.28);
+  background: rgba(45, 139, 104, 0.18);
+  color: #82ffd0;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.member-spotlight-grid::-webkit-scrollbar,
+.community-growth-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.member-spotlight-grid::-webkit-scrollbar-thumb,
+.community-growth-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.24);
+}
+
+@media (max-width: 1180px) {
+  .nami-hub-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nami-hub-lower-grid > .panel {
+    min-height: auto;
+  }
+
+  .member-spotlight-grid {
+    max-height: 410px;
+  }
+
+  .community-growth-list {
+    max-height: 410px;
+  }
+}
+
+@media (max-width: 920px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(3, minmax(112px, 1fr));
+  }
+
+  .member-spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .community-growth-row {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(2, minmax(112px, 1fr));
+  }
+
+  .community-growth-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.8 — final Nami Hub showcase restoration
+   ========================================================= */
+
+.sidebar-gamehub-shortcut {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(117, 215, 255, 0.05);
+  color: #9fe9ff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.sidebar-gamehub-shortcut:hover,
+.sidebar-gamehub-shortcut.is-active-gamehub-shortcut {
+  border-color: rgba(117, 215, 255, 0.34);
+  background: rgba(117, 215, 255, 0.1);
+  box-shadow: 0 0 18px rgba(117, 215, 255, 0.08);
+}
+
+.sidebar.is-collapsed .sidebar-gamehub-shortcut {
+  justify-content: center;
+  padding-inline: 6px;
+}
+
+.nami-hub-rotating-banner {
+  width: 100%;
+  min-height: 152px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: #fff8f4;
+  text-align: center;
+  cursor: pointer;
+}
+
+.nami-hub-rotating-banner span {
+  color: #ffd36d;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.nami-hub-rotating-banner strong {
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+}
+
+.nami-hub-rotating-banner small {
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 900;
+}
+
+.nami-hub-lower-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.nami-hub-lower-grid > .panel {
+  min-height: 610px;
+}
+
+/* Restored channel bubbles / community showcase. */
+.community-showcase-panel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.community-showcase-carousel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(112px, 1fr));
+  gap: 14px;
+}
+
+.community-showcase-card {
+  min-height: 132px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(5, 9, 15, 0.36);
+  color: #eef7ff;
+  cursor: pointer;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.community-showcase-card:hover,
+.community-showcase-card.is-active-showcase-card {
+  transform: translateY(-4px) scale(1.018);
+  border-color: rgba(67, 245, 167, 0.52);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.22),
+    0 0 28px rgba(67, 245, 167, 0.12);
+}
+
+.community-showcase-card strong {
+  font-size: 0.96rem;
+}
+
+.community-showcase-card small {
+  color: #9fb5ca;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Community Growth: more rows, no clipping, clickable channel rows. */
+.community-growth-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.community-growth-list {
+  display: grid;
+  gap: 10px;
+  max-height: 505px;
+  overflow-y: auto;
+  padding: 2px 8px 2px 2px;
+}
+
+.community-growth-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.community-growth-row:hover {
+  transform: scale(1.012);
+  border-color: rgba(117, 215, 255, 0.28);
+  box-shadow: 0 0 18px rgba(90, 190, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.community-growth-handle,
+.community-growth-value {
+  position: relative;
+  z-index: 2;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.community-growth-handle {
+  color: #dff6ff;
+  font-weight: 950;
+}
+
+.community-growth-value {
+  color: #eef7ff;
+  font-weight: 950;
+}
+
+.community-growth-bar-shell {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(125, 125, 180, 0.18);
+}
+
+.community-growth-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(77, 235, 180, 0.95),
+    rgba(164, 211, 255, 0.92),
+    rgba(222, 97, 244, 0.92)
+  );
+  transition:
+    width 220ms ease,
+    transform 220ms ease,
+    filter 220ms ease;
+  transform-origin: left center;
+}
+
+.community-growth-row:hover .community-growth-bar {
+  transform: scaleY(1.16);
+  filter: brightness(1.08) drop-shadow(0 0 10px rgba(67, 245, 167, 0.18));
+}
+
+/* Member Spotlight: no top badge, 2 columns, 8 visible, 18 scrollable. */
+.member-spotlight-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.member-spotlight-header {
+  flex: 0 0 auto;
+}
+
+.member-spotlight-header .mini-badge {
+  display: none !important;
+}
+
+.member-spotlight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 505px;
+  overflow-y: auto;
+  padding: 2px 8px 2px 2px;
+  scroll-behavior: smooth;
+}
+
+.member-spotlight-card {
+  width: 100%;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(102, 178, 255, 0.16);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(6, 10, 28, 0.68);
+  color: #eef7ff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.member-spotlight-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(120, 210, 255, 0.38);
+  box-shadow: 0 0 18px rgba(85, 180, 255, 0.12);
+}
+
+.member-spotlight-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.member-spotlight-avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+}
+
+.member-spotlight-level {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(115, 205, 255, 0.45);
+  background: #06111f;
+  color: #7ee6ff;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.member-spotlight-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.member-spotlight-copy strong,
+.member-spotlight-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-spotlight-copy strong {
+  color: #eef7ff;
+  font-size: 0.9rem;
+}
+
+.member-spotlight-copy span {
+  color: #9fb5ca;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.member-spotlight-verified {
+  flex: 0 0 auto;
+  min-height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(86, 255, 180, 0.28);
+  background: rgba(45, 139, 104, 0.18);
+  color: #82ffd0;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.member-spotlight-grid::-webkit-scrollbar,
+.community-growth-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.member-spotlight-grid::-webkit-scrollbar-thumb,
+.community-growth-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.24);
+}
+
+@media (max-width: 1180px) {
+  .nami-hub-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nami-hub-lower-grid > .panel {
+    min-height: auto;
+  }
+
+  .member-spotlight-grid,
+  .community-growth-list {
+    max-height: 410px;
+  }
+}
+
+@media (max-width: 920px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(3, minmax(112px, 1fr));
+  }
+
+  .member-spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .community-growth-row {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-showcase-carousel {
+    grid-template-columns: repeat(2, minmax(112px, 1fr));
+  }
+
+  .community-growth-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.9 — bubble showcase and growth clipping final fix
+   ========================================================= */
+
+/* Force the Community Showcase bubble panel to render visibly. */
+.nami-hub-bubble-showcase {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  gap: 18px !important;
+  margin-bottom: 22px !important;
+  overflow: visible !important;
+  min-height: 210px;
+}
+
+.nami-hub-bubble-row {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(118px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.nami-hub-bubble-card {
+  min-height: 138px;
+  display: grid !important;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.12), transparent 36%),
+    rgba(5, 9, 15, 0.38);
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.nami-hub-bubble-card:hover,
+.nami-hub-bubble-card.is-active-showcase-card {
+  transform: translateY(-4px) scale(1.018);
+  border-color: rgba(67, 245, 167, 0.52);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.22),
+    0 0 28px rgba(67, 245, 167, 0.12);
+}
+
+.nami-hub-bubble-card strong {
+  color: #eef7ff;
+  font-size: 0.96rem;
+}
+
+.nami-hub-bubble-card small {
+  max-width: 100%;
+  color: #9fb5ca;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+/* Fix Community Growth clipping by removing row-scale and adding inner breathing only. */
+.community-growth-panel {
+  overflow: visible !important;
+}
+
+.community-growth-list {
+  max-height: 505px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 6px 14px 6px 6px !important;
+}
+
+.community-growth-row {
+  width: 100%;
+  min-width: 0;
+  transform: none !important;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+.community-growth-row:hover {
+  transform: none !important;
+  border-color: rgba(117, 215, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(117, 215, 255, 0.04), 0 0 18px rgba(90, 190, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.community-growth-handle,
+.community-growth-value {
+  min-width: 0;
+  overflow: visible !important;
+  white-space: nowrap;
+}
+
+.community-growth-bar-shell {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.community-growth-row:hover .community-growth-bar {
+  transform: scaleY(1.18) !important;
+  filter: brightness(1.1) drop-shadow(0 0 10px rgba(67, 245, 167, 0.2));
+}
+
+/* Keep Member Spotlight in the finalized 2-column layout. */
+.member-spotlight-header .mini-badge {
+  display: none !important;
+}
+
+.member-spotlight-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  max-height: 505px !important;
+}
+
+@media (max-width: 920px) {
+  .nami-hub-bubble-row {
+    grid-template-columns: repeat(3, minmax(118px, 1fr));
+  }
+
+  .member-spotlight-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .nami-hub-bubble-row {
+    grid-template-columns: repeat(2, minmax(118px, 1fr));
+  }
+
+  .community-growth-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.10 — restore Top 50 communities bubble panel
+   ========================================================= */
+
+.nami-hub-top50-panel {
+  display: grid !important;
+  gap: 18px;
+  margin-bottom: 22px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nami-hub-top50-bubble-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(88px, 1fr));
+  gap: 12px;
+  max-height: 344px;
+  overflow-y: auto;
+  padding: 4px 10px 4px 2px;
+  scroll-behavior: smooth;
+}
+
+.nami-hub-top50-bubble {
+  min-height: 132px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  position: relative;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(117, 215, 255, 0.1), transparent 34%),
+    rgba(5, 9, 15, 0.36);
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.nami-hub-top50-bubble:hover,
+.nami-hub-top50-bubble.is-active-top50-bubble {
+  transform: translateY(-3px) scale(1.018);
+  border-color: rgba(67, 245, 167, 0.44);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.2),
+    0 0 24px rgba(67, 245, 167, 0.1);
+}
+
+.top50-rank {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-height: 22px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(255, 184, 77, 0.12);
+  border: 1px solid rgba(255, 184, 77, 0.22);
+  color: #ffd36d;
+  font-size: 0.64rem;
+  font-weight: 950;
+}
+
+.nami-hub-top50-bubble strong {
+  max-width: 100%;
+  color: #eef7ff;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nami-hub-top50-bubble small {
+  color: #9fb5ca;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.nami-hub-top50-bubble-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nami-hub-top50-bubble-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.24);
+}
+
+/* Extra protection for Community Growth padding/clipping. */
+.community-growth-list {
+  padding: 8px 18px 8px 8px !important;
+}
+
+.community-growth-row {
+  margin-inline: 0 !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1280px) {
+  .nami-hub-top50-bubble-grid {
+    grid-template-columns: repeat(8, minmax(88px, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .nami-hub-top50-bubble-grid {
+    grid-template-columns: repeat(5, minmax(88px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .nami-hub-top50-bubble-grid {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.11 — crypto bubbles Top 50 restoration
+   ========================================================= */
+
+.crypto-bubbles-panel {
+  --crypto-cursor-x: 50%;
+  --crypto-cursor-y: 50%;
+  display: grid !important;
+  gap: 18px;
+  margin-bottom: 22px;
+  overflow: hidden !important;
+  min-height: 660px;
+}
+
+.crypto-bubbles-board {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(
+      circle at var(--crypto-cursor-x) var(--crypto-cursor-y),
+      rgba(117, 215, 255, 0.12),
+      rgba(67, 245, 167, 0.055) 18%,
+      transparent 38%
+    ),
+    radial-gradient(circle at 20% 20%, rgba(232, 81, 242, 0.08), transparent 30%),
+    radial-gradient(circle at 82% 78%, rgba(67, 245, 167, 0.07), transparent 32%),
+    rgba(5, 9, 15, 0.42);
+  box-shadow:
+    inset 0 0 32px rgba(117, 215, 255, 0.04),
+    0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+.crypto-bubbles-board::before {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  left: var(--crypto-cursor-x);
+  top: var(--crypto-cursor-y);
+  pointer-events: none;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(117, 215, 255, 0.18), rgba(67, 245, 167, 0.06) 38%, transparent 68%);
+  transform: translate(-50%, -50%) scale(1.08);
+  filter: blur(10px);
+  opacity: 0.68;
+  transition:
+    left 120ms ease,
+    top 120ms ease,
+    opacity 180ms ease;
+}
+
+.crypto-bubbles-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(117, 215, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 215, 255, 0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at var(--crypto-cursor-x) var(--crypto-cursor-y), #000 0%, transparent 44%);
+  -webkit-mask-image: radial-gradient(circle at var(--crypto-cursor-x) var(--crypto-cursor-y), #000 0%, transparent 44%);
+  transform: scale(1.02);
+  transition:
+    mask-position 120ms ease,
+    -webkit-mask-position 120ms ease;
+}
+
+.crypto-community-bubble {
+  --bubble-size: 86px;
+  --bubble-x: 50%;
+  --bubble-y: 50%;
+  --bubble-delay: 0s;
+  --bubble-growth: 50%;
+  --bubble-tilt-x: 0deg;
+  --bubble-tilt-y: 0deg;
+  --bubble-shift-x: 0px;
+  --bubble-shift-y: 0px;
+
+  position: absolute;
+  left: var(--bubble-x);
+  top: var(--bubble-y);
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.2);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), transparent 18%),
+    radial-gradient(circle at center, rgba(67, 245, 167, 0.16), rgba(77, 163, 255, 0.08) 46%, rgba(5, 9, 15, 0.78) 72%);
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: center;
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--bubble-shift-x), var(--bubble-shift-y), 0)
+    rotateX(var(--bubble-tilt-x))
+    rotateY(var(--bubble-tilt-y));
+  transform-style: preserve-3d;
+  box-shadow:
+    inset 0 0 22px rgba(117, 215, 255, 0.08),
+    0 10px 26px rgba(0, 0, 0, 0.2);
+  animation: cryptoBubbleFloat 5.6s ease-in-out infinite;
+  animation-delay: var(--bubble-delay);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+  z-index: 2;
+}
+
+.crypto-community-bubble:hover,
+.crypto-community-bubble.is-active-crypto-bubble {
+  border-color: rgba(67, 245, 167, 0.64);
+  box-shadow:
+    inset 0 0 26px rgba(67, 245, 167, 0.12),
+    0 0 28px rgba(67, 245, 167, 0.16),
+    0 20px 38px rgba(0, 0, 0, 0.26);
+  filter: brightness(1.12);
+  z-index: 8;
+}
+
+.crypto-bubble-rank {
+  position: absolute;
+  top: 8px;
+  left: 9px;
+  color: #ffd36d;
+  font-size: 0.58rem;
+  font-weight: 950;
+}
+
+.crypto-community-bubble strong {
+  max-width: 96%;
+  color: #eef7ff;
+  font-size: clamp(0.58rem, calc(var(--bubble-size) / 120), 0.82rem);
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crypto-community-bubble small {
+  max-width: 96%;
+  color: #9fb5ca;
+  font-size: 0.58rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crypto-community-bubble em {
+  color: #8effca;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.crypto-community-bubble i {
+  width: 64%;
+  height: 4px;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.crypto-community-bubble i b {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(67, 245, 167, 0.95), rgba(117, 215, 255, 0.9));
+}
+
+@keyframes cryptoBubbleFloat {
+  0% {
+    margin-top: 0;
+  }
+
+  50% {
+    margin-top: -8px;
+  }
+
+  100% {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .crypto-bubbles-panel {
+    min-height: 760px;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 660px;
+  }
+
+  .crypto-community-bubble {
+    transform:
+      translate(-50%, -50%)
+      translate3d(var(--bubble-shift-x), var(--bubble-shift-y), 0)
+      scale(0.86)
+      rotateX(var(--bubble-tilt-x))
+      rotateY(var(--bubble-tilt-y));
+  }
+}
+
+@media (max-width: 620px) {
+  .crypto-bubbles-panel {
+    min-height: 920px;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 820px;
+  }
+
+  .crypto-community-bubble {
+    transform:
+      translate(-50%, -50%)
+      translate3d(var(--bubble-shift-x), var(--bubble-shift-y), 0)
+      scale(0.72)
+      rotateX(var(--bubble-tilt-x))
+      rotateY(var(--bubble-tilt-y));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crypto-community-bubble {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.12 — smooth crypto bubble physics final
+   ========================================================= */
+
+.crypto-bubbles-panel {
+  --crypto-cursor-x: 50%;
+  --crypto-cursor-y: 50%;
+  display: grid !important;
+  gap: 18px;
+  min-height: 700px;
+  overflow: hidden !important;
+  margin-bottom: 22px;
+}
+
+.crypto-bubbles-board {
+  position: relative;
+  min-height: 600px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(
+      circle at var(--crypto-cursor-x) var(--crypto-cursor-y),
+      rgba(117, 215, 255, 0.16),
+      rgba(67, 245, 167, 0.08) 20%,
+      transparent 42%
+    ),
+    radial-gradient(circle at 18% 18%, rgba(232, 81, 242, 0.08), transparent 28%),
+    radial-gradient(circle at 85% 82%, rgba(67, 245, 167, 0.08), transparent 32%),
+    rgba(5, 9, 15, 0.5);
+  box-shadow:
+    inset 0 0 30px rgba(117, 215, 255, 0.04),
+    0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.crypto-bubbles-board::before {
+  content: '';
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  left: var(--crypto-cursor-x);
+  top: var(--crypto-cursor-y);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0.74;
+  background:
+    radial-gradient(
+      circle,
+      rgba(117, 215, 255, 0.18),
+      rgba(67, 245, 167, 0.08) 34%,
+      transparent 70%
+    );
+  filter: blur(14px);
+  transition:
+    left 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease;
+}
+
+.crypto-bubbles-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(117, 215, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 215, 255, 0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(
+    circle at var(--crypto-cursor-x) var(--crypto-cursor-y),
+    #000 0%,
+    rgba(0, 0, 0, 0.6) 18%,
+    transparent 46%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle at var(--crypto-cursor-x) var(--crypto-cursor-y),
+    #000 0%,
+    rgba(0, 0, 0, 0.6) 18%,
+    transparent 46%
+  );
+}
+
+.crypto-community-bubble {
+  --bubble-size: 100px;
+  --bubble-x: 50%;
+  --bubble-y: 50%;
+  --bubble-scale: 1;
+  --bubble-growth: 50%;
+
+  position: absolute !important;
+  left: var(--bubble-x) !important;
+  top: var(--bubble-y) !important;
+  width: var(--bubble-size) !important;
+  height: var(--bubble-size) !important;
+  display: grid !important;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.24), transparent 18%),
+    radial-gradient(circle at center, rgba(67, 245, 167, 0.14), rgba(77, 163, 255, 0.1) 48%, rgba(5, 9, 15, 0.82) 72%);
+  color: #eef7ff;
+  cursor: pointer;
+  text-align: center;
+  transform: translate(-50%, -50%) scale(var(--bubble-scale)) !important;
+  transform-origin: center;
+  animation: none !important;
+  box-shadow:
+    inset 0 0 20px rgba(117, 215, 255, 0.08),
+    0 10px 26px rgba(0, 0, 0, 0.2);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    filter 220ms ease;
+  will-change: left, top, transform, width, height;
+  z-index: 2;
+}
+
+.crypto-community-bubble:hover,
+.crypto-community-bubble.is-active-crypto-bubble {
+  border-color: rgba(67, 245, 167, 0.62);
+  box-shadow:
+    inset 0 0 24px rgba(67, 245, 167, 0.12),
+    0 0 24px rgba(67, 245, 167, 0.12),
+    0 20px 38px rgba(0, 0, 0, 0.24);
+  filter: brightness(1.08);
+  z-index: 10;
+}
+
+.crypto-bubble-rank {
+  position: absolute;
+  top: 8px;
+  left: 9px;
+  color: #ffd36d;
+  font-size: 0.58rem;
+  font-weight: 950;
+}
+
+.crypto-community-bubble strong {
+  max-width: 96%;
+  color: #eef7ff;
+  font-size: clamp(0.58rem, 0.78vw, 0.84rem);
+  line-height: 1.04;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crypto-community-bubble small {
+  max-width: 96%;
+  color: #9fb5ca;
+  font-size: 0.58rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crypto-community-bubble em {
+  color: #8effca;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.crypto-community-bubble i {
+  width: 62%;
+  height: 4px;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.crypto-community-bubble i b {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(67, 245, 167, 0.95), rgba(117, 215, 255, 0.9));
+}
+
+@media (max-width: 980px) {
+  .crypto-bubbles-panel {
+    min-height: 760px;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 660px;
+  }
+}
+
+@media (max-width: 640px) {
+  .crypto-bubbles-panel {
+    min-height: 860px;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 760px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crypto-community-bubble {
+    transition: none !important;
+  }
+}
+
+
+/* =========================================================
+   UI-A11C.13 — crypto bubble readability spacing
+   ========================================================= */
+
+.crypto-bubbles-panel {
+  min-height: 820px !important;
+}
+
+.crypto-bubbles-board {
+  min-height: 720px !important;
+  overflow: hidden !important;
+}
+
+.crypto-community-bubble {
+  contain: layout paint style;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.crypto-community-bubble strong,
+.crypto-community-bubble small,
+.crypto-community-bubble em {
+  position: relative;
+  z-index: 2;
+}
+
+.crypto-community-bubble i {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 980px) {
+  .crypto-bubbles-panel {
+    min-height: 900px !important;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 800px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .crypto-bubbles-panel {
+    min-height: 1040px !important;
+  }
+
+  .crypto-bubbles-board {
+    min-height: 940px !important;
+  }
+}
