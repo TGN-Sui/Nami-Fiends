@@ -13515,3 +13515,140 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     width: 118px;
   }
 }
+
+
+/* =========================================================
+   UI-A16.1 — media asset fallback layer
+   ========================================================= */
+
+.gamehub-cover-art::before,
+.gamehub-swipe-cover-art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--game-cover-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--game-cover-image-opacity, 0);
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease,
+    filter 220ms ease;
+}
+
+.gamehub-cover-art.has-game-cover-image::before,
+.gamehub-swipe-cover-art.has-game-cover-image::before {
+  transform: scale(1.015);
+}
+
+.gamehub-cover-card:hover .gamehub-cover-art.has-game-cover-image::before,
+.gamehub-swipe-cover-card:hover .gamehub-swipe-cover-art.has-game-cover-image::before {
+  transform: scale(1.055);
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.gamehub-cover-art::after,
+.gamehub-swipe-cover-art::after {
+  z-index: 1;
+}
+
+.gamehub-cover-art > *,
+.gamehub-swipe-cover-art > * {
+  position: relative;
+  z-index: 2;
+}
+
+.gamehub-cover-art.has-game-cover-image .gamehub-cover-monogram,
+.gamehub-swipe-cover-art.has-game-cover-image > span {
+  opacity: 0;
+}
+
+.gamehub-cover-art.has-game-cover-image {
+  background:
+    linear-gradient(145deg, rgba(5, 9, 15, 0.62), rgba(5, 9, 15, 0.18)),
+    rgba(5, 9, 15, 0.9);
+}
+
+.studio-logo-mark {
+  position: relative;
+  overflow: hidden;
+}
+
+.studio-logo-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--studio-logo-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--studio-logo-image-opacity, 0);
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease;
+}
+
+.studio-logo-mark.has-studio-logo-image {
+  color: transparent !important;
+}
+
+.studio-logo-mark.has-studio-logo-image::before {
+  transform: scale(1.02);
+}
+
+.studio-logo-mark.has-studio-logo-image:hover::before {
+  transform: scale(1.06);
+}
+
+.studio-logo-mark > * {
+  position: relative;
+  z-index: 2;
+}
+
+.member-profile-avatar,
+.nami-profile-card-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.member-profile-avatar::before,
+.nami-profile-card-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--member-avatar-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--member-avatar-image-opacity, 0);
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease;
+}
+
+.member-profile-avatar.has-member-avatar-image,
+.nami-profile-card-avatar.has-member-avatar-image {
+  color: transparent !important;
+}
+
+.member-profile-avatar.has-member-avatar-image::before,
+.nami-profile-card-avatar.has-member-avatar-image::before {
+  transform: scale(1.02);
+}
+
+.member-profile-avatar.has-member-avatar-image:hover::before,
+.nami-profile-card-avatar.has-member-avatar-image:hover::before {
+  transform: scale(1.055);
+}
+
+.member-profile-avatar.has-member-avatar-image .profile-level-badge,
+.nami-profile-card-avatar.has-member-avatar-image .profile-level-badge {
+  color: #ffffff !important;
+}
+
+.member-profile-avatar > *,
+.nami-profile-card-avatar > * {
+  position: relative;
+  z-index: 2;
+}

@@ -95,6 +95,58 @@ function isMemberFoilEligible(member: (typeof members)[number], reviewedSignal: 
   return true;
 }
 
+function cssAssetUrl(url: string): string {
+  return 'url("' + url.replace(/"/g, '\\u0022') + '")';
+}
+
+function gameCoverAssetVariables(channel: NamiChannel): CSSProperties {
+  const coverImageUrl = channel.coverImageUrl?.trim();
+
+  if (!coverImageUrl) {
+    return {
+      '--game-cover-image': 'none',
+      '--game-cover-image-opacity': '0'
+    } as CSSProperties;
+  }
+
+  return {
+    '--game-cover-image': cssAssetUrl(coverImageUrl),
+    '--game-cover-image-opacity': '1'
+  } as CSSProperties;
+}
+
+function studioLogoAssetVariables(developer: (typeof developers)[number]): CSSProperties {
+  const logoImageUrl = developer.logoImageUrl?.trim();
+
+  if (!logoImageUrl) {
+    return {
+      '--studio-logo-image': 'none',
+      '--studio-logo-image-opacity': '0'
+    } as CSSProperties;
+  }
+
+  return {
+    '--studio-logo-image': cssAssetUrl(logoImageUrl),
+    '--studio-logo-image-opacity': '1'
+  } as CSSProperties;
+}
+
+function memberAvatarAssetVariables(member: (typeof members)[number]): CSSProperties {
+  const avatarImageUrl = member.avatarImageUrl?.trim();
+
+  if (!avatarImageUrl) {
+    return {
+      '--member-avatar-image': 'none',
+      '--member-avatar-image-opacity': '0'
+    } as CSSProperties;
+  }
+
+  return {
+    '--member-avatar-image': cssAssetUrl(avatarImageUrl),
+    '--member-avatar-image-opacity': '1'
+  } as CSSProperties;
+}
+
 function ChannelAvatar(props: {
   channel: NamiChannel;
   size?: 'sm' | 'md' | 'lg';
@@ -1399,12 +1451,16 @@ function GameHub(props: {
                   style={
                     {
                       '--game-card-brand': channelTheme.primary,
-                      '--game-card-brand-soft': channelTheme.secondary
+                      '--game-card-brand-soft': channelTheme.secondary,
+                        ...gameCoverAssetVariables(channel)
                     } as CSSProperties
                   }
                   type="button"
                 >
-                  <div className="gamehub-cover-art" aria-hidden="true">
+                  <div
+                      className={'gamehub-cover-art' + (channel.coverImageUrl ? ' has-game-cover-image' : '')}
+                      aria-hidden="true"
+                    >
                     <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
                     <span className="gamehub-cover-surface-chip">GAME</span>
                     <span
@@ -1475,11 +1531,15 @@ function GameHub(props: {
                 style={
                   {
                     '--game-card-brand': getStoredChannelBrandTheme(activeSwipeChannel.id).primary,
-                    '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary
+                    '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary,
+                      ...gameCoverAssetVariables(activeSwipeChannel)
                   } as CSSProperties
                 }
               >
-                <div className="gamehub-swipe-cover-art" aria-hidden="true">
+                <div
+                    className={'gamehub-swipe-cover-art' + (activeSwipeChannel.coverImageUrl ? ' has-game-cover-image' : '')}
+                    aria-hidden="true"
+                  >
                   <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
                 </div>
 
@@ -1705,7 +1765,14 @@ function StudioProfileScreen(props: {
           </div>
 
           <div className="studio-hero-main">
-            <div className={'studio-logo-mark ' + proofClass}>
+            <div
+              className={
+                'studio-logo-mark ' +
+                proofClass +
+                (props.developer.logoImageUrl ? ' has-studio-logo-image' : '')
+              }
+              style={studioLogoAssetVariables(props.developer)}
+            >
               {props.developer.logoSeed}
             </div>
 
@@ -4179,7 +4246,14 @@ function PassportScreen(props: {
       <section className="passport-page">
         <article className="panel passport-hero-card passport-hero-card-refined">
           <div className="passport-owner-block">
-            <div className={'member-profile-avatar ' + signalClass(profileMember.signal)}>
+            <div
+                  className={
+                    'member-profile-avatar ' +
+                    signalClass(profileMember.signal) +
+                    (profileMember.avatarImageUrl ? ' has-member-avatar-image' : '')
+                  }
+                  style={memberAvatarAssetVariables(profileMember)}
+                >
                 {memberInitials(profileMember)}
                 <span className="profile-level-badge">Lv {passportProgression.level}</span>
               </div>
@@ -4649,7 +4723,14 @@ function UserProfileScreen(props: {
               <strong>Identity Card</strong>
             </div>
 
-            <div className={'nami-profile-card-avatar ' + signalClass(profileMember.signal)}>
+            <div
+                className={
+                  'nami-profile-card-avatar ' +
+                  signalClass(profileMember.signal) +
+                  (profileMember.avatarImageUrl ? ' has-member-avatar-image' : '')
+                }
+                style={memberAvatarAssetVariables(profileMember)}
+              >
               {profileMember.name.slice(0, 2).toUpperCase()}
             </div>
 

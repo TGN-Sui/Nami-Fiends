@@ -38,6 +38,7 @@ export type NamiChannel = {
   developerLogoSeed: string;
   coverArtSeed: string;
   coverArtStyle: 'neon' | 'ocean' | 'cozy' | 'arcade' | 'builder';
+  coverImageUrl?: string;
   verifiedGame: boolean;
   genre: string;
   platforms: string[];
@@ -61,6 +62,7 @@ export type NamiDeveloperProfile = {
   name: string;
   handle: string;
   logoSeed: string;
+  logoImageUrl?: string;
   proofStatus: 'Verified Studio' | 'Community Maintainer' | 'Unverified Creator';
   approved: boolean;
   gameIds: string[];
@@ -89,6 +91,7 @@ export type NamiMember = {
   surfaceType: 'member';
   name: string;
   avatarSeed: string;
+  avatarImageUrl?: string;
   signal: ConductSignal;
   tier: 'NPC' | 'Adventurer' | 'Pro' | 'Elite';
   badge: string;
