@@ -13652,3 +13652,178 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   position: relative;
   z-index: 2;
 }
+
+
+/* =========================================================
+   UI-A16.2A — member avatar propagation
+   ========================================================= */
+
+.chat-member-avatar,
+.message-avatar,
+.member-dot,
+.member-spotlight-avatar,
+.spotlight-member-avatar,
+.hub-member-avatar,
+.community-member-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-member-avatar::before,
+.message-avatar::before,
+.member-dot::before,
+.member-spotlight-avatar::before,
+.spotlight-member-avatar::before,
+.hub-member-avatar::before,
+.community-member-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--member-avatar-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--member-avatar-image-opacity, 0);
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease,
+    filter 220ms ease;
+}
+
+.chat-member-avatar.has-member-avatar-image,
+.message-avatar.has-member-avatar-image,
+.member-dot.has-member-avatar-image,
+.member-spotlight-avatar.has-member-avatar-image,
+.spotlight-member-avatar.has-member-avatar-image,
+.hub-member-avatar.has-member-avatar-image,
+.community-member-avatar.has-member-avatar-image {
+  color: transparent !important;
+}
+
+.chat-member-avatar.has-member-avatar-image::before,
+.message-avatar.has-member-avatar-image::before,
+.member-dot.has-member-avatar-image::before,
+.member-spotlight-avatar.has-member-avatar-image::before,
+.spotlight-member-avatar.has-member-avatar-image::before,
+.hub-member-avatar.has-member-avatar-image::before,
+.community-member-avatar.has-member-avatar-image::before {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.chat-member-avatar.has-member-avatar-image:hover::before,
+.message-avatar.has-member-avatar-image:hover::before,
+.member-dot.has-member-avatar-image:hover::before,
+.member-spotlight-avatar.has-member-avatar-image:hover::before,
+.spotlight-member-avatar.has-member-avatar-image:hover::before,
+.hub-member-avatar.has-member-avatar-image:hover::before,
+.community-member-avatar.has-member-avatar-image:hover::before {
+  transform: scale(1.055);
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.chat-member-avatar.has-member-avatar-image > *,
+.message-avatar.has-member-avatar-image > *,
+.member-dot.has-member-avatar-image > *,
+.member-spotlight-avatar.has-member-avatar-image > *,
+.spotlight-member-avatar.has-member-avatar-image > *,
+.hub-member-avatar.has-member-avatar-image > *,
+.community-member-avatar.has-member-avatar-image > * {
+  position: relative;
+  z-index: 2;
+  color: transparent !important;
+}
+
+
+/* =========================================================
+   UI-A16.2B — member profile and spotlight avatar surfaces
+   ========================================================= */
+
+.member-profile-avatar,
+.member-spotlight-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.member-profile-avatar::before,
+.member-spotlight-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--member-avatar-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--member-avatar-image-opacity, 0);
+  transition:
+    opacity 220ms ease,
+    transform 260ms ease,
+    filter 220ms ease;
+}
+
+.member-profile-avatar.has-member-avatar-image,
+.member-spotlight-avatar.has-member-avatar-image {
+  color: transparent !important;
+}
+
+.member-profile-avatar.has-member-avatar-image::before,
+.member-spotlight-avatar.has-member-avatar-image::before {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.member-profile-avatar.has-member-avatar-image:hover::before,
+.member-spotlight-avatar.has-member-avatar-image:hover::before {
+  transform: scale(1.055);
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.member-profile-avatar.has-member-avatar-image > *,
+.member-spotlight-avatar.has-member-avatar-image > * {
+  position: relative;
+  z-index: 2;
+  color: transparent !important;
+}
+
+
+/* =========================================================
+   UI-A16.2C — direct member avatar background guarantees
+   ========================================================= */
+
+.member-profile-avatar.has-member-avatar-image,
+.member-spotlight-avatar.has-member-avatar-image,
+.chat-member-avatar.has-member-avatar-image,
+.message-avatar.has-member-avatar-image,
+.member-dot.has-member-avatar-image {
+  background-image: var(--member-avatar-image, none) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
+
+.member-profile-avatar.has-member-avatar-image::before,
+.member-spotlight-avatar.has-member-avatar-image::before,
+.chat-member-avatar.has-member-avatar-image::before,
+.message-avatar.has-member-avatar-image::before,
+.member-dot.has-member-avatar-image::before {
+  opacity: 1 !important;
+}
+
+.member-profile-avatar.has-member-avatar-image .member-avatar-initials,
+.member-spotlight-avatar.has-member-avatar-image .member-avatar-initials,
+.chat-member-avatar.has-member-avatar-image .member-avatar-initials,
+.message-avatar.has-member-avatar-image .member-avatar-initials,
+.member-dot.has-member-avatar-image .member-avatar-initials {
+  color: transparent !important;
+  opacity: 0 !important;
+}
+
+.member-spotlight-avatar.has-member-avatar-image .member-spotlight-level {
+  position: relative;
+  z-index: 4;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  background: rgba(5, 9, 15, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}

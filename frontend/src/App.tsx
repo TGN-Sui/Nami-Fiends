@@ -137,14 +137,70 @@ function memberAvatarAssetVariables(member: (typeof members)[number]): CSSProper
   if (!avatarImageUrl) {
     return {
       '--member-avatar-image': 'none',
-      '--member-avatar-image-opacity': '0'
+      '--member-avatar-image-opacity': '0',
+      backgroundImage: 'none'
     } as CSSProperties;
   }
 
   return {
     '--member-avatar-image': cssAssetUrl(avatarImageUrl),
-    '--member-avatar-image-opacity': '1'
+    '--member-avatar-image-opacity': '1',
+    backgroundImage: cssAssetUrl(avatarImageUrl),
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover'
   } as CSSProperties;
+}
+
+function memberAvatarClass(
+  member: (typeof members)[number],
+  baseClass: string,
+  signal: ConductSignal = member.signal
+): string {
+  return (
+    baseClass +
+    ' ' +
+    signalClass(signal) +
+    (member.avatarImageUrl ? ' has-member-avatar-image' : '')
+  );
+}
+
+function MemberVisualAvatar(props: {
+  member: (typeof members)[number];
+  signal?: ConductSignal;
+  className?: string;
+  children?: ReactElement | null;
+}): ReactElement {
+  return (
+    <div
+      className={memberAvatarClass(props.member, props.className ?? 'chat-member-avatar', props.signal)}
+      style={memberAvatarAssetVariables(props.member)}
+    >
+      <span className="member-avatar-initials">
+        {props.member.name.slice(0, 2).toUpperCase()}
+      </span>
+      {props.children}
+    </div>
+  );
+}
+
+function MemberAvatarButton(props: {
+  member: (typeof members)[number];
+  signal?: ConductSignal;
+  onClick: () => void;
+}): ReactElement {
+  return (
+    <button
+      className={memberAvatarClass(props.member, 'message-avatar message-avatar-button', props.signal)}
+      onClick={props.onClick}
+      style={memberAvatarAssetVariables(props.member)}
+      type="button"
+    >
+      <span className="member-avatar-initials">
+        {props.member.name.slice(0, 2).toUpperCase()}
+      </span>
+    </button>
+  );
 }
 
 function ChannelAvatar(props: {
@@ -1184,10 +1240,9 @@ function NamiHub(props: {
                   type="button"
                 >
                   <div className="member-spotlight-left">
-                    <div className={'member-spotlight-avatar ' + signalClass(member.signal)}>
-                      {memberInitials(member)}
+                    <MemberVisualAvatar className="member-spotlight-avatar" member={member}>
                       <span className="member-spotlight-level">{progression.level}</span>
-                    </div>
+                    </MemberVisualAvatar>
 
                     <div className="member-spotlight-copy">
                       <strong>{member.name}</strong>
@@ -2988,9 +3043,7 @@ function GameChat(props: {
                 onClick={() => props.onOpenMember(member)}
                 type="button"
               >
-                <div className={'chat-member-avatar ' + signalClass(member.signal)}>
-                  {member.name.slice(0, 2).toUpperCase()}
-                </div>
+                <MemberVisualAvatar member={member} />
                 <strong>{member.name}</strong>
                 <span>{preference.muted ? 'Muted' : member.tier}</span>
               </button>
@@ -3010,9 +3063,7 @@ function GameChat(props: {
                 onClick={() => props.onOpenMember(member)}
                 type="button"
               >
-                <div className={'chat-member-avatar ' + signalClass(member.signal)}>
-                  {member.name.slice(0, 2).toUpperCase()}
-                </div>
+                <MemberVisualAvatar member={member} />
                 <strong>{member.name}</strong>
                 <span>{preference.muted ? 'Muted' : 'Offline'}</span>
               </button>
@@ -3092,13 +3143,11 @@ function GameChat(props: {
                     }
                     key={message.id}
                   >
-                    <button
-                      className={'message-avatar message-avatar-button ' + signalClass(message.signal)}
+                    <MemberAvatarButton
+                      member={member}
                       onClick={() => props.onOpenMember(member)}
-                      type="button"
-                    >
-                      {message.author.slice(0, 2).toUpperCase()}
-                    </button>
+                      signal={message.signal}
+                    />
 
                     <div className="message-bubble">
                       <div className="message-meta">
@@ -3436,9 +3485,11 @@ function MemberProfileScreen(props: {
               if (memberFoilEligible) updateMemberHeroFoil(event);
             }}
           >
-          <div className={'member-profile-avatar ' + signalClass(reviewedSignal)}>
-            {props.member.name.slice(0, 2).toUpperCase()}
-          </div>
+          <MemberVisualAvatar
+              className="member-profile-avatar"
+              member={props.member}
+              signal={reviewedSignal}
+            />
 
           <div className="member-profile-copy">
             <div className="profile-signal-badge-row">
@@ -3814,9 +3865,10 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <div className={'chat-member-avatar ' + signalClass(readMemberSignalReview(member.id, member.signal))}>
-                    {member.name.slice(0, 2).toUpperCase()}
-                  </div>
+                  <MemberVisualAvatar
+                    member={member}
+                    signal={readMemberSignalReview(member.id, member.signal)}
+                  />
                   <div>
                     <strong>{member.name}</strong>
                     <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
@@ -3843,9 +3895,10 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <div className={'chat-member-avatar ' + signalClass(readMemberSignalReview(member.id, member.signal))}>
-                    {member.name.slice(0, 2).toUpperCase()}
-                  </div>
+                  <MemberVisualAvatar
+                    member={member}
+                    signal={readMemberSignalReview(member.id, member.signal)}
+                  />
                   <div>
                     <strong>{member.name}</strong>
                     <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
@@ -3977,9 +4030,7 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                         onClick={() => openMember(member)}
                         type="button"
                       >
-                        <div className={'chat-member-avatar ' + signalClass(reviewedSignal)}>
-                          {member.name.slice(0, 2).toUpperCase()}
-                        </div>
+                        <MemberVisualAvatar member={member} signal={reviewedSignal} />
                         <div>
                           <strong>{member.name}</strong>
                           <span>{member.tier} · {reviewedSignal}</span>
@@ -4943,9 +4994,7 @@ function MessagesScreen(): ReactElement {
       <section className="account-grid">
         {members.map((member) => (
           <article className="profile-panel account-card" key={member.id}>
-            <div className={'member-dot ' + signalClass(member.signal)}>
-              <span>{member.name.slice(0, 2).toUpperCase()}</span>
-            </div>
+            <MemberVisualAvatar className="member-dot" member={member} />
             <h2>{member.name}</h2>
             <p>{member.badge} · {member.tier}</p>
             <span className={'mini-badge signal-text-' + member.signal.toLowerCase()}>

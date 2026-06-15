@@ -120,6 +120,7 @@ const defaultModules: ChannelModule[] = [
 
 export const channels: NamiChannel[] = [
   {
+    coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff3152%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23221020%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%2375d7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%2375d7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EFIENDS%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'fiends',
       surfaceType: 'game',
     name: 'FIENDS',
@@ -155,6 +156,7 @@ export const channels: NamiChannel[] = [
     ]
   },
   {
+    coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2343f5a7%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23146c9f%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%23dff7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%23dff7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EWALRUS%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'walrus',
       surfaceType: 'game',
     name: 'Walrus Raiders',
@@ -257,6 +259,7 @@ export const channels: NamiChannel[] = [
     ]
   },
   {
+    coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2375d7ff%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%230c7f65%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%2343f5a7%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%2343f5a7%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EPEBBLE%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'pebble',
       surfaceType: 'game',
     name: 'Pebble',
@@ -295,6 +298,7 @@ export const channels: NamiChannel[] = [
 
 export const developers: NamiDeveloperProfile[] = [
   {
+    logoImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff3152%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23190711%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2296%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22310%22%20cy%3D%2288%22%20r%3D%2256%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.14%22%2F%3E%20%3Ctext%20x%3D%2270%22%20y%3D%22245%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EGL%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'goonie-labs',
     surfaceType: 'developer',
     name: 'Goonie Labs',
@@ -339,6 +343,7 @@ export const developers: NamiDeveloperProfile[] = [
     studioSignal: 'Red'
   },
   {
+    logoImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2375d7ff%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230c7f65%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2296%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22310%22%20cy%3D%2288%22%20r%3D%2256%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.14%22%2F%3E%20%3Ctext%20x%3D%2270%22%20y%3D%22245%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EPL%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'pebble-labs',
     surfaceType: 'developer',
     name: 'Pebble Labs',
@@ -369,8 +374,10 @@ export const userProfile: UserProfile = {
 };
 
 export const members: NamiMember[] = [
-  { id: 'm1', surfaceType: 'member', avatarSeed: 'NO', name: 'Nozomi', signal: 'Green', tier: 'Pro', badge: 'Top Helper' },
-  { id: 'm2', surfaceType: 'member', avatarSeed: 'DS', name: 'DeadlySin', signal: 'Orange', tier: 'Adventurer', badge: 'Raider' },
+  {
+    avatarImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%22200%22%20fill%3D%22%23062a22%22%2F%3E%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22158%22%20r%3D%2282%22%20fill%3D%22%239fffd2%22%2F%3E%20%3Cpath%20d%3D%22M80%20376%20C104%20274%20296%20274%20320%20376%22%20fill%3D%22%239fffd2%22%20opacity%3D%22.88%22%2F%3E%20%3Ctext%20x%3D%22116%22%20y%3D%22238%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%2292%22%20fill%3D%22%23062a22%22%3ENO%3C%2Ftext%3E%20%3C%2Fsvg%3E', id: 'm1', surfaceType: 'member', avatarSeed: 'NO', name: 'Nozomi', signal: 'Green', tier: 'Pro', badge: 'Top Helper' },
+  {
+    avatarImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%22200%22%20fill%3D%22%23301905%22%2F%3E%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22158%22%20r%3D%2282%22%20fill%3D%22%23ffd98a%22%2F%3E%20%3Cpath%20d%3D%22M80%20376%20C104%20274%20296%20274%20320%20376%22%20fill%3D%22%23ffd98a%22%20opacity%3D%22.88%22%2F%3E%20%3Ctext%20x%3D%22116%22%20y%3D%22238%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%2292%22%20fill%3D%22%23301905%22%3EDS%3C%2Ftext%3E%20%3C%2Fsvg%3E', id: 'm2', surfaceType: 'member', avatarSeed: 'DS', name: 'DeadlySin', signal: 'Orange', tier: 'Adventurer', badge: 'Raider' },
   { id: 'm3', surfaceType: 'member', avatarSeed: 'RH', name: 'Rhokdelar', signal: 'Red', tier: 'Elite', badge: 'PvP' },
   { id: 'm4', surfaceType: 'member', avatarSeed: 'PF', name: 'PebbleFan', signal: 'Green', tier: 'NPC', badge: 'Newbie' },
   { id: 'm5', surfaceType: 'member', avatarSeed: 'MG', name: 'MutedGhost', signal: 'Black', tier: 'Adventurer', badge: 'Respawn' }
