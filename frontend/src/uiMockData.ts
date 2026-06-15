@@ -7,6 +7,7 @@ export type NamiPage =
   | 'userProfile'
   | 'passport'
   | 'channelProfile'
+  | 'studioProfile'
   | 'chat'
   | 'channelEvents'
   | 'memberProfile'

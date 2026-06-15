@@ -27,6 +27,10 @@ function channelDeveloper(channel: NamiChannel): (typeof developers)[number] {
   return developers.find((developer) => developer.id === channel.developerId) ?? developers[0]!;
 }
 
+function developerGameChannels(developer: (typeof developers)[number]): NamiChannel[] {
+  return channels.filter((channel) => developer.gameIds.includes(channel.id));
+}
+
 function gameVerificationLabel(channel: NamiChannel): string {
   return channel.verifiedGame ? 'Verified Game' : 'Community Game';
 }
@@ -1634,10 +1638,186 @@ function applyChannelBrandToDocument(theme: ChannelBrandTheme): void {
   document.documentElement.style.setProperty('--active-channel-brand-glow', theme.glow);
 }
 
+function StudioProfileScreen(props: {
+  developer: (typeof developers)[number];
+  onNavigate: (page: NamiPage) => void;
+  onOpenProfile: (channel: NamiChannel) => void;
+  returnPage: NamiPage;
+  returnLabel: string;
+}): ReactElement {
+  const studioGames = developerGameChannels(props.developer);
+  const leadGame = studioGames[0] ?? channels[0]!;
+  const studioTheme = useMemo(() => getStoredChannelBrandTheme(leadGame.id), [leadGame.id]);
+  const proofClass = developerVerificationClass(props.developer);
+  const totalReach = studioGames.reduce((sum, channel) => sum + channel.subscribers, 0);
+
+  const studioProofs = [
+    {
+      label: 'Studio Surface',
+      value: 'Developer profile',
+      detail: 'Separate from game and member profiles.'
+    },
+    {
+      label: 'Proof Status',
+      value: props.developer.proofStatus,
+      detail: props.developer.approved
+        ? 'Studio identity has approval signals.'
+        : 'Community maintainer surface without verified studio status.'
+    },
+    {
+      label: 'Trust Rule',
+      value: 'Proofs, not payment',
+      detail: 'Paid placement never creates verification or trust.'
+    }
+  ];
+
+  useEffect(() => {
+    applyChannelBrandToDocument(studioTheme);
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [studioTheme]);
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Developer identity and approved game directory</p>
+        <h1>{props.developer.name}</h1>
+      </header>
+
+      <section className="studio-profile-page">
+        <article className={'panel studio-hero-card ' + proofClass}>
+          <div className="studio-hero-topbar">
+            <button
+              className="profile-return-button studio-return-button"
+              onClick={() => props.onNavigate(props.returnPage)}
+              type="button"
+            >
+              ← {props.returnLabel}
+            </button>
+
+            <span className={'studio-proof-pill ' + proofClass}>
+              {developerShortProofLabel(props.developer)} · {props.developer.proofStatus}
+            </span>
+          </div>
+
+          <div className="studio-hero-main">
+            <div className={'studio-logo-mark ' + proofClass}>
+              {props.developer.logoSeed}
+            </div>
+
+            <div className="studio-hero-copy">
+              <div className="surface-separation-row studio-surface-row">
+                <span>Studio Profile</span>
+                <span>{props.developer.handle}</span>
+                <i>{props.developer.approved ? 'Approved developer surface' : 'Community maintainer surface'}</i>
+              </div>
+
+              <h2>{props.developer.name}</h2>
+              <p>
+                Studio profiles hold developer identity, proof status, and the approved game directory.
+                Game profiles keep game-specific community content, and member profiles keep levels and passport progression.
+              </p>
+
+              <div className="studio-stat-row">
+                <span>
+                  <strong>{studioGames.length}</strong>
+                  Games
+                </span>
+                <span>
+                  <strong>{totalReach.toLocaleString()}</strong>
+                  Reach
+                </span>
+                <span>
+                  <strong>{props.developer.studioSignal}</strong>
+                  Signal
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section className="studio-profile-grid">
+          <article className="panel studio-directory-panel">
+            <div className="profile-panel-heading">
+              <h2>Approved Game Directory</h2>
+              <p>Games linked to this developer/studio surface.</p>
+            </div>
+
+            <div className="studio-game-directory">
+              {studioGames.map((channel) => (
+                <button
+                  className={'studio-game-card ' + gameVerificationClass(channel)}
+                  key={channel.id}
+                  onClick={() => props.onOpenProfile(channel)}
+                  type="button"
+                >
+                  <span className="studio-game-cover">{channel.name.slice(0, 2).toUpperCase()}</span>
+
+                  <div>
+                    <strong>{channel.name}</strong>
+                    <small>{channel.genre} · {channel.platforms.join(' / ')}</small>
+                  </div>
+
+                  <i>{gameVerificationShortLabel(channel)}</i>
+                </button>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel studio-proof-panel">
+            <div className="profile-panel-heading">
+              <h2>Developer Trust Proofs</h2>
+              <p>Studio verification remains separate from paid visibility.</p>
+            </div>
+
+            <div className="studio-proof-grid">
+              {studioProofs.map((proof) => (
+                <div className="studio-proof-card" key={proof.label}>
+                  <span>{proof.label}</span>
+                  <strong>{proof.value}</strong>
+                  <p>{proof.detail}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel studio-boundary-panel">
+            <div className="profile-panel-heading">
+              <h2>Surface Boundaries</h2>
+              <p>Each profile type owns different identity signals.</p>
+            </div>
+
+            <div className="studio-boundary-stack">
+              <div>
+                <span>Game</span>
+                <strong>Cover art, game verification, channel modules</strong>
+              </div>
+              <div>
+                <span>Studio</span>
+                <strong>Developer proof, logo, approved games</strong>
+              </div>
+              <div>
+                <span>Member</span>
+                <strong>Avatar, level, passport, squads, guilds</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </>
+  );
+}
+
+
 function ChannelProfile(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
   onOpenProfile?: (channel: NamiChannel) => void;
+  onOpenStudioProfile?: (developer: (typeof developers)[number]) => void;
   returnPage: NamiPage;
   returnLabel: string;
 }): ReactElement {
@@ -2277,6 +2457,16 @@ function ChannelProfile(props: {
                   <span>Game Channel</span>
                   <span>{developerProfile.name}</span>
                   <i className={gameVerificationClass(props.channel)}>{gameVerificationLabel(props.channel)}</i>
+                  <button
+                    className="surface-studio-link"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onOpenStudioProfile?.(developerProfile);
+                    }}
+                    type="button"
+                  >
+                    Open Studio
+                  </button>
                 </div>
 
               <div className="profile-meta-row">
@@ -5040,7 +5230,20 @@ export function App(): ReactElement {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
+  const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() => channelDeveloper(channels[0]!));
+  const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
   const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
+
+  function profileReturnLabel(page: NamiPage): string {
+    if (page === 'hub') return 'Back to Nami Hub';
+    if (page === 'gamehub') return 'Back to Game Hub';
+    if (page === 'channelProfile') return 'Back to Game Profile';
+    if (page === 'studioProfile') return 'Back to Studio';
+    if (page === 'memberProfile') return 'Back to Member Profile';
+    if (page === 'chat') return 'Back to Chat';
+
+    return 'Back';
+  }
 
   const openMemberProfile = (member: (typeof members)[number]): void => {
     setSelectedMember(member);
@@ -5052,13 +5255,20 @@ export function App(): ReactElement {
 
   const openChannelProfile = (channel: NamiChannel): void => {
     setSelectedChannel(channel);
+    setSelectedDeveloper(channelDeveloper(channel));
     setContextReturnPage(activePage === 'channelProfile' ? contextReturnPage : activePage);
     setActivePage('channelProfile');
   };
 
 
+  const openStudioProfile = (developer: (typeof developers)[number]): void => {
+    setSelectedDeveloper(developer);
+    setStudioReturnPage(activePage === 'studioProfile' ? studioReturnPage : activePage);
+    setActivePage('studioProfile');
+  };
+
   const navigateFromCurrentPage = (page: NamiPage): void => {
-    if ((page === 'channelProfile' || page === 'memberProfile') && page !== activePage) {
+    if ((page === 'channelProfile' || page === 'memberProfile' || page === 'studioProfile') && page !== activePage) {
       setContextReturnPage(activePage);
     }
 
@@ -5095,14 +5305,27 @@ export function App(): ReactElement {
       );
     }
 
+    if (activePage === 'studioProfile') {
+      return (
+        <StudioProfileScreen
+          developer={selectedDeveloper}
+          onNavigate={(page) => setActivePage(page)}
+          onOpenProfile={openChannelProfile}
+          returnLabel={profileReturnLabel(studioReturnPage)}
+          returnPage={studioReturnPage}
+        />
+      );
+    }
+
     if (activePage === 'channelProfile') {
       return (
         <ChannelProfile
             channel={selectedChannel}
             onNavigate={navigateFromCurrentPage}
             onOpenProfile={openChannelProfile}
+            onOpenStudioProfile={openStudioProfile}
             returnPage={contextReturnPage}
-            returnLabel={namiReturnLabelForPage(contextReturnPage)}
+            returnLabel={profileReturnLabel(contextReturnPage)}
           />
       );
     }
@@ -5128,7 +5351,7 @@ export function App(): ReactElement {
         member={selectedMember}
         onNavigate={navigateFromCurrentPage}
         returnPage={contextReturnPage}
-        returnLabel={namiReturnLabelForPage(contextReturnPage)}
+        returnLabel={profileReturnLabel(contextReturnPage)}
       />;
   }
 
@@ -5173,7 +5396,7 @@ if (activePage === 'userProfile') {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
         />;
-  }, [activePage, selectedChannel, selectedMember, contextReturnPage]);
+  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage]);
 
   return (
     <main className="nami-app">

@@ -13226,3 +13226,292 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-profile-hero.is-member-foil-eligible::before {
   opacity: 0.76;
 }
+
+
+/* =========================================================
+   UI-A15 — studio developer profile surface
+   ========================================================= */
+
+.studio-profile-page {
+  display: grid;
+  gap: 20px;
+}
+
+.studio-hero-card {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(117, 215, 255, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+}
+
+.studio-hero-card.is-verified-studio-logo {
+  border-color: rgba(117, 215, 255, 0.32);
+  box-shadow: 0 0 34px rgba(117, 215, 255, 0.1);
+}
+
+.studio-hero-card.is-community-studio-logo {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.studio-hero-topbar,
+.studio-hero-main,
+.studio-stat-row,
+.studio-profile-grid,
+.studio-game-card,
+.studio-boundary-stack div {
+  display: flex;
+}
+
+.studio-hero-topbar {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.studio-return-button,
+.surface-studio-link {
+  border: 1px solid rgba(117, 215, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(5, 9, 15, 0.48);
+  color: rgba(220, 236, 255, 0.82);
+  font-weight: 900;
+}
+
+.studio-return-button {
+  min-height: 34px;
+  padding: 0 13px;
+}
+
+.surface-studio-link {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+}
+
+.surface-studio-link:hover,
+.studio-return-button:hover {
+  border-color: rgba(117, 215, 255, 0.42);
+  color: #ffffff;
+}
+
+.studio-proof-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(5, 22, 35, 0.64);
+  color: #bceeff;
+  font-size: 0.76rem;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+}
+
+.studio-hero-main {
+  align-items: center;
+  gap: 20px;
+}
+
+.studio-logo-mark {
+  width: clamp(110px, 20vw, 164px);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 34px;
+  border: 3px solid rgba(117, 215, 255, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.26), transparent 44%),
+    rgba(5, 9, 15, 0.72);
+  color: #dff7ff;
+  font-size: clamp(2.1rem, 7vw, 4rem);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 24px 44px rgba(0, 0, 0, 0.26);
+}
+
+.studio-logo-mark.is-community-studio-logo {
+  border-color: rgba(148, 163, 184, 0.24);
+  color: rgba(220, 236, 255, 0.72);
+}
+
+.studio-hero-copy {
+  display: grid;
+  gap: 12px;
+}
+
+.studio-hero-copy h2 {
+  margin: 0;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  letter-spacing: -0.08em;
+}
+
+.studio-hero-copy p {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(220, 236, 255, 0.72);
+  line-height: 1.65;
+}
+
+.studio-surface-row i {
+  border-color: rgba(117, 215, 255, 0.32);
+  color: #bceeff;
+  background: rgba(117, 215, 255, 0.08);
+}
+
+.studio-stat-row {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.studio-stat-row span {
+  min-width: 112px;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(5, 9, 15, 0.46);
+  color: rgba(220, 236, 255, 0.7);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.studio-stat-row strong {
+  color: #ffffff;
+  font-size: 1.05rem;
+}
+
+.studio-profile-grid {
+  align-items: stretch;
+  gap: 18px;
+}
+
+.studio-profile-grid > .panel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.studio-game-directory,
+.studio-proof-grid,
+.studio-boundary-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.studio-game-card {
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(5, 9, 15, 0.42);
+  color: inherit;
+  text-align: left;
+}
+
+.studio-game-card:hover {
+  border-color: rgba(117, 215, 255, 0.34);
+  transform: translateY(-1px);
+}
+
+.studio-game-cover {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.18), transparent 50%),
+    rgba(255, 255, 255, 0.06);
+  color: #dff7ff;
+  font-weight: 1000;
+}
+
+.studio-game-card div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.studio-game-card strong,
+.studio-game-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-game-card small {
+  color: rgba(220, 236, 255, 0.62);
+}
+
+.studio-game-card i {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(67, 245, 167, 0.1);
+  color: #9fffd2;
+  font-style: normal;
+  font-weight: 1000;
+}
+
+.studio-proof-card,
+.studio-boundary-stack div {
+  padding: 13px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(5, 9, 15, 0.38);
+}
+
+.studio-proof-card {
+  display: grid;
+  gap: 6px;
+}
+
+.studio-proof-card span,
+.studio-boundary-stack span {
+  color: rgba(117, 215, 255, 0.84);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.studio-proof-card strong,
+.studio-boundary-stack strong {
+  color: #ffffff;
+}
+
+.studio-proof-card p {
+  margin: 0;
+  color: rgba(220, 236, 255, 0.66);
+  line-height: 1.5;
+}
+
+.studio-boundary-stack div {
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+@media (max-width: 980px) {
+  .studio-hero-main,
+  .studio-profile-grid {
+    display: grid;
+  }
+
+  .studio-logo-mark {
+    width: 118px;
+  }
+}
