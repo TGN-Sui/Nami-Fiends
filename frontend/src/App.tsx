@@ -203,6 +203,145 @@ function MemberAvatarButton(props: {
   );
 }
 
+function MediaUploadPrepCard(props: {
+  surfaceLabel: string;
+  assetLabel: string;
+  currentState: string;
+  storageLabel: string;
+  acceptedFormats: string;
+  note: string;
+}): ReactElement {
+  return (
+    <article className="media-upload-prep-card">
+      <div className="media-upload-prep-copy">
+        <span className="media-upload-prep-eyebrow">{props.surfaceLabel}</span>
+        <strong>{props.assetLabel}</strong>
+        <small>{props.currentState}</small>
+      </div>
+
+      <div className="media-upload-prep-details">
+        <span>{props.acceptedFormats}</span>
+        <span>{props.storageLabel}</span>
+      </div>
+
+      <button
+        aria-disabled="true"
+        className="media-upload-prep-button"
+        disabled
+        type="button"
+      >
+        Upload coming soon
+      </button>
+
+      <p>{props.note}</p>
+    </article>
+  );
+}
+
+function UxPreviewConsole(props: {
+  onOpenChannel: (channel: NamiChannel) => void;
+  onOpenMember: (member: (typeof members)[number]) => void;
+}): ReactElement {
+  const previewChannels = [
+    {
+      label: 'Verified Game',
+      detail: 'Official game channel',
+      channel: channels.find((channel) => channel.verifiedGame) ?? channels[0]!
+    },
+    {
+      label: 'Community Game',
+      detail: 'Fallback / non-verified game channel',
+      channel: channels.find((channel) => !channel.verifiedGame) ?? channels[0]!
+    },
+    {
+      label: 'Red Signal Game',
+      detail: 'High-intensity community behavior state',
+      channel: channels.find((channel) => channel.signal === 'Red') ?? channels[0]!
+    },
+    {
+      label: 'Builder Channel',
+      detail: 'Creator / builder-style game surface',
+      channel: channels.find((channel) => channel.name.toLowerCase().includes('pebble')) ?? channels[0]!
+    }
+  ];
+
+  const previewMembers = members.map((member) => {
+    return {
+      label: member.tier,
+      detail: member.signal + ' · ' + member.badge,
+      member
+    };
+  });
+
+  return (
+    <section className="panel ux-preview-console">
+      <div className="ux-preview-heading">
+        <span>UX Preview Console</span>
+        <strong>Navigate as any channel type or member tier</strong>
+        <p>
+          This panel is for product testing only. It helps verify tier, signal,
+          media, fallback, and profile-surface UX without changing trust status.
+        </p>
+      </div>
+
+      <div className="ux-preview-grid">
+        <div className="ux-preview-column">
+          <span className="ux-preview-label">Channel surfaces</span>
+          {previewChannels.map((entry) => (
+            <button
+              className="ux-preview-button"
+              key={entry.label}
+              onClick={() => props.onOpenChannel(entry.channel)}
+              type="button"
+            >
+              <strong>{entry.label}</strong>
+              <small>{entry.channel.name} · {entry.detail}</small>
+            </button>
+          ))}
+        </div>
+
+        <div className="ux-preview-column">
+          <span className="ux-preview-label">Member tiers</span>
+          {previewMembers.map((entry) => (
+            <button
+              className="ux-preview-button"
+              key={entry.member.id}
+              onClick={() => props.onOpenMember(entry.member)}
+              type="button"
+            >
+              <strong>{entry.label}</strong>
+              <small>{entry.member.name} · {entry.detail}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProfileEditPrepCard(): ReactElement {
+  return (
+    <article className="profile-edit-prep-card">
+      <div className="profile-edit-prep-heading">
+        <span>Edit Profile</span>
+        <strong>Profile editing coming soon</strong>
+        <p>
+          Preview controls for bio, profile picture, badge display, preferred game genres,
+          and platform preferences. Editing does not change verification or trust status.
+        </p>
+      </div>
+
+      <div className="profile-edit-prep-grid">
+        <button disabled type="button">Bio</button>
+        <button disabled type="button">Profile picture</button>
+        <button disabled type="button">Badge displays</button>
+        <button disabled type="button">Game genres</button>
+        <button disabled type="button">Platforms</button>
+      </div>
+    </article>
+  );
+}
+
 function ChannelAvatar(props: {
   channel: NamiChannel;
   size?: 'sm' | 'md' | 'lg';
@@ -1183,7 +1322,16 @@ function NamiHub(props: {
 
 
 
-      <section className="nami-hub-lower-grid">
+      
+      <UxPreviewConsole
+        onOpenChannel={(channel: NamiChannel) => {
+          props.onSelect(channel);
+          props.onOpenProfile(channel);
+        }}
+        onOpenMember={props.onOpenMember}
+      />
+
+<section className="nami-hub-lower-grid">
         <article className="panel community-growth-panel">
           <div className="profile-panel-heading">
             <h2>Community Growth</h2>
@@ -1929,7 +2077,20 @@ function StudioProfileScreen(props: {
             </div>
           </article>
         </section>
-      </section>
+      
+        <MediaUploadPrepCard
+          acceptedFormats="PNG, JPG, WebP, SVG"
+          assetLabel="Studio logo"
+          currentState={
+            props.developer.logoImageUrl
+              ? 'Demo studio logo active. Logo seed remains available as fallback.'
+              : 'Logo seed fallback active. No uploaded studio logo attached.'
+          }
+          note="This placeholder prepares Studio Profiles for future verified logo uploads without storage persistence yet."
+          storageLabel="Future source: Walrus logo reference plus studio approval proof"
+          surfaceLabel="Studio media"
+        />
+</section>
     </>
   );
 }
@@ -2706,7 +2867,20 @@ function ChannelProfile(props: {
             );
           })}
         </section>
-      </section>
+      
+        <MediaUploadPrepCard
+          acceptedFormats="PNG, JPG, WebP, SVG"
+          assetLabel="Cover image"
+          currentState={
+            props.channel.coverImageUrl
+              ? 'Demo cover image active. Generated cover remains available as fallback.'
+              : 'Generated cover fallback active. No uploaded cover image attached.'
+          }
+          note="This placeholder prepares the Game Profile for future uploaded cover art without storing files yet."
+          storageLabel="Future source: Walrus object reference plus Sui metadata proof"
+          surfaceLabel="Game Channel media"
+        />
+</section>
     </>
   );
 }
@@ -3656,7 +3830,20 @@ function MemberProfileScreen(props: {
             </div>
           </article>
         </section>
-      </section>
+      
+        <MediaUploadPrepCard
+          acceptedFormats="PNG, JPG, WebP"
+          assetLabel="Member avatar"
+          currentState={
+            props.member.avatarImageUrl
+              ? 'Demo member avatar active. Initials remain available as fallback.'
+              : 'Initials fallback active. No uploaded member avatar attached.'
+          }
+          note="This placeholder prepares Member Profiles for future avatar uploads without making upload equal verification or trust."
+          storageLabel="Future source: user-owned media reference plus passport attachment rules"
+          surfaceLabel="Member media"
+        />
+</section>
     </>
   );
 }
@@ -4944,7 +5131,22 @@ function UserProfileScreen(props: {
             </div>
           </article>
         </section>
-      </section>
+      
+        <MediaUploadPrepCard
+          acceptedFormats="PNG, JPG, WebP"
+          assetLabel="Profile avatar"
+          currentState={
+            members[0]?.avatarImageUrl
+              ? 'Demo profile avatar active. Initials remain available as fallback.'
+              : 'Initials fallback active. No uploaded profile avatar attached.'
+          }
+          note="This prepares My Profile for future avatar uploads while keeping identity and trust separate."
+          storageLabel="Future source: user-owned media reference plus passport attachment rules"
+          surfaceLabel="My Profile media"
+        />
+
+        <ProfileEditPrepCard />
+</section>
     </>
   );
 }
@@ -5441,7 +5643,7 @@ export function App(): ReactElement {
           developer={selectedDeveloper}
           onNavigate={(page) => setActivePage(page)}
           onOpenProfile={openChannelProfile}
-          returnLabel={profileReturnLabel(studioReturnPage)}
+          returnLabel="Back"
           returnPage={studioReturnPage}
         />
       );
