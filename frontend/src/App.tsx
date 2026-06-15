@@ -166,6 +166,18 @@ function NamiSeasonProgressBar(props: {
   );
 }
 
+function namiReturnLabelForPage(page: NamiPage): string {
+  if (page === 'hub') return 'Back to Nami Hub';
+  if (page === 'gamehub') return 'Back to Game Hub';
+  if (page === 'chat') return 'Back to Chat';
+  if (page === 'settings') return 'Back to Settings';
+  if (page === 'userProfile') return 'Back to My Profile';
+  if (page === 'subscriptions') return 'Back to Subscriptions';
+  if (page === 'guilds') return 'Back to Guilds';
+
+  return 'Back to Nami Hub';
+}
+
 function Sidebar(props: {
   activePage: NamiPage;
   collapsed: boolean;
@@ -1081,7 +1093,105 @@ function GameHub(props: {
   const topChannels = [...channels]
     .sort((left, right) => right.subscribers - left.subscribers)
     .slice(0, 4);
-  const browserChannels = channels.concat(channels, channels);
+
+  const randomizedBrowserEntries = useMemo(() => {
+    return channels
+      .concat(channels, channels)
+      .map((channel, copyIndex) => ({
+        channel,
+        copyIndex,
+        sortKey: Math.random()
+      }))
+      .sort((left, right) => left.sortKey - right.sortKey);
+  }, []);
+
+  const browserFilters = [
+    'All',
+    'Games',
+    'IRL',
+    'Music & DJs',
+    'Creative',
+    'Esports',
+    'Verified',
+    'PC',
+    'Console',
+    'Mobile'
+  ] as const;
+
+  type BrowserFilter = (typeof browserFilters)[number];
+
+  const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<BrowserFilter>('All');
+  const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
+  const [swipeIndex, setSwipeIndex] = useState(0);
+
+  const filteredBrowserEntries = randomizedBrowserEntries.filter(({ channel }) => {
+    const genre = channel.genre.toLowerCase();
+    const platforms = channel.platforms.map((platform) => platform.toLowerCase());
+
+    if (selectedBrowserFilter === 'All') return true;
+    if (selectedBrowserFilter === 'Games') {
+      return (
+        genre.includes('gaming') ||
+        genre.includes('adventure') ||
+        genre.includes('casual') ||
+        genre.includes('arcade') ||
+        genre.includes('pvp')
+      );
+    }
+    if (selectedBrowserFilter === 'IRL') return genre.includes('irl');
+    if (selectedBrowserFilter === 'Music & DJs') return genre.includes('music') || genre.includes('dj');
+    if (selectedBrowserFilter === 'Creative') return genre.includes('creative') || genre.includes('builder');
+    if (selectedBrowserFilter === 'Esports') return genre.includes('esports');
+    if (selectedBrowserFilter === 'Verified') return channel.verified;
+    if (selectedBrowserFilter === 'PC') return platforms.includes('pc');
+    if (selectedBrowserFilter === 'Console') return platforms.includes('console');
+    if (selectedBrowserFilter === 'Mobile') return platforms.includes('mobile');
+
+    return true;
+  });
+
+  const filteredBrowserChannels = filteredBrowserEntries.map(({ channel }) => channel);
+  const activeSwipeChannel =
+    filteredBrowserChannels[swipeIndex % Math.max(1, filteredBrowserChannels.length)] ?? props.selectedChannel;
+  const nextSwipeChannel =
+    filteredBrowserChannels.length > 1
+      ? filteredBrowserChannels[(swipeIndex + 1) % filteredBrowserChannels.length]!
+      : activeSwipeChannel;
+  const thirdSwipeChannel =
+    filteredBrowserChannels.length > 2
+      ? filteredBrowserChannels[(swipeIndex + 2) % filteredBrowserChannels.length]!
+      : nextSwipeChannel;
+
+  useEffect(() => {
+    setSwipeIndex(0);
+  }, [selectedBrowserFilter, browserViewMode]);
+
+  function moveSwipeDeck(direction: 'previous' | 'next'): void {
+    if (filteredBrowserChannels.length === 0) return;
+
+    setSwipeIndex((value) => {
+      const nextValue = direction === 'previous' ? value - 1 : value + 1;
+      return (nextValue + filteredBrowserChannels.length) % filteredBrowserChannels.length;
+    });
+  }
+
+  function updateFoilCardTilt(element: HTMLElement, clientX: number, clientY: number): void {
+    const rect = element.getBoundingClientRect();
+    const pointerX = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+    const pointerY = Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
+
+    element.style.setProperty('--game-card-tilt-x', ((pointerX - 0.5) * 12).toFixed(2) + 'deg');
+    element.style.setProperty('--game-card-tilt-y', ((0.5 - pointerY) * 10).toFixed(2) + 'deg');
+    element.style.setProperty('--game-card-foil-x', (pointerX * 100).toFixed(2) + '%');
+    element.style.setProperty('--game-card-foil-y', (pointerY * 100).toFixed(2) + '%');
+  }
+
+  function resetFoilCardTilt(element: HTMLElement): void {
+    element.style.setProperty('--game-card-tilt-x', '0deg');
+    element.style.setProperty('--game-card-tilt-y', '0deg');
+    element.style.setProperty('--game-card-foil-x', '50%');
+    element.style.setProperty('--game-card-foil-y', '18%');
+  }
 
   return (
     <>
@@ -1139,6 +1249,7 @@ function GameHub(props: {
             Verification and reputation remain identity-based.
           </p>
           <button
+            className="gamehub-themed-action"
             onClick={() => props.onOpenProfile(props.selectedChannel)}
             type="button"
           >
@@ -1148,56 +1259,187 @@ function GameHub(props: {
       </section>
 
       <section className="panel gamehub-browser">
-        <div className="browser-heading">
+        <div className="browser-heading gamehub-browser-heading">
           <div>
             <h2>Channel Browser</h2>
-            <p>Randomized discovery cards with signal rings and channel metadata.</p>
+            <p>Randomized game cover cards with dev marks, badges, and verified foil grading.</p>
           </div>
-          <div className="selected-channel-chip">
-            Selected: <strong>{props.selectedChannel.name}</strong>
+
+          <div className="gamehub-browser-controls">
+            <div className="gamehub-view-toggle" aria-label="Channel browser view mode">
+              <button
+                className={browserViewMode === 'tiles' ? 'is-active-view' : ''}
+                onClick={() => setBrowserViewMode('tiles')}
+                type="button"
+              >
+                Tile Grid
+              </button>
+              <button
+                className={browserViewMode === 'swipe' ? 'is-active-view' : ''}
+                onClick={() => setBrowserViewMode('swipe')}
+                type="button"
+              >
+                Swipe Deck
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="filter-row">
-          <button type="button">All</button>
-          <button type="button">Games</button>
-          <button type="button">IRL</button>
-          <button type="button">Music & DJs</button>
-          <button type="button">Creative</button>
-          <button type="button">Esports</button>
-          <button type="button">Verified</button>
-          <button type="button">PC</button>
-          <button type="button">Console</button>
-          <button type="button">Mobile</button>
-        </div>
-
-        <div className="discovery-grid">
-          {browserChannels.map((channel, index) => (
+        <div className="filter-row gamehub-filter-row" role="tablist" aria-label="Game Hub browser filters">
+          {browserFilters.map((filter) => (
             <button
-              className="discovery-card discovery-card-expanded"
-              key={channel.id + '-' + index}
-              onClick={() => props.onOpenProfile(channel)}
+              aria-pressed={selectedBrowserFilter === filter}
+              className={selectedBrowserFilter === filter ? 'is-active-filter' : ''}
+              key={filter}
+              onClick={() => setSelectedBrowserFilter(filter)}
               type="button"
             >
-              <div className="discovery-card-top">
-                <ChannelAvatar channel={channel} size="sm" />
-                <span className={'mini-badge signal-text-' + channel.signal.toLowerCase()}>
-                  {channel.signal}
-                </span>
-              </div>
-
-              <strong>{channel.name}</strong>
-              <span>{channel.genre}</span>
-              <small>{channel.platforms.join(' / ')}</small>
-
-              <div className="card-meta-row">
-                {channel.verified && <i>Verified</i>}
-                {channel.partner && <i>Partner</i>}
-                <i>{channel.subscribers.toLocaleString()}</i>
-              </div>
+              {filter}
             </button>
           ))}
         </div>
+
+        {browserViewMode === 'tiles' ? (
+          <div className="discovery-grid gamehub-discovery-grid">
+            {filteredBrowserEntries.map(({ channel, copyIndex }) => {
+              const channelTheme = getStoredChannelBrandTheme(channel.id);
+
+              return (
+                <button
+                  className={
+                    'discovery-card discovery-card-expanded gamehub-discovery-card gamehub-cover-card' +
+                    (channel.verified ? ' is-verified-foil-card' : ' is-static-card')
+                  }
+                  key={channel.id + '-' + copyIndex}
+                  onClick={() => props.onOpenProfile(channel)}
+                  onPointerLeave={(event) => {
+                    if (channel.verified) resetFoilCardTilt(event.currentTarget);
+                  }}
+                  onPointerMove={(event) => {
+                    if (channel.verified) {
+                      updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
+                    }
+                  }}
+                  style={
+                    {
+                      '--game-card-brand': channelTheme.primary,
+                      '--game-card-brand-soft': channelTheme.secondary
+                    } as CSSProperties
+                  }
+                  type="button"
+                >
+                  <div className="gamehub-cover-art" aria-hidden="true">
+                    <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
+                    <span className="gamehub-cover-genre">{channel.genre.split('/')[0]}</span>
+                  </div>
+
+                  <div className="gamehub-cover-overlay">
+                    <div className="gamehub-cover-topline">
+                      <span className="gamehub-dev-logo" title="Developer mark">
+                        <ChannelAvatar channel={channel} size="sm" />
+                      </span>
+
+                      <span className="gamehub-cover-icons">
+                        {channel.verified && <i className="gamehub-grade-icon" title="Verified">◆</i>}
+                        {channel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
+                        <i className={'gamehub-signal-dot signal-text-' + channel.signal.toLowerCase()} title={channel.signal} />
+                      </span>
+                    </div>
+
+                    <strong>{channel.name}</strong>
+                    <small>{channel.platforms.slice(0, 2).join(' / ')}</small>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <section className="gamehub-swipe-stage" aria-label="Swipe deck channel browser">
+            <div className="gamehub-swipe-copy">
+              <span className="feature-label">Swipe Discovery</span>
+              <h3>Browse game covers like a deck</h3>
+              <p>
+                Game channels use full-card cover art. Verified game channels receive the graded foil sleeve.
+              </p>
+              <strong>
+                {filteredBrowserChannels.length === 0
+                  ? '0 / 0'
+                  : (swipeIndex + 1).toLocaleString() + ' / ' + filteredBrowserChannels.length.toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="gamehub-swipe-deck">
+              <div className="gamehub-swipe-shadow-card is-third">
+                <strong>{thirdSwipeChannel.name}</strong>
+              </div>
+              <div className="gamehub-swipe-shadow-card is-second">
+                <strong>{nextSwipeChannel.name}</strong>
+              </div>
+
+              <article
+                className={'gamehub-swipe-card gamehub-swipe-cover-card' + (activeSwipeChannel.verified ? ' is-verified-foil' : '')}
+                onPointerLeave={(event) => {
+                  if (activeSwipeChannel.verified) resetFoilCardTilt(event.currentTarget);
+                }}
+                onPointerMove={(event) => {
+                  if (activeSwipeChannel.verified) {
+                    updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
+                  }
+                }}
+                style={
+                  {
+                    '--game-card-brand': getStoredChannelBrandTheme(activeSwipeChannel.id).primary,
+                    '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary
+                  } as CSSProperties
+                }
+              >
+                <div className="gamehub-swipe-cover-art" aria-hidden="true">
+                  <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
+                </div>
+
+                <div className="gamehub-swipe-cover-overlay">
+                  <div className="gamehub-swipe-card-top">
+                    <span className="gamehub-dev-logo" title="Developer mark">
+                      <ChannelAvatar channel={activeSwipeChannel} size="sm" />
+                    </span>
+
+                    <span className="gamehub-cover-icons">
+                      {activeSwipeChannel.verified && <i className="gamehub-grade-icon" title="Verified">◆</i>}
+                      {activeSwipeChannel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
+                      <i className={'gamehub-signal-dot signal-text-' + activeSwipeChannel.signal.toLowerCase()} title={activeSwipeChannel.signal} />
+                    </span>
+                  </div>
+
+                  <div className="gamehub-swipe-card-copy">
+                    <h3>{activeSwipeChannel.name}</h3>
+                    <p>{activeSwipeChannel.genre} · {activeSwipeChannel.platforms.join(' / ')}</p>
+                  </div>
+
+                  <div className="gamehub-swipe-meta">
+                    <span>{activeSwipeChannel.subscribers.toLocaleString()}</span>
+                    <span>{activeSwipeChannel.handle}</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div className="gamehub-swipe-actions">
+              <button onClick={() => moveSwipeDeck('previous')} type="button">
+                Swipe Left
+              </button>
+              <button
+                className="is-open-swipe-card"
+                onClick={() => props.onOpenProfile(activeSwipeChannel)}
+                type="button"
+              >
+                View Profile
+              </button>
+              <button onClick={() => moveSwipeDeck('next')} type="button">
+                Swipe Right
+              </button>
+            </div>
+          </section>
+        )}
 
         <div className="interest-tracker">
           <div>
@@ -1216,7 +1458,7 @@ function GameHub(props: {
             <span>Events</span>
           </div>
 
-          <button className="add-module-button" type="button">
+          <button className="add-module-button gamehub-add-module-button" type="button">
             + Add Section / Module
           </button>
         </div>
@@ -1292,6 +1534,8 @@ function ChannelProfile(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
   onOpenProfile?: (channel: NamiChannel) => void;
+  returnPage: NamiPage;
+  returnLabel: string;
 }): ReactElement {
   const profileModuleDefaults = [
     'Main Chat',
@@ -1932,6 +2176,13 @@ function ChannelProfile(props: {
           </div>
 
           <div className="profile-hero-actions">
+              <button
+                className="secondary-action profile-return-button"
+                onClick={() => props.onNavigate(props.returnPage)}
+                type="button"
+              >
+                {props.returnLabel}
+              </button>
             <button className="primary-action" type="button">
               Subscribe
             </button>
@@ -2274,10 +2525,10 @@ function GameChat(props: {
   const [hideNpc, setHideNpc] = useState(false);
   const [hideRed, setHideRed] = useState(false);
   const [proEliteOnly, setProEliteOnly] = useState(false);
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
-  const [customizationCollapsed, setCustomizationCollapsed] = useState(false);
-  const [gatedAccessCollapsed, setGatedAccessCollapsed] = useState(false);
-  const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
+  const [customizationCollapsed, setCustomizationCollapsed] = useState(true);
+  const [gatedAccessCollapsed, setGatedAccessCollapsed] = useState(true);
+  const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(true);
   const [reportPulse, setReportPulse] = useState('');
   const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
 
@@ -2288,6 +2539,14 @@ function GameChat(props: {
   useEffect(() => {
     applyChannelBrandToDocument(channelBrandTheme);
   }, [channelBrandTheme, props.channel.id]);
+
+  // UI-A13B force collapse on channel entry
+  useEffect(() => {
+    setFiltersCollapsed(true);
+    setCustomizationCollapsed(true);
+    setGatedAccessCollapsed(true);
+    setAdultLanguageCollapsed(true);
+  }, [props.channel.id]);
 
   const chatEligibleMembers = members.filter((member) => member.signal !== 'Black');
 
@@ -2707,6 +2966,8 @@ function GameChat(props: {
 function MemberProfileScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
+  returnPage: NamiPage;
+  returnLabel: string;
 }): ReactElement {
   const preferenceStorageKey = 'nami-member-preferences-' + props.member.id;
   const [isMuted, setIsMuted] = useState(false);
@@ -2868,12 +3129,12 @@ function MemberProfileScreen(props: {
             </button>
 
             <button
-              className="secondary-action"
-              onClick={() => props.onNavigate('chat')}
-              type="button"
-            >
-              Back to Chat
-            </button>
+                className="secondary-action member-return-button"
+                onClick={() => props.onNavigate(props.returnPage)}
+                type="button"
+              >
+                {props.returnLabel}
+              </button>
           </div>
         </article>
 
@@ -4653,16 +4914,29 @@ export function App(): ReactElement {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
+  const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
 
   const openMemberProfile = (member: (typeof members)[number]): void => {
     setSelectedMember(member);
+    setContextReturnPage(activePage === 'memberProfile' ? contextReturnPage : activePage);
     window.localStorage.setItem('nami-selected-member-id', member.id);
     setActivePage('memberProfile');
   };
 
+
   const openChannelProfile = (channel: NamiChannel): void => {
     setSelectedChannel(channel);
+    setContextReturnPage(activePage === 'channelProfile' ? contextReturnPage : activePage);
     setActivePage('channelProfile');
+  };
+
+
+  const navigateFromCurrentPage = (page: NamiPage): void => {
+    if ((page === 'channelProfile' || page === 'memberProfile') && page !== activePage) {
+      setContextReturnPage(activePage);
+    }
+
+    setActivePage(page);
   };
 
   const screen = useMemo(() => {
@@ -4698,44 +4972,44 @@ export function App(): ReactElement {
     if (activePage === 'channelProfile') {
       return (
         <ChannelProfile
-          channel={selectedChannel}
-          onNavigate={setActivePage}
-          onOpenProfile={openChannelProfile}
-        />
+            channel={selectedChannel}
+            onNavigate={navigateFromCurrentPage}
+            onOpenProfile={openChannelProfile}
+            returnPage={contextReturnPage}
+            returnLabel={namiReturnLabelForPage(contextReturnPage)}
+          />
       );
     }
 
     if (activePage === 'chat') {
     return <GameChat
         channel={selectedChannel}
-        onNavigate={setActivePage}
+        onNavigate={navigateFromCurrentPage}
         onOpenMember={openMemberProfile}
       />;
   }
 
   if (activePage === 'channelEvents') {
-    return <ChannelEventsScreen channel={selectedChannel} onNavigate={setActivePage} />;
+    return <ChannelEventsScreen channel={selectedChannel} onNavigate={navigateFromCurrentPage} />;
   }
 
   if (activePage === 'safetyCenter') {
-    return <SafetyCenterScreen onNavigate={setActivePage} />;
+    return <SafetyCenterScreen onNavigate={navigateFromCurrentPage} />;
   }
 
   if (activePage === 'memberProfile') {
     return <MemberProfileScreen
-      member={
-        members.find((member) => {
-          return member.id === window.localStorage.getItem('nami-selected-member-id');
-        }) ?? members[0]!
-      }
-      onNavigate={setActivePage}
-    />;
+        member={selectedMember}
+        onNavigate={navigateFromCurrentPage}
+        returnPage={contextReturnPage}
+        returnLabel={namiReturnLabelForPage(contextReturnPage)}
+      />;
   }
 
   if (activePage === 'passport') {
     return (
       <PassportScreen
-        onNavigate={setActivePage}
+        onNavigate={navigateFromCurrentPage}
         onOpenProfile={(channel) => {
           setSelectedChannel(channel);
           setActivePage('channelProfile');
@@ -4747,7 +5021,7 @@ export function App(): ReactElement {
 if (activePage === 'userProfile') {
       return <UserProfileScreen
           onOpenProfile={openChannelProfile}
-          onNavigate={setActivePage}
+          onNavigate={navigateFromCurrentPage}
         />;
     }
 
@@ -4764,7 +5038,7 @@ if (activePage === 'userProfile') {
     }
 
     if (activePage === 'settings') {
-      return <SettingsScreen onNavigate={setActivePage} />;
+      return <SettingsScreen onNavigate={navigateFromCurrentPage} />;
     }
 
     return <NamiHub
@@ -4773,14 +5047,14 @@ if (activePage === 'userProfile') {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
         />;
-  }, [activePage, selectedChannel, selectedMember]);
+  }, [activePage, selectedChannel, selectedMember, contextReturnPage]);
 
   return (
     <main className="nami-app">
       <Sidebar
         activePage={activePage}
         collapsed={sidebarCollapsed}
-        onNavigate={setActivePage}
+        onNavigate={navigateFromCurrentPage}
         onToggle={() => setSidebarCollapsed((value) => !value)}
       />
 

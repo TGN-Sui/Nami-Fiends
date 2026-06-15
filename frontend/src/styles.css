@@ -11388,3 +11388,1434 @@ body::after {
     min-height: 940px !important;
   }
 }
+
+
+/* =========================================================
+   UI-A13B — contextual return and channel-uniform tabs
+   ========================================================= */
+
+.context-return-bar {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 0 14px;
+}
+
+.context-return-button {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 34%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent), transparent 42%),
+    rgba(5, 9, 15, 0.5);
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 78%, #ffffff);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 950;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, transparent);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.context-return-button::before {
+  content: '←';
+  font-weight: 950;
+}
+
+.context-return-button:hover {
+  transform: translateX(-2px);
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 58%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 18%, transparent);
+  background: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, rgba(5, 9, 15, 0.76));
+}
+
+.chat-shell-buildout .channel-tab-row {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent);
+  background:
+    linear-gradient(135deg, rgba(5, 9, 15, 0.7), rgba(12, 18, 28, 0.46)),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, transparent), transparent 44%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.chat-shell-buildout .channel-tab-row button {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, transparent);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(220, 236, 255, 0.74);
+  box-shadow: none;
+}
+
+.chat-shell-buildout .channel-tab-row button:hover {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, transparent);
+  background: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 9%, rgba(255, 255, 255, 0.045));
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 55%, #ffffff);
+}
+
+.chat-shell-buildout .channel-tab-row button.is-active-tab {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 58%, transparent);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, rgba(5, 9, 15, 0.84)),
+      rgba(5, 9, 15, 0.72)
+    );
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 70%, #ffffff);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+
+/* =========================================================
+   UI-A13C — visible return controls and forced collapsed chat panels
+   ========================================================= */
+
+.profile-return-button,
+.member-return-button {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 38%, transparent) !important;
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 78%, #ffffff) !important;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent), transparent 42%),
+    rgba(5, 9, 15, 0.56) !important;
+}
+
+.profile-return-button::before,
+.member-return-button::before {
+  content: '← ';
+  font-weight: 950;
+}
+
+.profile-return-button:hover,
+.member-return-button:hover {
+  transform: translateX(-2px);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 18%, transparent);
+}
+
+.chat-rail-collapsible-panel.is-collapsed .chat-rail-panel-body,
+.chat-rail-collapsible-panel.is-collapsed-chat-panel .chat-rail-panel-body,
+.chat-rail-collapsible-panel.is-collapsed-customization .chat-rail-panel-body,
+.chat-customization-panel.is-collapsed-customization .chat-rail-panel-body,
+.chat-filter-panel.is-collapsed-filter .chat-rail-panel-body {
+  display: none !important;
+}
+
+/* =========================================================
+   UI-A13D — Game Hub uniform channel-themed tabs/buttons
+   ========================================================= */
+
+.gamehub-browser .tab-row {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent);
+  background:
+    linear-gradient(135deg, rgba(5, 9, 15, 0.72), rgba(12, 18, 28, 0.5)),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, transparent), transparent 44%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 0 20px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 6%, transparent);
+}
+
+.gamehub-browser .tab-row button {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, transparent);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(220, 236, 255, 0.74);
+  box-shadow: none;
+}
+
+.gamehub-browser .tab-row button:hover {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, transparent);
+  background: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 9%, rgba(255, 255, 255, 0.045));
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 55%, #ffffff);
+  transform: translateY(-1px);
+}
+
+.gamehub-browser .tab-row button.is-active-tab,
+.gamehub-browser .tab-row button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 58%, transparent);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, rgba(5, 9, 15, 0.84)),
+      rgba(5, 9, 15, 0.72)
+    );
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 70%, #ffffff);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.gamehub-feature-card.paid-feature > button {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 42%, transparent);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 18%, transparent), transparent 46%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 24%, rgba(5, 9, 15, 0.84)),
+      rgba(5, 9, 15, 0.72)
+    );
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 72%, #ffffff);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.gamehub-feature-card.paid-feature > button:hover {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 64%, transparent);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 26%, transparent), transparent 48%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 34%, rgba(5, 9, 15, 0.82)),
+      rgba(5, 9, 15, 0.68)
+    );
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+
+/* =========================================================
+   UI-A13E — Game Hub Browser UX Polish
+   ========================================================= */
+
+.gamehub-browser .filter-row.gamehub-filter-row {
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(5, 9, 15, 0.72), rgba(12, 18, 28, 0.5)),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, transparent), transparent 44%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 0 20px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 6%, transparent);
+}
+
+.gamehub-browser .filter-row.gamehub-filter-row button,
+.gamehub-view-toggle button {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, transparent) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  color: rgba(220, 236, 255, 0.74) !important;
+  box-shadow: none !important;
+}
+
+.gamehub-browser .filter-row.gamehub-filter-row button:hover,
+.gamehub-view-toggle button:hover {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, transparent) !important;
+  background: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 9%, rgba(255, 255, 255, 0.045)) !important;
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 55%, #ffffff) !important;
+  transform: translateY(-1px);
+}
+
+.gamehub-browser .filter-row.gamehub-filter-row button.is-active-filter,
+.gamehub-browser .filter-row.gamehub-filter-row button[aria-pressed='true'],
+.gamehub-view-toggle button.is-active-view {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 58%, transparent) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 30%, rgba(5, 9, 15, 0.84)),
+      rgba(5, 9, 15, 0.72)
+    ) !important;
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 70%, #ffffff) !important;
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.gamehub-browser-controls {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.gamehub-view-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gamehub-view-toggle button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.gamehub-top-panel .paid-feature > button,
+.gamehub-browser .add-module-button {
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 42%, transparent) !important;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 18%, transparent), transparent 46%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 24%, rgba(5, 9, 15, 0.84)),
+      rgba(5, 9, 15, 0.72)
+    ) !important;
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 72%, #ffffff) !important;
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.gamehub-top-panel .paid-feature > button:hover,
+.gamehub-browser .add-module-button:hover {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 64%, transparent) !important;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 26%, transparent), transparent 48%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 34%, rgba(5, 9, 15, 0.82)),
+      rgba(5, 9, 15, 0.68)
+    ) !important;
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.gamehub-discovery-grid {
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 16px;
+  padding: 2px 8px 12px 0;
+  overflow-x: hidden;
+}
+
+.gamehub-discovery-card {
+  min-width: 0;
+  min-height: 196px;
+  align-content: start;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.gamehub-discovery-card > strong,
+.gamehub-discovery-card > span,
+.gamehub-discovery-card > small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gamehub-discovery-card > small {
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.gamehub-discovery-card .card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.gamehub-discovery-card .card-meta-row i {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gamehub-swipe-stage {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(280px, 1.28fr);
+  gap: 22px;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, transparent), transparent 44%),
+    rgba(5, 9, 15, 0.38);
+}
+
+.gamehub-swipe-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.gamehub-swipe-copy h3,
+.gamehub-swipe-copy p {
+  margin: 0;
+}
+
+.gamehub-swipe-copy p {
+  color: rgba(220, 236, 255, 0.72);
+  line-height: 1.55;
+}
+
+.gamehub-swipe-copy strong {
+  width: max-content;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 62%, #ffffff);
+}
+
+.gamehub-swipe-deck {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  place-items: center;
+  perspective: 1100px;
+}
+
+.gamehub-swipe-shadow-card,
+.gamehub-swipe-card {
+  width: min(430px, 100%);
+  border-radius: 28px;
+}
+
+.gamehub-swipe-shadow-card {
+  position: absolute;
+  min-height: 340px;
+  display: grid;
+  place-items: end start;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 10%, transparent);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(220, 236, 255, 0.32);
+  pointer-events: none;
+}
+
+.gamehub-swipe-shadow-card.is-second {
+  transform: translate(22px, 18px) rotate(4deg) scale(0.94);
+}
+
+.gamehub-swipe-shadow-card.is-third {
+  transform: translate(42px, 34px) rotate(8deg) scale(0.88);
+  opacity: 0.62;
+}
+
+.gamehub-swipe-card {
+  position: relative;
+  z-index: 3;
+  min-height: 390px;
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  padding: 26px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 28%, transparent);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent), transparent 42%),
+    linear-gradient(145deg, rgba(7, 10, 17, 0.94), rgba(18, 24, 38, 0.84));
+  color: #ffffff;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.36),
+    0 0 34px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent);
+}
+
+.gamehub-swipe-card.is-verified-foil::before {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  background:
+    conic-gradient(
+      from 120deg,
+      transparent,
+      rgba(117, 215, 255, 0.13),
+      rgba(67, 245, 167, 0.12),
+      rgba(255, 255, 255, 0.1),
+      rgba(117, 215, 255, 0.14),
+      transparent
+    );
+  animation: gamehubVerifiedFoil 7.5s linear infinite;
+  opacity: 0.86;
+  pointer-events: none;
+}
+
+.gamehub-swipe-card.is-verified-foil::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 27px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 36%, rgba(255, 255, 255, 0.04));
+  pointer-events: none;
+}
+
+.gamehub-swipe-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.gamehub-swipe-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.gamehub-swipe-card-copy h3,
+.gamehub-swipe-card-copy p {
+  margin: 0;
+}
+
+.gamehub-swipe-card-copy h3 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: -0.05em;
+}
+
+.gamehub-swipe-card-copy p {
+  color: rgba(220, 236, 255, 0.76);
+  line-height: 1.55;
+}
+
+.gamehub-swipe-meta,
+.gamehub-swipe-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gamehub-swipe-meta span,
+.gamehub-swipe-badges i {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(220, 236, 255, 0.82);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.gamehub-swipe-badges i:first-child {
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 70%, #ffffff);
+}
+
+.gamehub-swipe-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gamehub-swipe-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 18%, transparent);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(220, 236, 255, 0.78);
+  font-weight: 950;
+}
+
+.gamehub-swipe-actions button:hover,
+.gamehub-swipe-actions button.is-select-swipe-card,
+.gamehub-swipe-actions button.is-open-swipe-card {
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 48%, transparent);
+  background: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, rgba(5, 9, 15, 0.76));
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 68%, #ffffff);
+}
+
+@keyframes gamehubVerifiedFoil {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .gamehub-swipe-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .gamehub-browser-controls {
+    justify-items: start;
+  }
+}
+
+
+/* =========================================================
+   UI-A13G — hard Game Hub browser overrides
+   ========================================================= */
+
+section.gamehub-browser .filter-row > button,
+section.gamehub-browser .filter-row.gamehub-filter-row > button,
+section.gamehub-browser .gamehub-view-toggle > button {
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border: 1px solid rgba(117, 215, 255, 0.22) !important;
+  border-radius: 999px !important;
+  background: rgba(5, 9, 15, 0.68) !important;
+  color: rgba(220, 236, 255, 0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  font-weight: 950 !important;
+}
+
+section.gamehub-browser .filter-row > button:hover,
+section.gamehub-browser .filter-row.gamehub-filter-row > button:hover,
+section.gamehub-browser .gamehub-view-toggle > button:hover {
+  border-color: rgba(117, 215, 255, 0.46) !important;
+  background: rgba(20, 55, 76, 0.52) !important;
+  color: #dff8ff !important;
+  transform: translateY(-1px);
+}
+
+section.gamehub-browser .filter-row > button.is-active-filter,
+section.gamehub-browser .filter-row > button[aria-pressed='true'],
+section.gamehub-browser .gamehub-view-toggle > button.is-active-view {
+  border-color: rgba(67, 245, 167, 0.56) !important;
+  background:
+    radial-gradient(circle at top left, rgba(67, 245, 167, 0.2), transparent 42%),
+    rgba(5, 9, 15, 0.78) !important;
+  color: #9fffd2 !important;
+  box-shadow: 0 0 22px rgba(67, 245, 167, 0.14) !important;
+}
+
+.gamehub-browser-heading {
+  align-items: start;
+}
+
+.gamehub-browser-controls {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.gamehub-view-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gamehub-themed-action,
+section.gamehub-browser .gamehub-add-module-button {
+  border: 1px solid rgba(117, 215, 255, 0.44) !important;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.16), transparent 42%),
+    rgba(5, 9, 15, 0.68) !important;
+  color: #dff8ff !important;
+  box-shadow: 0 0 24px rgba(117, 215, 255, 0.12) !important;
+}
+
+section.gamehub-browser .gamehub-discovery-card,
+section.gamehub-browser .gamehub-discovery-card * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+section.gamehub-browser .gamehub-discovery-card {
+  overflow: hidden !important;
+}
+
+section.gamehub-browser .gamehub-discovery-card .card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  overflow: hidden;
+}
+
+.gamehub-swipe-stage {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(280px, 1.28fr);
+  gap: 22px;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  border-radius: 22px;
+  background: rgba(5, 9, 15, 0.42);
+}
+
+.gamehub-swipe-deck {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  place-items: center;
+  perspective: 1100px;
+}
+
+.gamehub-swipe-shadow-card,
+.gamehub-swipe-card {
+  width: min(430px, 100%);
+  border-radius: 28px;
+}
+
+.gamehub-swipe-shadow-card {
+  position: absolute;
+  min-height: 340px;
+  display: grid;
+  place-items: end start;
+  padding: 24px;
+  border: 1px solid rgba(117, 215, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(220, 236, 255, 0.32);
+  pointer-events: none;
+}
+
+.gamehub-swipe-shadow-card.is-second {
+  transform: translate(22px, 18px) rotate(4deg) scale(0.94);
+}
+
+.gamehub-swipe-shadow-card.is-third {
+  transform: translate(42px, 34px) rotate(8deg) scale(0.88);
+  opacity: 0.62;
+}
+
+.gamehub-swipe-card {
+  position: relative;
+  z-index: 3;
+  min-height: 390px;
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  padding: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.14), transparent 42%),
+    linear-gradient(145deg, rgba(7, 10, 17, 0.94), rgba(18, 24, 38, 0.84));
+  color: #ffffff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+}
+
+.gamehub-swipe-card.is-verified-foil::before {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  background:
+    conic-gradient(
+      from 120deg,
+      transparent,
+      rgba(117, 215, 255, 0.13),
+      rgba(67, 245, 167, 0.12),
+      rgba(255, 255, 255, 0.1),
+      rgba(117, 215, 255, 0.14),
+      transparent
+    );
+  animation: gamehubVerifiedFoil 7.5s linear infinite;
+  opacity: 0.86;
+  pointer-events: none;
+}
+
+.gamehub-swipe-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.gamehub-swipe-card-top,
+.gamehub-swipe-meta,
+.gamehub-swipe-badges,
+.gamehub-swipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gamehub-swipe-card-top {
+  justify-content: space-between;
+  align-items: start;
+}
+
+.gamehub-swipe-copy p,
+.gamehub-swipe-card-copy p {
+  color: rgba(220, 236, 255, 0.74);
+  line-height: 1.55;
+}
+
+.gamehub-swipe-meta span,
+.gamehub-swipe-badges i {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(220, 236, 255, 0.82);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.gamehub-swipe-actions {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+
+.gamehub-swipe-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.22);
+  background: rgba(5, 9, 15, 0.68);
+  color: rgba(220, 236, 255, 0.82);
+  font-weight: 950;
+}
+
+.gamehub-swipe-actions button:hover,
+.gamehub-swipe-actions button.is-select-swipe-card,
+.gamehub-swipe-actions button.is-open-swipe-card {
+  border-color: rgba(67, 245, 167, 0.48);
+  background: rgba(24, 74, 55, 0.54);
+  color: #9fffd2;
+}
+
+@keyframes gamehubVerifiedFoil {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   UI-A13H — cleaner Game Hub swipe controls + seamless foil
+   ========================================================= */
+
+.gamehub-browser-controls {
+  justify-items: end;
+}
+
+.gamehub-view-toggle {
+  margin-top: 0;
+}
+
+.gamehub-swipe-actions {
+  justify-content: center;
+  gap: 12px;
+}
+
+.gamehub-swipe-actions button {
+  min-width: 132px;
+}
+
+.gamehub-swipe-actions button.is-open-swipe-card {
+  min-width: 152px;
+  border-color: rgba(67, 245, 167, 0.56) !important;
+  background:
+    radial-gradient(circle at top left, rgba(67, 245, 167, 0.18), transparent 42%),
+    rgba(5, 9, 15, 0.78) !important;
+  color: #9fffd2 !important;
+  box-shadow: 0 0 24px rgba(67, 245, 167, 0.14) !important;
+}
+
+.gamehub-swipe-card.is-verified-foil::before {
+  content: '';
+  position: absolute;
+  inset: -18% -70%;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      transparent 28%,
+      rgba(117, 215, 255, 0.08) 36%,
+      rgba(255, 255, 255, 0.18) 42%,
+      rgba(67, 245, 167, 0.12) 48%,
+      rgba(255, 255, 255, 0.16) 54%,
+      rgba(117, 215, 255, 0.08) 60%,
+      transparent 70%,
+      transparent 100%
+    );
+  animation: gamehubFoilSwipeLoop 4.8s linear infinite;
+  opacity: 0.86;
+  pointer-events: none;
+  transform: translateX(-28%);
+}
+
+.gamehub-swipe-card.is-verified-foil::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 27px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 34%, rgba(255, 255, 255, 0.035)),
+    radial-gradient(circle at 18% 12%, rgba(117, 215, 255, 0.09), transparent 36%),
+    radial-gradient(circle at 88% 86%, rgba(67, 245, 167, 0.08), transparent 34%);
+  pointer-events: none;
+}
+
+@keyframes gamehubFoilSwipeLoop {
+  0% {
+    transform: translateX(-34%);
+  }
+
+  100% {
+    transform: translateX(34%);
+  }
+}
+
+
+/* =========================================================
+   UI-A13I — Game Hub TCG cards, verified sleeves, bounce foil
+   ========================================================= */
+
+.gamehub-tcg-card {
+  --game-card-tilt-x: 0deg;
+  --game-card-tilt-y: 0deg;
+  --game-card-foil-x: 50%;
+  --game-card-foil-y: 18%;
+  position: relative;
+  isolation: isolate;
+  min-height: 236px !important;
+  padding: 10px !important;
+  gap: 8px !important;
+  border-radius: 18px !important;
+  transform:
+    perspective(900px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x));
+  transform-style: preserve-3d;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gamehub-tcg-card.is-static-card {
+  border: 1px solid rgba(117, 215, 255, 0.12) !important;
+  background: rgba(6, 9, 16, 0.86) !important;
+}
+
+.gamehub-tcg-card.is-verified-foil-card {
+  border: 3px solid rgba(221, 244, 255, 0.26) !important;
+  background:
+    linear-gradient(145deg, rgba(6, 9, 16, 0.92), rgba(15, 22, 34, 0.88)) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 20px 44px rgba(0, 0, 0, 0.28),
+    0 0 26px color-mix(in srgb, var(--game-card-brand, #75d7ff) 18%, transparent) !important;
+}
+
+.gamehub-tcg-card.is-verified-foil-card::before {
+  content: '';
+  position: absolute;
+  inset: -18% -72%;
+  z-index: 0;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      transparent 27%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 10%, transparent) 35%,
+      rgba(255, 255, 255, 0.18) 42%,
+      color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 14%, transparent) 50%,
+      rgba(255, 255, 255, 0.14) 57%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 9%, transparent) 64%,
+      transparent 74%,
+      transparent 100%
+    );
+  opacity: 0.55;
+  pointer-events: none;
+  animation: gamehubFoilBounceSweep 5.2s ease-in-out infinite alternate;
+}
+
+.gamehub-tcg-card.is-verified-foil-card:hover::before {
+  opacity: 0.86;
+}
+
+.gamehub-tcg-card.is-verified-foil-card::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, rgba(255, 255, 255, 0.035));
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.08),
+    inset 0 0 36px rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.gamehub-tcg-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.gamehub-card-brand-image {
+  min-height: 76px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 24% 16%, color-mix(in srgb, var(--game-card-brand, #75d7ff) 42%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 30%, transparent), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02)),
+    rgba(5, 9, 15, 0.86);
+}
+
+.gamehub-card-brand-image span {
+  font-size: 1.75rem;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  color: color-mix(in srgb, var(--game-card-brand, #75d7ff) 68%, #ffffff);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--game-card-brand, #75d7ff) 38%, transparent);
+}
+
+.gamehub-card-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.gamehub-signal-orb {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  box-shadow: 0 0 16px currentColor;
+}
+
+.gamehub-card-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.gamehub-card-copy strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.98rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamehub-card-copy small {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(220, 236, 255, 0.62);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamehub-card-icon-row,
+.gamehub-card-member-row,
+.gamehub-swipe-member-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gamehub-card-icon-row i {
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(220, 236, 255, 0.82);
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 1000;
+}
+
+.gamehub-card-icon-row .gamehub-grade-icon {
+  color: #9fffd2;
+  background: rgba(67, 245, 167, 0.14);
+}
+
+.gamehub-card-icon-row .gamehub-partner-icon {
+  color: #75d7ff;
+  background: rgba(117, 215, 255, 0.13);
+}
+
+.gamehub-card-member-row {
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.gamehub-card-member-row > span:last-child,
+.gamehub-swipe-member-row > span:last-child {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(220, 236, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.gamehub-member-pic {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  background: rgba(5, 9, 15, 0.72);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 1000;
+}
+
+.gamehub-swipe-card {
+  --game-card-tilt-x: 0deg;
+  --game-card-tilt-y: 0deg;
+  --game-card-foil-x: 50%;
+  --game-card-foil-y: 18%;
+  transform:
+    perspective(1100px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x));
+  transform-style: preserve-3d;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gamehub-swipe-card.is-verified-foil {
+  border: 3px solid rgba(221, 244, 255, 0.28) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 28px 80px rgba(0, 0, 0, 0.42),
+    0 0 42px color-mix(in srgb, var(--game-card-brand, #75d7ff) 18%, transparent) !important;
+}
+
+.gamehub-swipe-card.is-verified-foil::before {
+  content: '';
+  position: absolute;
+  inset: -20% -72%;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      transparent 27%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 11%, transparent) 35%,
+      rgba(255, 255, 255, 0.2) 42%,
+      color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 16%, transparent) 50%,
+      rgba(255, 255, 255, 0.15) 57%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 10%, transparent) 64%,
+      transparent 74%,
+      transparent 100%
+    ) !important;
+  opacity: 0.76 !important;
+  animation: gamehubFoilBounceSweep 4.6s ease-in-out infinite alternate !important;
+  pointer-events: none;
+  transform: translateX(-30%);
+}
+
+.gamehub-swipe-card.is-verified-foil::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), transparent 34%, rgba(255, 255, 255, 0.035));
+  box-shadow:
+    inset 0 0 22px rgba(255, 255, 255, 0.08),
+    inset 0 0 42px rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.gamehub-swipe-art {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 24% 16%, color-mix(in srgb, var(--game-card-brand, #75d7ff) 42%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 30%, transparent), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02)),
+    rgba(5, 9, 15, 0.86);
+}
+
+.gamehub-swipe-art span {
+  font-size: clamp(2.8rem, 8vw, 5rem);
+  font-weight: 1000;
+  letter-spacing: -0.1em;
+  color: color-mix(in srgb, var(--game-card-brand, #75d7ff) 68%, #ffffff);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--game-card-brand, #75d7ff) 42%, transparent);
+}
+
+.gamehub-swipe-card-copy p {
+  font-size: 0.92rem;
+}
+
+@keyframes gamehubFoilBounceSweep {
+  0% {
+    transform: translateX(-34%);
+  }
+
+  100% {
+    transform: translateX(34%);
+  }
+}
+
+
+/* =========================================================
+   UI-A13J — Game channel cover cards + bounced foil sleeves
+   ========================================================= */
+
+.gamehub-cover-card,
+.gamehub-swipe-cover-card {
+  --game-card-tilt-x: 0deg;
+  --game-card-tilt-y: 0deg;
+  --game-card-foil-x: 50%;
+  --game-card-foil-y: 18%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden !important;
+  transform:
+    perspective(1000px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x));
+  transform-style: preserve-3d;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gamehub-cover-card {
+  min-height: 262px !important;
+  padding: 0 !important;
+  border-radius: 22px !important;
+  align-content: end !important;
+  background: rgba(5, 9, 15, 0.88) !important;
+}
+
+.gamehub-cover-card.is-static-card {
+  border: 1px solid rgba(117, 215, 255, 0.12) !important;
+}
+
+.gamehub-cover-card.is-verified-foil-card {
+  border: 5px solid rgba(221, 244, 255, 0.24) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.13),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 22px 48px rgba(0, 0, 0, 0.32),
+    0 0 30px color-mix(in srgb, var(--game-card-brand, #75d7ff) 18%, transparent) !important;
+}
+
+.gamehub-cover-art,
+.gamehub-swipe-cover-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 24% 16%, color-mix(in srgb, var(--game-card-brand, #75d7ff) 46%, transparent), transparent 34%),
+    radial-gradient(circle at 82% 86%, color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 34%, transparent), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.018)),
+    rgba(5, 9, 15, 0.9);
+}
+
+.gamehub-cover-art::after,
+.gamehub-swipe-cover-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(5, 9, 15, 0.3) 48%, rgba(5, 9, 15, 0.9) 100%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.11), transparent 38%);
+}
+
+.gamehub-cover-monogram,
+.gamehub-swipe-cover-art span {
+  align-self: start;
+  justify-self: start;
+  margin: 16px;
+  color: color-mix(in srgb, var(--game-card-brand, #75d7ff) 70%, #ffffff);
+  font-weight: 1000;
+  letter-spacing: -0.12em;
+  text-shadow: 0 0 28px color-mix(in srgb, var(--game-card-brand, #75d7ff) 42%, transparent);
+}
+
+.gamehub-cover-monogram {
+  font-size: 2.35rem;
+}
+
+.gamehub-swipe-cover-art span {
+  font-size: clamp(4rem, 10vw, 7rem);
+  opacity: 0.94;
+}
+
+.gamehub-cover-genre {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  max-width: 52%;
+  overflow: hidden;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(5, 9, 15, 0.56);
+  color: rgba(220, 236, 255, 0.78);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamehub-cover-overlay,
+.gamehub-swipe-cover-overlay {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  margin: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(5, 9, 15, 0.52), rgba(5, 9, 15, 0.86));
+  backdrop-filter: blur(12px);
+}
+
+.gamehub-cover-topline,
+.gamehub-cover-icons,
+.gamehub-swipe-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gamehub-cover-topline,
+.gamehub-swipe-card-top {
+  justify-content: space-between;
+}
+
+.gamehub-dev-logo {
+  display: inline-grid;
+  place-items: center;
+}
+
+.gamehub-cover-icons i {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(220, 236, 255, 0.82);
+  font-style: normal;
+  font-size: 0.74rem;
+  font-weight: 1000;
+}
+
+.gamehub-cover-icons .gamehub-grade-icon {
+  color: #9fffd2;
+  background: rgba(67, 245, 167, 0.16);
+}
+
+.gamehub-cover-icons .gamehub-partner-icon {
+  color: #75d7ff;
+  background: rgba(117, 215, 255, 0.15);
+}
+
+.gamehub-signal-dot {
+  width: 13px !important;
+  height: 13px !important;
+  padding: 0 !important;
+  box-shadow: 0 0 16px currentColor;
+}
+
+.gamehub-cover-overlay strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 1.02rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamehub-cover-overlay small {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(220, 236, 255, 0.66);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamehub-cover-card.is-verified-foil-card::before,
+.gamehub-swipe-cover-card.is-verified-foil::before {
+  content: '';
+  position: absolute;
+  inset: -16% -72%;
+  z-index: 2;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      transparent 26%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 11%, transparent) 35%,
+      rgba(255, 255, 255, 0.2) 42%,
+      color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 16%, transparent) 50%,
+      rgba(255, 255, 255, 0.15) 57%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 10%, transparent) 64%,
+      transparent 74%,
+      transparent 100%
+    ) !important;
+  opacity: 0.58;
+  animation: gamehubFoilBounceSweepV2 5.2s ease-in-out infinite alternate !important;
+  pointer-events: none;
+}
+
+.gamehub-cover-card.is-verified-foil-card:hover::before,
+.gamehub-swipe-cover-card.is-verified-foil:hover::before {
+  opacity: 0.9;
+}
+
+.gamehub-cover-card.is-verified-foil-card::after,
+.gamehub-swipe-cover-card.is-verified-foil::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  z-index: 3;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, rgba(255, 255, 255, 0.035));
+  box-shadow:
+    inset 0 0 22px rgba(255, 255, 255, 0.08),
+    inset 0 0 42px rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.gamehub-swipe-cover-card {
+  min-height: 460px !important;
+  padding: 0 !important;
+  align-content: end !important;
+}
+
+.gamehub-swipe-cover-card.is-verified-foil {
+  border: 5px solid rgba(221, 244, 255, 0.26) !important;
+}
+
+.gamehub-swipe-cover-overlay {
+  margin: 16px;
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.gamehub-swipe-card-copy h3,
+.gamehub-swipe-card-copy p {
+  margin: 0;
+}
+
+.gamehub-swipe-card-copy h3 {
+  font-size: clamp(2rem, 5vw, 3.35rem);
+  letter-spacing: -0.07em;
+}
+
+.gamehub-swipe-card-copy p {
+  color: rgba(220, 236, 255, 0.74);
+  line-height: 1.55;
+}
+
+.gamehub-swipe-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gamehub-swipe-meta span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(220, 236, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+@keyframes gamehubFoilBounceSweepV2 {
+  0% {
+    transform: translateX(-34%);
+  }
+
+  100% {
+    transform: translateX(34%);
+  }
+}
