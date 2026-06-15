@@ -888,6 +888,8 @@ function NamiHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
+
+  onOpenMember: (member: (typeof members)[number]) => void;
 }): ReactElement {
   const featuredShowcaseChannels = channels.slice(0, 8);
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
@@ -1041,9 +1043,7 @@ function NamiHub(props: {
                 <button
                   className="member-spotlight-card"
                   key={slotId}
-                  onClick={() => {
-                    window.localStorage.setItem('nami-selected-member-id', member.id);
-                  }}
+                  onClick={() => props.onOpenMember(member)}
                   type="button"
                 >
                   <div className="member-spotlight-left">
@@ -4652,6 +4652,14 @@ export function App(): ReactElement {
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
+
+  const openMemberProfile = (member: (typeof members)[number]): void => {
+    setSelectedMember(member);
+    window.localStorage.setItem('nami-selected-member-id', member.id);
+    setActivePage('memberProfile');
+  };
+
   const openChannelProfile = (channel: NamiChannel): void => {
     setSelectedChannel(channel);
     setActivePage('channelProfile');
@@ -4663,6 +4671,7 @@ export function App(): ReactElement {
           selectedChannel={selectedChannel}
           onSelect={setSelectedChannel}
           onOpenProfile={openChannelProfile}
+          onOpenMember={openMemberProfile}
         />;
     }
 
@@ -4700,10 +4709,7 @@ export function App(): ReactElement {
     return <GameChat
         channel={selectedChannel}
         onNavigate={setActivePage}
-        onOpenMember={(member) => {
-          window.localStorage.setItem('nami-selected-member-id', member.id);
-          setActivePage('memberProfile');
-        }}
+        onOpenMember={openMemberProfile}
       />;
   }
 
@@ -4765,8 +4771,9 @@ if (activePage === 'userProfile') {
           selectedChannel={selectedChannel}
           onSelect={setSelectedChannel}
           onOpenProfile={openChannelProfile}
+          onOpenMember={openMemberProfile}
         />;
-  }, [activePage, selectedChannel]);
+  }, [activePage, selectedChannel, selectedMember]);
 
   return (
     <main className="nami-app">
