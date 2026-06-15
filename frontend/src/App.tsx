@@ -10,6 +10,7 @@ import {
 import {
   channels,
   chatMessages,
+  developers,
   members,
   navItems,
   userProfile,
@@ -20,6 +21,74 @@ import {
 
 function signalClass(signal: ConductSignal): string {
   return 'signal-ring signal-' + signal.toLowerCase();
+}
+
+function channelDeveloper(channel: NamiChannel): (typeof developers)[number] {
+  return developers.find((developer) => developer.id === channel.developerId) ?? developers[0]!;
+}
+
+function gameVerificationLabel(channel: NamiChannel): string {
+  return channel.verifiedGame ? 'Verified Game' : 'Community Game';
+}
+
+type GameVerificationTier = 'verified-game' | 'studio-approved' | 'community-game';
+
+function gameVerificationTier(channel: NamiChannel): GameVerificationTier {
+  const developerProfile = channelDeveloper(channel);
+
+  if (channel.verifiedGame) return 'verified-game';
+  if (developerProfile.approved) return 'studio-approved';
+
+  return 'community-game';
+}
+
+function gameVerificationClass(channel: NamiChannel): string {
+  const tier = gameVerificationTier(channel);
+
+  if (tier === 'verified-game') return 'is-verified-game-surface';
+  if (tier === 'studio-approved') return 'is-studio-approved-surface';
+
+  return 'is-community-game-surface';
+}
+
+function gameVerificationShortLabel(channel: NamiChannel): string {
+  const tier = gameVerificationTier(channel);
+
+  if (tier === 'verified-game') return 'VG';
+  if (tier === 'studio-approved') return 'ST';
+
+  return 'CM';
+}
+
+function gameVerificationBadgeLabel(channel: NamiChannel): string {
+  const tier = gameVerificationTier(channel);
+
+  if (tier === 'verified-game') return 'Verified game proof';
+  if (tier === 'studio-approved') return 'Studio approved';
+
+  return 'Community listed';
+}
+
+function developerVerificationClass(developer: (typeof developers)[number]): string {
+  if (developer.proofStatus === 'Verified Studio') return 'is-verified-studio-logo';
+  if (developer.approved) return 'is-approved-studio-logo';
+
+  return 'is-community-studio-logo';
+}
+
+function developerShortProofLabel(developer: (typeof developers)[number]): string {
+  if (developer.proofStatus === 'Verified Studio') return 'VS';
+  if (developer.approved) return 'AP';
+
+  return 'CS';
+}
+
+function isMemberFoilEligible(member: (typeof members)[number], reviewedSignal: ConductSignal): boolean {
+  if (reviewedSignal !== 'Green') return false;
+  if (member.tier === 'NPC') return false;
+  if (/sponsor|sponsored|squad/i.test(member.badge)) return false;
+
+  return true;
 }
 
 function ChannelAvatar(props: {
@@ -1142,7 +1211,7 @@ function GameHub(props: {
     if (selectedBrowserFilter === 'Music & DJs') return genre.includes('music') || genre.includes('dj');
     if (selectedBrowserFilter === 'Creative') return genre.includes('creative') || genre.includes('builder');
     if (selectedBrowserFilter === 'Esports') return genre.includes('esports');
-    if (selectedBrowserFilter === 'Verified') return channel.verified;
+    if (selectedBrowserFilter === 'Verified') return channel.verifiedGame;
     if (selectedBrowserFilter === 'PC') return platforms.includes('pc');
     if (selectedBrowserFilter === 'Console') return platforms.includes('console');
     if (selectedBrowserFilter === 'Mobile') return platforms.includes('mobile');
@@ -1161,6 +1230,7 @@ function GameHub(props: {
     filteredBrowserChannels.length > 2
       ? filteredBrowserChannels[(swipeIndex + 2) % filteredBrowserChannels.length]!
       : nextSwipeChannel;
+  const activeSwipeDeveloper = channelDeveloper(activeSwipeChannel);
 
   useEffect(() => {
     setSwipeIndex(0);
@@ -1303,20 +1373,22 @@ function GameHub(props: {
           <div className="discovery-grid gamehub-discovery-grid">
             {filteredBrowserEntries.map(({ channel, copyIndex }) => {
               const channelTheme = getStoredChannelBrandTheme(channel.id);
+              const developerProfile = channelDeveloper(channel);
 
               return (
                 <button
                   className={
-                    'discovery-card discovery-card-expanded gamehub-discovery-card gamehub-cover-card' +
-                    (channel.verified ? ' is-verified-foil-card' : ' is-static-card')
+                    'discovery-card discovery-card-expanded gamehub-discovery-card gamehub-cover-card ' +
+                    gameVerificationClass(channel) +
+                    (channel.verifiedGame ? ' is-verified-foil-card' : ' is-static-card')
                   }
                   key={channel.id + '-' + copyIndex}
                   onClick={() => props.onOpenProfile(channel)}
                   onPointerLeave={(event) => {
-                    if (channel.verified) resetFoilCardTilt(event.currentTarget);
+                    if (channel.verifiedGame) resetFoilCardTilt(event.currentTarget);
                   }}
                   onPointerMove={(event) => {
-                    if (channel.verified) {
+                    if (channel.verifiedGame) {
                       updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
                     }
                   }}
@@ -1330,24 +1402,30 @@ function GameHub(props: {
                 >
                   <div className="gamehub-cover-art" aria-hidden="true">
                     <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
-                    <span className="gamehub-cover-genre">{channel.genre.split('/')[0]}</span>
+                    <span className="gamehub-cover-surface-chip">GAME</span>
+                    <span
+                      className={'gamehub-cover-verification-chip ' + gameVerificationClass(channel)}
+                      title={gameVerificationBadgeLabel(channel)}
+                    >
+                      {gameVerificationShortLabel(channel)}
+                    </span>
                   </div>
 
                   <div className="gamehub-cover-overlay">
                     <div className="gamehub-cover-topline">
-                      <span className="gamehub-dev-logo" title="Developer mark">
-                        <ChannelAvatar channel={channel} size="sm" />
+                      <span className="gamehub-dev-logo" title={developerProfile.name + ' developer mark'}>
+                        {developerProfile.logoSeed}
                       </span>
 
                       <span className="gamehub-cover-icons">
-                        {channel.verified && <i className="gamehub-grade-icon" title="Verified">◆</i>}
+                        {channel.verifiedGame && <i className="gamehub-grade-icon" title="Verified">◆</i>}
                         {channel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
                         <i className={'gamehub-signal-dot signal-text-' + channel.signal.toLowerCase()} title={channel.signal} />
                       </span>
                     </div>
 
                     <strong>{channel.name}</strong>
-                    <small>{channel.platforms.slice(0, 2).join(' / ')}</small>
+                    <small>{channel.platforms.slice(0, 2).join(' / ')} · {channel.genre.split('/')[0]}</small>
                   </div>
                 </button>
               );
@@ -1377,12 +1455,16 @@ function GameHub(props: {
               </div>
 
               <article
-                className={'gamehub-swipe-card gamehub-swipe-cover-card' + (activeSwipeChannel.verified ? ' is-verified-foil' : '')}
+                className={
+                  'gamehub-swipe-card gamehub-swipe-cover-card ' +
+                  gameVerificationClass(activeSwipeChannel) +
+                  (activeSwipeChannel.verifiedGame ? ' is-verified-foil' : '')
+                }
                 onPointerLeave={(event) => {
-                  if (activeSwipeChannel.verified) resetFoilCardTilt(event.currentTarget);
+                  if (activeSwipeChannel.verifiedGame) resetFoilCardTilt(event.currentTarget);
                 }}
                 onPointerMove={(event) => {
-                  if (activeSwipeChannel.verified) {
+                  if (activeSwipeChannel.verifiedGame) {
                     updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
                   }
                 }}
@@ -1399,18 +1481,39 @@ function GameHub(props: {
 
                 <div className="gamehub-swipe-cover-overlay">
                   <div className="gamehub-swipe-card-top">
-                    <span className="gamehub-dev-logo" title="Developer mark">
-                      <ChannelAvatar channel={activeSwipeChannel} size="sm" />
+                    <span
+                      className={'gamehub-dev-logo ' + developerVerificationClass(activeSwipeDeveloper)}
+                      title={activeSwipeDeveloper.name + ' · ' + activeSwipeDeveloper.proofStatus}
+                    >
+                      {activeSwipeDeveloper.logoSeed}
                     </span>
 
                     <span className="gamehub-cover-icons">
-                      {activeSwipeChannel.verified && <i className="gamehub-grade-icon" title="Verified">◆</i>}
-                      {activeSwipeChannel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
+                      <i
+                        className={'gamehub-proof-icon ' + gameVerificationClass(activeSwipeChannel)}
+                        title={gameVerificationBadgeLabel(activeSwipeChannel)}
+                      >
+                        {gameVerificationShortLabel(activeSwipeChannel)}
+                      </i>
+                      <i
+                        className={'gamehub-studio-proof-icon ' + developerVerificationClass(activeSwipeDeveloper)}
+                        title={activeSwipeDeveloper.proofStatus}
+                      >
+                        {developerShortProofLabel(activeSwipeDeveloper)}
+                      </i>
                       <i className={'gamehub-signal-dot signal-text-' + activeSwipeChannel.signal.toLowerCase()} title={activeSwipeChannel.signal} />
                     </span>
                   </div>
 
                   <div className="gamehub-swipe-card-copy">
+                    <div className="gamehub-swipe-taxonomy-row">
+                      <span>GAME</span>
+                      <i className={gameVerificationClass(activeSwipeChannel)}>
+                        {gameVerificationShortLabel(activeSwipeChannel)}
+                      </i>
+                      <em>{developerShortProofLabel(activeSwipeDeveloper)}</em>
+                    </div>
+
                     <h3>{activeSwipeChannel.name}</h3>
                     <p>{activeSwipeChannel.genre} · {activeSwipeChannel.platforms.join(' / ')}</p>
                   </div>
@@ -1418,6 +1521,7 @@ function GameHub(props: {
                   <div className="gamehub-swipe-meta">
                     <span>{activeSwipeChannel.subscribers.toLocaleString()}</span>
                     <span>{activeSwipeChannel.handle}</span>
+                    <span>{gameVerificationBadgeLabel(activeSwipeChannel)}</span>
                   </div>
                 </div>
               </article>
@@ -1537,6 +1641,8 @@ function ChannelProfile(props: {
   returnPage: NamiPage;
   returnLabel: string;
 }): ReactElement {
+  const developerProfile = channelDeveloper(props.channel);
+
   const profileModuleDefaults = [
     'Main Chat',
     'Timeline',
@@ -2166,6 +2272,12 @@ function ChannelProfile(props: {
 
               <h2>{props.channel.name}</h2>
               <p>{props.channel.tagline}</p>
+
+                <div className="surface-separation-row game-surface-row">
+                  <span>Game Channel</span>
+                  <span>{developerProfile.name}</span>
+                  <i className={gameVerificationClass(props.channel)}>{gameVerificationLabel(props.channel)}</i>
+                </div>
 
               <div className="profile-meta-row">
                 <span>{props.channel.handle}</span>
@@ -2979,6 +3091,7 @@ function MemberProfileScreen(props: {
   const memberProgression = getNamiProgression(props.member);
   const memberVerificationStatus =
     reviewedSignal === 'Green' ? 'Verified' : reviewedSignal + ' Review';
+  const memberFoilEligible = isMemberFoilEligible(props.member, reviewedSignal);
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
   }, [props.member.id, refreshKey]);
@@ -3054,10 +3167,17 @@ function MemberProfileScreen(props: {
 
       <section className="member-profile-page">
         <article
-            className="member-profile-hero panel"
+            className={
+              'member-profile-hero panel ' +
+              (memberFoilEligible ? 'is-member-foil-eligible' : 'is-member-foil-disabled')
+            }
             data-member-hero="true"
-            onPointerLeave={resetMemberHeroFoil}
-            onPointerMove={updateMemberHeroFoil}
+            onPointerLeave={(event) => {
+              if (memberFoilEligible) resetMemberHeroFoil(event);
+            }}
+            onPointerMove={(event) => {
+              if (memberFoilEligible) updateMemberHeroFoil(event);
+            }}
           >
           <div className={'member-profile-avatar ' + signalClass(reviewedSignal)}>
             {props.member.name.slice(0, 2).toUpperCase()}
@@ -3076,6 +3196,12 @@ function MemberProfileScreen(props: {
             </div>
 
             <h2>{props.member.name}</h2>
+
+              <div className="surface-separation-row member-surface-row">
+                <span>Member Profile</span>
+                <span>{props.member.tier}</span>
+                <i>Level-enabled passport surface</i>
+              </div>
             <p>
               Member profile preview for chat discovery, preference controls, moderation
               history, and future passport-driven reputation surfaces.

@@ -28,9 +28,16 @@ export type VerifiedLink = {
 
 export type NamiChannel = {
   id: string;
+  surfaceType: 'game';
   name: string;
   handle: string;
   owner: string;
+  developerId: string;
+  developerName: string;
+  developerLogoSeed: string;
+  coverArtSeed: string;
+  coverArtStyle: 'neon' | 'ocean' | 'cozy' | 'arcade' | 'builder';
+  verifiedGame: boolean;
   genre: string;
   platforms: string[];
   subscribers: number;
@@ -45,6 +52,18 @@ export type NamiChannel = {
   customBadges: string[];
   verifiedLinks: VerifiedLink[];
   announcements: string[];
+};
+
+export type NamiDeveloperProfile = {
+  id: string;
+  surfaceType: 'developer';
+  name: string;
+  handle: string;
+  logoSeed: string;
+  proofStatus: 'Verified Studio' | 'Community Maintainer' | 'Unverified Creator';
+  approved: boolean;
+  gameIds: string[];
+  studioSignal: ConductSignal;
 };
 
 export type UserProfile = {
@@ -66,7 +85,9 @@ export type UserProfile = {
 
 export type NamiMember = {
   id: string;
+  surfaceType: 'member';
   name: string;
+  avatarSeed: string;
   signal: ConductSignal;
   tier: 'NPC' | 'Adventurer' | 'Pro' | 'Elite';
   badge: string;
@@ -96,9 +117,16 @@ const defaultModules: ChannelModule[] = [
 export const channels: NamiChannel[] = [
   {
     id: 'fiends',
+      surfaceType: 'game',
     name: 'FIENDS',
     handle: '@fiends',
     owner: 'Goonie Labs',
+      developerId: 'goonie-labs',
+      developerName: 'Goonie Labs',
+      developerLogoSeed: 'GL',
+      coverArtSeed: 'cyber-alley',
+      coverArtStyle: 'neon',
+      verifiedGame: true,
     genre: 'Gaming / Social',
     platforms: ['PC', 'Sui', 'Streaming'],
     subscribers: 128,
@@ -124,9 +152,16 @@ export const channels: NamiChannel[] = [
   },
   {
     id: 'walrus',
+      surfaceType: 'game',
     name: 'Walrus Raiders',
     handle: '@walrus',
     owner: 'Walrus Community',
+      developerId: 'walrus-community',
+      developerName: 'Walrus Community',
+      developerLogoSeed: 'WC',
+      coverArtSeed: 'ocean-raid',
+      coverArtStyle: 'ocean',
+      verifiedGame: true,
     genre: 'Adventure',
     platforms: ['PC', 'Console'],
     subscribers: 1228,
@@ -151,9 +186,16 @@ export const channels: NamiChannel[] = [
   },
   {
     id: 'pawtato',
+      surfaceType: 'game',
     name: 'Pawtato',
     handle: '@pawtato',
     owner: 'Pawtato Community',
+      developerId: 'pawtato-community',
+      developerName: 'Pawtato Community',
+      developerLogoSeed: 'PC',
+      coverArtSeed: 'cozy-forest',
+      coverArtStyle: 'cozy',
+      verifiedGame: false,
     genre: 'Casual / Cozy',
     platforms: ['Mobile', 'PC'],
     subscribers: 2668,
@@ -178,9 +220,16 @@ export const channels: NamiChannel[] = [
   },
   {
     id: 'retro',
+      surfaceType: 'game',
     name: 'Retro Arena',
     handle: '@retro',
     owner: 'Retro Arcade',
+      developerId: 'retro-arcade',
+      developerName: 'Retro Arcade',
+      developerLogoSeed: 'RA',
+      coverArtSeed: 'neon-arcade',
+      coverArtStyle: 'arcade',
+      verifiedGame: false,
     genre: 'Arcade / PvP',
     platforms: ['PC', 'Console'],
     subscribers: 877,
@@ -205,9 +254,16 @@ export const channels: NamiChannel[] = [
   },
   {
     id: 'pebble',
+      surfaceType: 'game',
     name: 'Pebble',
     handle: '@pebble',
     owner: 'Pebble Labs',
+      developerId: 'pebble-labs',
+      developerName: 'Pebble Labs',
+      developerLogoSeed: 'PL',
+      coverArtSeed: 'builder-wave',
+      coverArtStyle: 'builder',
+      verifiedGame: true,
     genre: 'Builder / Creative',
     platforms: ['Sui', 'Web'],
     subscribers: 23771,
@@ -233,6 +289,64 @@ export const channels: NamiChannel[] = [
   }
 ];
 
+export const developers: NamiDeveloperProfile[] = [
+  {
+    id: 'goonie-labs',
+    surfaceType: 'developer',
+    name: 'Goonie Labs',
+    handle: '@goonie-labs',
+    logoSeed: 'GL',
+    proofStatus: 'Verified Studio',
+    approved: true,
+    gameIds: ['fiends'],
+    studioSignal: 'Green'
+  },
+  {
+    id: 'walrus-community',
+    surfaceType: 'developer',
+    name: 'Walrus Community',
+    handle: '@walrus-dev',
+    logoSeed: 'WC',
+    proofStatus: 'Verified Studio',
+    approved: true,
+    gameIds: ['walrus'],
+    studioSignal: 'Orange'
+  },
+  {
+    id: 'pawtato-community',
+    surfaceType: 'developer',
+    name: 'Pawtato Community',
+    handle: '@pawtato-dev',
+    logoSeed: 'PC',
+    proofStatus: 'Community Maintainer',
+    approved: false,
+    gameIds: ['pawtato'],
+    studioSignal: 'Green'
+  },
+  {
+    id: 'retro-arcade',
+    surfaceType: 'developer',
+    name: 'Retro Arcade',
+    handle: '@retro-arcade-dev',
+    logoSeed: 'RA',
+    proofStatus: 'Community Maintainer',
+    approved: false,
+    gameIds: ['retro'],
+    studioSignal: 'Red'
+  },
+  {
+    id: 'pebble-labs',
+    surfaceType: 'developer',
+    name: 'Pebble Labs',
+    handle: '@pebble-labs',
+    logoSeed: 'PL',
+    proofStatus: 'Verified Studio',
+    approved: true,
+    gameIds: ['pebble'],
+    studioSignal: 'Green'
+  }
+];
+
 export const userProfile: UserProfile = {
   displayName: 'NPC Gamer',
   handle: '@npcgamer',
@@ -251,11 +365,11 @@ export const userProfile: UserProfile = {
 };
 
 export const members: NamiMember[] = [
-  { id: 'm1', name: 'Nozomi', signal: 'Green', tier: 'Pro', badge: 'Top Helper' },
-  { id: 'm2', name: 'DeadlySin', signal: 'Orange', tier: 'Adventurer', badge: 'Raider' },
-  { id: 'm3', name: 'Rhokdelar', signal: 'Red', tier: 'Elite', badge: 'PvP' },
-  { id: 'm4', name: 'PebbleFan', signal: 'Green', tier: 'NPC', badge: 'Newbie' },
-  { id: 'm5', name: 'MutedGhost', signal: 'Black', tier: 'Adventurer', badge: 'Respawn' }
+  { id: 'm1', surfaceType: 'member', avatarSeed: 'NO', name: 'Nozomi', signal: 'Green', tier: 'Pro', badge: 'Top Helper' },
+  { id: 'm2', surfaceType: 'member', avatarSeed: 'DS', name: 'DeadlySin', signal: 'Orange', tier: 'Adventurer', badge: 'Raider' },
+  { id: 'm3', surfaceType: 'member', avatarSeed: 'RH', name: 'Rhokdelar', signal: 'Red', tier: 'Elite', badge: 'PvP' },
+  { id: 'm4', surfaceType: 'member', avatarSeed: 'PF', name: 'PebbleFan', signal: 'Green', tier: 'NPC', badge: 'Newbie' },
+  { id: 'm5', surfaceType: 'member', avatarSeed: 'MG', name: 'MutedGhost', signal: 'Black', tier: 'Adventurer', badge: 'Respawn' }
 ];
 
 export const chatMessages: ChatMessage[] = [

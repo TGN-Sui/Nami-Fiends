@@ -12819,3 +12819,410 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     transform: translateX(34%);
   }
 }
+
+
+/* =========================================================
+   UI-A14.1 — profile surface separation
+   ========================================================= */
+
+.surface-separation-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.surface-separation-row span,
+.surface-separation-row i {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  background: rgba(5, 9, 15, 0.48);
+  color: rgba(220, 236, 255, 0.8);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.game-surface-row i {
+  border-color: rgba(67, 245, 167, 0.3);
+  color: #9fffd2;
+  background: rgba(67, 245, 167, 0.09);
+}
+
+.member-surface-row i {
+  border-color: rgba(255, 199, 76, 0.28);
+  color: #ffd98a;
+  background: rgba(255, 199, 76, 0.08);
+}
+
+.gamehub-dev-logo {
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--game-card-brand, #75d7ff) 58%, transparent);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--game-card-brand, #75d7ff) 22%, transparent), transparent 48%),
+    rgba(5, 9, 15, 0.72);
+  color: color-mix(in srgb, var(--game-card-brand, #75d7ff) 72%, #ffffff);
+  font-size: 0.8rem;
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 18px color-mix(in srgb, var(--game-card-brand, #75d7ff) 14%, transparent);
+}
+
+
+/* =========================================================
+   UI-A14.2 — verification taxonomy and surface distinction
+   ========================================================= */
+
+.gamehub-cover-card.is-verified-game-surface {
+  border-color: rgba(221, 244, 255, 0.28) !important;
+}
+
+.gamehub-cover-card.is-studio-approved-surface {
+  border: 3px solid rgba(117, 215, 255, 0.26) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(117, 215, 255, 0.1),
+    0 18px 42px rgba(0, 0, 0, 0.28),
+    0 0 22px rgba(117, 215, 255, 0.1) !important;
+}
+
+.gamehub-cover-card.is-community-game-surface {
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.gamehub-cover-surface-chip,
+.gamehub-cover-verification-chip {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+}
+
+.gamehub-cover-surface-chip {
+  left: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background: rgba(5, 9, 15, 0.68);
+  color: rgba(220, 236, 255, 0.82);
+}
+
+.gamehub-cover-verification-chip {
+  right: 12px;
+}
+
+.gamehub-cover-verification-chip.is-verified-game-surface,
+.gamehub-proof-icon.is-verified-game-surface,
+.gamehub-swipe-taxonomy-row i.is-verified-game-surface {
+  border-color: rgba(67, 245, 167, 0.42) !important;
+  background:
+    radial-gradient(circle at top left, rgba(67, 245, 167, 0.2), transparent 46%),
+    rgba(8, 37, 29, 0.72) !important;
+  color: #9fffd2 !important;
+}
+
+.gamehub-cover-verification-chip.is-studio-approved-surface,
+.gamehub-proof-icon.is-studio-approved-surface,
+.gamehub-swipe-taxonomy-row i.is-studio-approved-surface {
+  border-color: rgba(117, 215, 255, 0.42) !important;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.18), transparent 46%),
+    rgba(10, 35, 52, 0.72) !important;
+  color: #bceeff !important;
+}
+
+.gamehub-cover-verification-chip.is-community-game-surface,
+.gamehub-proof-icon.is-community-game-surface,
+.gamehub-swipe-taxonomy-row i.is-community-game-surface {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: rgba(20, 25, 34, 0.72) !important;
+  color: rgba(220, 236, 255, 0.68) !important;
+}
+
+.gamehub-cover-icons {
+  align-items: center;
+}
+
+.gamehub-cover-icons .gamehub-proof-icon,
+.gamehub-cover-icons .gamehub-studio-proof-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+}
+
+.gamehub-studio-proof-icon.is-verified-studio-logo,
+.gamehub-dev-logo.is-verified-studio-logo {
+  border-color: rgba(117, 215, 255, 0.58) !important;
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.24), transparent 48%),
+    rgba(5, 22, 35, 0.78) !important;
+  color: #bceeff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 20px rgba(117, 215, 255, 0.16) !important;
+}
+
+.gamehub-studio-proof-icon.is-approved-studio-logo,
+.gamehub-dev-logo.is-approved-studio-logo {
+  border-color: rgba(255, 199, 76, 0.5) !important;
+  background:
+    radial-gradient(circle at top left, rgba(255, 199, 76, 0.18), transparent 48%),
+    rgba(39, 29, 10, 0.74) !important;
+  color: #ffd98a !important;
+}
+
+.gamehub-studio-proof-icon.is-community-studio-logo,
+.gamehub-dev-logo.is-community-studio-logo {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: rgba(15, 20, 30, 0.76) !important;
+  color: rgba(220, 236, 255, 0.72) !important;
+}
+
+.gamehub-cover-card.is-community-game-surface .gamehub-cover-art,
+.gamehub-swipe-cover-card.is-community-game-surface .gamehub-swipe-cover-art {
+  filter: saturate(0.72) contrast(0.95);
+}
+
+.gamehub-cover-card.is-studio-approved-surface .gamehub-cover-art,
+.gamehub-swipe-cover-card.is-studio-approved-surface .gamehub-swipe-cover-art {
+  filter: saturate(0.96) contrast(1.02);
+}
+
+.gamehub-cover-card.is-verified-game-surface .gamehub-cover-art,
+.gamehub-swipe-cover-card.is-verified-game-surface .gamehub-swipe-cover-art {
+  filter: saturate(1.16) contrast(1.06);
+}
+
+.gamehub-swipe-cover-card.is-studio-approved-surface {
+  border: 3px solid rgba(117, 215, 255, 0.28) !important;
+}
+
+.gamehub-swipe-cover-card.is-community-game-surface {
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+}
+
+.gamehub-swipe-taxonomy-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gamehub-swipe-taxonomy-row span,
+.gamehub-swipe-taxonomy-row i,
+.gamehub-swipe-taxonomy-row em {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+}
+
+.gamehub-swipe-taxonomy-row span {
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background: rgba(5, 9, 15, 0.68);
+  color: rgba(220, 236, 255, 0.82);
+}
+
+.gamehub-swipe-taxonomy-row em {
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background: rgba(5, 22, 35, 0.62);
+  color: #bceeff;
+}
+
+.game-surface-row i.is-verified-game-surface {
+  border-color: rgba(67, 245, 167, 0.36);
+  background: rgba(67, 245, 167, 0.1);
+  color: #9fffd2;
+}
+
+.game-surface-row i.is-studio-approved-surface {
+  border-color: rgba(117, 215, 255, 0.34);
+  background: rgba(117, 215, 255, 0.09);
+  color: #bceeff;
+}
+
+.game-surface-row i.is-community-game-surface {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: rgba(148, 163, 184, 0.07);
+  color: rgba(220, 236, 255, 0.72);
+}
+
+
+/* =========================================================
+   UI-A14.3 — clean cover-card reveal and member foil eligibility
+   ========================================================= */
+
+/* Tile Grid: keep game cards clean on idle. Badges stay visible; details reveal on hover. */
+.gamehub-cover-card {
+  overflow: hidden !important;
+}
+
+.gamehub-cover-card .gamehub-cover-overlay {
+  position: absolute !important;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 6;
+  margin: 0 !important;
+  min-height: 56px;
+  padding: 10px !important;
+  transform: translateY(calc(100% - 56px));
+  opacity: 0.96;
+  transition:
+    transform 220ms ease,
+    opacity 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-overlay,
+.gamehub-cover-card:focus-visible .gamehub-cover-overlay {
+  transform: translateY(0);
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(5, 9, 15, 0.56), rgba(5, 9, 15, 0.9));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.gamehub-cover-card .gamehub-cover-topline {
+  min-height: 36px;
+  transition:
+    transform 220ms ease,
+    margin 220ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-topline,
+.gamehub-cover-card:focus-visible .gamehub-cover-topline {
+  margin-bottom: 4px;
+  transform: translateY(-2px);
+}
+
+.gamehub-cover-card .gamehub-cover-overlay > strong,
+.gamehub-cover-card .gamehub-cover-overlay > small {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(8px);
+  transition:
+    max-height 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-overlay > strong,
+.gamehub-cover-card:hover .gamehub-cover-overlay > small,
+.gamehub-cover-card:focus-visible .gamehub-cover-overlay > strong,
+.gamehub-cover-card:focus-visible .gamehub-cover-overlay > small {
+  max-height: 44px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gamehub-cover-card .gamehub-cover-icons {
+  margin-left: auto;
+  transition:
+    transform 220ms ease,
+    gap 220ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-icons,
+.gamehub-cover-card:focus-visible .gamehub-cover-icons {
+  gap: 7px;
+  transform: translateX(-2px);
+}
+
+/* Keep taxonomy chips readable without competing with the hover reveal. */
+.gamehub-cover-surface-chip,
+.gamehub-cover-verification-chip {
+  opacity: 0.92;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-surface-chip,
+.gamehub-cover-card:hover .gamehub-cover-verification-chip,
+.gamehub-cover-card:focus-visible .gamehub-cover-surface-chip,
+.gamehub-cover-card:focus-visible .gamehub-cover-verification-chip {
+  opacity: 0.58;
+  transform: translateY(-2px);
+}
+
+/* Verified foil bounce: reverse direction instead of hard restarting. */
+.gamehub-cover-card.is-verified-foil-card::before,
+.gamehub-swipe-cover-card.is-verified-foil::before {
+  animation: gamehubFoilBounceClean 5.4s ease-in-out infinite alternate !important;
+  will-change: transform;
+}
+
+@keyframes gamehubFoilBounceClean {
+  0% {
+    transform: translateX(-34%);
+  }
+
+  100% {
+    transform: translateX(34%);
+  }
+}
+
+/* Member profile foil eligibility. NPC, unverified, and sponsored/squad-like members are matte. */
+.member-profile-hero.is-member-foil-disabled {
+  transform: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 16px 34px rgba(0, 0, 0, 0.24) !important;
+}
+
+.member-profile-hero.is-member-foil-disabled::before,
+.member-profile-hero.is-member-foil-disabled::after {
+  opacity: 0 !important;
+  animation: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.member-profile-hero.is-member-foil-disabled:hover {
+  transform: none !important;
+}
+
+.member-profile-hero.is-member-foil-disabled .member-profile-avatar::after {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+.member-profile-hero.is-member-foil-disabled .profile-level-badge {
+  box-shadow: none !important;
+}
+
+.member-profile-hero.is-member-foil-eligible {
+  border-color: rgba(67, 245, 167, 0.22);
+}
+
+.member-profile-hero.is-member-foil-eligible::before {
+  opacity: 0.76;
+}
