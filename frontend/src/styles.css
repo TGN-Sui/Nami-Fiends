@@ -14834,3 +14834,120 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     min-height: 66px;
   }
 }
+
+
+/* =========================================================
+   UI-A20.4 — final responsive and accessibility polish
+   ========================================================= */
+
+.sidebar-nav button:focus-visible,
+.sidebar-toggle:focus-visible,
+.sidebar-gamehub-shortcut:focus-visible,
+.sidebar-player-progress-button:focus-visible,
+.ux-preview-button:focus-visible,
+.media-upload-prep-card button:focus-visible,
+.settings-brand-reset-button:focus-visible,
+.settings-brand-color-chip-polished input:focus-visible,
+.channel-colors-stat-card .channel-member-brand-dot:focus-visible,
+.owner-tool-action:focus-visible,
+.gamehub-cover-card:focus-visible {
+  outline: 2px solid rgba(67, 245, 167, 0.72) !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    0 0 0 1px rgba(5, 9, 15, 0.82),
+    0 0 22px rgba(67, 245, 167, 0.22) !important;
+}
+
+.owner-tool-action:focus-visible,
+.channel-colors-stat-card .channel-member-brand-dot:focus-visible {
+  transform: translateY(-1px);
+}
+
+.ux-preview-mode-strip,
+.settings-owner-mode-strip,
+.owner-tool-mode-strip,
+.media-upload-owner-lock {
+  min-width: 0;
+}
+
+.owner-tool-action,
+.channel-colors-stat-card .channel-member-brand-dot,
+.ux-preview-button,
+.settings-brand-reset-button,
+.media-upload-prep-card button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member-spotlight-foil,
+  .member-spotlight-card,
+  .member-spotlight-avatar::before,
+  .sidebar-player-progress-button::before,
+  .owner-tool-action,
+  .channel-colors-stat-card .channel-member-brand-dot,
+  .ux-preview-button,
+  .media-upload-prep-card::before {
+    animation: none !important;
+    transition-duration: 1ms !important;
+    transform: none !important;
+  }
+
+  .member-spotlight-card:hover,
+  .owner-tool-action:hover,
+  .channel-colors-stat-card .channel-member-brand-dot:hover {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .ux-preview-grid,
+  .owner-tool-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .settings-brand-header {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .settings-brand-reset-button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .ux-preview-mode-strip,
+  .settings-owner-mode-strip,
+  .owner-tool-mode-strip,
+  .media-upload-owner-lock {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .settings-brand-preview-row,
+  .channel-colors-stat-card .channel-member-brand-strip {
+    justify-content: center !important;
+  }
+
+  .settings-brand-color-grid-polished {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .owner-tool-action {
+    min-height: 62px !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .channel-colors-stat-card .channel-member-brand-dot {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+  }
+
+  .channel-colors-stat-card .channel-member-brand-dot span {
+    width: 19px !important;
+    height: 19px !important;
+  }
+}
