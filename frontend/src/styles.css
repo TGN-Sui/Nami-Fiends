@@ -14549,3 +14549,90 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     ) !important;
   transform: rotate(13deg) scale(1.55) !important;
 }
+
+
+/* =========================================================
+   UI-A20.1 — ownership mode clarity
+   ========================================================= */
+
+.ux-preview-mode-strip,
+.settings-owner-mode-strip,
+.owner-tool-mode-strip,
+.media-upload-owner-lock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(117, 215, 255, 0.08), rgba(67, 245, 167, 0.035)),
+    rgba(5, 9, 15, 0.26);
+}
+
+.ux-preview-mode-strip {
+  margin-top: 14px;
+}
+
+.settings-owner-mode-strip {
+  margin-bottom: 2px;
+}
+
+.owner-tool-mode-strip {
+  margin: 14px 0 12px;
+}
+
+.media-upload-owner-lock {
+  justify-content: flex-start;
+}
+
+.ux-preview-mode-chip,
+.settings-owner-mode-strip span,
+.owner-tool-mode-strip span,
+.media-upload-owner-lock span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 7px 10px;
+  border: 1px solid rgba(67, 245, 167, 0.22);
+  border-radius: 999px;
+  color: #dff6ff;
+  background: rgba(67, 245, 167, 0.08);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ux-preview-mode-chip.is-owner-mode,
+.settings-owner-mode-strip span,
+.owner-tool-mode-strip span {
+  border-color: rgba(117, 215, 255, 0.32);
+  background: rgba(117, 215, 255, 0.1);
+}
+
+.ux-preview-mode-strip small,
+.settings-owner-mode-strip small,
+.owner-tool-mode-strip small,
+.media-upload-owner-lock small {
+  color: rgba(223, 247, 255, 0.72);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.media-upload-owner-lock + p {
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .ux-preview-mode-strip,
+  .settings-owner-mode-strip,
+  .owner-tool-mode-strip,
+  .media-upload-owner-lock {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
