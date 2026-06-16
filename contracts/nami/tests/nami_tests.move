@@ -3625,6 +3625,81 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
+    /// Non-owner cannot create a ChannelAccessPolicy.
+    ///
+    /// Attack attempt:
+    /// - USER creates a valid Adventurer Channel.
+    /// - SPONSORED_USER borrows the USER-owned Channel from scenario storage.
+    /// - SPONSORED_USER attempts to create an access policy for the USER Channel.
+    ///
+    /// Expected abort:
+    /// unauthorized = 30
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 30)]
+    fun test_non_owner_cannot_create_channel_access_policy() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"policy-owner-only-channel",
+            b"Policy owner-only channel",
+            b"metadata://policy-owner-only-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let channel_obj =
+            test_scenario::take_from_address<channel::Channel>(&scenario, USER);
+
+        channel_access::create_policy_for_channel(
+            &channel_obj,
+            true,
+            ADVENTURER,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_address(USER, channel_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     /// Channel owner can update access policy through Channel-aware path.
     /// ---------------------------------------------------------
     #[test]
