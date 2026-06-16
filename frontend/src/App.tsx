@@ -233,6 +233,19 @@ function MediaUploadPrepCard(props: {
         Upload coming soon
       </button>
 
+      <div className="media-upload-owner-lock">
+
+
+        <span>Owner-only setup</span>
+
+
+        <small>Members see published media only. Upload controls stay locked until owner authorization is live.</small>
+
+
+      </div>
+
+
+
       <p>{props.note}</p>
     </article>
   );
@@ -283,6 +296,31 @@ function UxPreviewConsole(props: {
           media, fallback, and profile-surface UX without changing trust status.
         </p>
       </div>
+
+      <div className="ux-preview-mode-strip" aria-label="Ownership preview modes">
+
+
+        <span className="ux-preview-mode-chip is-owner-mode">Viewing as Owner</span>
+
+
+        <span className="ux-preview-mode-chip">Viewing as Member</span>
+
+
+        <small>
+
+
+          Owner mode exposes setup tools. Member mode only shows approved public choices.
+
+
+          Verification still depends on identity proofs and approvals, not payment.
+
+
+        </small>
+
+
+      </div>
+
+
 
       <div className="ux-preview-grid">
         <div className="ux-preview-column">
@@ -4321,6 +4359,19 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                 })}
             </div>
 
+            <div className="owner-tool-mode-strip">
+
+
+              <span>Viewing as Channel Owner</span>
+
+
+              <small>Operational controls only. Nami-controlled proofs still decide trust and verification.</small>
+
+
+            </div>
+
+
+
             <div className="owner-tool-grid">
               <button type="button">Lock Thread</button>
               <button type="button">Open Audit Log</button>
@@ -5507,6 +5558,25 @@ function SettingsScreen(props: {
               Reset
             </button>
           </div>
+
+          <div className="settings-owner-mode-strip" aria-label="Channel ownership mode">
+
+
+            <span>Viewing as Owner</span>
+
+
+            <small>
+
+
+              Edit approved palette colors here. Members can only choose from these public color dots.
+
+
+            </small>
+
+
+          </div>
+
+
 
           <div className="settings-brand-preview-row" aria-label="Approved brand color preview">
             {settingsChannelBrandPalette.slice(0, 4).map((color: string) => (
