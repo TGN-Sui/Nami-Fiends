@@ -350,3 +350,18 @@ Recovery protects continuity.
 Sui anchors proof.
 
 Nami should feel like a world gamers enter, not a form they fill out.
+
+<!-- UI-A20.5-CHECKPOINT:START -->
+## UI Build Checkpoint
+
+The current frontend UI build checkpoint is documented in [docs/ui-build-checkpoint.md](docs/ui-build-checkpoint.md).
+
+Completed through UI-A20.4:
+- UI-A19 Member Spotlight + Sidebar Avatar Polish
+- UI-A20.1 Ownership Mode Clarity
+- UI-A20.2 Channel Palette Member Flow
+- UI-A20.3 Owner Tool Action States
+- UI-A20.4 Final responsive/accessibility polish
+
+TypeScript and production frontend build passed at the UI-A20.5 checkpoint.
+<!-- UI-A20.5-CHECKPOINT:END -->
