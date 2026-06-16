@@ -2348,10 +2348,12 @@ function ChannelProfile(props: {
   const selectedBrandTheme =
     profileBrandThemes.find((theme) => theme.key === brandKey) ?? defaultBrandTheme;
 
+  const selectedSurfaceBrandColor = readSelectedChannelBrandColor();
+
   const profileBrandStyle = {
-    '--profile-brand-primary': selectedBrandTheme.primary,
-    '--profile-brand-secondary': selectedBrandTheme.secondary,
-    '--profile-brand-glow': selectedBrandTheme.glow
+    '--profile-brand-primary': selectedSurfaceBrandColor,
+    '--profile-brand-secondary': selectedSurfaceBrandColor,
+    '--profile-brand-glow': selectedSurfaceBrandColor
   } as CSSProperties;
 
   useEffect(() => {
@@ -2921,12 +2923,13 @@ function ChannelProfile(props: {
           </article>
         
 
-            <article className="profile-stat-card channel-colors-stat-card">
+            <article className="profile-stat-card channel-colors-stat-card" aria-label="Channel Colors">
               <span>Channel Colors</span>
               <div className="channel-member-brand-strip channel-member-brand-strip-compact">
                 {channelBrandPalette.slice(0, 4).map((color: string) => (
                   <button
                     aria-label={'Use channel brand color ' + color}
+                    aria-pressed={selectedChannelBrandColor === color}
                     className={
                       'channel-member-brand-dot' +
                       (selectedChannelBrandColor === color ? ' is-selected-channel-brand-color' : '')

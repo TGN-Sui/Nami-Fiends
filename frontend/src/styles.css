@@ -14636,3 +14636,92 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     flex-direction: column;
   }
 }
+
+
+/* =========================================================
+   UI-A20.2 — dots-only Channel Colors surface sync
+   ========================================================= */
+
+.channel-colors-stat-card {
+  min-height: auto !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  border-color: color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 34%, rgba(255, 255, 255, 0.12)) !important;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 14%, transparent), transparent 34%),
+    rgba(5, 9, 15, 0.34) !important;
+}
+
+.channel-colors-stat-card > span {
+  display: none !important;
+}
+
+.channel-colors-stat-card .channel-member-brand-strip {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+}
+
+.channel-colors-stat-card .channel-member-brand-dot {
+  position: relative !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  border: 2px solid rgba(255, 255, 255, 0.42) !important;
+  border-radius: 999px !important;
+  background: rgba(5, 9, 15, 0.42) !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 22%, transparent) !important;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    outline-color 180ms ease,
+    transform 180ms ease;
+}
+
+.channel-colors-stat-card .channel-member-brand-dot:hover {
+  transform: translateY(-1px) scale(1.06);
+  border-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.channel-colors-stat-card .channel-member-brand-dot span {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 18px currentColor !important;
+}
+
+.channel-colors-stat-card .channel-member-brand-dot.is-selected-channel-brand-color,
+.channel-colors-stat-card .channel-member-brand-dot[aria-pressed='true'] {
+  transform: scale(1.16);
+  border-color: rgba(67, 245, 167, 0.9) !important;
+  outline: 2px solid rgba(67, 245, 167, 0.52) !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    0 0 0 1px rgba(5, 9, 15, 0.78),
+    0 0 22px rgba(67, 245, 167, 0.34),
+    0 0 34px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 28%, transparent) !important;
+}
+
+.channel-colors-stat-card .channel-member-brand-dot.is-selected-channel-brand-color::after,
+.channel-colors-stat-card .channel-member-brand-dot[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(5, 9, 15, 0.82);
+  border-radius: 999px;
+}
+
+.channel-profile-page .profile-stat-card,
+.channel-profile-page .channel-info-card,
+.channel-profile-page .profile-section-card,
+.channel-profile-page .profile-module-card {
+  border-color: color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 30%, rgba(255, 255, 255, 0.12)) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 8%, transparent),
+    0 18px 44px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 8%, rgba(0, 0, 0, 0.28)) !important;
+}
