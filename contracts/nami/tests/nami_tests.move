@@ -4035,6 +4035,94 @@ module nami::nami_tests {
     /// Expected abort:
     /// invalid_owner = 2
     /// ---------------------------------------------------------
+    /// Non-owner cannot update a Profile.
+    ///
+    /// Attack attempt:
+    /// - USER creates a valid Profile linked to their Passport.
+    /// - SPONSORED_USER borrows the USER-owned Profile, Passport, and ConductStatus.
+    /// - SPONSORED_USER attempts to update the USER Profile.
+    ///
+    /// Expected abort:
+    /// invalid_owner = 2
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 2)]
+    fun test_non_owner_cannot_update_profile() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        profile::create_profile(
+            &passport_obj,
+            &status,
+            b"Original Gamer",
+            b"bio://original",
+            b"avatar://original",
+            b"metadata://original",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let passport_obj =
+            test_scenario::take_from_address<passport::Passport>(&scenario, USER);
+
+        let status =
+            test_scenario::take_from_address<conduct::ConductStatus>(&scenario, USER);
+
+        let mut profile_obj =
+            test_scenario::take_from_address<profile::Profile>(&scenario, USER);
+
+        profile::update_profile(
+            &mut profile_obj,
+            &passport_obj,
+            &status,
+            b"Updated Gamer",
+            b"bio://updated",
+            b"avatar://updated",
+            b"metadata://updated",
+            false,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(!profile::get_is_public(&profile_obj), 233);
+
+        test_scenario::return_to_address(USER, passport_obj);
+        test_scenario::return_to_address(USER, status);
+        test_scenario::return_to_address(USER, profile_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     #[test, expected_failure(abort_code = 2)]
     fun test_profile_update_rejects_wrong_passport_pairing() {
         let mut scenario = test_scenario::begin(USER);
