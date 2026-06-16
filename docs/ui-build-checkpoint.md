@@ -2,7 +2,7 @@
 
 Status: UI build checkpoint complete through UI-A20.4.
 
-This checkpoint records the completed frontend UI polish pass for Nami Chat. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability frontend UI polish pass for Nami Chat. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
+This checkpoint records the completed frontend UI polish pass for Nami Chat. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
 ## Completed UI Scope
 
