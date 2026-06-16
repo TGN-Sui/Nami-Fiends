@@ -287,9 +287,9 @@ Current breakdown:
 
 ```text
 On-chain protocol foundation:   ~98% done
-Documentation architecture:     Mini-sync in progress
+Documentation architecture:     UI checkpoint synced
 Backend/indexer:                 0% done
-Frontend/profile UI:             0% done
+Frontend/profile UI:             UI polish checkpoint complete; protocol wiring pending
 SDK integration:                 0% done
 zkLogin production flow:          0% done
 ```
@@ -301,11 +301,10 @@ zkLogin production flow:          0% done
 Recommended next phases:
 
 ```text
-Finish mini documentation sync
 Protocol hardening tests
 Scenario/adversarial test suite
 Backend event indexer
-Frontend Passport/Profile UI
+Authorization and persistence wiring
 SDK read helpers
 zkLogin production flow
 Testnet deployment scripts
@@ -365,3 +364,4 @@ Completed through UI-A20.4:
 
 TypeScript and production frontend build passed at the UI-A20.5 checkpoint.
 <!-- UI-A20.5-CHECKPOINT:END -->
+

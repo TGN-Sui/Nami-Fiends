@@ -395,7 +395,7 @@ Recovery service
 Status:
 
 ```text
-Not started
+UI polish checkpoint complete; production protocol wiring not started
 ```
 
 Minimum frontend screens:
@@ -556,3 +556,4 @@ Discovery influence
 ```
 
 across connected games, communities, and experiences.
+

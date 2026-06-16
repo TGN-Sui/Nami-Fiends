@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: UI build checkpoint complete through UI-A20.4.
+Status: UI build checkpoint complete through UI-A20.5.
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -13,6 +13,7 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat. It 
 | UI-A20.2 | Complete | Channel Palette member flow with dots-only color selection. |
 | UI-A20.3 | Complete | Owner tool action states for operational controls. |
 | UI-A20.4 | Complete | Final responsive and accessibility polish. |
+| UI-A20.5 | Complete | UI build checkpoint and documentation cleanup. |
 
 ## Latest UI Commits
 
@@ -56,3 +57,4 @@ Recommended next lane:
 2. Begin wiring real authorization and persistence behind owner/member preview controls.
 3. Connect media upload placeholders to approved storage and proof systems.
 4. Continue avoiding any wording that implies payment equals trust.
+
