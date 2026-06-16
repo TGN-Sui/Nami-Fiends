@@ -5035,6 +5035,99 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
+    /// Non-owner cannot update a ChannelAccessPolicy.
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 30)]
+    fun test_non_owner_cannot_update_channel_access_policy() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"update-policy-channel",
+            b"Channel with updateable access policy",
+            b"metadata://update-policy-channel",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let channel_obj =
+            test_scenario::take_from_sender<channel::Channel>(&scenario);
+
+        channel_access::create_policy_for_channel(
+            &channel_obj,
+            true,
+            NPC,
+            NEWBIE,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, channel_obj);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let channel_obj =
+            test_scenario::take_from_address<channel::Channel>(&scenario, USER);
+
+        let mut policy =
+            test_scenario::take_from_address<channel_access::ChannelAccessPolicy>(&scenario, USER);
+
+        assert!(channel_access::get_allow_npc_chat(&policy), 224);
+
+        channel_access::update_policy_for_channel(
+            &channel_obj,
+            &mut policy,
+            false,
+            ADVENTURER,
+            GAMESTER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(!channel_access::get_allow_npc_chat(&policy), 225);
+        assert!(channel_access::get_minimum_tier(&policy) == ADVENTURER, 226);
+        assert!(channel_access::get_minimum_reputation(&policy) == GAMESTER, 227);
+
+        test_scenario::return_to_address(USER, channel_obj);
+        test_scenario::return_to_address(USER, policy);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     /// ChannelAccessPolicy cannot be updated with the wrong Channel.
     ///
     /// Attack attempt:
