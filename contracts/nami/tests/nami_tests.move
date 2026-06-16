@@ -3368,6 +3368,92 @@ module nami::nami_tests {
     }
 
     /// ---------------------------------------------------------
+    /// Non-owner cannot update Channel metadata.
+    ///
+    /// Attack attempt:
+    /// - USER creates a valid Adventurer Channel.
+    /// - SPONSORED_USER borrows USER-owned objects from test scenario storage.
+    /// - SPONSORED_USER attempts to update the USER Channel.
+    ///
+    /// Expected abort:
+    /// unauthorized = 30
+    /// ---------------------------------------------------------
+    #[test, expected_failure(abort_code = 30)]
+    fun test_non_owner_cannot_update_channel() {
+        let mut scenario = test_scenario::begin(USER);
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        conduct::create_status(
+            &passport_obj,
+            GREEN,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        let status =
+            test_scenario::take_from_sender<conduct::ConductStatus>(&scenario);
+
+        channel::create_channel(
+            &passport_obj,
+            &status,
+            b"owner-only-channel",
+            b"Owner-only before update",
+            b"metadata://owner-only-before",
+            true,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_sender(&scenario, passport_obj);
+        test_scenario::return_to_sender(&scenario, status);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let passport_obj =
+            test_scenario::take_from_address<passport::Passport>(&scenario, USER);
+
+        let status =
+            test_scenario::take_from_address<conduct::ConductStatus>(&scenario, USER);
+
+        let mut channel_obj =
+            test_scenario::take_from_address<channel::Channel>(&scenario, USER);
+
+        channel::update_channel(
+            &mut channel_obj,
+            &passport_obj,
+            &status,
+            b"stolen-channel-update",
+            b"Non-owner should not update",
+            b"metadata://non-owner-update",
+            false,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::return_to_address(USER, passport_obj);
+        test_scenario::return_to_address(USER, status);
+        test_scenario::return_to_address(USER, channel_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
     /// AdminCap can verify a Channel.
     /// ---------------------------------------------------------
     #[test]
