@@ -14725,3 +14725,112 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     inset 0 0 0 1px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 8%, transparent),
     0 18px 44px color-mix(in srgb, var(--profile-brand-primary, #4da3ff) 8%, rgba(0, 0, 0, 0.28)) !important;
 }
+
+
+/* =========================================================
+   UI-A20.3 — owner tool action states
+   ========================================================= */
+
+.owner-tool-grid {
+  gap: 12px !important;
+}
+
+.owner-tool-action {
+  position: relative;
+  display: grid !important;
+  min-height: 74px;
+  gap: 7px;
+  justify-items: start;
+  align-content: center;
+  padding: 14px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(117, 215, 255, 0.16) !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(117, 215, 255, 0.11), transparent 34%),
+    rgba(5, 9, 15, 0.38) !important;
+  color: #eef7ff !important;
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.owner-tool-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(117, 215, 255, 0.32) !important;
+  box-shadow: 0 0 22px rgba(117, 215, 255, 0.1);
+}
+
+.owner-tool-action span {
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.owner-tool-action small {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.owner-tool-action.is-owner-tool-ready small {
+  color: #06110f;
+  background: #43f5a7;
+}
+
+.owner-tool-action.is-owner-tool-preview small {
+  color: #dff6ff;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(117, 215, 255, 0.08);
+}
+
+.owner-tool-action.is-owner-tool-proof-gated small {
+  color: #ffdba8;
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.owner-tool-action.is-owner-tool-nami-queue small {
+  color: #e9ddff;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.owner-tool-action::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.46);
+  box-shadow: 0 0 14px rgba(117, 215, 255, 0.28);
+}
+
+.owner-tool-action.is-owner-tool-ready::after {
+  background: #43f5a7;
+  box-shadow: 0 0 16px rgba(67, 245, 167, 0.42);
+}
+
+.owner-tool-action.is-owner-tool-proof-gated::after {
+  background: #f97316;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.34);
+}
+
+.owner-tool-action.is-owner-tool-nami-queue::after {
+  background: #a855f7;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.34);
+}
+
+@media (max-width: 720px) {
+  .owner-tool-action {
+    min-height: 66px;
+  }
+}

@@ -4375,11 +4375,26 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
 
 
 
-            <div className="owner-tool-grid">
-              <button type="button">Lock Thread</button>
-              <button type="button">Open Audit Log</button>
-              <button type="button">Review Guild</button>
-              <button type="button">Escalate to Nami</button>
+            <div className="owner-tool-grid" aria-label="Channel owner operational tools">
+              <button className="owner-tool-action is-owner-tool-ready" type="button">
+                <span>Lock Thread</span>
+                <small>Ready</small>
+              </button>
+
+              <button className="owner-tool-action is-owner-tool-preview" type="button">
+                <span>Open Audit Log</span>
+                <small>Preview</small>
+              </button>
+
+              <button className="owner-tool-action is-owner-tool-proof-gated" type="button">
+                <span>Review Guild</span>
+                <small>Proof-gated</small>
+              </button>
+
+              <button className="owner-tool-action is-owner-tool-nami-queue" type="button">
+                <span>Escalate to Nami</span>
+                <small>Nami queue</small>
+              </button>
             </div>
           </article>
           )}
