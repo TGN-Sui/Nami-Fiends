@@ -37,9 +37,11 @@ module nami::conduct
 Current protocol status:
 
 ```text
-55 tests passing
+77 tests passing
 0 warnings
 ```
+
+Phase 2 indexer: conduct signal changes feed `PassportTimelineService`; frontend reads live `ConductStatus` via SDK `loadConductProtocolView`.
 
 Conduct is currently integrated with:
 

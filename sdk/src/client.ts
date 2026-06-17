@@ -132,8 +132,18 @@ export class NamiClient {
     );
   }
 
+  async getOwnedIdentities(owner: string): Promise<OwnedObjectResponse[]> {
+    return this.getOwnedNamiObjects(owner, 'identity', 'Identity');
+  }
+
   async getOwnedPassports(owner: string): Promise<OwnedObjectResponse[]> {
     return this.getOwnedNamiObjects(owner, 'passport', 'Passport');
+  }
+
+  async getOwnedChannelAccessPolicies(
+    owner: string
+  ): Promise<OwnedObjectResponse[]> {
+    return this.getOwnedNamiObjects(owner, 'channel_access', 'ChannelAccessPolicy');
   }
 
   async getOwnedProfiles(owner: string): Promise<OwnedObjectResponse[]> {

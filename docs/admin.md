@@ -23,8 +23,16 @@ module nami::admin
 Current protocol status:
 
 ```text
-55 tests passing
+77 tests passing
 0 warnings
+Phase 1 + Phase 1.8 (Break-the-System hardening): complete
+```
+
+Phase 2 indexer surfaces (read-only HTTP) expose admin-adjacent projections:
+
+```text
+Appeals, jury cases, moderation records, recovery requests
+backend/src/server.ts · default http://127.0.0.1:8787
 ```
 
 AdminCap currently connects to:

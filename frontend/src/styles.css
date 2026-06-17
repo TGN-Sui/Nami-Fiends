@@ -14951,3 +14951,395 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     height: 19px !important;
   }
 }
+
+.protocol-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(8, 24, 40, 0.72);
+}
+
+.protocol-status-bar p {
+  margin: 0;
+  color: rgba(220, 236, 255, 0.82);
+  font-size: 0.92rem;
+}
+
+.protocol-hint {
+  margin: 0 0 1rem;
+  color: rgba(190, 214, 240, 0.78);
+  font-size: 0.92rem;
+}
+
+.protocol-passport-card {
+  margin-bottom: 1rem;
+}
+
+.sidebar-wallet-connect {
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.sidebar-wallet-connect button {
+  width: 100%;
+}
+
+.protocol-timeline-card {
+  margin-bottom: 1rem;
+}
+
+.protocol-timeline-snapshot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+  color: rgba(210, 230, 255, 0.88);
+}
+
+.protocol-timeline-snapshot span {
+  color: rgba(170, 198, 230, 0.75);
+  font-size: 0.85rem;
+}
+
+.protocol-timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.protocol-timeline-filters button {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(12, 34, 56, 0.8);
+  color: rgba(220, 236, 255, 0.86);
+  border: 1px solid rgba(120, 190, 255, 0.16);
+  font-size: 0.82rem;
+}
+
+.protocol-timeline-filters button.is-active {
+  background: rgba(36, 108, 168, 0.45);
+  border-color: rgba(120, 210, 255, 0.45);
+}
+
+.protocol-timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.protocol-timeline-item {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 190, 255, 0.14);
+  background: rgba(6, 20, 34, 0.65);
+}
+
+.protocol-timeline-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.protocol-timeline-item p {
+  margin: 0.15rem 0;
+  color: rgba(215, 232, 250, 0.9);
+  font-size: 0.92rem;
+}
+
+.protocol-moderation-card {
+  margin-top: 1rem;
+}
+
+.protocol-moderation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.protocol-moderation-grid h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: rgba(210, 230, 255, 0.9);
+}
+
+.protocol-subsection-title {
+  grid-column: 1 / -1;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.protocol-timeline-item small {
+  color: rgba(160, 188, 220, 0.72);
+  font-size: 0.8rem;
+}
+
+.onboarding-panel {
+  margin-bottom: 1.5rem;
+}
+
+.onboarding-panel-compact {
+  margin-bottom: 1rem;
+}
+
+.onboarding-copy {
+  margin-bottom: 1rem;
+}
+
+.onboarding-copy .eyebrow,
+.onboarding-verify-banner .eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(140, 210, 255, 0.82);
+}
+
+.onboarding-copy h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+
+.onboarding-copy p {
+  margin: 0;
+  color: rgba(205, 225, 245, 0.86);
+}
+
+.onboarding-card {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.onboarding-act-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.onboarding-act-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(120, 190, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(8, 20, 36, 0.55);
+  color: rgba(210, 230, 255, 0.88);
+  cursor: pointer;
+}
+
+.onboarding-act-pill span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+}
+
+.onboarding-act-pill.is-active {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(20, 56, 48, 0.55);
+}
+
+.onboarding-act-pill.is-done {
+  opacity: 0.82;
+}
+
+.onboarding-step-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.onboarding-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.onboarding-field span {
+  font-size: 0.88rem;
+  color: rgba(190, 214, 240, 0.9);
+}
+
+.onboarding-field input {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(120, 190, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(6, 16, 28, 0.85);
+  color: #eef6ff;
+}
+
+.onboarding-field small {
+  font-size: 0.82rem;
+}
+
+.onboarding-field-error {
+  margin: 0;
+  color: #ff9f9f;
+  font-size: 0.88rem;
+}
+
+.onboarding-quiz-block h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.onboarding-quiz-question {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.onboarding-quiz-question legend {
+  margin-bottom: 0.45rem;
+  font-size: 0.92rem;
+  color: rgba(220, 236, 255, 0.92);
+}
+
+.onboarding-quiz-options {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.onboarding-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.onboarding-preview-card {
+  padding: 1rem 1.1rem;
+  border: 1px dashed rgba(120, 190, 255, 0.35);
+  border-radius: 14px;
+  background: rgba(8, 24, 40, 0.55);
+}
+
+.onboarding-preview-status {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 190, 120, 0.9);
+}
+
+.onboarding-preview-card h3 {
+  margin: 0 0 0.2rem;
+}
+
+.onboarding-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.65rem 0;
+}
+
+.onboarding-preview-meta span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.82rem;
+}
+
+.onboarding-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.onboarding-primary-btn,
+.onboarding-secondary-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 190, 255, 0.28);
+  cursor: pointer;
+}
+
+.onboarding-primary-btn {
+  background: linear-gradient(90deg, rgba(50, 180, 140, 0.55), rgba(80, 140, 255, 0.45));
+  color: #f4fbff;
+}
+
+.onboarding-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.onboarding-secondary-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(220, 236, 255, 0.92);
+}
+
+.method-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.method-toggle button {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 190, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(210, 230, 255, 0.9);
+  cursor: pointer;
+}
+
+.method-toggle button.active {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(20, 56, 48, 0.55);
+}
+
+.onboarding-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+}
+
+.onboarding-status div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.onboarding-status span {
+  font-size: 0.78rem;
+  color: rgba(160, 188, 220, 0.82);
+}
+
+.onboarding-package {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.onboarding-package span {
+  font-size: 0.82rem;
+  color: rgba(160, 188, 220, 0.82);
+}
+
+.onboarding-package code {
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.onboarding-wallet-connect {
+  max-width: 220px;
+}
+
+.onboarding-verify-banner h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}

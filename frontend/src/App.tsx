@@ -19,6 +19,34 @@ import {
   type NamiPage
 } from './uiMockData.js';
 
+import { PassportTimelinePanel } from './PassportTimelinePanel.js';
+import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
+import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
+import { ProtocolConductPanel } from './ProtocolConductPanel.js';
+import { ProtocolCustomizationPanel } from './ProtocolCustomizationPanel.js';
+import { ProtocolHistoryPanel } from './ProtocolHistoryPanel.js';
+import { ProtocolIdentityPanel } from './ProtocolIdentityPanel.js';
+import { ProtocolModerationPanel } from './ProtocolModerationPanel.js';
+import { ProtocolModerationRecordsPanel } from './ProtocolModerationRecordsPanel.js';
+import { ProtocolProfilePanel } from './ProtocolProfilePanel.js';
+import { ProtocolRecoveryPanel } from './ProtocolRecoveryPanel.js';
+import {
+  type GuildCardView,
+  type SquadCardView,
+} from './protocol.js';
+import { useGuildCardsQuery, useOwnerHistoryQuery, usePassportQuery, useSquadCardsQuery } from './protocol-query.js';
+import { OnboardingPanel } from './OnboardingPanel.js';
+import {
+  getConfiguredNetwork,
+  getConfiguredPackageId,
+  hasConfiguredPackageId,
+} from './nami.js';
+import {
+  protocolOwnerStatusLabel,
+  useProtocolOwner,
+  WalletConnectControl,
+} from './wallet.js';
+
 function signalClass(signal: ConductSignal): string {
   return 'signal-ring signal-' + signal.toLowerCase();
 }
@@ -632,6 +660,10 @@ function Sidebar(props: {
           <span className="nav-icon">G</span>
           {!props.collapsed && <span>Game Hub</span>}
         </button>
+
+        <div className="sidebar-wallet-connect">
+          <WalletConnectControl />
+        </div>
 
         <nav className="sidebar-nav">
         {navItems.filter((item) => item.page !== 'hub').map((item) => (
@@ -1258,8 +1290,8 @@ function NamiHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
-
   onOpenMember: (member: (typeof members)[number]) => void;
+  onNavigateToSettings?: () => void;
 }): ReactElement {
   const featuredShowcaseChannels = channels.slice(0, 8);
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
@@ -1384,6 +1416,15 @@ function NamiHub(props: {
         <p>Signed-in dashboard</p>
         <h1>Nami Hub</h1>
       </header>
+
+      <OnboardingPanel
+        isPackageConfigured={hasConfiguredPackageId()}
+        network={getConfiguredNetwork()}
+        {...(props.onNavigateToSettings
+          ? { onNavigateToSettings: props.onNavigateToSettings }
+          : {})}
+        packageId={getConfiguredPackageId()}
+      />
 
       <button
         className="banner-panel featured-banner-carousel nami-hub-rotating-banner"
@@ -2826,6 +2867,10 @@ function ChannelProfile(props: {
         <p>Contextual channel profile</p>
         <h1>Game Profile</h1>
       </header>
+
+      <ProtocolStatusBar />
+      <ProtocolChannelPanel />
+      <ProtocolChannelAccessPanel />
 
       <section className="channel-profile-page" style={profileBrandStyle}>
                   
@@ -4427,6 +4472,9 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
             </button>
           )}
         </article>
+
+        <ProtocolModerationPanel />
+        <ProtocolModerationRecordsPanel />
       </section>
     </>
   );
@@ -4576,6 +4624,9 @@ function PassportScreen(props: {
   const profileMember = members[0]!;
   const passportProgression = getNamiProgression(profileMember);
   const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
+  const { owner: protocolOwner } = useProtocolOwner();
+  const { data: passportView, loadState: passportLoadState } = usePassportQuery();
+  const { data: ownerHistory } = useOwnerHistoryQuery();
 
   const passportProofs = [
     {
@@ -4622,6 +4673,48 @@ function PassportScreen(props: {
         <p>Wallet identity, proofs, and gated access</p>
         <h1>Nami Passport</h1>
       </header>
+
+      <ProtocolStatusBar />
+      <ProtocolIdentityPanel />
+      <ProtocolConductPanel />
+
+      {passportView?.passport ? (
+        <article className="panel protocol-passport-card">
+          <div className="profile-panel-heading">
+            <h2>On-Chain Passport</h2>
+            <p>
+              Live object read via SDK · Level {passportView.passport.level} ·{' '}
+              {passportView.passport.membershipTierLabel} ·{' '}
+              {passportView.passport.reputationLabel}
+            </p>
+          </div>
+
+          <div className="passport-wallet-grid passport-wallet-grid-refined">
+            <span>Passport ID</span>
+            <strong>{passportView.passport.objectId}</strong>
+            <span>XP</span>
+            <strong>{passportView.passport.xp}</strong>
+            <span>Badge Points</span>
+            <strong>{passportView.passport.badgePoints}</strong>
+            <span>Indexed Timeline</span>
+            <strong>{passportView.timelineEntryCount} event(s)</strong>
+            <span>Badge Events</span>
+            <strong>{ownerHistory?.badgeHistory.length ?? 0}</strong>
+            <span>Boost Events</span>
+            <strong>{ownerHistory?.boostHistory.length ?? 0}</strong>
+          </div>
+        </article>
+      ) : passportLoadState === 'loading' ? (
+        <p className="protocol-hint">Loading on-chain passport and indexed timeline…</p>
+      ) : passportLoadState === 'error' ? (
+        <p className="protocol-hint">Could not load protocol passport data. Showing mock passport UI below.</p>
+      ) : protocolOwner ? (
+        <p className="protocol-hint">No owned Passport object found for the connected wallet.</p>
+      ) : null}
+
+      <PassportTimelinePanel timeline={passportView?.timeline ?? null} />
+      <ProtocolHistoryPanel />
+      <ProtocolCustomizationPanel />
 
       <section className="passport-page">
         <article className="panel passport-hero-card passport-hero-card-refined">
@@ -4880,6 +4973,8 @@ function UserProfileScreen(props: {
     return readProfileCardLayout();
   });
   const mySubscriptions = channels.slice(0, 4);
+  const { data: guildCards } = useGuildCardsQuery();
+  const guildRows = guildCards ?? [];
 
   const myGuilds = [
     {
@@ -5050,6 +5145,12 @@ function UserProfileScreen(props: {
         <p>Member identity and passport</p>
         <h1>My Profile</h1>
       </header>
+
+      <ProtocolStatusBar />
+      <ProtocolProfilePanel />
+      <ProtocolConductPanel />
+      <ProtocolCustomizationPanel />
+      <ProtocolHistoryPanel />
 
       <section className="user-profile-page">
         <div className={'nami-profile-stable-controls nami-profile-stable-controls-' + profileCardLayout}>
@@ -5237,15 +5338,27 @@ function UserProfileScreen(props: {
             </div>
 
             <div className="profile-guild-mini-grid">
-              {myGuilds.map((guild) => (
-                <button className="profile-mini-guild-card" key={guild.name} type="button">
-                  <span className={'legend-dot ' + signalClass(guild.signal as NamiChannel['signal'])} />
-                  <div>
-                    <strong>{guild.name}</strong>
-                    <small>{guild.role} · {guild.members} members</small>
-                  </div>
-                </button>
-              ))}
+              {guildRows.length > 0
+                ? guildRows.map((guild) => (
+                    <button className="profile-mini-guild-card" key={guild.id} type="button">
+                      <span className="legend-dot signal-ring signal-green" />
+                      <div>
+                        <strong>{guild.title}</strong>
+                        <small>
+                          {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
+                        </small>
+                      </div>
+                    </button>
+                  ))
+                : myGuilds.map((guild) => (
+                    <button className="profile-mini-guild-card" key={guild.name} type="button">
+                      <span className={'legend-dot ' + signalClass(guild.signal as NamiChannel['signal'])} />
+                      <div>
+                        <strong>{guild.name}</strong>
+                        <small>{guild.role} · {guild.members} members</small>
+                      </div>
+                    </button>
+                  ))}
             </div>
 
             <button
@@ -5293,7 +5406,27 @@ function UserProfileScreen(props: {
   );
 }
 
+function ProtocolStatusBar(): ReactElement {
+  const { owner, source, context, mode } = useProtocolOwner();
+
+  return (
+    <div className="protocol-status-bar">
+      <span className="mini-badge">{mode === 'live' && owner ? 'Protocol' : 'Mock'}</span>
+      <p>{protocolOwnerStatusLabel(context, owner, source)}</p>
+    </div>
+  );
+}
+
 function GuildsScreen(): ReactElement {
+  const { owner: protocolOwner } = useProtocolOwner();
+  const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
+  const { data: squadCards } = useSquadCardsQuery();
+
+  const guildRows = guildCards ?? [];
+  const squadRows = squadCards ?? [];
+  const showLiveGuilds = guildRows.length > 0;
+  const showLiveSquads = squadRows.length > 0;
+
   return (
     <>
       <header className="page-title">
@@ -5301,28 +5434,97 @@ function GuildsScreen(): ReactElement {
         <h1>My Guilds</h1>
       </header>
 
-      <section className="account-grid uniform-card-grid">
-        {channels.slice(0, 4).map((channel) => (
-          <article className="profile-panel account-card fixed-card guild-card" key={channel.id}>
-            <div className="fixed-card-body">
-              <div className={'guild-card-icon guild-icon-' + channel.signal.toLowerCase()}>
-                {channel.name.slice(0, 2).toUpperCase()}
+      <ProtocolStatusBar />
+
+      {guildLoadState === 'loading' ? (
+        <p className="protocol-hint">Loading indexed guild memberships…</p>
+      ) : null}
+
+      {guildLoadState === 'error' ? (
+        <p className="protocol-hint">Could not load guild projections. Showing mock guild cards.</p>
+      ) : null}
+
+      {showLiveGuilds ? (
+        <section className="account-grid uniform-card-grid">
+          {guildRows.map((guild) => (
+            <article className="profile-panel account-card fixed-card guild-card" key={guild.id}>
+              <div className="fixed-card-body">
+                <div className="guild-card-icon guild-icon-green">
+                  {guild.title.slice(0, 2).toUpperCase()}
+                </div>
+
+                <div className="fixed-card-copy">
+                  <h2>{guild.title}</h2>
+                  <p>{guild.subtitle}</p>
+                </div>
               </div>
 
-              <div className="fixed-card-copy">
-                <h2>{channel.name} Guild</h2>
-                <p>{channel.genre}</p>
+              <div className="fixed-card-footer">
+                <span className="guild-signal-pill guild-signal-green">
+                  {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
+                </span>
+                <span className="mini-badge">{guild.source}</span>
               </div>
-            </div>
+            </article>
+          ))}
+        </section>
+      ) : (
+        <section className="account-grid uniform-card-grid">
+          {channels.slice(0, 4).map((channel) => (
+            <article className="profile-panel account-card fixed-card guild-card" key={channel.id}>
+              <div className="fixed-card-body">
+                <div className={'guild-card-icon guild-icon-' + channel.signal.toLowerCase()}>
+                  {channel.name.slice(0, 2).toUpperCase()}
+                </div>
 
-            <div className="fixed-card-footer">
-              <span className={'guild-signal-pill guild-signal-' + channel.signal.toLowerCase()}>
-                {channel.signal}
-              </span>
-            </div>
-          </article>
-        ))}
-      </section>
+                <div className="fixed-card-copy">
+                  <h2>{channel.name} Guild</h2>
+                  <p>{channel.genre}</p>
+                </div>
+              </div>
+
+              <div className="fixed-card-footer">
+                <span className={'guild-signal-pill guild-signal-' + channel.signal.toLowerCase()}>
+                  {channel.signal}
+                </span>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+
+      {showLiveSquads ? (
+        <section className="account-grid uniform-card-grid">
+          <header className="page-title protocol-subsection-title">
+            <p>Indexed squads</p>
+            <h2>My Squads</h2>
+          </header>
+
+          {squadRows.map((squad) => (
+            <article className="profile-panel account-card fixed-card guild-card" key={squad.id}>
+              <div className="fixed-card-body">
+                <div className="guild-card-icon guild-icon-orange">
+                  SQ
+                </div>
+
+                <div className="fixed-card-copy">
+                  <h2>{squad.name}</h2>
+                  <p>
+                    {squad.memberCount}/{squad.maxSlots} slots filled
+                  </p>
+                </div>
+              </div>
+
+              <div className="fixed-card-footer">
+                <span className="guild-signal-pill guild-signal-orange">
+                  {squad.owner === protocolOwner ? 'Owner' : 'Member'}
+                </span>
+                <span className="mini-badge">{squad.source}</span>
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
     </>
   );
 }
@@ -5557,6 +5759,10 @@ function SettingsScreen(props: {
         <h1>Settings</h1>
       </header>
 
+      <ProtocolStatusBar />
+
+      <ProtocolIdentityPanel />
+
               <section className="panel settings-channel-brand-palette settings-channel-owner-controls">
           <div className="settings-brand-header">
             <div>
@@ -5703,6 +5909,9 @@ function SettingsScreen(props: {
             </div>
           </article>
         </section>
+
+        <ProtocolRecoveryPanel />
+        <ProtocolChannelAccessPanel />
       </section>
     </>
   );
@@ -5775,6 +5984,7 @@ export function App(): ReactElement {
           onSelect={setSelectedChannel}
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
+          onNavigateToSettings={() => setActivePage('settings')}
         />;
     }
 
@@ -5888,6 +6098,7 @@ if (activePage === 'userProfile') {
           onSelect={setSelectedChannel}
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
+          onNavigateToSettings={() => setActivePage('settings')}
         />;
   }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage]);
 

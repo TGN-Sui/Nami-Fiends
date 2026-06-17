@@ -18,7 +18,7 @@ Black Passport benefit bypass attempts
 
 ```text
 Wave 1 status: Complete
-Move tests: 65 passing
+Move tests: 77 passing (full suite, including Wave 1 + Wave 2 + extras)
 Warnings: 0
 ```
 

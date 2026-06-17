@@ -3,6 +3,7 @@ import type { SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
 import { config } from './config.js';
 import {
   NAMI_EVENT_MODULES,
+  toTypedEvent,
   type IndexedNamiEvent,
   type NamiEventModule
 } from './events.js';
@@ -23,10 +24,34 @@ type QueryEventsParams = Parameters<
 
 type SuiEvent = QueryEventsResponse['data'][number];
 
+/**
+ * Clean Phase 2 architecture (no duplicated patches):
+ *
+ * 1. Raw log (events.jsonl) = immutable source of truth. Always appended exactly.
+ * 2. Typed events (from types/events.ts) = the contract for all downstream logic.
+ * 3. Projections (future) = derived, replayable views (Guilds, Passport timelines, etc.).
+ *
+ * The indexer owns polling + typing. Projections are applied via pluggable processors
+ * (we start with a no-op placeholder that will be replaced by real projectors in later steps).
+ */
+
+export interface EventProcessor {
+  process(typed: ReturnType<typeof toTypedEvent>): Promise<void>;
+}
+
 export class NamiEventIndexer {
   private cursors: CursorStore = {};
+  private processors: EventProcessor[] = [];
 
   constructor(private readonly client: SuiJsonRpcClient) {}
+
+  /**
+   * Register processors (domain projections / services).
+   * This keeps the indexer itself concise and focused on Sui polling + ordering.
+   */
+  registerProcessor(processor: EventProcessor): void {
+    this.processors.push(processor);
+  }
 
   async load(): Promise<void> {
     this.cursors = await readJsonFile<CursorStore>(config.cursorPath, {});
@@ -71,8 +96,8 @@ export class NamiEventIndexer {
 
       const response = await this.client.queryEvents(params);
 
-      for (const event of response.data) {
-        await this.storeEvent(moduleName, event);
+      for (const suiEvent of response.data) {
+        await this.storeAndProcess(moduleName, suiEvent);
         indexed += 1;
       }
 
@@ -94,24 +119,33 @@ export class NamiEventIndexer {
     return indexed;
   }
 
-  private async storeEvent(
+  private async storeAndProcess(
     moduleName: NamiEventModule,
-    event: SuiEvent
+    suiEvent: SuiEvent
   ): Promise<void> {
-    const indexedEvent: IndexedNamiEvent = {
+    const raw: IndexedNamiEvent = {
       module: moduleName,
       id: {
-        txDigest: event.id.txDigest,
-        eventSeq: event.id.eventSeq
+        txDigest: suiEvent.id.txDigest,
+        eventSeq: suiEvent.id.eventSeq
       },
-      packageId: event.packageId,
-      transactionModule: event.transactionModule,
-      sender: event.sender,
-      type: event.type,
-      parsedJson: event.parsedJson,
-      timestampMs: event.timestampMs ?? null
+      packageId: suiEvent.packageId,
+      transactionModule: suiEvent.transactionModule,
+      sender: suiEvent.sender,
+      type: suiEvent.type,
+      parsedJson: suiEvent.parsedJson,
+      timestampMs: suiEvent.timestampMs ?? null
     };
 
-    await appendJsonLine(config.eventLogPath, indexedEvent);
+    // 1. Always persist the raw immutable event (source of truth).
+    await appendJsonLine(config.eventLogPath, raw);
+
+    // 2. Lift to typed form (the architectural contract).
+    const typed = toTypedEvent(raw);
+
+    // 3. Run registered processors / projectors (replaces any future scattered logic).
+    for (const processor of this.processors) {
+      await processor.process(typed);
+    }
   }
 }

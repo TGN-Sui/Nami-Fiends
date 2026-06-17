@@ -12,7 +12,7 @@ The goal is to confirm that contracts, backend, SDK, frontend, deployment output
 
 ```text
 Move build: passing
-Move tests: 55 passing
+Move tests: 77 passing
 Warnings: 0
 Backend typecheck: passing
 SDK typecheck/build: passing

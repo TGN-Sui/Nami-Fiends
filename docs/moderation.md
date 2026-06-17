@@ -37,9 +37,11 @@ recovery.move
 Current protocol status:
 
 ```text
-55 tests passing
+77 tests passing
 0 warnings
 ```
+
+Phase 2 indexer: `ModerationService`, `AppealService`, `JuryService` project on-chain moderation events to read-only HTTP routes (`/api/moderation`, `/api/appeals`, `/api/jury`).
 
 ---
 

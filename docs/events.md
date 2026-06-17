@@ -23,8 +23,78 @@ contracts/nami
 Current protocol status:
 
 ```text
-55 tests passing
+77 tests passing
 0 warnings
+Phase 1 + Phase 1.8 (Break-the-System hardening): complete
+```
+
+Phase 2 backend (event indexer foundation):
+
+```text
+Foundation slice: in place
+Typecheck: passing
+```
+
+Implemented in `backend/`:
+
+```text
+Immutable raw event log       data/events.jsonl
+Per-module cursors            data/cursors.json
+Canonical event shapes        backend/src/types/events.ts
+Schema validation + mapping   backend/src/event-guards.ts (44 known events)
+Typed event lift              backend/src/events.ts → toTypedEvent()
+Polling indexer               backend/src/indexer.ts
+Projection registry           backend/src/projection-registry.ts
+Replay CLI                    npm --prefix backend run replay
+Read-only HTTP API            default http://127.0.0.1:8787
+```
+
+Implemented projection services (event → app-ready views):
+
+```text
+GuildService                  GuildCreated, GuildMemberAdded, GuildUpdated
+RecoveryService               RecoveryRequested, RecoveryResolved
+PassportTimelineService       PassportCreated, IdentityVerified, XPAdded,
+                              BadgePointsAdded, TierUpgraded, ConductStatusCreated,
+                              ConductSignalUpdated, PassportDowned, PassportRespawned,
+                              BlackPassportIssued, TitleClaimed, TitleDisplayCreated,
+                              TitleEquipped, CosmeticUnlocked, CosmeticLoadoutCreated,
+                              CosmeticEquipped
+AppealService                 AppealOpened, AppealResolved
+JuryService                   JuryCaseOpened, JuryVoteSubmitted, JuryCaseClosed
+SquadService                  SquadCreated, SquadMemberSponsored
+ProfileService                ProfileCreated, ProfileUpdated
+ChannelService                ChannelCreated, ChannelUpdated, ChannelVerified
+ModerationService             WarningIssued, MuteIssued, ChannelBanIssued,
+                              BlackPassportIssued
+BadgeHistoryService           BadgeMinted, BadgeIssuedByIssuer
+BoostHistoryService           BoostUsed
+ChannelAccessService          ChannelAccessPolicyCreated, ChannelAccessRuleUpdated
+```
+
+Projection files:
+
+```text
+data/projections/guilds.json
+data/projections/recovery.json
+data/projections/passport-timelines.json
+data/projections/appeals.json
+data/projections/jury.json
+data/projections/squads.json
+data/projections/profiles.json
+data/projections/channels.json
+data/projections/moderation.json
+data/projections/badge-history.json
+data/projections/boost-history.json
+data/projections/channel-access.json
+```
+
+Phase 2 backend services: complete (12 projection services).
+
+Run the indexer:
+
+```text
+NAMI_PACKAGE_ID=0x... NAMI_NETWORK=testnet npm --prefix backend run dev
 ```
 
 Current event-producing modules:
@@ -836,19 +906,80 @@ Current recovery resolution does not transfer ownership yet.
 
 # Backend Indexing Priorities
 
-The first backend indexer should prioritize:
+## Architecture (Phase 2)
+
+The backend follows a strict layered model:
+
+```text
+1. Raw log (events.jsonl)     Immutable append-only source of truth
+2. Typed events               Validated against types/events.ts via event-guards.ts
+3. Projections                Derived JSON views, rebuildable from the log
+4. Domain services            Thin query APIs over projections
+5. HTTP surface               Read-only routes for frontend/SDK consumption
+```
+
+Rules:
+
+```text
+Never mutate the raw log
+Never duplicate event shape definitions outside types/events.ts
+New services plug into ProjectionRegistry — do not scatter event logic
+Replay rebuilds all projections: npm --prefix backend run replay
+```
+
+Typed event envelope (`NamiTypedEvent`):
+
+```text
+eventName   Parsed Move struct name (e.g. GuildCreated), or null if unknown/invalid
+data        Validated payload, or loose record for unknown events
+```
+
+All 44 on-chain event structs are registered in `KNOWN_EVENT_NAMES` and validated
+by field schema in `backend/src/event-guards.ts`.
+
+---
+
+## Priority events
+
+High-priority events (`PRIORITY_EVENT_NAMES`) — first wave for services and UI:
+
+```text
+PassportCreated
+XPAdded
+BadgePointsAdded
+TierUpgraded
+ConductSignalUpdated
+PassportDowned
+BlackPassportIssued
+GuildCreated
+GuildMemberAdded
+TitleClaimed
+TitleEquipped
+CosmeticUnlocked
+CosmeticEquipped
+RecoveryRequested
+RecoveryResolved
+AppealOpened
+AppealResolved
+JuryCaseOpened
+```
+
+Full indexer poll list (all modules in `NAMI_EVENT_MODULES`):
 
 ```text
 IdentityCreated
 PassportCreated
 IdentityVerified
 BadgeMinted
+BadgeIssuerCreated
 BadgeIssuedByIssuer
 BoostUsed
 ChannelCreated
+ChannelUpdated
 ChannelVerified
 ChannelAccessPolicyCreated
 ChannelAccessRuleUpdated
+ConductStatusCreated
 ConductSignalUpdated
 PassportDowned
 PassportRespawned
@@ -856,6 +987,7 @@ WarningIssued
 MuteIssued
 ChannelBanIssued
 BlackPassportIssued
+AdminAction
 AppealOpened
 AppealResolved
 JuryCaseOpened
@@ -865,30 +997,98 @@ SquadCreated
 SquadMemberSponsored
 GuildCreated
 GuildMemberAdded
+GuildUpdated
 ProfileCreated
 ProfileUpdated
 TitleClaimed
+TitleDisplayCreated
 TitleEquipped
 CosmeticUnlocked
+CosmeticLoadoutCreated
 CosmeticEquipped
 RecoveryRequested
 RecoveryResolved
 ```
 
+---
+
+## Implementation status
+
+| Event        | Validated | Projected |      Service            |
+|--------------|-----------|-----------|-------------------------|
+| GuildCreated |    yes    |    yes    | GuildService            |
+| GuildMemberAdded |yes    |    yes    | GuildService            |
+| GuildUpdated |    yes    |    yes    | GuildService            |
+| RecoveryRequested yes    |    yes    | RecoveryService         |
+| RecoveryResolved |yes    |    yes    | RecoveryService         |
+| PassportCreated | yes    |    yes    | PassportTimelineService |
+| IdentityVerified |yes    |    yes    | PassportTimelineService |
+| XPAdded |         yes    |    yes    | PassportTimelineService |
+| BadgePointsAdded |yes    |    yes    | PassportTimelineService |
+| TierUpgraded |    yes    |    yes    | PassportTimelineService |
+| ConductStatusCreated yes |    yes    | PassportTimelineService |
+| ConductSignalUpdated yes |    yes    | PassportTimelineService |
+| PassportDowned |  yes    |    yes    | PassportTimelineService |
+| PassportRespawned yes    |    yes    | PassportTimelineService |
+| BlackPassportIssued yes  |    yes    | PassportTimelineService |
+| TitleClaimed |    yes    |    yes    | PassportTimelineService |
+| TitleDisplayCreated yes  |    yes    | PassportTimelineService |
+| TitleEquipped |  yes     |    yes    | PassportTimelineService |
+| CosmeticUnlocked  yes    |    yes    | PassportTimelineService |
+| CosmeticLoadoutCreated yes|   yes    | PassportTimelineService |
+| CosmeticEquipped  yes    |    yes    | PassportTimelineService |
+| All other events  yes    |    no     | — (indexed to raw log only) |
+
+---
+
+## HTTP read-only routes
+
+Default port: `8787` (`NAMI_HTTP_PORT`). Disable with `NAMI_HTTP_ENABLED=false`.
+
+```text
+GET /health
+GET /stats
+GET /api/guilds
+GET /api/guilds/public
+GET /api/guilds/:id
+GET /api/guilds/member/:address
+GET /api/recovery
+GET /api/recovery/open
+GET /api/recovery/:id
+GET /api/recovery/passport/:id
+GET /api/recovery/identity/:id
+GET /api/recovery/requester/:address
+GET /api/passports/timelines
+GET /api/passports/:id/timeline
+GET /api/passports/:id/timeline/snapshot
+```
+
+Timeline query params:
+
+```text
+?category=progression|conduct|customization|verification|moderation|origin
+?limit=50
+```
+
+---
+
+## Powered views (target)
+
 These events are enough to power early:
 
 ```text
-Passport profiles
-Channel pages
-Access policy views
-Badge history
-Boost history
-Moderation dashboards
-Appeal dashboards
-Jury review dashboards
-Squad and Guild displays
-Profile customization
-Recovery review dashboards
+Passport profiles / timelines     PassportTimelineService (foundation in place)
+Guild displays                    GuildService (foundation in place)
+Recovery review dashboards        RecoveryService (foundation in place)
+Channel pages                     pending Channel service
+Access policy views               pending Channel service
+Badge history                     pending Badge service
+Boost history                     pending Boost service
+Moderation dashboards             pending Moderation service
+Appeal dashboards                 pending Appeal service
+Jury review dashboards            pending Jury service
+Squad displays                    pending Squad service
+Profile customization             partial via PassportTimelineService
 ```
 
 ---
@@ -931,10 +1131,14 @@ RecoveryOwnershipTransferred
 
 ```text
 docs/onchain.md
+docs/architecture.md
+docs/roadmap.md
 docs/systems.md
 docs/access-control.md
 docs/moderation.md
 docs/conduct-system.md
 docs/customization.md
 docs/recovery.md
+backend/src/types/events.ts
+backend/src/event-guards.ts
 ```

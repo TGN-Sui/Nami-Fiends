@@ -41,9 +41,11 @@ module nami::membership
 Current protocol status:
 
 ```text
-55 tests passing
+77 tests passing
 0 warnings
 ```
+
+Membership tier is stored on `Passport.tier` and surfaced by SDK `loadPassportProtocolView` / `membershipTierLabel`.
 
 Related modules:
 

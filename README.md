@@ -14,10 +14,10 @@ The goal is to build a portable gamer identity and trust layer.
 
 ```text
 Move build: passing
-Move tests: 55 passing
+Move tests: 77 passing
 Warnings: 0
 Documentation: synced/in-progress mini-sync
-MVP progress: 71%
+MVP progress: ~80% (on-chain + full protocol hardening complete)
 ```
 
 Current Move package:
@@ -286,12 +286,12 @@ Nami Presentable MVP Progress
 Current breakdown:
 
 ```text
-On-chain protocol foundation:   ~98% done
-Documentation architecture:     UI checkpoint synced
-Backend/indexer:                 0% done
-Frontend/profile UI:             UI polish checkpoint complete; protocol wiring pending
-SDK integration:                 0% done
-zkLogin production flow:          0% done
+On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 / Break-the-System complete)
+Documentation architecture:                 Mini-sync in progress
+Backend/indexer:                            0% done (Phase 2)
+Frontend/profile UI:                        UI polish checkpoint complete; protocol wiring pending (Phase 3)
+SDK integration:                            Thin client exists; rich helpers pending (Phase 4)
+zkLogin production flow:                    0% done (Phase 5)
 ```
 
 ---
@@ -301,12 +301,10 @@ zkLogin production flow:          0% done
 Recommended next phases:
 
 ```text
-Protocol hardening tests
-Scenario/adversarial test suite
-Backend event indexer
-Authorization and persistence wiring
-SDK read helpers
-zkLogin production flow
+Backend event indexer (Phase 2)
+Real frontend protocol wiring + MVP screens (Phase 3)
+SDK read helpers for Guilds, Titles, Cosmetics, Recovery, Appeals, Jury, etc. (Phase 4)
+zkLogin production flow (Phase 5)
 Testnet deployment scripts
 ```
 

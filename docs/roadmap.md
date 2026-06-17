@@ -22,14 +22,14 @@ Current protocol status:
 
 ```text
 Build passing
-55 tests passing
+77 tests passing
 0 warnings
 ```
 
 Current MVP progress:
 
 ```text
-[██████████████░░░░░░] 71%
+[████████████████░░░░] ~80%  (on-chain + hardening complete)
 ```
 
 ---
@@ -202,8 +202,6 @@ systems.md
 Remaining mini-sync targets:
 
 ```text
-roadmap.md
-README.md
 admin.md
 membership.md
 moderation.md
@@ -243,18 +241,18 @@ Scenario/adversarial test suite
 ```text
 Nami Presentable MVP Progress
 
-[██████████████░░░░░░] 71%
+[████████████████░░░░] ~80%  (on-chain + hardening complete)
 ```
 
 Current breakdown:
 
 ```text
-On-chain protocol foundation:   ~98% done
-Documentation architecture:     Mini-sync in progress
-Backend/indexer:                 0% done
-Frontend/profile UI:             0% done
-SDK integration:                 0% done
-zkLogin production flow:          0% done
+On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
+Documentation architecture:                 Mini-sync in progress
+Backend/indexer:                            0% done (Phase 2)
+Frontend/profile UI (real wiring):          UI polish done; protocol wiring pending (Phase 3)
+SDK integration:                            Thin client exists; rich helpers pending (Phase 4)
+zkLogin production flow:                    0% done (Phase 5)
 ```
 
 ---
@@ -284,7 +282,7 @@ Mini-sync docs after title, cosmetics, recovery, channel, and profile modules
 Status:
 
 ```text
-Near complete
+Complete
 ```
 
 Implemented:
@@ -314,13 +312,11 @@ Recovery
 Errors
 ```
 
-Remaining possible Phase 1 hardening:
+Remaining possible Phase 1 items:
 
 ```text
 Membership expiration
 Admin role separation
-More negative tests
-Scenario/adversarial test suite
 Deployment scripts
 ```
 
@@ -331,31 +327,28 @@ Deployment scripts
 Status:
 
 ```text
-Next recommended coding phase
+Complete
 ```
 
 Goal:
 
 Try to break the system before moving heavily into frontend/backend.
 
-Planned scenario tests:
+Completed scenario / adversarial coverage (77 tests passing):
 
 ```text
 Unauthorized owner attempts
 Wrong Passport / Conduct pairing
-Black Passport bypass attempts
-Invalid tier transitions
-Invalid badge issuer permissions
-Invalid channel policy ownership
-Moderation bypass attempts
-Appeal ownership abuse
-Jury eligibility abuse
-Squad and Guild authority abuse
-Profile/title/cosmetic restriction bypass
-Recovery abuse paths
+Black Passport bypass attempts (across guilds, titles, cosmetics, squads, channels, profiles, boosts, etc.)
+Recovery abuse paths (unlinked pairs, zero owner, double resolution)
+Appeal / Jury abuse (resolved appeal jury case, double resolution)
+Guild / Squad authority abuse (owner + member add pairing)
+Title / Cosmetic ownership + equip abuse (mismatched display/unlock)
+Profile update abuse
+Moderation / Appeal ownership abuse
 ```
 
-This phase should intentionally test hostile and incorrect flows.
+This phase is intentionally hostile-flow focused and is now validated.
 
 ---
 

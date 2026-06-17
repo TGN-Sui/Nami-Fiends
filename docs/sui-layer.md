@@ -239,6 +239,54 @@ Developers, guilds, studios, and official channels may benefit more from SuiNS i
 
 ---
 
+## Nodenames (Nami-native handles)
+
+Nodenames are **user-chosen readable handles** registered at Passport claim (Act 2 of [onboarding.md](./onboarding.md)). They are distinct from:
+
+```text
+Display name     — profile copy; can change off-chain
+SuiNS name       — optional paid namespace; not required for gamers
+Nodename         — stable Nami identity handle chosen once at claim
+```
+
+### Purpose
+
+```text
+Readable @handle in chat, profiles, and discovery
+Mapping to on-chain Identity without exposing raw addresses
+Gamer-friendly claim flow alongside zkLogin / wallet connect
+```
+
+### Rules (target)
+
+```text
+Length: 3–24 characters (tunable)
+Charset: lowercase letters, digits, underscore; no leading digit
+Unique globally within Nami registry
+Immutable after claim (display name may still change)
+Reserved list for official / system names
+```
+
+### On-chain target
+
+Future `nami::onboarding::enter_nami` (or `identity` module extension) should:
+
+```text
+Mint Identity + Passport + core objects in one PTB
+Register nodename → identity_id mapping
+Emit nodename_registered event for indexer
+```
+
+Until Move support lands, frontend collects nodename in the claim step and persists it in the local onboarding draft only.
+
+### Relationship to SuiNS
+
+Nami may optionally anchor or verify against SuiNS later. **Nodenames are the default gamer path** — no purchase required.
+
+See also [verification.md](./verification.md) for platform-linked identity (separate from nodename).
+
+---
+
 # Walrus
 
 ## Purpose

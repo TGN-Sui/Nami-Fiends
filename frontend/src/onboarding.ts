@@ -1,37 +1,34 @@
 export type OnboardingMethod = 'wallet' | 'zklogin' | 'demo';
 
-export interface OnboardingStep {
+export type OnboardingAct = 'create' | 'preview' | 'claim' | 'verify';
+
+export interface OnboardingActStep {
+  act: OnboardingAct;
   label: string;
   description: string;
-  status: 'ready' | 'next' | 'future';
 }
 
-export const ONBOARDING_STEPS: OnboardingStep[] = [
+export const ONBOARDING_ACTS: OnboardingActStep[] = [
   {
-    label: 'Connect',
-    description: 'Connect wallet, zkLogin, or demo address.',
-    status: 'ready'
+    act: 'create',
+    label: 'Create',
+    description: 'Display name and gamer quiz — no wallet yet.',
   },
   {
-    label: 'Create Identity',
-    description: 'Mint the root Nami Identity object.',
-    status: 'next'
+    act: 'preview',
+    label: 'Preview',
+    description: 'See your passport card. Created, not owned.',
   },
   {
-    label: 'Create Passport',
-    description: 'Create the player journey object linked to Identity.',
-    status: 'next'
+    act: 'claim',
+    label: 'Claim',
+    description: 'Connect wallet, choose nodename, one transaction.',
   },
   {
-    label: 'Create Profile',
-    description: 'Create public profile metadata and avatar references.',
-    status: 'next'
-  },
-  {
+    act: 'verify',
     label: 'Verify',
-    description: 'Move from NPC to Adventurer through supported verification.',
-    status: 'future'
-  }
+    description: 'Link platforms for achievement badges.',
+  },
 ];
 
 export function getOnboardingMethodLabel(method: OnboardingMethod): string {
@@ -44,4 +41,8 @@ export function getOnboardingMethodLabel(method: OnboardingMethod): string {
   }
 
   return 'Demo Mode';
+}
+
+export function getOnboardingActIndex(act: OnboardingAct): number {
+  return ONBOARDING_ACTS.findIndex((step) => step.act === act);
 }

@@ -14,7 +14,7 @@ It means the core protocol, documentation, deployment path, backend foundation, 
 
 ```text
 Move build: passing
-Move tests: 55 passing
+Move tests: 77 passing
 Move warnings: 0
 
 Backend typecheck: passing
@@ -250,7 +250,7 @@ AdminCap is the MVP authority model.
 SDK is read-only.
 Frontend uses sample display data.
 Backend stores local JSONL event output.
-Break-the-System suite has not started yet.
+Break-the-System adversarial suite: Complete (Wave 1 + Wave 2 + additional hardening, 77 tests).
 ```
 
 These limits are intentional.
@@ -261,49 +261,26 @@ They should be hardened before production launch.
 
 ## Next Required Phase
 
-The next required phase is:
+The Break-the-System adversarial suite (Phase 1.8) is complete.
+
+Next phases per roadmap:
 
 ```text
-Break-the-System adversarial suite
-```
-
-The goal is to intentionally attack the protocol before deeper UI polish or production launch.
-
-Initial adversarial targets:
-
-```text
-Wrong owner attempts
-Wrong Passport / Conduct pairing
-Black Passport bypass attempts
-Invalid tier transitions
-Invalid badge issuer permissions
-Invalid channel policy ownership
-Moderation bypass attempts
-Appeal ownership abuse
-Jury eligibility abuse
-Squad authority abuse
-Guild authority abuse
-Profile update abuse
-Title ownership abuse
-Cosmetic ownership abuse
-Recovery abuse paths
-Admin authority misuse attempts
+Backend event indexer (Phase 2)
+Frontend protocol wiring + presentable MVP screens (Phase 3)
+SDK rich read helpers (Phase 4)
 ```
 
 ---
 
 ## Checkpoint Decision
 
-Nami is ready to move from:
+Nami has completed:
 
 ```text
-MVP Assembly
+MVP Assembly + MVP Hardening (Break-the-System Waves 1 + 2)
 ```
 
-to:
+The protocol foundation and core safety/abuse resistance are validated (77 tests passing). 
 
-```text
-MVP Hardening
-```
-
-The next phase should prioritize correctness, abuse resistance, and adversarial tests before adding major new features.
+Ready to advance to real backend + frontend wiring.

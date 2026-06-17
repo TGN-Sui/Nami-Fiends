@@ -195,6 +195,62 @@ Partner Community
 
 Issuer type helps the backend and future review systems understand badge context.
 
+On-chain: `badge_issuer.move` defines `ISSUER_VERIFIED_CHANNEL` for approved Game Channel programs.
+
+---
+
+# Onboarding and Platform Badges
+
+Badges earned after [onboarding](./onboarding.md) follow stricter rules than generic mint paths.
+
+## Act 2 — Claim
+
+At Passport claim (target: single `enter_nami` PTB), the platform may mint an **onboarding Basic** badge tied to the gamer quiz archetype. This is flavor and entry standing, not achievement proof.
+
+## Act 3 — Verified achievements
+
+Platform-sourced badges (Steam, Epic, Xbox, etc.) require:
+
+```text
+Gamer has platform-verified link on Passport
+achievement_unlocked_at >= passport.created_at_ms
+Platform API confirms unlock at grant time
+Achievement maps to an approved badge definition
+```
+
+Pre-Passport achievements are **never** claimable. Full rules: [verification.md](./verification.md).
+
+## Unlink revocation
+
+Unlinking a platform removes badges sourced from that link and recalculates XP/reputation. Relink does not restore removed badges.
+
+---
+
+# Verified Game Channel Badge Programs
+
+Verified Game Channel owners may issue badges when gamers complete **verified platform achievements** on titles the channel provably controls.
+
+This is separate from personal platform linking:
+
+```text
+Owner: platform link + game ownership proof + eligibility review
+Owner: submits badge program questionnaire (achievement → badge mapping)
+Admin: approves campaign before mint
+Gamer: claims only while campaign active and rules satisfied
+```
+
+Example questionnaire shapes (polish later):
+
+```text
+Which achievement issues the game completion badge?
+Which achievement issues a 50% completion Event badge (2 points)?
+Which achievement issues a milestone Event badge?
+```
+
+Full policy: [channel-badge-programs.md](./channel-badge-programs.md).
+
+Anti-shovelware eligibility applies before Completion-weight programs are approved.
+
 ---
 
 # Admin Approval
@@ -328,6 +384,9 @@ Badge evidence should be referenced, not fully stored on-chain.
 # Related Docs
 
 ```text
+docs/onboarding.md
+docs/verification.md
+docs/channel-badge-programs.md
 docs/passport.md
 docs/reputation.md
 docs/events.md

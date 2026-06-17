@@ -7,7 +7,7 @@ Completed.
 Final verification:
 
 - Move build: passing
-- Move tests: 75 passing
+- Move tests: 77 passing (full suite)
 - Warnings: 0
 - Errors: 0
 
@@ -183,10 +183,10 @@ The frontend can now safely represent these MVP primitives:
 
 Break-the-System Wave 2 is complete.
 
-Next phase:
+Full Break-the-System suite (Wave 1 + Wave 2 + additional cases) is complete at 77 tests.
 
-- UI reference/design intake
-- Presentable MVP interface planning
-- Frontend screen map
-- User onboarding flow refinement
-- Wallet / zkLogin / demo-mode UX decisions
+Next phases per current roadmap:
+
+- Backend event indexer (Phase 2)
+- Frontend protocol wiring + presentable MVP screens (Phase 3)
+- SDK rich read helpers (Phase 4)
