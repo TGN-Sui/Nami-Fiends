@@ -1,5 +1,10 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  isMemberPreferencesApiAvailable,
+  syncMemberPreferencesToBackend,
+} from './member-preferences-api.js';
+
 const ONLINE_STATUS_KEY = 'nami.member.streaming-online';
 const SELF_MEMBER_ID = 'm1';
 
@@ -7,6 +12,24 @@ type MemberOnlineStatusMap = Record<string, boolean>;
 
 const listeners = new Set<() => void>();
 let cachedSnapshot: MemberOnlineStatusMap | null = null;
+let preferencesSyncOwner: string | null = null;
+
+export function setMemberOnlinePreferencesSyncOwner(owner: string | null): void {
+  preferencesSyncOwner = owner?.startsWith('0x') ? owner : null;
+}
+
+function pushStreamingPreferenceToBackend(enabled: boolean): void {
+  if (!preferencesSyncOwner || !isMemberPreferencesApiAvailable()) {
+    return;
+  }
+
+  void syncMemberPreferencesToBackend({
+    owner: preferencesSyncOwner,
+    streamingOnline: enabled,
+  }).catch(() => {
+    // Preference sync is best-effort during demo wiring.
+  });
+}
 
 function emit(): void {
   cachedSnapshot = null;
@@ -70,6 +93,7 @@ export function readSelfStreamingOnline(): boolean {
 export function setSelfStreamingOnline(enabled: boolean): void {
   const next = { ...readStatusMap(), [SELF_MEMBER_ID]: enabled };
   writeStatusMap(next);
+  pushStreamingPreferenceToBackend(enabled);
 }
 
 export function useMemberStreamingOnline(memberId: string): boolean {

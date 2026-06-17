@@ -13,7 +13,13 @@ import {
   type PublicPaymentConfig,
 } from './membership-payments-api.js';
 import {
+  fetchMembershipSubscription,
+  isMembershipSubscriptionApiAvailable,
+  subscriptionToPlanState,
+} from './membership-subscriptions-api.js';
+import {
   finalizeMembershipUpgradeAfterPayment,
+  hydrateMembershipPlanState,
   membershipCheckoutSelectionLabel,
   membershipPlanForTier,
   setMembershipPendingPaymentId,
@@ -116,6 +122,18 @@ export function MembershipCheckoutPanel(props: MembershipCheckoutPanelProps): Re
     if (intent.status !== 'paid') {
       props.onError('Payment is not confirmed yet. Wait for provider settlement or retry.');
       return;
+    }
+
+    if (isMembershipSubscriptionApiAvailable() && payerAddress?.startsWith('0x')) {
+      const subscription = await fetchMembershipSubscription(payerAddress);
+
+      if (subscription) {
+        hydrateMembershipPlanState(subscriptionToPlanState(subscription));
+        props.onNotice('Welcome to ' + subscription.activeTier + '.');
+        props.onComplete?.();
+        setCheckout(null);
+        return;
+      }
     }
 
     const result = finalizeMembershipUpgradeAfterPayment(paymentId);

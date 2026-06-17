@@ -1,5 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  isMemberPreferencesApiAvailable,
+  syncMemberPreferencesToBackend,
+} from './member-preferences-api.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -9,9 +13,27 @@ const AVATAR_STORAGE_KEY = 'nami.self.avatar';
 const SELF_MEMBER_ID = 'm1';
 
 let cachedSelfMember: NamiMember | null = null;
+let preferencesSyncOwner: string | null = null;
 
 function invalidateSelfMemberCache(): void {
   cachedSelfMember = null;
+}
+
+export function setMemberPreferencesSyncOwner(owner: string | null): void {
+  preferencesSyncOwner = owner?.startsWith('0x') ? owner : null;
+}
+
+function pushAvatarPreferenceToBackend(avatarUrl: string | null): void {
+  if (!preferencesSyncOwner || !isMemberPreferencesApiAvailable()) {
+    return;
+  }
+
+  void syncMemberPreferencesToBackend({
+    owner: preferencesSyncOwner,
+    avatarUrl,
+  }).catch(() => {
+    // Preference sync is best-effort during demo wiring.
+  });
 }
 
 export function readSelfAvatarOverride(): string | null {
@@ -26,12 +48,14 @@ export function saveSelfAvatarOverride(dataUrl: string): void {
   window.localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
   invalidateSelfMemberCache();
   window.dispatchEvent(new CustomEvent('nami-self-avatar-changed'));
+  pushAvatarPreferenceToBackend(dataUrl);
 }
 
 export function clearSelfAvatarOverride(): void {
   window.localStorage.removeItem(AVATAR_STORAGE_KEY);
   invalidateSelfMemberCache();
   window.dispatchEvent(new CustomEvent('nami-self-avatar-changed'));
+  pushAvatarPreferenceToBackend(null);
 }
 
 export function resolveMemberAvatarImageUrl(member: NamiMember): string | null {

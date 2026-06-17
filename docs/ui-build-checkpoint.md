@@ -68,12 +68,12 @@ Both checks passed.
 
 ## UI Build Outcome
 
-Phase 7 surfaces are active. Membership checkout uses the backend payment API; avatar uploads and streaming state remain local/demo until persistence ships.
+Phase 7 surfaces are active. Membership checkout, subscription state, avatar uploads, and streaming presence now sync through the backend receiving server when `VITE_NAMI_INDEXER_URL` is set.
 
 Recommended next lane:
 
-1. Wire payment webhooks and subscription proofs to on-chain tier updates.
-2. Persist avatar uploads and streaming presence beyond localStorage.
-3. Connect media upload placeholders to approved storage and proof systems.
+1. Wire subscription proofs to on-chain tier updates (AdminCap or future subscription module).
+2. Add wallet-signed auth for preference and media writes.
+3. Connect remaining media upload placeholders (channel covers, studio logos) to the media API.
 4. Continue avoiding any wording that implies payment equals trust.
 

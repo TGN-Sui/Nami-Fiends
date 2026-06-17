@@ -391,6 +391,26 @@ PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / NAMI_PAYPAL_MODE
 
 Frontend checkout panels: `MembershipCheckoutPanel`, `MembershipPaymentMethods`, `MembershipPaymentReturnHandler`, `MembershipUpgradeOverlay`.
 
+Paid intents activate a server-side subscription record:
+
+```text
+GET  /api/memberships/subscriptions/owner/:owner
+POST /api/memberships/subscriptions/sync
+```
+
+Subscription fields mirror the frontend plan state (`activeTier`, `billingCycle`, `status`, `pendingTier`, `renewsAtMs`, `lastPaymentId`). Renewal rules apply pending downgrade/cancel when `renewsAtMs` elapses.
+
+Member display preferences (avatar URL, streaming online) persist separately:
+
+```text
+GET  /api/member-preferences/owner/:owner
+POST /api/member-preferences/sync
+POST /api/media/avatar
+GET  /api/media/files/:owner/:filename
+```
+
+`MemberSessionSync` hydrates membership + preferences from the backend on wallet connect.
+
 ---
 
 # Admin Authority

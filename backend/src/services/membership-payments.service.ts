@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { paymentConfig } from '../payment-config.js';
 import { createSuiClient } from '../sui.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
+import { activateMembershipFromPaymentIntent } from './membership-subscriptions.service.js';
 
 export type MembershipPaymentRail = 'card' | 'paypal' | 'other';
 
@@ -439,8 +440,17 @@ async function markIntentPaid(
     updatedAtMs: now,
   };
 
+  const paidIntent = store.intents[index]!;
+
   await writeStore(store);
-  return store.intents[index]!;
+
+  try {
+    await activateMembershipFromPaymentIntent(paidIntent);
+  } catch (error) {
+    console.error('[nami-payments] subscription activation failed', error);
+  }
+
+  return paidIntent;
 }
 
 export async function confirmMockProviderPayment(paymentId: string): Promise<MembershipPaymentIntent | null> {

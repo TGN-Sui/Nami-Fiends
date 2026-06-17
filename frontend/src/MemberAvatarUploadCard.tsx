@@ -1,11 +1,16 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
+  isMemberPreferencesApiAvailable,
+  uploadAvatarToBackend,
+} from './member-preferences-api.js';
+import {
   clearSelfAvatarOverride,
   readSelfAvatarOverride,
   saveSelfAvatarOverride,
   useSelfMember,
 } from './member-avatar-store.js';
+import { useProtocolOwner } from './wallet.js';
 
 const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
@@ -14,13 +19,42 @@ function formatAcceptedTypes(): string {
   return 'PNG, JPG, WebP';
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Could not read image.'));
+        return;
+      }
+
+      const commaIndex = reader.result.indexOf(',');
+
+      if (commaIndex < 0) {
+        reject(new Error('Could not read image.'));
+        return;
+      }
+
+      resolve(reader.result.slice(commaIndex + 1));
+    };
+
+    reader.onerror = () => reject(new Error('Could not read image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function MemberAvatarUploadCard(): ReactElement {
   const member = useSelfMember();
+  const { owner } = useProtocolOwner();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const override = readSelfAvatarOverride();
   const hasCustomAvatar = override !== null && override.length > 0;
+  const storageHint = isMemberPreferencesApiAvailable()
+    ? 'Synced to the receiving server for this wallet.'
+    : 'Stored locally until the backend API is available.';
   const currentState = hasCustomAvatar
     ? 'Custom display photo active across Nami.'
     : member.avatarImageUrl
@@ -29,6 +63,24 @@ export function MemberAvatarUploadCard(): ReactElement {
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
+  }
+
+  async function persistAvatar(file: File, dataUrl: string): Promise<void> {
+    if (isMemberPreferencesApiAvailable() && owner?.startsWith('0x')) {
+      const dataBase64 = await fileToBase64(file);
+      const uploaded = await uploadAvatarToBackend({
+        owner,
+        contentType: file.type,
+        dataBase64,
+      });
+
+      if (uploaded?.url) {
+        saveSelfAvatarOverride(uploaded.url);
+        return;
+      }
+    }
+
+    saveSelfAvatarOverride(dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -56,14 +108,20 @@ export function MemberAvatarUploadCard(): ReactElement {
     const reader = new FileReader();
 
     reader.onload = () => {
-      setIsReadingFile(false);
+      void (async () => {
+        try {
+          if (typeof reader.result !== 'string') {
+            setErrorMessage('Could not read that image. Try another file.');
+            return;
+          }
 
-      if (typeof reader.result !== 'string') {
-        setErrorMessage('Could not read that image. Try another file.');
-        return;
-      }
-
-      saveSelfAvatarOverride(reader.result);
+          await persistAvatar(file, reader.result);
+        } catch (error) {
+          setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
+        } finally {
+          setIsReadingFile(false);
+        }
+      })();
     };
 
     reader.onerror = () => {
@@ -89,7 +147,7 @@ export function MemberAvatarUploadCard(): ReactElement {
 
       <div className="media-upload-prep-details">
         <span>{formatAcceptedTypes()}</span>
-        <span>Stored locally for this demo session</span>
+        <span>{storageHint}</span>
       </div>
 
       <input
@@ -107,7 +165,7 @@ export function MemberAvatarUploadCard(): ReactElement {
           onClick={openFilePicker}
           type="button"
         >
-          {isReadingFile ? 'Reading image…' : 'Upload display photo'}
+          {isReadingFile ? 'Uploading image…' : 'Upload display photo'}
         </button>
 
         {hasCustomAvatar || member.avatarImageUrl ? (

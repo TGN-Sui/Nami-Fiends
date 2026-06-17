@@ -569,6 +569,15 @@ UI-B21.12 Chat emojis, @member tags, tag notifications, social embed player
 
 Latest UI checkpoint: `docs/ui-build-checkpoint.md` (UI-B21.1 through UI-B21.12 recorded).
 
+Phase 7 wiring (server-backed demo):
+
+```text
+UI-B21.13 Payment webhooks activate backend membership subscriptions
+UI-B21.14 Member preferences API (avatar URL + streaming online)
+UI-B21.15 Media upload API for profile avatars
+UI-B21.16 MemberSessionSync hydrates wallet session from backend
+```
+
 ---
 
 # Phase 8 — Public Launch Preparation

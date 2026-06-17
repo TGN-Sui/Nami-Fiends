@@ -1,16 +1,25 @@
 import { useEffect, type ReactElement } from 'react';
 
 import {
+  confirmMockMembershipPayment,
   fetchMembershipPaymentIntent,
   isPaymentApiAvailable,
 } from './membership-payments-api.js';
 import {
+  fetchMembershipSubscription,
+  isMembershipSubscriptionApiAvailable,
+  subscriptionToPlanState,
+} from './membership-subscriptions-api.js';
+import {
   finalizeMembershipUpgradeAfterPayment,
+  hydrateMembershipPlanState,
   useMembershipPlanState,
 } from './membership-plans-store.js';
+import { useProtocolOwner } from './wallet.js';
 
 export function MembershipPaymentReturnHandler(): ReactElement | null {
   const planState = useMembershipPlanState();
+  const { owner } = useProtocolOwner();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -23,10 +32,28 @@ export function MembershipPaymentReturnHandler(): ReactElement | null {
 
     void (async () => {
       try {
-        const intent = await fetchMembershipPaymentIntent(paymentId);
+        let intent = await fetchMembershipPaymentIntent(paymentId);
 
-        if (intent.status === 'paid' && planState.status === 'pending-upgrade') {
-          finalizeMembershipUpgradeAfterPayment(paymentId);
+        if (intent.status !== 'paid' && params.has('mock_session')) {
+          intent = await confirmMockMembershipPayment(paymentId);
+        }
+
+        if (intent.status !== 'paid' && params.has('mock_paypal_order')) {
+          intent = await confirmMockMembershipPayment(paymentId);
+        }
+
+        if (intent.status === 'paid') {
+          if (isMembershipSubscriptionApiAvailable() && owner?.startsWith('0x')) {
+            const subscription = await fetchMembershipSubscription(owner);
+
+            if (subscription) {
+              hydrateMembershipPlanState(subscriptionToPlanState(subscription));
+            } else if (planState.status === 'pending-upgrade') {
+              finalizeMembershipUpgradeAfterPayment(paymentId);
+            }
+          } else if (planState.status === 'pending-upgrade') {
+            finalizeMembershipUpgradeAfterPayment(paymentId);
+          }
         }
       } catch {
         // Payment return polling is best-effort until webhooks land.
@@ -44,7 +71,7 @@ export function MembershipPaymentReturnHandler(): ReactElement | null {
         window.history.replaceState({}, '', next);
       }
     })();
-  }, [planState.status]);
+  }, [owner, planState.status]);
 
   return null;
 }

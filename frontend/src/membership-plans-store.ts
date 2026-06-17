@@ -1,5 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  isMembershipSubscriptionApiAvailable,
+  syncMembershipSubscriptionToBackend,
+} from './membership-subscriptions-api.js';
 import { isXVerificationEligibleForAdventurerClaim } from './x-verification-store.js';
 import { type NamiMember } from './uiMockData.js';
 
@@ -159,6 +163,22 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 };
 
 let cachedMembershipState: MembershipPlanState | null = null;
+let subscriptionSyncOwner: string | null = null;
+let suppressSubscriptionPush = false;
+
+export function setMembershipSubscriptionSyncOwner(owner: string | null): void {
+  subscriptionSyncOwner = owner?.startsWith('0x') ? owner : null;
+}
+
+function pushMembershipPlanStateToBackend(state: MembershipPlanState): void {
+  if (suppressSubscriptionPush || !subscriptionSyncOwner || !isMembershipSubscriptionApiAvailable()) {
+    return;
+  }
+
+  void syncMembershipSubscriptionToBackend(state, subscriptionSyncOwner).catch(() => {
+    // Backend sync is best-effort until launch ops ship.
+  });
+}
 
 function defaultMembershipState(): MembershipPlanState {
   return {
@@ -273,6 +293,17 @@ function saveMembershipPlanState(state: MembershipPlanState): void {
   cachedMembershipState = state;
   window.localStorage.setItem(MEMBERSHIP_STATE_KEY, JSON.stringify(state));
   window.dispatchEvent(new CustomEvent('nami-membership-plan-changed'));
+  pushMembershipPlanStateToBackend(state);
+}
+
+export function hydrateMembershipPlanState(state: MembershipPlanState): void {
+  suppressSubscriptionPush = true;
+
+  try {
+    saveMembershipPlanState(state);
+  } finally {
+    suppressSubscriptionPush = false;
+  }
 }
 
 function invalidateMembershipState(): void {

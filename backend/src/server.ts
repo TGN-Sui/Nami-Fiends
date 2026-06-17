@@ -12,6 +12,18 @@ import {
   handlePayPalWebhookPost,
   handleStripeWebhookPost,
 } from './routes/membership-payments.routes.js';
+import {
+  handleMembershipSubscriptionGet,
+  handleMembershipSubscriptionSync,
+} from './routes/membership-subscriptions.routes.js';
+import {
+  handleMemberPreferencesGet,
+  handleMemberPreferencesUpsert,
+} from './routes/member-preferences.routes.js';
+import {
+  handleAvatarUploadPost,
+  handleMediaFileGet,
+} from './routes/media-upload.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -834,6 +846,45 @@ const routes: Route[] = [
     paramNames: [],
     handler: (_registry, request, response) => handlePayPalWebhookPost(request, response),
   },
+  {
+    method: 'GET',
+    pattern: /^\/api\/memberships\/subscriptions\/owner\/([^/]+)$/,
+    paramNames: ['owner'],
+    handler: (_registry, request, response, params) =>
+      handleMembershipSubscriptionGet(request, response, params.owner ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/memberships\/subscriptions\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMembershipSubscriptionSync(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/member-preferences\/owner\/([^/]+)$/,
+    paramNames: ['owner'],
+    handler: (_registry, request, response, params) =>
+      handleMemberPreferencesGet(request, response, params.owner ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/member-preferences\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberPreferencesUpsert(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/media\/avatar$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleAvatarUploadPost(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/media\/files\/([^/]+)\/([^/]+)$/,
+    paramNames: ['owner', 'filename'],
+    handler: (_registry, request, response, params) =>
+      handleMediaFileGet(request, response, params.owner ?? '', params.filename ?? ''),
+  },
 ];
 
 function matchRoute(
@@ -896,6 +947,6 @@ export function startReadOnlyServer(registry: ProjectionRegistry): void {
 
   server.listen(config.httpPort, () => {
     console.log(`[nami-http] read-only API listening on http://127.0.0.1:${config.httpPort}`);
-    console.log('[nami-http] routes: /health, /stats, /api/payments/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
+    console.log('[nami-http] routes: /health, /stats, /api/payments/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
   });
 }

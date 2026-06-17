@@ -71,6 +71,7 @@ import { channelRainbowBorderClass, isNamiTeamMember } from './channel-surface.j
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
 import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler.js';
+import { MemberSessionSync } from './MemberSessionSync.js';
 import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
@@ -7129,6 +7130,7 @@ if (activePage === 'userProfile') {
       {showSidebar ? <IgniteRadioDock /> : null}
       {showSidebar ? <MembershipUpgradeOverlay /> : null}
       {showSidebar ? <MembershipPaymentReturnHandler /> : null}
+      {showSidebar ? <MemberSessionSync /> : null}
     </main>
   );
 }
