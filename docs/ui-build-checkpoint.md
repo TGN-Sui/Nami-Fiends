@@ -72,8 +72,8 @@ Phase 7 surfaces are active. Membership checkout, subscription state, avatar upl
 
 Recommended next lane:
 
-1. Wire subscription proofs to on-chain tier updates (AdminCap or future subscription module).
-2. Add wallet-signed auth for preference and media writes.
-3. Connect remaining media upload placeholders (channel covers, studio logos) to the media API.
+1. Wire cross-user subscription proofs to on-chain tier updates (shared passport or delegated fulfillment cap).
+2. Phase 8 launch prep: testnet live, security review, production dashboards.
+3. Extend Walrus-backed media references when storage proofs ship.
 4. Continue avoiding any wording that implies payment equals trust.
 

@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
-  isChannelPreferencesApiAvailable,
-  uploadChannelCoverToBackend,
-} from './channel-preferences-api.js';
-import { fetchChannelPreferences } from './channel-preferences-api.js';
+  fetchStudioPreferences,
+  isStudioPreferencesApiAvailable,
+  uploadStudioLogoToBackend,
+} from './studio-preferences-api.js';
 import {
-  clearChannelCoverOverride,
-  hydrateChannelCoverOverride,
-  readChannelCoverOverride,
-  resolveChannelCoverUrl,
-  saveChannelCoverOverride,
-} from './channel-cover-store.js';
-import { type NamiChannel } from './uiMockData.js';
+  clearStudioLogoOverride,
+  hydrateStudioLogoOverride,
+  readStudioLogoOverride,
+  resolveStudioLogoUrl,
+  saveStudioLogoOverride,
+} from './studio-logo-store.js';
+import { type NamiDeveloperProfile } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -42,56 +43,56 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactElement {
+export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile }): ReactElement {
   const { owner } = useProtocolOwner();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isReadingFile, setIsReadingFile] = useState(false);
 
-  const override = readChannelCoverOverride(props.channel.id);
-  const activeCover = resolveChannelCoverUrl(props.channel);
-  const hasOwnerUpload = override !== null && override.length > 0;
+  const override = readStudioLogoOverride(props.developer.id);
+  const activeLogo = resolveStudioLogoUrl(props.developer);
+  const hasCustomLogo = override !== null && override.length > 0;
+  const storageHint = isStudioPreferencesApiAvailable()
+    ? 'Synced to the receiving server for this studio owner wallet.'
+    : 'Stored locally until the backend API is available.';
+
   useEffect(() => {
-    if (!isChannelPreferencesApiAvailable()) {
+    if (!isStudioPreferencesApiAvailable()) {
       return;
     }
 
-    void fetchChannelPreferences(props.channel.id)
+    void fetchStudioPreferences(props.developer.id)
       .then((preferences) => {
-        if (preferences?.coverUrl) {
-          hydrateChannelCoverOverride(props.channel.id, preferences.coverUrl);
+        if (preferences?.logoUrl) {
+          hydrateStudioLogoOverride(props.developer.id, preferences.logoUrl);
         }
       })
       .catch(() => {
-        // Channel preference hydration is best-effort.
+        // Studio preference hydration is best-effort.
       });
-  }, [props.channel.id]);
-
-  const storageHint = isChannelPreferencesApiAvailable()
-    ? 'Synced to the receiving server for this channel owner wallet.'
-    : 'Stored locally until the backend API is available.';
+  }, [props.developer.id]);
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
   }
 
-  async function persistCover(file: File, dataUrl: string): Promise<void> {
-    if (isChannelPreferencesApiAvailable() && owner?.startsWith('0x')) {
+  async function persistLogo(file: File, dataUrl: string): Promise<void> {
+    if (isStudioPreferencesApiAvailable() && owner?.startsWith('0x')) {
       const dataBase64 = await fileToBase64(file);
-      const uploaded = await uploadChannelCoverToBackend({
+      const uploaded = await uploadStudioLogoToBackend({
         owner,
-        channelId: props.channel.id,
+        studioId: props.developer.id,
         contentType: file.type,
         dataBase64,
       });
 
       if (uploaded?.url) {
-        saveChannelCoverOverride(props.channel.id, uploaded.url);
+        saveStudioLogoOverride(props.developer.id, uploaded.url);
         return;
       }
     }
 
-    saveChannelCoverOverride(props.channel.id, dataUrl);
+    saveStudioLogoOverride(props.developer.id, dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -108,8 +109,8 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
       return;
     }
 
-    if (file.size > 4 * 1024 * 1024) {
-      setErrorMessage('Cover image must be 4 MB or smaller.');
+    if (file.size > MAX_FILE_BYTES) {
+      setErrorMessage('Logo must be 2 MB or smaller.');
       return;
     }
 
@@ -126,7 +127,7 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
             return;
           }
 
-          await persistCover(file, reader.result);
+          await persistLogo(file, reader.result);
         } catch (error) {
           setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
         } finally {
@@ -143,27 +144,29 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
     reader.readAsDataURL(file);
   }
 
-  function removeCover(): void {
+  function removeLogo(): void {
     setErrorMessage(null);
-    clearChannelCoverOverride(props.channel.id);
+    clearStudioLogoOverride(props.developer.id);
   }
 
   return (
-    <article className="media-upload-prep-card channel-cover-upload-card">
+    <article className="media-upload-prep-card studio-logo-upload-card">
       <div className="media-upload-prep-copy">
-        <span className="media-upload-prep-eyebrow">Game Channel media</span>
-        <strong>Cover image</strong>
+        <span className="media-upload-prep-eyebrow">Studio media</span>
+        <strong>Studio logo</strong>
         <small>
-          {hasOwnerUpload
-            ? 'Owner upload active across Game Hub cards and channel surfaces.'
-            : 'Upload a cover for this channel card and hub surfaces.'}
+          {hasCustomLogo
+            ? 'Custom studio logo active across studio surfaces.'
+            : activeLogo
+              ? 'Demo studio logo active. Upload to replace it site-wide.'
+              : 'Logo seed fallback active. Upload a studio logo for this profile.'}
         </small>
       </div>
 
-      {activeCover ? (
+      {activeLogo ? (
         <div
-          className="channel-cover-upload-preview"
-          style={{ backgroundImage: 'url(' + JSON.stringify(activeCover) + ')' }}
+          className="studio-logo-upload-preview"
+          style={{ backgroundImage: 'url(' + JSON.stringify(activeLogo) + ')' }}
         />
       ) : null}
 
@@ -187,17 +190,19 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
           onClick={openFilePicker}
           type="button"
         >
-          {isReadingFile ? 'Uploading cover…' : 'Upload cover image'}
+          {isReadingFile ? 'Uploading logo…' : 'Upload studio logo'}
         </button>
 
-        {hasOwnerUpload ? (
-          <button className="nami-surface-button" onClick={removeCover} type="button">
-            Remove upload
+        {hasCustomLogo || activeLogo ? (
+          <button className="nami-surface-button" onClick={removeLogo} type="button">
+            Remove logo
           </button>
         ) : null}
       </div>
 
       {errorMessage ? <p className="member-avatar-upload-error">{errorMessage}</p> : null}
+
+      <p>Studio logos update Game Hub cards, studio hero marks, and developer profile surfaces.</p>
     </article>
   );
 }

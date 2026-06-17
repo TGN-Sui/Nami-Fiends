@@ -52,6 +52,11 @@ export function readChannelCoverOverride(channelId: string): string | null {
   }
 }
 
+export function hydrateChannelCoverOverride(channelId: string, coverUrl: string): void {
+  window.localStorage.setItem(coverStorageKey(channelId), coverUrl);
+  dispatchCoverChange();
+}
+
 export function saveChannelCoverOverride(channelId: string, dataUrl: string): void {
   window.localStorage.setItem(coverStorageKey(channelId), dataUrl);
   dispatchCoverChange();

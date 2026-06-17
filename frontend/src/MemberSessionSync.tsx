@@ -6,6 +6,7 @@ import {
   syncMemberPreferencesToBackend,
 } from './member-preferences-api.js';
 import { setChannelPreferencesSyncOwner } from './channel-cover-store.js';
+import { setStudioPreferencesSyncOwner } from './studio-logo-store.js';
 import {
   readSelfAvatarOverride,
   saveSelfAvatarOverride,
@@ -37,6 +38,7 @@ export function MemberSessionSync(): ReactElement | null {
     setMemberPreferencesSyncOwner(owner);
     setMemberOnlinePreferencesSyncOwner(owner);
     setChannelPreferencesSyncOwner(owner);
+    setStudioPreferencesSyncOwner(owner);
 
     if (!owner?.startsWith('0x')) {
       return;

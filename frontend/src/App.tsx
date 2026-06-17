@@ -67,6 +67,8 @@ import { AccountConnectSection } from './account-connect.js';
 import { markSignedOut } from './member-auth-store.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
 import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
+import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
+import { useStudioLogoVersion, withStudioLogo } from './studio-logo-store.js';
 import { channelRainbowBorderClass, isNamiTeamMember } from './channel-surface.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
@@ -2496,10 +2498,12 @@ function StudioProfileScreen(props: {
   returnPage: NamiPage;
   returnLabel: string;
 }): ReactElement {
-  const studioGames = developerGameChannels(props.developer);
+  useStudioLogoVersion();
+  const developer = withStudioLogo(props.developer);
+  const studioGames = developerGameChannels(developer);
   const leadGame = studioGames[0] ?? channels[0]!;
   const studioTheme = useMemo(() => getStoredChannelBrandTheme(leadGame.id), [leadGame.id]);
-  const proofClass = developerVerificationClass(props.developer);
+  const proofClass = developerVerificationClass(developer);
   const totalReach = studioGames.reduce((sum, channel) => sum + channel.subscribers, 0);
 
   const studioProofs = [
@@ -2510,8 +2514,8 @@ function StudioProfileScreen(props: {
     },
     {
       label: 'Proof Status',
-      value: props.developer.proofStatus,
-      detail: props.developer.approved
+      value: developer.proofStatus,
+      detail: developer.approved
         ? 'Studio identity has approval signals.'
         : 'Community maintainer surface without verified studio status.'
     },
@@ -2536,7 +2540,7 @@ function StudioProfileScreen(props: {
     <>
       <header className="page-title">
         <p>Developer identity and approved game directory</p>
-        <h1>{props.developer.name}</h1>
+        <h1>{developer.name}</h1>
       </header>
 
       <section className="studio-profile-page">
@@ -2551,7 +2555,7 @@ function StudioProfileScreen(props: {
             </button>
 
             <span className={'studio-proof-pill ' + proofClass}>
-              {developerShortProofLabel(props.developer)} · {props.developer.proofStatus}
+              {developerShortProofLabel(developer)} · {developer.proofStatus}
             </span>
           </div>
 
@@ -2560,21 +2564,21 @@ function StudioProfileScreen(props: {
               className={
                 'studio-logo-mark ' +
                 proofClass +
-                (props.developer.logoImageUrl ? ' has-studio-logo-image' : '')
+                (developer.logoImageUrl ? ' has-studio-logo-image' : '')
               }
-              style={studioLogoAssetVariables(props.developer)}
+              style={studioLogoAssetVariables(developer)}
             >
-              {props.developer.logoSeed}
+              {developer.logoSeed}
             </div>
 
             <div className="studio-hero-copy">
               <div className="surface-separation-row studio-surface-row">
                 <span>Studio Profile</span>
-                <span>{props.developer.handle}</span>
-                <i>{props.developer.approved ? 'Approved developer surface' : 'Community maintainer surface'}</i>
+                <span>{developer.handle}</span>
+                <i>{developer.approved ? 'Approved developer surface' : 'Community maintainer surface'}</i>
               </div>
 
-              <h2>{props.developer.name}</h2>
+              <h2>{developer.name}</h2>
               <p>
                 Studio profiles hold developer identity, proof status, and the approved game directory.
                 Game profiles keep game-specific community content, and member profiles keep levels and passport progression.
@@ -2590,7 +2594,7 @@ function StudioProfileScreen(props: {
                   Reach
                 </span>
                 <span className="studio-signal-stat">
-                  <ConductSignalDot signal={props.developer.studioSignal} />
+                  <ConductSignalDot signal={developer.studioSignal} />
                   <strong>Owner signal</strong>
                 </span>
               </div>
@@ -2668,18 +2672,7 @@ function StudioProfileScreen(props: {
           </article>
         </section>
       
-        <MediaUploadPrepCard
-          acceptedFormats="PNG, JPG, WebP, SVG"
-          assetLabel="Studio logo"
-          currentState={
-            props.developer.logoImageUrl
-              ? 'Demo studio logo active. Logo seed remains available as fallback.'
-              : 'Logo seed fallback active. No uploaded studio logo attached.'
-          }
-          note="This placeholder prepares Studio Profiles for future verified logo uploads without storage persistence yet."
-          storageLabel="Future source: Walrus logo reference plus studio approval proof"
-          surfaceLabel="Studio media"
-        />
+        <StudioLogoUploadCard developer={developer} />
 </section>
     </>
   );

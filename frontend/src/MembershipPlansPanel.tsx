@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
+import { MembershipOnChainFulfillmentCard } from './MembershipOnChainFulfillmentCard.js';
 import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
 import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
 import {
@@ -151,6 +152,8 @@ export function MembershipPlansPanel(): ReactElement {
       </article>
 
       <MembershipAdventurerClaimCard onError={setError} onNotice={setNotice} />
+
+      <MembershipOnChainFulfillmentCard />
 
       <MembershipPaymentMethods
         onSelectCryptoAsset={setCryptoAsset}

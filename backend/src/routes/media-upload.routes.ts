@@ -4,6 +4,7 @@ import {
   readUploadedMediaFile,
   saveAvatarUpload,
   saveChannelCoverUpload,
+  saveStudioLogoUpload,
 } from '../services/media-upload.service.js';
 import {
   assertWalletAuth,
@@ -138,6 +139,47 @@ export async function handleChannelCoverUploadPost(
     console.error('[nami-media] channel cover upload failed', error);
     sendJson(response, 400, {
       error: 'channel_cover_upload_failed',
+      message,
+    });
+  }
+}
+
+export async function handleStudioLogoUploadPost(
+  request: IncomingMessage,
+  response: ServerResponse
+): Promise<void> {
+  try {
+    const body = await readJsonBody(request);
+    const owner = typeof body.owner === 'string' ? body.owner : '';
+    const studioId = typeof body.studioId === 'string' ? body.studioId : '';
+    const contentType = typeof body.contentType === 'string' ? body.contentType : '';
+    const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
+    const walletAuth = readWalletAuth(body);
+
+    if (!owner.startsWith('0x') || !studioId.trim()) {
+      sendJson(response, 400, { error: 'invalid_payload' });
+      return;
+    }
+
+    await assertWalletAuth(owner, {
+      owner,
+      signature: walletAuth.signature ?? '',
+      timestampMs: walletAuth.timestampMs ?? 0,
+    });
+
+    const result = await saveStudioLogoUpload({ owner, studioId, contentType, dataBase64 });
+    sendJson(response, 201, result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
+    console.error('[nami-media] studio logo upload failed', error);
+    sendJson(response, 400, {
+      error: 'studio_logo_upload_failed',
       message,
     });
   }

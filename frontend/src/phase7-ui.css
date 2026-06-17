@@ -1380,6 +1380,20 @@
   gap: 0.2rem;
 }
 
+.studio-logo-upload-preview {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 16px;
+  height: 96px;
+  width: 96px;
+}
+
+.membership-onchain-fulfillment-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .membership-onchain-pending-badge {
   color: var(--nami-accent);
   font-size: 0.85rem;

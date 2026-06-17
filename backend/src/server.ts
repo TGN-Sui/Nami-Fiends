@@ -24,7 +24,12 @@ import {
   handleAvatarUploadPost,
   handleChannelCoverUploadPost,
   handleMediaFileGet,
+  handleStudioLogoUploadPost,
 } from './routes/media-upload.routes.js';
+import {
+  handleStudioPreferencesGet,
+  handleStudioPreferencesUpsert,
+} from './routes/studio-preferences.routes.js';
 import {
   handleChannelPreferencesGet,
   handleChannelPreferencesUpsert,
@@ -900,6 +905,25 @@ const routes: Route[] = [
     pattern: /^\/api\/media\/channel-cover$/,
     paramNames: [],
     handler: (_registry, request, response) => handleChannelCoverUploadPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/media\/studio-logo$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleStudioLogoUploadPost(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/studio-preferences\/([^/]+)$/,
+    paramNames: ['studioId'],
+    handler: (_registry, request, response, params) =>
+      handleStudioPreferencesGet(request, response, params.studioId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/studio-preferences\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleStudioPreferencesUpsert(request, response),
   },
   {
     method: 'GET',

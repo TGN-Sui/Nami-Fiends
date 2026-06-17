@@ -436,6 +436,14 @@ POST /api/channel-preferences/sync
 POST /api/media/channel-cover
 ```
 
+Studio logo media:
+
+```text
+GET  /api/studio-preferences/:studioId
+POST /api/studio-preferences/sync
+POST /api/media/studio-logo
+```
+
 ---
 
 # Admin Authority
