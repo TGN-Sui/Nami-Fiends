@@ -173,3 +173,43 @@ export interface ChannelAccessProjection {
   created_at_ms: string | null;
   updated_at_ms: string | null;
 }
+
+export interface DiscoveryChannelRanking {
+  channel_id: string;
+  owner: string;
+  is_verified: boolean;
+  is_public: boolean;
+  boost_power: number;
+  boost_count: number;
+  score: number;
+  week_id: number;
+  rank: number;
+  signals: string[];
+}
+
+export interface DiscoveryGuildRanking {
+  guild_id: string;
+  owner: string;
+  is_public: boolean;
+  member_count: number;
+  score: number;
+  rank: number;
+  signals: string[];
+}
+
+export interface DiscoveryCycleSnapshot {
+  week_id: number;
+  generated_at_ms: number;
+  channel_count: number;
+  guild_count: number;
+}
+
+export interface ChannelDiscoveryResponse {
+  cycle: DiscoveryCycleSnapshot;
+  channels: DiscoveryChannelRanking[];
+}
+
+export interface GuildDiscoveryResponse {
+  cycle: DiscoveryCycleSnapshot;
+  guilds: DiscoveryGuildRanking[];
+}

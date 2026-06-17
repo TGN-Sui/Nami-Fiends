@@ -3,6 +3,10 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { config } from './config.js';
 import type { ProjectionRegistry } from './projection-registry.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
+import {
+  buildChannelDiscoveryRankings,
+  buildGuildDiscoveryRankings,
+} from './services/discovery.service.js';
 import { collectIndexerStats } from './stats.js';
 
 const TIMELINE_CATEGORIES = new Set<TimelineCategory>([
@@ -728,6 +732,45 @@ const routes: Route[] = [
       }
 
       sendJson(response, 200, { policy });
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/discovery\/channels$/,
+    paramNames: [],
+    handler: (registry, request, response) => {
+      const url = new URL(request.url ?? '/', 'http://localhost');
+      const limit = Number(url.searchParams.get('limit') ?? '50');
+      const weekId = url.searchParams.get('weekId');
+      const parsedWeekId =
+        weekId !== null && weekId.trim() !== '' ? Number(weekId) : undefined;
+
+      const rankingOptions: { limit?: number; weekId?: number } = {
+        limit: Number.isFinite(limit) ? limit : 50,
+      };
+
+      if (typeof parsedWeekId === 'number' && Number.isFinite(parsedWeekId)) {
+        rankingOptions.weekId = parsedWeekId;
+      }
+
+      const result = buildChannelDiscoveryRankings(registry, rankingOptions);
+
+      sendJson(response, 200, result);
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/discovery\/guilds$/,
+    paramNames: [],
+    handler: (registry, request, response) => {
+      const url = new URL(request.url ?? '/', 'http://localhost');
+      const limit = Number(url.searchParams.get('limit') ?? '50');
+
+      const result = buildGuildDiscoveryRankings(registry, {
+        limit: Number.isFinite(limit) ? limit : 50,
+      });
+
+      sendJson(response, 200, result);
     },
   },
 ];

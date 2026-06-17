@@ -14,7 +14,9 @@ import {
   type BoostHistoryEntry,
   type ChannelAccessPolicyView,
   type ChannelCardView,
+  type ChannelDiscoveryResponse,
   type ConductProtocolView,
+  type GuildDiscoveryResponse,
   type CustomizationProtocolView,
   type GuildCardView,
   type IdentityProtocolView,
@@ -235,13 +237,40 @@ export async function fetchChannelAccessPolicies(
   return loadOwnerChannelAccessPolicies(context.chain!, context.indexer, owner);
 }
 
+export async function fetchDiscoveryChannels(
+  context: ProtocolContext,
+  limit = 20
+): Promise<ChannelDiscoveryResponse | null> {
+  if (!context.indexer) {
+    return null;
+  }
+
+  return context.indexer.getDiscoveryChannels(limit);
+}
+
+export async function fetchDiscoveryGuilds(
+  context: ProtocolContext,
+  limit = 20
+): Promise<GuildDiscoveryResponse | null> {
+  if (!context.indexer) {
+    return null;
+  }
+
+  return context.indexer.getDiscoveryGuilds(limit);
+}
+
 export type {
   AppealProjection,
   BadgeHistoryEntry,
   BoostHistoryEntry,
   ChannelAccessPolicyView,
   ChannelCardView,
+  ChannelDiscoveryResponse,
   ConductProtocolView,
+  DiscoveryChannelRanking,
+  DiscoveryCycleSnapshot,
+  DiscoveryGuildRanking,
+  GuildDiscoveryResponse,
   CustomizationProtocolView,
   GuildCardView,
   IdentityProtocolView,

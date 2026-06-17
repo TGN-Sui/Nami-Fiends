@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 
 import {
+  fetchDiscoveryChannels,
+  fetchDiscoveryGuilds,
   fetchGuildCards,
   fetchOwnerHistory,
   fetchPassportView,
@@ -166,4 +168,16 @@ export function useGuildCardsQuery() {
 
 export function useSquadCardsQuery() {
   return useProtocolQuery('squads', fetchSquadCards, { requiresChain: true });
+}
+
+export function useDiscoveryChannelsQuery(limit = 12) {
+  return useProtocolIndexerQuery('discovery-channels', (context) =>
+    fetchDiscoveryChannels(context, limit)
+  );
+}
+
+export function useDiscoveryGuildsQuery(limit = 8) {
+  return useProtocolIndexerQuery('discovery-guilds', (context) =>
+    fetchDiscoveryGuilds(context, limit)
+  );
 }

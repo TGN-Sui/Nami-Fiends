@@ -3,7 +3,9 @@ import type {
   BadgeHistoryEntry,
   BoostHistoryEntry,
   ChannelAccessProjection,
+  ChannelDiscoveryResponse,
   ChannelProjection,
+  GuildDiscoveryResponse,
   GuildProjection,
   JuryCaseProjection,
   ModerationRecordProjection,
@@ -282,6 +284,24 @@ export class NamiIndexerClient {
     );
 
     return body.entries;
+  }
+
+  async getDiscoveryChannels(limit = 20, weekId?: number): Promise<ChannelDiscoveryResponse> {
+    const params = new URLSearchParams({ limit: String(limit) });
+
+    if (weekId !== undefined) {
+      params.set('weekId', String(weekId));
+    }
+
+    return fetchJson<ChannelDiscoveryResponse>(
+      `${this.baseUrl}/api/discovery/channels?${params.toString()}`
+    );
+  }
+
+  async getDiscoveryGuilds(limit = 20): Promise<GuildDiscoveryResponse> {
+    return fetchJson<GuildDiscoveryResponse>(
+      `${this.baseUrl}/api/discovery/guilds?limit=${limit}`
+    );
   }
 }
 

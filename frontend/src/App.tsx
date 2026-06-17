@@ -23,6 +23,7 @@ import { PassportTimelinePanel } from './PassportTimelinePanel.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { ProtocolConductPanel } from './ProtocolConductPanel.js';
+import { ProtocolDiscoveryPanel } from './ProtocolDiscoveryPanel.js';
 import { ProtocolCustomizationPanel } from './ProtocolCustomizationPanel.js';
 import { ProtocolHistoryPanel } from './ProtocolHistoryPanel.js';
 import { ProtocolIdentityPanel } from './ProtocolIdentityPanel.js';
@@ -1425,6 +1426,8 @@ function NamiHub(props: {
           : {})}
         packageId={getConfiguredPackageId()}
       />
+
+      <ProtocolDiscoveryPanel />
 
       <button
         className="banner-panel featured-banner-carousel nami-hub-rotating-banner"
