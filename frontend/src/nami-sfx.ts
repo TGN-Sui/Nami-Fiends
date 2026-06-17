@@ -192,7 +192,11 @@ export function initNamiSoundscape(): void {
         return;
       }
 
-      if (!event.target.closest('.chat-composer-row, .global-chat-composer, .message-log-composer')) {
+      if (
+        !event.target.closest(
+          '.chat-composer-row, .chat-composer-with-emojis, .global-chat-composer, .message-log-composer'
+        )
+      ) {
         return;
       }
 

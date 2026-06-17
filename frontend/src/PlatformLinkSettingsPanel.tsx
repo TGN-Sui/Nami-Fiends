@@ -3,8 +3,13 @@ import { useState, type ReactElement } from 'react';
 import { usePassportQuery } from './protocol-query.js';
 import { useMemberSession } from './member-session-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
+import {
+  authorizeXAccount,
+  unlinkXAccount,
+  useXVerificationState,
+} from './x-verification-store.js';
 
-type PlatformLinkId = 'steam' | 'epic' | 'xbox' | 'playstation' | 'nintendo' | 'riot';
+type PlatformLinkId = 'x' | 'steam' | 'epic' | 'xbox' | 'playstation' | 'nintendo' | 'riot';
 
 type PlatformLinkEntry = {
   id: PlatformLinkId;
@@ -13,6 +18,11 @@ type PlatformLinkEntry = {
 };
 
 const PLATFORM_LINKS: PlatformLinkEntry[] = [
+  {
+    id: 'x',
+    label: 'X.com',
+    hint: 'Verified X authorization can claim Adventurer membership without payment.',
+  },
   {
     id: 'steam',
     label: 'Steam',
@@ -49,8 +59,11 @@ export function PlatformLinkSettingsPanel(): ReactElement {
   const session = useMemberSession();
   const { userClaimStatus } = useNamiAdminStore();
   const { data: passportView } = usePassportQuery();
+  const xVerification = useXVerificationState();
 
-  const [linkedPlatforms, setLinkedPlatforms] = useState<Set<PlatformLinkId>>(new Set());
+  const [linkedPlatforms, setLinkedPlatforms] = useState<Set<PlatformLinkId>>(() => {
+    return xVerification.verified ? new Set<PlatformLinkId>(['x']) : new Set();
+  });
   const [linkNotice, setLinkNotice] = useState<string | null>(null);
 
   const claimApproved = userClaimStatus.status === 'approved';
@@ -64,6 +77,28 @@ export function PlatformLinkSettingsPanel(): ReactElement {
     }
 
     setLinkNotice(null);
+
+    if (platformId === 'x') {
+      if (xVerification.verified) {
+        const result = unlinkXAccount();
+        setLinkedPlatforms((current) => {
+          const next = new Set(current);
+          next.delete('x');
+          return next;
+        });
+        setLinkNotice(result.ok ? result.message : result.reason);
+      } else {
+        const result = authorizeXAccount();
+        setLinkedPlatforms((current) => {
+          const next = new Set(current);
+          next.add('x');
+          return next;
+        });
+        setLinkNotice(result.ok ? result.message : result.reason);
+      }
+
+      return;
+    }
 
     setLinkedPlatforms((current) => {
       const next = new Set(current);
@@ -104,7 +139,8 @@ export function PlatformLinkSettingsPanel(): ReactElement {
 
       <ul className="platform-link-list">
         {PLATFORM_LINKS.map((platform) => {
-          const linked = linkedPlatforms.has(platform.id);
+          const linked =
+            platform.id === 'x' ? xVerification.verified : linkedPlatforms.has(platform.id);
 
           return (
             <li className="platform-link-row" key={platform.id}>
@@ -120,7 +156,7 @@ export function PlatformLinkSettingsPanel(): ReactElement {
                 onClick={() => togglePlatform(platform.id)}
                 type="button"
               >
-                {linked ? 'Unlink' : 'Link'}
+                {linked ? 'Unlink' : platform.id === 'x' ? 'Authorize with X' : 'Link'}
               </button>
             </li>
           );

@@ -7,6 +7,7 @@ const MODERATORS_KEY = 'nami.admin.moderators';
 export type NamiOwnerCapability =
   | 'core-settings'
   | 'official-panels'
+  | 'custom-emojis'
   | 'server-maintenance'
   | 'nodename-claims'
   | 'ban-enforcement'
@@ -16,6 +17,7 @@ export type NamiOwnerCapability =
 const OWNER_ONLY_CAPABILITIES: ReadonlySet<NamiOwnerCapability> = new Set([
   'core-settings',
   'official-panels',
+  'custom-emojis',
   'server-maintenance',
   'nodename-claims',
   'ban-enforcement',
@@ -123,6 +125,7 @@ export function canManageModerators(connectedOwner: string | null): boolean {
 export const OWNER_CAPABILITY_LABELS: Record<NamiOwnerCapability, string> = {
   'core-settings': 'Change Nami core settings',
   'official-panels': 'Update Official Nami panels',
+  'custom-emojis': 'Upload shared chat emojis',
   'server-maintenance': 'Start or shut down maintenance servers',
   'nodename-claims': 'Accept nodename submissions',
   'ban-enforcement': 'Ban or lift enforcement actions',

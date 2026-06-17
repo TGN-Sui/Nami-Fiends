@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { playChatSendSfx } from './nami-sfx.js';
 import { getSelfMember } from './member-access.js';
+import { processMessageTags } from './nami-notifications-store.js';
 import { chatMessages, members, type ChatMessage, type ConductSignal } from './uiMockData.js';
 import type { ThreadMessage } from './messages-data.js';
 
@@ -198,6 +199,12 @@ export function appendChannelChatMessage(
   };
 
   writeChannelMessages([...readChannelMessages(), message]);
+  processMessageTags({
+    body: message.body,
+    authorName: author,
+    context: 'channel',
+    contextLabel: 'Game Chat',
+  });
   playChatSendSfx();
   return message;
 }
@@ -227,6 +234,12 @@ export function appendGlobalChatMessage(
     [chatId]: [...(globalMessages[chatId] ?? []), message],
   });
 
+  processMessageTags({
+    body: message.body,
+    authorName: author,
+    context: 'global',
+    contextLabel: 'Global Chat · ' + chatId,
+  });
   playChatSendSfx();
   return message;
 }
@@ -234,9 +247,9 @@ export function appendGlobalChatMessage(
 const INCOMING_REPLY_SNIPPETS = [
   'Got your message — hopping on now.',
   'Copy that. See you in the lounge.',
-  'Nice. I will ping the squad.',
-  'On it. Want me to invite the guild?',
-  'Heard you. Grabbing a squad slot.',
+  'Nice. I will ping %Alpha Squad.',
+  'On it. Want me to invite &Wave Raiders?',
+  'Heard you @Nozomi — grabbing a squad slot.',
 ];
 
 function appendIncomingPrivateMessage(
@@ -303,6 +316,12 @@ function scheduleIncomingThreadReply(memberId: string, memberName: string): void
     const body = INCOMING_REPLY_SNIPPETS[Math.floor(Math.random() * INCOMING_REPLY_SNIPPETS.length)]!;
 
     appendIncomingPrivateMessage(memberId, memberName, body, member.name, member.signal);
+    processMessageTags({
+      body,
+      authorName: member.name,
+      context: 'private',
+      contextLabel: 'Private message · ' + memberName,
+    });
   }, delayMs);
 }
 
@@ -345,6 +364,12 @@ export function sendPrivateMessage(memberId: string, memberName: string, body: s
         };
       })
     );
+    processMessageTags({
+      body: trimmed,
+      authorName: selfMember.name,
+      context: 'private',
+      contextLabel: 'Private message · ' + memberName,
+    });
     playChatSendSfx();
     scheduleIncomingThreadReply(memberId, memberName);
     return;
@@ -362,6 +387,12 @@ export function sendPrivateMessage(memberId: string, memberName: string, body: s
     ...threads,
   ]);
 
+  processMessageTags({
+    body: trimmed,
+    authorName: selfMember.name,
+    context: 'private',
+    contextLabel: 'Private message · ' + memberName,
+  });
   playChatSendSfx();
   scheduleIncomingThreadReply(memberId, memberName);
 }

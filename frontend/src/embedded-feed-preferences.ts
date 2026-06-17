@@ -26,6 +26,15 @@ function normalizeEmbed(entry: Partial<SocialEmbed>, fallback: SocialEmbed): Soc
     next.previewUrl = previewUrl;
   }
 
+  const embedUrl =
+    typeof entry.embedUrl === 'string' && entry.embedUrl.trim()
+      ? entry.embedUrl.trim()
+      : fallback.embedUrl;
+
+  if (embedUrl !== undefined) {
+    next.embedUrl = embedUrl;
+  }
+
   const live = typeof entry.live === 'boolean' ? entry.live : fallback.live;
 
   if (live !== undefined) {

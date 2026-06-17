@@ -200,7 +200,7 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
       time: '14:03',
       author: 'DeadlySin',
       signal: 'Orange',
-      body: 'LFG for ranked runs tonight. Voice room is open.',
+      body: 'LFG for ranked runs tonight @Nozomi — voice room is open.',
     },
     {
       id: 'og3',
@@ -340,6 +340,8 @@ export type SocialEmbed = {
   title: string;
   handle: string;
   previewUrl?: string;
+  /** Optional direct iframe src override (Settings → Embedded Feeds). */
+  embedUrl?: string;
   live?: boolean;
 };
 
@@ -352,6 +354,8 @@ export function genreChatToBubbleChannel(chat: GlobalChatRoom, template: NamiCha
     subscribers: chat.activeMembers,
     handle: '@' + chat.id.replace('genre-', ''),
     tagline: 'Official Nami genre lounge · ' + chat.activeMembers.toLocaleString() + ' active',
+    officialNami: chat.isOfficial,
+    partner: chat.isOfficial ? true : template.partner,
   };
 }
 
@@ -364,16 +368,23 @@ export function buildGenreBubbleEntries(): Array<{ channel: NamiChannel; slotId:
 
 export const defaultSocialEmbeds: SocialEmbed[] = [
   {
+    platform: 'twitch',
+    title: 'Live broadcast',
+    handle: 'twitch',
+    previewUrl: 'https://www.twitch.tv/twitch',
+    live: true,
+  },
+  {
+    platform: 'youtube',
+    title: 'Featured stream',
+    handle: '@namigamer',
+    previewUrl: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+    live: false,
+  },
+  {
     platform: 'x',
     title: 'Latest post',
     handle: '@namigamer',
-    previewUrl: 'https://x.com',
-  },
-  {
-    platform: 'twitch',
-    title: 'Live broadcast',
-    handle: 'namigamer',
-    previewUrl: 'https://twitch.tv',
-    live: true,
+    previewUrl: 'https://x.com/namigamer',
   },
 ];

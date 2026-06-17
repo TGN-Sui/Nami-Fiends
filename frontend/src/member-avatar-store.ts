@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type NamiMember } from './uiMockData.js';
 
@@ -28,9 +29,27 @@ export function saveSelfAvatarOverride(dataUrl: string): void {
 }
 
 export function clearSelfAvatarOverride(): void {
-  window.localStorage.setItem(AVATAR_STORAGE_KEY, '');
+  window.localStorage.removeItem(AVATAR_STORAGE_KEY);
   invalidateSelfMemberCache();
   window.dispatchEvent(new CustomEvent('nami-self-avatar-changed'));
+}
+
+export function resolveMemberAvatarImageUrl(member: NamiMember): string | null {
+  if (member.id === SELF_MEMBER_ID) {
+    const override = readSelfAvatarOverride();
+
+    if (override?.trim()) {
+      return override.trim();
+    }
+  }
+
+  const avatarImageUrl = member.avatarImageUrl?.trim();
+
+  return avatarImageUrl ? avatarImageUrl : null;
+}
+
+export function resolveSelfAvatarImageUrl(): string | null {
+  return resolveMemberAvatarImageUrl(getSelfMemberSnapshot());
 }
 
 export function withMemberAvatar(member: NamiMember): NamiMember {
@@ -38,21 +57,15 @@ export function withMemberAvatar(member: NamiMember): NamiMember {
     return member;
   }
 
-  const override = readSelfAvatarOverride();
+  const avatarImageUrl = resolveMemberAvatarImageUrl(member);
 
-  if (override === null) {
+  if (!avatarImageUrl) {
     return member;
-  }
-
-  if (!override) {
-    const { avatarImageUrl: _removed, ...memberWithoutAvatar } = member;
-
-    return memberWithoutAvatar;
   }
 
   return {
     ...member,
-    avatarImageUrl: override,
+    avatarImageUrl,
   };
 }
 
@@ -62,7 +75,7 @@ function getSelfMemberSnapshot(): NamiMember {
   }
 
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
-  cachedSelfMember = withMemberProfile(withMemberAvatar(baseMember));
+  cachedSelfMember = applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)));
 
   return cachedSelfMember;
 }
@@ -86,6 +99,12 @@ function subscribeSelfMember(onStoreChange: () => void): () => void {
 
 export function useSelfMember(): NamiMember {
   return useSyncExternalStore(subscribeSelfMember, getSelfMemberSnapshot, getSelfMemberSnapshot);
+}
+
+export function useSelfAvatarImageUrl(): string | null {
+  const member = useSelfMember();
+
+  return resolveMemberAvatarImageUrl(member);
 }
 
 export const PROFILE_EDIT_PANEL_ID = 'profile-edit-panel';

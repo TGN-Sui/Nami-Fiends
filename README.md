@@ -14,7 +14,7 @@ The goal is to build a portable gamer identity and trust layer.
 
 ```text
 Move build: passing
-Move tests: 77 passing
+Move tests: 80 passing
 Warnings: 0
 Documentation: synced/in-progress mini-sync
 MVP progress: ~80% (on-chain + full protocol hardening complete)

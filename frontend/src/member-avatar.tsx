@@ -1,6 +1,8 @@
 import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
-import { withMemberAvatar } from './member-avatar-store.js';
+import { memberRainbowBorderClass } from './channel-surface.js';
+import { resolveMemberAvatarImageUrl, withMemberAvatar } from './member-avatar-store.js';
+import { useMemberStreamingOnline } from './member-online-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
 
@@ -64,7 +66,7 @@ function usesChatTierFoil(member: NamiMember, baseClass: string): boolean {
 }
 
 function memberAvatarAssetVariables(member: NamiMember): CSSProperties {
-  const avatarImageUrl = member.avatarImageUrl?.trim();
+  const avatarImageUrl = resolveMemberAvatarImageUrl(member);
 
   if (!avatarImageUrl) {
     return {
@@ -79,10 +81,6 @@ function memberAvatarAssetVariables(member: NamiMember): CSSProperties {
   return {
     '--member-avatar-image': cssUrl,
     '--member-avatar-image-opacity': '1',
-    backgroundImage: cssUrl,
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
   } as CSSProperties;
 }
 
@@ -99,9 +97,31 @@ function memberAvatarClass(
     ' uniform-member-avatar' +
     ' ' +
     signalClass(signal) +
-    (member.avatarImageUrl ? ' has-member-avatar-image' : '') +
+    (resolveMemberAvatarImageUrl(member) ? ' has-member-avatar-image' : '') +
     (chatTierFoil ? ' ' + memberTierSurfaceClass(member) : '') +
-    (foilEligible && !chatTierFoil ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame')
+    (foilEligible && !chatTierFoil ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame') +
+    memberRainbowBorderClass(member)
+  );
+}
+
+export function MemberStreamingLiveDot(props: {
+  memberId: string;
+  className?: string;
+}): ReactElement | null {
+  const isStreamingOnline = useMemberStreamingOnline(props.memberId);
+
+  if (!isStreamingOnline) {
+    return null;
+  }
+
+  return (
+    <span
+      aria-label="Streaming live"
+      className={
+        'member-streaming-live-dot' + (props.className ? ' ' + props.className : '')
+      }
+      title="Streaming live — visit profile for feed"
+    />
   );
 }
 
@@ -133,17 +153,26 @@ export function UniformMemberAvatar(props: {
   const chatTierFoil = usesChatTierFoil(member, baseClass);
   const genericFoil = isMemberFoilEligible(member, signal) && !chatTierFoil;
 
+  const isStreamingOnline = useMemberStreamingOnline(member.id);
+
   return (
     <div
-      className={memberAvatarClass(member, baseClass, signal)}
-      style={memberAvatarAssetVariables(member)}
+      className={
+        'member-avatar-live-shell' + (isStreamingOnline ? ' has-member-streaming-live' : '')
+      }
     >
-      {tierFoilLayer(member, baseClass)}
-      {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
-      {!member.avatarImageUrl ? (
-        <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
-      ) : null}
-      {props.children}
+      <div
+        className={memberAvatarClass(member, baseClass, signal)}
+        style={memberAvatarAssetVariables(member)}
+      >
+        {tierFoilLayer(member, baseClass)}
+        {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
+        {!resolveMemberAvatarImageUrl(member) ? (
+          <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
+        ) : null}
+        {props.children}
+      </div>
+      <MemberStreamingLiveDot memberId={member.id} />
     </div>
   );
 }
@@ -160,19 +189,28 @@ export function UniformMemberAvatarButton(props: {
   const chatTierFoil = usesChatTierFoil(member, baseClass);
   const genericFoil = isMemberFoilEligible(member, signal) && !chatTierFoil;
 
+  const isStreamingOnline = useMemberStreamingOnline(member.id);
+
   return (
-    <button
-      className={memberAvatarClass(member, baseClass, signal)}
-      onClick={props.onClick}
-      style={memberAvatarAssetVariables(member)}
-      type="button"
+    <div
+      className={
+        'member-avatar-live-shell' + (isStreamingOnline ? ' has-member-streaming-live' : '')
+      }
     >
-      {tierFoilLayer(member, baseClass)}
-      {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
-      {!member.avatarImageUrl ? (
-        <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
-      ) : null}
-    </button>
+      <button
+        className={memberAvatarClass(member, baseClass, signal)}
+        onClick={props.onClick}
+        style={memberAvatarAssetVariables(member)}
+        type="button"
+      >
+        {tierFoilLayer(member, baseClass)}
+        {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
+        {!resolveMemberAvatarImageUrl(member) ? (
+          <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
+        ) : null}
+      </button>
+      <MemberStreamingLiveDot memberId={member.id} />
+    </div>
   );
 }
 

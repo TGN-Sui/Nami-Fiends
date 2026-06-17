@@ -1,8 +1,8 @@
 # Nami Chat UI Build Checkpoint
 
-Status: UI build checkpoint complete through UI-A20.5.
+Status: UI build checkpoint complete through UI-A20.5; Phase 7 intake UI-B21.1–UI-B21.12 in progress.
 
-This checkpoint records the completed frontend UI polish pass for Nami Chat. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
+This checkpoint records the completed frontend UI polish pass for Nami Chat and the active Phase 7 product surfaces. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
 ## Completed UI Scope
 
@@ -15,10 +15,29 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat. It 
 | UI-A20.4 | Complete | Final responsive and accessibility polish. |
 | UI-A20.5 | Complete | UI build checkpoint and documentation cleanup. |
 
+## Phase 7 Intake (UI-B21)
+
+| Phase | Status | Result |
+| --- | --- | --- |
+| UI-B21.1 | Complete | Account sign-in relocated to Settings. |
+| UI-B21.2 | Complete | Theme modes: Nami Default, Dark, Light, Custom. |
+| UI-B21.3 | Complete | Nami Hub global chats + Elite temporary rooms. |
+| UI-B21.4 | Complete | Game Hub genre browser + bottom chat dock. |
+| UI-B21.5 | Complete | Embedded social panels (X, Twitch/live). |
+| UI-B21.6 | Complete | Passport ↔ Badge Collectors Book swipe carousel. |
+| UI-B21.7 | Complete | TCG-style member passport when viewing others. |
+| UI-B21.8 | Complete | Membership checkout + backend payment intents API. |
+| UI-B21.9 | Complete | Pinned top-right profile avatar with foil + photo. |
+| UI-B21.10 | Complete | Live-streaming dot on avatars (top-right inset). |
+| UI-B21.11 | Complete | TCG passport vertical layout + tier header polish. |
+| UI-B21.12 | Complete | Chat emojis, @tags, notifications, social embeds. |
+
 ## Latest UI Commits
 
 | Commit | Summary |
 | --- | --- |
+| latest | Phase 7 payments, pinned avatar, passport polish, chat tags |
+| `dd918d4` | Add Phase 7 UI, owner-only admin caps, membership billing |
 | `57746d0` | Add final responsive accessibility polish |
 | `a437426` | Polish owner tool action states |
 | `57ac68e` | Polish channel colors member flow |
@@ -49,12 +68,12 @@ Both checks passed.
 
 ## UI Build Outcome
 
-The current frontend UI build is ready for the next development lane.
+Phase 7 surfaces are active. Membership checkout uses the backend payment API; avatar uploads and streaming state remain local/demo until persistence ships.
 
 Recommended next lane:
 
-1. Keep UI behavior stable.
-2. Begin wiring real authorization and persistence behind owner/member preview controls.
+1. Wire payment webhooks and subscription proofs to on-chain tier updates.
+2. Persist avatar uploads and streaming presence beyond localStorage.
 3. Connect media upload placeholders to approved storage and proof systems.
 4. Continue avoiding any wording that implies payment equals trust.
 

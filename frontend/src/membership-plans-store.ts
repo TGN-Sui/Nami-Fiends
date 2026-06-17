@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { isXVerificationEligibleForAdventurerClaim } from './x-verification-store.js';
 import { type NamiMember } from './uiMockData.js';
 
 export type PaidMembershipTier = 'Adventurer' | 'Pro' | 'Elite';
@@ -15,6 +16,15 @@ export type MembershipPlanStatus =
 
 export type MembershipPlanId = 'adventurer' | 'pro' | 'elite';
 
+export type MembershipCheckoutRail = 'card' | 'paypal' | 'other';
+
+export type MembershipCryptoAsset = 'sui' | 'usdc-sui' | 'goon';
+
+/** @deprecated Use MembershipCheckoutRail */
+export type MembershipPaymentMethod = MembershipCheckoutRail;
+
+export type AdventurerAccessSource = 'paid' | 'x-claim' | null;
+
 export type MembershipPlan = {
   id: MembershipPlanId;
   tier: PaidMembershipTier;
@@ -26,22 +36,76 @@ export type MembershipPlan = {
   boostCount: number;
   squadSlots: number;
   juryEligible: boolean;
+  claimableViaVerifiedX: boolean;
   highlights: string[];
 };
+
+export const MEMBERSHIP_CHECKOUT_RAILS: ReadonlyArray<{
+  id: MembershipCheckoutRail;
+  label: string;
+  hint: string;
+}> = [
+  {
+    id: 'card',
+    label: 'Credit / debit card',
+    hint: 'Secure card checkout via Stripe on the receiving server',
+  },
+  {
+    id: 'paypal',
+    label: 'PayPal',
+    hint: 'PayPal checkout with server-side capture and webhook confirmation',
+  },
+  {
+    id: 'other',
+    label: 'Other',
+    hint: 'SUI, USDC on Sui, or $GOON — sign in wallet and send to treasury',
+  },
+];
+
+export const MEMBERSHIP_CRYPTO_ASSETS: ReadonlyArray<{
+  id: MembershipCryptoAsset;
+  label: string;
+  hint: string;
+}> = [
+  {
+    id: 'sui',
+    label: 'SUI',
+    hint: 'USD-equivalent SUI at checkout spot price',
+  },
+  {
+    id: 'usdc-sui',
+    label: 'USDC on Sui',
+    hint: 'Send USDC equal to the tier USD amount',
+  },
+  {
+    id: 'goon',
+    label: '$GOON',
+    hint: 'Send GOON equal to the tier USD amount',
+  },
+];
+
+export const MEMBERSHIP_PAYMENT_METHODS = MEMBERSHIP_CHECKOUT_RAILS;
 
 export const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
     id: 'adventurer',
     tier: 'Adventurer',
     label: 'Adventurer',
-    tagline: 'Verified free access after human check.',
-    monthlyUsd: 0,
-    annualUsd: 0,
+    tagline: '$3 USDC/mo or claim free with a verified X.com account.',
+    monthlyUsd: 3,
+    annualUsd: 27,
     channelSlots: 3,
     boostCount: 1,
     squadSlots: 0,
     juryEligible: false,
-    highlights: ['Channel creation', 'Guild creation', '1 boost', '3 followed channels'],
+    claimableViaVerifiedX: true,
+    highlights: [
+      'Channel creation',
+      'Guild creation',
+      '1 boost',
+      '3 followed channels',
+      'Claimable via verified X.com OAuth',
+    ],
   },
   {
     id: 'pro',
@@ -54,6 +118,7 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     boostCount: 6,
     squadSlots: 3,
     juryEligible: true,
+    claimableViaVerifiedX: false,
     highlights: ['6 boosts', '3 squad slots', 'Jury eligibility', 'Profile cosmetics tier I'],
   },
   {
@@ -67,6 +132,7 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     boostCount: 8,
     squadSlots: 8,
     juryEligible: true,
+    claimableViaVerifiedX: false,
     highlights: ['8 boosts', '8 squad slots', 'Banner slots', 'Premium reactions & filters'],
   },
 ];
@@ -78,6 +144,10 @@ export type MembershipPlanState = {
   billingCycle: MembershipBillingCycle;
   status: MembershipPlanStatus;
   pendingTier: PaidMembershipTier | null;
+  pendingCheckoutRail: MembershipCheckoutRail | null;
+  pendingCryptoAsset: MembershipCryptoAsset | null;
+  pendingPaymentId: string | null;
+  adventurerSource: AdventurerAccessSource;
   renewsAtMs: number;
   updatedAtMs: number;
 };
@@ -96,6 +166,10 @@ function defaultMembershipState(): MembershipPlanState {
     billingCycle: 'monthly',
     status: 'active',
     pendingTier: null,
+    pendingCheckoutRail: null,
+    pendingCryptoAsset: null,
+    pendingPaymentId: null,
+    adventurerSource: 'paid',
     renewsAtMs: Date.now() + 30 * 24 * 60 * 60 * 1000,
     updatedAtMs: Date.now(),
   };
@@ -114,7 +188,9 @@ export function readMembershipPlanState(): MembershipPlanState {
       return cachedMembershipState;
     }
 
-    const parsed = JSON.parse(stored) as Partial<MembershipPlanState>;
+    const parsed = JSON.parse(stored) as Partial<MembershipPlanState> & {
+      pendingPaymentMethod?: 'card' | 'paypal' | 'sui' | 'usdc-sui';
+    };
     const activeTier =
       parsed.activeTier === 'Pro' || parsed.activeTier === 'Elite' || parsed.activeTier === 'Adventurer'
         ? parsed.activeTier
@@ -135,6 +211,52 @@ export function readMembershipPlanState(): MembershipPlanState {
         parsed.pendingTier === 'Elite' ||
         parsed.pendingTier === 'Adventurer'
           ? parsed.pendingTier
+          : null,
+      pendingCheckoutRail: (() => {
+        if (
+          parsed.pendingCheckoutRail === 'card' ||
+          parsed.pendingCheckoutRail === 'paypal' ||
+          parsed.pendingCheckoutRail === 'other'
+        ) {
+          return parsed.pendingCheckoutRail;
+        }
+
+        const legacy = parsed.pendingPaymentMethod;
+
+        if (legacy === 'card' || legacy === 'paypal') {
+          return legacy;
+        }
+
+        if (legacy === 'sui' || legacy === 'usdc-sui') {
+          return 'other';
+        }
+
+        return null;
+      })(),
+      pendingCryptoAsset: (() => {
+        if (
+          parsed.pendingCryptoAsset === 'sui' ||
+          parsed.pendingCryptoAsset === 'usdc-sui' ||
+          parsed.pendingCryptoAsset === 'goon'
+        ) {
+          return parsed.pendingCryptoAsset;
+        }
+
+        if (parsed.pendingPaymentMethod === 'sui') {
+          return 'sui';
+        }
+
+        if (parsed.pendingPaymentMethod === 'usdc-sui') {
+          return 'usdc-sui';
+        }
+
+        return null;
+      })(),
+      pendingPaymentId:
+        typeof parsed.pendingPaymentId === 'string' ? parsed.pendingPaymentId : null,
+      adventurerSource:
+        parsed.adventurerSource === 'paid' || parsed.adventurerSource === 'x-claim'
+          ? parsed.adventurerSource
           : null,
       renewsAtMs: typeof parsed.renewsAtMs === 'number' ? parsed.renewsAtMs : Date.now(),
       updatedAtMs: typeof parsed.updatedAtMs === 'number' ? parsed.updatedAtMs : Date.now(),
@@ -162,15 +284,36 @@ export function membershipPlanForTier(tier: PaidMembershipTier): MembershipPlan 
 }
 
 export function formatMembershipPrice(plan: MembershipPlan, cycle: MembershipBillingCycle): string {
-  if (plan.monthlyUsd === 0) {
-    return 'Free';
-  }
+  const currencySuffix = plan.tier === 'Adventurer' ? ' USDC' : '';
 
   if (cycle === 'annual') {
-    return '$' + plan.annualUsd.toFixed(0) + '/yr';
+    return '$' + plan.annualUsd.toFixed(0) + currencySuffix + '/yr';
   }
 
-  return '$' + plan.monthlyUsd.toFixed(2) + '/mo';
+  return '$' + plan.monthlyUsd.toFixed(2) + currencySuffix + '/mo';
+}
+
+export function membershipCheckoutRailLabel(rail: MembershipCheckoutRail): string {
+  return MEMBERSHIP_CHECKOUT_RAILS.find((entry) => entry.id === rail)?.label ?? rail;
+}
+
+export function membershipCryptoAssetLabel(asset: MembershipCryptoAsset): string {
+  return MEMBERSHIP_CRYPTO_ASSETS.find((entry) => entry.id === asset)?.label ?? asset;
+}
+
+export function membershipPaymentMethodLabel(method: MembershipCheckoutRail): string {
+  return membershipCheckoutRailLabel(method);
+}
+
+export function membershipCheckoutSelectionLabel(
+  rail: MembershipCheckoutRail,
+  cryptoAsset: MembershipCryptoAsset | null
+): string {
+  if (rail === 'other' && cryptoAsset) {
+    return membershipCryptoAssetLabel(cryptoAsset);
+  }
+
+  return membershipCheckoutRailLabel(rail);
 }
 
 export function effectiveMemberTier(state: MembershipPlanState = readMembershipPlanState()): PaidMembershipTier {
@@ -201,7 +344,9 @@ export type MembershipActionResult =
 
 export function requestMembershipUpgrade(
   targetTier: PaidMembershipTier,
-  billingCycle: MembershipBillingCycle
+  billingCycle: MembershipBillingCycle,
+  checkoutRail: MembershipCheckoutRail = 'card',
+  cryptoAsset: MembershipCryptoAsset | null = null
 ): MembershipActionResult {
   const state = readMembershipPlanState();
 
@@ -209,8 +354,15 @@ export function requestMembershipUpgrade(
     return { ok: false, reason: 'Choose a higher tier to upgrade.' };
   }
 
-  if (targetTier === 'Adventurer') {
-    return { ok: false, reason: 'Adventurer is unlocked through verification, not checkout.' };
+  if (targetTier === 'Adventurer' && isXVerificationEligibleForAdventurerClaim()) {
+    return {
+      ok: false,
+      reason: 'Your verified X.com account already qualifies for Adventurer. Use Claim via X instead.',
+    };
+  }
+
+  if (checkoutRail === 'other' && !cryptoAsset) {
+    return { ok: false, reason: 'Choose SUI, USDC on Sui, or $GOON under Other.' };
   }
 
   saveMembershipPlanState({
@@ -218,20 +370,83 @@ export function requestMembershipUpgrade(
     billingCycle,
     status: 'pending-upgrade',
     pendingTier: targetTier,
+    pendingCheckoutRail: checkoutRail,
+    pendingCryptoAsset: checkoutRail === 'other' ? cryptoAsset : null,
+    pendingPaymentId: null,
+    updatedAtMs: Date.now(),
+  });
+
+  const plan = membershipPlanForTier(targetTier);
+  const price = formatMembershipPrice(plan, billingCycle);
+
+  return {
+    ok: true,
+    message:
+      'Upgrade to ' +
+      plan.label +
+      ' queued (' +
+      price +
+      ' via ' +
+      membershipCheckoutSelectionLabel(checkoutRail, cryptoAsset) +
+      '). Continue to checkout.',
+  };
+}
+
+export function claimAdventurerMembershipViaX(): MembershipActionResult {
+  if (!isXVerificationEligibleForAdventurerClaim()) {
+    return {
+      ok: false,
+      reason: 'Link and verify your X.com account through X authorization before claiming Adventurer.',
+    };
+  }
+
+  const state = readMembershipPlanState();
+
+  if (TIER_RANK[state.activeTier] > TIER_RANK.Adventurer && state.status === 'active') {
+    return { ok: false, reason: 'You already have a higher membership tier than Adventurer.' };
+  }
+
+  const cycleMs = 30 * 24 * 60 * 60 * 1000;
+
+  saveMembershipPlanState({
+    ...state,
+    activeTier: 'Adventurer',
+    billingCycle: 'monthly',
+    status: 'active',
+    pendingTier: null,
+    pendingCheckoutRail: null,
+    pendingCryptoAsset: null,
+    pendingPaymentId: null,
+    adventurerSource: 'x-claim',
+    renewsAtMs: Date.now() + cycleMs,
     updatedAtMs: Date.now(),
   });
 
   return {
     ok: true,
-    message: 'Upgrade to ' + targetTier + ' queued. Perks activate after payment confirmation.',
+    message: 'Adventurer claimed through verified X.com authorization. Renews while X stays linked.',
   };
 }
 
-export function confirmMembershipUpgrade(): MembershipActionResult {
+export function setMembershipPendingPaymentId(paymentId: string): void {
+  const state = readMembershipPlanState();
+
+  saveMembershipPlanState({
+    ...state,
+    pendingPaymentId: paymentId,
+    updatedAtMs: Date.now(),
+  });
+}
+
+export function finalizeMembershipUpgradeAfterPayment(paymentId: string): MembershipActionResult {
   const state = readMembershipPlanState();
 
   if (state.status !== 'pending-upgrade' || !state.pendingTier) {
-    return { ok: false, reason: 'No pending upgrade to confirm.' };
+    return { ok: false, reason: 'No pending upgrade to finalize.' };
+  }
+
+  if (state.pendingPaymentId && state.pendingPaymentId !== paymentId) {
+    return { ok: false, reason: 'Payment does not match the active checkout session.' };
   }
 
   const cycleMs = state.billingCycle === 'annual' ? 365 : 30;
@@ -242,11 +457,31 @@ export function confirmMembershipUpgrade(): MembershipActionResult {
     billingCycle: state.billingCycle,
     status: 'active',
     pendingTier: null,
+    pendingCheckoutRail: null,
+    pendingCryptoAsset: null,
+    pendingPaymentId: null,
+    adventurerSource: state.pendingTier === 'Adventurer' ? 'paid' : state.adventurerSource,
     renewsAtMs,
     updatedAtMs: Date.now(),
   });
 
-  return { ok: true, message: 'Welcome to ' + state.pendingTier + '.' };
+  const paymentLabel = state.pendingCheckoutRail
+    ? ' via ' +
+      membershipCheckoutSelectionLabel(state.pendingCheckoutRail, state.pendingCryptoAsset)
+    : '';
+
+  return { ok: true, message: 'Welcome to ' + state.pendingTier + paymentLabel + '.' };
+}
+
+/** Legacy local-only confirm when payment API is unavailable. */
+export function confirmMembershipUpgrade(): MembershipActionResult {
+  const state = readMembershipPlanState();
+
+  if (state.status !== 'pending-upgrade' || !state.pendingTier) {
+    return { ok: false, reason: 'No pending upgrade to confirm.' };
+  }
+
+  return finalizeMembershipUpgradeAfterPayment(state.pendingPaymentId ?? 'local-mock');
 }
 
 export function requestMembershipDowngrade(targetTier: PaidMembershipTier): MembershipActionResult {
@@ -281,8 +516,28 @@ export function requestMembershipDowngrade(targetTier: PaidMembershipTier): Memb
 export function requestMembershipCancel(): MembershipActionResult {
   const state = readMembershipPlanState();
 
-  if (state.activeTier === 'Adventurer') {
-    return { ok: false, reason: 'Adventurer access is free and verification-based.' };
+  if (state.activeTier === 'Adventurer' && state.adventurerSource === 'x-claim') {
+    return {
+      ok: false,
+      reason: 'Unlink your verified X.com account in Settings to revoke Adventurer claim access.',
+    };
+  }
+
+  if (state.activeTier === 'Adventurer' && state.status === 'active') {
+    saveMembershipPlanState({
+      ...state,
+      status: 'pending-cancel',
+      pendingTier: null,
+      updatedAtMs: Date.now(),
+    });
+
+    return {
+      ok: true,
+      message:
+        'Adventurer subscription cancellation scheduled for ' +
+        new Date(state.renewsAtMs).toLocaleDateString() +
+        '. Re-link verified X.com to retain access without payment.',
+    };
   }
 
   saveMembershipPlanState({
@@ -297,7 +552,7 @@ export function requestMembershipCancel(): MembershipActionResult {
     message:
       'Cancellation scheduled. Paid perks end on ' +
       new Date(state.renewsAtMs).toLocaleDateString() +
-      ', then you keep Adventurer if verified.',
+      ', then you fall back to Adventurer.',
   };
 }
 
@@ -312,6 +567,9 @@ export function undoMembershipChange(): MembershipActionResult {
     ...state,
     status: 'active',
     pendingTier: null,
+    pendingCheckoutRail: null,
+    pendingCryptoAsset: null,
+    pendingPaymentId: null,
     updatedAtMs: Date.now(),
   });
 

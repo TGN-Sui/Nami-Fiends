@@ -106,13 +106,18 @@ NPC is the starting state.
 
 Adventurer represents verified-human or basic trusted access.
 
-Current unlock path:
+Current unlock paths:
 
 ```text
-NPC → Adventurer
+NPC → Adventurer (paid: $3 USDC/month or $27 USDC/year)
+NPC → Adventurer (free: verified X.com account via X authorization)
 ```
 
-This transition is controlled by:
+Paid checkout accepts card, PayPal, SUI (USD equivalent), or USDC on the Sui network.
+
+The free X.com path requires verified authorization through the official X account OAuth flow — not manual handle entry.
+
+On-chain tier transitions still coordinate with:
 
 ```move
 module nami::verification
@@ -307,20 +312,84 @@ Planned subscription pricing for the frontend membership manager (`MembershipPla
 
 | Tier | Monthly | Annual | Notes |
 |------|---------|--------|-------|
-| Adventurer | Free | Free | Unlocked via verification, not checkout |
+| Adventurer | $3 USDC | $27 USDC (~25% off) | Or claim free with verified X.com OAuth |
 | Pro Circuit | $9.99 | $89 (~26% off) | 6 boosts, 3 squads, jury eligibility, 5 followed channels |
 | Elite Crest | $19.99 | $179 (~25% off) | 8 boosts, 8 squads, banner slots, 8 followed channels |
+
+### Payment methods (UI prototype)
+
+```text
+Credit / debit card  → Stripe Checkout + webhook on receiving server
+PayPal               → PayPal Orders API + webhook on receiving server
+Other                → single rail with sub-choice:
+  SUI (USD-equivalent spot price at checkout)
+  USDC on Sui (USD-equal token amount)
+  $GOON (USD-equal token amount)
+```
+
+$GOON coin type (testnet):
+
+```text
+0xc31be4b73d3352373c9e2d99e8620944f414b24407495b1d0c9f5628e2e86104::goon::GOON
+```
+
+Crypto checkout prompts wallet sign-in and sends to `NAMI_PAYMENT_TREASURY_ADDRESS`.
 
 ### Billing rules (UI prototype)
 
 ```text
-Upgrade      → pending-upgrade, confirm step simulates payment
+Upgrade      → pending-upgrade, pick payment method, confirm step simulates checkout
+X claim      → verified X.com OAuth grants Adventurer without payment
 Downgrade    → pending-downgrade, effective at renewal date
-Cancel       → pending-cancel, reverts to Adventurer if verified at period end
+Cancel       → pending-cancel; paid Adventurer cancels at renewal; X-claim revokes on unlink
 Undo         → clears pending change before renewal
 ```
 
 On-chain membership still uses AdminCap until subscription proofs ship.
+
+### Backend payment API (receiving server)
+
+Membership checkout calls the backend indexer HTTP API (`VITE_NAMI_INDEXER_URL`, default `http://127.0.0.1:8787`).
+
+```text
+GET  /api/payments/membership/config
+POST /api/payments/membership/intents
+GET  /api/payments/membership/intents/:paymentId
+POST /api/payments/membership/intents/:paymentId/mock/confirm
+POST /api/payments/membership/intents/:paymentId/crypto/confirm
+POST /api/payments/webhooks/stripe
+POST /api/payments/webhooks/paypal
+```
+
+Intent create body:
+
+```text
+owner          → 0x wallet address
+tier           → adventurer | pro | elite
+billingCycle   → monthly | annual
+rail           → card | paypal | other
+cryptoAsset    → sui | usdc | goon (required when rail = other)
+successUrl     → optional return URL after provider checkout
+cancelUrl      → optional cancel URL
+```
+
+Public config (`GET .../config`) exposes treasury address, coin types, USD spot helpers, and publishable Stripe/PayPal keys. Payment intents persist under `backend/data/projections/membership-payments.json` (local demo storage).
+
+Backend env (`backend/.env.example`):
+
+```text
+NAMI_PAYMENT_TREASURY_ADDRESS
+NAMI_USDC_COIN_TYPE
+NAMI_GOON_COIN_TYPE
+NAMI_SUI_USD_PRICE
+NAMI_PAYMENT_ALLOW_MOCK
+NAMI_PAYMENT_SUCCESS_URL
+NAMI_PAYMENT_CANCEL_URL
+STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY / STRIPE_WEBHOOK_SECRET
+PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / NAMI_PAYPAL_MODE
+```
+
+Frontend checkout panels: `MembershipCheckoutPanel`, `MembershipPaymentMethods`, `MembershipPaymentReturnHandler`, `MembershipUpgradeOverlay`.
 
 ---
 

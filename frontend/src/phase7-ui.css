@@ -323,7 +323,7 @@
 
 .embedded-social-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
 
@@ -334,33 +334,150 @@
   border-radius: 12px;
   border: 1px solid rgba(120, 190, 255, 0.16);
   background: rgba(255, 255, 255, 0.04);
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto auto;
+}
+
+.embedded-social-card.is-live-embed-card {
+  grid-column: 1 / -1;
+  border-color: rgba(255, 92, 92, 0.38);
+  box-shadow: 0 0 24px rgba(255, 92, 92, 0.08);
+}
+
+.embedded-social-card.is-playable-embed-card {
+  border-color: rgba(117, 188, 224, 0.28);
 }
 
 .embedded-social-card-actions {
   display: flex;
-  justify-content: center;
-  margin-top: 4px;
+  justify-content: flex-start;
+  margin-top: 2px;
 }
 
-.embedded-social-open-feed {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 132px;
-  text-decoration: none;
+.embedded-social-open-external {
+  font-size: 0.78rem;
+}
+
+.embedded-social-player {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.embedded-social-player.is-playable:not(.is-x-post-embed-player) {
+  aspect-ratio: 16 / 9;
+}
+
+.embedded-social-player.is-featured-embed-player:not(.is-x-post-embed-player) {
+  max-height: min(62vh, 520px);
+}
+
+.embedded-social-player.is-x-post-embed-player {
+  aspect-ratio: auto;
+  width: 100%;
+  max-width: 550px;
+  margin-inline: auto;
+}
+
+.embedded-social-player.is-x-post-embed-player.is-featured-embed-player {
+  max-height: none;
+}
+
+.embedded-social-player-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  border: 0;
+  background: #000;
+}
+
+.embedded-social-player-frame.is-x-post-embed-frame {
+  width: 550px;
+  max-width: 100%;
+  height: 520px;
+  min-height: 520px;
+  background: transparent;
+}
+
+.embedded-social-player.is-unconfigured:not(.is-unconfigured-x-post) {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  aspect-ratio: 16 / 9;
+  place-content: center;
   text-align: center;
+  border: 1px dashed rgba(117, 188, 224, 0.24);
 }
 
-.embedded-social-preview {
+.embedded-social-player.is-unconfigured-x-post {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  width: 100%;
+  max-width: 550px;
+  min-height: 520px;
+  margin-inline: auto;
+  place-content: center;
+  text-align: center;
+  border: 1px dashed rgba(117, 188, 224, 0.24);
+  aspect-ratio: auto;
+}
+
+.embedded-social-panel[data-embedded-surface='member'] .embedded-social-grid {
+  grid-template-columns: minmax(0, 550px);
+  justify-content: center;
+}
+
+.embedded-social-panel[data-embedded-surface='member'] .embedded-social-card.is-x {
+  width: 100%;
+  max-width: 550px;
+  justify-self: center;
+}
+
+.embedded-social-panel[data-embedded-surface='member'] .embedded-social-card.is-x.is-live-embed-card {
+  grid-column: 1;
+}
+
+.embedded-social-player.is-unconfigured p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.embedded-social-player-placeholder {
   display: grid;
   place-items: center;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(24, 111, 255, 0.18), rgba(255, 255, 255, 0.04));
   font-size: 2rem;
+  opacity: 0.7;
+}
+
+.embedded-live-pill {
+  color: #ffb4b4;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: embeddedLivePulse 2s ease-in-out infinite;
+}
+
+@keyframes embeddedLivePulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.settings-embedded-link-live-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: rgba(185, 210, 235, 0.86);
 }
 
 .settings-embedded-links-block {
@@ -1246,17 +1363,97 @@
   font-size: 0.88rem;
 }
 
-.nami-pinned-profile-card .sidebar-player-avatar.uniform-member-avatar {
+.pinned-profile-avatar-shell {
+  position: relative;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  overflow: visible;
+}
+
+.pinned-profile-avatar {
+  position: relative;
   width: 54px;
   height: 54px;
   min-width: 54px;
   min-height: 54px;
+  display: grid;
+  place-items: center;
   border-radius: 18px;
-  font-size: 1rem;
+  background: rgba(5, 9, 15, 0.76);
+  color: #eef7ff;
+  font-size: 0.95rem;
+  font-weight: 950;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.nami-pinned-profile-card .sidebar-player-avatar .member-avatar-initials {
-  font-size: 0.95rem;
+.pinned-profile-avatar.has-pinned-avatar-photo {
+  background-color: rgba(5, 9, 15, 0.2);
+  color: transparent;
+}
+
+.pinned-profile-avatar-initials {
+  position: relative;
+  z-index: 2;
+}
+
+.pinned-profile-avatar.is-nami-rainbow-foil-border {
+  overflow: visible;
+  border: 3px solid transparent !important;
+}
+
+.pinned-profile-avatar.is-nami-rainbow-foil-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  pointer-events: none;
+}
+
+.pinned-profile-level-chip {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  z-index: 6;
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.35);
+  background: #07111d;
+  color: #7ee6ff;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.pinned-profile-avatar-shell .member-streaming-live-dot {
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
 }
 
 @media (max-width: 760px) {
@@ -1291,10 +1488,11 @@
 
 .is-uniform-vertical-passport .nami-profile-card-frame-vertical,
 .is-uniform-vertical-passport .tcg-foil-passport-frame-vertical {
-  min-height: 500px;
+  min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 14px;
+  gap: 16px;
 }
 
 .is-uniform-vertical-passport .nami-profile-card-nameplate h2 {
@@ -1345,9 +1543,57 @@
 
 .nami-profile-card-header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.nami-profile-card-header .mini-badge {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nami-profile-card-header > strong {
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.nami-profile-card-frame-vertical .member-avatar-live-shell,
+.is-uniform-vertical-passport .nami-profile-card-frame-vertical .member-avatar-live-shell,
+.tcg-passport-horizontal-identity .member-avatar-live-shell {
+  display: block;
+  line-height: normal;
+  justify-self: center;
+  width: min(100%, 190px);
+  margin-inline: auto;
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.is-pinned-profile-avatar-shell.member-avatar-live-shell {
+  display: block;
+  line-height: normal;
+  overflow: visible;
+}
+
+.member-avatar-live-shell > .nami-profile-card-avatar {
+  margin-inline: auto;
+}
+
+.nami-profile-card-frame-vertical .nami-profile-card-nameplate,
+.nami-profile-card-frame-vertical .nami-profile-card-stats {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.nami-profile-card-avatar.uniform-member-avatar {
+  overflow: visible;
 }
 
 .gamehub-interest-modules-stack {
@@ -2140,6 +2386,11 @@ button.uniform-member-avatar {
   overflow: hidden;
 }
 
+.uniform-member-avatar.is-nami-rainbow-foil-border,
+button.uniform-member-avatar.is-nami-rainbow-foil-border {
+  overflow: visible;
+}
+
 .uniform-member-avatar.is-uniform-foil-frame {
   box-shadow:
     0 0 0 2px rgba(255, 210, 120, 0.45),
@@ -2892,10 +3143,365 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
   }
 }
 
+.membership-plan-x-claim-note {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(159, 255, 210, 0.88);
+}
+
+.membership-payment-methods {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 188, 224, 0.2);
+  background: rgba(5, 9, 15, 0.42);
+}
+
+.membership-payment-methods-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.membership-payment-methods-heading p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.membership-payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.membership-payment-method-grid.is-three-rail-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.membership-crypto-asset-picker {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(117, 188, 224, 0.16);
+}
+
+.membership-crypto-asset-picker-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(185, 210, 235, 0.78);
+}
+
+.membership-crypto-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.membership-crypto-asset-chip {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  background: rgba(5, 9, 15, 0.5);
+  text-align: left;
+  cursor: pointer;
+}
+
+.membership-crypto-asset-chip span {
+  color: rgba(185, 210, 235, 0.76);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.membership-crypto-asset-chip.is-selected-crypto-asset {
+  border-color: rgba(255, 196, 92, 0.45);
+  box-shadow: 0 0 16px rgba(255, 196, 92, 0.1);
+}
+
+.membership-checkout-panel {
+  display: grid;
+  gap: 12px;
+  border-color: rgba(90, 220, 170, 0.28);
+}
+
+.membership-checkout-copy p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  line-height: 1.45;
+}
+
+.membership-checkout-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  background: rgba(5, 9, 15, 0.45);
+  font-size: 0.82rem;
+}
+
+.membership-checkout-provider-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.membership-checkout-provider-panel code {
+  word-break: break-all;
+  font-size: 0.76rem;
+}
+
+.membership-checkout-wallet-hint {
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.8rem;
+}
+
+.membership-payment-method-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.2);
+  background: rgba(5, 9, 15, 0.55);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.membership-payment-method-card span {
+  color: rgba(185, 210, 235, 0.78);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.membership-payment-method-card.is-selected-payment-method {
+  border-color: rgba(90, 220, 170, 0.5);
+  box-shadow: 0 0 18px rgba(90, 220, 170, 0.1);
+}
+
+.membership-adventurer-claim-card {
+  display: grid;
+  gap: 12px;
+  border-color: rgba(117, 188, 224, 0.28);
+  background:
+    linear-gradient(135deg, rgba(8, 14, 24, 0.82), rgba(5, 9, 15, 0.72));
+}
+
+.membership-adventurer-claim-copy h3 {
+  margin: 0;
+}
+
+.membership-adventurer-claim-copy p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  line-height: 1.45;
+}
+
+.membership-adventurer-claim-status {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  background: rgba(5, 9, 15, 0.45);
+}
+
+.membership-adventurer-claim-status span {
+  color: rgba(185, 210, 235, 0.8);
+  font-size: 0.8rem;
+}
+
+.membership-adventurer-claim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.membership-access-card {
+  display: grid;
+  gap: 12px;
+}
+
+.membership-access-card.is-compact-membership-access {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.membership-access-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.membership-access-copy strong {
+  font-size: 1.05rem;
+}
+
+.membership-access-copy p,
+.membership-access-meta span {
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.membership-access-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.membership-access-upgrade-btn {
+  width: fit-content;
+}
+
+.membership-upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
+  background: rgba(2, 5, 10, 0.82);
+  backdrop-filter: blur(32px) saturate(145%);
+  -webkit-backdrop-filter: blur(32px) saturate(145%);
+  animation: membershipOverlayFadeIn 0.28s ease;
+}
+
+.membership-upgrade-dialog {
+  position: relative;
+  width: min(1080px, 100%);
+  max-height: min(92vh, 920px);
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.4vw, 28px);
+  border-radius: 22px;
+  border: 1px solid rgba(117, 188, 224, 0.28);
+  background:
+    linear-gradient(180deg, rgba(8, 14, 24, 0.94), rgba(4, 8, 14, 0.9));
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(117, 215, 255, 0.08);
+  animation: membershipDialogPopIn 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.membership-upgrade-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(117, 188, 224, 0.24);
+  border-radius: 999px;
+  background: rgba(5, 9, 15, 0.72);
+  color: rgba(220, 235, 250, 0.92);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.membership-upgrade-header {
+  display: grid;
+  gap: 6px;
+  padding-right: 42px;
+}
+
+.membership-upgrade-header p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  line-height: 1.45;
+}
+
+.membership-upgrade-status {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  background: rgba(5, 9, 15, 0.5);
+}
+
+.membership-upgrade-status strong {
+  font-size: 1.1rem;
+}
+
+.membership-upgrade-status.is-status-pending-upgrade,
+.membership-upgrade-status.is-status-pending-downgrade,
+.membership-upgrade-status.is-status-pending-cancel {
+  border-color: rgba(255, 196, 92, 0.45);
+  background: rgba(255, 196, 92, 0.08);
+}
+
+.membership-upgrade-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.membership-upgrade-plan-card {
+  animation: membershipCardPopIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.membership-upgrade-actions {
+  margin-top: 4px;
+}
+
+@keyframes membershipOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes membershipDialogPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes membershipCardPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 980px) {
   .membership-plans-hero,
   .membership-plan-grid,
+  .membership-upgrade-plan-grid,
+  .membership-payment-method-grid,
+  .membership-crypto-asset-grid,
   .nami-owner-capability-list {
+    grid-template-columns: 1fr;
+  }
+
+  .membership-access-card.is-compact-membership-access {
     grid-template-columns: 1fr;
   }
 }
@@ -3198,21 +3804,21 @@ body.is-hub-spotlight-burst::after {
 }
 
 body.is-hub-spotlight-burst.is-hub-spotlight-nami::after {
-  --hub-burst-x: 84%;
-  --hub-burst-y: 82%;
-  --hub-burst-dx: 38%;
-  --hub-burst-dy: 34%;
-  --hub-rest-x: 84%;
-  --hub-rest-y: 82%;
+  --hub-burst-x: 22%;
+  --hub-burst-y: 18%;
+  --hub-burst-dx: 0%;
+  --hub-burst-dy: 0%;
+  --hub-rest-x: 22%;
+  --hub-rest-y: 18%;
 }
 
 body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
-  --hub-burst-x: 88%;
-  --hub-burst-y: 78%;
-  --hub-burst-dx: 42%;
-  --hub-burst-dy: 28%;
-  --hub-rest-x: 88%;
-  --hub-rest-y: 78%;
+  --hub-burst-x: 22%;
+  --hub-burst-y: 18%;
+  --hub-burst-dx: 0%;
+  --hub-burst-dy: 0%;
+  --hub-rest-x: 22%;
+  --hub-rest-y: 18%;
 }
 
 @keyframes namiHubSpotlightBurst {
@@ -3291,14 +3897,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 [data-nami-ui='glass'] .chat-window,
 [data-nami-ui='glass'] .settings-screen-layout,
 [data-nami-ui='glass'] .ignite-radio-dock,
-[data-nami-ui='glass'] .nami-season-progress {
-  background: rgba(10, 16, 28, 0.38);
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
-  border-color: rgba(255, 255, 255, 0.14);
+[data-nami-ui='glass'] .nami-season-progress,
+[data-nami-ui='glass'] .gamehub-discovery-panel,
+[data-nami-ui='glass'] .genre-chat-pinned-dock {
+  background: rgba(10, 16, 28, 0.2);
+  backdrop-filter: blur(22px) saturate(155%);
+  -webkit-backdrop-filter: blur(22px) saturate(155%);
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 10px 34px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 [data-nami-ui='glass'] .sidebar-nav button,
@@ -3306,18 +3914,19 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 [data-nami-ui='glass'] .global-chat-list-row,
 [data-nami-ui='glass'] .message-bubble,
 [data-nami-ui='glass'] .member-spotlight-card,
-[data-nami-ui='glass'] .embedded-social-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+[data-nami-ui='glass'] .embedded-social-card,
+[data-nami-ui='glass'] .gamehub-discovery-channel-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 [data-nami-ui='glass'][data-nami-theme='light'] .sidebar,
 [data-nami-ui='glass'][data-nami-theme='light'] .panel,
 [data-nami-ui='glass'][data-nami-theme='light'] .chat-window,
 [data-nami-ui='glass'][data-nami-theme='light'] .settings-screen-layout {
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.42);
   border-color: rgba(24, 111, 255, 0.14);
   box-shadow:
     0 12px 30px rgba(24, 111, 255, 0.08),
@@ -3480,4 +4089,926 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 
 .genre-chat-pinned-dock .global-chat-composer input {
   font-size: 0.82rem;
+}
+
+/* GameHub discovery panels */
+.gamehub-discovery-panels {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gamehub-discovery-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  background: rgba(5, 9, 15, 0.55);
+}
+
+.gamehub-discovery-panel-head {
+  display: grid;
+  gap: 6px;
+}
+
+.gamehub-discovery-eyebrow {
+  color: rgba(159, 255, 210, 0.88);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.gamehub-discovery-panel-head h2,
+.gamehub-discovery-panel-head p {
+  margin: 0;
+}
+
+.gamehub-discovery-panel-head p {
+  color: rgba(185, 210, 235, 0.78);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.gamehub-discovery-channel-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.gamehub-discovery-channel-card,
+.gamehub-discovery-rank-row,
+.gamehub-placement-preview {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  background: rgba(8, 12, 20, 0.62);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.gamehub-discovery-channel-card:hover,
+.gamehub-discovery-rank-row:hover,
+.gamehub-placement-preview:hover {
+  transform: translateY(-1px);
+  border-color: rgba(117, 188, 224, 0.34);
+}
+
+.gamehub-discovery-channel-copy,
+.gamehub-discovery-rank-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gamehub-discovery-channel-copy em,
+.gamehub-placement-preview em,
+.gamehub-discovery-channel-cta {
+  color: rgba(159, 255, 210, 0.9);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gamehub-discovery-rank-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.gamehub-discovery-rank-index {
+  font-size: 0.9rem;
+  font-weight: 1000;
+  color: rgba(117, 215, 255, 0.92);
+  min-width: 28px;
+}
+
+.gamehub-discovery-rank-bar {
+  display: block;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(117, 215, 255, 0.85), rgba(67, 245, 167, 0.75));
+  box-shadow: 0 0 12px rgba(117, 215, 255, 0.22);
+}
+
+.gamehub-placement-benefits {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(200, 220, 245, 0.86);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.gamehub-placement-preview {
+  grid-template-columns: auto 1fr auto;
+  margin-top: 4px;
+}
+
+/* Game card face refresh */
+.gamehub-cover-face-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(5, 9, 15, 0.08) 0%, rgba(5, 9, 15, 0.22) 42%, rgba(5, 9, 15, 0.72) 100%),
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.12), transparent 34%);
+  pointer-events: none;
+}
+
+.gamehub-cover-face-frame {
+  position: absolute;
+  inset: 10px;
+  z-index: 2;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 -16px 28px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.gamehub-cover-title-chip {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 68px;
+  z-index: 5;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 9, 15, 0.58);
+  color: #f4fbff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.gamehub-cover-card:hover .gamehub-cover-title-chip,
+.gamehub-cover-card:focus-visible .gamehub-cover-title-chip {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.gamehub-cover-card .gamehub-cover-monogram {
+  z-index: 3;
+  opacity: 0.42;
+}
+
+.gamehub-cover-card.has-game-cover-image .gamehub-cover-monogram,
+.gamehub-cover-art.has-game-cover-image .gamehub-cover-monogram {
+  opacity: 0;
+}
+
+/* Animated rainbow foil border */
+@property --nami-rainbow-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.is-nami-rainbow-foil-border {
+  position: relative;
+  isolation: isolate;
+  border: 3px solid transparent !important;
+}
+
+.is-nami-rainbow-foil-border:not(.uniform-member-avatar):not(button.uniform-member-avatar)::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  pointer-events: none;
+}
+
+.uniform-member-avatar.is-nami-rainbow-foil-border,
+button.uniform-member-avatar.is-nami-rainbow-foil-border {
+  overflow: visible;
+  border: 3px solid transparent !important;
+  background: rgba(5, 9, 15, 0.35);
+}
+
+.uniform-member-avatar.is-nami-rainbow-foil-border::after,
+button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 4;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  pointer-events: none;
+}
+
+.message-bubble.is-nami-team-chat-bubble {
+  border-width: 3px !important;
+  box-shadow:
+    0 0 18px rgba(117, 215, 255, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.tcg-foil-passport-shell.is-nami-rainbow-foil-border .tcg-foil-passport-frame.is-nami-rainbow-foil-border::before {
+  z-index: 6;
+}
+
+.is-nami-rainbow-foil-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes namiRainbowFoilBorder {
+  to {
+    --nami-rainbow-angle: 360deg;
+  }
+}
+
+.nami-team-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: #f8fbff;
+  background: rgba(5, 9, 15, 0.72);
+}
+
+.user-profile-page-title h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.embedded-social-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.embedded-feed-toggle.is-active-view {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.12);
+}
+
+.embedded-social-disabled-state {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(117, 188, 224, 0.24);
+  background: rgba(5, 9, 15, 0.35);
+}
+
+.embedded-social-disabled-state p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.86rem;
+}
+
+/* Pinned genre chat avatar clipping */
+.genre-chat-pinned-dock .global-message-stack {
+  padding: 8px 12px 8px 14px;
+}
+
+.genre-chat-pinned-dock .chat-message-row {
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 10px;
+  overflow: visible;
+}
+
+.genre-chat-pinned-dock .message-avatar,
+.genre-chat-pinned-dock .message-avatar-button {
+  width: 44px;
+  height: 44px;
+  margin-left: 2px;
+  overflow: visible;
+}
+
+.genre-chat-pinned-dock .uniform-member-tier-foil {
+  inset: -3px;
+}
+
+@media (max-width: 1100px) {
+  .gamehub-discovery-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tag mentions */
+.nami-tagged-message-body {
+  display: inline;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.nami-message-tag {
+  display: inline;
+  font-weight: 800;
+}
+
+.nami-message-tag-button {
+  display: inline;
+  margin: 0 1px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.35;
+  cursor: pointer;
+  text-decoration: none;
+  vertical-align: baseline;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.nami-message-tag-member,
+.nami-message-tag-button.nami-message-tag-member {
+  color: #9fffd2;
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.nami-message-tag-channel,
+.nami-message-tag-button.nami-message-tag-channel {
+  color: #8ec8ff;
+  background: rgba(77, 163, 255, 0.14);
+}
+
+.nami-message-tag-studio,
+.nami-message-tag-dev,
+.nami-message-tag-button.nami-message-tag-studio,
+.nami-message-tag-button.nami-message-tag-dev {
+  color: #ffd36e;
+  background: rgba(255, 211, 110, 0.14);
+}
+
+.nami-message-tag-squad,
+.nami-message-tag-button.nami-message-tag-squad {
+  color: #ffb38a;
+  background: rgba(255, 140, 90, 0.14);
+}
+
+.nami-message-tag-guild,
+.nami-message-tag-button.nami-message-tag-guild {
+  color: #d8b4ff;
+  background: rgba(190, 130, 255, 0.14);
+}
+
+.nami-message-tag-button:hover,
+.nami-message-tag-button:focus-visible {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.member-profile-social-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.member-profile-social-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.member-profile-action-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  background: rgba(5, 9, 15, 0.42);
+}
+
+.member-profile-action-panel p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  font-size: 0.86rem;
+}
+
+.member-profile-action-field {
+  display: grid;
+  gap: 6px;
+}
+
+.member-profile-action-field span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(185, 210, 235, 0.72);
+}
+
+.member-profile-action-field input,
+.member-profile-action-field select {
+  width: 100%;
+}
+
+.member-profile-action-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.member-profile-action-status,
+.member-profile-goon-total {
+  margin: 0;
+  color: rgba(159, 255, 210, 0.92);
+  font-size: 0.84rem;
+}
+
+.member-profile-goon-token-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: rgba(185, 210, 235, 0.82);
+}
+
+.member-profile-goon-token-row code {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(5, 9, 15, 0.55);
+  color: #ffd36e;
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.member-profile-goon-balance {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  font-size: 0.84rem;
+}
+
+/* Custom chat emojis */
+.chat-composer-with-emojis {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-composer-with-emojis input {
+  min-width: 0;
+}
+
+.chat-emoji-picker-root {
+  position: relative;
+}
+
+.chat-emoji-picker-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(117, 188, 224, 0.28);
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.55);
+  color: #ffd36e;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.chat-emoji-picker-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chat-emoji-picker-popover {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: min(280px, 72vw);
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.28);
+  border-radius: 14px;
+  background: rgba(8, 14, 22, 0.98);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+}
+
+.chat-emoji-picker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: rgba(185, 210, 235, 0.78);
+}
+
+.chat-emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.chat-emoji-picker-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  border-radius: 10px;
+  background: rgba(5, 9, 15, 0.45);
+  cursor: pointer;
+}
+
+.chat-emoji-picker-option:hover,
+.chat-emoji-picker-option:focus-visible {
+  border-color: rgba(255, 211, 110, 0.45);
+  outline: none;
+}
+
+.nami-custom-emoji-image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+.nami-custom-emoji-inline {
+  width: 1.35em;
+  height: 1.35em;
+  margin: 0 1px;
+  object-fit: contain;
+  vertical-align: -0.2em;
+  display: inline-block;
+}
+
+.nami-owner-emoji-panel .nami-owner-emoji-upload-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.nami-owner-emoji-hint {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.76);
+  font-size: 0.84rem;
+}
+
+.nami-owner-emoji-error {
+  margin: 0;
+  color: #ff8f9d;
+  font-size: 0.84rem;
+}
+
+.nami-owner-emoji-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.nami-owner-emoji-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.38);
+}
+
+.nami-owner-emoji-card-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.nami-owner-emoji-card-copy code {
+  color: #ffd36e;
+  font-size: 0.8rem;
+}
+
+.nami-owner-emoji-empty {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.72);
+  font-size: 0.86rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.genre-chat-pinned-dock .chat-composer-with-emojis {
+  padding: 0 10px 10px;
+}
+
+/* Member streaming live indicator */
+.member-avatar-live-shell {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: minmax(0, max-content);
+  grid-template-rows: minmax(0, max-content);
+  width: max-content;
+  height: max-content;
+  overflow: visible;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 0;
+  isolation: isolate;
+}
+
+.member-avatar-live-shell > .uniform-member-avatar,
+.member-avatar-live-shell > .chat-member-avatar,
+.member-avatar-live-shell > .message-avatar,
+.member-avatar-live-shell > .message-avatar-button,
+.member-avatar-live-shell > .sidebar-player-avatar,
+.member-avatar-live-shell > .nami-profile-card-avatar,
+.member-avatar-live-shell > .member-profile-avatar,
+.member-avatar-live-shell > .member-spotlight-avatar,
+.member-avatar-live-shell > .hub-member-avatar,
+.member-avatar-live-shell > .community-member-avatar,
+.member-avatar-live-shell > .messages-thread-avatar,
+.member-avatar-live-shell > button.uniform-member-avatar,
+.member-avatar-live-shell > button.message-avatar-button {
+  grid-area: 1 / 1;
+}
+
+.member-streaming-live-dot {
+  grid-area: 1 / 1;
+  place-self: start end;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  left: auto;
+  bottom: auto;
+  z-index: 12;
+  width: 11px;
+  height: 11px;
+  margin: 0;
+  border-radius: 50%;
+  background: #ff3152;
+  border: 2px solid rgba(8, 14, 22, 0.95);
+  box-shadow: 0 0 0 0 rgba(255, 49, 82, 0.55);
+  animation: member-streaming-live-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Profile & passport pictures */
+.member-avatar-live-shell:has(.member-profile-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.nami-profile-card-avatar) .member-streaming-live-dot {
+  top: 8px;
+  right: 8px;
+  width: 14px;
+  height: 14px;
+}
+
+.member-avatar-live-shell:has(.sidebar-player-avatar) .member-streaming-live-dot {
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+}
+
+.member-avatar-live-shell:has(.chat-member-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.member-spotlight-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.hub-member-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.community-member-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.messages-thread-avatar) .member-streaming-live-dot {
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-width: 1.5px;
+}
+
+.member-avatar-live-shell:has(.message-avatar) .member-streaming-live-dot,
+.member-avatar-live-shell:has(.message-avatar-button) .member-streaming-live-dot {
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border-width: 1.5px;
+}
+
+.sidebar-player-avatar.uniform-member-avatar.is-nami-rainbow-foil-border {
+  overflow: visible !important;
+}
+
+.member-streaming-live-dot.is-menu-streaming-dot,
+.member-streaming-live-dot.is-banner-streaming-dot {
+  position: static;
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  pointer-events: auto;
+}
+
+@keyframes member-streaming-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 49, 82, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 49, 82, 0);
+  }
+}
+
+.sidebar-profile-online-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(117, 188, 224, 0.14);
+  cursor: pointer;
+}
+
+.sidebar-profile-online-toggle input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  margin: 0;
+  accent-color: #ff3152;
+}
+
+.sidebar-profile-online-toggle-indicator {
+  display: grid;
+  place-items: center;
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.sidebar-profile-online-toggle-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.sidebar-profile-online-toggle-copy strong {
+  font-size: 0.86rem;
+}
+
+.sidebar-profile-online-toggle-copy small {
+  color: rgba(185, 210, 235, 0.72);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.member-streaming-live-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 49, 82, 0.34);
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 49, 82, 0.14),
+    rgba(5, 9, 15, 0.42)
+  );
+}
+
+.member-streaming-live-banner strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffb4c0;
+}
+
+.member-streaming-live-banner p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.86);
+  font-size: 0.86rem;
+}
+
+.tag-notifications-panel .tag-notification-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tag-notification-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.84rem;
+}
+
+.tag-notification-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tag-notification-row {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.38);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-notification-row strong {
+  font-size: 0.88rem;
+}
+
+.tag-notification-row p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.82);
+  font-size: 0.82rem;
+}
+
+.tag-notification-row small {
+  color: rgba(185, 210, 235, 0.62);
+}
+
+.tag-notification-row.is-read-tag-notification {
+  opacity: 0.72;
+}
+
+.tag-notification-empty {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.72);
+  font-size: 0.84rem;
 }

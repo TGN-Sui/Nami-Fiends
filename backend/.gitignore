@@ -4,4 +4,5 @@ dist/
 
 data/*.json
 data/*.jsonl
+data/projections/
 !data/.gitkeep

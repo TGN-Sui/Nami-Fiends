@@ -7,8 +7,8 @@
   --nami-theme-panel: rgba(18, 22, 34, 0.78);
   --nami-theme-accent: rgba(24, 111, 255, 0.7);
   --nami-theme-text: #eef7ff;
-  --nami-spotlight-x: 84%;
-  --nami-spotlight-y: 82%;
+  --nami-spotlight-x: 22%;
+  --nami-spotlight-y: 18%;
   background: var(--nami-theme-bg);
   color: var(--nami-theme-text);
 }
@@ -7652,14 +7652,19 @@ body,
   min-height: 100%;
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   position: relative;
+  overflow-x: clip;
 }
 
 body::before {
   content: '';
   position: fixed;
-  inset: -18%;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   opacity: 1;
@@ -8825,80 +8830,6 @@ button {
   }
 }
 
-/* Living background lens: subtle glow, curved zoom feeling, and organic motion behind panels. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: -16%;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.34;
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      rgba(117, 215, 255, 0.14) 0,
-      rgba(67, 245, 167, 0.075) 18%,
-      rgba(5, 9, 15, 0.04) 31%,
-      transparent 44%
-    );
-  filter: blur(2px);
-  mix-blend-mode: screen;
-  transform-origin: center;
-  animation: namiGridOrganicLens 28s ease-in-out infinite;
-}
-
-@keyframes namiGridOrganicLens {
-  0% {
-    transform: translate3d(-22%, -14%, 0) scale(0.82);
-    opacity: 0.18;
-  }
-
-  18% {
-    transform: translate3d(16%, -8%, 0) scale(1.08);
-    opacity: 0.31;
-  }
-
-  39% {
-    transform: translate3d(24%, 18%, 0) scale(0.92);
-    opacity: 0.24;
-  }
-
-  58% {
-    transform: translate3d(-6%, 24%, 0) scale(1.16);
-    opacity: 0.36;
-  }
-
-  79% {
-    transform: translate3d(-26%, 6%, 0) scale(0.96);
-    opacity: 0.26;
-  }
-
-  100% {
-    transform: translate3d(-22%, -14%, 0) scale(0.82);
-    opacity: 0.18;
-  }
-}
-
-/* Make sure UI remains above both animated background layers. */
-#root,
-.nami-app,
-.panel,
-.chat-window,
-.chat-side-panel {
-  position: relative;
-  z-index: 1;
-}
-
-/* Keep motion accessible. */
-@media (prefers-reduced-motion: reduce) {
-  .partner-feature::after,
-  .paid-feature::after,
-  .featured-partner-banner-card::after,
-  body::after {
-    animation: none !important;
-  }
-}
-
 /* =========================================================
    UI-A11C.2 — motion correction pass
    - living grid lens with color/tint + falloff
@@ -8938,7 +8869,7 @@ body::after {
 body::after {
   content: '';
   position: fixed;
-  inset: -18%;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   opacity: 0.34;
@@ -8951,84 +8882,64 @@ body::after {
       rgba(116, 215, 255, 0.10) 10%,
       rgba(67, 245, 167, 0.06) 18%,
       rgba(0, 0, 0, 0) 34%
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0) 0 34px,
-      rgba(116, 215, 255, 0.12) 34px 35px
-    ),
-    repeating-linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0) 0 34px,
-      rgba(67, 245, 167, 0.10) 34px 35px
     );
-  mask-image: radial-gradient(
-    circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.92) 12%,
-    rgba(0, 0, 0, 0.56) 24%,
-    rgba(0, 0, 0, 0.16) 34%,
-    rgba(0, 0, 0, 0) 46%
-  );
-  -webkit-mask-image: radial-gradient(
-    circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.92) 12%,
-    rgba(0, 0, 0, 0.56) 24%,
-    rgba(0, 0, 0, 0.16) 34%,
-    rgba(0, 0, 0, 0) 46%
-  );
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
+    radial-gradient(
+      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.92) 12%,
+      rgba(0, 0, 0, 0.56) 24%,
+      rgba(0, 0, 0, 0.16) 34%,
+      rgba(0, 0, 0, 0) 46%
+    );
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
+    radial-gradient(
+      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.92) 12%,
+      rgba(0, 0, 0, 0.56) 24%,
+      rgba(0, 0, 0, 0.16) 34%,
+      rgba(0, 0, 0, 0) 46%
+    );
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
   filter: blur(0.4px) saturate(116%);
   animation: namiOrganicGridLens 24s ease-in-out infinite;
 }
 
 @keyframes namiOrganicGridLens {
   0% {
-    transform: translate3d(10%, 14%, 0) scale(0.96);
-    background-position:
-      0 0,
-      0 0,
-      0 0;
+    transform: translate3d(4%, 6%, 0) scale(0.98);
+    opacity: 0.28;
   }
 
   20% {
-    transform: translate3d(16%, 10%, 0) scale(1.08);
-    background-position:
-      0 0,
-      8px 0,
-      0 8px;
+    transform: translate3d(8%, 4%, 0) scale(1.04);
+    opacity: 0.34;
   }
 
   42% {
-    transform: translate3d(22%, 18%, 0) scale(1.2);
-    background-position:
-      0 0,
-      14px 0,
-      0 14px;
+    transform: translate3d(10%, 8%, 0) scale(1.1);
+    opacity: 0.38;
   }
 
   62% {
-    transform: translate3d(14%, 22%, 0) scale(1.12);
-    background-position:
-      0 0,
-      9px 0,
-      0 9px;
+    transform: translate3d(6%, 10%, 0) scale(1.06);
+    opacity: 0.32;
   }
 
   82% {
-    transform: translate3d(8%, 16%, 0) scale(1.02);
-    background-position:
-      0 0,
-      4px 0,
-      0 4px;
+    transform: translate3d(3%, 7%, 0) scale(1.01);
+    opacity: 0.3;
   }
 
   100% {
-    transform: translate3d(10%, 14%, 0) scale(0.96);
-    background-position:
-      0 0,
-      0 0,
-      0 0;
+    transform: translate3d(4%, 6%, 0) scale(0.98);
+    opacity: 0.28;
   }
 }
 
@@ -13737,8 +13648,9 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .nami-profile-card-avatar::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 3px;
   z-index: 0;
+  border-radius: inherit;
   background-image: var(--member-avatar-image, none);
   background-position: center;
   background-size: cover;
@@ -13789,6 +13701,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .sidebar-player-avatar.uniform-member-avatar {
   position: relative;
   overflow: hidden;
+  background-color: rgba(5, 9, 15, 0.42);
+  background-image: none !important;
 }
 
 .chat-member-avatar::before,
@@ -13801,8 +13715,9 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .sidebar-player-avatar.uniform-member-avatar::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 3px;
   z-index: 0;
+  border-radius: inherit;
   background-image: var(--member-avatar-image, none);
   background-position: center;
   background-size: cover;
@@ -13825,7 +13740,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 .sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image {
-  background: rgba(5, 9, 15, 0.2) !important;
+  background-color: rgba(5, 9, 15, 0.2) !important;
 }
 
 .chat-member-avatar.has-member-avatar-image::before,
@@ -13858,7 +13773,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-spotlight-avatar.has-member-avatar-image > *,
 .spotlight-member-avatar.has-member-avatar-image > *,
 .hub-member-avatar.has-member-avatar-image > *,
-.community-member-avatar.has-member-avatar-image > * {
+.community-member-avatar.has-member-avatar-image > *,
+.sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image > * {
   position: relative;
   z-index: 2;
   color: transparent !important;
@@ -13924,7 +13840,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-spotlight-avatar.has-member-avatar-image,
 .chat-member-avatar.has-member-avatar-image,
 .message-avatar.has-member-avatar-image,
-.member-dot.has-member-avatar-image {
+.member-dot.has-member-avatar-image,
+.sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image {
   background-image: var(--member-avatar-image, none) !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
@@ -13935,7 +13852,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-spotlight-avatar.has-member-avatar-image::before,
 .chat-member-avatar.has-member-avatar-image::before,
 .message-avatar.has-member-avatar-image::before,
-.member-dot.has-member-avatar-image::before {
+.member-dot.has-member-avatar-image::before,
+.sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image::before {
   opacity: 1 !important;
 }
 

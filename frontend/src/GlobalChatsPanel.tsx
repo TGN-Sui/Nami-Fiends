@@ -11,7 +11,7 @@ import {
 import {
   canSendChatMessages,
   canSendOfficialChatMessages,
-  isEliteAuthor,
+  messageBubbleClass,
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
@@ -30,15 +30,20 @@ import {
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
   type GlobalChatRoom,
 } from './global-chats.js';
+import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { tagSuggestionHint } from './nami-tag-registry.js';
+import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, userProfile, type NamiMember } from './uiMockData.js';
 
 type GlobalChatsPanelProps = {
   onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
 };
 
 function GlobalChatRoomView(props: {
   chat: GlobalChatRoom;
   onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
   onClose?: () => void;
   compact?: boolean;
 }): ReactElement {
@@ -158,7 +163,7 @@ function GlobalChatRoomView(props: {
 
                 <div
                   className={
-                    'message-bubble' + (isEliteAuthor(message.author) ? ' is-elite-chat-bubble' : '')
+                    'message-bubble' + messageBubbleClass(member, message.author)
                   }
                 >
                   <div className="message-meta">
@@ -172,42 +177,33 @@ function GlobalChatRoomView(props: {
                     <span>{message.time}</span>
                     <ConductSignalDot signal={message.signal} size="sm" />
                   </div>
-                  <p>{message.body}</p>
+                  <p>
+                    <TaggedMessageBody
+                      body={message.body}
+                      {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
+                    />
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="global-chat-composer chat-composer-row">
-          <input
-            aria-label="Message global chat"
-            disabled={!canSend}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder={
-              canSend
-                ? props.chat.isOfficial
-                  ? 'Say something to the official room…'
-                  : 'Say something to the room…'
-                : 'Sign in and verify to send official chat messages'
-            }
-            value={draft}
-          />
-          <button
-            className="primary-action"
-            disabled={!canSend || !draft.trim()}
-            onClick={sendMessage}
-            type="button"
-          >
-            Send
-          </button>
-        </div>
+        <ChatComposerWithEmojis
+          ariaLabel="Message global chat"
+          canSend={canSend}
+          className="global-chat-composer chat-composer-row"
+          onChange={setDraft}
+          onSend={sendMessage}
+          placeholder={
+            canSend
+              ? props.chat.isOfficial
+                ? 'Say something to the official room… · ' + tagSuggestionHint()
+                : 'Say something to the room… · ' + tagSuggestionHint()
+              : 'Sign in and verify to send official chat messages'
+          }
+          value={draft}
+        />
 
         {props.chat.voiceEnabled && isOwner ? (
           <div className="global-chat-voice-controls">
@@ -227,6 +223,7 @@ function GlobalChatRoomView(props: {
 export function GenreChatRoomPanel(props: {
   activeChatId: string;
   onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
   compact?: boolean;
 }): ReactElement {
   const activeChat =
@@ -236,6 +233,7 @@ export function GenreChatRoomPanel(props: {
     <GlobalChatRoomView
       chat={activeChat}
       onOpenMember={props.onOpenMember}
+      {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       {...(props.compact ? { compact: true } : {})}
     />
   );
@@ -362,7 +360,11 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
           ) : null}
         </aside>
 
-        <GlobalChatRoomView chat={activeChat} onOpenMember={props.onOpenMember} />
+        <GlobalChatRoomView
+          chat={activeChat}
+          onOpenMember={props.onOpenMember}
+          {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+        />
       </div>
     </article>
   );
@@ -376,6 +378,7 @@ export function PinnedGenreChatDock(props: {
   onPinnedChange: (pinned: boolean) => void;
   onSelectChat: (chatId: string) => void;
   onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
 }): ReactElement | null {
   const activeChat =
     genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
@@ -504,7 +507,12 @@ export function PinnedGenreChatDock(props: {
         ))}
       </div>
 
-      <GlobalChatRoomView chat={activeChat} compact onOpenMember={props.onOpenMember} />
+      <GlobalChatRoomView
+        chat={activeChat}
+        compact
+        onOpenMember={props.onOpenMember}
+        {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+      />
 
       <button
         aria-label="Resize pinned genre chat"

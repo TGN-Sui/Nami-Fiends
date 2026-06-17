@@ -1,3 +1,4 @@
+import { isNamiTeamMember } from './channel-surface.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 import { readDemoOwner } from './protocol-env.js';
@@ -88,4 +89,19 @@ export function resolveMessageAuthorMember(
 
 export function isEliteAuthor(authorName: string): boolean {
   return memberByName(authorName)?.tier === 'Elite';
+}
+
+export function messageBubbleClass(
+  member: NamiMember | undefined,
+  authorName: string
+): string {
+  if (member && isNamiTeamMember(member)) {
+    return ' is-nami-team-chat-bubble is-nami-rainbow-foil-border';
+  }
+
+  if (member?.tier === 'Elite' || isEliteAuthor(authorName)) {
+    return ' is-elite-chat-bubble';
+  }
+
+  return '';
 }

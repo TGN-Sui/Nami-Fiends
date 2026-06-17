@@ -33,7 +33,7 @@ import {
   canSendChatMessages,
   canSendPrivateMessages,
   getSelfMember,
-  isEliteAuthor,
+  messageBubbleClass,
   PINNED_PROFILE_MODULE,
   resolveMessageAuthorMember,
 } from './member-access.js';
@@ -67,7 +67,11 @@ import { AccountConnectSection } from './account-connect.js';
 import { markSignedOut } from './member-auth-store.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
 import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
+import { channelRainbowBorderClass, isNamiTeamMember } from './channel-surface.js';
+import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
+import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler.js';
+import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
@@ -93,17 +97,27 @@ import {
   type GameHubInterestModule,
 } from './gamehub-preferences.js';
 import { GenreChatRoomPanel, PinnedGenreChatDock, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { MemberProfileActions } from './MemberProfileActions.js';
+import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
+import { TagNotificationsPanel } from './TagNotificationsPanel.js';
+import { seedDemoTagNotifications } from './nami-notifications-store.js';
+import { tagSuggestionHint } from './nami-tag-registry.js';
+import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
 import { ProfileEditPanel } from './ProfileEditPanel.js';
+import { PinnedProfileAvatar } from './PinnedProfileAvatar.js';
 
 
 import {
   chatMemberCardTierClass,
   ConductSignalDot,
+  MemberStreamingLiveDot,
   UniformMemberAvatar,
   UniformMemberAvatarButton,
 } from './member-avatar.js';
+import { useMemberStreamingOnline, useSelfStreamingOnline } from './member-online-store.js';
 import {
   requestProfileEditFocus,
   useSelfMember,
@@ -568,6 +582,7 @@ function SidebarProfileCard(props: {
 }): ReactElement {
   const sidebarMember = useSelfMember();
   const sidebarProgression = getNamiProgression(sidebarMember);
+  const { isStreamingOnline, setStreamingOnline } = useSelfStreamingOnline();
   const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false);
   const sidebarProfileShellRef = useRef<HTMLDivElement | null>(null);
 
@@ -627,9 +642,7 @@ function SidebarProfileCard(props: {
           onPointerMove={updateSidebarProfileFoil}
           type="button"
         >
-          <UniformMemberAvatar className="sidebar-player-avatar" member={sidebarMember}>
-            <strong>{sidebarProgression.level}</strong>
-          </UniformMemberAvatar>
+          <PinnedProfileAvatar level={sidebarProgression.level} />
 
           <div className="sidebar-player-copy">
             <span>{sidebarMember.name}</span>
@@ -642,6 +655,22 @@ function SidebarProfileCard(props: {
 
         {sidebarProfileMenuOpen ? (
           <div className="sidebar-profile-menu">
+            <label className="sidebar-profile-online-toggle">
+              <input
+                checked={isStreamingOnline}
+                onChange={(event) => setStreamingOnline(event.target.checked)}
+                type="checkbox"
+              />
+              <span className="sidebar-profile-online-toggle-copy">
+                <strong>I'm streaming</strong>
+                <small>Shows a live dot on your avatar for other members</small>
+              </span>
+              <span aria-hidden={!isStreamingOnline} className="sidebar-profile-online-toggle-indicator">
+                {isStreamingOnline ? (
+                  <MemberStreamingLiveDot className="is-menu-streaming-dot" memberId={sidebarMember.id} />
+                ) : null}
+              </span>
+            </label>
             <button
               onClick={() => {
                 setSidebarProfileMenuOpen(false);
@@ -1372,7 +1401,8 @@ function CryptoBubbleBoard(props: {
             <button
               className={
                 'crypto-community-bubble' +
-                (node.channel.id === props.activeChannelId ? ' is-active-crypto-bubble' : '')
+                (node.channel.id === props.activeChannelId ? ' is-active-crypto-bubble' : '') +
+                channelRainbowBorderClass(node.channel)
               }
               key={node.id}
               onClick={() => props.onOpenChannel(node.channel)}
@@ -1407,6 +1437,7 @@ function NamiHub(props: {
   onOpenMember: (member: (typeof members)[number]) => void;
   onViewEvent: (event: NamiEvent) => void;
   onNavigateToSettings?: () => void;
+  tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const featuredShowcaseChannels = channels.slice(0, 8);
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
@@ -1553,7 +1584,7 @@ function NamiHub(props: {
 
       <HubEventsPanel onViewEvent={props.onViewEvent} />
 
-      <HubGlobalChatsSection onOpenMember={props.onOpenMember} />
+      <HubGlobalChatsSection onOpenMember={props.onOpenMember} tagHandlers={props.tagHandlers} />
 
 <section className="nami-hub-lower-grid">
         <article className="panel community-growth-panel">
@@ -1669,6 +1700,7 @@ function GameHub(props: {
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
@@ -1858,62 +1890,93 @@ function GameHub(props: {
         <h1>GameHub</h1>
       </header>
 
-      <section className="gamehub-top-panel">
-        <article className="gamehub-feature-card partner-feature">
-          <span className="feature-label">Partner Channels</span>
-          <h2>Featured official spaces</h2>
-          <div className="compact-channel-list">
+      <section className="gamehub-top-panel gamehub-discovery-panels">
+        <article className="gamehub-discovery-panel is-partner-panel">
+          <header className="gamehub-discovery-panel-head">
+            <span className="gamehub-discovery-eyebrow">Partner Channels</span>
+            <h2>Official partner spaces</h2>
+            <p>Verified studios and channels with Nami partner status.</p>
+          </header>
+
+          <div className="gamehub-discovery-channel-grid">
             {partnerChannels.map((channel) => (
               <button
+                className={'gamehub-discovery-channel-card' + channelRainbowBorderClass(channel)}
                 key={channel.id}
                 onClick={() => props.onOpenProfile(channel)}
                 type="button"
               >
                 <ChannelAvatar channel={channel} size="sm" />
-                <span>
+                <span className="gamehub-discovery-channel-copy">
                   <strong>{channel.name}</strong>
                   <small>{channel.genre}</small>
+                  <em>{channel.subscribers.toLocaleString()} members</em>
                 </span>
+                <span className="gamehub-discovery-channel-cta">Open</span>
               </button>
             ))}
           </div>
         </article>
 
-        <article className="gamehub-feature-card">
-          <span className="feature-label">Top Channels</span>
-          <h2>Trending by activity</h2>
-          <div className="compact-channel-list">
-            {topChannels.map((channel, index) => (
-              <button
-                key={channel.id}
-                onClick={() => props.onOpenProfile(channel)}
-                type="button"
-              >
-                <ChannelAvatar channel={channel} size="sm" />
-                <strong className="rank-badge">#{index + 1}</strong>
-                <span>
-                  <strong>{channel.name}</strong>
-                  <small>{channel.subscribers.toLocaleString()} subscribers</small>
-                </span>
-              </button>
-            ))}
-          </div>
+        <article className="gamehub-discovery-panel is-top-panel">
+          <header className="gamehub-discovery-panel-head">
+            <span className="gamehub-discovery-eyebrow">Top Channels</span>
+            <h2>Trending right now</h2>
+            <p>Ranked by live subscriber momentum across GameHub.</p>
+          </header>
+
+          <ol className="gamehub-discovery-rank-list">
+            {topChannels.map((channel, index) => {
+              const topMax = topChannels[0]?.subscribers ?? 1;
+              const momentum = Math.max(12, (channel.subscribers / topMax) * 100);
+
+              return (
+                <li key={channel.id}>
+                  <button
+                    className={'gamehub-discovery-rank-row' + channelRainbowBorderClass(channel)}
+                    onClick={() => props.onOpenProfile(channel)}
+                    type="button"
+                  >
+                    <span className="gamehub-discovery-rank-index">#{index + 1}</span>
+                    <ChannelAvatar channel={channel} size="sm" />
+                    <span className="gamehub-discovery-rank-copy">
+                      <strong>{channel.name}</strong>
+                      <small>{channel.subscribers.toLocaleString()} subscribers</small>
+                      <span className="gamehub-discovery-rank-bar" style={{ width: momentum + '%' }} />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
         </article>
 
-        <article className="gamehub-feature-card paid-feature">
-          <span className="feature-label">Featured Placement</span>
-          <h2>Pro / Elite channel boosts</h2>
-          <p>
-            Paid placement should increase discovery visibility, not trust status.
-            Verification and reputation remain identity-based.
-          </p>
+        <article className="gamehub-discovery-panel is-placement-panel">
+          <header className="gamehub-discovery-panel-head">
+            <span className="gamehub-discovery-eyebrow">Featured Placement</span>
+            <h2>Boost your discovery slot</h2>
+            <p>Paid placement increases visibility — not trust or verification.</p>
+          </header>
+
+          <ul className="gamehub-placement-benefits">
+            <li>Higher browser rotation weight</li>
+            <li>Partner carousel eligibility</li>
+            <li>Genre bubble spotlight priority</li>
+          </ul>
+
           <button
-            className="gamehub-themed-action gamehub-featured-channel-button"
+            className={
+              'gamehub-placement-preview' + channelRainbowBorderClass(props.selectedChannel)
+            }
             onClick={() => props.onOpenProfile(props.selectedChannel)}
             type="button"
           >
             <ChannelAvatar channel={props.selectedChannel} size="sm" />
-            <span>View {props.selectedChannel.name}</span>
+            <span>
+              <strong>{props.selectedChannel.name}</strong>
+              <small>Preview your featured placement card</small>
+            </span>
+            <em>View channel</em>
           </button>
         </article>
       </section>
@@ -1972,7 +2035,8 @@ function GameHub(props: {
                   className={
                     'discovery-card discovery-card-expanded gamehub-discovery-card gamehub-cover-card ' +
                     gameVerificationClass(channel) +
-                    (channel.verifiedGame ? ' is-verified-foil-card' : ' is-static-card')
+                    (channel.verifiedGame ? ' is-verified-foil-card' : ' is-static-card') +
+                    channelRainbowBorderClass(channel)
                   }
                   key={channel.id + '-' + copyIndex}
                   onClick={() => props.onOpenProfile(channel)}
@@ -1997,6 +2061,9 @@ function GameHub(props: {
                       className={'gamehub-cover-art' + (resolveChannelCoverUrl(channel) ? ' has-game-cover-image' : '')}
                       aria-hidden="true"
                     >
+                    <span className="gamehub-cover-face-scrim" />
+                    <span className="gamehub-cover-face-frame" />
+                    <span className="gamehub-cover-title-chip">{channel.name}</span>
                     <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
                     <span className="gamehub-cover-surface-chip" title="Game channel">
                       <i className="gamehub-cover-surface-icon" aria-hidden="true">▣</i>
@@ -2205,7 +2272,11 @@ function GameHub(props: {
                 ))}
               </div>
 
-              <GenreChatRoomPanel activeChatId={activeGenreChatId} onOpenMember={props.onOpenMember} />
+              <GenreChatRoomPanel
+                activeChatId={activeGenreChatId}
+                onOpenMember={props.onOpenMember}
+                tagHandlers={props.tagHandlers}
+              />
             </article>
           ) : null}
         </div>
@@ -2345,6 +2416,7 @@ function GameHub(props: {
           onOpenMember={props.onOpenMember}
           onPinnedChange={setGenreDockPinned}
           onSelectChat={setActiveGenreChatId}
+          tagHandlers={props.tagHandlers}
         />
       ) : null}
     </>
@@ -3833,6 +3905,7 @@ function GameChat(props: {
   channel: NamiChannel;
   onNavigate: (page: NamiPage) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const [hideNpc, setHideNpc] = useState(false);
   const [hideRed, setHideRed] = useState(false);
@@ -4057,7 +4130,7 @@ function GameChat(props: {
 
                     <div
                       className={
-                        'message-bubble' + (isEliteAuthor(message.author) ? ' is-elite-chat-bubble' : '')
+                        'message-bubble' + messageBubbleClass(member, message.author)
                       }
                     >
                       <div className="message-meta">
@@ -4083,9 +4156,13 @@ function GameChat(props: {
                       </div>
 
                       <p>
-                        {adultLanguageMode === 'censor'
-                          ? censorAdultLanguage(message.body)
-                          : message.body}
+                        <TaggedMessageBody
+                          body={message.body}
+                          handlers={props.tagHandlers}
+                          {...(adultLanguageMode === 'censor'
+                            ? { transformText: censorAdultLanguage }
+                            : {})}
+                        />
                       </p>
                     </div>
                   </div>
@@ -4093,40 +4170,27 @@ function GameChat(props: {
               })}
             </div>
 
-            <div className="chat-composer-row chat-input-placeholder">
-              <input
-                aria-label={'Message ' + props.channel.name}
-                disabled={!canSend}
-                onChange={(event) => setChatDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    if (canSend && chatDraft.trim()) {
-                      appendChannelChatMessage(chatDraft);
-                      setChatDraft('');
-                    }
-                  }
-                }}
-                placeholder={
-                  canSend ? 'Message ' + props.channel.name : 'Sign in and verify to send messages'
+            <ChatComposerWithEmojis
+              ariaLabel={'Message ' + props.channel.name}
+              canSend={canSend}
+              className="chat-composer-row chat-input-placeholder"
+              onChange={setChatDraft}
+              onSend={() => {
+                if (!canSend || !chatDraft.trim()) {
+                  return;
                 }
-                value={chatDraft}
-              />
-              <button
-                disabled={!canSend || !chatDraft.trim()}
-                onClick={() => {
-                  if (!canSend || !chatDraft.trim()) {
-                    return;
-                  }
 
-                  appendChannelChatMessage(chatDraft);
-                  setChatDraft('');
-                }}
-                type="button"
-              >
-                Send
-              </button>
-            </div>
+                appendChannelChatMessage(chatDraft);
+                setChatDraft('');
+              }}
+              placeholder={
+                canSend
+                  ? 'Message ' + props.channel.name + ' · ' + tagSuggestionHint()
+                  : 'Sign in and verify to send messages'
+              }
+              sendButtonClassName=""
+              value={chatDraft}
+            />
           </article>
 
                     <aside className="chat-side-panel chat-side-panel-collapsible">
@@ -4325,6 +4389,7 @@ function MemberProfileScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
   onOpenThread: (memberId: string) => void;
+  onNavigateGuilds: () => void;
   returnPage: NamiPage;
   returnLabel: string;
 }): ReactElement {
@@ -4341,6 +4406,7 @@ function MemberProfileScreen(props: {
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [privateDraft, setPrivateDraft] = useState('');
   const canMessage = canSendPrivateMessages() && props.member.id !== 'm1';
+  const isStreamingOnline = useMemberStreamingOnline(props.member.id);
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
   }, [props.member.id, refreshKey]);
@@ -4396,6 +4462,16 @@ function MemberProfileScreen(props: {
         <p>Member profile, history, and preference controls</p>
         <h1>{props.member.name}</h1>
       </header>
+
+      {isStreamingOnline ? (
+        <div className="member-streaming-live-banner" role="status">
+          <MemberStreamingLiveDot className="is-banner-streaming-dot" memberId={props.member.id} />
+          <div>
+            <strong>{props.member.name} is live</strong>
+            <p>Check the member feed below to watch their stream and live updates.</p>
+          </div>
+        </div>
+      ) : null}
 
       <section className="member-profile-page">
         <div className="member-profile-passport-hero">
@@ -4500,46 +4576,31 @@ function MemberProfileScreen(props: {
           />
         </div>
 
+        <MemberProfileActions member={props.member} onNavigateGuilds={props.onNavigateGuilds} />
+
         {canMessage ? (
           <article className="panel member-private-message-panel">
             <div className="profile-panel-heading">
               <h2>Private Message</h2>
               <p>Verified members can send direct messages that appear in Messages.</p>
             </div>
-            <div className="chat-composer-row message-log-composer">
-              <input
-                aria-label={'Private message to ' + props.member.name}
-                onChange={(event) => setPrivateDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    if (privateDraft.trim()) {
-                      sendPrivateMessage(props.member.id, props.member.name, privateDraft);
-                      setPrivateDraft('');
-                      props.onOpenThread(props.member.id);
-                    }
-                  }
-                }}
-                placeholder={'Write to ' + props.member.name}
-                value={privateDraft}
-              />
-              <button
-                className="primary-action"
-                disabled={!privateDraft.trim()}
-                onClick={() => {
-                  if (!privateDraft.trim()) {
-                    return;
-                  }
+            <ChatComposerWithEmojis
+              ariaLabel={'Private message to ' + props.member.name}
+              canSend={true}
+              className="chat-composer-row message-log-composer"
+              onChange={setPrivateDraft}
+              onSend={() => {
+                if (!privateDraft.trim()) {
+                  return;
+                }
 
-                  sendPrivateMessage(props.member.id, props.member.name, privateDraft);
-                  setPrivateDraft('');
-                  props.onOpenThread(props.member.id);
-                }}
-                type="button"
-              >
-                Send
-              </button>
-            </div>
+                sendPrivateMessage(props.member.id, props.member.name, privateDraft);
+                setPrivateDraft('');
+                props.onOpenThread(props.member.id);
+              }}
+              placeholder={'Write to ' + props.member.name}
+              value={privateDraft}
+            />
           </article>
         ) : null}
 
@@ -5434,6 +5495,8 @@ function PassportScreen(props: {
           ) : null}
         </article>
 
+        <MembershipAccessCard />
+
         <section className="passport-grid">
             <article className="panel passport-affiliation-panel">
               <div className="profile-panel-heading">
@@ -5605,9 +5668,7 @@ function UserProfileScreen(props: {
   const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>(() => {
     return readProfileCardLayout();
   });
-  const memberFeedEnabled =
-    canConfigureEmbeddedFeedSurface('member', readUserSurfaceRole(), profileMember) &&
-    readEmbeddedFeedEnabled('member');
+  const memberFeedEnabled = readEmbeddedFeedEnabled('member');
 
   const mySubscriptions = useSubscribedChannels();
   const { data: guildCards } = useGuildCardsQuery();
@@ -5641,9 +5702,14 @@ function UserProfileScreen(props: {
 
   return (
     <>
-      <header className="page-title">
+      <header className="page-title user-profile-page-title">
         <p>Member identity and passport</p>
-        <h1>My Profile</h1>
+        <h1>
+          My Profile
+          {isNamiTeamMember(profileMember) ? (
+            <span className="nami-team-badge is-nami-rainbow-foil-border">Official Nami Team</span>
+          ) : null}
+        </h1>
       </header>
 
       <section className="user-profile-passport-hero is-tight-passport-hero">
@@ -5737,26 +5803,29 @@ function UserProfileScreen(props: {
       <section className="user-profile-page">
         {viewAsGuest ? (
           memberFeedEnabled ? (
-            <EmbeddedSocialPanel surface="member" title="Member Feed" />
+            <EmbeddedSocialPanel showFeedToggle={false} surface="member" title="Member Feed" />
           ) : (
             <article className="panel profile-guest-preview-empty">
               <div className="profile-panel-heading">
                 <h2>Embedded Panels</h2>
                 <p>
-                  Turn on Member feeds in Settings to preview how guests see your live and social
-                  embeds.
+                  Turn on Member feeds to preview how guests see your live and social embeds.
                 </p>
               </div>
               <button
                 className="profile-secondary-link"
-                onClick={() => props.onNavigate?.('settings')}
+                onClick={() => {
+                  saveEmbeddedFeedEnabled('member', true);
+                }}
                 type="button"
               >
-                Open Settings
+                Turn feeds on
               </button>
             </article>
           )
-        ) : null}
+        ) : (
+          <EmbeddedSocialPanel surface="member" title="Member Feed" />
+        )}
 
         {viewAsGuest ? null : (
         <section className="profile-quick-grid">
@@ -5858,6 +5927,7 @@ function UserProfileScreen(props: {
         </section>
         )}
 
+        {viewAsGuest ? null : <MembershipAccessCard />}
         {viewAsGuest ? null : <ProfileEditPanel />}
 </section>
 
@@ -6047,6 +6117,7 @@ function MessageLogScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const messageStore = useMessagesStore();
   const activeThread = messageStore.threads.find((thread) => thread.memberId === props.member.id);
@@ -6129,42 +6200,35 @@ function MessageLogScreen(props: {
                 />
                 <div
                   className={
-                    'message-bubble' + (isEliteAuthor(message.author) ? ' is-elite-chat-bubble' : '')
+                    'message-bubble' + messageBubbleClass(messageMember, message.author)
                   }
                 >
                   <div className="message-meta">
                     <strong>{message.author}</strong>
                     <span>{message.time}</span>
                   </div>
-                  <p>{message.body}</p>
+                  <p>
+                    <TaggedMessageBody body={message.body} handlers={props.tagHandlers} />
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="chat-composer-row message-log-composer">
-          <input
-            aria-label={'Private message to ' + props.member.name}
-            disabled={!canSend}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                sendPrivateReply();
-              }
-            }}
-            placeholder={
-              canSend
-                ? 'Send a private message to ' + props.member.name
-                : 'Sign in and verify to send private messages'
-            }
-            value={draft}
-          />
-          <button className="primary-action" disabled={!canSend || !draft.trim()} onClick={sendPrivateReply} type="button">
-            Send
-          </button>
-        </div>
+        <ChatComposerWithEmojis
+          ariaLabel={'Private message to ' + props.member.name}
+          canSend={canSend}
+          className="chat-composer-row message-log-composer"
+          onChange={setDraft}
+          onSend={sendPrivateReply}
+          placeholder={
+            canSend
+              ? 'Send a private message to ' + props.member.name + ' · ' + tagSuggestionHint()
+              : 'Sign in and verify to send private messages'
+          }
+          value={draft}
+        />
       </section>
     </>
   );
@@ -6514,6 +6578,7 @@ function EventsScreen(props: {
 
 function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
+  onOpenMember?: (member: (typeof members)[number]) => void;
 } = {}): ReactElement {
   const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
   const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
@@ -6558,7 +6623,9 @@ function SettingsScreen(props: {
         <PassportClaimSettingsPanel />
         <PlatformLinkSettingsPanel />
         <NamiOwnerSettingsPanel />
+        <NamiOwnerEmojiPanel />
         <ThemeSettingsPanel />
+        <MembershipAccessCard />
         <SurfaceRoleSettingsPanel />
         <EmbeddedFeedSettingsPanel />
 
@@ -6681,18 +6748,16 @@ function SettingsScreen(props: {
             </div>
           </article>
 
-          <article className="panel settings-card">
-            <div className="profile-panel-heading">
-              <h2>Notifications</h2>
-              <p>Manage event alerts, guild updates, and channel announcements.</p>
-            </div>
+          <TagNotificationsPanel
+            onNavigateGuilds={() => props.onNavigate?.('guilds')}
+            onOpenMember={(memberId) => {
+              const member = members.find((entry) => entry.id === memberId);
 
-            <div className="settings-toggle-list">
-              <span>Game event reminders</span>
-              <span>Guild announcements</span>
-              <span>Moderation status updates</span>
-            </div>
-          </article>
+              if (member) {
+                props.onOpenMember?.(member);
+              }
+            }}
+          />
 
           <article className="panel settings-card">
             <div className="profile-panel-heading">
@@ -6721,6 +6786,10 @@ function SettingsScreen(props: {
 export function App(): ReactElement {
   const messageStore = useMessagesStore();
   const selfMember = useSelfMember();
+
+  useEffect(() => {
+    seedDemoTagNotifications();
+  }, []);
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');
   const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);
@@ -6775,6 +6844,31 @@ export function App(): ReactElement {
     setActivePage('studioProfile');
   };
 
+  const tagHandlers: TagNavigationHandlers = {
+    onOpenMember: (memberId) => {
+      const member = members.find((entry) => entry.id === memberId);
+
+      if (member) {
+        openMemberProfile(member);
+      }
+    },
+    onOpenChannel: (channelId) => {
+      const channel = channels.find((entry) => entry.id === channelId);
+
+      if (channel) {
+        openChannelProfile(channel);
+      }
+    },
+    onOpenStudio: (studioId) => {
+      const developer = developers.find((entry) => entry.id === studioId);
+
+      if (developer) {
+        openStudioProfile(developer);
+      }
+    },
+    onOpenGuilds: () => setActivePage('guilds'),
+  };
+
   const navigateFromCurrentPage = (page: NamiPage): void => {
     if ((page === 'channelProfile' || page === 'memberProfile' || page === 'studioProfile') && page !== activePage) {
       setContextReturnPage(activePage);
@@ -6825,6 +6919,7 @@ export function App(): ReactElement {
             setSelectedEvent(event);
             setActivePage('eventDetail');
           }}
+          tagHandlers={tagHandlers}
         />;
     }
 
@@ -6835,6 +6930,7 @@ export function App(): ReactElement {
           onSelect={setSelectedChannel}
           onOpenMember={openMemberProfile}
           onOpenProfile={openChannelProfile}
+          tagHandlers={tagHandlers}
         />
       );
     }
@@ -6879,6 +6975,7 @@ export function App(): ReactElement {
         channel={selectedChannel}
         onNavigate={navigateFromCurrentPage}
         onOpenMember={openMemberProfile}
+        tagHandlers={tagHandlers}
       />;
   }
 
@@ -6894,6 +6991,7 @@ export function App(): ReactElement {
     return <MemberProfileScreen
         member={selectedMember}
         onNavigate={navigateFromCurrentPage}
+        onNavigateGuilds={() => setActivePage('guilds')}
         onOpenThread={(memberId) => {
           setSelectedThreadMemberId(memberId);
           markThreadRead(memberId);
@@ -6947,6 +7045,7 @@ if (activePage === 'userProfile') {
           member={threadMember}
           onNavigate={navigateFromCurrentPage}
           onOpenMember={openMemberProfile}
+          tagHandlers={tagHandlers}
         />
       );
     }
@@ -6973,8 +7072,9 @@ if (activePage === 'userProfile') {
             setSelectedEvent(event);
             setActivePage('eventDetail');
           }}
+          tagHandlers={tagHandlers}
         />;
-  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding]);
+  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding, tagHandlers]);
 
   function signOutToEntry(): void {
     clearZkLoginSession();
@@ -7020,13 +7120,15 @@ if (activePage === 'userProfile') {
       <section className="main-stage">
         {showSidebar ? <NamiSeasonProgressBar member={selfMember} /> : null}
         {activePage === 'settings' ? (
-          <SettingsScreen onNavigate={navigateFromCurrentPage} />
+          <SettingsScreen onNavigate={navigateFromCurrentPage} onOpenMember={openMemberProfile} />
         ) : (
           screen
         )}
       </section>
 
       {showSidebar ? <IgniteRadioDock /> : null}
+      {showSidebar ? <MembershipUpgradeOverlay /> : null}
+      {showSidebar ? <MembershipPaymentReturnHandler /> : null}
     </main>
   );
 }

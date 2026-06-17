@@ -1,5 +1,6 @@
 import { useRef, type ReactElement, type ReactNode } from 'react';
 
+import { isNamiTeamMember, memberRainbowBorderClass } from './channel-surface.js';
 import {
   ConductSignalDot,
   memberTierSurfaceClass,
@@ -262,20 +263,21 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           (layout === 'horizontal'
             ? 'nami-profile-card-frame-horizontal tcg-foil-passport-frame-horizontal'
             : 'nami-profile-card-frame-vertical tcg-foil-passport-frame-vertical') +
-          (tierFoilClass ? ' ' + tierFoilClass : '')
+          (tierFoilClass ? ' ' + tierFoilClass : '') +
+          memberRainbowBorderClass(props.member)
         }
         ref={profileCardFrameRef}
       >
         <div className="nami-profile-card-header">
-          <span className="mini-badge">Nami Passport</span>
+          <span className="mini-badge">
+            {isNamiTeamMember(props.member) ? 'Official Nami Team Passport' : 'Nami Passport'}
+          </span>
           <strong>{props.member.tier}</strong>
         </div>
 
         {layout === 'horizontal' ? (
           <div className="tcg-passport-horizontal-identity">
-            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal}>
-              <strong className="tcg-passport-level-chip">Lv {progression.level}</strong>
-            </UniformMemberAvatar>
+            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
 
             <div className="nami-profile-card-nameplate">
               <div className="profile-signal-badge-row">
@@ -290,9 +292,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           </div>
         ) : (
           <>
-            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal}>
-              <strong className="tcg-passport-level-chip">Lv {progression.level}</strong>
-            </UniformMemberAvatar>
+            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
 
             <div className="nami-profile-card-nameplate">
               <div className="profile-signal-badge-row">

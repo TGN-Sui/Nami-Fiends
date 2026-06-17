@@ -2,6 +2,16 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { config } from './config.js';
 import type { ProjectionRegistry } from './projection-registry.js';
+import {
+  handlePaymentConfigGet,
+  handlePaymentIntentCreate,
+  handlePaymentIntentCryptoConfirm,
+  handlePaymentIntentGet,
+  handlePaymentIntentMockConfirm,
+  handlePaymentOptions,
+  handlePayPalWebhookPost,
+  handleStripeWebhookPost,
+} from './routes/membership-payments.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -25,11 +35,17 @@ type RouteHandler = (
   params: Record<string, string>
 ) => Promise<void> | void;
 
+type HttpMethod = 'GET' | 'POST' | 'OPTIONS';
+
 interface Route {
-  method: 'GET';
+  method: HttpMethod | HttpMethod[];
   pattern: RegExp;
   paramNames: string[];
   handler: RouteHandler;
+}
+
+function routeMethods(method: HttpMethod | HttpMethod[]): HttpMethod[] {
+  return Array.isArray(method) ? method : [method];
 }
 
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
@@ -773,6 +789,51 @@ const routes: Route[] = [
       sendJson(response, 200, result);
     },
   },
+  {
+    method: 'GET',
+    pattern: /^\/api\/payments\/membership\/config$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePaymentConfigGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/membership\/intents$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePaymentIntentCreate(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/payments\/membership\/intents\/([^/]+)$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handlePaymentIntentGet(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/membership\/intents\/([^/]+)\/mock\/confirm$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handlePaymentIntentMockConfirm(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/membership\/intents\/([^/]+)\/crypto\/confirm$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handlePaymentIntentCryptoConfirm(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/webhooks\/stripe$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleStripeWebhookPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/webhooks\/paypal$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePayPalWebhookPost(request, response),
+  },
 ];
 
 function matchRoute(
@@ -780,7 +841,7 @@ function matchRoute(
   pathname: string
 ): { route: Route; params: Record<string, string> } | null {
   for (const route of routes) {
-    if (route.method !== method) {
+    if (!routeMethods(route.method).includes(method as HttpMethod)) {
       continue;
     }
 
@@ -805,13 +866,20 @@ function matchRoute(
 export function startReadOnlyServer(registry: ProjectionRegistry): void {
   const server = createServer((request, response) => {
     void (async () => {
-      if (request.method !== 'GET') {
+      const method = request.method ?? 'GET';
+
+      if (method === 'OPTIONS') {
+        await handlePaymentOptions(request, response);
+        return;
+      }
+
+      if (method !== 'GET' && method !== 'POST') {
         sendJson(response, 405, { error: 'method_not_allowed' });
         return;
       }
 
       const url = new URL(request.url ?? '/', 'http://localhost');
-      const matched = matchRoute(request.method, url.pathname);
+      const matched = matchRoute(method, url.pathname);
 
       if (!matched) {
         notFound(response);
@@ -828,6 +896,6 @@ export function startReadOnlyServer(registry: ProjectionRegistry): void {
 
   server.listen(config.httpPort, () => {
     console.log(`[nami-http] read-only API listening on http://127.0.0.1:${config.httpPort}`);
-    console.log('[nami-http] routes: /health, /stats, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
+    console.log('[nami-http] routes: /health, /stats, /api/payments/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
   });
 }

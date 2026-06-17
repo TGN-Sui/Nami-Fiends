@@ -77,6 +77,29 @@ export function EmbeddedFeedLinksPanel(props: {
               value={link.previewUrl ?? ''}
             />
           </label>
+
+          <label className="settings-embedded-link-field">
+            <span>Embed URL (optional)</span>
+            <input
+              onChange={(event) => {
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { embedUrl: event.target.value }));
+              }}
+              placeholder="https://player.twitch.tv/…"
+              type="url"
+              value={link.embedUrl ?? ''}
+            />
+          </label>
+
+          <label className="settings-embedded-link-live-toggle">
+            <input
+              checked={link.live === true}
+              onChange={(event) => {
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { live: event.target.checked }));
+              }}
+              type="checkbox"
+            />
+            <span>Mark as live broadcast (featured player)</span>
+          </label>
         </div>
       ))}
     </div>

@@ -42,6 +42,21 @@ export function readEmbeddedFeedEnabled(surface: EmbeddedFeedSurface): boolean {
 
 export function saveEmbeddedFeedEnabled(surface: EmbeddedFeedSurface, enabled: boolean): void {
   window.localStorage.setItem(EMBEDDED_PREFIX + surface, enabled ? 'true' : 'false');
+  window.dispatchEvent(new CustomEvent('nami-embedded-feed-enabled-changed', { detail: { surface } }));
+}
+
+export function subscribeEmbeddedFeedEnabled(listener: () => void): () => void {
+  function onChange(): void {
+    listener();
+  }
+
+  window.addEventListener('nami-embedded-feed-enabled-changed', onChange);
+  window.addEventListener('storage', onChange);
+
+  return () => {
+    window.removeEventListener('nami-embedded-feed-enabled-changed', onChange);
+    window.removeEventListener('storage', onChange);
+  };
 }
 
 export function getConfigurableEmbeddedFeedSurfaces(
@@ -76,11 +91,7 @@ export function canShowEmbeddedFeedSurface(
   role: UserSurfaceRole = readUserSurfaceRole(),
   member: NamiMember = getSelfMember()
 ): boolean {
-  if (!canConfigureEmbeddedFeedSurface(surface, role, member)) {
-    return false;
-  }
-
-  return readEmbeddedFeedEnabled(surface);
+  return readEmbeddedFeedEnabled(surface) || canConfigureEmbeddedFeedSurface(surface, role, member);
 }
 
 export function readViewingAsChannelOwner(): boolean {

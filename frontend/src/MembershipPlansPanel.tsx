@@ -1,8 +1,10 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
+import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
+import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
 import {
   MEMBERSHIP_PLANS,
-  confirmMembershipUpgrade,
   formatMembershipPrice,
   membershipPlanForTier,
   requestMembershipCancel,
@@ -11,6 +13,8 @@ import {
   undoMembershipChange,
   useMembershipPlanState,
   type MembershipBillingCycle,
+  type MembershipCheckoutRail,
+  type MembershipCryptoAsset,
   type PaidMembershipTier,
 } from './membership-plans-store.js';
 
@@ -23,6 +27,12 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 export function MembershipPlansPanel(): ReactElement {
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
+  const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
+    planState.pendingCheckoutRail ?? 'card'
+  );
+  const [cryptoAsset, setCryptoAsset] = useState<MembershipCryptoAsset | null>(
+    planState.pendingCryptoAsset ?? null
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [animatingTier, setAnimatingTier] = useState<PaidMembershipTier | null>(null);
@@ -48,15 +58,23 @@ export function MembershipPlansPanel(): ReactElement {
       return 'Cancelled';
     }
 
+    if (planState.activeTier === 'Adventurer' && planState.adventurerSource === 'x-claim') {
+      return 'Active via verified X.com';
+    }
+
     return 'Active';
-  }, [planState.status]);
+  }, [planState.activeTier, planState.adventurerSource, planState.status]);
 
   function clearMessages(): void {
     setNotice(null);
     setError(null);
   }
 
-  function runWithPulse(tier: PaidMembershipTier, action: () => { ok: boolean; message?: string; reason?: string }): void {
+  function runWithPulse(
+    tier: PaidMembershipTier,
+    action: () => { ok: boolean; message?: string; reason?: string },
+    options?: { preserveConfirming?: boolean }
+  ): void {
     clearMessages();
     setAnimatingTier(tier);
 
@@ -67,7 +85,10 @@ export function MembershipPlansPanel(): ReactElement {
 
       if (result.ok) {
         setNotice(result.message ?? 'Membership updated.');
-        setConfirmingUpgrade(false);
+
+        if (!options?.preserveConfirming) {
+          setConfirmingUpgrade(false);
+        }
       } else {
         setError(result.reason ?? 'Could not update membership.');
       }
@@ -87,8 +108,10 @@ export function MembershipPlansPanel(): ReactElement {
       return;
     }
 
-    if (TIER_RANK[tier] > TIER_RANK[planState.activeTier]) {
-      runWithPulse(tier, () => requestMembershipUpgrade(tier, billingCycle));
+    if (TIER_RANK[tier] > TIER_RANK[planState.activeTier] || planState.status === 'pending-cancel') {
+      runWithPulse(tier, () => requestMembershipUpgrade(tier, billingCycle, checkoutRail, cryptoAsset), {
+        preserveConfirming: true,
+      });
       setConfirmingUpgrade(true);
       return;
     }
@@ -98,6 +121,11 @@ export function MembershipPlansPanel(): ReactElement {
     }
   }
 
+  const showPaidCancel =
+    planState.status === 'active' &&
+    (planState.activeTier !== 'Adventurer' ||
+      (planState.activeTier === 'Adventurer' && planState.adventurerSource === 'paid'));
+
   return (
     <section className="membership-plans-panel">
       <article className="panel membership-plans-hero">
@@ -105,8 +133,9 @@ export function MembershipPlansPanel(): ReactElement {
           <span className="mini-badge">Membership Plans</span>
           <h2>Upgrade your Nami access</h2>
           <p>
-            Paid tiers expand boosts, squads, cosmetics, and followed channels. Verification and
-            conduct still gate trust — membership adds features, not status.
+            Pay with Credit/debit card, PayPal, or Other (SUI, USDC on Sui, $GOON). Adventurer is $3
+            USDC/month — or claimable free with verified X.com. Card and PayPal settle on Nami
+            servers; crypto sends to treasury via wallet signature.
           </p>
         </div>
 
@@ -120,6 +149,15 @@ export function MembershipPlansPanel(): ReactElement {
           <small>Renews {new Date(planState.renewsAtMs).toLocaleDateString()}</small>
         </div>
       </article>
+
+      <MembershipAdventurerClaimCard onError={setError} onNotice={setNotice} />
+
+      <MembershipPaymentMethods
+        onSelectCryptoAsset={setCryptoAsset}
+        onSelectRail={setCheckoutRail}
+        selectedCryptoAsset={cryptoAsset}
+        selectedRail={checkoutRail}
+      />
 
       <div className="membership-billing-toggle" role="group" aria-label="Billing cycle">
         <button
@@ -159,7 +197,8 @@ export function MembershipPlansPanel(): ReactElement {
                 (isPending ? ' is-pending-membership-plan' : '') +
                 (isAnimating ? ' is-animating-membership-plan' : '') +
                 (plan.tier === 'Elite' ? ' is-elite-membership-plan' : '') +
-                (plan.tier === 'Pro' ? ' is-pro-membership-plan' : '')
+                (plan.tier === 'Pro' ? ' is-pro-membership-plan' : '') +
+                (plan.tier === 'Adventurer' ? ' is-adventurer-membership-plan' : '')
               }
               key={plan.id}
               onClick={() => handleSelectPlan(plan.tier)}
@@ -172,6 +211,9 @@ export function MembershipPlansPanel(): ReactElement {
                   {formatMembershipPrice(plan, billingCycle)}
                 </span>
               </span>
+              {plan.claimableViaVerifiedX ? (
+                <span className="membership-plan-x-claim-note">or free with verified X.com</span>
+              ) : null}
               <span className="membership-plan-tagline">{plan.tagline}</span>
               <ul className="membership-plan-highlights">
                 {plan.highlights.map((highlight) => (
@@ -194,18 +236,16 @@ export function MembershipPlansPanel(): ReactElement {
         })}
       </div>
 
-      <div className="membership-plans-actions">
-        {confirmingUpgrade && planState.status === 'pending-upgrade' ? (
-          <button
-            className="primary-action membership-confirm-upgrade-btn"
-            onClick={() => runWithPulse(planState.pendingTier ?? 'Pro', () => confirmMembershipUpgrade())}
-            type="button"
-          >
-            Confirm upgrade
-          </button>
-        ) : null}
+      {planState.status === 'pending-upgrade' ? (
+        <MembershipCheckoutPanel
+          onComplete={() => setConfirmingUpgrade(false)}
+          onError={setError}
+          onNotice={setNotice}
+        />
+      ) : null}
 
-        {planState.activeTier !== 'Adventurer' && planState.status === 'active' ? (
+      <div className="membership-plans-actions">
+        {showPaidCancel ? (
           <button
             className="secondary-action membership-cancel-btn"
             onClick={() => runWithPulse(planState.activeTier, () => requestMembershipCancel())}

@@ -560,7 +560,14 @@ UI-B21.4 Game Hub genre chat browser (community bubbles) + bottom chat dock
 UI-B21.5 Embedded social panels (X, Twitch/live) on member/dev/guild/game profiles
 UI-B21.6 My Profile passport ↔ Badge Collectors Book swipe carousel
 UI-B21.7 TCG-style member passport card when viewing other members
+UI-B21.8 Membership checkout + backend payment intents (Stripe, PayPal, crypto, mock)
+UI-B21.9 Pinned top-right profile avatar (rainbow foil, uploaded photo, tier signal)
+UI-B21.10 Live-streaming dot on avatars (grid overlay, top-right inset on all surfaces)
+UI-B21.11 TCG passport vertical layout polish (tier header, centered photo, stats-row level)
+UI-B21.12 Chat emojis, @member tags, tag notifications, social embed player
 ```
+
+Latest UI checkpoint: `docs/ui-build-checkpoint.md` (UI-B21.1 through UI-B21.12 recorded).
 
 ---
 
