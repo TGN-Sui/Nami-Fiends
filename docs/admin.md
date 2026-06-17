@@ -23,10 +23,12 @@ module nami::admin
 Current protocol status:
 
 ```text
-77 tests passing
+80 tests passing
 0 warnings
 Phase 1 + Phase 1.8 (Break-the-System hardening): complete
 ```
+
+Frontend owner console (`NamiOwnerSettingsPanel`) enforces sole-owner capabilities via `nami-capabilities.ts`. See `docs/security-audit.md`.
 
 Phase 2 indexer surfaces (read-only HTTP) expose admin-adjacent projections:
 
@@ -430,6 +432,7 @@ AdminCap is acceptable for MVP, but not the final trust model.
 # Related Docs
 
 ```text
+docs/security-audit.md
 docs/access-control.md
 docs/moderation.md
 docs/appeals.md

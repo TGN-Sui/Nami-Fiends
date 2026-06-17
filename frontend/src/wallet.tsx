@@ -64,7 +64,11 @@ export function NamiWalletProvider(props: { children: ReactNode }): ReactElement
 }
 
 export function WalletConnectControl(): ReactElement {
-  return <ConnectButton />;
+  return (
+    <div className="nami-connect-button-shell" data-nami-connect-label="Link account">
+      <ConnectButton />
+    </div>
+  );
 }
 
 function useZkLoginSessionState(): ZkLoginSession | null {
@@ -117,7 +121,7 @@ export function ZkLoginConnectControl(): ReactElement {
     return (
       <div className="zklogin-connect">
         <p className="protocol-hint">
-          zkLogin active · {session.address.slice(0, 10)}…
+          Signed in · {session.address.slice(0, 10)}…
         </p>
         <button
           className="onboarding-secondary-btn"
@@ -127,7 +131,7 @@ export function ZkLoginConnectControl(): ReactElement {
           }}
           type="button"
         >
-          Sign out zkLogin
+          Sign out
         </button>
       </div>
     );
@@ -141,7 +145,7 @@ export function ZkLoginConnectControl(): ReactElement {
         onClick={handleStart}
         type="button"
       >
-        {pending ? 'Redirecting…' : 'Sign in with Google (zkLogin)'}
+        {pending ? 'Redirecting…' : 'Sign in with Google'}
       </button>
       {error ? <p className="onboarding-field-error">{error}</p> : null}
     </div>
@@ -186,25 +190,25 @@ export function protocolOwnerStatusLabel(
   source: ProtocolOwnerSource
 ): string {
   if (!context.chain) {
-    return 'Mock UI — package ID not configured';
+    return 'Preview mode — live profile sync unavailable';
   }
 
   if (!owner) {
-    return 'Connect a wallet, zkLogin, or set VITE_NAMI_DEMO_OWNER for protocol reads';
+    return 'Sign in from Settings to sync your passport and badges';
   }
 
-  const parts = ['Live protocol reads'];
+  const parts = ['Profile sync active'];
 
   if (source === 'wallet') {
-    parts.push(`wallet ${owner.slice(0, 10)}…`);
+    parts.push(`account ${owner.slice(0, 10)}…`);
   } else if (source === 'zklogin') {
-    parts.push(`zkLogin ${owner.slice(0, 10)}…`);
+    parts.push(`account ${owner.slice(0, 10)}…`);
   } else if (source === 'demo') {
-    parts.push(`demo owner ${owner.slice(0, 10)}…`);
+    parts.push(`preview ${owner.slice(0, 10)}…`);
   }
 
   if (context.indexerUrl) {
-    parts.push('indexer connected');
+    parts.push('activity feed connected');
   }
 
   return parts.join(' · ');

@@ -7,6 +7,7 @@ const STORAGE_KEY = 'nami.onboarding.draft';
 
 export interface OnboardingDraft {
   displayName: string;
+  email: string;
   nodename: string;
   quizAnswers: Record<string, string>;
   archetype: number;
@@ -21,6 +22,7 @@ export function createEmptyDraft(): OnboardingDraft {
 
   return {
     displayName: '',
+    email: '',
     nodename: '',
     quizAnswers: {},
     archetype: 2,
@@ -51,6 +53,7 @@ export function loadOnboardingDraft(): OnboardingDraft | null {
 
     return {
       displayName: parsed.displayName,
+      email: typeof parsed.email === 'string' ? parsed.email : '',
       nodename: typeof parsed.nodename === 'string' ? parsed.nodename : '',
       quizAnswers:
         parsed.quizAnswers !== null &&

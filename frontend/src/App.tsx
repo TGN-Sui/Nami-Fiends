@@ -14,6 +14,7 @@ import {
   members,
   navItems,
   userProfile,
+  type ChatMessage,
   type ConductSignal,
   type NamiChannel,
   type NamiPage
@@ -23,10 +24,36 @@ import { PassportTimelinePanel } from './PassportTimelinePanel.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { ProtocolConductPanel } from './ProtocolConductPanel.js';
-import { ProtocolDiscoveryPanel } from './ProtocolDiscoveryPanel.js';
+import { channelOwnerEvents, type NamiEvent } from './events-data.js';
+import { HubEventsPanel } from './HubEventsPanel.js';
+import { EntryPage } from './EntryPage.js';
+import { IndexedDataPanel } from './IndexedDataPanel.js';
+import { threadMessagesFor, threadParticipantsFor } from './messages-data.js';
+import {
+  canSendChatMessages,
+  canSendPrivateMessages,
+  getSelfMember,
+  isEliteAuthor,
+  PINNED_PROFILE_MODULE,
+  resolveMessageAuthorMember,
+} from './member-access.js';
+import {
+  appendChannelChatMessage,
+  markThreadRead,
+  readChannelChatMessages,
+  sendPrivateMessage,
+  useMessagesStore,
+} from './messages-store.js';
+import {
+  isChannelSubscribed,
+  subscribeToChannel,
+  subscriptionSlotLimit,
+  useSubscribedChannels,
+} from './subscriptions-store.js';
+import { guildOwnerEvents, subscribedUserEvents } from './events-data.js';
 import { ProtocolCustomizationPanel } from './ProtocolCustomizationPanel.js';
 import { ProtocolHistoryPanel } from './ProtocolHistoryPanel.js';
-import { ProtocolIdentityPanel } from './ProtocolIdentityPanel.js';
+
 import { ProtocolModerationPanel } from './ProtocolModerationPanel.js';
 import { ProtocolModerationRecordsPanel } from './ProtocolModerationRecordsPanel.js';
 import { ProtocolProfilePanel } from './ProtocolProfilePanel.js';
@@ -36,16 +63,74 @@ import {
   type SquadCardView,
 } from './protocol.js';
 import { useGuildCardsQuery, useOwnerHistoryQuery, usePassportQuery, useSquadCardsQuery } from './protocol-query.js';
-import { OnboardingPanel } from './OnboardingPanel.js';
+import { AccountConnectSection } from './account-connect.js';
+import { markSignedOut } from './member-auth-store.js';
+import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
+import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
+import { MembershipPlansPanel } from './MembershipPlansPanel.js';
+import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
+import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
+import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
+import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
+import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
+import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
+import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
 import {
-  getConfiguredNetwork,
-  getConfiguredPackageId,
-  hasConfiguredPackageId,
-} from './nami.js';
+  buildGenreBubbleEntries,
+  genreOfficialChats,
+} from './global-chats.js';
+import {
+  channelMatchesGameHubFilter,
+  channelsForModuleFilters,
+  gameHubBrowserFilters,
+  readGameHubInterestModules,
+  readGenreChatDockCollapsed,
+  readGenreChatDockPinned,
+  saveGameHubInterestModules,
+  saveGenreChatDockCollapsed,
+  saveGenreChatDockPinned,
+  type GameHubBrowserFilter,
+  type GameHubInterestModule,
+} from './gamehub-preferences.js';
+import { GenreChatRoomPanel, PinnedGenreChatDock, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+
+import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
+import { ProfileEditPanel } from './ProfileEditPanel.js';
+
+
+import {
+  chatMemberCardTierClass,
+  ConductSignalDot,
+  UniformMemberAvatar,
+  UniformMemberAvatarButton,
+} from './member-avatar.js';
+import {
+  requestProfileEditFocus,
+  useSelfMember,
+} from './member-avatar-store.js';
+import { useSelfProfileEdits } from './member-profile-store.js';
+import { clearZkLoginSession } from './zklogin.js';
+import {
+  isSelfMember,
+  canConfigureEmbeddedFeedSurface,
+  getConfigurableEmbeddedFeedSurfaces,
+  readEmbeddedFeedEnabled,
+  readUserSurfaceRole,
+  readViewingAsChannelOwner,
+  saveEmbeddedFeedEnabled,
+  saveUserSurfaceRole,
+  subscribeSurfaceRole,
+  type EmbeddedFeedSurface,
+  type UserSurfaceRole,
+} from './surface-preferences.js';
+import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
+import { ThemeSettingsPanel } from './theme.js';
+import { triggerHubSpotlightBurst } from './hub-spotlight.js';
+import { IgniteRadioDock } from './IgniteRadioDock.js';
+import { saveIgniteRadioEnabled, useIgniteRadioEnabled } from './ignite-radio-store.js';
 import {
   protocolOwnerStatusLabel,
   useProtocolOwner,
-  WalletConnectControl,
 } from './wallet.js';
 
 function signalClass(signal: ConductSignal): string {
@@ -129,7 +214,7 @@ function cssAssetUrl(url: string): string {
 }
 
 function gameCoverAssetVariables(channel: NamiChannel): CSSProperties {
-  const coverImageUrl = channel.coverImageUrl?.trim();
+  const coverImageUrl = resolveChannelCoverUrl(channel)?.trim();
 
   if (!coverImageUrl) {
     return {
@@ -158,78 +243,6 @@ function studioLogoAssetVariables(developer: (typeof developers)[number]): CSSPr
     '--studio-logo-image': cssAssetUrl(logoImageUrl),
     '--studio-logo-image-opacity': '1'
   } as CSSProperties;
-}
-
-function memberAvatarAssetVariables(member: (typeof members)[number]): CSSProperties {
-  const avatarImageUrl = member.avatarImageUrl?.trim();
-
-  if (!avatarImageUrl) {
-    return {
-      '--member-avatar-image': 'none',
-      '--member-avatar-image-opacity': '0',
-      backgroundImage: 'none'
-    } as CSSProperties;
-  }
-
-  return {
-    '--member-avatar-image': cssAssetUrl(avatarImageUrl),
-    '--member-avatar-image-opacity': '1',
-    backgroundImage: cssAssetUrl(avatarImageUrl),
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover'
-  } as CSSProperties;
-}
-
-function memberAvatarClass(
-  member: (typeof members)[number],
-  baseClass: string,
-  signal: ConductSignal = member.signal
-): string {
-  return (
-    baseClass +
-    ' ' +
-    signalClass(signal) +
-    (member.avatarImageUrl ? ' has-member-avatar-image' : '')
-  );
-}
-
-function MemberVisualAvatar(props: {
-  member: (typeof members)[number];
-  signal?: ConductSignal;
-  className?: string;
-  children?: ReactElement | null;
-}): ReactElement {
-  return (
-    <div
-      className={memberAvatarClass(props.member, props.className ?? 'chat-member-avatar', props.signal)}
-      style={memberAvatarAssetVariables(props.member)}
-    >
-      <span className="member-avatar-initials">
-        {props.member.name.slice(0, 2).toUpperCase()}
-      </span>
-      {props.children}
-    </div>
-  );
-}
-
-function MemberAvatarButton(props: {
-  member: (typeof members)[number];
-  signal?: ConductSignal;
-  onClick: () => void;
-}): ReactElement {
-  return (
-    <button
-      className={memberAvatarClass(props.member, 'message-avatar message-avatar-button', props.signal)}
-      onClick={props.onClick}
-      style={memberAvatarAssetVariables(props.member)}
-      type="button"
-    >
-      <span className="member-avatar-initials">
-        {props.member.name.slice(0, 2).toUpperCase()}
-      </span>
-    </button>
-  );
 }
 
 function MediaUploadPrepCard(props: {
@@ -386,29 +399,6 @@ function UxPreviewConsole(props: {
   );
 }
 
-function ProfileEditPrepCard(): ReactElement {
-  return (
-    <article className="profile-edit-prep-card">
-      <div className="profile-edit-prep-heading">
-        <span>Edit Profile</span>
-        <strong>Profile editing coming soon</strong>
-        <p>
-          Preview controls for bio, profile picture, badge display, preferred game genres,
-          and platform preferences. Editing does not change verification or trust status.
-        </p>
-      </div>
-
-      <div className="profile-edit-prep-grid">
-        <button disabled type="button">Bio</button>
-        <button disabled type="button">Profile picture</button>
-        <button disabled type="button">Badge displays</button>
-        <button disabled type="button">Game genres</button>
-        <button disabled type="button">Platforms</button>
-      </div>
-    </article>
-  );
-}
-
 function ChannelAvatar(props: {
   channel: NamiChannel;
   size?: 'sm' | 'md' | 'lg';
@@ -418,17 +408,24 @@ function ChannelAvatar(props: {
   const className =
     'channel-avatar channel-avatar-' +
     (props.size ?? 'md') +
-    ' ' +
-    signalClass(props.channel.signal) +
+    (resolveChannelCoverUrl(props.channel) ? ' has-channel-cover-avatar' : '') +
     (props.selected ? ' is-selected' : '');
 
   const label = props.channel.name.slice(0, 2).toUpperCase();
+  const resolvedCover = resolveChannelCoverUrl(props.channel);
+  const avatarStyle = resolvedCover
+    ? ({
+        ...gameCoverAssetVariables(props.channel),
+        '--channel-avatar-monogram-opacity': '0',
+      } as CSSProperties)
+    : undefined;
 
   if (props.onClick) {
     return (
       <button
         className={className}
         onClick={props.onClick}
+        style={avatarStyle}
         type="button"
         title={props.channel.name}
       >
@@ -438,7 +435,7 @@ function ChannelAvatar(props: {
   }
 
   return (
-    <div className={className} title={props.channel.name}>
+    <div className={className} style={avatarStyle} title={props.channel.name}>
       <span>{label}</span>
     </div>
   );
@@ -565,15 +562,40 @@ function namiReturnLabelForPage(page: NamiPage): string {
   return 'Back to Nami Hub';
 }
 
-function Sidebar(props: {
-  activePage: NamiPage;
-  collapsed: boolean;
+function SidebarProfileCard(props: {
   onNavigate: (page: NamiPage) => void;
-  onToggle: () => void;
+  onSignOut: () => void;
 }): ReactElement {
-  const sidebarMember = members[0]!;
+  const sidebarMember = useSelfMember();
   const sidebarProgression = getNamiProgression(sidebarMember);
   const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false);
+  const sidebarProfileShellRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!sidebarProfileMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent): void {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (sidebarProfileShellRef.current?.contains(target)) {
+        return;
+      }
+
+      setSidebarProfileMenuOpen(false);
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [sidebarProfileMenuOpen]);
 
   function updateSidebarProfileFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -596,9 +618,8 @@ function Sidebar(props: {
   }
 
   return (
-    <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
-
-      <div className="sidebar-profile-shell">
+    <div aria-label="Signed-in member profile" className="nami-pinned-profile-card">
+      <div className="sidebar-profile-shell" ref={sidebarProfileShellRef}>
         <button
           className="sidebar-player-progress sidebar-player-progress-button"
           onClick={() => setSidebarProfileMenuOpen((value) => !value)}
@@ -606,12 +627,10 @@ function Sidebar(props: {
           onPointerMove={updateSidebarProfileFoil}
           type="button"
         >
-        <div className={'sidebar-player-avatar ' + signalClass(sidebarMember.signal)}>
-          {memberInitials(sidebarMember)}
-          <strong>{sidebarProgression.level}</strong>
-        </div>
+          <UniformMemberAvatar className="sidebar-player-avatar" member={sidebarMember}>
+            <strong>{sidebarProgression.level}</strong>
+          </UniformMemberAvatar>
 
-        {!props.collapsed && (
           <div className="sidebar-player-copy">
             <span>{sidebarMember.name}</span>
             <small>Lv {sidebarProgression.level} · {sidebarProgression.currentXp} XP</small>
@@ -619,52 +638,121 @@ function Sidebar(props: {
               <i style={{ width: (sidebarProgression.currentXp / sidebarProgression.nextLevelXp) * 100 + '%' }} />
             </div>
           </div>
-        )}
         </button>
 
-        {sidebarProfileMenuOpen && (
+        {sidebarProfileMenuOpen ? (
           <div className="sidebar-profile-menu">
-            <button onClick={() => props.onNavigate('userProfile')} type="button">
-              Edit Avatar
+            <button
+              onClick={() => {
+                setSidebarProfileMenuOpen(false);
+                requestProfileEditFocus();
+                props.onNavigate('userProfile');
+              }}
+              type="button"
+            >
+              Edit Profile
             </button>
             <button onClick={() => props.onNavigate('passport')} type="button">
               Share Passport
             </button>
-            <button onClick={() => setSidebarProfileMenuOpen(false)} type="button">
+            <button
+              onClick={() => {
+                setSidebarProfileMenuOpen(false);
+                props.onSignOut();
+              }}
+              type="button"
+            >
               Sign Out
             </button>
           </div>
-        )}
+        ) : null}
       </div>
+    </div>
+  );
+}
 
-      <button className={'sidebar-brand' + (props.activePage === 'hub' ? ' is-active-sidebar-brand' : '')}
-        onClick={() => props.onNavigate('hub')}
-        type="button"
-      >
-        <div className="diamond-mark">N</div>
-        {!props.collapsed && <span>Nami Hub</span>}
-      </button>
+function Sidebar(props: {
+  activePage: NamiPage;
+  collapsed: boolean;
+  messageUnreadCount: number;
+  onNavigate: (page: NamiPage) => void;
+  onHubSwap: (page: 'hub' | 'gamehub') => void;
+  onToggle: () => void;
+}): ReactElement {
+  const igniteRadioEnabled = useIgniteRadioEnabled();
+  const [hubSwapIdleHint, setHubSwapIdleHint] = useState(false);
+  const isOnGameHub = props.activePage === 'gamehub';
+  const isOnNamiHub = props.activePage === 'hub';
+  const hubSwapTarget: NamiPage = isOnGameHub ? 'hub' : isOnNamiHub ? 'gamehub' : 'hub';
+  const hubSwapLabel = isOnGameHub ? 'Nami Hub' : 'Game Hub';
+
+  useEffect(() => {
+    if (!isOnGameHub && !isOnNamiHub) {
+      setHubSwapIdleHint(false);
+      return;
+    }
+
+    let idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
+
+    function resetIdleTimer(): void {
+      setHubSwapIdleHint(false);
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
+    }
+
+    window.addEventListener('pointermove', resetIdleTimer);
+    window.addEventListener('keydown', resetIdleTimer);
+    window.addEventListener('scroll', resetIdleTimer, true);
+
+    return () => {
+      window.clearTimeout(idleTimer);
+      window.removeEventListener('pointermove', resetIdleTimer);
+      window.removeEventListener('keydown', resetIdleTimer);
+      window.removeEventListener('scroll', resetIdleTimer, true);
+    };
+  }, [isOnGameHub, isOnNamiHub]);
+
+  return (
+    <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
+      {isOnGameHub || isOnNamiHub ? (
+        <button
+          className={
+            'sidebar-brand sidebar-hub-swap is-active-sidebar-brand' +
+            (hubSwapIdleHint ? ' is-hub-swap-idle-hint' : '')
+          }
+          onClick={() => props.onHubSwap(hubSwapTarget)}
+          type="button"
+        >
+          <div aria-hidden="true" className="sidebar-hub-swap-mark-stack">
+            <div
+              className={
+                'diamond-mark sidebar-hub-swap-mark is-nami-hub-mark' +
+                (isOnGameHub ? ' is-alt-hub-mark' : ' is-current-hub-mark')
+              }
+            >
+              N
+            </div>
+            <div
+              className={
+                'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
+                (isOnGameHub ? ' is-current-hub-mark' : ' is-alt-hub-mark')
+              }
+            >
+              G
+            </div>
+          </div>
+          {!props.collapsed && <span>{hubSwapLabel}</span>}
+        </button>
+      ) : (
+        <button className="sidebar-brand" onClick={() => props.onNavigate('hub')} type="button">
+          <div className="diamond-mark">N</div>
+          {!props.collapsed && <span>Nami Hub</span>}
+        </button>
+      )}
 
       <button className="sidebar-toggle" onClick={props.onToggle} type="button">
         {props.collapsed ? '→' : '←'}
       </button>
-
-      
-        <button
-          className={
-            'sidebar-gamehub-shortcut' +
-            (props.activePage === 'gamehub' ? ' is-active-gamehub-shortcut' : '')
-          }
-          onClick={() => props.onNavigate('gamehub')}
-          type="button"
-        >
-          <span className="nav-icon">G</span>
-          {!props.collapsed && <span>Game Hub</span>}
-        </button>
-
-        <div className="sidebar-wallet-connect">
-          <WalletConnectControl />
-        </div>
 
         <nav className="sidebar-nav">
         {navItems.filter((item) => item.page !== 'hub').map((item) => (
@@ -676,9 +764,28 @@ function Sidebar(props: {
           >
             <span className="nav-icon">{item.shortLabel.slice(0, 1)}</span>
             {!props.collapsed && <span>{item.shortLabel}</span>}
+            {item.page === 'messages' && props.messageUnreadCount > 0 ? (
+              <span aria-label={props.messageUnreadCount + ' unread messages'} className="sidebar-nav-unread-pill">
+                {props.messageUnreadCount}
+              </span>
+            ) : null}
           </button>
         ))}
       </nav>
+
+      <div className="sidebar-radio-block">
+        <button
+          aria-pressed={igniteRadioEnabled}
+          className={'sidebar-radio-toggle' + (igniteRadioEnabled ? ' is-active-sidebar-radio' : '')}
+          onClick={() => saveIgniteRadioEnabled(!igniteRadioEnabled)}
+          type="button"
+        >
+          <span className="nav-icon">♫</span>
+          {!props.collapsed ? (
+            <span>{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
+          ) : null}
+        </button>
+      </div>
     </aside>
   );
 }
@@ -727,9 +834,6 @@ function ChannelInfoCard(props: {
         <div className="badge-row">
           {props.channel.verified && <span className="mini-badge">Verified</span>}
           {props.channel.partner && <span className="mini-badge">Partner</span>}
-          <span className={'mini-badge signal-text-' + props.channel.signal.toLowerCase()}>
-            {props.channel.signal}
-          </span>
         </div>
 
         <h2>{props.channel.name}</h2>
@@ -875,7 +979,10 @@ function namiReadableBubbleRadius(
   return visualRadius * 0.82 + softMoat;
 }
 
-function buildNamiCryptoBubbleNodes(entries: NamiCryptoBubbleEntry[]): NamiCryptoBubbleNode[] {
+function buildNamiCryptoBubbleNodes(
+  entries: NamiCryptoBubbleEntry[],
+  bubbleScale = 1
+): NamiCryptoBubbleNode[] {
   const virtualWidth = 1160;
   const virtualHeight = 720;
   const placedNodes: NamiCryptoBubbleNode[] = [];
@@ -886,13 +993,13 @@ function buildNamiCryptoBubbleNodes(entries: NamiCryptoBubbleEntry[]): NamiCrypt
     const randomMass = namiSeededRandom(index + 311);
 
     const baseRadius =
-      rank <= 5
+      (rank <= 5
         ? 56 + randomScale * 12
         : rank <= 12
           ? 47 + randomScale * 10
           : rank <= 24
             ? 37 + randomScale * 9
-            : 27 + randomScale * 8;
+            : 27 + randomScale * 8) * bubbleScale;
 
     const scale = 0.88 + randomScale * 0.3;
     const visualRadius = baseRadius * scale;
@@ -968,7 +1075,13 @@ function CryptoBubbleBoard(props: {
   activeChannelId: string;
   onOpenChannel: (channel: NamiChannel) => void;
   onHoverChannel: (channelId: string | null) => void;
+  heading?: string;
+  subheading?: string;
+  badgeLabel?: string;
+  bubbleScale?: number;
+  boardClassName?: string;
 }): ReactElement {
+  const bubbleScale = props.bubbleScale ?? 1;
   const boardRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const pointerRef = useRef({
@@ -976,15 +1089,15 @@ function CryptoBubbleBoard(props: {
     y: 0.5,
     inside: false
   });
-
   const [renderTick, setRenderTick] = useState(0);
   const entriesSignature = props.entries.map((entry) => entry.slotId).join('|');
-  const nodesRef = useRef<NamiCryptoBubbleNode[]>(buildNamiCryptoBubbleNodes(props.entries));
-  const maxSubscribers = Math.max(1, ...props.entries.map((entry) => entry.channel.subscribers));
+  const nodesRef = useRef<NamiCryptoBubbleNode[]>(
+    buildNamiCryptoBubbleNodes(props.entries, bubbleScale)
+  );
 
   useEffect(() => {
-    nodesRef.current = buildNamiCryptoBubbleNodes(props.entries);
-  }, [entriesSignature]);
+    nodesRef.current = buildNamiCryptoBubbleNodes(props.entries, bubbleScale);
+  }, [entriesSignature, bubbleScale]);
 
   useEffect(() => {
     let lastRenderTime = 0;
@@ -1061,6 +1174,13 @@ function CryptoBubbleBoard(props: {
           }
         } else {
           node.radius += (node.baseRadius - node.radius) * 0.065;
+
+          const wavePhase = time * 0.00115;
+          const primaryRipple = Math.sin(node.x * 10 + node.y * 4 + wavePhase) * 0.014;
+          const crossRipple = Math.cos(node.x * 6 - node.y * 5 - wavePhase * 1.35) * 0.007;
+
+          node.vx += primaryRipple * frameDelta;
+          node.vy += crossRipple * frameDelta;
         }
       }
 
@@ -1219,14 +1339,17 @@ function CryptoBubbleBoard(props: {
     <section className="panel nami-hub-top50-panel crypto-bubbles-panel">
       <div className="browser-heading">
         <div>
-          <h2>Top 50 Communities</h2>
-          <p>Live community board with loose marble physics and smooth cursor falloff.</p>
+          <h2>{props.heading ?? 'Top 50 Communities'}</h2>
+          <p>
+            {props.subheading ??
+              'Live community board with loose marble physics and smooth cursor falloff.'}
+          </p>
         </div>
-        <span>Top 50 board</span>
+        <span>{props.badgeLabel ?? 'Top 50 board'}</span>
       </div>
 
       <div
-        className="crypto-bubbles-board"
+        className={'crypto-bubbles-board' + (props.boardClassName ? ' ' + props.boardClassName : '')}
         data-physics-tick={renderTick}
         onPointerLeave={() => {
           pointerRef.current.inside = false;
@@ -1245,11 +1368,6 @@ function CryptoBubbleBoard(props: {
         ref={boardRef}
       >
         {nodesRef.current.map((node, index) => {
-          const growthPercent = Math.max(
-            8,
-            Math.min(100, (node.channel.subscribers / maxSubscribers) * 100)
-          );
-
           return (
             <button
               className={
@@ -1266,18 +1384,13 @@ function CryptoBubbleBoard(props: {
                   '--bubble-x': node.x * 100 + '%',
                   '--bubble-y': node.y * 100 + '%',
                   '--bubble-scale': node.scale.toFixed(3),
-                  '--bubble-growth': growthPercent + '%'
                 } as CSSProperties
               }
               type="button"
             >
-              <span className="crypto-bubble-rank">#{index + 1}</span>
               <strong>{node.channel.name}</strong>
               <small>{node.channel.genre}</small>
-              <em>{node.channel.subscribers.toLocaleString()}</em>
-              <i>
-                <b style={{ width: growthPercent + '%' }} />
-              </i>
+              <span className="crypto-bubble-rank">#{index + 1}</span>
             </button>
           );
         })}
@@ -1292,6 +1405,7 @@ function NamiHub(props: {
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  onViewEvent: (event: NamiEvent) => void;
   onNavigateToSettings?: () => void;
 }): ReactElement {
   const featuredShowcaseChannels = channels.slice(0, 8);
@@ -1418,17 +1532,6 @@ function NamiHub(props: {
         <h1>Nami Hub</h1>
       </header>
 
-      <OnboardingPanel
-        isPackageConfigured={hasConfiguredPackageId()}
-        network={getConfiguredNetwork()}
-        {...(props.onNavigateToSettings
-          ? { onNavigateToSettings: props.onNavigateToSettings }
-          : {})}
-        packageId={getConfiguredPackageId()}
-      />
-
-      <ProtocolDiscoveryPanel />
-
       <button
         className="banner-panel featured-banner-carousel nami-hub-rotating-banner"
         onClick={() => openFeaturedChannel(activeFeaturedChannel)}
@@ -1448,16 +1551,9 @@ function NamiHub(props: {
         onOpenChannel={openFeaturedChannel}
       />
 
+      <HubEventsPanel onViewEvent={props.onViewEvent} />
 
-
-      
-      <UxPreviewConsole
-        onOpenChannel={(channel: NamiChannel) => {
-          props.onSelect(channel);
-          props.onOpenProfile(channel);
-        }}
-        onOpenMember={props.onOpenMember}
-      />
+      <HubGlobalChatsSection onOpenMember={props.onOpenMember} />
 
 <section className="nami-hub-lower-grid">
         <article className="panel community-growth-panel">
@@ -1535,9 +1631,10 @@ function NamiHub(props: {
                   <span className="member-spotlight-foil" aria-hidden="true" style={memberSpotlightFoilStyle} />
 
                     <div className="member-spotlight-left">
-                    <MemberVisualAvatar className="member-spotlight-avatar" member={member}>
+                    <div className="member-spotlight-avatar-wrap">
+                      <UniformMemberAvatar className="member-spotlight-avatar" member={member} />
                       <span className="member-spotlight-level">{progression.level}</span>
-                    </MemberVisualAvatar>
+                    </div>
 
                     <div className="member-spotlight-copy">
                       <strong>{member.name}</strong>
@@ -1571,7 +1668,19 @@ function GameHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
+  onOpenMember: (member: (typeof members)[number]) => void;
 }): ReactElement {
+  useChannelCoverVersion();
+  const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
+  const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
+  const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
+  const [interestModules, setInterestModules] = useState<GameHubInterestModule[]>(() => {
+    return readGameHubInterestModules();
+  });
+  const [nextModuleKind, setNextModuleKind] = useState<'genre' | 'game' | 'game-genre'>('genre');
+  const [nextModuleFilter, setNextModuleFilter] = useState<GameHubBrowserFilter>('Games');
+  const [draggedInterestModuleId, setDraggedInterestModuleId] = useState<string | null>(null);
+  const genreBubbleEntries = useMemo(() => buildGenreBubbleEntries(), []);
   const partnerChannels = channels.filter((channel) => channel.partner);
   const topChannels = [...channels]
     .sort((left, right) => right.subscribers - left.subscribers)
@@ -1588,49 +1697,29 @@ function GameHub(props: {
       .sort((left, right) => left.sortKey - right.sortKey);
   }, []);
 
-  const browserFilters = [
-    'All',
-    'Games',
-    'IRL',
-    'Music & DJs',
-    'Creative',
-    'Esports',
-    'Verified',
-    'PC',
-    'Console',
-    'Mobile'
-  ] as const;
-
-  type BrowserFilter = (typeof browserFilters)[number];
-
-  const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<BrowserFilter>('All');
+  const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
   const [swipeIndex, setSwipeIndex] = useState(0);
 
-  const filteredBrowserEntries = randomizedBrowserEntries.filter(({ channel }) => {
-    const genre = channel.genre.toLowerCase();
-    const platforms = channel.platforms.map((platform) => platform.toLowerCase());
+  function openGenreBubbleChannel(channel: NamiChannel): void {
+    const genreChat = genreOfficialChats.find((chat) => chat.id === channel.id);
 
-    if (selectedBrowserFilter === 'All') return true;
-    if (selectedBrowserFilter === 'Games') {
-      return (
-        genre.includes('gaming') ||
-        genre.includes('adventure') ||
-        genre.includes('casual') ||
-        genre.includes('arcade') ||
-        genre.includes('pvp')
-      );
+    if (genreChat) {
+      setActiveGenreChatId(genreChat.id);
+
+      if (genreDockPinned) {
+        setGenreDockCollapsed(false);
+        saveGenreChatDockCollapsed(false);
+      }
+
+      return;
     }
-    if (selectedBrowserFilter === 'IRL') return genre.includes('irl');
-    if (selectedBrowserFilter === 'Music & DJs') return genre.includes('music') || genre.includes('dj');
-    if (selectedBrowserFilter === 'Creative') return genre.includes('creative') || genre.includes('builder');
-    if (selectedBrowserFilter === 'Esports') return genre.includes('esports');
-    if (selectedBrowserFilter === 'Verified') return channel.verifiedGame;
-    if (selectedBrowserFilter === 'PC') return platforms.includes('pc');
-    if (selectedBrowserFilter === 'Console') return platforms.includes('console');
-    if (selectedBrowserFilter === 'Mobile') return platforms.includes('mobile');
 
-    return true;
+    props.onOpenProfile(channel);
+  }
+
+  const filteredBrowserEntries = randomizedBrowserEntries.filter(({ channel }) => {
+    return channelMatchesGameHubFilter(channel, selectedBrowserFilter);
   });
 
   const filteredBrowserChannels = filteredBrowserEntries.map(({ channel }) => channel);
@@ -1677,6 +1766,91 @@ function GameHub(props: {
     element.style.setProperty('--game-card-foil-y', '18%');
   }
 
+  function persistInterestModules(nextModules: GameHubInterestModule[]): void {
+    setInterestModules(nextModules);
+    saveGameHubInterestModules(nextModules);
+  }
+
+  function addInterestModule(): void {
+    const templateChannel = channels[interestModules.length % channels.length]!;
+    const label =
+      nextModuleKind === 'game'
+        ? templateChannel.name
+        : nextModuleKind === 'game-genre'
+          ? templateChannel.genre
+          : templateChannel.genre.split('/')[0]?.trim() ?? 'Genre';
+    persistInterestModules([
+      ...interestModules,
+      {
+        id: 'interest-' + Date.now(),
+        label,
+        kind: nextModuleKind,
+        ref:
+          nextModuleKind === 'game'
+            ? templateChannel.handle
+            : nextModuleKind === 'game-genre'
+              ? templateChannel.genre
+              : label,
+        filters: [nextModuleFilter],
+      },
+    ]);
+  }
+
+  function toggleInterestModuleFilter(moduleId: string, filter: GameHubBrowserFilter): void {
+    persistInterestModules(
+      interestModules.map((module) => {
+        if (module.id !== moduleId) {
+          return module;
+        }
+
+        const hasFilter = module.filters.includes(filter);
+        const nextFilters = hasFilter
+          ? module.filters.filter((entry) => entry !== filter)
+          : [...module.filters, filter];
+
+        return {
+          ...module,
+          filters: nextFilters.length > 0 ? nextFilters : [filter],
+        };
+      })
+    );
+  }
+
+  function removeInterestModule(moduleId: string): void {
+    persistInterestModules(interestModules.filter((module) => module.id !== moduleId));
+  }
+
+  function dropInterestModule(targetModuleId: string): void {
+    const movingModuleId = draggedInterestModuleId;
+
+    if (!movingModuleId || movingModuleId === targetModuleId) {
+      setDraggedInterestModuleId(null);
+      return;
+    }
+
+    persistInterestModules(
+      (() => {
+        const nextModules = interestModules.filter((module) => module.id !== movingModuleId);
+        const targetIndex = nextModules.findIndex((module) => module.id === targetModuleId);
+
+        if (targetIndex === -1) {
+          return interestModules;
+        }
+
+        const movingModule = interestModules.find((module) => module.id === movingModuleId);
+
+        if (!movingModule) {
+          return interestModules;
+        }
+
+        nextModules.splice(targetIndex, 0, movingModule);
+        return nextModules;
+      })()
+    );
+
+    setDraggedInterestModuleId(null);
+  }
+
   return (
     <>
       <header className="page-title">
@@ -1692,7 +1866,7 @@ function GameHub(props: {
             {partnerChannels.map((channel) => (
               <button
                 key={channel.id}
-                onClick={() => props.onSelect(channel)}
+                onClick={() => props.onOpenProfile(channel)}
                 type="button"
               >
                 <ChannelAvatar channel={channel} size="sm" />
@@ -1712,9 +1886,10 @@ function GameHub(props: {
             {topChannels.map((channel, index) => (
               <button
                 key={channel.id}
-                onClick={() => props.onSelect(channel)}
+                onClick={() => props.onOpenProfile(channel)}
                 type="button"
               >
+                <ChannelAvatar channel={channel} size="sm" />
                 <strong className="rank-badge">#{index + 1}</strong>
                 <span>
                   <strong>{channel.name}</strong>
@@ -1733,11 +1908,12 @@ function GameHub(props: {
             Verification and reputation remain identity-based.
           </p>
           <button
-            className="gamehub-themed-action"
+            className="gamehub-themed-action gamehub-featured-channel-button"
             onClick={() => props.onOpenProfile(props.selectedChannel)}
             type="button"
           >
-            View selected channel
+            <ChannelAvatar channel={props.selectedChannel} size="sm" />
+            <span>View {props.selectedChannel.name}</span>
           </button>
         </article>
       </section>
@@ -1752,14 +1928,14 @@ function GameHub(props: {
           <div className="gamehub-browser-controls">
             <div className="gamehub-view-toggle" aria-label="Channel browser view mode">
               <button
-                className={browserViewMode === 'tiles' ? 'is-active-view' : ''}
+                className={'nami-surface-button' + (browserViewMode === 'tiles' ? ' is-active-view' : '')}
                 onClick={() => setBrowserViewMode('tiles')}
                 type="button"
               >
                 Tile Grid
               </button>
               <button
-                className={browserViewMode === 'swipe' ? 'is-active-view' : ''}
+                className={'nami-surface-button' + (browserViewMode === 'swipe' ? ' is-active-view' : '')}
                 onClick={() => setBrowserViewMode('swipe')}
                 type="button"
               >
@@ -1770,10 +1946,12 @@ function GameHub(props: {
         </div>
 
         <div className="filter-row gamehub-filter-row" role="tablist" aria-label="Game Hub browser filters">
-          {browserFilters.map((filter) => (
+          {gameHubBrowserFilters.map((filter) => (
             <button
               aria-pressed={selectedBrowserFilter === filter}
-              className={selectedBrowserFilter === filter ? 'is-active-filter' : ''}
+              className={
+                'nami-surface-button' + (selectedBrowserFilter === filter ? ' is-active-filter' : '')
+              }
               key={filter}
               onClick={() => setSelectedBrowserFilter(filter)}
               type="button"
@@ -1816,11 +1994,14 @@ function GameHub(props: {
                   type="button"
                 >
                   <div
-                      className={'gamehub-cover-art' + (channel.coverImageUrl ? ' has-game-cover-image' : '')}
+                      className={'gamehub-cover-art' + (resolveChannelCoverUrl(channel) ? ' has-game-cover-image' : '')}
                       aria-hidden="true"
                     >
                     <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
-                    <span className="gamehub-cover-surface-chip">GAME</span>
+                    <span className="gamehub-cover-surface-chip" title="Game channel">
+                      <i className="gamehub-cover-surface-icon" aria-hidden="true">▣</i>
+                      <span>Game</span>
+                    </span>
                     <span
                       className={'gamehub-cover-verification-chip ' + gameVerificationClass(channel)}
                       title={gameVerificationBadgeLabel(channel)}
@@ -1838,7 +2019,6 @@ function GameHub(props: {
                       <span className="gamehub-cover-icons">
                         {channel.verifiedGame && <i className="gamehub-grade-icon" title="Verified">◆</i>}
                         {channel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
-                        <i className={'gamehub-signal-dot signal-text-' + channel.signal.toLowerCase()} title={channel.signal} />
                       </span>
                     </div>
 
@@ -1895,7 +2075,7 @@ function GameHub(props: {
                 }
               >
                 <div
-                    className={'gamehub-swipe-cover-art' + (activeSwipeChannel.coverImageUrl ? ' has-game-cover-image' : '')}
+                    className={'gamehub-swipe-cover-art' + (resolveChannelCoverUrl(activeSwipeChannel) ? ' has-game-cover-image' : '')}
                     aria-hidden="true"
                   >
                   <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
@@ -1923,13 +2103,16 @@ function GameHub(props: {
                       >
                         {developerShortProofLabel(activeSwipeDeveloper)}
                       </i>
-                      <i className={'gamehub-signal-dot signal-text-' + activeSwipeChannel.signal.toLowerCase()} title={activeSwipeChannel.signal} />
+
                     </span>
                   </div>
 
                   <div className="gamehub-swipe-card-copy">
                     <div className="gamehub-swipe-taxonomy-row">
-                      <span>GAME</span>
+                      <span className="gamehub-swipe-surface-label">
+                        <i aria-hidden="true">▣</i>
+                        Game
+                      </span>
                       <i className={gameVerificationClass(activeSwipeChannel)}>
                         {gameVerificationShortLabel(activeSwipeChannel)}
                       </i>
@@ -1950,45 +2133,220 @@ function GameHub(props: {
             </div>
 
             <div className="gamehub-swipe-actions">
-              <button onClick={() => moveSwipeDeck('previous')} type="button">
+              <button className="nami-surface-button" onClick={() => moveSwipeDeck('previous')} type="button">
                 Swipe Left
               </button>
               <button
-                className="is-open-swipe-card"
+                className="nami-surface-button is-primary-surface-button is-open-swipe-card"
                 onClick={() => props.onOpenProfile(activeSwipeChannel)}
                 type="button"
               >
                 View Profile
               </button>
-              <button onClick={() => moveSwipeDeck('next')} type="button">
+              <button className="nami-surface-button" onClick={() => moveSwipeDeck('next')} type="button">
                 Swipe Right
               </button>
             </div>
           </section>
         )}
 
+        <div className="gamehub-genre-chats-under-browser">
+          <CryptoBubbleBoard
+            activeChannelId={activeGenreChatId}
+            badgeLabel="Genre lounges"
+            boardClassName="is-genre-bubble-board"
+            bubbleScale={2.15}
+            entries={genreBubbleEntries}
+            heading="Genre Chats"
+            onHoverChannel={() => undefined}
+            onOpenChannel={openGenreBubbleChannel}
+            subheading={
+              genreDockPinned
+                ? 'Official genre lounges under Channel Browser. Bubble size reflects active members.'
+                : 'Unpinned panel view. Pick a lounge below or pin the floating dock again.'
+            }
+          />
+
+          {!genreDockPinned ? (
+            <article className="panel gamehub-genre-chats-inline-panel">
+              <div className="gamehub-genre-chats-inline-head">
+                <div>
+                  <h3>Genre Chats</h3>
+                  <p>Normal panel view with full-width readable chat.</p>
+                </div>
+                <button
+                  className="nami-surface-button is-primary-surface-button"
+                  onClick={() => {
+                    setGenreDockPinned(true);
+                    saveGenreChatDockPinned(true);
+                    setGenreDockCollapsed(false);
+                    saveGenreChatDockCollapsed(false);
+                  }}
+                  type="button"
+                >
+                  Pin chat dock
+                </button>
+              </div>
+
+              <div className="genre-chat-pinned-room-row" role="tablist" aria-label="Genre chat rooms">
+                {genreOfficialChats.map((chat) => (
+                  <button
+                    aria-selected={chat.id === activeGenreChatId}
+                    className={
+                      'genre-chat-pinned-room-tab' + (chat.id === activeGenreChatId ? ' is-active-genre-room' : '')
+                    }
+                    key={chat.id}
+                    onClick={() => setActiveGenreChatId(chat.id)}
+                    role="tab"
+                    type="button"
+                  >
+                    {chat.title}
+                  </button>
+                ))}
+              </div>
+
+              <GenreChatRoomPanel activeChatId={activeGenreChatId} onOpenMember={props.onOpenMember} />
+            </article>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="gamehub-interest-modules-stack">
+        {interestModules.map((module) => {
+          const moduleChannels = channelsForModuleFilters(channels, module.filters).slice(0, 8);
+
+          return (
+            <article
+              className={
+                'panel gamehub-interest-module-panel' +
+                (module.id === draggedInterestModuleId ? ' is-dragging-interest-module' : '')
+              }
+              draggable
+              key={module.id}
+              onDragEnd={() => setDraggedInterestModuleId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDragStart={() => setDraggedInterestModuleId(module.id)}
+              onDrop={() => dropInterestModule(module.id)}
+            >
+              <div className="gamehub-interest-module-head">
+                <span className="module-dot-handle" aria-hidden="true">
+                  ⋮⋮
+                </span>
+                <div>
+                  <strong>{module.label}</strong>
+                  <small>
+                    {module.kind} · {module.ref} · {moduleChannels.length} channel
+                    {moduleChannels.length === 1 ? '' : 's'}
+                  </small>
+                </div>
+                <button
+                  className="nami-surface-button"
+                  onClick={() => removeInterestModule(module.id)}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div
+                className="filter-row gamehub-module-filter-row"
+                role="group"
+                aria-label={module.label + ' filters'}
+              >
+                {gameHubBrowserFilters.map((filter) => (
+                  <button
+                    aria-pressed={module.filters.includes(filter)}
+                    className={
+                      'nami-surface-button' + (module.filters.includes(filter) ? ' is-active-filter' : '')
+                    }
+                    key={module.id + '-' + filter}
+                    onClick={() => toggleInterestModuleFilter(module.id, filter)}
+                    type="button"
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+
+              <div className="gamehub-module-channel-grid">
+                {moduleChannels.length === 0 ? (
+                  <p className="gamehub-module-empty-copy">No channels match the selected filters yet.</p>
+                ) : (
+                  moduleChannels.map((channel) => (
+                    <button
+                      className="gamehub-module-channel-card"
+                      key={module.id + '-' + channel.id}
+                      onClick={() => props.onOpenProfile(channel)}
+                      type="button"
+                    >
+                      <ChannelAvatar channel={channel} size="md" />
+                      <span>
+                        <strong>{channel.name}</strong>
+                        <small>{channel.genre}</small>
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="panel gamehub-interest-tracker-panel gamehub-interest-add-panel">
         <div className="interest-tracker">
           <div>
             <h3>Preferred Channels & Interests</h3>
-            <p>
-              Future personalization module for pinned genres, preferred platforms,
-              favorite signal types, and followed channel categories.
-            </p>
+            <p>Add draggable filter modules above. This control always stays pinned at the bottom.</p>
           </div>
 
-          <div className="interest-tags">
-            <span>Gaming</span>
-            <span>Verified</span>
-            <span>PC</span>
-            <span>Guilds</span>
-            <span>Events</span>
+          <div className="interest-module-create-row">
+            <select
+              aria-label="Module type"
+              className="gamehub-module-type-select"
+              onChange={(event) =>
+                setNextModuleKind(event.target.value as 'genre' | 'game' | 'game-genre')
+              }
+              value={nextModuleKind}
+            >
+              <option value="genre">Genre</option>
+              <option value="game">Specific game card</option>
+              <option value="game-genre">Game genre</option>
+            </select>
+            <select
+              aria-label="Filter for new module"
+              className="gamehub-module-type-select gamehub-module-filter-select"
+              onChange={(event) =>
+                setNextModuleFilter(event.target.value as GameHubBrowserFilter)
+              }
+              value={nextModuleFilter}
+            >
+              {gameHubBrowserFilters
+                .filter((filter) => filter !== 'All')
+                .map((filter) => (
+                  <option key={filter} value={filter}>
+                    {filter}
+                  </option>
+                ))}
+            </select>
+            <button className="nami-surface-button is-primary-surface-button" onClick={addInterestModule} type="button">
+              + Add Section / Module
+            </button>
           </div>
-
-          <button className="add-module-button gamehub-add-module-button" type="button">
-            + Add Section / Module
-          </button>
         </div>
       </section>
+
+      {genreDockPinned ? (
+        <PinnedGenreChatDock
+          activeChatId={activeGenreChatId}
+          collapsed={genreDockCollapsed}
+          pinned={genreDockPinned}
+          onCollapsedChange={setGenreDockCollapsed}
+          onOpenMember={props.onOpenMember}
+          onPinnedChange={setGenreDockPinned}
+          onSelectChat={setActiveGenreChatId}
+        />
+      ) : null}
     </>
   );
 }
@@ -2156,14 +2514,16 @@ function StudioProfileScreen(props: {
                   <strong>{totalReach.toLocaleString()}</strong>
                   Reach
                 </span>
-                <span>
-                  <strong>{props.developer.studioSignal}</strong>
-                  Signal
+                <span className="studio-signal-stat">
+                  <ConductSignalDot signal={props.developer.studioSignal} />
+                  <strong>Owner signal</strong>
                 </span>
               </div>
             </div>
           </div>
         </article>
+
+        <EmbeddedSocialPanel surface="studio" title="Studio Feed" />
 
         <section className="studio-profile-grid">
           <article className="panel studio-directory-panel">
@@ -2262,24 +2622,25 @@ function ChannelProfile(props: {
   const developerProfile = channelDeveloper(props.channel);
 
   const profileModuleDefaults = [
+    PINNED_PROFILE_MODULE,
     'Main Chat',
+    'Events',
+    'Official Badges',
     'Timeline',
     'Guilds',
-    'Events',
     'Patch Notes',
     'Support',
     'Esports',
-    'Gated Rooms'
+    'Gated Rooms',
   ];
 
   const profilePanelDefaults = [
     'Channel Modules',
     'Official Announcements',
-    'Official Links',
     'Nami Badges',
     'Channel Badges',
     'Profile Customization',
-    'Related Channels'
+    'Related Channels',
   ];
 
   const profileBrandThemes = [
@@ -2321,9 +2682,15 @@ function ChannelProfile(props: {
   const defaultBrandTheme = profileBrandThemes[0]!;
 
   const [brandKey, setBrandKey] = useState(defaultBrandTheme.key);
+  const [collapsedModules, setCollapsedModules] = useState<string[]>([]);
+  const [subscribeNotice, setSubscribeNotice] = useState('');
+  const selfMember = getSelfMember();
+  const channelIsSubscribed = isChannelSubscribed(props.channel.id);
+  const [showChannelData, setShowChannelData] = useState(false);
   const [moduleOrderSaved, setModuleOrderSaved] = useState(false);
   const [panelOrderSaved, setPanelOrderSaved] = useState(false);
   const [collapsedPanelsSaved, setCollapsedPanelsSaved] = useState(false);
+  const [collapsedModulesSaved, setCollapsedModulesSaved] = useState(false);
   const [brandSaved, setBrandSaved] = useState(false);
 
   const relatedChannels = channels
@@ -2386,8 +2753,10 @@ function ChannelProfile(props: {
   const moduleStorageKey = 'nami-profile-module-order-' + props.channel.id;
   const panelStorageKey = 'nami-profile-panel-order-' + props.channel.id;
   const collapsedStorageKey = 'nami-profile-collapsed-panels-' + props.channel.id;
+  const collapsedModulesStorageKey = 'nami-profile-collapsed-modules-' + props.channel.id;
   const brandStorageKey = 'nami-profile-brand-theme-' + props.channel.id;
-  const layoutSaved = moduleOrderSaved && panelOrderSaved && collapsedPanelsSaved && brandSaved;
+  const layoutSaved =
+    moduleOrderSaved && panelOrderSaved && collapsedPanelsSaved && collapsedModulesSaved && brandSaved;
 
   const selectedBrandTheme =
     profileBrandThemes.find((theme) => theme.key === brandKey) ?? defaultBrandTheme;
@@ -2459,7 +2828,10 @@ function ChannelProfile(props: {
       }
     }
 
-    function loadCollapsedPanels(savedValue: string | null): {
+    function loadCollapsedItems(
+      savedValue: string | null,
+      defaultItems: string[]
+    ): {
       items: string[];
       saved: boolean;
     } {
@@ -2481,8 +2853,8 @@ function ChannelProfile(props: {
         }
 
         return {
-          items: parsedValue.filter((panelName): panelName is string => {
-            return typeof panelName === 'string' && profilePanelDefaults.includes(panelName);
+          items: parsedValue.filter((itemName): itemName is string => {
+            return typeof itemName === 'string' && defaultItems.includes(itemName);
           }),
           saved: true
         };
@@ -2504,22 +2876,48 @@ function ChannelProfile(props: {
       profilePanelDefaults
     );
 
-    const savedCollapsedPanels = loadCollapsedPanels(
-      window.localStorage.getItem(collapsedStorageKey)
+    const savedCollapsedPanels = loadCollapsedItems(
+      window.localStorage.getItem(collapsedStorageKey),
+      profilePanelDefaults
+    );
+
+    const savedCollapsedModules = loadCollapsedItems(
+      window.localStorage.getItem(collapsedModulesStorageKey),
+      profileModuleDefaults
     );
 
     const savedBrandKey = window.localStorage.getItem(brandStorageKey);
     const savedBrandIsValid = profileBrandThemes.some((theme) => theme.key === savedBrandKey);
 
-    setProfileModules(savedModules.items);
+    setProfileModules(
+      (() => {
+        const pinned = PINNED_PROFILE_MODULE;
+        const validModules = savedModules.items.filter((item) => profileModuleDefaults.includes(item));
+        const withoutPinned = validModules.filter((item) => item !== pinned);
+        const missingModules = profileModuleDefaults.filter(
+          (item) => item !== pinned && !withoutPinned.includes(item)
+        );
+
+        return [pinned, ...withoutPinned, ...missingModules];
+      })()
+    );
     setProfilePanels(savedPanels.items);
     setCollapsedPanels(savedCollapsedPanels.items);
+    setCollapsedModules(savedCollapsedModules.items);
     setBrandKey(savedBrandIsValid && savedBrandKey ? savedBrandKey : defaultBrandTheme.key);
     setModuleOrderSaved(savedModules.saved);
     setPanelOrderSaved(savedPanels.saved);
     setCollapsedPanelsSaved(savedCollapsedPanels.saved);
+    setCollapsedModulesSaved(savedCollapsedModules.saved);
     setBrandSaved(savedBrandIsValid);
-  }, [moduleStorageKey, panelStorageKey, collapsedStorageKey, brandStorageKey, props.channel.id]);
+  }, [
+    moduleStorageKey,
+    panelStorageKey,
+    collapsedStorageKey,
+    collapsedModulesStorageKey,
+    brandStorageKey,
+    props.channel.id
+  ]);
 
   function openModule(moduleName: string): void {
     if (moduleName === 'Main Chat') {
@@ -2532,10 +2930,26 @@ function ChannelProfile(props: {
     }
   }
 
+  function normalizeModuleOrder(moduleNames: string[]): string[] {
+    const pinned = PINNED_PROFILE_MODULE;
+    const validModules = moduleNames.filter((moduleName) => profileModuleDefaults.includes(moduleName));
+    const withoutPinned = validModules.filter((moduleName) => moduleName !== pinned);
+    const missingModules = profileModuleDefaults.filter(
+      (moduleName) => moduleName !== pinned && !withoutPinned.includes(moduleName)
+    );
+
+    return [pinned, ...withoutPinned, ...missingModules];
+  }
+
   function dropModule(targetModule: string): void {
     const movingModule = draggedModule;
 
-    if (!movingModule || movingModule === targetModule) {
+    if (
+      !movingModule ||
+      movingModule === targetModule ||
+      movingModule === PINNED_PROFILE_MODULE ||
+      targetModule === PINNED_PROFILE_MODULE
+    ) {
       setDraggedModule(null);
       return;
     }
@@ -2549,11 +2963,38 @@ function ChannelProfile(props: {
       }
 
       nextModules.splice(targetIndex, 0, movingModule);
-      return nextModules;
+      return normalizeModuleOrder(nextModules);
     });
 
     setDraggedModule(null);
     setModuleOrderSaved(false);
+  }
+
+  function handleSubscribe(): void {
+    if (channelIsSubscribed) {
+      setSubscribeNotice('Already subscribed to ' + props.channel.name + '.');
+      return;
+    }
+
+    const result = subscribeToChannel(props.channel.id, selfMember.tier);
+
+    if (!result.ok) {
+      if (result.reason === 'slots-full') {
+        setSubscribeNotice(
+          'Subscription slots full (' +
+            subscriptionSlotLimit(selfMember.tier) +
+            ' max for ' +
+            selfMember.tier +
+            ' tier).'
+        );
+      } else {
+        setSubscribeNotice('Already subscribed to this channel.');
+      }
+
+      return;
+    }
+
+    setSubscribeNotice('Subscribed to ' + props.channel.name + '. Find it in My Profile → My Subscriptions.');
   }
 
   function dropPanel(targetPanel: string): void {
@@ -2592,14 +3033,28 @@ function ChannelProfile(props: {
     setCollapsedPanelsSaved(false);
   }
 
+  function toggleModule(moduleName: string): void {
+    setCollapsedModules((currentModules) => {
+      if (currentModules.includes(moduleName)) {
+        return currentModules.filter((currentModule) => currentModule !== moduleName);
+      }
+
+      return [...currentModules, moduleName];
+    });
+
+    setCollapsedModulesSaved(false);
+  }
+
   function saveProfileLayout(): void {
     window.localStorage.setItem(moduleStorageKey, JSON.stringify(profileModules));
     window.localStorage.setItem(panelStorageKey, JSON.stringify(profilePanels));
     window.localStorage.setItem(collapsedStorageKey, JSON.stringify(collapsedPanels));
+    window.localStorage.setItem(collapsedModulesStorageKey, JSON.stringify(collapsedModules));
     window.localStorage.setItem(brandStorageKey, brandKey);
     setModuleOrderSaved(true);
     setPanelOrderSaved(true);
     setCollapsedPanelsSaved(true);
+    setCollapsedModulesSaved(true);
     setBrandSaved(true);
   }
 
@@ -2822,12 +3277,92 @@ function ChannelProfile(props: {
                   <strong>{channel.name}</strong>
                   <span>{channel.genre}</span>
                 </div>
-                <i className={signalClass(channel.signal)}>{channel.signal}</i>
               </button>
             ))}
           </div>
         </article>
       );
+    }
+
+    return null;
+  }
+
+  function renderModuleContent(moduleName: string): ReactElement | null {
+    if (moduleName === PINNED_PROFILE_MODULE) {
+      return renderProfilePanel('Official Announcements');
+    }
+
+    if (moduleName === 'Main Chat') {
+      return (
+        <>
+          <EmbeddedSocialPanel surface="game" title="Game Feed" />
+          <article className="panel channel-main-chat-preview">
+            <div className="profile-panel-heading">
+              <h2>{props.channel.name} Main Chat</h2>
+              <p>Live community room for this game channel.</p>
+            </div>
+            <button className="primary-action" onClick={() => props.onNavigate('chat')} type="button">
+              Open Main Chat
+            </button>
+          </article>
+        </>
+      );
+    }
+
+    if (moduleName === 'Official Badges') {
+      return renderProfilePanel('Official Badges');
+    }
+
+    if (moduleName === 'Timeline') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Timeline</h2>
+            <p>Channel activity feed and milestone highlights.</p>
+          </div>
+        </article>
+      );
+    }
+
+    if (moduleName === 'Guilds') {
+      return renderProfilePanel('Related Channels');
+    }
+
+    if (moduleName === 'Events') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Channel Events</h2>
+            <p>Game channel owners create events from this module.</p>
+          </div>
+          <button className="primary-action" onClick={() => props.onNavigate('channelEvents')} type="button">
+            Manage channel events
+          </button>
+        </article>
+      );
+    }
+
+    if (moduleName === 'Patch Notes') {
+      return renderProfilePanel('Official Announcements');
+    }
+
+    if (moduleName === 'Support') {
+      return (
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Support</h2>
+            <p>Help desk links and player support routing for this channel.</p>
+          </div>
+        </article>
+      );
+    }
+
+    if (moduleName === 'Esports') {
+      return renderProfilePanel('Official Badges');
+    }
+
+    if (moduleName === 'Gated Rooms') {
+      return renderProfilePanel('Profile Customization');
     }
 
     return null;
@@ -2871,10 +3406,6 @@ function ChannelProfile(props: {
         <h1>Game Profile</h1>
       </header>
 
-      <ProtocolStatusBar />
-      <ProtocolChannelPanel />
-      <ProtocolChannelAccessPanel />
-
       <section className="channel-profile-page" style={profileBrandStyle}>
                   
             <article data-channel-hero="true" className="profile-hero-panel">
@@ -2883,11 +3414,6 @@ function ChannelProfile(props: {
 
             <div className="profile-hero-copy">
               <div className="profile-signal-badge-row">
-                <span className={'profile-signal-chip ' + signalClass(props.channel.signal)}>
-                  <i />
-                  {props.channel.signal} Signal
-                </span>
-
                 <div className="profile-badge-icon-row" aria-label="Channel badge icons">
                   {officialBadgeIcons.slice(0, 4).map((badge) => renderBadgeIcon(badge, 'official'))}
                   {customBadgeIcons.slice(0, 2).map((badge) => renderBadgeIcon(badge, 'custom'))}
@@ -2929,8 +3455,12 @@ function ChannelProfile(props: {
               >
                 {props.returnLabel}
               </button>
-            <button className="primary-action" type="button">
-              Subscribe
+            <button
+              className={'primary-action' + (channelIsSubscribed ? ' is-subscribed-channel-action' : '')}
+              onClick={handleSubscribe}
+              type="button"
+            >
+              {channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
             </button>
 
             <button
@@ -2992,56 +3522,78 @@ function ChannelProfile(props: {
               </div>
             </article></section>
 
-                  
+        {subscribeNotice ? <p className="report-pulse">{subscribeNotice}</p> : null}
 
-          <section className="profile-section-grid">
-            {expandedPanels.map((panelName) => {
-            const panel = renderProfilePanel(panelName);
+        <div className="channel-module-tab-row tab-row" role="tablist" aria-label="Channel modules">
+          {profileModules.map((moduleName) => {
+            const isCollapsed = collapsedModules.includes(moduleName);
+            const isPinned = moduleName === PINNED_PROFILE_MODULE;
 
-            if (!panel) {
+            return (
+              <button
+                aria-expanded={!isCollapsed}
+                className={
+                  (isCollapsed ? 'is-collapsed-tab' : 'is-expanded-tab') +
+                  (moduleName === draggedModule ? ' is-dragging-module-tab' : '') +
+                  (isPinned ? ' is-pinned-module-tab' : ' is-draggable-module-tab')
+                }
+                draggable={!isPinned}
+                aria-grabbed={moduleName === draggedModule}
+                key={moduleName}
+                onClick={() => toggleModule(moduleName)}
+                onDragEnd={() => setDraggedModule(null)}
+                onDragOver={(event) => {
+                  if (!isPinned) {
+                    event.preventDefault();
+                  }
+                }}
+                onDragStart={() => {
+                  if (!isPinned) {
+                    setDraggedModule(moduleName);
+                  }
+                }}
+                onDrop={() => dropModule(moduleName)}
+                type="button"
+              >
+                {!isPinned ? <i className="module-dot-handle">⋮⋮</i> : null}
+                {moduleName}
+              </button>
+            );
+          })}
+        </div>
+
+        <section className="channel-module-tab-body">
+          {profileModules.map((moduleName) => {
+            if (collapsedModules.includes(moduleName)) {
               return null;
             }
 
             return (
-              <div
-                className={
-                  'profile-section-shell' +
-                  (panelName === draggedPanel ? ' is-dragging-panel' : '')
-                }
-                key={panelName}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => dropPanel(panelName)}
-              >
-                <div
-                  className="profile-section-drag-bar"
-                  draggable
-                  onDragEnd={() => setDraggedPanel(null)}
-                  onDragStart={() => setDraggedPanel(panelName)}
-                >
-                  <button onClick={() => togglePanel(panelName)} type="button">
-                    Collapse
-                  </button>
-                  <i>⋮⋮</i>
-                </div>
-
-                {panel}
+              <div className="channel-module-section" key={moduleName}>
+                {renderModuleContent(moduleName)}
               </div>
             );
           })}
         </section>
-      
-        <MediaUploadPrepCard
-          acceptedFormats="PNG, JPG, WebP, SVG"
-          assetLabel="Cover image"
-          currentState={
-            props.channel.coverImageUrl
-              ? 'Demo cover image active. Generated cover remains available as fallback.'
-              : 'Generated cover fallback active. No uploaded cover image attached.'
-          }
-          note="This placeholder prepares the Game Profile for future uploaded cover art without storing files yet."
-          storageLabel="Future source: Walrus object reference plus Sui metadata proof"
-          surfaceLabel="Game Channel media"
-        />
+
+        <article className="panel channel-data-collapse">
+          <button
+            className="secondary-action"
+            onClick={() => setShowChannelData((value) => !value)}
+            type="button"
+          >
+            {showChannelData ? 'Hide channel data' : 'Show channel data'}
+          </button>
+
+          {showChannelData ? (
+            <div className="channel-data-tab-body">
+              <ProtocolChannelPanel />
+              <ProtocolChannelAccessPanel />
+            </div>
+          ) : null}
+        </article>
+
+        {readViewingAsChannelOwner() ? <ChannelCoverUploadCard channel={props.channel} /> : null}
 </section>
     </>
   );
@@ -3314,13 +3866,21 @@ function GameChat(props: {
     return !readMemberPreference(member.id).blocked;
   });
 
-  const memberByName = new Map(chatEligibleMembers.map((member) => [member.name, member]));
+  const selfChatMember = useSelfMember();
+  const messageStore = useMessagesStore();
+  const [chatDraft, setChatDraft] = useState('');
+  const messageStackRef = useRef<HTMLDivElement | null>(null);
+  const canSend = canSendChatMessages();
 
-  const visibleMessages = chatMessages.filter((message) => {
+  function resolveChatMessageMember(message: ChatMessage): (typeof members)[number] | undefined {
+    return resolveMessageAuthorMember(message, selfChatMember, chatEligibleMembers);
+  }
+
+  const visibleMessages = [...chatMessages, ...messageStore.channelMessages].filter((message) => {
     if (message.signal === 'Black') return false;
     if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
 
-    const member = memberByName.get(message.author);
+    const member = resolveChatMessageMember(message);
 
     if (!member) return false;
     if (readMemberPreference(member.id).blocked) return false;
@@ -3330,6 +3890,16 @@ function GameChat(props: {
 
     return true;
   });
+
+  useEffect(() => {
+    const stack = messageStackRef.current;
+
+    if (!stack) {
+      return;
+    }
+
+    stack.scrollTop = stack.scrollHeight;
+  }, [visibleMessages.length, messageStore.channelMessages.length]);
 
   const onlineMembers = visibleChatMembers.slice(0, 4);
   const offlineMembers = visibleChatMembers.slice(4);
@@ -3357,9 +3927,7 @@ function GameChat(props: {
         <div className="chat-presence-channel">
           <ChannelAvatar channel={props.channel} size="lg" />
           <div>
-            <span className={'mini-badge signal-text-' + props.channel.signal.toLowerCase()}>
-              {props.channel.signal} Channel
-            </span>
+            <span className="mini-badge">Live Channel</span>
             <h2>{props.channel.name}</h2>
             <p>{props.channel.tagline}</p>
           </div>
@@ -3373,13 +3941,14 @@ function GameChat(props: {
               <button
                 className={
                   'chat-member-card' +
+                  chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
                 onClick={() => props.onOpenMember(member)}
                 type="button"
               >
-                <MemberVisualAvatar member={member} />
+                <UniformMemberAvatar member={member} />
                 <strong>{member.name}</strong>
                 <span>{preference.muted ? 'Muted' : member.tier}</span>
               </button>
@@ -3393,13 +3962,14 @@ function GameChat(props: {
               <button
                 className={
                   'chat-member-card is-offline' +
+                  chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
                 onClick={() => props.onOpenMember(member)}
                 type="button"
               >
-                <MemberVisualAvatar member={member} />
+                <UniformMemberAvatar member={member} />
                 <strong>{member.name}</strong>
                 <span>{preference.muted ? 'Muted' : 'Offline'}</span>
               </button>
@@ -3461,9 +4031,9 @@ function GameChat(props: {
               </div>
             </div>
 
-            <div className="message-stack">
+            <div className="message-stack" ref={messageStackRef}>
               {visibleMessages.map((message) => {
-                const member = memberByName.get(message.author);
+                const member = resolveChatMessageMember(message);
 
                 if (!member) {
                   return null;
@@ -3479,13 +4049,17 @@ function GameChat(props: {
                     }
                     key={message.id}
                   >
-                    <MemberAvatarButton
+                    <UniformMemberAvatarButton
                       member={member}
                       onClick={() => props.onOpenMember(member)}
                       signal={message.signal}
                     />
 
-                    <div className="message-bubble">
+                    <div
+                      className={
+                        'message-bubble' + (isEliteAuthor(message.author) ? ' is-elite-chat-bubble' : '')
+                      }
+                    >
                       <div className="message-meta">
                         <button
                           className={'message-author-button signal-text-' + message.signal.toLowerCase()}
@@ -3497,7 +4071,7 @@ function GameChat(props: {
 
                         <span>{message.time}</span>
                         <i>{preference.muted ? 'Muted' : member.tier}</i>
-                        <i>{message.signal}</i>
+                        <ConductSignalDot signal={message.signal} size="sm" />
 
                         <button
                           className="message-report-button"
@@ -3519,9 +4093,39 @@ function GameChat(props: {
               })}
             </div>
 
-            <div className="chat-input-placeholder">
-              <span>Message {props.channel.name}</span>
-              <button type="button">Send</button>
+            <div className="chat-composer-row chat-input-placeholder">
+              <input
+                aria-label={'Message ' + props.channel.name}
+                disabled={!canSend}
+                onChange={(event) => setChatDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (canSend && chatDraft.trim()) {
+                      appendChannelChatMessage(chatDraft);
+                      setChatDraft('');
+                    }
+                  }
+                }}
+                placeholder={
+                  canSend ? 'Message ' + props.channel.name : 'Sign in and verify to send messages'
+                }
+                value={chatDraft}
+              />
+              <button
+                disabled={!canSend || !chatDraft.trim()}
+                onClick={() => {
+                  if (!canSend || !chatDraft.trim()) {
+                    return;
+                  }
+
+                  appendChannelChatMessage(chatDraft);
+                  setChatDraft('');
+                }}
+                type="button"
+              >
+                Send
+              </button>
             </div>
           </article>
 
@@ -3720,6 +4324,7 @@ function GameChat(props: {
 function MemberProfileScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
+  onOpenThread: (memberId: string) => void;
   returnPage: NamiPage;
   returnLabel: string;
 }): ReactElement {
@@ -3733,7 +4338,9 @@ function MemberProfileScreen(props: {
   const memberProgression = getNamiProgression(props.member);
   const memberVerificationStatus =
     reviewedSignal === 'Green' ? 'Verified' : reviewedSignal + ' Review';
-  const memberFoilEligible = isMemberFoilEligible(props.member, reviewedSignal);
+  const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
+  const [privateDraft, setPrivateDraft] = useState('');
+  const canMessage = canSendPrivateMessages() && props.member.id !== 'm1';
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
   }, [props.member.id, refreshKey]);
@@ -3754,6 +4361,7 @@ function MemberProfileScreen(props: {
     setIsMuted(savedPreference.muted);
     setIsBlocked(savedPreference.blocked);
     setReportQueued(false);
+    setProfileCarouselSlide('passport');
     setRefreshKey((value) => value + 1);
   }, [preferenceStorageKey, props.member.id]);
 
@@ -3782,24 +4390,6 @@ function MemberProfileScreen(props: {
     setReportQueued(true);
     setRefreshKey((value) => value + 1);
   }
-  function updateMemberHeroFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const pointerX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const pointerY = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-
-    event.currentTarget.style.setProperty('--member-hero-foil-x', (pointerX * 100).toFixed(2) + '%');
-    event.currentTarget.style.setProperty('--member-hero-foil-y', (pointerY * 100).toFixed(2) + '%');
-    event.currentTarget.style.setProperty('--member-hero-light-x', ((pointerX - 0.5) * 18).toFixed(2) + 'px');
-    event.currentTarget.style.setProperty('--member-hero-light-y', ((pointerY - 0.5) * 18).toFixed(2) + 'px');
-  }
-
-  function resetMemberHeroFoil(event: { currentTarget: HTMLElement }): void {
-    event.currentTarget.style.setProperty('--member-hero-foil-x', '50%');
-    event.currentTarget.style.setProperty('--member-hero-foil-y', '18%');
-    event.currentTarget.style.setProperty('--member-hero-light-x', '0px');
-    event.currentTarget.style.setProperty('--member-hero-light-y', '0px');
-  }
-
   return (
     <>
       <header className="page-title">
@@ -3808,105 +4398,154 @@ function MemberProfileScreen(props: {
       </header>
 
       <section className="member-profile-page">
-        <article
-            className={
-              'member-profile-hero panel ' +
-              (memberFoilEligible ? 'is-member-foil-eligible' : 'is-member-foil-disabled')
-            }
-            data-member-hero="true"
-            onPointerLeave={(event) => {
-              if (memberFoilEligible) resetMemberHeroFoil(event);
-            }}
-            onPointerMove={(event) => {
-              if (memberFoilEligible) updateMemberHeroFoil(event);
-            }}
-          >
-          <MemberVisualAvatar
-              className="member-profile-avatar"
-              member={props.member}
-              signal={reviewedSignal}
-            />
-
-          <div className="member-profile-copy">
-            <div className="profile-signal-badge-row">
-              <span className={'profile-signal-chip ' + signalClass(reviewedSignal)}>
-                <i />
-                {reviewedSignal} Signal
-              </span>
-
-              <span className="profile-badge-icon profile-badge-icon-custom" title={props.member.tier}>
-                {props.member.tier.slice(0, 1)}
-              </span>
-            </div>
-
-            <h2>{props.member.name}</h2>
-
-              <div className="surface-separation-row member-surface-row">
-                <span>Member Profile</span>
-                <span>{props.member.tier}</span>
-                <i>Level-enabled passport surface</i>
+        <div className="member-profile-passport-hero">
+          <div className="nami-profile-view-toolbar nami-profile-view-toolbar-stable nami-profile-view-toolbar-member">
+            <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-tabs">
+              <div
+                className="profile-passport-carousel-actions"
+                role="tablist"
+                aria-label="Profile card views"
+              >
+                <button
+                  aria-selected={profileCarouselSlide === 'passport'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('passport')}
+                  role="tab"
+                  type="button"
+                >
+                  Passport
+                </button>
+                <button
+                  aria-selected={profileCarouselSlide === 'badges'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('badges')}
+                  role="tab"
+                  type="button"
+                >
+                  Badge Book
+                </button>
               </div>
-            <p>
-              Member profile preview for chat discovery, preference controls, moderation
-              history, and future passport-driven reputation surfaces.
-            </p>
-
-            <div className="member-profile-meta-row">
-              <span>Tier</span>
-              <strong>{props.member.tier}</strong>
-              <span>Status</span>
-              <strong>{isBlocked ? 'Blocked' : isMuted ? 'Muted' : 'Open'}</strong>
-              <span>Reports</span>
-              <strong>{memberReports.length}</strong>
-              <span>Actions</span>
-              <strong>{memberActions.length}</strong>
             </div>
-
-            {reportQueued && <p className="report-pulse">Report added to moderation queue.</p>}
           </div>
 
-          <div className="member-profile-actions">
-            <button
-              className={isMuted ? 'preference-button is-muted-active' : 'preference-button'}
-              onClick={() => savePreference(!isMuted, isBlocked)}
-              type="button"
-            >
-              {isMuted ? 'Muted' : 'Mute'}
-            </button>
+          <ProfilePassportCarousel
+            activeSlide={profileCarouselSlide}
+            badgeBookView={<BadgeCollectorsBook key={props.member.id} member={props.member} />}
+            passportView={
+              <TcgFoilPassportCard layout="vertical" member={props.member} signal={reviewedSignal} />
+            }
+            sideRail={profileCarouselSlide === 'passport' ? (
+              <div className="member-profile-actions tcg-passport-actions">
+                <button
+                  className={isMuted ? 'preference-button is-muted-active' : 'preference-button'}
+                  onClick={() => savePreference(!isMuted, isBlocked)}
+                  type="button"
+                >
+                  {isMuted ? 'Muted' : 'Mute'}
+                </button>
 
-            <button
-              className={isBlocked ? 'preference-button is-blocked-active' : 'preference-button danger-preference'}
-              onClick={() => savePreference(isMuted, !isBlocked)}
-              type="button"
-            >
-              {isBlocked ? 'Blocked' : 'Block'}
-            </button>
+                <button
+                  className={
+                    isBlocked
+                      ? 'preference-button is-blocked-active'
+                      : 'preference-button danger-preference'
+                  }
+                  onClick={() => savePreference(isMuted, !isBlocked)}
+                  type="button"
+                >
+                  {isBlocked ? 'Blocked' : 'Block'}
+                </button>
 
-            <button
-              className="preference-button report-preference"
-              onClick={reportMember}
-              type="button"
-            >
-              Report
-            </button>
+                <button
+                  className="preference-button report-preference"
+                  onClick={reportMember}
+                  type="button"
+                >
+                  Report
+                </button>
 
-            <button
-              className="secondary-action"
-              onClick={() => props.onNavigate('safetyCenter')}
-              type="button"
-            >
-              Safety Center
-            </button>
+                <button
+                  className="nami-surface-button"
+                  onClick={() => props.onNavigate('safetyCenter')}
+                  type="button"
+                >
+                  Safety Center
+                </button>
 
-            <button
-                className="secondary-action member-return-button"
-                onClick={() => props.onNavigate(props.returnPage)}
+                <button
+                  className="nami-surface-button member-return-button"
+                  onClick={() => props.onNavigate(props.returnPage)}
+                  type="button"
+                >
+                  {props.returnLabel}
+                </button>
+
+                {canMessage ? (
+                  <button
+                    className="nami-surface-button is-primary-surface-button"
+                    onClick={() => props.onOpenThread(props.member.id)}
+                    type="button"
+                  >
+                    Message
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          />
+        </div>
+
+        {canMessage ? (
+          <article className="panel member-private-message-panel">
+            <div className="profile-panel-heading">
+              <h2>Private Message</h2>
+              <p>Verified members can send direct messages that appear in Messages.</p>
+            </div>
+            <div className="chat-composer-row message-log-composer">
+              <input
+                aria-label={'Private message to ' + props.member.name}
+                onChange={(event) => setPrivateDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (privateDraft.trim()) {
+                      sendPrivateMessage(props.member.id, props.member.name, privateDraft);
+                      setPrivateDraft('');
+                      props.onOpenThread(props.member.id);
+                    }
+                  }
+                }}
+                placeholder={'Write to ' + props.member.name}
+                value={privateDraft}
+              />
+              <button
+                className="primary-action"
+                disabled={!privateDraft.trim()}
+                onClick={() => {
+                  if (!privateDraft.trim()) {
+                    return;
+                  }
+
+                  sendPrivateMessage(props.member.id, props.member.name, privateDraft);
+                  setPrivateDraft('');
+                  props.onOpenThread(props.member.id);
+                }}
                 type="button"
               >
-                {props.returnLabel}
+                Send
               </button>
-          </div>
-        </article>
+            </div>
+          </article>
+        ) : null}
+
+        <EmbeddedSocialPanel surface="member" title="Member Feed" />
+
+        {reportQueued ? <p className="report-pulse">Report added to moderation queue.</p> : null}
 
         <section className="member-profile-grid">
             <article className="panel member-affiliation-panel">
@@ -3993,18 +4632,20 @@ function MemberProfileScreen(props: {
           </article>
         </section>
       
-        <MediaUploadPrepCard
-          acceptedFormats="PNG, JPG, WebP"
-          assetLabel="Member avatar"
-          currentState={
-            props.member.avatarImageUrl
-              ? 'Demo member avatar active. Initials remain available as fallback.'
-              : 'Initials fallback active. No uploaded member avatar attached.'
-          }
-          note="This placeholder prepares Member Profiles for future avatar uploads without making upload equal verification or trust."
-          storageLabel="Future source: user-owned media reference plus passport attachment rules"
-          surfaceLabel="Member media"
-        />
+        {isSelfMember(props.member.id) ? (
+          <MediaUploadPrepCard
+            acceptedFormats="PNG, JPG, WebP"
+            assetLabel="Member avatar"
+            currentState={
+              props.member.avatarImageUrl
+                ? 'Demo member avatar active. Initials remain available as fallback.'
+                : 'Initials fallback active. No uploaded member avatar attached.'
+            }
+            note="This placeholder prepares Member Profiles for future avatar uploads without making upload equal verification or trust."
+            storageLabel="Future source: user-owned media reference plus passport attachment rules"
+            surfaceLabel="Member media"
+          />
+        ) : null}
 </section>
     </>
   );
@@ -4214,13 +4855,19 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <MemberVisualAvatar
+                  <UniformMemberAvatar
                     member={member}
                     signal={readMemberSignalReview(member.id, member.signal)}
                   />
                   <div>
                     <strong>{member.name}</strong>
-                    <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
+                    <span className="safety-member-meta">
+                      {member.tier}
+                      <ConductSignalDot
+                        signal={readMemberSignalReview(member.id, member.signal)}
+                        size="sm"
+                      />
+                    </span>
                   </div>
                   <i>Muted</i>
                 </button>
@@ -4244,13 +4891,19 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                   onClick={() => openMember(member)}
                   type="button"
                 >
-                  <MemberVisualAvatar
+                  <UniformMemberAvatar
                     member={member}
                     signal={readMemberSignalReview(member.id, member.signal)}
                   />
                   <div>
                     <strong>{member.name}</strong>
-                    <span>{member.tier} · {readMemberSignalReview(member.id, member.signal)}</span>
+                    <span className="safety-member-meta">
+                      {member.tier}
+                      <ConductSignalDot
+                        signal={readMemberSignalReview(member.id, member.signal)}
+                        size="sm"
+                      />
+                    </span>
                   </div>
                   <i>Blocked</i>
                 </button>
@@ -4379,16 +5032,20 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                         onClick={() => openMember(member)}
                         type="button"
                       >
-                        <MemberVisualAvatar member={member} signal={reviewedSignal} />
+                        <UniformMemberAvatar member={member} signal={reviewedSignal} />
                         <div>
                           <strong>{member.name}</strong>
-                          <span>{member.tier} · {reviewedSignal}</span>
+                          <span className="safety-member-meta">
+                            {member.tier}
+                            <ConductSignalDot signal={reviewedSignal} size="sm" />
+                          </span>
                         </div>
                       </button>
 
                       <div className="signal-review-action-row">
                         {(['Green', 'Orange', 'Red'] as Array<NamiChannel['signal']>).map((signal) => (
                           <button
+                            aria-label={'Set signal to ' + signal}
                             className={
                               signal === reviewedSignal
                                 ? 'is-selected-signal-review'
@@ -4401,7 +5058,7 @@ const reports = useMemo(() => readSafetyReports(), [refreshKey]);
                             onClick={() => reviewMemberSignal(member, signal)}
                             type="button"
                           >
-                            {signal}
+                            <ConductSignalDot signal={signal} />
                           </button>
                         ))}
                       </div>
@@ -4488,8 +5145,12 @@ function Subscriptions(props: {
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
-  const subscribedChannels = channels.slice(0, 4);
-  const recommendedChannels = channels.slice(2);
+  const subscribedChannels = useSubscribedChannels();
+  const selfMember = getSelfMember();
+  const membershipState = useMembershipPlanState();
+  const activeMembershipPlan = membershipPlanForTier(membershipState.activeTier);
+  const slotLimit = subscriptionSlotLimit(selfMember.tier);
+  const recommendedChannels = channels.filter((channel) => !isChannelSubscribed(channel.id));
 
   return (
     <>
@@ -4511,10 +5172,14 @@ function Subscriptions(props: {
 
           <div className="subscription-cap-card">
             <span>Current Plan</span>
-            <strong>Free Explorer</strong>
-            <p>{subscribedChannels.length}/5 followed channels</p>
+            <strong>{activeMembershipPlan.label}</strong>
+            <p>
+              {subscribedChannels.length}/{slotLimit} followed channels · {selfMember.tier} tier
+            </p>
           </div>
         </article>
+
+        <MembershipPlansPanel />
 
         <section className="subscription-layout">
           <article className="panel">
@@ -4543,7 +5208,6 @@ function Subscriptions(props: {
                     <strong>{channel.name}</strong>
                     <span>{channel.genre} · {channel.platforms.join(' / ')}</span>
                   </div>
-                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
                 </button>
               ))}
             </div>
@@ -4624,7 +5288,7 @@ function PassportScreen(props: {
   onNavigate: (page: NamiPage) => void;
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
-  const profileMember = members[0]!;
+  const profileMember = useSelfMember();
   const passportProgression = getNamiProgression(profileMember);
   const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
   const { owner: protocolOwner } = useProtocolOwner();
@@ -4633,15 +5297,15 @@ function PassportScreen(props: {
 
   const passportProofs = [
     {
-      title: 'Wallet Linked',
+      title: 'Account Linked',
       status: 'Verified',
-      detail: 'Wallet remains an owner-only identity anchor by default.',
+      detail: 'Your account remains a private identity anchor by default.',
       category: 'Identity'
     },
     {
-      title: 'SuiNS / Subname',
+      title: 'Nodename',
       status: 'Verified',
-      detail: 'npcgamer.sui is connected, but hidden publicly until enabled.',
+      detail: 'npcgamer is connected, but hidden publicly until enabled.',
       category: 'Name Proof'
     },
     {
@@ -4653,7 +5317,7 @@ function PassportScreen(props: {
     {
       title: 'Game Ownership',
       status: 'Pending',
-      detail: 'Future Sui object, NFT, or license proof for gated rooms.',
+      detail: 'Future license proof for gated rooms and events.',
       category: 'Access'
     },
     {
@@ -4673,18 +5337,15 @@ function PassportScreen(props: {
   return (
     <>
       <header className="page-title">
-        <p>Wallet identity, proofs, and gated access</p>
+        <p>Member identity, proofs, and access</p>
         <h1>Nami Passport</h1>
       </header>
 
-      <ProtocolStatusBar />
-      <ProtocolIdentityPanel />
-      <ProtocolConductPanel />
-
+      <div className="passport-screen-layout">
       {passportView?.passport ? (
         <article className="panel protocol-passport-card">
           <div className="profile-panel-heading">
-            <h2>On-Chain Passport</h2>
+            <h2>Live Passport</h2>
             <p>
               Live object read via SDK · Level {passportView.passport.level} ·{' '}
               {passportView.passport.membershipTierLabel} ·{' '}
@@ -4715,24 +5376,12 @@ function PassportScreen(props: {
         <p className="protocol-hint">No owned Passport object found for the connected wallet.</p>
       ) : null}
 
-      <PassportTimelinePanel timeline={passportView?.timeline ?? null} />
-      <ProtocolHistoryPanel />
-      <ProtocolCustomizationPanel />
-
       <section className="passport-page">
         <article className="panel passport-hero-card passport-hero-card-refined">
           <div className="passport-owner-block">
-            <div
-                  className={
-                    'member-profile-avatar ' +
-                    signalClass(profileMember.signal) +
-                    (profileMember.avatarImageUrl ? ' has-member-avatar-image' : '')
-                  }
-                  style={memberAvatarAssetVariables(profileMember)}
-                >
-                {memberInitials(profileMember)}
-                <span className="profile-level-badge">Lv {passportProgression.level}</span>
-              </div>
+            <UniformMemberAvatar className="member-profile-avatar" member={profileMember}>
+              <span className="profile-level-badge">Lv {passportProgression.level}</span>
+            </UniformMemberAvatar>
 
             <div className="passport-owner-copy">
               <span className="mini-badge">Sui Identity Layer</span>
@@ -4748,37 +5397,41 @@ function PassportScreen(props: {
                 <span>SuiNS</span>
                 <strong>{suiNsPublic ? 'npcgamer.sui visible publicly' : 'Hidden publicly'}</strong>
                 <span>Signal</span>
-                <strong>{profileMember.signal}</strong>
+                <strong className="passport-signal-value">
+                  <ConductSignalDot signal={profileMember.signal} />
+                </strong>
                 <span>Trust Source</span>
                 <strong>Proofs + conduct, not payment</strong>
               </div>
             </div>
           </div>
 
-          <aside className="passport-privacy-card">
-            <span className="mini-badge">Privacy</span>
-            <h3>SuiNS Visibility</h3>
-            <p>
-              SuiNS is a readable wallet identity. It stays hidden publicly unless you
-              choose to display it.
-            </p>
+          {isSelfMember(profileMember.id) ? (
+            <aside className="passport-privacy-card">
+              <span className="mini-badge">Privacy</span>
+              <h3>SuiNS Visibility</h3>
+              <p>
+                SuiNS is a readable wallet identity. It stays hidden publicly unless you
+                choose to display it.
+              </p>
 
-            <button
-              className={suiNsPublic ? 'is-wallet-public' : ''}
-              onClick={() => {
-                const nextValue = !suiNsPublic;
-                setSuiNsPublic(nextValue);
-                saveSuiNsPublicDisplay(nextValue);
-              }}
-              type="button"
-            >
-              {suiNsPublic ? 'Hide SuiNS Publicly' : 'Display SuiNS Publicly'}
-            </button>
+              <button
+                className={suiNsPublic ? 'is-wallet-public' : ''}
+                onClick={() => {
+                  const nextValue = !suiNsPublic;
+                  setSuiNsPublic(nextValue);
+                  saveSuiNsPublicDisplay(nextValue);
+                }}
+                type="button"
+              >
+                {suiNsPublic ? 'Hide SuiNS Publicly' : 'Display SuiNS Publicly'}
+              </button>
 
-            <button onClick={() => props.onNavigate('userProfile')} type="button">
-              Back to My Profile
-            </button>
-          </aside>
+              <button onClick={() => props.onNavigate('userProfile')} type="button">
+                Back to My Profile
+              </button>
+            </aside>
+          ) : null}
         </article>
 
         <section className="passport-grid">
@@ -4872,6 +5525,11 @@ function PassportScreen(props: {
           </article>
         </section>
       </section>
+
+      <PassportTimelinePanel timeline={passportView?.timeline ?? null} />
+      </div>
+
+      <ProtocolStatusBar />
     </>
   );
 }
@@ -4939,43 +5597,19 @@ function UserProfileScreen(props: {
   onOpenProfile?: (channel: NamiChannel) => void;
   onNavigate?: (page: NamiPage) => void;
 } = {}): ReactElement {
-  const profileMember = members[0]!;
+  const profileMember = useSelfMember();
+  const profileEdits = useSelfProfileEdits();
   const profileProgression = getNamiProgression(profileMember);
-  const profileVerificationStatus =
-    profileMember.signal === 'Green' ? 'Verified' : profileMember.signal + ' Review';
-  const suiNsPublic = readSuiNsPublicDisplay();
-  const profileCardFrameRef = useRef<HTMLDivElement | null>(null);
-  const foilFrameRef = useRef<number | null>(null);
-  const foilStateRef = useRef({
-    current: {
-      foilX: 50,
-      foilY: 18,
-      cardTiltX: 0,
-      cardTiltY: 0,
-      lightX: 0,
-      lightY: 0,
-      cardOpacity: 0.36,
-      passportLightX: 0,
-      passportLightY: 0,
-      passportOpacity: 0.22
-    },
-    target: {
-      foilX: 50,
-      foilY: 18,
-      cardTiltX: 0,
-      cardTiltY: 0,
-      lightX: 0,
-      lightY: 0,
-      cardOpacity: 0.36,
-      passportLightX: 0,
-      passportLightY: 0,
-      passportOpacity: 0.22
-    }
-  });
+  const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
+  const [viewAsGuest, setViewAsGuest] = useState(false);
   const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>(() => {
     return readProfileCardLayout();
   });
-  const mySubscriptions = channels.slice(0, 4);
+  const memberFeedEnabled =
+    canConfigureEmbeddedFeedSurface('member', readUserSurfaceRole(), profileMember) &&
+    readEmbeddedFeedEnabled('member');
+
+  const mySubscriptions = useSubscribedChannels();
   const { data: guildCards } = useGuildCardsQuery();
   const guildRows = guildCards ?? [];
 
@@ -5000,143 +5634,6 @@ function UserProfileScreen(props: {
     }
   ];
 
-  function writeFoilStyles(card: HTMLElement): void {
-    const current = foilStateRef.current.current;
-
-    card.style.setProperty('--card-foil-x', current.foilX.toFixed(2) + '%');
-    card.style.setProperty('--card-foil-y', current.foilY.toFixed(2) + '%');
-    card.style.setProperty('--card-body-tilt-x', current.cardTiltX.toFixed(3) + 'deg');
-    card.style.setProperty('--card-body-tilt-y', current.cardTiltY.toFixed(3) + 'deg');
-    card.style.setProperty('--card-light-x', current.lightX.toFixed(2) + 'px');
-    card.style.setProperty('--card-light-y', current.lightY.toFixed(2) + 'px');
-    card.style.setProperty('--card-foil-opacity', current.cardOpacity.toFixed(3));
-    card.style.setProperty('--passport-light-x', current.passportLightX.toFixed(2) + 'px');
-    card.style.setProperty('--passport-light-y', current.passportLightY.toFixed(2) + 'px');
-    card.style.setProperty('--passport-foil-opacity', current.passportOpacity.toFixed(3));
-  }
-
-  function animateFoil(card: HTMLElement): void {
-    const state = foilStateRef.current;
-    const current = state.current;
-    const target = state.target;
-    const smoothing = 0.105;
-
-    current.foilX += (target.foilX - current.foilX) * smoothing;
-    current.foilY += (target.foilY - current.foilY) * smoothing;
-    current.cardTiltX += (target.cardTiltX - current.cardTiltX) * smoothing;
-    current.cardTiltY += (target.cardTiltY - current.cardTiltY) * smoothing;
-    current.lightX += (target.lightX - current.lightX) * smoothing;
-    current.lightY += (target.lightY - current.lightY) * smoothing;
-    current.cardOpacity += (target.cardOpacity - current.cardOpacity) * smoothing;
-    current.passportLightX += (target.passportLightX - current.passportLightX) * smoothing;
-    current.passportLightY += (target.passportLightY - current.passportLightY) * smoothing;
-    current.passportOpacity += (target.passportOpacity - current.passportOpacity) * smoothing;
-
-    writeFoilStyles(card);
-
-    const remaining = Math.max(
-      Math.abs(target.foilX - current.foilX),
-      Math.abs(target.foilY - current.foilY),
-      Math.abs(target.cardTiltX - current.cardTiltX),
-      Math.abs(target.cardTiltY - current.cardTiltY),
-      Math.abs(target.lightX - current.lightX),
-      Math.abs(target.lightY - current.lightY),
-      Math.abs(target.cardOpacity - current.cardOpacity),
-      Math.abs(target.passportLightX - current.passportLightX),
-      Math.abs(target.passportLightY - current.passportLightY),
-      Math.abs(target.passportOpacity - current.passportOpacity)
-    );
-
-    if (remaining > 0.01) {
-      foilFrameRef.current = window.requestAnimationFrame(() => animateFoil(card));
-      return;
-    }
-
-    Object.assign(current, target);
-    writeFoilStyles(card);
-    foilFrameRef.current = null;
-  }
-
-  function startFoilAnimation(card: HTMLElement): void {
-    if (foilFrameRef.current !== null) {
-      return;
-    }
-
-    foilFrameRef.current = window.requestAnimationFrame(() => animateFoil(card));
-  }
-
-  function updateCardFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
-    const card = profileCardFrameRef.current;
-
-    if (!card) {
-      return;
-    }
-
-    const shell = event.currentTarget;
-    const rect = shell.getBoundingClientRect();
-
-    const pointerX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const pointerY = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-
-    const fromCenterX = pointerX - 0.5;
-    const fromCenterY = pointerY - 0.5;
-    const deadZone = 0.08;
-
-    const easedX =
-      Math.sign(fromCenterX) *
-      Math.max(0, Math.abs(fromCenterX) - deadZone) /
-      (0.5 - deadZone);
-
-    const easedY =
-      Math.sign(fromCenterY) *
-      Math.max(0, Math.abs(fromCenterY) - deadZone) /
-      (0.5 - deadZone);
-
-    const clampedX = Math.max(-1, Math.min(1, easedX));
-    const clampedY = Math.max(-1, Math.min(1, easedY));
-
-    const tiltStrength = 1.55;
-    const lightStrength = 13;
-
-    foilStateRef.current.target = {
-      foilX: pointerX * 100,
-      foilY: pointerY * 100,
-      cardTiltX: -clampedY * tiltStrength,
-      cardTiltY: clampedX * tiltStrength,
-      lightX: clampedX * lightStrength,
-      lightY: clampedY * lightStrength,
-      cardOpacity: 0.58,
-      passportLightX: clampedX * 9,
-      passportLightY: clampedY * 9,
-      passportOpacity: 0.34
-    };
-
-    startFoilAnimation(card);
-  }
-
-  function resetCardFoil(): void {
-    const card = profileCardFrameRef.current;
-
-    if (!card) {
-      return;
-    }
-
-    foilStateRef.current.target = {
-      foilX: 50,
-      foilY: 18,
-      cardTiltX: 0,
-      cardTiltY: 0,
-      lightX: 0,
-      lightY: 0,
-      cardOpacity: 0.36,
-      passportLightX: 0,
-      passportLightY: 0,
-      passportOpacity: 0.22
-    };
-
-    startFoilAnimation(card);
-  }
-
   function chooseProfileCardLayout(layout: ProfileCardLayout): void {
     setProfileCardLayout(layout);
     saveProfileCardLayout(layout);
@@ -5149,15 +5646,9 @@ function UserProfileScreen(props: {
         <h1>My Profile</h1>
       </header>
 
-      <ProtocolStatusBar />
-      <ProtocolProfilePanel />
-      <ProtocolConductPanel />
-      <ProtocolCustomizationPanel />
-      <ProtocolHistoryPanel />
-
-      <section className="user-profile-page">
-        <div className={'nami-profile-stable-controls nami-profile-stable-controls-' + profileCardLayout}>
-          <div className="nami-profile-toolbar-actions">
+      <section className="user-profile-passport-hero is-tight-passport-hero">
+        <div className="nami-profile-view-toolbar nami-profile-view-toolbar-stable">
+          <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-layout">
             <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
               {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
                 <button
@@ -5171,132 +5662,103 @@ function UserProfileScreen(props: {
               ))}
             </div>
           </div>
-        </div>
 
-        <article
-          aria-label="Open Nami Passport"
-          className={
-            'nami-profile-card-shell ' +
-            (profileCardLayout === 'horizontal'
-              ? 'nami-profile-card-shell-horizontal'
-              : 'nami-profile-card-shell-vertical')
-          }
-          onClick={() => props.onNavigate?.('passport')}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              props.onNavigate?.('passport');
-            }
-          }}
-          onPointerLeave={resetCardFoil}
-          onPointerMove={updateCardFoil}
-          role="button"
-          tabIndex={0}
-        >
-          <div
-            className={
-              'nami-profile-card-frame ' +
-              (profileCardLayout === 'horizontal'
-                ? 'nami-profile-card-frame-horizontal'
-                : 'nami-profile-card-frame-vertical')
-            }
-            ref={profileCardFrameRef}
-          >
-            <div className="nami-profile-card-header">
-              <span className="mini-badge">Nami Passport</span>
-              <strong>Identity Card</strong>
-            </div>
-
+          <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-tabs">
             <div
+              className="profile-passport-carousel-actions"
+              role="tablist"
+              aria-label="Profile card views"
+            >
+              <button
+                aria-selected={profileCarouselSlide === 'passport'}
                 className={
-                  'nami-profile-card-avatar ' +
-                  signalClass(profileMember.signal) +
-                  (profileMember.avatarImageUrl ? ' has-member-avatar-image' : '')
+                  'nami-surface-button profile-passport-view-tab' +
+                  (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
                 }
-                style={memberAvatarAssetVariables(profileMember)}
+                onClick={() => setProfileCarouselSlide('passport')}
+                role="tab"
+                type="button"
               >
-              {profileMember.name.slice(0, 2).toUpperCase()}
-            </div>
-
-            <div className="nami-profile-card-nameplate">
-              <div className="profile-signal-badge-row">
-                <span className={'profile-signal-chip ' + signalClass(profileMember.signal)}>
-                  <i />
-                  {profileMember.signal}
-                </span>
-
-                <span className="profile-badge-icon profile-badge-icon-custom" title="Adventurer">
-                  A
-                </span>
-
-                <span className="profile-badge-icon profile-badge-icon-custom" title="Gamester">
-                  G
-                </span>
-              </div>
-
-              <h2>{profileMember.name}</h2>
-              <p>
-                Portable gamer identity powered by Sui. Your Nami Passport connects
-                SuiNS identity, proofs, guild standing, and gated-access readiness.
-              </p>
-            </div>
-
-            <div className="nami-profile-card-stats">
-              <div>
-                <span>Signal</span>
-                <strong>{profileMember.signal}</strong>
-              </div>
-
-              <div>
-                <span>Tier</span>
-                <strong>Adventurer</strong>
-              </div>
-
-              <div>
-                <span>Rep</span>
-                <strong>Gamester</strong>
-              </div>
-            </div>
-
-            <div className="nami-profile-card-details">
-              <div>
-                <span>Handle</span>
-                <strong>@npcgamer</strong>
-              </div>
-
-              <div>
-                <span>SuiNS</span>
-                <strong>{suiNsPublic ? 'npcgamer.sui' : 'Hidden publicly'}</strong>
-              </div>
-
-              <div>
-                <span>Verification</span>
-                <strong>{profileVerificationStatus}</strong>
-                <span>Passport</span>
-                <strong>Proof-based, not payment-based</strong>
-              </div>
-
-              <div>
-                <span>Public Identity</span>
-                <strong>{suiNsPublic ? 'SuiNS visible' : 'SuiNS hidden by default'}</strong>
-              </div>
-            </div>
-
-            <div className="nami-profile-passport-surface">
-              <span className="mini-badge">Privacy</span>
-              <strong>SuiNS stays private by default.</strong>
-              <p>
-                You decide whether your readable identity is visible on public-facing
-                profile surfaces.
-              </p>
-
-              <span className="nami-profile-passport-action-note">
-                Click the foil card to open Nami Passport.
-              </span>
+                Passport
+              </button>
+              <button
+                aria-selected={profileCarouselSlide === 'badges'}
+                className={
+                  'nami-surface-button profile-passport-view-tab' +
+                  (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
+                }
+                onClick={() => setProfileCarouselSlide('badges')}
+                role="tab"
+                type="button"
+              >
+                Badge Book
+              </button>
             </div>
           </div>
-        </article>
 
+          <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-extra">
+            <button
+              aria-pressed={viewAsGuest}
+              className={
+                'nami-surface-button profile-guest-preview-toggle' + (viewAsGuest ? ' is-active-view' : '')
+              }
+              onClick={() => setViewAsGuest((value) => !value)}
+              type="button"
+            >
+              {viewAsGuest ? 'Exit Guest View' : 'Preview as Guest'}
+            </button>
+          </div>
+        </div>
+
+        {viewAsGuest ? (
+          <p className="profile-guest-preview-note">
+            Guest preview — embedded feeds and public profile surfaces only.
+          </p>
+        ) : null}
+
+        {profileEdits.bio.trim() ? (
+          <p className="user-profile-bio-preview">{profileEdits.bio}</p>
+        ) : null}
+
+        <ProfilePassportCarousel
+          activeSlide={profileCarouselSlide}
+          badgeBookView={<BadgeCollectorsBook key={profileMember.id} member={profileMember} />}
+          passportLayout={profileCardLayout}
+          passportView={
+            <TcgFoilPassportCard
+              layout={profileCardLayout}
+              member={profileMember}
+              onOpenPassport={() => props.onNavigate?.('passport')}
+            />
+          }
+        />
+      </section>
+
+      <section className="user-profile-page">
+        {viewAsGuest ? (
+          memberFeedEnabled ? (
+            <EmbeddedSocialPanel surface="member" title="Member Feed" />
+          ) : (
+            <article className="panel profile-guest-preview-empty">
+              <div className="profile-panel-heading">
+                <h2>Embedded Panels</h2>
+                <p>
+                  Turn on Member feeds in Settings to preview how guests see your live and social
+                  embeds.
+                </p>
+              </div>
+              <button
+                className="profile-secondary-link"
+                onClick={() => props.onNavigate?.('settings')}
+                type="button"
+              >
+                Open Settings
+              </button>
+            </article>
+          )
+        ) : null}
+
+        {viewAsGuest ? null : (
         <section className="profile-quick-grid">
           <article className="panel profile-embedded-card">
             <div className="profile-panel-heading">
@@ -5305,24 +5767,29 @@ function UserProfileScreen(props: {
             </div>
 
             <div className="profile-subscription-mini-grid">
-              {mySubscriptions.map((channel) => (
-                <button
-                  className="profile-mini-channel-card"
-                  key={channel.id}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    props.onOpenProfile?.(channel);
-                  }}
-                  type="button"
-                >
-                  <ChannelAvatar channel={channel} size="sm" />
-                  <div>
-                    <strong>{channel.name}</strong>
-                    <span>{channel.genre}</span>
-                  </div>
-                  <i className={signalClass(channel.signal)}>{channel.signal}</i>
-                </button>
-              ))}
+              {mySubscriptions.length > 0 ? (
+                mySubscriptions.map((channel) => (
+                  <button
+                    className="profile-mini-channel-card"
+                    key={channel.id}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onOpenProfile?.(channel);
+                    }}
+                    type="button"
+                  >
+                    <ChannelAvatar channel={channel} size="sm" />
+                    <div>
+                      <strong>{channel.name}</strong>
+                      <span>{channel.genre}</span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p className="profile-empty-state-copy">
+                  No subscribed channels yet. Subscribe from any Game Profile to fill a slot.
+                </p>
+              )}
             </div>
 
             <button
@@ -5389,22 +5856,12 @@ function UserProfileScreen(props: {
             </div>
           </article>
         </section>
-      
-        <MediaUploadPrepCard
-          acceptedFormats="PNG, JPG, WebP"
-          assetLabel="Profile avatar"
-          currentState={
-            members[0]?.avatarImageUrl
-              ? 'Demo profile avatar active. Initials remain available as fallback.'
-              : 'Initials fallback active. No uploaded profile avatar attached.'
-          }
-          note="This prepares My Profile for future avatar uploads while keeping identity and trust separate."
-          storageLabel="Future source: user-owned media reference plus passport attachment rules"
-          surfaceLabel="My Profile media"
-        />
+        )}
 
-        <ProfileEditPrepCard />
+        {viewAsGuest ? null : <ProfileEditPanel />}
 </section>
+
+      <ProtocolStatusBar />
     </>
   );
 }
@@ -5413,14 +5870,16 @@ function ProtocolStatusBar(): ReactElement {
   const { owner, source, context, mode } = useProtocolOwner();
 
   return (
-    <div className="protocol-status-bar">
+    <div className="protocol-status-bar is-protocol-site-footer">
       <span className="mini-badge">{mode === 'live' && owner ? 'Protocol' : 'Mock'}</span>
       <p>{protocolOwnerStatusLabel(context, owner, source)}</p>
     </div>
   );
 }
 
-function GuildsScreen(): ReactElement {
+function GuildsScreen(props: {
+  onNavigate?: (page: NamiPage) => void;
+} = {}): ReactElement {
   const { owner: protocolOwner } = useProtocolOwner();
   const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
   const { data: squadCards } = useSquadCardsQuery();
@@ -5487,19 +5946,29 @@ function GuildsScreen(): ReactElement {
               </div>
 
               <div className="fixed-card-footer">
-                <span className={'guild-signal-pill guild-signal-' + channel.signal.toLowerCase()}>
-                  {channel.signal}
-                </span>
+                <span className="mini-badge">Guild</span>
               </div>
             </article>
           ))}
         </section>
       )}
 
+      <EmbeddedSocialPanel surface="guild" title="Guild Feed" />
+
+      <article className="panel guild-owner-entry-card">
+        <div className="profile-panel-heading">
+          <h2>Guild Owner Page</h2>
+          <p>Guild owners create events that subscribed members see in My Events.</p>
+        </div>
+        <button className="primary-action" onClick={() => props.onNavigate?.('guildOwner')} type="button">
+          Open Guild Owner Page
+        </button>
+      </article>
+
       {showLiveSquads ? (
         <section className="account-grid uniform-card-grid">
           <header className="page-title protocol-subsection-title">
-            <p>Indexed squads</p>
+            <p>Your squads</p>
             <h2>My Squads</h2>
           </header>
 
@@ -5532,7 +6001,11 @@ function GuildsScreen(): ReactElement {
   );
 }
 
-function MessagesScreen(): ReactElement {
+function MessagesScreen(props: {
+  onOpenThread: (memberId: string) => void;
+}): ReactElement {
+  const messageStore = useMessagesStore();
+
   return (
     <>
       <header className="page-title">
@@ -5540,17 +6013,365 @@ function MessagesScreen(): ReactElement {
         <h1>Messages</h1>
       </header>
 
-      <section className="account-grid">
-        {members.map((member) => (
-          <article className="profile-panel account-card" key={member.id}>
-            <MemberVisualAvatar className="member-dot" member={member} />
-            <h2>{member.name}</h2>
-            <p>{member.badge} · {member.tier}</p>
-            <span className={'mini-badge signal-text-' + member.signal.toLowerCase()}>
-              {member.signal}
-            </span>
-          </article>
+      <section className="messages-thread-list">
+        {messageStore.threads.map((thread) => {
+          const member = members.find((entry) => entry.id === thread.memberId);
+
+          if (!member) {
+            return null;
+          }
+
+          return (
+            <button
+              className="messages-thread-row panel"
+              key={thread.memberId}
+              onClick={() => props.onOpenThread(thread.memberId)}
+              type="button"
+            >
+              <UniformMemberAvatar className="messages-thread-avatar" member={member} />
+              <div className="messages-thread-copy">
+                <strong>{thread.memberName}</strong>
+                <p>{thread.preview}</p>
+                <small>{thread.updatedAt}</small>
+              </div>
+              {thread.unread > 0 ? <span className="messages-unread-pill">{thread.unread}</span> : null}
+            </button>
+          );
+        })}
+      </section>
+    </>
+  );
+}
+
+function MessageLogScreen(props: {
+  member: (typeof members)[number];
+  onNavigate: (page: NamiPage) => void;
+  onOpenMember: (member: (typeof members)[number]) => void;
+}): ReactElement {
+  const messageStore = useMessagesStore();
+  const activeThread = messageStore.threads.find((thread) => thread.memberId === props.member.id);
+  const threadMessages = activeThread?.messages ?? threadMessagesFor(props.member.id, props.member.name);
+  const selfMember = useSelfMember();
+  const threadParticipants = threadParticipantsFor(props.member.id, props.member.name);
+  const [draft, setDraft] = useState('');
+  const messageStackRef = useRef<HTMLDivElement | null>(null);
+  const canSend = canSendPrivateMessages();
+
+  useEffect(() => {
+    markThreadRead(props.member.id);
+  }, [props.member.id]);
+
+  useEffect(() => {
+    const stack = messageStackRef.current;
+
+    if (!stack) {
+      return;
+    }
+
+    stack.scrollTop = stack.scrollHeight;
+  }, [threadMessages.length, messageStore.threads]);
+
+  function sendPrivateReply(): void {
+    if (!canSend || !draft.trim()) {
+      return;
+    }
+
+    sendPrivateMessage(props.member.id, props.member.name, draft);
+    setDraft('');
+  }
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Conversation log</p>
+        <h1>{props.member.name}</h1>
+      </header>
+
+      <section className="message-log-passport-rail">
+        {threadParticipants.map((participant) => {
+          const reviewedSignal = readMemberSignalReview(participant.id, participant.signal);
+
+          return (
+            <div className="message-log-passport-slot" key={participant.id}>
+              <TcgFoilPassportCard layout="vertical" member={participant} signal={reviewedSignal} />
+              <button
+                className="secondary-action message-log-passport-profile-button"
+                onClick={() => props.onOpenMember(participant)}
+                type="button"
+              >
+                View {participant.name}
+              </button>
+            </div>
+          );
+        })}
+      </section>
+
+      <div className="message-log-passport-actions tcg-passport-actions">
+        <button className="secondary-action" onClick={() => props.onNavigate('messages')} type="button">
+          Back to Messages
+        </button>
+      </div>
+
+      <section className="message-log-page panel">
+        <div className="message-stack" ref={messageStackRef}>
+          {threadMessages.map((message) => {
+            const messageMember = message.outgoing ? selfMember : props.member;
+
+            return (
+              <div
+                className={'chat-message-row' + (message.outgoing ? ' is-outgoing-message' : '')}
+                key={message.id + '-' + threadMessages.length}
+              >
+                <UniformMemberAvatarButton
+                  member={messageMember}
+                  onClick={() => props.onOpenMember(messageMember)}
+                  signal={message.signal}
+                />
+                <div
+                  className={
+                    'message-bubble' + (isEliteAuthor(message.author) ? ' is-elite-chat-bubble' : '')
+                  }
+                >
+                  <div className="message-meta">
+                    <strong>{message.author}</strong>
+                    <span>{message.time}</span>
+                  </div>
+                  <p>{message.body}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="chat-composer-row message-log-composer">
+          <input
+            aria-label={'Private message to ' + props.member.name}
+            disabled={!canSend}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                sendPrivateReply();
+              }
+            }}
+            placeholder={
+              canSend
+                ? 'Send a private message to ' + props.member.name
+                : 'Sign in and verify to send private messages'
+            }
+            value={draft}
+          />
+          <button className="primary-action" disabled={!canSend || !draft.trim()} onClick={sendPrivateReply} type="button">
+            Send
+          </button>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function EventDetailScreen(props: {
+  event: NamiEvent;
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
+  return (
+    <>
+      <header className="page-title">
+        <p>Event details</p>
+        <h1>{props.event.title}</h1>
+      </header>
+
+      <article className="panel event-detail-page">
+        <span className="mini-badge">{props.event.status}</span>
+        <h2>{props.event.title}</h2>
+        <p className="event-detail-description">{props.event.description}</p>
+        <div className="event-detail-body">{props.event.body}</div>
+        <div className="channel-event-meta-row">
+          <span>{props.event.dateLabel}</span>
+          <strong>{props.event.seats}</strong>
+        </div>
+        <button className="secondary-action" onClick={() => props.onNavigate('hub')} type="button">
+          Back to Nami Hub
+        </button>
+      </article>
+    </>
+  );
+}
+
+function SurfaceRoleSettingsPanel(): ReactElement {
+  const selfMember = getSelfMember();
+  const [role, setRole] = useState<UserSurfaceRole>(() => readUserSurfaceRole());
+
+  useEffect(() => subscribeSurfaceRole(() => setRole(readUserSurfaceRole())), []);
+
+  const roleOptions: Array<{ id: UserSurfaceRole; label: string; detail: string }> = [
+    {
+      id: 'member',
+      label: 'Member',
+      detail: 'Verified Pro+ members can enable member feeds only.',
+    },
+    {
+      id: 'channel-owner',
+      label: 'Game Channel Owner',
+      detail: 'Game feed settings only. Guild, member, and studio feeds stay hidden.',
+    },
+    {
+      id: 'guild-owner',
+      label: 'Guild Owner',
+      detail: 'Guild feed settings only.',
+    },
+  ];
+
+  return (
+    <article className="panel settings-card">
+      <div className="profile-panel-heading">
+        <h2>Surface Role</h2>
+        <p>Controls which embedded feed options appear in Settings for this account.</p>
+      </div>
+
+      <div className="settings-surface-role-row">
+        {roleOptions.map((option) => (
+          <button
+            className={'secondary-action settings-surface-role-button' + (role === option.id ? ' is-active-surface-role' : '')}
+            key={option.id}
+            onClick={() => saveUserSurfaceRole(option.id)}
+            type="button"
+          >
+            <strong>{option.label}</strong>
+            <small>{option.detail}</small>
+          </button>
         ))}
+      </div>
+
+      <p className="settings-surface-role-footnote">
+        Current member tier: {selfMember.tier} ·{' '}
+        {selfMember.tier === 'Pro' || selfMember.tier === 'Elite' ? 'feed eligible' : 'member feeds locked'}
+      </p>
+    </article>
+  );
+}
+
+function EmbeddedFeedSettingsPanel(): ReactElement {
+  const selfMember = getSelfMember();
+  const [role, setRole] = useState<UserSurfaceRole>(() => readUserSurfaceRole());
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => subscribeSurfaceRole(() => setRole(readUserSurfaceRole())), []);
+
+  const surfaceLabels: Record<EmbeddedFeedSurface, string> = {
+    member: 'Member feeds',
+    studio: 'Studio feeds',
+    game: 'Game feeds',
+    guild: 'Guild feeds',
+  };
+
+  const visibleSurfaces = getConfigurableEmbeddedFeedSurfaces(role, selfMember);
+
+  if (visibleSurfaces.length === 0) {
+    return (
+      <article className="panel settings-card">
+        <div className="profile-panel-heading">
+          <h2>Embedded Feeds</h2>
+          <p>
+            {role === 'member'
+              ? 'Verified Pro or Elite members can enable member feeds here.'
+              : 'No embedded feed options are available for the current surface role.'}
+          </p>
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article className="panel settings-card">
+      <div className="profile-panel-heading">
+        <h2>Embedded Feeds</h2>
+        <p>Activate X and live broadcast panels on profiles when you are ready to show them.</p>
+      </div>
+
+      <div className="settings-toggle-list" key={revision + role}>
+        {visibleSurfaces.map((surface) => (
+          <button
+            className="secondary-action settings-embedded-toggle"
+            key={surface}
+            onClick={() => {
+              if (!canConfigureEmbeddedFeedSurface(surface, role, selfMember)) {
+                return;
+              }
+
+              saveEmbeddedFeedEnabled(surface, !readEmbeddedFeedEnabled(surface));
+              setRevision((value) => value + 1);
+            }}
+            type="button"
+          >
+            {surfaceLabels[surface]}: {readEmbeddedFeedEnabled(surface) ? 'On' : 'Off'}
+          </button>
+        ))}
+      </div>
+
+      {visibleSurfaces.map((surface) => (
+        <EmbeddedFeedLinksPanel
+          enabled={readEmbeddedFeedEnabled(surface)}
+          key={surface + '-links-' + revision}
+          surface={surface}
+        />
+      ))}
+    </article>
+  );
+}
+
+function GuildOwnerScreen(props: {
+  onNavigate: (page: NamiPage) => void;
+}): ReactElement {
+  const [eventTitle, setEventTitle] = useState('');
+
+  return (
+    <>
+      <header className="page-title">
+        <p>Guild owner controls</p>
+        <h1>Wave Raiders Guild</h1>
+      </header>
+
+      <section className="guild-owner-page">
+        <article className="panel">
+          <div className="profile-panel-heading">
+            <h2>Guild Events</h2>
+            <p>Guild owners create events that appear for subscribed members in My Events.</p>
+          </div>
+
+          <div className="channel-event-grid">
+            {guildOwnerEvents.map((event) => (
+              <article className="channel-event-card panel" key={event.id}>
+                <div>
+                  <span className="mini-badge">{event.status}</span>
+                  <h2>{event.title}</h2>
+                  <p>{event.dateLabel}</p>
+                </div>
+                <p>{event.description}</p>
+                <div className="channel-event-meta-row">
+                  <span>{event.guildName}</span>
+                  <strong>{event.seats}</strong>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="guild-owner-create-event">
+            <input
+              aria-label="New guild event title"
+              onChange={(event) => setEventTitle(event.target.value)}
+              placeholder="New guild event title"
+              value={eventTitle}
+            />
+            <button className="primary-action" disabled={!eventTitle.trim()} type="button">
+              Create guild event
+            </button>
+          </div>
+        </article>
+
+        <button className="secondary-action" onClick={() => props.onNavigate('guilds')} type="button">
+          Back to My Guilds
+        </button>
       </section>
     </>
   );
@@ -5574,36 +6395,7 @@ function ChannelEventsScreen(props: {
     });
   }, [channelBrandTheme, props.channel.id]);
 
-  const gameEvents = [
-    {
-      title: props.channel.name + ' Launch Tournament',
-      status: 'Registration open',
-      date: 'Tonight · 8:00 PM',
-      type: 'Competitive',
-      seats: '42/64'
-    },
-    {
-      title: 'Guild Recruitment Night',
-      status: 'Live lobby',
-      date: 'Tomorrow · 7:30 PM',
-      type: 'Social',
-      seats: '18/40'
-    },
-    {
-      title: 'Developer AMA',
-      status: 'Official',
-      date: 'Friday · 6:00 PM',
-      type: 'Announcement',
-      seats: 'Unlimited'
-    },
-    {
-      title: 'Patch Notes Watch Party',
-      status: 'Scheduled',
-      date: 'Saturday · 4:00 PM',
-      type: 'Community',
-      seats: '26/100'
-    }
-  ];
+  const gameEvents = channelOwnerEvents(props.channel);
 
   return (
     <>
@@ -5647,11 +6439,11 @@ function ChannelEventsScreen(props: {
 
         <section className="channel-event-grid">
           {gameEvents.map((event) => (
-            <article className="channel-event-card panel" key={event.title}>
+            <article className="channel-event-card panel" key={event.id}>
               <div>
-                <span className="mini-badge">{event.type}</span>
+                <span className="mini-badge">{event.status}</span>
                 <h2>{event.title}</h2>
-                <p>{event.date}</p>
+                <p>{event.dateLabel}</p>
               </div>
 
               <div className="channel-event-meta-row">
@@ -5668,51 +6460,50 @@ function ChannelEventsScreen(props: {
   );
 }
 
-function EventsScreen(): ReactElement {
-  const events = [
-    {
-      label: 'Event 1',
-      title: 'Guild Run',
-      description: 'Saved event placeholder connected to subscribed channels.'
-    },
-    {
-      label: 'Event 2',
-      title: 'PvP Bracket',
-      description: 'Saved event placeholder connected to subscribed channels.'
-    },
-    {
-      label: 'Event 3',
-      title: 'Builder Showcase',
-      description: 'Saved event placeholder connected to subscribed channels.'
-    },
-    {
-      label: 'Event 4',
-      title: 'Cozy Night',
-      description: 'Saved event placeholder connected to subscribed channels.'
-    }
-  ];
-
+function EventsScreen(props: {
+  onOpenChannel: (channel: NamiChannel) => void;
+}): ReactElement {
   return (
     <>
       <header className="page-title">
-        <p>Saved and subscribed activity</p>
+        <p>Subscribed channel and guild activity</p>
         <h1>My Events</h1>
       </header>
 
       <section className="account-grid uniform-card-grid">
-        {events.map((eventItem) => (
-          <article className="profile-panel account-card fixed-card event-card" key={eventItem.label}>
+        {subscribedUserEvents.map((eventItem) => (
+          <article className="profile-panel account-card fixed-card event-card" key={eventItem.id}>
             <div className="fixed-card-body">
-              <span className="feature-label">{eventItem.label}</span>
+              <span className="feature-label">{eventItem.source}</span>
 
               <div className="fixed-card-copy">
                 <h2>{eventItem.title}</h2>
                 <p>{eventItem.description}</p>
+                <small>{eventItem.dateLabel} · {eventItem.status}</small>
               </div>
             </div>
 
             <div className="fixed-card-footer">
-              <button type="button">View Event</button>
+              <span>{eventItem.seats}</span>
+              {eventItem.channelId ? (
+                <button
+                  className="secondary-action"
+                  onClick={() => {
+                    const channel = channels.find((entry) => entry.id === eventItem.channelId);
+
+                    if (channel) {
+                      props.onOpenChannel(channel);
+                    }
+                  }}
+                  type="button"
+                >
+                  Open channel
+                </button>
+              ) : (
+                <button className="secondary-action" type="button">
+                  View event
+                </button>
+              )}
             </div>
           </article>
         ))}
@@ -5756,17 +6547,22 @@ function SettingsScreen(props: {
   }
 
   return (
-    <>
-      <header className="page-title">
+    <div className="settings-screen-layout" data-settings-screen="true">
+      <header className="page-title settings-page-title">
         <p>Account preferences and controls</p>
         <h1>Settings</h1>
       </header>
 
-      <ProtocolStatusBar />
+      <section className="settings-page">
+        <AccountConnectSection />
+        <PassportClaimSettingsPanel />
+        <PlatformLinkSettingsPanel />
+        <NamiOwnerSettingsPanel />
+        <ThemeSettingsPanel />
+        <SurfaceRoleSettingsPanel />
+        <EmbeddedFeedSettingsPanel />
 
-      <ProtocolIdentityPanel />
-
-              <section className="panel settings-channel-brand-palette settings-channel-owner-controls">
+        <section className="panel settings-channel-brand-palette settings-channel-owner-controls">
           <div className="settings-brand-header">
             <div>
               <span className="mini-badge">Channel Owner Controls</span>
@@ -5836,7 +6632,6 @@ function SettingsScreen(props: {
           </p>
         </section>
 
-      <section className="settings-page">
         <article className="panel settings-hero-panel">
           <div>
             <span className="mini-badge">Account Settings</span>
@@ -5882,7 +6677,7 @@ function SettingsScreen(props: {
             <div className="settings-toggle-list">
               <span>Public profile enabled</span>
               <span>Allow channel recommendations</span>
-              <span>Hide wallet details by default</span>
+              <span>Hide account details by default</span>
             </div>
           </article>
 
@@ -5913,17 +6708,23 @@ function SettingsScreen(props: {
           </article>
         </section>
 
-        <ProtocolRecoveryPanel />
-        <ProtocolChannelAccessPanel />
+        <IndexedDataPanel />
       </section>
-    </>
+
+      <ProtocolStatusBar />
+    </div>
   );
 }
 
 
 
 export function App(): ReactElement {
-  const [activePage, setActivePage] = useState<NamiPage>('hub');
+  const messageStore = useMessagesStore();
+  const selfMember = useSelfMember();
+
+  const [activePage, setActivePage] = useState<NamiPage>('entry');
+  const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);
+  const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
     const defaultChannel = channels[0];
     if (!defaultChannel) {
@@ -5938,6 +6739,8 @@ export function App(): ReactElement {
   const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() => channelDeveloper(channels[0]!));
   const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
   const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
+  const [selectedThreadMemberId, setSelectedThreadMemberId] = useState<string>(members[1]?.id ?? 'm2');
+  const [selectedEvent, setSelectedEvent] = useState<NamiEvent | null>(null);
 
   function profileReturnLabel(page: NamiPage): string {
     if (page === 'hub') return 'Back to Nami Hub';
@@ -5980,7 +6783,37 @@ export function App(): ReactElement {
     setActivePage(page);
   };
 
+  function navigateHubSwap(page: 'hub' | 'gamehub'): void {
+    if (page !== activePage) {
+      triggerHubSpotlightBurst(page === 'hub' ? 'nami' : 'game');
+    }
+
+    navigateFromCurrentPage(page);
+  }
+
+  useEffect(() => {
+    document.body.classList.add('is-grid-nav-pulse');
+    setGridPulseKey((value) => value + 1);
+
+    const timer = window.setTimeout(() => {
+      document.body.classList.remove('is-grid-nav-pulse');
+    }, 920);
+
+    return () => window.clearTimeout(timer);
+  }, [activePage]);
+
   const screen = useMemo(() => {
+    if (activePage === 'entry') {
+      return (
+        <EntryPage
+          onEnterHub={() => setActivePage('hub')}
+          onNavigateToSettings={() => setActivePage('settings')}
+          onStartOnboardingHandled={() => setEntryStartOnboarding(false)}
+          startOnboarding={entryStartOnboarding}
+        />
+      );
+    }
+
     if (activePage === 'hub') {
       return <NamiHub
           selectedChannel={selectedChannel}
@@ -5988,6 +6821,10 @@ export function App(): ReactElement {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
+          onViewEvent={(event) => {
+            setSelectedEvent(event);
+            setActivePage('eventDetail');
+          }}
         />;
     }
 
@@ -5996,6 +6833,7 @@ export function App(): ReactElement {
         <GameHub
           selectedChannel={selectedChannel}
           onSelect={setSelectedChannel}
+          onOpenMember={openMemberProfile}
           onOpenProfile={openChannelProfile}
         />
       );
@@ -6056,6 +6894,11 @@ export function App(): ReactElement {
     return <MemberProfileScreen
         member={selectedMember}
         onNavigate={navigateFromCurrentPage}
+        onOpenThread={(memberId) => {
+          setSelectedThreadMemberId(memberId);
+          markThreadRead(memberId);
+          setActivePage('messageLog');
+        }}
         returnPage={contextReturnPage}
         returnLabel={profileReturnLabel(contextReturnPage)}
       />;
@@ -6081,19 +6924,43 @@ if (activePage === 'userProfile') {
     }
 
     if (activePage === 'guilds') {
-      return <GuildsScreen />;
+      return <GuildsScreen onNavigate={navigateFromCurrentPage} />;
     }
 
     if (activePage === 'messages') {
-      return <MessagesScreen />;
+      return (
+        <MessagesScreen
+          onOpenThread={(memberId) => {
+            setSelectedThreadMemberId(memberId);
+            markThreadRead(memberId);
+            setActivePage('messageLog');
+          }}
+        />
+      );
+    }
+
+    if (activePage === 'messageLog') {
+      const threadMember = members.find((member) => member.id === selectedThreadMemberId) ?? members[1]!;
+
+      return (
+        <MessageLogScreen
+          member={threadMember}
+          onNavigate={navigateFromCurrentPage}
+          onOpenMember={openMemberProfile}
+        />
+      );
+    }
+
+    if (activePage === 'guildOwner') {
+      return <GuildOwnerScreen onNavigate={navigateFromCurrentPage} />;
     }
 
     if (activePage === 'events') {
-      return <EventsScreen />;
+      return <EventsScreen onOpenChannel={openChannelProfile} />;
     }
 
-    if (activePage === 'settings') {
-      return <SettingsScreen onNavigate={navigateFromCurrentPage} />;
+    if (activePage === 'eventDetail' && selectedEvent) {
+      return <EventDetailScreen event={selectedEvent} onNavigate={navigateFromCurrentPage} />;
     }
 
     return <NamiHub
@@ -6102,20 +6969,64 @@ if (activePage === 'userProfile') {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
+          onViewEvent={(event) => {
+            setSelectedEvent(event);
+            setActivePage('eventDetail');
+          }}
         />;
-  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage]);
+  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding]);
+
+  function signOutToEntry(): void {
+    clearZkLoginSession();
+    markSignedOut();
+    setEntryStartOnboarding(false);
+    setActivePage('entry');
+  }
+
+  useEffect(() => {
+    if (activePage !== 'entry') {
+      return;
+    }
+
+    saveIgniteRadioEnabled(false);
+  }, [activePage]);
+
+  const showSidebar = activePage !== 'entry';
 
   return (
-    <main className="nami-app">
-      <Sidebar
-        activePage={activePage}
-        collapsed={sidebarCollapsed}
-        onNavigate={navigateFromCurrentPage}
-        onToggle={() => setSidebarCollapsed((value) => !value)}
-      />
+    <main className="nami-app" data-grid-pulse-key={gridPulseKey}>
+      {showSidebar ? (
+        <>
+          <SidebarProfileCard onNavigate={navigateFromCurrentPage} onSignOut={signOutToEntry} />
+          <Sidebar
+            activePage={activePage}
+            collapsed={sidebarCollapsed}
+            messageUnreadCount={messageStore.unreadCount}
+            onHubSwap={navigateHubSwap}
+            onNavigate={navigateFromCurrentPage}
+            onToggle={() => setSidebarCollapsed((value) => !value)}
+          />
+        </>
+      ) : (
+        <button
+          className="sidebar-enter-nami-button"
+          onClick={() => setEntryStartOnboarding(true)}
+          type="button"
+        >
+          Enter Nami
+        </button>
+      )}
 
-      <section className="main-stage"><NamiSeasonProgressBar member={members[0]!} />
-        {screen}</section>
+      <section className="main-stage">
+        {showSidebar ? <NamiSeasonProgressBar member={selfMember} /> : null}
+        {activePage === 'settings' ? (
+          <SettingsScreen onNavigate={navigateFromCurrentPage} />
+        ) : (
+          screen
+        )}
+      </section>
+
+      {showSidebar ? <IgniteRadioDock /> : null}
     </main>
   );
 }

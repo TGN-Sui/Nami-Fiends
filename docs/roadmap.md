@@ -22,7 +22,7 @@ Current protocol status:
 
 ```text
 Build passing
-77 tests passing
+80 tests passing
 0 warnings
 ```
 
@@ -199,16 +199,21 @@ architecture.md
 systems.md
 ```
 
-Remaining mini-sync targets:
+Recently synced:
 
 ```text
 admin.md
-membership.md
+membership.md (pricing + billing rules)
+security-audit.md (owner capability matrix)
+theme.tsx / Appearance selection cards
+```
+
+Remaining mini-sync targets:
+
+```text
 moderation.md
 conduct-system.md
 ```
-
-Some of these may only need small updates.
 
 ---
 
@@ -334,7 +339,7 @@ Goal:
 
 Try to break the system before moving heavily into frontend/backend.
 
-Completed scenario / adversarial coverage (77 tests passing):
+Completed scenario / adversarial coverage (80 tests passing):
 
 ```text
 Unauthorized owner attempts
@@ -388,7 +393,17 @@ Recovery service
 Status:
 
 ```text
-UI polish checkpoint complete; production protocol wiring not started
+UI polish + owner/membership flows in progress; production protocol wiring not started
+```
+
+Recent Phase 3 UI checkpoints:
+
+```text
+Appearance panel (uniform selection cards)
+Ignite Radio dock + theme shell (Classic / Glass)
+Owner security console (sole-owner capability guards)
+Membership plan manager (upgrade / downgrade / cancel animations)
+Embedded feed preferences + Game Hub layout polish
 ```
 
 Minimum frontend screens:
@@ -495,12 +510,66 @@ Discovery should be mostly off-chain and anchored by on-chain signals.
 
 ---
 
-# Phase 7 — Public Launch Preparation
+# Phase 7 — Product UX & UI Evolution
 
 Status:
 
 ```text
-Future
+Active — UI/UX redesign and new surfaces (no testnet launch in this phase)
+```
+
+Prior UI checkpoint: `docs/ui-build-checkpoint.md` (UI-A20.5 complete).
+
+Phase 7 goals:
+
+```text
+Redesign existing screens and flows for clarity, delight, and gamer-native UX
+Integrate protocol panels into cohesive product surfaces (not dev-only side panels)
+Add new UI functions and interaction patterns agreed in Phase 7 intake
+Update docs (roadmap, onboarding, architecture, events) when new surfaces need protocol or indexer support
+Introduce frontend helpers / SDK reads only where UI needs real data — no launch ops
+```
+
+Current surfaces to evolve:
+
+```text
+Hub, Game Hub, Subscriptions
+Channel / Studio / Member profiles
+Chat, Channel Events, Safety Center
+Passport, User Profile, Guilds
+Messages, Events, Settings
+Onboarding wizard, UX Preview Console
+Protocol panels (identity, conduct, moderation, recovery, discovery, etc.)
+```
+
+Product rules (unchanged):
+
+```text
+Paid features add capability or customization only — never verification or trust
+Owner vs member preview modes stay explicit
+Mock data remains acceptable until a surface is wired
+```
+
+Phase 7 intake (UI-B21 — in progress):
+
+```text
+UI-B21.1 Account sign-in moved to Settings (web2 copy, no sidebar connect)
+UI-B21.2 Theme modes: Nami Default, Dark, Light, Custom color wheel
+UI-B21.3 Nami Hub global chats panel + official default room + Elite temporary rooms
+UI-B21.4 Game Hub genre chat browser (community bubbles) + bottom chat dock
+UI-B21.5 Embedded social panels (X, Twitch/live) on member/dev/guild/game profiles
+UI-B21.6 My Profile passport ↔ Badge Collectors Book swipe carousel
+UI-B21.7 TCG-style member passport card when viewing other members
+```
+
+---
+
+# Phase 8 — Public Launch Preparation
+
+Status:
+
+```text
+Deferred — after Phase 7 UX is stable
 ```
 
 Launch requirements:

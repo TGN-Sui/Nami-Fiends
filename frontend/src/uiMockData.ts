@@ -1,6 +1,7 @@
 export type ConductSignal = 'Green' | 'Orange' | 'Red' | 'Black';
 
 export type NamiPage =
+  | 'entry'
   | 'hub'
   | 'gamehub'
   | 'subscriptions'
@@ -13,8 +14,11 @@ export type NamiPage =
   | 'memberProfile'
   | 'safetyCenter'
   | 'guilds'
+  | 'guildOwner'
   | 'messages'
+  | 'messageLog'
   | 'events'
+  | 'eventDetail'
   | 'settings';
 
 export type ChannelModule = {
@@ -361,7 +365,7 @@ export const userProfile: UserProfile = {
   handle: '@npcgamer',
   wallet: '0xUSER',
   passportId: '0xPASSPORT',
-  tier: 'Adventurer',
+  tier: 'Elite',
   level: 18,
   xp: 1840,
   reputation: 'Gamester',

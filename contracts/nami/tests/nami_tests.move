@@ -6059,5 +6059,32 @@ module nami::nami_tests {
         test_scenario::end(scenario);
     }
 
+    /// ---------------------------------------------------------
+    /// Non-owner cannot access AdminCap from their own sender slot.
+    ///
+    /// Attack attempt:
+    /// - USER receives AdminCap on init.
+    /// - SPONSORED_USER attempts to take AdminCap as if they were the holder.
+    ///
+    /// Expected failure:
+    /// SPONSORED_USER has no AdminCap object in their account.
+    /// ---------------------------------------------------------
+    #[test, expected_failure]
+    fun test_non_owner_cannot_take_admin_cap_from_sender() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::end(scenario);
+    }
+
     
 }

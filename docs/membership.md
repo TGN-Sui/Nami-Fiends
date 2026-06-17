@@ -41,7 +41,7 @@ module nami::membership
 Current protocol status:
 
 ```text
-77 tests passing
+80 tests passing
 0 warnings
 ```
 
@@ -298,6 +298,29 @@ Titles are earned through reputation.
 Cosmetics are unlock proofs and equipped loadouts.
 
 Black Passport can block updates or equipping, but existing history should remain intact by default.
+
+---
+
+# Proposed Pricing (MVP UI)
+
+Planned subscription pricing for the frontend membership manager (`MembershipPlansPanel`):
+
+| Tier | Monthly | Annual | Notes |
+|------|---------|--------|-------|
+| Adventurer | Free | Free | Unlocked via verification, not checkout |
+| Pro Circuit | $9.99 | $89 (~26% off) | 6 boosts, 3 squads, jury eligibility, 5 followed channels |
+| Elite Crest | $19.99 | $179 (~25% off) | 8 boosts, 8 squads, banner slots, 8 followed channels |
+
+### Billing rules (UI prototype)
+
+```text
+Upgrade      → pending-upgrade, confirm step simulates payment
+Downgrade    → pending-downgrade, effective at renewal date
+Cancel       → pending-cancel, reverts to Adventurer if verified at period end
+Undo         → clears pending change before renewal
+```
+
+On-chain membership still uses AdminCap until subscription proofs ship.
 
 ---
 
