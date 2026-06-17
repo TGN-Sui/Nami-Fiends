@@ -8,6 +8,7 @@ import { paymentConfig } from '../payment-config.js';
 
 const UPLOAD_ROOT = 'data/uploads';
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const MAX_CHANNEL_COVER_BYTES = 4 * 1024 * 1024;
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
@@ -21,6 +22,10 @@ function normalizeOwner(owner: string): string {
 
 function ownerUploadDir(owner: string): string {
   return join(UPLOAD_ROOT, normalizeOwner(owner));
+}
+
+function safeChannelId(channelId: string): string {
+  return channelId.replace(/[^a-zA-Z0-9._-]/g, '');
 }
 
 export function buildMediaPublicUrl(owner: string, filename: string): string {
@@ -62,6 +67,47 @@ export async function saveAvatarUpload(input: AvatarUploadInput): Promise<{ url:
   await mkdir(dir, { recursive: true });
 
   const filename = 'avatar-' + randomUUID() + extension;
+  const filePath = join(dir, filename);
+
+  await writeFile(filePath, buffer);
+
+  return {
+    filename,
+    url: buildMediaPublicUrl(owner, filename),
+  };
+}
+
+export type ChannelCoverUploadInput = {
+  owner: string;
+  channelId: string;
+  contentType: string;
+  dataBase64: string;
+};
+
+export async function saveChannelCoverUpload(
+  input: ChannelCoverUploadInput
+): Promise<{ url: string; filename: string }> {
+  if (!input.owner.startsWith('0x') || !input.channelId.trim()) {
+    throw new Error('invalid_payload');
+  }
+
+  const extension = MIME_EXTENSIONS[input.contentType];
+
+  if (!extension) {
+    throw new Error('unsupported_content_type');
+  }
+
+  const buffer = Buffer.from(input.dataBase64, 'base64');
+
+  if (buffer.byteLength === 0 || buffer.byteLength > MAX_CHANNEL_COVER_BYTES) {
+    throw new Error('invalid_file_size');
+  }
+
+  const owner = normalizeOwner(input.owner);
+  const dir = ownerUploadDir(owner);
+  await mkdir(dir, { recursive: true });
+
+  const filename = 'cover-' + safeChannelId(input.channelId) + '-' + randomUUID() + extension;
   const filePath = join(dir, filename);
 
   await writeFile(filePath, buffer);

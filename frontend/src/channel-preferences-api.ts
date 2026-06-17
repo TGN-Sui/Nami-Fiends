@@ -1,10 +1,10 @@
 import { readIndexerUrl } from './protocol-env.js';
 import { createWalletAuthPayload } from './wallet-auth.js';
 
-export type MemberPreferences = {
+export type ChannelPreferences = {
+  channelId: string;
   owner: string;
-  avatarUrl: string | null;
-  streamingOnline: boolean;
+  coverUrl: string | null;
   updatedAtMs: number;
 };
 
@@ -12,7 +12,7 @@ function apiBaseUrl(): string | null {
   return readIndexerUrl();
 }
 
-async function preferencesFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function channelPreferencesFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
   const base = apiBaseUrl();
 
   if (!base) {
@@ -34,33 +34,33 @@ async function preferencesFetch<T>(path: string, init?: RequestInit): Promise<T 
   const payload = (await response.json()) as T & { message?: string; error?: string };
 
   if (!response.ok) {
-    throw new Error(payload.message ?? payload.error ?? 'Preferences request failed.');
+    throw new Error(payload.message ?? payload.error ?? 'Channel preferences request failed.');
   }
 
   return payload;
 }
 
-export function isMemberPreferencesApiAvailable(): boolean {
+export function isChannelPreferencesApiAvailable(): boolean {
   return apiBaseUrl() !== null;
 }
 
-export async function fetchMemberPreferences(owner: string): Promise<MemberPreferences | null> {
-  const payload = await preferencesFetch<{ preferences: MemberPreferences }>(
-    '/api/member-preferences/owner/' + encodeURIComponent(owner)
+export async function fetchChannelPreferences(channelId: string): Promise<ChannelPreferences | null> {
+  const payload = await channelPreferencesFetch<{ preferences: ChannelPreferences }>(
+    '/api/channel-preferences/' + encodeURIComponent(channelId)
   );
 
   return payload?.preferences ?? null;
 }
 
-export async function syncMemberPreferencesToBackend(input: {
+export async function syncChannelPreferencesToBackend(input: {
   owner: string;
-  avatarUrl?: string | null;
-  streamingOnline?: boolean;
-}): Promise<MemberPreferences | null> {
+  channelId: string;
+  coverUrl?: string | null;
+}): Promise<ChannelPreferences | null> {
   const auth = await createWalletAuthPayload(input.owner);
 
-  const payload = await preferencesFetch<{ preferences: MemberPreferences }>(
-    '/api/member-preferences/sync',
+  const payload = await channelPreferencesFetch<{ preferences: ChannelPreferences }>(
+    '/api/channel-preferences/sync',
     {
       method: 'POST',
       body: JSON.stringify({
@@ -73,8 +73,9 @@ export async function syncMemberPreferencesToBackend(input: {
   return payload?.preferences ?? null;
 }
 
-export async function uploadAvatarToBackend(input: {
+export async function uploadChannelCoverToBackend(input: {
   owner: string;
+  channelId: string;
   contentType: string;
   dataBase64: string;
 }): Promise<{ url: string; filename: string } | null> {
@@ -86,7 +87,7 @@ export async function uploadAvatarToBackend(input: {
 
   const auth = await createWalletAuthPayload(input.owner);
 
-  const response = await fetch(base + '/api/media/avatar', {
+  const response = await fetch(base + '/api/media/channel-cover', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -103,7 +104,7 @@ export async function uploadAvatarToBackend(input: {
   };
 
   if (!response.ok || !payload.url) {
-    throw new Error(payload.message ?? payload.error ?? 'Avatar upload failed.');
+    throw new Error(payload.message ?? payload.error ?? 'Channel cover upload failed.');
   }
 
   return { url: payload.url, filename: payload.filename ?? '' };

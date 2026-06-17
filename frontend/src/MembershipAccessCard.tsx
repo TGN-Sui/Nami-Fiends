@@ -1,7 +1,12 @@
-import type { ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
+import {
+  fetchPendingFulfillmentForOwner,
+  isMembershipFulfillmentApiAvailable,
+} from './membership-fulfillment-api.js';
 import { openMembershipUpgradeOverlay } from './membership-upgrade-store.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
+import { useProtocolOwner } from './wallet.js';
 
 type MembershipAccessCardProps = {
   compact?: boolean;
@@ -9,9 +14,22 @@ type MembershipAccessCardProps = {
 
 export function MembershipAccessCard(props: MembershipAccessCardProps = {}): ReactElement {
   const planState = useMembershipPlanState();
+  const { owner } = useProtocolOwner();
   const activePlan = membershipPlanForTier(planState.activeTier);
+  const [onChainPending, setOnChainPending] = useState(false);
   const ctaLabel =
     planState.activeTier === 'Elite' ? 'Change membership' : 'Upgrade membership';
+
+  useEffect(() => {
+    if (!owner?.startsWith('0x') || !isMembershipFulfillmentApiAvailable()) {
+      setOnChainPending(false);
+      return;
+    }
+
+    void fetchPendingFulfillmentForOwner(owner)
+      .then((fulfillment) => setOnChainPending(fulfillment !== null))
+      .catch(() => setOnChainPending(false));
+  }, [owner, planState.activeTier, planState.updatedAtMs]);
 
   if (props.compact) {
     return (
@@ -46,6 +64,11 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
       <div className="membership-access-meta">
         <span>{activePlan.tagline}</span>
         <span>{activePlan.highlights.length} benefits included</span>
+        {onChainPending ? (
+          <span className="membership-onchain-pending-badge">
+            Paid tier active in app. On-chain passport upgrade is queued.
+          </span>
+        ) : null}
       </div>
 
       <button

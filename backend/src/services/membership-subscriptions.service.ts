@@ -1,4 +1,5 @@
 import type { MembershipPaymentIntent } from './membership-payments.service.js';
+import { queueMembershipFulfillmentFromPayment } from './membership-fulfillment.service.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type SubscriptionTier = 'Adventurer' | 'Pro' | 'Elite';
@@ -201,6 +202,13 @@ export async function activateMembershipFromPaymentIntent(
   }
 
   await writeStore(store);
+
+  try {
+    await queueMembershipFulfillmentFromPayment(intent, next.renewsAtMs);
+  } catch (error) {
+    console.error('[nami-membership] fulfillment queue failed', error);
+  }
+
   return next;
 }
 

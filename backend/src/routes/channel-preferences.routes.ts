@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
-  getMemberPreferences,
-  upsertMemberPreferences,
-} from '../services/member-preferences.service.js';
+  getChannelPreferences,
+  upsertChannelPreferences,
+} from '../services/channel-preferences.service.js';
 import {
   assertWalletAuth,
   type WalletAuthPayload,
@@ -40,21 +40,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-export async function handleMemberPreferencesGet(
-  _request: IncomingMessage,
-  response: ServerResponse,
-  owner: string
-): Promise<void> {
-  const preferences = await getMemberPreferences(owner);
-
-  if (!preferences) {
-    sendJson(response, 404, { error: 'not_found' });
-    return;
-  }
-
-  sendJson(response, 200, { preferences });
-}
-
 function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
   const auth = body.auth;
 
@@ -76,16 +61,32 @@ function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
   return patch;
 }
 
-export async function handleMemberPreferencesUpsert(
+export async function handleChannelPreferencesGet(
+  _request: IncomingMessage,
+  response: ServerResponse,
+  channelId: string
+): Promise<void> {
+  const preferences = await getChannelPreferences(channelId);
+
+  if (!preferences) {
+    sendJson(response, 404, { error: 'not_found' });
+    return;
+  }
+
+  sendJson(response, 200, { preferences });
+}
+
+export async function handleChannelPreferencesUpsert(
   request: IncomingMessage,
   response: ServerResponse
 ): Promise<void> {
   try {
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
+    const channelId = typeof body.channelId === 'string' ? body.channelId : '';
 
-    if (!owner.startsWith('0x')) {
-      sendJson(response, 400, { error: 'invalid_owner' });
+    if (!owner.startsWith('0x') || !channelId.trim()) {
+      sendJson(response, 400, { error: 'invalid_payload' });
       return;
     }
 
@@ -97,20 +98,18 @@ export async function handleMemberPreferencesUpsert(
       timestampMs: walletAuth.timestampMs ?? 0,
     });
 
-    const patch: Parameters<typeof upsertMemberPreferences>[0] = { owner };
+    const patch: Parameters<typeof upsertChannelPreferences>[0] = {
+      channelId,
+      owner,
+    };
 
-    if (body.avatarUrl === null) {
-      patch.avatarUrl = null;
-    } else if (typeof body.avatarUrl === 'string') {
-      patch.avatarUrl = body.avatarUrl;
+    if (body.coverUrl === null) {
+      patch.coverUrl = null;
+    } else if (typeof body.coverUrl === 'string') {
+      patch.coverUrl = body.coverUrl;
     }
 
-    if (typeof body.streamingOnline === 'boolean') {
-      patch.streamingOnline = body.streamingOnline;
-    }
-
-    const preferences = await upsertMemberPreferences(patch);
-
+    const preferences = await upsertChannelPreferences(patch);
     sendJson(response, 200, { preferences });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -120,9 +119,9 @@ export async function handleMemberPreferencesUpsert(
       return;
     }
 
-    console.error('[nami-preferences] upsert failed', error);
+    console.error('[nami-channel-preferences] upsert failed', error);
     sendJson(response, 500, {
-      error: 'preferences_upsert_failed',
+      error: 'channel_preferences_upsert_failed',
       message,
     });
   }

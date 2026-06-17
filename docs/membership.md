@@ -411,6 +411,31 @@ GET  /api/media/files/:owner/:filename
 
 `MemberSessionSync` hydrates membership + preferences from the backend on wallet connect.
 
+On-chain fulfillment (Pro/Elite paid checkouts):
+
+```text
+GET  /api/memberships/fulfillment/pending
+GET  /api/memberships/fulfillment/owner/:owner
+POST /api/memberships/fulfillment/:fulfillmentId/complete
+```
+
+Paid Pro/Elite intents queue `pending_onchain` fulfillments. The official owner can self-fulfill when the subscriber wallet owns the passport and signs with AdminCap (`MembershipFulfillmentPanel`). Other subscribers keep app-tier access while on-chain passport updates remain queued.
+
+Wallet-signed writes (optional, `NAMI_REQUIRE_WALLET_AUTH=true`):
+
+```text
+auth: { signature, timestampMs } on preference/media POST bodies
+Message: nami-auth:v1:{owner}:{timestampMs}
+```
+
+Channel cover media:
+
+```text
+GET  /api/channel-preferences/:channelId
+POST /api/channel-preferences/sync
+POST /api/media/channel-cover
+```
+
 ---
 
 # Admin Authority

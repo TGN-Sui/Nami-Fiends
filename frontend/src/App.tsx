@@ -72,6 +72,8 @@ import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
 import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler.js';
 import { MemberSessionSync } from './MemberSessionSync.js';
+import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
+import { WalletAuthBridge } from './WalletAuthBridge.js';
 import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
@@ -6624,6 +6626,7 @@ function SettingsScreen(props: {
         <PassportClaimSettingsPanel />
         <PlatformLinkSettingsPanel />
         <NamiOwnerSettingsPanel />
+        <MembershipFulfillmentPanel />
         <NamiOwnerEmojiPanel />
         <ThemeSettingsPanel />
         <MembershipAccessCard />
@@ -7131,6 +7134,7 @@ if (activePage === 'userProfile') {
       {showSidebar ? <MembershipUpgradeOverlay /> : null}
       {showSidebar ? <MembershipPaymentReturnHandler /> : null}
       {showSidebar ? <MemberSessionSync /> : null}
+      {showSidebar ? <WalletAuthBridge /> : null}
     </main>
   );
 }

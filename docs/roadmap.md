@@ -576,6 +576,9 @@ UI-B21.13 Payment webhooks activate backend membership subscriptions
 UI-B21.14 Member preferences API (avatar URL + streaming online)
 UI-B21.15 Media upload API for profile avatars
 UI-B21.16 MemberSessionSync hydrates wallet session from backend
+UI-B21.17 On-chain fulfillment queue for paid Pro/Elite + owner AdminCap panel
+UI-B21.18 Wallet-signed auth for preference and media writes
+UI-B21.19 Channel cover media upload + preferences API
 ```
 
 ---

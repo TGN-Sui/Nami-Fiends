@@ -22,8 +22,18 @@ import {
 } from './routes/member-preferences.routes.js';
 import {
   handleAvatarUploadPost,
+  handleChannelCoverUploadPost,
   handleMediaFileGet,
 } from './routes/media-upload.routes.js';
+import {
+  handleChannelPreferencesGet,
+  handleChannelPreferencesUpsert,
+} from './routes/channel-preferences.routes.js';
+import {
+  handleMembershipFulfillmentComplete,
+  handleMembershipFulfillmentOwnerGet,
+  handleMembershipFulfillmentPendingGet,
+} from './routes/membership-fulfillment.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -884,6 +894,45 @@ const routes: Route[] = [
     paramNames: ['owner', 'filename'],
     handler: (_registry, request, response, params) =>
       handleMediaFileGet(request, response, params.owner ?? '', params.filename ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/media\/channel-cover$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelCoverUploadPost(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/channel-preferences\/([^/]+)$/,
+    paramNames: ['channelId'],
+    handler: (_registry, request, response, params) =>
+      handleChannelPreferencesGet(request, response, params.channelId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/channel-preferences\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelPreferencesUpsert(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/memberships\/fulfillment\/pending$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMembershipFulfillmentPendingGet(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/memberships\/fulfillment\/owner\/([^/]+)$/,
+    paramNames: ['owner'],
+    handler: (_registry, request, response, params) =>
+      handleMembershipFulfillmentOwnerGet(request, response, params.owner ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/memberships\/fulfillment\/([^/]+)\/complete$/,
+    paramNames: ['fulfillmentId'],
+    handler: (_registry, request, response, params) =>
+      handleMembershipFulfillmentComplete(request, response, params.fulfillmentId ?? ''),
   },
 ];
 

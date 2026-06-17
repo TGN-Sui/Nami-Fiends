@@ -1,16 +1,47 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
+  isChannelPreferencesApiAvailable,
+  uploadChannelCoverToBackend,
+} from './channel-preferences-api.js';
+import {
   clearChannelCoverOverride,
   readChannelCoverOverride,
   resolveChannelCoverUrl,
   saveChannelCoverOverride,
 } from './channel-cover-store.js';
 import { type NamiChannel } from './uiMockData.js';
+import { useProtocolOwner } from './wallet.js';
 
 const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Could not read image.'));
+        return;
+      }
+
+      const commaIndex = reader.result.indexOf(',');
+
+      if (commaIndex < 0) {
+        reject(new Error('Could not read image.'));
+        return;
+      }
+
+      resolve(reader.result.slice(commaIndex + 1));
+    };
+
+    reader.onerror = () => reject(new Error('Could not read image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactElement {
+  const { owner } = useProtocolOwner();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -18,9 +49,31 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
   const override = readChannelCoverOverride(props.channel.id);
   const activeCover = resolveChannelCoverUrl(props.channel);
   const hasOwnerUpload = override !== null && override.length > 0;
+  const storageHint = isChannelPreferencesApiAvailable()
+    ? 'Synced to the receiving server for this channel owner wallet.'
+    : 'Stored locally until the backend API is available.';
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
+  }
+
+  async function persistCover(file: File, dataUrl: string): Promise<void> {
+    if (isChannelPreferencesApiAvailable() && owner?.startsWith('0x')) {
+      const dataBase64 = await fileToBase64(file);
+      const uploaded = await uploadChannelCoverToBackend({
+        owner,
+        channelId: props.channel.id,
+        contentType: file.type,
+        dataBase64,
+      });
+
+      if (uploaded?.url) {
+        saveChannelCoverOverride(props.channel.id, uploaded.url);
+        return;
+      }
+    }
+
+    saveChannelCoverOverride(props.channel.id, dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -48,14 +101,20 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
     const reader = new FileReader();
 
     reader.onload = () => {
-      setIsReadingFile(false);
+      void (async () => {
+        try {
+          if (typeof reader.result !== 'string') {
+            setErrorMessage('Could not read that image. Try another file.');
+            return;
+          }
 
-      if (typeof reader.result !== 'string') {
-        setErrorMessage('Could not read that image. Try another file.');
-        return;
-      }
-
-      saveChannelCoverOverride(props.channel.id, reader.result);
+          await persistCover(file, reader.result);
+        } catch (error) {
+          setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
+        } finally {
+          setIsReadingFile(false);
+        }
+      })();
     };
 
     reader.onerror = () => {
@@ -79,23 +138,20 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
         <small>
           {hasOwnerUpload
             ? 'Owner upload active across Game Hub cards and channel surfaces.'
-            : activeCover
-              ? 'Demo cover active. Upload to replace it site-wide for this channel.'
-              : 'No cover attached yet. Upload owner cover art for this game channel.'}
+            : 'Upload a cover for this channel card and hub surfaces.'}
         </small>
       </div>
 
       {activeCover ? (
         <div
-          aria-hidden="true"
           className="channel-cover-upload-preview"
-          style={{ backgroundImage: 'url("' + activeCover.replace(/"/g, '\\u0022') + '")' }}
+          style={{ backgroundImage: 'url(' + JSON.stringify(activeCover) + ')' }}
         />
       ) : null}
 
       <div className="media-upload-prep-details">
         <span>PNG, JPG, WebP</span>
-        <span>Stored locally for this demo session</span>
+        <span>{storageHint}</span>
       </div>
 
       <input
@@ -113,7 +169,7 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
           onClick={openFilePicker}
           type="button"
         >
-          {isReadingFile ? 'Reading image…' : 'Upload cover photo'}
+          {isReadingFile ? 'Uploading cover…' : 'Upload cover image'}
         </button>
 
         {hasOwnerUpload ? (
@@ -124,8 +180,6 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
       </div>
 
       {errorMessage ? <p className="member-avatar-upload-error">{errorMessage}</p> : null}
-
-      <p>Uploaded covers replace Game Hub browser cards, swipe deck art, and channel avatars for members.</p>
     </article>
   );
 }
