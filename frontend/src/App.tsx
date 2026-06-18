@@ -138,10 +138,10 @@ import {
   SquadDetailScreen,
 } from './GuildSpaceScreens.js';
 import { markGuildEventsSeen, useGuildEventsStore } from './guild-events-store.js';
+import { resolveMemberGuildAffiliations } from './affiliation-provider.js';
 import {
   namiGuilds,
   namiSquads,
-  resolveGuildFromCard,
   resolveSquadFromCard,
   type NamiGuildRecord,
   type NamiSquadRecord,
@@ -5789,8 +5789,21 @@ function UserProfileScreen(props: {
   const memberFeedEnabled = readEmbeddedFeedEnabled('member');
 
   const mySubscriptions = useSubscribedChannels();
-  const { data: guildCards } = useGuildCardsQuery();
-  const guildRows = guildCards ?? [];
+  const { owner: protocolOwner, context } = useProtocolOwner();
+  const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
+  const guildLiveQueryEnabled = context.indexer !== null && protocolOwner !== null;
+  const profileGuildAffiliations = useMemo(
+    () =>
+      resolveMemberGuildAffiliations({
+        liveCards: guildCards ?? [],
+        loadState: guildLoadState,
+        liveQueryEnabled: guildLiveQueryEnabled,
+        memberId: profileMember.id,
+        createdGuilds: [],
+        fixtureGuilds: namiGuilds,
+      }),
+    [guildCards, guildLoadState, guildLiveQueryEnabled, profileMember.id]
+  );
 
 
 
@@ -6018,39 +6031,22 @@ function UserProfileScreen(props: {
             </div>
 
             <div className="profile-guild-mini-grid">
-              {guildRows.length > 0
-                ? guildRows.map((guild) => (
-                    <button
-                      className="profile-mini-guild-card"
-                      key={guild.id}
-                      onClick={() => props.onOpenGuild?.(resolveGuildFromCard(guild))}
-                      type="button"
-                    >
-                      <span className="legend-dot signal-ring signal-green" />
-                      <div>
-                        <strong>{guild.title}</strong>
-                        <small>
-                          {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
-                        </small>
-                      </div>
-                    </button>
-                  ))
-                : namiGuilds.map((guild) => (
-                    <button
-                      className="profile-mini-guild-card"
-                      key={guild.id}
-                      onClick={() => props.onOpenGuild?.(guild)}
-                      type="button"
-                    >
-                      <span className="legend-dot signal-ring signal-green" />
-                      <div>
-                        <strong>{guild.name}</strong>
-                        <small>
-                          {guild.isPublic ? 'Public' : 'Private'} · {guild.memberIds.length} members
-                        </small>
-                      </div>
-                    </button>
-                  ))}
+              {profileGuildAffiliations.map((guild) => (
+                <button
+                  className="profile-mini-guild-card"
+                  key={guild.id}
+                  onClick={() => props.onOpenGuild?.(guild.record)}
+                  type="button"
+                >
+                  <span className="legend-dot signal-ring signal-green" />
+                  <div>
+                    <strong>{guild.title}</strong>
+                    <small>
+                      {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
+                    </small>
+                  </div>
+                </button>
+              ))}
             </div>
 
             <button
@@ -6088,21 +6084,26 @@ function GuildsScreen(props: {
   onOpenSquad: (squad: NamiSquadRecord, showInvitePanel?: boolean) => void;
   onOpenMessage?: (memberId: string) => void;
 }): ReactElement {
-  const { owner: protocolOwner } = useProtocolOwner();
+  const { owner: protocolOwner, context } = useProtocolOwner();
   const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
-  const { data: squadCards } = useSquadCardsQuery();
+  const { data: squadCards, loadState: squadLoadState } = useSquadCardsQuery();
+  const guildLiveQueryEnabled = context.indexer !== null && protocolOwner !== null;
+  const squadLiveQueryEnabled = context.chain !== null && protocolOwner !== null;
 
   return (
     <>
       <ProtocolStatusBar />
 
       <MyGuildHomeScreen
+        guildLiveQueryEnabled={guildLiveQueryEnabled}
         guildLoadState={guildLoadState}
         guildRows={guildCards ?? []}
         onOpenGuild={props.onOpenGuild}
         {...(props.onOpenMessage ? { onOpenMessage: props.onOpenMessage } : {})}
         onOpenSquad={props.onOpenSquad}
         protocolOwner={protocolOwner}
+        squadLiveQueryEnabled={squadLiveQueryEnabled}
+        squadLoadState={squadLoadState}
         squadRows={squadCards ?? []}
       />
 

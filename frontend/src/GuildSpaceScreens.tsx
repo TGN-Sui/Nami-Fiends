@@ -69,12 +69,14 @@ import {
   useSquadRosterStore,
 } from './squad-roster-store.js';
 import {
+  resolveMemberGuildAffiliations,
+  resolveMemberSquadAffiliations,
+  type GuildAffiliationItem,
+  type SquadAffiliationItem,
+} from './affiliation-provider.js';
+import {
   guildMaxMembers,
-  guildsForMember,
   membersForSquad,
-  resolveGuildFromCard,
-  resolveSquadFromCard,
-  squadsForMember,
   type NamiGuildRecord,
   type NamiSquadRecord,
 } from './nami-affiliations.js';
@@ -1199,27 +1201,13 @@ function AffiliationViewToggle(props: {
   );
 }
 
-function squadRoleLabel(squad: NamiSquadRecord, memberId: string): string {
-  return squad.memberIds[0] === memberId ? 'Leader' : 'Member';
-}
-
-function mergeGuildRecords(records: NamiGuildRecord[]): NamiGuildRecord[] {
-  const seen = new Set<string>();
-
-  return records.filter((guild) => {
-    if (seen.has(guild.id)) {
-      return false;
-    }
-
-    seen.add(guild.id);
-    return true;
-  });
-}
-
 export function MyGuildHomeScreen(props: {
   guildLoadState: 'idle' | 'loading' | 'error' | 'ready';
   guildRows: GuildCardView[];
+  guildLiveQueryEnabled: boolean;
+  squadLoadState: 'idle' | 'loading' | 'error' | 'ready';
   squadRows: SquadCardView[];
+  squadLiveQueryEnabled: boolean;
   protocolOwner: string | null;
   onOpenGuild: (guild: NamiGuildRecord) => void;
   onOpenSquad: (squad: NamiSquadRecord, showInvitePanel?: boolean) => void;
@@ -1229,96 +1217,52 @@ export function MyGuildHomeScreen(props: {
   const { proposals } = useGuildCreationStore();
   const [viewMode, setViewMode] = useState<AffiliationViewMode>(() => readAffiliationViewMode());
 
-  const showLiveGuilds = props.guildRows.length > 0;
-  const showLiveSquads = props.squadRows.length > 0;
   const squadSlotsAvailable = availableSquadInviteSlots(selfMember.id);
   const canLeadSquads = canLeadSquadInvites(selfMember);
 
-  const mockGuilds = useMemo(
+  const guildAffiliations = useMemo(
     () =>
-      mergeGuildRecords([
-        ...getCreatedGuildRecords(),
-        ...guildsForMember(selfMember.id),
-      ]),
-    [proposals, selfMember.id]
+      resolveMemberGuildAffiliations({
+        liveCards: props.guildRows,
+        loadState: props.guildLoadState,
+        liveQueryEnabled: props.guildLiveQueryEnabled,
+        memberId: selfMember.id,
+        createdGuilds: getCreatedGuildRecords(),
+      }),
+    [props.guildLoadState, props.guildLiveQueryEnabled, props.guildRows, proposals, selfMember.id]
   );
-  const mockSquads = useMemo(() => squadsForMember(selfMember.id), [selfMember.id]);
+
+  const squadAffiliations = useMemo(
+    () =>
+      resolveMemberSquadAffiliations({
+        liveCards: props.squadRows,
+        loadState: props.squadLoadState,
+        liveQueryEnabled: props.squadLiveQueryEnabled,
+        memberId: selfMember.id,
+        protocolOwner: props.protocolOwner,
+      }),
+    [
+      props.protocolOwner,
+      props.squadLoadState,
+      props.squadLiveQueryEnabled,
+      props.squadRows,
+      selfMember.id,
+    ]
+  );
 
   function setAffiliationView(mode: AffiliationViewMode): void {
     writeAffiliationViewMode(mode);
     setViewMode(mode);
   }
 
-  function renderGuildCards(guilds: NamiGuildRecord[]): ReactElement {
+  function renderGuildCards(guilds: GuildAffiliationItem[]): ReactElement {
     return (
       <section className="account-grid uniform-card-grid affiliation-card-grid">
         {guilds.map((guild) => (
           <button
             className="profile-panel account-card fixed-card guild-card is-clickable-guild-card"
             key={guild.id}
-            onClick={() => props.onOpenGuild(guild)}
-            type="button"
-          >
-            <div className="fixed-card-body">
-              <div className="guild-card-icon guild-icon-green">{guild.name.slice(0, 2).toUpperCase()}</div>
-              <div className="fixed-card-copy">
-                <h2>{guild.name}</h2>
-                <p>{guild.isPublic ? 'Public guild' : 'Private guild'}</p>
-              </div>
-            </div>
-            <div className="fixed-card-footer">
-              <span className="guild-signal-pill guild-signal-green">
-                {guild.isPublic ? 'Public' : 'Private'} · {guild.memberIds.length} members
-              </span>
-              <span className="mini-badge">Guild</span>
-            </div>
-          </button>
-        ))}
-      </section>
-    );
-  }
-
-  function renderGuildList(guilds: NamiGuildRecord[]): ReactElement {
-    return (
-      <div className="affiliation-list-wrap">
-        <table className="affiliation-list-table">
-          <thead>
-            <tr>
-              <th scope="col">Guild</th>
-              <th scope="col">Visibility</th>
-              <th scope="col">Members</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {guilds.map((guild) => (
-              <tr key={guild.id}>
-                <td>
-                  <strong>{guild.name}</strong>
-                </td>
-                <td>{guild.isPublic ? 'Public' : 'Private'}</td>
-                <td>{guild.memberIds.length}</td>
-                <td>
-                  <button className="secondary-action" onClick={() => props.onOpenGuild(guild)} type="button">
-                    Open
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  function renderLiveGuildCards(): ReactElement {
-    return (
-      <section className="account-grid uniform-card-grid affiliation-card-grid">
-        {props.guildRows.map((guild) => (
-          <button
-            className="profile-panel account-card fixed-card guild-card is-clickable-guild-card"
-            key={guild.id}
-            onClick={() => props.onOpenGuild(resolveGuildFromCard(guild))}
+            onClick={() => props.onOpenGuild(guild.record)}
             type="button"
           >
             <div className="fixed-card-body">
@@ -1332,7 +1276,7 @@ export function MyGuildHomeScreen(props: {
               <span className="guild-signal-pill guild-signal-green">
                 {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
               </span>
-              <span className="mini-badge">{guild.source}</span>
+              <span className="mini-badge">{guild.badgeLabel}</span>
             </div>
           </button>
         ))}
@@ -1340,7 +1284,9 @@ export function MyGuildHomeScreen(props: {
     );
   }
 
-  function renderLiveGuildList(): ReactElement {
+  function renderGuildList(guilds: GuildAffiliationItem[]): ReactElement {
+    const showSourceColumn = guilds.some((guild) => guild.source === 'live');
+
     return (
       <div className="affiliation-list-wrap">
         <table className="affiliation-list-table">
@@ -1349,24 +1295,26 @@ export function MyGuildHomeScreen(props: {
               <th scope="col">Guild</th>
               <th scope="col">Visibility</th>
               <th scope="col">Members</th>
-              <th scope="col">Source</th>
+              {showSourceColumn ? <th scope="col">Source</th> : null}
               <th scope="col">Action</th>
             </tr>
           </thead>
           <tbody>
-            {props.guildRows.map((guild) => (
+            {guilds.map((guild) => (
               <tr key={guild.id}>
                 <td>
                   <strong>{guild.title}</strong>
-                  <span className="affiliation-list-subtitle">{guild.subtitle}</span>
+                  {guild.source === 'live' ? (
+                    <span className="affiliation-list-subtitle">{guild.subtitle}</span>
+                  ) : null}
                 </td>
                 <td>{guild.isPublic ? 'Public' : 'Private'}</td>
                 <td>{guild.memberCount}</td>
-                <td>{guild.source}</td>
+                {showSourceColumn ? <td>{guild.source === 'live' ? guild.badgeLabel : '—'}</td> : null}
                 <td>
                   <button
                     className="secondary-action"
-                    onClick={() => props.onOpenGuild(resolveGuildFromCard(guild))}
+                    onClick={() => props.onOpenGuild(guild.record)}
                     type="button"
                   >
                     Open
@@ -1380,47 +1328,45 @@ export function MyGuildHomeScreen(props: {
     );
   }
 
-  function renderSquadCards(squads: NamiSquadRecord[]): ReactElement {
+  function renderSquadCards(squads: SquadAffiliationItem[]): ReactElement {
     return (
       <section className="account-grid uniform-card-grid affiliation-card-grid">
-        {squads.map((squad) => {
-          const isLeader = squad.memberIds[0] === selfMember.id;
-
-          return (
-            <article className="profile-panel account-card fixed-card guild-card affiliation-squad-card" key={squad.id}>
-              <button className="affiliation-squad-open" onClick={() => props.onOpenSquad(squad)} type="button">
-                <div className="fixed-card-body">
-                  <div className="guild-card-icon guild-icon-orange">{squad.name.slice(0, 2).toUpperCase()}</div>
-                  <div className="fixed-card-copy">
-                    <h2>{squad.name}</h2>
-                    <p>
-                      {squad.memberIds.length}/{squad.maxSlots} slots
-                    </p>
-                  </div>
+        {squads.map((squad) => (
+          <article className="profile-panel account-card fixed-card guild-card affiliation-squad-card" key={squad.id}>
+            <button className="affiliation-squad-open" onClick={() => props.onOpenSquad(squad.record)} type="button">
+              <div className="fixed-card-body">
+                <div className="guild-card-icon guild-icon-orange">{squad.title.slice(0, 2).toUpperCase()}</div>
+                <div className="fixed-card-copy">
+                  <h2>{squad.title}</h2>
+                  <p>
+                    {squad.memberCount}/{squad.maxSlots} slots
+                  </p>
                 </div>
-                <div className="fixed-card-footer">
-                  <span className="guild-signal-pill guild-signal-orange">{squadRoleLabel(squad, selfMember.id)}</span>
-                  <span className="mini-badge">Squad</span>
-                </div>
+              </div>
+              <div className="fixed-card-footer">
+                <span className="guild-signal-pill guild-signal-orange">{squad.roleLabel}</span>
+                <span className="mini-badge">{squad.badgeLabel}</span>
+              </div>
+            </button>
+            {squad.isLeader && canLeadSquads ? (
+              <button
+                className="secondary-action affiliation-squad-invite-btn"
+                disabled={squadSlotsAvailable <= 0}
+                onClick={() => props.onOpenSquad(squad.record, true)}
+                type="button"
+              >
+                Invite
               </button>
-              {isLeader && canLeadSquads ? (
-                <button
-                  className="secondary-action affiliation-squad-invite-btn"
-                  disabled={squadSlotsAvailable <= 0}
-                  onClick={() => props.onOpenSquad(squad, true)}
-                  type="button"
-                >
-                  Invite
-                </button>
-              ) : null}
-            </article>
-          );
-        })}
+            ) : null}
+          </article>
+        ))}
       </section>
     );
   }
 
-  function renderSquadList(squads: NamiSquadRecord[]): ReactElement {
+  function renderSquadList(squads: SquadAffiliationItem[]): ReactElement {
+    const showSourceColumn = squads.some((squad) => squad.source === 'live');
+
     return (
       <div className="affiliation-list-wrap">
         <table className="affiliation-list-table">
@@ -1429,111 +1375,37 @@ export function MyGuildHomeScreen(props: {
               <th scope="col">Squad</th>
               <th scope="col">Slots</th>
               <th scope="col">Your role</th>
+              {showSourceColumn ? <th scope="col">Source</th> : null}
               <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {squads.map((squad) => {
-              const isLeader = squad.memberIds[0] === selfMember.id;
-
-              return (
-                <tr key={squad.id}>
-                  <td>
-                    <strong>{squad.name}</strong>
-                  </td>
-                  <td>
-                    {squad.memberIds.length}/{squad.maxSlots}
-                  </td>
-                  <td>{squadRoleLabel(squad, selfMember.id)}</td>
-                  <td>
-                    <div className="affiliation-list-actions">
-                      <button className="secondary-action" onClick={() => props.onOpenSquad(squad)} type="button">
-                        Open
-                      </button>
-                      {isLeader && canLeadSquads ? (
-                        <button
-                          className="secondary-action"
-                          disabled={squadSlotsAvailable <= 0}
-                          onClick={() => props.onOpenSquad(squad, true)}
-                          type="button"
-                        >
-                          Invite
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  function renderLiveSquadCards(): ReactElement {
-    return (
-      <section className="account-grid uniform-card-grid affiliation-card-grid">
-        {props.squadRows.map((squad) => (
-          <button
-            className="profile-panel account-card fixed-card guild-card is-clickable-guild-card"
-            key={squad.id}
-            onClick={() => props.onOpenSquad(resolveSquadFromCard(squad))}
-            type="button"
-          >
-            <div className="fixed-card-body">
-              <div className="guild-card-icon guild-icon-orange">SQ</div>
-              <div className="fixed-card-copy">
-                <h2>{squad.name}</h2>
-                <p>
-                  {squad.memberCount}/{squad.maxSlots} slots
-                </p>
-              </div>
-            </div>
-            <div className="fixed-card-footer">
-              <span className="guild-signal-pill guild-signal-orange">
-                {squad.owner === props.protocolOwner ? 'Owner' : 'Member'}
-              </span>
-              <span className="mini-badge">{squad.source}</span>
-            </div>
-          </button>
-        ))}
-      </section>
-    );
-  }
-
-  function renderLiveSquadList(): ReactElement {
-    return (
-      <div className="affiliation-list-wrap">
-        <table className="affiliation-list-table">
-          <thead>
-            <tr>
-              <th scope="col">Squad</th>
-              <th scope="col">Slots</th>
-              <th scope="col">Role</th>
-              <th scope="col">Source</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {props.squadRows.map((squad) => (
+            {squads.map((squad) => (
               <tr key={squad.id}>
                 <td>
-                  <strong>{squad.name}</strong>
+                  <strong>{squad.title}</strong>
                 </td>
                 <td>
                   {squad.memberCount}/{squad.maxSlots}
                 </td>
-                <td>{squad.owner === props.protocolOwner ? 'Owner' : 'Member'}</td>
-                <td>{squad.source}</td>
+                <td>{squad.roleLabel}</td>
+                {showSourceColumn ? <td>{squad.source === 'live' ? squad.badgeLabel : '—'}</td> : null}
                 <td>
-                  <button
-                    className="secondary-action"
-                    onClick={() => props.onOpenSquad(resolveSquadFromCard(squad))}
-                    type="button"
-                  >
-                    Open
-                  </button>
+                  <div className="affiliation-list-actions">
+                    <button className="secondary-action" onClick={() => props.onOpenSquad(squad.record)} type="button">
+                      Open
+                    </button>
+                    {squad.isLeader && canLeadSquads ? (
+                      <button
+                        className="secondary-action"
+                        disabled={squadSlotsAvailable <= 0}
+                        onClick={() => props.onOpenSquad(squad.record, true)}
+                        type="button"
+                      >
+                        Invite
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -1543,8 +1415,8 @@ export function MyGuildHomeScreen(props: {
     );
   }
 
-  const guildCount = showLiveGuilds ? props.guildRows.length : mockGuilds.length;
-  const squadCount = showLiveSquads ? props.squadRows.length : mockSquads.length;
+  const guildCount = guildAffiliations.length;
+  const squadCount = squadAffiliations.length;
 
   return (
     <div className="my-guild-home">
@@ -1563,12 +1435,16 @@ export function MyGuildHomeScreen(props: {
         <AffiliationViewToggle mode={viewMode} onChange={setAffiliationView} />
       </div>
 
-      {props.guildLoadState === 'loading' ? (
+      {props.guildLoadState === 'loading' || props.squadLoadState === 'loading' ? (
         <p className="protocol-hint">Loading indexed guild memberships…</p>
       ) : null}
 
       {props.guildLoadState === 'error' ? (
         <p className="protocol-hint">Could not load guild projections. Showing local memberships.</p>
+      ) : null}
+
+      {props.squadLoadState === 'error' ? (
+        <p className="protocol-hint">Could not load squad projections. Showing local memberships.</p>
       ) : null}
 
       <section className="affiliation-section">
@@ -1579,11 +1455,9 @@ export function MyGuildHomeScreen(props: {
         {guildCount === 0 ? (
           <p className="protocol-hint">You are not in a guild yet.</p>
         ) : viewMode === 'cards' ? (
-          showLiveGuilds ? renderLiveGuildCards() : renderGuildCards(mockGuilds)
-        ) : showLiveGuilds ? (
-          renderLiveGuildList()
+          renderGuildCards(guildAffiliations)
         ) : (
-          renderGuildList(mockGuilds)
+          renderGuildList(guildAffiliations)
         )}
       </section>
 
@@ -1595,11 +1469,9 @@ export function MyGuildHomeScreen(props: {
         {squadCount === 0 ? (
           <p className="protocol-hint">You are not in a squad yet.</p>
         ) : viewMode === 'cards' ? (
-          showLiveSquads ? renderLiveSquadCards() : renderSquadCards(mockSquads)
-        ) : showLiveSquads ? (
-          renderLiveSquadList()
+          renderSquadCards(squadAffiliations)
         ) : (
-          renderSquadList(mockSquads)
+          renderSquadList(squadAffiliations)
         )}
       </section>
 
