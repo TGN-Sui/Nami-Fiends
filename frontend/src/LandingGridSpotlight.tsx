@@ -5,11 +5,8 @@ export function LandingGridSpotlight(): ReactElement {
     document.documentElement.classList.add('is-landing-page');
 
     function onPointerMove(event: PointerEvent): void {
-      const x = (event.clientX / Math.max(window.innerWidth, 1)) * 100;
-      const y = (event.clientY / Math.max(window.innerHeight, 1)) * 100;
-
-      document.documentElement.style.setProperty('--nami-spotlight-x', x.toFixed(2) + '%');
-      document.documentElement.style.setProperty('--nami-spotlight-y', y.toFixed(2) + '%');
+      document.documentElement.style.setProperty('--nami-spotlight-x', event.clientX + 'px');
+      document.documentElement.style.setProperty('--nami-spotlight-y', event.clientY + 'px');
     }
 
     window.addEventListener('pointermove', onPointerMove, { passive: true });
