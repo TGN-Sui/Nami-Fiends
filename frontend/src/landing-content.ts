@@ -36,13 +36,18 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
     outcome: 'Keep the squad, not the scavenger hunt.',
   },
   {
-    id: 'tournament',
-    title: 'Tournament hosts cannot tell who is actually trusted',
+    id: 'genre-lounge',
+    title: '"Anyone still play FPS?"',
     pain:
-      'An event organizer sees a fresh account with no history and has no idea if this player was banned last season or is on an alt.',
+      'You are a genre fan, not a one-game tourist. When the meta moves or your main goes quiet, ' +
+      'the lobby empties and the gamer group goes dead. General gaming chat is too loud and too broad. ' +
+      'Your current game\'s lobby only cares about this patch. You want to talk builds, ranked, raids, ' +
+      'and strats with people who play the same way you do, no matter what title they are on tonight.',
     namiWay:
-      'Conduct signals, moderation records, and verification travel with the member profile, not just the wallet they connected today.',
-    outcome: 'Competitive rooms start with context, not guesswork.',
+      'Official Nami genre lounges — FPS, MMORPG, MOBA, Sports & Racing, Sandbox, Souls-Like, JRPG — ' +
+      'give genre fans a public home that outlives any single launch. Talk meta, LFG, and culture with ' +
+      'people who play your way, even when your current game changes.',
+    outcome: 'Your people live in the genre room, not the launch-week server.',
   },
   {
     id: 'creator',
