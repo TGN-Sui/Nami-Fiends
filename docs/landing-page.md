@@ -45,7 +45,8 @@ Change those in `frontend/src/EntryPage.tsx` when you need different button or s
 | `LandingHeroVisual.tsx` | Three-passport hero collage (Official center, Elite left, Pro right) |
 | `LandingScenarioDeck.tsx` | Draw / flip / discard TCG scenario deck |
 | `LandingGenreBubbleField.tsx` | Floating genre lounge bubbles |
-| `LandingGridSpotlight.tsx` | Cursor-aligned white grid spotlight |
+| `NamiGridSpotlight.tsx` | Cursor-aligned white grid spotlight (`scope="landing"` on entry, `scope="app"` inside Nami) |
+| `LandingGridSpotlight.tsx` | Thin re-export of `NamiGridSpotlight` for landing-only imports |
 | `phase7-ui.css` | Landing layout, TCG card sizing, spotlight, bubbles |
 
 ## Behavior notes

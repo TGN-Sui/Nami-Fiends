@@ -381,6 +381,21 @@ Badge evidence should be referenced, not fully stored on-chain.
 
 ---
 
+# Frontend — Badge Collectors Book
+
+The profile carousel **Badge Book** tab is implemented in `frontend/src/BadgeCollectorsBook.tsx` and styled in `phase7-ui.css`.
+
+| Behavior | Detail |
+| --- | --- |
+| Closed book | One 720px-wide volume: back cover, spine, front cover titled **Nami Badges** (same page-face dimensions as open spreads). |
+| Open | Front cover flips in 3D, then unmounts; inner spreads show six badge slots per face (12 per spread). |
+| Page turns | `requestAnimationFrame` eased 3D rotation; drag, scroll wheel, or arrow controls. |
+| Detail panel | Tapping a filled slot shows claim date, collector count, and rarity below the book. |
+
+Carousel wiring: `ProfilePassportCarousel.tsx` (Passport ↔ Badge Book tabs). Mock badge data: `collectedBadgesForMember` / `userCollectedBadges` in `global-chats.js`.
+
+---
+
 # Related Docs
 
 ```text

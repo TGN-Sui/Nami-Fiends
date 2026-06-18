@@ -1,23 +1,5 @@
-import { useEffect, type ReactElement } from 'react';
+import { NamiGridSpotlight } from './NamiGridSpotlight.js';
 
-export function LandingGridSpotlight(): ReactElement {
-  useEffect(() => {
-    document.documentElement.classList.add('is-landing-page');
-
-    function onPointerMove(event: PointerEvent): void {
-      document.documentElement.style.setProperty('--nami-spotlight-x', event.clientX + 'px');
-      document.documentElement.style.setProperty('--nami-spotlight-y', event.clientY + 'px');
-    }
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      document.documentElement.classList.remove('is-landing-page');
-      document.documentElement.style.removeProperty('--nami-spotlight-x');
-      document.documentElement.style.removeProperty('--nami-spotlight-y');
-    };
-  }, []);
-
-  return <div aria-hidden="true" className="nami-landing-grid-spotlight" />;
+export function LandingGridSpotlight(): ReturnType<typeof NamiGridSpotlight> {
+  return <NamiGridSpotlight scope="landing" />;
 }

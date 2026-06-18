@@ -59,24 +59,26 @@ function genreChatExpandProps(
   expandedChatNotice?: ReactElement;
   expandedChatHeading?: ReactElement;
 } {
-  const compactHeading =
-    options?.compact === true ? (
-      <div className="chat-window-expanded-heading-copy">
-        <span className="mini-badge">Genre Lounge</span>
-        <h2>{chat.title}</h2>
-        <p>{chat.activeMembers.toLocaleString()} active in lounge</p>
-      </div>
-    ) : undefined;
+  const expandedHeading = (
+    <div className="chat-window-expanded-heading-copy">
+      <span className="mini-badge">Genre Lounge</span>
+      <h2>{chat.title}</h2>
+      <p>
+        {chat.activeMembers.toLocaleString()} active
+        {options?.compact === true ? ' in lounge' : ''}
+      </p>
+    </div>
+  );
 
   if (hasTaggedGenreBroadcasts(chat)) {
     return {
-      ...(compactHeading ? { expandedChatHeading: compactHeading } : {}),
+      expandedChatHeading: expandedHeading,
       renderExpandedAside: () => <GenreChatBroadcastAside chat={chat} isExpanded={true} />,
     };
   }
 
   return {
-    ...(compactHeading ? { expandedChatHeading: compactHeading } : {}),
+    expandedChatHeading: expandedHeading,
     expandedChatNotice: (
       <p>
         No tagged live streams in {chat.title} yet. Expanded view is chat-only until members
@@ -133,7 +135,7 @@ export function GlobalChatRoomView(props: {
 
   const chatWindowBody = (
     <>
-      {!props.compact ? (
+      {!props.compact && props.chat.kind !== 'genre' ? (
         <div className="chat-window-heading">
           <div>
             <h2>{props.chat.title}</h2>
@@ -213,21 +215,23 @@ export function GlobalChatRoomView(props: {
 
   return (
     <div className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}>
-      {props.compact && props.showCompactHead !== false ? (
-        <div className="global-chat-compact-head">
-          <div className="global-chat-compact-title-row">
-            <span className="global-chat-compact-mark">{props.chat.title.slice(0, 2).toUpperCase()}</span>
-            <strong>{props.chat.title}</strong>
-            <span className="global-chat-compact-meta">
-              {props.chat.activeMembers.toLocaleString()} inside
-            </span>
+      {props.compact ? (
+        props.showCompactHead !== false ? (
+          <div className="global-chat-compact-head">
+            <div className="global-chat-compact-title-row">
+              <span className="global-chat-compact-mark">{props.chat.title.slice(0, 2).toUpperCase()}</span>
+              <strong>{props.chat.title}</strong>
+              <span className="global-chat-compact-meta">
+                {props.chat.activeMembers.toLocaleString()} inside
+              </span>
+            </div>
+            {props.onClose ? (
+              <button className="nami-surface-button global-chat-compact-close" onClick={props.onClose} type="button">
+                Close
+              </button>
+            ) : null}
           </div>
-          {props.onClose ? (
-            <button className="nami-surface-button global-chat-compact-close" onClick={props.onClose} type="button">
-              Close
-            </button>
-          ) : null}
-        </div>
+        ) : null
       ) : (
         <div className="chat-presence-rail">
           <div className="chat-presence-channel">
@@ -302,8 +306,8 @@ export function GenreChatRoomPanel(props: {
     <GlobalChatRoomView
       chat={activeChat}
       onOpenMember={props.onOpenMember}
-      {...genreChatExpandProps(activeChat)}
-      showCompactHead={false}
+        {...genreChatExpandProps(activeChat, { compact: false })}
+        showCompactHead={false}
       {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       {...(props.compact ? { compact: true } : {})}
     />

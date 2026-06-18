@@ -63,6 +63,21 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat, the
 
 Copy for the landing page is centralized in `frontend/src/landing-content.ts`. See [landing-page.md](./landing-page.md).
 
+## Post-Phase 7 UI Polish (Game Hub + Profile)
+
+| Area | Summary |
+| --- | --- |
+| Navigation | Pages scroll to top on every `activePage` change. |
+| Ambient | `NamiGridSpotlight` extends landing cursor spotlight to the signed-in app shell. |
+| Genre chat | Centered expand overlay; heading/messages no longer overlap. |
+| Profile passport | Horizontal carousel centered; avatar/name overlap fixed. |
+| Memberships list | Fixed table columns; aligned Open / Invite action grid. |
+| My Events | Footer rows aligned (Interested + channel / view actions). |
+| Member pinned chat | Compact mode skips presence rail; composer stays visible. |
+| Badge Book | Single-scale closed cover, 3D open animation, frame-by-frame spread flips. |
+
+Latest commit for this wave: `8267009` — Polish Game Hub surfaces and interactive Badge Book.
+
 ## Latest UI Commits
 
 | Commit | Summary |

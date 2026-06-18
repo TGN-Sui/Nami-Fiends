@@ -1312,13 +1312,16 @@ export function MyGuildHomeScreen(props: {
                 <td>{guild.memberCount}</td>
                 {showSourceColumn ? <td>{guild.source === 'live' ? guild.badgeLabel : '—'}</td> : null}
                 <td>
-                  <button
-                    className="secondary-action"
-                    onClick={() => props.onOpenGuild(guild.record)}
-                    type="button"
-                  >
-                    Open
-                  </button>
+                  <div className="affiliation-list-actions">
+                    <button
+                      className="secondary-action"
+                      onClick={() => props.onOpenGuild(guild.record)}
+                      type="button"
+                    >
+                      Open
+                    </button>
+                    <span aria-hidden="true" className="affiliation-list-action-spacer" />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -1404,7 +1407,9 @@ export function MyGuildHomeScreen(props: {
                       >
                         Invite
                       </button>
-                    ) : null}
+                    ) : (
+                      <span aria-hidden="true" className="affiliation-list-action-spacer" />
+                    )}
                   </div>
                 </td>
               </tr>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { LandingGenreBubbleField } from './LandingGenreBubbleField.js';
-import { LandingGridSpotlight } from './LandingGridSpotlight.js';
+import { NamiGridSpotlight } from './NamiGridSpotlight.js';
 import { LandingHeroVisual } from './LandingHeroVisual.js';
 import { LandingScenarioDeck } from './LandingScenarioDeck.js';
 import { genreOfficialChats } from './global-chats.js';
@@ -52,7 +52,7 @@ function LandingOverview(props: {
 
   return (
     <div className="nami-landing-shell">
-      <LandingGridSpotlight />
+      <NamiGridSpotlight scope="landing" />
       <LandingGenreBubbleField onGenrePop={handleGenreBubblePop} />
 
       <div className="nami-landing-foreground">

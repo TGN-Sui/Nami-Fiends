@@ -191,6 +191,7 @@ import {
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 
 import { triggerHubSpotlightBurst } from './hub-spotlight.js';
+import { NamiGridSpotlight } from './NamiGridSpotlight.js';
 import { IgniteRadioDock } from './IgniteRadioDock.js';
 import { saveIgniteRadioEnabled, useIgniteRadioEnabled } from './ignite-radio-store.js';
 import {
@@ -6540,30 +6541,34 @@ function EventsScreen(props: {
               </div>
             </div>
 
-            <div className="fixed-card-footer">
+            <div className="fixed-card-footer event-card-footer">
               <EventInterestedButton eventId={eventItem.id} />
-              {eventItem.channelId ? (
+              <div className="event-card-secondary-actions">
+                {eventItem.channelId ? (
+                  <button
+                    className="secondary-action"
+                    onClick={() => {
+                      const channel = channels.find((entry) => entry.id === eventItem.channelId);
+
+                      if (channel) {
+                        props.onOpenChannel(channel);
+                      }
+                    }}
+                    type="button"
+                  >
+                    Open channel
+                  </button>
+                ) : (
+                  <span aria-hidden="true" className="event-card-action-spacer" />
+                )}
                 <button
                   className="secondary-action"
-                  onClick={() => {
-                    const channel = channels.find((entry) => entry.id === eventItem.channelId);
-
-                    if (channel) {
-                      props.onOpenChannel(channel);
-                    }
-                  }}
+                  onClick={() => props.onViewEvent(event)}
                   type="button"
                 >
-                  Open channel
+                  View event
                 </button>
-              ) : null}
-              <button
-                className="secondary-action"
-                onClick={() => props.onViewEvent(event)}
-                type="button"
-              >
-                View event
-              </button>
+              </div>
             </div>
           </article>
           );
@@ -6738,6 +6743,10 @@ export function App(): ReactElement {
   }
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     document.body.classList.add('is-grid-nav-pulse');
     setGridPulseKey((value) => value + 1);
 
@@ -7032,6 +7041,7 @@ if (activePage === 'userProfile') {
       data-active-page={activePage}
       data-grid-pulse-key={gridPulseKey}
     >
+      {showSidebar ? <NamiGridSpotlight scope="app" /> : null}
       {showSidebar ? (
         <>
           <SidebarProfileCard onNavigate={navigateFromCurrentPage} onSignOut={signOutToEntry} />
