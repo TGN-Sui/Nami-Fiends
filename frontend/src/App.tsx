@@ -139,6 +139,8 @@ import {
 } from './GuildSpaceScreens.js';
 import { markGuildEventsSeen, useGuildEventsStore } from './guild-events-store.js';
 import { resolveMemberGuildAffiliations } from './affiliation-provider.js';
+import { useChannelDirectory } from './channel-directory-provider.js';
+import { useMemberDirectory } from './member-directory-provider.js';
 import {
   namiGuilds,
   namiSquads,
@@ -1454,7 +1456,9 @@ function NamiHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const bubbleLeaderboardSize = useBubbleLeaderboardSize();
-  const featuredShowcaseChannels = channels.slice(0, 8);
+  const { channels: directoryChannels } = useChannelDirectory(50);
+  const { members: directoryMembers } = useMemberDirectory();
+  const featuredShowcaseChannels = directoryChannels.slice(0, 8);
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
   const [hoveredShowcaseChannelId, setHoveredShowcaseChannelId] = useState<string | null>(null);
 
@@ -1465,7 +1469,7 @@ function NamiHub(props: {
         props.selectedChannel
       : featuredShowcaseChannels[activeShowcaseIndex] ?? props.selectedChannel;
 
-  const sortedGrowthChannels = [...channels].sort((left, right) => {
+  const sortedGrowthChannels = [...directoryChannels].sort((left, right) => {
     return right.subscribers - left.subscribers;
   });
 
@@ -1511,7 +1515,7 @@ function NamiHub(props: {
     };
   }, []);
 
-  const spotlightEligibleMembers = members.filter((member) => {
+  const spotlightEligibleMembers = directoryMembers.filter((member) => {
     return member.tier !== 'NPC' && member.signal !== 'Black';
   });
 
@@ -1840,6 +1844,7 @@ function GameHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
+  const { channels: directoryChannels } = useChannelDirectory(50);
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
@@ -1850,21 +1855,21 @@ function GameHub(props: {
   const [nextModuleFilter, setNextModuleFilter] = useState<GameHubBrowserFilter>('Games');
   const [draggedInterestModuleId, setDraggedInterestModuleId] = useState<string | null>(null);
   const genreBubbleEntries = useMemo(() => buildGenreBubbleEntries(), []);
-  const partnerChannels = channels.filter((channel) => channel.partner);
-  const topChannels = [...channels]
+  const partnerChannels = directoryChannels.filter((channel) => channel.partner);
+  const topChannels = [...directoryChannels]
     .sort((left, right) => right.subscribers - left.subscribers)
     .slice(0, 4);
 
   const randomizedBrowserEntries = useMemo(() => {
-    return channels
-      .concat(channels, channels)
+    return directoryChannels
+      .concat(directoryChannels, directoryChannels)
       .map((channel, copyIndex) => ({
         channel,
         copyIndex,
         sortKey: Math.random()
       }))
       .sort((left, right) => left.sortKey - right.sortKey);
-  }, []);
+  }, [directoryChannels]);
 
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
@@ -1941,7 +1946,9 @@ function GameHub(props: {
   }
 
   function addInterestModule(): void {
-    const templateChannel = channels[interestModules.length % channels.length]!;
+    const templateChannel =
+      directoryChannels[interestModules.length % Math.max(1, directoryChannels.length)] ??
+      props.selectedChannel;
     const label =
       nextModuleKind === 'game'
         ? templateChannel.name
@@ -2421,7 +2428,7 @@ function GameHub(props: {
 
       <section className="gamehub-interest-modules-stack">
         {interestModules.map((module) => {
-          const moduleChannels = channelsForModuleFilters(channels, module.filters).slice(0, 8);
+          const moduleChannels = channelsForModuleFilters(directoryChannels, module.filters).slice(0, 8);
 
           return (
             <article
