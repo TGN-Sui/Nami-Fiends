@@ -1,3 +1,4 @@
+import { shouldAutoSeedLocalData } from './app-config.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { channels, members, userProfile, type ConductSignal, type NamiChannel, type NamiMember } from './uiMockData.js';
@@ -225,11 +226,11 @@ const GLOBAL_CHAT_TEMPLATES = [
   'Builder showcase starts soon.',
 ];
 
-export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
+function buildFixtureGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   const seeded = mockMessagesByChat[chatId];
   const authors = members.filter((member) => member.signal !== 'Black');
 
-  const baseMessages = Array.from({ length: 20 }, (_, index) => {
+  return Array.from({ length: 20 }, (_, index) => {
     const author = authors[index % authors.length] ?? members[0]!;
     const seededMessage = seeded?.[index];
 
@@ -245,7 +246,9 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
       body: GLOBAL_CHAT_TEMPLATES[index % GLOBAL_CHAT_TEMPLATES.length]!,
     };
   });
+}
 
+export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   const overlay = readGlobalChatOverlay(chatId).map((message) => ({
     id: message.id,
     author: message.author,
@@ -254,7 +257,11 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
     signal: message.signal,
   }));
 
-  return [...baseMessages, ...overlay];
+  if (!shouldAutoSeedLocalData()) {
+    return overlay;
+  }
+
+  return [...buildFixtureGlobalChatMessages(chatId), ...overlay];
 }
 
 export function canCreateTemporaryChat(): boolean {

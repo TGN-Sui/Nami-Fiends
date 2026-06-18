@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldAutoSeedLocalData } from './app-config.js';
 import { getSelfMember } from './member-access.js';
 import { guildOwnerEvents, type NamiEvent } from './events-data.js';
 import { guildsForMember, namiGuilds, type NamiGuildRecord } from './nami-affiliations.js';
@@ -64,11 +65,19 @@ function seedGuildEvents(): Record<string, StoredGuildEvent[]> {
   return seeded;
 }
 
+function emptyGuildEventsMap(): Record<string, StoredGuildEvent[]> {
+  return {};
+}
+
 function readGuildEventsMap(): Record<string, StoredGuildEvent[]> {
   try {
     const stored = window.localStorage.getItem(EVENTS_KEY);
 
     if (!stored) {
+      if (!shouldAutoSeedLocalData()) {
+        return emptyGuildEventsMap();
+      }
+
       const seeded = seedGuildEvents();
       window.localStorage.setItem(EVENTS_KEY, JSON.stringify(seeded));
       return seeded;
@@ -78,9 +87,11 @@ function readGuildEventsMap(): Record<string, StoredGuildEvent[]> {
 
     return typeof parsed === 'object' && parsed !== null
       ? (parsed as Record<string, StoredGuildEvent[]>)
-      : seedGuildEvents();
+      : shouldAutoSeedLocalData()
+        ? seedGuildEvents()
+        : emptyGuildEventsMap();
   } catch {
-    return seedGuildEvents();
+    return shouldAutoSeedLocalData() ? seedGuildEvents() : emptyGuildEventsMap();
   }
 }
 

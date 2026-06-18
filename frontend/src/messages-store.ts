@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldAutoSeedLocalData } from './app-config.js';
 import { playChatSendSfx } from './nami-sfx.js';
 import { getSelfMember, isSelfMessageAuthor } from './member-access.js';
 import { processMessageTags } from './nami-notifications-store.js';
@@ -79,18 +80,18 @@ function readThreads(): StoredThread[] {
     const stored = window.localStorage.getItem(THREADS_KEY);
 
     if (!stored) {
-      return seedThreads();
+      return shouldAutoSeedLocalData() ? seedThreads() : [];
     }
 
     const parsed = JSON.parse(stored);
 
     if (!Array.isArray(parsed)) {
-      return seedThreads();
+      return shouldAutoSeedLocalData() ? seedThreads() : [];
     }
 
     return parsed as StoredThread[];
   } catch {
-    return seedThreads();
+    return shouldAutoSeedLocalData() ? seedThreads() : [];
   }
 }
 

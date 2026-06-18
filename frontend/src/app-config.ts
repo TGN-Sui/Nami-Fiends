@@ -76,3 +76,12 @@ export function shouldUseDevFixtures(config: AppConfig = readAppConfig()): boole
 export function isTestLaunchMode(config: AppConfig = readAppConfig()): boolean {
   return config.testLaunch;
 }
+
+/** Auto-populate local message/event/chat stores on first load (dev demo only). */
+export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): boolean {
+  if (isTestLaunchMode(config)) {
+    return false;
+  }
+
+  return shouldUseDevFixtures(config);
+}

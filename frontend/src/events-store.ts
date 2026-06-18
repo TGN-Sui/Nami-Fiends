@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldAutoSeedLocalData } from './app-config.js';
 import { isNamiTeamMember } from './channel-surface.js';
 import { getSelfMember } from './member-access.js';
 import {
@@ -188,7 +189,7 @@ function readCatalogEventsMap(): Record<string, StoredEvent> {
   const stored = readStoredEventsMap();
 
   if (Object.keys(stored).length === 0) {
-    return seedCatalogEvents();
+    return shouldAutoSeedLocalData() ? seedCatalogEvents() : {};
   }
 
   const merged: Record<string, StoredEvent> = { ...stored };
