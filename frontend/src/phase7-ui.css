@@ -1586,40 +1586,60 @@
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.34) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.34) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.42) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.42) 1px, transparent 1px);
   background-size: 42px 42px;
   background-position: 0 0;
   mask-image: radial-gradient(
     circle at var(--nami-spotlight-x, 22%) var(--nami-spotlight-y, 18%),
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.92) 12%,
-    rgba(0, 0, 0, 0.58) 22%,
-    rgba(0, 0, 0, 0.2) 34%,
-    transparent 48%
+    rgba(0, 0, 0, 0.3) 9%,
+    rgba(0, 0, 0, 0.12) 16%,
+    transparent 30%
   );
   -webkit-mask-image: radial-gradient(
     circle at var(--nami-spotlight-x, 22%) var(--nami-spotlight-y, 18%),
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.92) 12%,
-    rgba(0, 0, 0, 0.58) 22%,
-    rgba(0, 0, 0, 0.2) 34%,
-    transparent 48%
+    rgba(0, 0, 0, 0.3) 9%,
+    rgba(0, 0, 0, 0.12) 16%,
+    transparent 30%
   );
   animation: namiLivingGrid 34s ease-in-out infinite;
 }
 
 html.is-landing-page body::after {
-  opacity: 0.18;
+  opacity: 0.46;
   mix-blend-mode: screen;
   background:
     radial-gradient(
       circle at var(--nami-spotlight-x, 22%) var(--nami-spotlight-y, 18%),
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.06) 14%,
-      rgba(117, 215, 255, 0.04) 24%,
-      transparent 44%
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.102) 8%,
+      rgba(255, 255, 255, 0.04) 15%,
+      transparent 28%
     );
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
+    radial-gradient(
+      circle at var(--nami-spotlight-x, 22%) var(--nami-spotlight-y, 18%),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.3) 9%,
+      rgba(0, 0, 0, 0.1) 17%,
+      transparent 30%
+    );
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
+    radial-gradient(
+      circle at var(--nami-spotlight-x, 22%) var(--nami-spotlight-y, 18%),
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.3) 9%,
+      rgba(0, 0, 0, 0.1) 17%,
+      transparent 30%
+    );
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
 }
 
 .nami-landing-foreground {
