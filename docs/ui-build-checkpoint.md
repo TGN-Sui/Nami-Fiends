@@ -59,7 +59,7 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat, the
 | `7858c6e` | Sharper spotlight falloff |
 | `2858b5f` | Spotlight bloom aligned to cursor pixels |
 
-| `e0cc86c` | Native TCG passport fit, three-card stack, hero headline, landing copy docs |
+| `064822d` | Native TCG passport fit, three-card stack, hero headline, landing copy docs |
 
 Copy for the landing page is centralized in `frontend/src/landing-content.ts`. See [landing-page.md](./landing-page.md).
 
