@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 
+import { LandingGenreBubbleField } from './LandingGenreBubbleField.js';
 import { LandingHeroVisual } from './LandingHeroVisual.js';
 import { LandingScenarioDeck } from './LandingScenarioDeck.js';
+import { genreOfficialChats } from './global-chats.js';
 import {
   LANDING_GENRE_LOUNGES,
   LANDING_HERO,
@@ -22,6 +24,9 @@ function LandingOverview(props: {
 }): ReactElement {
   return (
     <div className="nami-landing-shell">
+      <LandingGenreBubbleField />
+
+      <div className="nami-landing-foreground">
       {props.signedOutNotice ? (
         <p className="nami-landing-signed-out-note">
           Your session ended. Sign up again to enter Nami.
@@ -38,7 +43,7 @@ function LandingOverview(props: {
 
             <div className="nami-landing-hero-actions">
               <button className="primary-action" onClick={props.onEnterNami} type="button">
-                Enter Nami — it&apos;s free to start
+                Enter Nami. It&apos;s free to start
               </button>
             </div>
 
@@ -67,7 +72,7 @@ function LandingOverview(props: {
           <span className="mini-badge">Real situations</span>
           <h2>Built for how gamers actually lose their communities</h2>
           <p>
-            Draw from the deck — each TCG-style card is a moment that inspired Nami. Flip to see the
+            Draw from the deck. Each TCG style card is a moment that inspired Nami. Flip to see the
             split between life without Nami and life with a portable gamer layer.
           </p>
         </header>
@@ -78,12 +83,25 @@ function LandingOverview(props: {
       <section className="nami-landing-section panel nami-landing-genre-panel">
         <header className="nami-landing-section-head">
           <span className="mini-badge">Genre global chats</span>
-          <h2>Every genre has an official lounge — not just every game</h2>
+          <h2>Every genre has an official lounge, not just every game</h2>
           <p>
             After signup, jump into Nami Hub and Game Hub to find global chats grouped by how you
             play: FPS, RPG, MOBA, sports, sandbox, and more. Bubble size reflects live activity.
           </p>
         </header>
+
+        <div className="nami-landing-genre-showcase" aria-label="Official genre lounge bubbles preview">
+          {genreOfficialChats.slice(0, 6).map((chat) => (
+            <div
+              className="nami-landing-genre-showcase-bubble"
+              key={chat.id}
+              style={{ '--bubble-scale': String(0.78 + chat.activeMembers / 1400) } as CSSProperties}
+            >
+              <strong>{chat.title}</strong>
+              <small>{chat.activeMembers.toLocaleString()} active</small>
+            </div>
+          ))}
+        </div>
 
         <ul className="nami-landing-genre-chip-list" aria-label="Official genre lounges">
           {LANDING_GENRE_LOUNGES.map((lounge) => (
@@ -95,7 +113,7 @@ function LandingOverview(props: {
       <section className="nami-landing-section panel nami-landing-pillars-panel">
         <header className="nami-landing-section-head">
           <span className="mini-badge">What Nami is</span>
-          <h2>Identity, community, and safety — in one gamer-native world</h2>
+          <h2>Identity, community, and safety in one gamer native world</h2>
         </header>
 
         <div className="nami-landing-pillar-grid">
@@ -133,6 +151,7 @@ function LandingOverview(props: {
           </button>
         </div>
       </section>
+      </div>
     </div>
   );
 }

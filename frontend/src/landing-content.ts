@@ -15,9 +15,10 @@ export const LANDING_HERO = {
   eyebrow: 'Portable gamer identity',
   headline: 'One passport. Every game. Every crew.',
   subhead:
-    'Nami is where your reputation, squads, guilds, events, and channel homes stay with you — ' +
+    'Nami is where your reputation, squads, guilds, events, and channel homes stay with you, ' +
     'instead of resetting every time a new Discord, launcher, or season drops.',
-  trustNote: 'Paid tiers unlock slots and tools. Verification and trust come from proofs, conduct, and moderation — never from a subscription.',
+  trustNote:
+    'Paid tiers unlock slots and tools. Verification and trust come from proofs, conduct, and moderation, never from a subscription.',
 };
 
 export const LANDING_SCENARIOS: LandingScenario[] = [
@@ -27,7 +28,7 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
     pain:
       'You found a great squad in one title, then the crew scatters into separate Discords when the next game launches.',
     namiWay:
-      'Squads and guilds live on your Nami passport. Same roster, new channel — jump from FIENDS to Walrus Raiders without rebuilding the group chat from scratch.',
+      'Squads and guilds live on your Nami passport. Same roster, new channel. Jump from FIENDS to Walrus Raiders without rebuilding the group chat from scratch.',
     outcome: 'Keep the people, not just the server history.',
   },
   {
@@ -36,14 +37,14 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
     pain:
       'An event organizer sees a fresh account with no history and has no idea if this player was banned last season or is on an alt.',
     namiWay:
-      'Conduct signals, moderation records, and verification travel with the member profile — not just the wallet they connected today.',
+      'Conduct signals, moderation records, and verification travel with the member profile, not just the wallet they connected today.',
     outcome: 'Competitive rooms start with context, not guesswork.',
   },
   {
     id: 'creator',
-    title: 'A creator outgrew one Discord and one link-in-bio',
+    title: 'A creator outgrew one Discord and one link in bio',
     pain:
-      'A studio runs multiple games, each with its own chat, events calendar, and subscriber list — all disconnected.',
+      'A studio runs multiple games, each with its own chat, events calendar, and subscriber list, all disconnected.',
     namiWay:
       'Each game gets a Nami channel: verified studio profile, official events, genre chat, badges, and follower slots in one surface.',
     outcome: 'Fans know where home is for every title you ship.',
@@ -54,16 +55,16 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
     pain:
       'Global game chats reward noise. New players bounce before they find the room that matches how they actually play.',
     namiWay:
-      'Genre lounges, conduct-aware rooms, and mute/block controls you own — plus official channels for events that matter.',
+      'Genre lounges, conduct aware rooms, and mute/block controls you own, plus official channels for events that matter.',
     outcome: 'Discover communities sized to how you play, not how loud the lobby is.',
   },
   {
     id: 'achievement',
     title: 'Your achievements are scattered across platforms',
     pain:
-      'Hundreds of hours on Steam, console trophies, and event badges — but no single profile that shows who you are as a gamer.',
+      'Hundreds of hours on Steam, console trophies, and event badges, but no single profile that shows who you are as a gamer.',
     namiWay:
-      'Passport level, badge book, titles, and platform links roll into one TCG-style identity card other members can actually read.',
+      'Passport level, badge book, titles, and platform links roll into one TCG style identity card other members can actually read.',
     outcome: 'Carry proof of play across communities without reintroducing yourself.',
   },
 ];
@@ -83,12 +84,12 @@ export const LANDING_PILLARS: LandingPillar[] = [
   },
   {
     title: 'Channels & studios',
-    detail: 'Every game or community gets a verified home — chat, events, guilds, and modules.',
+    detail: 'Every game or community gets a verified home with chat, events, guilds, and modules.',
   },
   {
     title: 'Genre global chats',
     detail:
-      'Official genre lounges — FPS, RPG, MOBA, sports, sandbox, and more — where gamers meet ' +
+      'Official genre lounges for FPS, RPG, MOBA, sports, sandbox, and more, where gamers meet ' +
       'across every channel before they follow a specific game.',
   },
   {
@@ -105,7 +106,7 @@ export const LANDING_STEPS = [
   {
     step: '1',
     title: 'Enter Nami',
-    detail: 'Quick signup and a short conduct quiz — no wallet lecture on day one.',
+    detail: 'Quick signup and a short conduct quiz. No wallet lecture on day one.',
   },
   {
     step: '2',
@@ -122,8 +123,8 @@ export const LANDING_STEPS = [
 
 export const GAME_HUB_INTRO = {
   eyebrow: 'Discover game communities',
-  headline: 'Find your next main game — and the room that fits how you play.',
+  headline: 'Find your next main game and the room that fits how you play.',
   subhead:
-    'Partner channels, trending games, cover-art browser, and genre lounges — all ranked by real activity, not paid trust.',
+    'Partner channels, trending games, cover art browser, and genre lounges, all ranked by real activity, not paid trust.',
   previewNote: 'Preview catalog active while discovery cycles populate.',
 };

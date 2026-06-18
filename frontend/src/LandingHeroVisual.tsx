@@ -1,12 +1,10 @@
 import { type CSSProperties, type ReactElement } from 'react';
 
-import { genreOfficialChats } from './global-chats.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import { channels, members } from './uiMockData.js';
 
 const HERO_MEMBER = members[0]!;
 const HERO_CHANNEL = channels[0]!;
-const HERO_GENRE = genreOfficialChats[0]!;
 
 export function LandingHeroVisual(): ReactElement {
   return (
@@ -33,15 +31,6 @@ export function LandingHeroVisual(): ReactElement {
             <span className="mini-badge">Verified channel</span>
             <strong>{HERO_CHANNEL.name}</strong>
             <small>{HERO_CHANNEL.genre}</small>
-          </div>
-        </article>
-
-        <article className="nami-landing-hero-genre-bubble">
-          <span className="nami-landing-hero-genre-orbit" />
-          <div className="nami-landing-hero-genre-core">
-            <span className="mini-badge">Genre lounge</span>
-            <strong>{HERO_GENRE.title}</strong>
-            <small>{HERO_GENRE.activeMembers.toLocaleString()} active</small>
           </div>
         </article>
       </div>
