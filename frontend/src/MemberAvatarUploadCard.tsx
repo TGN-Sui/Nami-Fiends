@@ -58,7 +58,7 @@ export function MemberAvatarUploadCard(): ReactElement {
   const currentState = hasCustomAvatar
     ? 'Custom display photo active across Nami.'
     : member.avatarImageUrl
-      ? 'Default demo avatar active. Upload to replace it site-wide.'
+      ? 'Default profile photo active. Upload to replace it site-wide.'
       : 'Initials fallback active. Upload a display photo for your profile.';
 
   function openFilePicker(): void {

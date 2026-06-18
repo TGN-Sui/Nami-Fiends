@@ -146,13 +146,14 @@ import {
   type NamiGuildRecord,
   type NamiSquadRecord,
 } from './nami-affiliations.js';
+import { MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
 import { MemberProfileActions } from './MemberProfileActions.js';
 import { MemberPublicPinnedChat } from './MemberPublicPinnedChat.js';
 import { canShowMemberPublicChat } from './member-public-chat.js';
 import { readMemberIdFromShareUrl, shareMemberProfile } from './profile-share.js';
 import { SharePassportButton } from './SharePassportButton.js';
 
-import { seedDemoTagNotifications, useUnreadTagNotificationCount } from './nami-notifications-store.js';
+import { useUnreadTagNotificationCount } from './nami-notifications-store.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 
@@ -314,160 +315,6 @@ function studioLogoAssetVariables(developer: (typeof developers)[number]): CSSPr
     '--studio-logo-image': cssAssetUrl(logoImageUrl),
     '--studio-logo-image-opacity': '1'
   } as CSSProperties;
-}
-
-function MediaUploadPrepCard(props: {
-  surfaceLabel: string;
-  assetLabel: string;
-  currentState: string;
-  storageLabel: string;
-  acceptedFormats: string;
-  note: string;
-}): ReactElement {
-  return (
-    <article className="media-upload-prep-card">
-      <div className="media-upload-prep-copy">
-        <span className="media-upload-prep-eyebrow">{props.surfaceLabel}</span>
-        <strong>{props.assetLabel}</strong>
-        <small>{props.currentState}</small>
-      </div>
-
-      <div className="media-upload-prep-details">
-        <span>{props.acceptedFormats}</span>
-        <span>{props.storageLabel}</span>
-      </div>
-
-      <button
-        aria-disabled="true"
-        className="media-upload-prep-button"
-        disabled
-        type="button"
-      >
-        Upload coming soon
-      </button>
-
-      <div className="media-upload-owner-lock">
-
-
-        <span>Owner-only setup</span>
-
-
-        <small>Members see published media only. Upload controls stay locked until owner authorization is live.</small>
-
-
-      </div>
-
-
-
-      <p>{props.note}</p>
-    </article>
-  );
-}
-
-function UxPreviewConsole(props: {
-  onOpenChannel: (channel: NamiChannel) => void;
-  onOpenMember: (member: (typeof members)[number]) => void;
-}): ReactElement {
-  const previewChannels = [
-    {
-      label: 'Verified Game',
-      detail: 'Official game channel',
-      channel: channels.find((channel) => channel.verifiedGame) ?? channels[0]!
-    },
-    {
-      label: 'Community Game',
-      detail: 'Fallback / non-verified game channel',
-      channel: channels.find((channel) => !channel.verifiedGame) ?? channels[0]!
-    },
-    {
-      label: 'Red Signal Game',
-      detail: 'High-intensity community behavior state',
-      channel: channels.find((channel) => channel.signal === 'Red') ?? channels[0]!
-    },
-    {
-      label: 'Builder Channel',
-      detail: 'Creator / builder-style game surface',
-      channel: channels.find((channel) => channel.name.toLowerCase().includes('pebble')) ?? channels[0]!
-    }
-  ];
-
-  const previewMembers = members.map((member) => {
-    return {
-      label: member.tier,
-      detail: member.signal + ' · ' + member.badge,
-      member
-    };
-  });
-
-  return (
-    <section className="panel ux-preview-console">
-      <div className="ux-preview-heading">
-        <span>UX Preview Console</span>
-        <strong>Navigate as any channel type or member tier</strong>
-        <p>
-          This panel is for product testing only. It helps verify tier, signal,
-          media, fallback, and profile-surface UX without changing trust status.
-        </p>
-      </div>
-
-      <div className="ux-preview-mode-strip" aria-label="Ownership preview modes">
-
-
-        <span className="ux-preview-mode-chip is-owner-mode">Viewing as Owner</span>
-
-
-        <span className="ux-preview-mode-chip">Viewing as Member</span>
-
-
-        <small>
-
-
-          Owner mode exposes setup tools. Member mode only shows approved public choices.
-
-
-          Verification still depends on identity proofs and approvals, not payment.
-
-
-        </small>
-
-
-      </div>
-
-
-
-      <div className="ux-preview-grid">
-        <div className="ux-preview-column">
-          <span className="ux-preview-label">Channel surfaces</span>
-          {previewChannels.map((entry) => (
-            <button
-              className="ux-preview-button"
-              key={entry.label}
-              onClick={() => props.onOpenChannel(entry.channel)}
-              type="button"
-            >
-              <strong>{entry.label}</strong>
-              <small>{entry.channel.name} · {entry.detail}</small>
-            </button>
-          ))}
-        </div>
-
-        <div className="ux-preview-column">
-          <span className="ux-preview-label">Member tiers</span>
-          {previewMembers.map((entry) => (
-            <button
-              className="ux-preview-button"
-              key={entry.member.id}
-              onClick={() => props.onOpenMember(entry.member)}
-              type="button"
-            >
-              <strong>{entry.label}</strong>
-              <small>{entry.member.name} · {entry.detail}</small>
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function ChannelAvatar(props: {
@@ -4856,20 +4703,7 @@ function MemberProfileScreen(props: {
           </article>
         </section>
       
-        {isSelfMember(props.member.id) ? (
-          <MediaUploadPrepCard
-            acceptedFormats="PNG, JPG, WebP"
-            assetLabel="Member avatar"
-            currentState={
-              props.member.avatarImageUrl
-                ? 'Demo member avatar active. Initials remain available as fallback.'
-                : 'Initials fallback active. No uploaded member avatar attached.'
-            }
-            note="This placeholder prepares Member Profiles for future avatar uploads without making upload equal verification or trust."
-            storageLabel="Future source: user-owned media reference plus passport attachment rules"
-            surfaceLabel="Member media"
-          />
-        ) : null}
+        {isSelfMember(props.member.id) ? <MemberAvatarUploadCard /> : null}
 </section>
     </>
   );
@@ -6768,10 +6602,6 @@ export function App(): ReactElement {
   const messageStore = useMessagesStore();
   const guildEventsStore = useGuildEventsStore();
   const selfMember = useSelfMember();
-
-  useEffect(() => {
-    seedDemoTagNotifications();
-  }, []);
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');
   const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);

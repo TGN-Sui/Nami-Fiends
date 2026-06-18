@@ -506,17 +506,6 @@ export function SettingsScreen(props: {
           <div className="settings-section-stack">
             <NamiOwnerSettingsPanel />
             <NamiOwnerEmojiPanel />
-            <article className="panel settings-card settings-compact-card">
-              <div className="profile-panel-heading">
-                <h2>Accessibility</h2>
-                <p>Animation, contrast, and density preferences (coming soon).</p>
-              </div>
-              <div className="settings-toggle-list">
-                <span>Reduced motion mode</span>
-                <span>High contrast signal badges</span>
-                <span>Compact chat density</span>
-              </div>
-            </article>
             <IndexedDataPanel />
           </div>
         ) : null}

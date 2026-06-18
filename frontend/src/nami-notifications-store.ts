@@ -232,35 +232,6 @@ export function processMessageTags(input: {
   writeNotifications([...incoming, ...existing]);
 }
 
-const DEMO_SEED_KEY = 'nami.user.tag-notifications-demo-seeded';
-
-export function seedDemoTagNotifications(): void {
-  if (window.localStorage.getItem(DEMO_SEED_KEY)) {
-    return;
-  }
-
-  const demoMessages = [
-    {
-      body: 'LFG for ranked runs tonight @Robbos — voice room is open.',
-      authorName: 'DeadlySin',
-      context: 'global' as const,
-      contextLabel: 'Global Chat · Official Nami Global',
-    },
-    {
-      body: 'Looking for members for tonight’s &Wave Raiders run. Ping @DeadlySin if you are in.',
-      authorName: 'Robbos',
-      context: 'channel' as const,
-      contextLabel: 'Game Chat · FIENDS',
-    },
-  ];
-
-  for (const message of demoMessages) {
-    processMessageTags(message);
-  }
-
-  window.localStorage.setItem(DEMO_SEED_KEY, '1');
-}
-
 export function memberNameForTagNotification(notification: TagNotification): string | null {
   if (notification.tagKind !== 'member') {
     return null;

@@ -14009,12 +14009,11 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 
 /* =========================================================
-   UI-A17B — visible upload and UX preview controls
+   UI-A17B — visible upload controls
    ========================================================= */
 
 .media-upload-prep-card,
-.profile-edit-prep-card,
-.ux-preview-console {
+.profile-edit-prep-card {
   position: relative;
   margin-top: 18px;
   padding: 18px;
@@ -14039,24 +14038,19 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .media-upload-prep-copy,
 .media-upload-prep-details,
 .profile-edit-prep-heading,
-.profile-edit-prep-grid,
-.ux-preview-heading,
-.ux-preview-grid {
+.profile-edit-prep-grid {
   position: relative;
   z-index: 1;
 }
 
 .media-upload-prep-copy,
-.profile-edit-prep-heading,
-.ux-preview-heading {
+.profile-edit-prep-heading {
   display: grid;
   gap: 7px;
 }
 
 .media-upload-prep-eyebrow,
-.profile-edit-prep-heading span,
-.ux-preview-heading span,
-.ux-preview-label {
+.profile-edit-prep-heading span {
   color: rgba(223, 247, 255, 0.66);
   font-size: 0.72rem;
   font-weight: 900;
@@ -14065,8 +14059,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 .media-upload-prep-copy strong,
-.profile-edit-prep-heading strong,
-.ux-preview-heading strong {
+.profile-edit-prep-heading strong {
   color: #ffffff;
   font-size: 1.08rem;
   letter-spacing: -0.02em;
@@ -14074,8 +14067,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .media-upload-prep-copy small,
 .media-upload-prep-card p,
-.profile-edit-prep-heading p,
-.ux-preview-heading p {
+.profile-edit-prep-heading p {
   color: rgba(223, 247, 255, 0.72);
   font-size: 0.82rem;
   line-height: 1.45;
@@ -14119,16 +14111,14 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin: 0;
 }
 
-.profile-edit-prep-grid,
-.ux-preview-grid {
+.profile-edit-prep-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
 
-.profile-edit-prep-grid button,
-.ux-preview-button {
+.profile-edit-prep-grid button {
   display: grid;
   gap: 4px;
   width: 100%;
@@ -14139,49 +14129,13 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   background:
     linear-gradient(135deg, rgba(5, 9, 15, 0.42), rgba(255, 255, 255, 0.05));
   text-align: left;
-}
-
-.ux-preview-button {
-  cursor: pointer;
-  transition:
-    border-color 180ms ease,
-    transform 180ms ease,
-    background 180ms ease;
-}
-
-.ux-preview-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(117, 215, 255, 0.34);
-  background:
-    linear-gradient(135deg, rgba(117, 215, 255, 0.12), rgba(67, 245, 167, 0.07));
-}
-
-.profile-edit-prep-grid button {
   cursor: not-allowed;
   opacity: 0.72;
 }
 
-.ux-preview-column {
-  display: grid;
-  gap: 9px;
-  min-width: 0;
-}
-
-.ux-preview-button strong {
-  color: #ffffff;
-  font-size: 0.88rem;
-}
-
-.ux-preview-button small {
-  color: rgba(223, 247, 255, 0.68);
-  font-size: 0.74rem;
-  line-height: 1.35;
-}
-
 @media (max-width: 860px) {
   .media-upload-prep-card,
-  .profile-edit-prep-grid,
-  .ux-preview-grid {
+  .profile-edit-prep-grid {
     grid-template-columns: 1fr;
   }
 
@@ -14591,10 +14545,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
    UI-A20.1 — ownership mode clarity
    ========================================================= */
 
-.ux-preview-mode-strip,
 .settings-owner-mode-strip,
-.owner-tool-mode-strip,
-.media-upload-owner-lock {
+.owner-tool-mode-strip {
   position: relative;
   z-index: 1;
   display: flex;
@@ -14609,10 +14561,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     rgba(5, 9, 15, 0.26);
 }
 
-.ux-preview-mode-strip {
-  margin-top: 14px;
-}
-
 .settings-owner-mode-strip {
   margin-bottom: 2px;
 }
@@ -14621,14 +14569,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin: 14px 0 12px;
 }
 
-.media-upload-owner-lock {
-  justify-content: flex-start;
-}
-
-.ux-preview-mode-chip,
 .settings-owner-mode-strip span,
-.owner-tool-mode-strip span,
-.media-upload-owner-lock span {
+.owner-tool-mode-strip span {
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -14643,31 +14585,22 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   text-transform: uppercase;
 }
 
-.ux-preview-mode-chip.is-owner-mode,
 .settings-owner-mode-strip span,
 .owner-tool-mode-strip span {
   border-color: rgba(117, 215, 255, 0.32);
   background: rgba(117, 215, 255, 0.1);
 }
 
-.ux-preview-mode-strip small,
 .settings-owner-mode-strip small,
-.owner-tool-mode-strip small,
-.media-upload-owner-lock small {
+.owner-tool-mode-strip small {
   color: rgba(223, 247, 255, 0.72);
   font-size: 0.76rem;
   line-height: 1.4;
 }
 
-.media-upload-owner-lock + p {
-  margin-top: 4px;
-}
-
 @media (max-width: 720px) {
-  .ux-preview-mode-strip,
   .settings-owner-mode-strip,
-  .owner-tool-mode-strip,
-  .media-upload-owner-lock {
+  .owner-tool-mode-strip {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -14880,7 +14813,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .sidebar-toggle:focus-visible,
 .sidebar-gamehub-shortcut:focus-visible,
 .sidebar-player-progress-button:focus-visible,
-.ux-preview-button:focus-visible,
 .media-upload-prep-card button:focus-visible,
 .settings-brand-reset-button:focus-visible,
 .settings-brand-color-chip-polished input:focus-visible,
@@ -14899,16 +14831,13 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateY(-1px);
 }
 
-.ux-preview-mode-strip,
 .settings-owner-mode-strip,
-.owner-tool-mode-strip,
-.media-upload-owner-lock {
+.owner-tool-mode-strip {
   min-width: 0;
 }
 
 .owner-tool-action,
 .channel-colors-stat-card .channel-member-brand-dot,
-.ux-preview-button,
 .settings-brand-reset-button,
 .media-upload-prep-card button {
   -webkit-tap-highlight-color: transparent;
@@ -14921,7 +14850,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   .sidebar-player-progress-button::before,
   .owner-tool-action,
   .channel-colors-stat-card .channel-member-brand-dot,
-  .ux-preview-button,
   .media-upload-prep-card::before {
     animation: none !important;
     transition-duration: 1ms !important;
@@ -14936,7 +14864,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 @media (max-width: 860px) {
-  .ux-preview-grid,
   .owner-tool-grid {
     grid-template-columns: 1fr !important;
   }
@@ -14952,10 +14879,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 @media (max-width: 640px) {
-  .ux-preview-mode-strip,
   .settings-owner-mode-strip,
-  .owner-tool-mode-strip,
-  .media-upload-owner-lock {
+  .owner-tool-mode-strip {
     align-items: flex-start !important;
     flex-direction: column !important;
   }
