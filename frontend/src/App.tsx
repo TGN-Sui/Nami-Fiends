@@ -4688,7 +4688,7 @@ function MemberProfileScreen(props: {
           <article className="panel">
             <div className="profile-panel-heading">
               <h2>Preference Notes</h2>
-              <p>Mute, Block, and Report are user-owned preference controls in this UI mock.</p>
+              <p>Mute, Block, and Report are user-owned preference controls on your account.</p>
             </div>
 
             <div className="preference-note-stack">
@@ -4921,7 +4921,7 @@ function SafetyCenterScreen(props: {
 
         <article className="panel moderation-role-panel">
           <div className="profile-panel-heading">
-            <h2>Mock Access Role</h2>
+            <h2>Preview Access Role</h2>
             <p>Switch roles to preview who can manually review Color Signals.</p>
           </div>
 
@@ -5114,7 +5114,7 @@ function SafetyCenterScreen(props: {
 
             {reports.length > 0 && (
               <button className="profile-secondary-link" onClick={clearReports} type="button">
-                Clear mock queue
+                Clear report queue
               </button>
             )}
           </article>
@@ -5291,7 +5291,7 @@ function SafetyCenterScreen(props: {
 
           {actions.length > 0 && (
             <button className="profile-secondary-link" onClick={clearActions} type="button">
-              Clear mock action history
+              Clear action history
             </button>
           )}
         </article>
@@ -5492,7 +5492,7 @@ function PassportScreen(props: {
     {
       title: 'Moderation Standing',
       status: 'Clear',
-      detail: 'No unresolved enforcement actions on this mock passport.',
+      detail: 'No unresolved enforcement actions on this passport.',
       category: 'Safety'
     }
   ];
@@ -5553,7 +5553,7 @@ function PassportScreen(props: {
       ) : passportLoadState === 'loading' ? (
         <p className="protocol-hint">Loading on-chain passport and indexed timeline…</p>
       ) : passportLoadState === 'error' ? (
-        <p className="protocol-hint">Could not load protocol passport data. Showing mock passport UI below.</p>
+        <p className="protocol-hint">Could not load passport data from chain. Showing your profile preview below.</p>
       ) : protocolOwner ? (
         <p className="protocol-hint">No owned Passport object found for the connected wallet.</p>
       ) : null}

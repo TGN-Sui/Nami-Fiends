@@ -98,6 +98,18 @@ describe('channel-directory-provider', () => {
     expect(items[0]?.channel.id).toBe('fiends');
   });
 
+  it('shows fixture channels while discovery is still loading', () => {
+    const items = resolveChannelDirectory({
+      liveRankings: [],
+      loadState: 'loading',
+      liveQueryEnabled: true,
+      fixtureChannels: [fixtureChannel],
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.source).toBe('fixture');
+  });
+
   it('enriches fixture metadata when a live ranking matches a fixture id', () => {
     const items = resolveChannelDirectory({
       liveRankings: [

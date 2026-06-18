@@ -56,6 +56,10 @@ describe('app-config directory fallback', () => {
       false
     );
   });
+
+  it('keeps fixture catalogs visible while discovery is still loading', () => {
+    expect(shouldUseFixtureCatalogFallback(0, 'loading', createConfig({}))).toBe(true);
+  });
 });
 
 describe('app-config mock checkout policy', () => {

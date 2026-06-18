@@ -16,7 +16,9 @@ import {
 } from './member-preference-store.js';
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
 import { readSafetyReportCount } from './safety-report-store.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 import { getSelfMember } from './member-access.js';
+import { useProtocolOwner } from './wallet.js';
 import {
   canConfigureEmbeddedFeedSurface,
   getConfigurableEmbeddedFeedSurfaces,
@@ -293,6 +295,8 @@ export function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
   onOpenMember?: (member: NamiMember) => void;
 } = {}): ReactElement {
+  const { owner } = useProtocolOwner();
+  const showIndexedDataPanel = isOfficialOwner(owner);
   const [activeSection, setActiveSection] = useState<SettingsSection>(
     () => consumeSettingsSectionFocus() ?? 'overview'
   );
@@ -506,7 +510,7 @@ export function SettingsScreen(props: {
           <div className="settings-section-stack">
             <NamiOwnerSettingsPanel />
             <NamiOwnerEmojiPanel />
-            <IndexedDataPanel />
+            {showIndexedDataPanel ? <IndexedDataPanel /> : null}
           </div>
         ) : null}
       </section>

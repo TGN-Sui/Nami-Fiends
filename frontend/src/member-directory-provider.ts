@@ -25,10 +25,6 @@ export function resolveMemberDirectory(input: {
   liveQueryEnabled: boolean;
   fixtureMembers?: NamiMember[];
 }): MemberDirectoryItem[] {
-  if (input.loadState === 'loading') {
-    return [];
-  }
-
   if (input.liveMembers.length > 0) {
     return input.liveMembers.map((member) => ({
       member,

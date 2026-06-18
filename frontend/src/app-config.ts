@@ -89,18 +89,14 @@ export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): bo
 /** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */
 export function shouldUseFixtureCatalogFallback(
   liveItemCount: number,
-  loadState: 'idle' | 'loading' | 'ready' | 'error',
+  _loadState: 'idle' | 'loading' | 'ready' | 'error',
   config: AppConfig = readAppConfig()
 ): boolean {
   if (liveItemCount > 0) {
     return false;
   }
 
-  if (!shouldUseDevFixtures(config)) {
-    return false;
-  }
-
-  return loadState !== 'loading';
+  return shouldUseDevFixtures(config);
 }
 
 /** Local mock checkout and provider simulation (dev only, never in test launch). */

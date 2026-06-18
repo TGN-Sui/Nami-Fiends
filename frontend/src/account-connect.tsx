@@ -37,7 +37,7 @@ export function AccountConnectSection(): ReactElement {
             {source === 'zklogin'
               ? 'Signed in with your connected account.'
               : source === 'demo'
-                ? 'Preview session active for local demo reads.'
+                ? 'Preview session active.'
                 : 'Account linked and ready.'}
           </p>
           <button

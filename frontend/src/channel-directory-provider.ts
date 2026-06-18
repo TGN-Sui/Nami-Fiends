@@ -142,10 +142,6 @@ export function resolveChannelDirectory(input: {
   liveQueryEnabled: boolean;
   fixtureChannels?: NamiChannel[];
 }): ChannelDirectoryItem[] {
-  if (input.loadState === 'loading') {
-    return [];
-  }
-
   const fixtureChannels = input.fixtureChannels ?? seedChannels;
 
   if (input.liveRankings.length > 0) {
