@@ -14,17 +14,11 @@ import { useProtocolOwner, type ProtocolOwnerSource } from './wallet.js';
 
 export type ProtocolLoadState = 'idle' | 'loading' | 'ready' | 'error';
 
-export function protocolConnectHint(): string {
-  return 'Connect a wallet, zkLogin, or set VITE_NAMI_DEMO_OWNER to load protocol data.';
-}
-
-export function protocolChainHint(): string {
-  return 'Configure VITE_NAMI_PACKAGE_ID to load on-chain protocol reads.';
-}
-
-export function protocolIndexerHint(): string {
-  return 'Configure VITE_NAMI_INDEXER_URL to load indexed protocol projections.';
-}
+export {
+  protocolChainHint,
+  protocolConnectHint,
+  protocolIndexerHint,
+} from './protocol-availability.js';
 
 interface ProtocolQueryOptions {
   requiresChain?: boolean;

@@ -18,6 +18,7 @@ import {
 } from 'react';
 
 import { getConfiguredNetwork } from './nami.js';
+import { resolveProtocolConnectionState } from './protocol-availability.js';
 import { readDemoOwner } from './protocol-env.js';
 import { getProtocolContext, type ProtocolContext, type ProtocolDataMode } from './protocol.js';
 import {
@@ -189,29 +190,7 @@ export function protocolOwnerStatusLabel(
   owner: string | null,
   source: ProtocolOwnerSource
 ): string {
-  if (!context.chain) {
-    return 'Preview mode — live profile sync unavailable';
-  }
-
-  if (!owner) {
-    return 'Sign in from Settings to sync your passport and badges';
-  }
-
-  const parts = ['Profile sync active'];
-
-  if (source === 'wallet') {
-    parts.push(`account ${owner.slice(0, 10)}…`);
-  } else if (source === 'zklogin') {
-    parts.push(`account ${owner.slice(0, 10)}…`);
-  } else if (source === 'demo') {
-    parts.push(`preview ${owner.slice(0, 10)}…`);
-  }
-
-  if (context.indexerUrl) {
-    parts.push('activity feed connected');
-  }
-
-  return parts.join(' · ');
+  return resolveProtocolConnectionState(context, owner, source).detail;
 }
 
 export function useWalletDisconnect(): () => Promise<void> {

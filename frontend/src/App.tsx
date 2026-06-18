@@ -187,9 +187,22 @@ import { triggerHubSpotlightBurst } from './hub-spotlight.js';
 import { IgniteRadioDock } from './IgniteRadioDock.js';
 import { saveIgniteRadioEnabled, useIgniteRadioEnabled } from './ignite-radio-store.js';
 import {
-  protocolOwnerStatusLabel,
-  useProtocolOwner,
-} from './wallet.js';
+  readMemberPreference,
+  saveMemberPreference,
+} from './member-preference-store.js';
+import { ProtocolStatusBar } from './ProtocolStatusBar.js';
+import {
+  clearSafetyActions,
+  clearSafetyReports,
+  readSafetyActions,
+  readSafetyReports,
+  saveSafetyAction,
+  saveSafetyReport,
+  saveSafetyReports,
+  type SafetyActionRecord,
+  type SafetyReport,
+} from './safety-report-store.js';
+import { useProtocolOwner } from './wallet.js';
 
 function signalClass(signal: ConductSignal): string {
   return 'signal-ring signal-' + signal.toLowerCase();
@@ -3950,32 +3963,7 @@ function ChannelProfile(props: {
   );
 }
 
-type MemberPreferenceState = {
-  muted: boolean;
-  blocked: boolean;
-};
 
-type SafetyReport = {
-  id: string;
-  source: 'message' | 'member';
-  targetId: string;
-  targetName: string;
-  reason: string;
-  channelName: string;
-  createdAt: string;
-  status: 'Queued' | 'Reviewing' | 'Warned' | 'Timed Out' | 'Escalated' | 'Resolved';
-};
-
-type SafetyActionRecord = {
-  id: string;
-  reportId: string;
-  targetId: string;
-  targetName: string;
-  action: 'Review' | 'Warn' | 'Timeout' | 'Escalate' | 'Resolve' | 'Signal Review';
-  note: string;
-  channelName: string;
-  createdAt: string;
-};
 
 function readMemberSignalReviews(): Record<string, NamiChannel['signal']> {
   try {
@@ -4068,116 +4056,6 @@ function censorAdultLanguage(content: string): string {
 
     return censoredContent.replace(termPattern, (match) => '•'.repeat(Math.max(4, match.length)));
   }, content);
-}
-
-function readMemberPreference(memberId: string): MemberPreferenceState {
-  try {
-    const savedPreference = window.localStorage.getItem('nami-member-preferences-' + memberId);
-
-    if (!savedPreference) {
-      return {
-        muted: false,
-        blocked: false
-      };
-    }
-
-    const parsedPreference = JSON.parse(savedPreference);
-
-    return {
-      muted: Boolean(parsedPreference.muted),
-      blocked: Boolean(parsedPreference.blocked)
-    };
-  } catch {
-    return {
-      muted: false,
-      blocked: false
-    };
-  }
-}
-
-function readSafetyReports(): SafetyReport[] {
-  try {
-    const savedReports = window.localStorage.getItem('nami-safety-reports');
-
-    if (!savedReports) {
-      return [];
-    }
-
-    const parsedReports = JSON.parse(savedReports);
-
-    if (!Array.isArray(parsedReports)) {
-      return [];
-    }
-
-    return parsedReports.filter((report): report is SafetyReport => {
-      return (
-        typeof report === 'object' &&
-        report !== null &&
-        typeof report.id === 'string' &&
-        typeof report.targetId === 'string' &&
-        typeof report.targetName === 'string'
-      );
-    });
-  } catch {
-    return [];
-  }
-}
-
-function saveSafetyReports(reports: SafetyReport[]): void {
-  window.localStorage.setItem('nami-safety-reports', JSON.stringify(reports));
-}
-
-function readSafetyActions(): SafetyActionRecord[] {
-  try {
-    const savedActions = window.localStorage.getItem('nami-safety-actions');
-
-    if (!savedActions) {
-      return [];
-    }
-
-    const parsedActions = JSON.parse(savedActions);
-
-    if (!Array.isArray(parsedActions)) {
-      return [];
-    }
-
-    return parsedActions.filter((action): action is SafetyActionRecord => {
-      return (
-        typeof action === 'object' &&
-        action !== null &&
-        typeof action.id === 'string' &&
-        typeof action.reportId === 'string' &&
-        typeof action.targetId === 'string'
-      );
-    });
-  } catch {
-    return [];
-  }
-}
-
-function saveSafetyAction(action: Omit<SafetyActionRecord, 'id' | 'createdAt'>): void {
-  const nextAction: SafetyActionRecord = {
-    ...action,
-    id: 'action-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
-    createdAt: new Date().toLocaleString()
-  };
-
-  window.localStorage.setItem(
-    'nami-safety-actions',
-    JSON.stringify([nextAction, ...readSafetyActions()])
-  );
-}
-
-function saveSafetyReport(report: Omit<SafetyReport, 'id' | 'createdAt' | 'status'>): void {
-  const nextReport: SafetyReport = {
-    ...report,
-    id: 'report-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
-    createdAt: new Date().toLocaleString(),
-    status: 'Queued'
-  };
-
-  const reports = readSafetyReports();
-  window.localStorage.setItem('nami-safety-reports', JSON.stringify([nextReport, ...reports]));
 }
 
 function GameChat(props: {
@@ -4715,14 +4593,10 @@ function MemberProfileScreen(props: {
   function savePreference(nextMuted: boolean, nextBlocked: boolean): void {
     setIsMuted(nextMuted);
     setIsBlocked(nextBlocked);
-
-    window.localStorage.setItem(
-      preferenceStorageKey,
-      JSON.stringify({
-        muted: nextMuted,
-        blocked: nextBlocked
-      })
-    );
+    saveMemberPreference(props.member.id, {
+      muted: nextMuted,
+      blocked: nextBlocked,
+    });
   }
 
   function reportMember(): void {
@@ -5109,12 +4983,12 @@ function SafetyCenterScreen(props: {
   }
 
   function clearReports(): void {
-    window.localStorage.setItem('nami-safety-reports', JSON.stringify([]));
+    clearSafetyReports();
     setRefreshKey((value) => value + 1);
   }
 
   function clearActions(): void {
-    window.localStorage.setItem('nami-safety-actions', JSON.stringify([]));
+    clearSafetyActions();
     setRefreshKey((value) => value + 1);
   }
 
@@ -6371,17 +6245,6 @@ function UserProfileScreen(props: {
 
       <ProtocolStatusBar />
     </>
-  );
-}
-
-function ProtocolStatusBar(): ReactElement {
-  const { owner, source, context, mode } = useProtocolOwner();
-
-  return (
-    <div className="protocol-status-bar is-protocol-site-footer">
-      <span className="mini-badge">{mode === 'live' && owner ? 'Protocol' : 'Mock'}</span>
-      <p>{protocolOwnerStatusLabel(context, owner, source)}</p>
-    </div>
   );
 }
 

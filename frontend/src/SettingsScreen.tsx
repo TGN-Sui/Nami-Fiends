@@ -10,7 +10,12 @@ import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
-import { protocolOwnerStatusLabel, useProtocolOwner } from './wallet.js';
+import {
+  countBlockedMembers,
+  countMutedMembers,
+} from './member-preference-store.js';
+import { ProtocolStatusBar } from './ProtocolStatusBar.js';
+import { readSafetyReportCount } from './safety-report-store.js';
 import { getSelfMember } from './member-access.js';
 import {
   canConfigureEmbeddedFeedSurface,
@@ -114,40 +119,7 @@ function saveSelectedChannelBrandColor(color: string): void {
   window.localStorage.setItem('nami-selected-channel-brand-color', color);
 }
 
-function readMemberPreference(memberId: string): { muted: boolean; blocked: boolean } {
-  try {
-    const savedPreference = window.localStorage.getItem('nami-member-preferences-' + memberId);
 
-    if (!savedPreference) {
-      return { muted: false, blocked: false };
-    }
-
-    const parsedPreference = JSON.parse(savedPreference);
-
-    return {
-      muted: Boolean(parsedPreference.muted),
-      blocked: Boolean(parsedPreference.blocked),
-    };
-  } catch {
-    return { muted: false, blocked: false };
-  }
-}
-
-function readSafetyReportCount(): number {
-  try {
-    const savedReports = window.localStorage.getItem('nami-safety-reports');
-
-    if (!savedReports) {
-      return 0;
-    }
-
-    const parsedReports = JSON.parse(savedReports);
-
-    return Array.isArray(parsedReports) ? parsedReports.length : 0;
-  } catch {
-    return 0;
-  }
-}
 
 function SurfaceRoleSettingsPanel(): ReactElement {
   const selfMember = getSelfMember();
@@ -317,17 +289,6 @@ function ChannelBrandPalettePanel(props: {
   );
 }
 
-function SettingsProtocolStatusBar(): ReactElement {
-  const { owner, source, context, mode } = useProtocolOwner();
-
-  return (
-    <div className="protocol-status-bar is-protocol-site-footer">
-      <span className="mini-badge">{mode === 'live' && owner ? 'Protocol' : 'Mock'}</span>
-      <p>{protocolOwnerStatusLabel(context, owner, source)}</p>
-    </div>
-  );
-}
-
 export function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
   onOpenMember?: (member: NamiMember) => void;
@@ -335,8 +296,9 @@ export function SettingsScreen(props: {
   const [activeSection, setActiveSection] = useState<SettingsSection>(
     () => consumeSettingsSectionFocus() ?? 'overview'
   );
-  const mutedCount = members.filter((member) => readMemberPreference(member.id).muted).length;
-  const blockedCount = members.filter((member) => readMemberPreference(member.id).blocked).length;
+  const memberIds = members.map((member) => member.id);
+  const mutedCount = countMutedMembers(memberIds);
+  const blockedCount = countBlockedMembers(memberIds);
   const reportCount = readSafetyReportCount();
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
@@ -560,7 +522,7 @@ export function SettingsScreen(props: {
         ) : null}
       </section>
 
-      <SettingsProtocolStatusBar />
+      <ProtocolStatusBar />
     </div>
   );
 }
