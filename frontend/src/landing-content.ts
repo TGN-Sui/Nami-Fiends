@@ -18,7 +18,7 @@ export const LANDING_HERO = {
     'Nami is where your reputation, squads, guilds, events, chats, and achievements stay with you ' +
     'instead of resetting every time a new Chat App, launcher, or season drops.',
   trustNote:
-    'Paid tiers unlock slots and tools. Verification and trust come from proofs, conduct, and moderation, never from a subscription.',
+    'Your passport proves you\'re the same gamer everywhere. What top guilds and leaderboards need before they trust a name.',
 };
 
 export const LANDING_SCENARIOS: LandingScenario[] = [
