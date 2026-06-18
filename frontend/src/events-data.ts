@@ -16,6 +16,9 @@ export type NamiEvent = {
   guildId?: string;
   guildName?: string;
   subscribed?: boolean;
+  startsAtUtc?: string;
+  durationMinutes?: number;
+  createdByMemberId?: string;
 };
 
 export const officialNamiHubEvents: NamiEvent[] = [

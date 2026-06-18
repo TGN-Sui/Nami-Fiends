@@ -29,3 +29,20 @@ export function formatGoonCoinTypeLabel(coinType: string): string {
 
   return coinType.slice(0, 18) + '…' + coinType.slice(-16);
 }
+
+export const GOON_QUICK_BUY_AMOUNTS = [10, 25, 50, 100] as const;
+
+export const GOON_DEFAULT_BUY_AMOUNT = 25;
+
+export function buildGoonSwapUrl(coinType: string = readConfiguredGoonCoinType()): string {
+  const fromEnv = import.meta.env.VITE_NAMI_GOON_SWAP_URL;
+
+  if (typeof fromEnv === 'string' && fromEnv.trim().length > 0) {
+    return fromEnv.trim();
+  }
+
+  const output = encodeURIComponent(coinType);
+  const input = encodeURIComponent('0x2::sui::SUI');
+
+  return 'https://aftermath.finance/trade?input=' + input + '&output=' + output;
+}

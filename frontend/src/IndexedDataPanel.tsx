@@ -30,7 +30,7 @@ export function IndexedDataPanel(): ReactElement {
   const [activeTab, setActiveTab] = useState<IndexedTabId>('identity');
 
   return (
-    <article className="panel settings-indexed-data-panel">
+    <article className="panel settings-indexed-data-panel settings-section-wide">
       <div className="profile-panel-heading">
         <h2>Indexed Data</h2>
         <p>All synced profile, channel, and safety reads in one place.</p>

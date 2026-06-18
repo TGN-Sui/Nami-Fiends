@@ -2,29 +2,32 @@ import { type CSSProperties, type ReactElement } from 'react';
 
 import { memberRainbowBorderClass } from './channel-surface.js';
 import { MemberStreamingLiveDot, signalClass } from './member-avatar.js';
-import { useSelfAvatarImageUrl, useSelfMember } from './member-avatar-store.js';
+import { resolveMemberAvatarImageUrl, useSelfMember } from './member-avatar-store.js';
 import { useMemberStreamingOnline } from './member-online-store.js';
 
 type PinnedProfileAvatarProps = {
   level: number;
 };
 
-function pinnedAvatarBackground(avatarImageUrl: string | null): CSSProperties | undefined {
+function pinnedAvatarStyle(avatarImageUrl: string | null): CSSProperties {
   if (!avatarImageUrl) {
-    return undefined;
+    return {
+      '--member-avatar-image': 'none',
+      '--member-avatar-image-opacity': '0',
+    } as CSSProperties;
   }
 
+  const cssUrl = 'url("' + avatarImageUrl.replace(/"/g, '\\u0022') + '")';
+
   return {
-    backgroundImage: 'url(' + JSON.stringify(avatarImageUrl) + ')',
-    backgroundPosition: 'center',
-    backgroundSize: 'cover',
-    backgroundRepeat: 'no-repeat',
-  };
+    '--member-avatar-image': cssUrl,
+    '--member-avatar-image-opacity': '1',
+  } as CSSProperties;
 }
 
 export function PinnedProfileAvatar(props: PinnedProfileAvatarProps): ReactElement {
   const member = useSelfMember();
-  const avatarImageUrl = useSelfAvatarImageUrl();
+  const avatarImageUrl = resolveMemberAvatarImageUrl(member);
   const isStreamingOnline = useMemberStreamingOnline(member.id);
 
   return (
@@ -38,16 +41,16 @@ export function PinnedProfileAvatar(props: PinnedProfileAvatarProps): ReactEleme
         className={
           'pinned-profile-avatar ' +
           signalClass(member.signal) +
-          (avatarImageUrl ? ' has-pinned-avatar-photo' : '') +
+          (avatarImageUrl ? ' has-pinned-avatar-photo has-member-avatar-image' : '') +
           memberRainbowBorderClass(member)
         }
-        style={pinnedAvatarBackground(avatarImageUrl)}
+        style={pinnedAvatarStyle(avatarImageUrl)}
       >
         {!avatarImageUrl ? (
           <span className="pinned-profile-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
         ) : null}
-        <strong className="pinned-profile-level-chip">{props.level}</strong>
       </div>
+      <strong className="pinned-profile-level-chip">{props.level}</strong>
       <MemberStreamingLiveDot memberId={member.id} />
     </div>
   );

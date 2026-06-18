@@ -1,3 +1,4 @@
+import type { GuildCardView, SquadCardView } from './protocol.js';
 import { getSelfMember } from './member-access.js';
 import { members, type NamiMember } from './uiMockData.js';
 
@@ -65,6 +66,13 @@ export const namiGuilds: NamiGuildRecord[] = [
     name: 'Builder League',
     ownerMemberId: 'm4',
     memberIds: ['m4'],
+    isPublic: true,
+  },
+  {
+    id: 'guild-passport-showcase',
+    name: 'Nami Passport Showcase',
+    ownerMemberId: 'm1',
+    memberIds: ['m1', 'm2', 'm3', 'm4', 'm6', 'm7', 'm8', 'm9'],
     isPublic: true,
   },
 ];
@@ -136,4 +144,104 @@ export function selfInvitableGuilds(): NamiGuildRecord[] {
   const selfId = getSelfMember().id;
 
   return namiGuilds.filter((guild) => canMemberInviteToGuild(selfId, guild));
+}
+
+export function guildById(guildId: string): NamiGuildRecord | undefined {
+  return namiGuilds.find((guild) => guild.id === guildId);
+}
+
+export function squadById(squadId: string): NamiSquadRecord | undefined {
+  return namiSquads.find((squad) => squad.id === squadId);
+}
+
+export function guildByIdOrName(guildId: string, guildName?: string): NamiGuildRecord | undefined {
+  return (
+    guildById(guildId) ??
+    (guildName ? guildByName(guildName) : undefined) ??
+    namiGuilds.find((guild) => guild.name.toLowerCase() === guildId.toLowerCase())
+  );
+}
+
+export function squadByIdOrName(squadId: string, squadName?: string): NamiSquadRecord | undefined {
+  return (
+    squadById(squadId) ??
+    (squadName ? squadByName(squadName) : undefined) ??
+    namiSquads.find((squad) => squad.name.toLowerCase() === squadId.toLowerCase())
+  );
+}
+
+function syntheticGuildMemberIds(memberCount: number, seed: string): string[] {
+  const normalizedCount = Math.max(1, Math.min(memberCount, members.length));
+  const seedOffset = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+  return members.slice(0, normalizedCount).map((member, index) => {
+    const rotatedIndex = (index + seedOffset) % members.length;
+
+    return members[rotatedIndex]!.id;
+  });
+}
+
+export function resolveGuildFromCard(card: GuildCardView): NamiGuildRecord {
+  const existing =
+    guildById(card.id) ??
+    guildByName(card.title) ??
+    namiGuilds.find((guild) => guild.name.toLowerCase() === card.title.toLowerCase());
+
+  if (existing) {
+    return existing;
+  }
+
+  return {
+    id: card.id,
+    name: card.title,
+    ownerMemberId: members[0]?.id ?? 'm1',
+    memberIds: syntheticGuildMemberIds(card.memberCount, card.id),
+    isPublic: card.isPublic,
+  };
+}
+
+export function resolveSquadFromCard(card: SquadCardView): NamiSquadRecord {
+  const existing =
+    squadById(card.id) ??
+    squadByName(card.name) ??
+    namiSquads.find((squad) => squad.name.toLowerCase() === card.name.toLowerCase());
+
+  if (existing) {
+    return existing;
+  }
+
+  return {
+    id: card.id,
+    name: card.name,
+    memberIds: syntheticGuildMemberIds(card.memberCount, card.id),
+    maxSlots: card.maxSlots,
+  };
+}
+
+export function membersForGuild(guild: NamiGuildRecord): NamiMember[] {
+  const resolved = guild.memberIds
+    .map((memberId) => members.find((member) => member.id === memberId))
+    .filter((member): member is NamiMember => Boolean(member));
+
+  if (resolved.length > 0) {
+    return resolved;
+  }
+
+  return members.slice(0, Math.max(1, guild.memberIds.length));
+}
+
+export function membersForSquad(squad: NamiSquadRecord): NamiMember[] {
+  const resolved = squad.memberIds
+    .map((memberId) => members.find((member) => member.id === memberId))
+    .filter((member): member is NamiMember => Boolean(member));
+
+  if (resolved.length > 0) {
+    return resolved;
+  }
+
+  return members.slice(0, Math.max(1, squad.memberIds.length));
+}
+
+export function guildsForSelfMember(): NamiGuildRecord[] {
+  return guildsForMember(getSelfMember().id);
 }

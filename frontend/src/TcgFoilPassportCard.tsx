@@ -238,6 +238,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           : 'nami-profile-card-shell-vertical is-uniform-vertical-passport') +
         (passportInteractive ? ' is-tcg-foil-eligible' : '') +
         (isClickable ? ' is-clickable-passport' : '') +
+        (isNamiTeamMember(props.member) ? ' is-nami-official-galaxy-passport' : '') +
         (tierFoilClass ? ' ' + tierFoilClass : '') +
         (tierSurfaceClass ? ' ' + tierSurfaceClass : '')
       }
@@ -268,6 +269,12 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         }
         ref={profileCardFrameRef}
       >
+        {isNamiTeamMember(props.member) ? (
+          <div aria-hidden="true" className="nami-official-galaxy-sky">
+            <span className="nami-official-galaxy-shooting-star" />
+          </div>
+        ) : null}
+
         <div className="nami-profile-card-header">
           <span className="mini-badge">
             {isNamiTeamMember(props.member) ? 'Official Nami Team Passport' : 'Nami Passport'}

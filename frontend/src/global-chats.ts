@@ -56,7 +56,7 @@ export const hubGlobalChats: GlobalChatRoom[] = [
     id: 'global-lfg-arena',
     title: 'Looking For Group',
     kind: 'temporary',
-    createdBy: 'Nozomi',
+    createdBy: 'Robbos',
     creatorVerified: true,
     activeMembers: 186,
     voiceEnabled: true,
@@ -191,7 +191,7 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
     {
       id: 'og1',
       time: '14:02',
-      author: 'Nozomi',
+      author: 'Robbos',
       signal: 'Green',
       body: 'Welcome to the official global lounge — say hi!',
     },
@@ -200,7 +200,7 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
       time: '14:03',
       author: 'DeadlySin',
       signal: 'Orange',
-      body: 'LFG for ranked runs tonight @Nozomi — voice room is open.',
+      body: 'LFG for ranked runs tonight @Robbos — voice room is open.',
     },
     {
       id: 'og3',
@@ -310,6 +310,88 @@ export const userCollectedBadges: CollectedBadge[] = mapBadgeNames(
   [...userProfile.ownedBadges, ...EXTRA_BADGE_NAMES],
   'self'
 );
+
+export type CollectedTitle = {
+  id: string;
+  name: string;
+};
+
+export type CosmeticKind = 'frame' | 'theme' | 'ring';
+
+export type CollectedCosmetic = {
+  id: string;
+  name: string;
+  kind: CosmeticKind;
+};
+
+function cosmeticKindFromName(name: string): CosmeticKind {
+  const normalized = name.toLowerCase();
+
+  if (normalized.includes('theme')) {
+    return 'theme';
+  }
+
+  if (normalized.includes('ring')) {
+    return 'ring';
+  }
+
+  return 'frame';
+}
+
+function mapCollectedTitles(names: string[], idPrefix: string): CollectedTitle[] {
+  return names.map((name, index) => ({
+    id: idPrefix + '-title-' + index,
+    name,
+  }));
+}
+
+function mapCollectedCosmetics(names: string[], idPrefix: string): CollectedCosmetic[] {
+  return names.map((name, index) => ({
+    id: idPrefix + '-cosmetic-' + index,
+    name,
+    kind: cosmeticKindFromName(name),
+  }));
+}
+
+export const userCollectedTitles: CollectedTitle[] = mapCollectedTitles(userProfile.titles, 'self');
+
+export const userCollectedCosmetics: CollectedCosmetic[] = mapCollectedCosmetics(
+  userProfile.cosmetics,
+  'self'
+);
+
+export function collectedTitlesForMember(member: NamiMember): CollectedTitle[] {
+  if (isSelfMember(member.id)) {
+    return userCollectedTitles;
+  }
+
+  const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));
+
+  return mapCollectedTitles(
+    userProfile.titles.slice(memberIndex % userProfile.titles.length),
+    member.id
+  );
+}
+
+export function collectedCosmeticsForMember(member: NamiMember): CollectedCosmetic[] {
+  if (isSelfMember(member.id)) {
+    return userCollectedCosmetics;
+  }
+
+  const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));
+
+  return mapCollectedCosmetics(
+    userProfile.cosmetics.slice(memberIndex % userProfile.cosmetics.length),
+    member.id
+  );
+}
+
+export function cosmeticsForKind(
+  cosmetics: CollectedCosmetic[],
+  kind: CosmeticKind
+): CollectedCosmetic[] {
+  return cosmetics.filter((entry) => entry.kind === kind);
+}
 
 export function collectedBadgesForMember(member: NamiMember): CollectedBadge[] {
   if (isSelfMember(member.id)) {

@@ -5,6 +5,11 @@ import {
   nodenameValidationMessage,
   normalizeNodename,
 } from './onboarding-draft.js';
+import {
+  buildClaimNodename,
+  NAMI_CLAIM_HANDLE_PREFIX,
+  nodenameSuffixFromFull,
+} from './member-public-chat.js';
 import { getOnboardingMethodLabel, type OnboardingMethod } from './onboarding.js';
 import { useMemberSession } from './member-session-store.js';
 import {
@@ -21,18 +26,21 @@ export function PassportClaimSettingsPanel(): ReactElement {
   const { userClaimStatus } = useNamiAdminStore();
 
   const [method, setMethod] = useState<OnboardingMethod>('zklogin');
-  const [nodename, setNodename] = useState(userClaimStatus.nodename);
+  const [nodenameSuffix, setNodenameSuffix] = useState(() =>
+    nodenameSuffixFromFull(userClaimStatus.nodename)
+  );
+  const claimNodename = buildClaimNodename(nodenameSuffix);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
 
-  const nodenameError = nodenameValidationMessage(nodename);
+  const nodenameError = nodenameValidationMessage(claimNodename);
   const claimPending = userClaimStatus.status === 'pending';
   const claimApproved = userClaimStatus.status === 'approved';
   const claimRejected = userClaimStatus.status === 'rejected';
 
   useEffect(() => {
     if (userClaimStatus.nodename) {
-      setNodename(userClaimStatus.nodename);
+      setNodenameSuffix(nodenameSuffixFromFull(userClaimStatus.nodename));
     }
   }, [userClaimStatus.nodename]);
 
@@ -67,7 +75,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
       return;
     }
 
-    if (!isValidNodename(nodename)) {
+    if (!isValidNodename(claimNodename)) {
       setClaimError(nodenameError ?? 'Choose a valid nodename.');
       return;
     }
@@ -79,7 +87,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
     submitNodenameClaim({
       email: session.email,
       displayName: session.displayName,
-      nodename: normalizeNodename(nodename),
+      nodename: normalizeNodename(claimNodename),
       archetype: session.archetype,
       archetypeLabel: session.archetypeLabel,
       flavorBadgeId: session.flavorBadgeId,
@@ -164,20 +172,28 @@ export function PassportClaimSettingsPanel(): ReactElement {
         </div>
       ) : null}
 
-      <label className="onboarding-field">
+      <label className="onboarding-field passport-claim-handle-field">
         <span>Nodename</span>
-        <input
-          disabled={claimPending || claimApproved}
-          maxLength={24}
-          onChange={(event) => setNodename(event.target.value)}
-          placeholder="your_handle"
-          type="text"
-          value={nodename}
-        />
-        {nodenameError && nodename.trim() !== '' ? (
+        <div className="passport-claim-handle-input-row">
+          <span aria-hidden="true" className="passport-claim-handle-prefix">
+            @{NAMI_CLAIM_HANDLE_PREFIX}
+          </span>
+          <input
+            aria-label="Nodename suffix after @nami"
+            disabled={claimPending || claimApproved}
+            maxLength={20}
+            onChange={(event) => setNodenameSuffix(event.target.value)}
+            placeholder="your_handle"
+            type="text"
+            value={nodenameSuffix}
+          />
+        </div>
+        {nodenameError && nodenameSuffix.trim() !== '' ? (
           <small className="onboarding-field-error">{nodenameError}</small>
         ) : (
-          <small className="protocol-hint">Your stable @handle — reviewed once by Nami Official.</small>
+          <small className="protocol-hint">
+            @{NAMI_CLAIM_HANDLE_PREFIX} is reserved for every claim. Add your unique suffix after it.
+          </small>
         )}
       </label>
 
@@ -205,7 +221,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
           !session ||
           claimPending ||
           claimApproved ||
-          !isValidNodename(nodename)
+          !isValidNodename(claimNodename)
         }
         onClick={handleSubmitClaim}
         type="button"

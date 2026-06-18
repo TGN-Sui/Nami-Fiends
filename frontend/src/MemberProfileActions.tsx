@@ -1,6 +1,7 @@
 import { useSignAndExecuteTransaction, useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
+import { GoonQuickBuy } from './GoonQuickBuy.js';
 import { isMemberVerified } from './member-access.js';
 import { guildMaxMembers, guildMemberCount } from './nami-affiliations.js';
 import {
@@ -9,9 +10,8 @@ import {
   sendGuildInvite,
   useGuildInvites,
 } from './guild-invites-store.js';
-import { recordGoonPurchase, recordGoonTip, totalTipsReceived } from './goon-tips-store.js';
+import { recordGoonTip, totalTipsReceived } from './goon-tips-store.js';
 import {
-  formatGoonCoinTypeLabel,
   goonAmountToBaseUnits,
   NAMI_GOON_SYMBOL,
   readConfiguredGoonCoinType,
@@ -42,7 +42,6 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
   const [goonAmount, setGoonAmount] = useState('25');
   const [goonStatus, setGoonStatus] = useState<string | null>(null);
-  const [goonBalance, setGoonBalance] = useState<string | null>(null);
   const [goonCoinType, setGoonCoinType] = useState(readConfiguredGoonCoinType());
   const [tipTreasuryAddress, setTipTreasuryAddress] = useState<string | null>(null);
   const [goonLoading, setGoonLoading] = useState(false);
@@ -71,23 +70,6 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
       });
   }, []);
 
-  useEffect(() => {
-    if (!walletAccount?.address || activePanel !== 'buy') {
-      return;
-    }
-
-    void suiClient
-      .getBalance({
-        owner: walletAccount.address,
-        coinType: goonCoinType,
-      })
-      .then((balance) => {
-        const whole = Number(balance.totalBalance) / 10 ** 9;
-        setGoonBalance(whole.toLocaleString(undefined, { maximumFractionDigits: 4 }));
-      })
-      .catch(() => setGoonBalance(null));
-  }, [activePanel, goonCoinType, suiClient, walletAccount?.address]);
-
   if (!showInvite && !showBuy && !showTip) {
     return null;
   }
@@ -109,51 +91,6 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
 
     setInviteStatus('Invite sent to ' + props.member.name + ' for ' + guild.name + '.');
     setActivePanel(null);
-  }
-
-  async function buyGoon(): Promise<void> {
-    const amount = Number(goonAmount);
-
-    if (!walletAccount?.address) {
-      setGoonStatus('Connect your Sui wallet to buy ' + NAMI_GOON_SYMBOL + '.');
-      return;
-    }
-
-    setGoonLoading(true);
-    setGoonStatus(null);
-
-    try {
-      const balance = await suiClient.getBalance({
-        owner: walletAccount.address,
-        coinType: goonCoinType,
-      });
-      const whole = Number(balance.totalBalance) / 10 ** 9;
-
-      const result = recordGoonPurchase(amount);
-
-      if (!result.ok) {
-        setGoonStatus(result.reason);
-        return;
-      }
-
-      setGoonBalance(whole.toLocaleString(undefined, { maximumFractionDigits: 4 }));
-      setGoonStatus(
-        'Buying ' +
-          NAMI_GOON_SYMBOL +
-          ' uses token ' +
-          goonCoinType +
-          '. Wallet balance: ' +
-          whole.toLocaleString(undefined, { maximumFractionDigits: 4 }) +
-          ' ' +
-          NAMI_GOON_SYMBOL +
-          '. Swap on Sui using this coin type to top up.'
-      );
-      setActivePanel(null);
-    } catch (error) {
-      setGoonStatus(error instanceof Error ? error.message : 'Could not read ' + NAMI_GOON_SYMBOL + ' balance.');
-    } finally {
-      setGoonLoading(false);
-    }
   }
 
   async function tipGoon(): Promise<void> {
@@ -301,32 +238,17 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
         </div>
       ) : null}
 
-      {activePanel === 'buy' || activePanel === 'tip' ? (
-        <div className="member-profile-action-panel">
-          <p>
-            {activePanel === 'buy'
-              ? 'Buy ' +
-                NAMI_GOON_SYMBOL +
-                ' on Sui using the canonical token type below. Your wallet balance refreshes when you continue.'
-              : 'Send ' +
-                NAMI_GOON_SYMBOL +
-                ' from your connected, verified wallet to ' +
-                props.member.name +
-                '.'}
-          </p>
-          <div className="member-profile-goon-token-row">
-            <span>Token</span>
-            <code title={goonCoinType}>{formatGoonCoinTypeLabel(goonCoinType)}</code>
-          </div>
-          {goonBalance !== null && activePanel === 'buy' ? (
-            <p className="member-profile-goon-balance">
-              Wallet balance: <strong>{goonBalance}</strong> {NAMI_GOON_SYMBOL}
-            </p>
-          ) : null}
+      {activePanel === 'buy' ? (
+        <GoonQuickBuy onClose={() => setActivePanel(null)} />
+      ) : null}
+
+      {activePanel === 'tip' ? (
+        <div className="member-profile-action-panel member-profile-tip-panel">
+          <p>Send {NAMI_GOON_SYMBOL} from your connected wallet to {props.member.name}.</p>
           <label className="member-profile-action-field">
             <span>Amount ({NAMI_GOON_SYMBOL})</span>
             <input
-              aria-label={activePanel === 'buy' ? 'GOON purchase amount' : 'GOON tip amount'}
+              aria-label="GOON tip amount"
               min="1"
               onChange={(event) => setGoonAmount(event.target.value)}
               type="number"
@@ -337,14 +259,10 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             <button
               className="primary-action"
               disabled={goonLoading}
-              onClick={() => void (activePanel === 'buy' ? buyGoon() : tipGoon())}
+              onClick={() => void tipGoon()}
               type="button"
             >
-              {goonLoading
-                ? 'Waiting for wallet…'
-                : activePanel === 'buy'
-                  ? 'Check balance & buy'
-                  : 'Send tip'}
+              {goonLoading ? 'Waiting for wallet…' : 'Send tip'}
             </button>
           </div>
         </div>

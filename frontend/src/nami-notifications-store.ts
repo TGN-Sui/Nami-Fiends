@@ -111,6 +111,12 @@ export function useTagNotifications(): TagNotification[] {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+export function useUnreadTagNotificationCount(): number {
+  const notifications = useTagNotifications();
+
+  return notifications.filter((notification) => !notification.read).length;
+}
+
 export function readUnreadTagNotificationCount(): number {
   return readNotifications().filter((notification) => !notification.read).length;
 }
@@ -235,14 +241,14 @@ export function seedDemoTagNotifications(): void {
 
   const demoMessages = [
     {
-      body: 'LFG for ranked runs tonight @Nozomi — voice room is open.',
+      body: 'LFG for ranked runs tonight @Robbos — voice room is open.',
       authorName: 'DeadlySin',
       context: 'global' as const,
       contextLabel: 'Global Chat · Official Nami Global',
     },
     {
       body: 'Looking for members for tonight’s &Wave Raiders run. Ping @DeadlySin if you are in.',
-      authorName: 'Nozomi',
+      authorName: 'Robbos',
       context: 'channel' as const,
       contextLabel: 'Game Chat · FIENDS',
     },

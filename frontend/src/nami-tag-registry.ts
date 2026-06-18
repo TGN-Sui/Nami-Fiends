@@ -6,6 +6,9 @@ import {
   namiSquads,
   squadByName,
 } from './nami-affiliations.js';
+import { LEGACY_SELF_MEMBER_NAMES, SELF_MEMBER_ID } from './member-access.js';
+import { withMemberAvatar } from './member-avatar-store.js';
+import { withMemberProfile } from './member-profile-store.js';
 import { channels, developers, members } from './uiMockData.js';
 
 export type NamiTagKind = 'member' | 'channel' | 'studio' | 'dev' | 'squad' | 'guild';
@@ -36,12 +39,29 @@ function buildRegistry(): NamiTagTarget[] {
   const entries: NamiTagTarget[] = [];
 
   for (const member of members) {
+    const resolvedMember = withMemberProfile(withMemberAvatar(member));
+
     entries.push({
       kind: 'member',
-      id: member.id,
-      label: member.name,
+      id: resolvedMember.id,
+      label: resolvedMember.name,
       prefix: '@',
     });
+
+    if (resolvedMember.id === SELF_MEMBER_ID) {
+      for (const legacyName of LEGACY_SELF_MEMBER_NAMES) {
+        if (legacyName.toLowerCase() === resolvedMember.name.toLowerCase()) {
+          continue;
+        }
+
+        entries.push({
+          kind: 'member',
+          id: resolvedMember.id,
+          label: legacyName,
+          prefix: '@',
+        });
+      }
+    }
   }
 
   for (const channel of channels) {
@@ -123,12 +143,25 @@ function buildRegistry(): NamiTagTarget[] {
   return entries;
 }
 
+export function invalidateNamiTagRegistry(): void {
+  cachedRegistry = null;
+}
+
 export function readNamiTagRegistry(): NamiTagTarget[] {
   if (!cachedRegistry) {
     cachedRegistry = buildRegistry();
   }
 
   return cachedRegistry;
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('nami-self-profile-changed', () => {
+    invalidateNamiTagRegistry();
+  });
+  window.addEventListener('nami-self-avatar-changed', () => {
+    invalidateNamiTagRegistry();
+  });
 }
 
 export function lookupTagTarget(kind: NamiTagKind, label: string): NamiTagTarget | undefined {

@@ -20,6 +20,10 @@ export type SelfProfileEdits = {
   displayName: string;
   bio: string;
   badgeDisplay: string;
+  titleDisplay: string;
+  frameDisplay: string;
+  themeDisplay: string;
+  ringDisplay: string;
   preferredPlatforms: string[];
   preferredGenres: string[];
 };
@@ -28,6 +32,10 @@ const defaultProfileEdits = (): SelfProfileEdits => ({
   displayName: '',
   bio: '',
   badgeDisplay: '',
+  titleDisplay: '',
+  frameDisplay: '',
+  themeDisplay: '',
+  ringDisplay: '',
   preferredPlatforms: [],
   preferredGenres: [],
 });
@@ -46,6 +54,10 @@ export function readSelfProfileEdits(): SelfProfileEdits {
       displayName: typeof parsed.displayName === 'string' ? parsed.displayName : '',
       bio: typeof parsed.bio === 'string' ? parsed.bio : '',
       badgeDisplay: typeof parsed.badgeDisplay === 'string' ? parsed.badgeDisplay : '',
+      titleDisplay: typeof parsed.titleDisplay === 'string' ? parsed.titleDisplay : '',
+      frameDisplay: typeof parsed.frameDisplay === 'string' ? parsed.frameDisplay : '',
+      themeDisplay: typeof parsed.themeDisplay === 'string' ? parsed.themeDisplay : '',
+      ringDisplay: typeof parsed.ringDisplay === 'string' ? parsed.ringDisplay : '',
       preferredPlatforms: Array.isArray(parsed.preferredPlatforms)
         ? parsed.preferredPlatforms.filter((entry): entry is string => typeof entry === 'string')
         : [],

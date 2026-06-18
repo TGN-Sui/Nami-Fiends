@@ -11,6 +11,40 @@ function isValidPlatform(value: unknown): value is SocialEmbed['platform'] {
   return value === 'x' || value === 'twitch' || value === 'youtube';
 }
 
+function isDisallowedEmbedOverride(embedUrl: string): boolean {
+  try {
+    const parsed = new URL(embedUrl);
+    const host = parsed.hostname.toLowerCase();
+
+    if (typeof window !== 'undefined') {
+      const currentHost = window.location.hostname.toLowerCase();
+
+      if (host === currentHost) {
+        return true;
+      }
+
+      if (
+        (host === 'localhost' || host === '127.0.0.1') &&
+        (currentHost === 'localhost' || currentHost === '127.0.0.1')
+      ) {
+        return true;
+      }
+    }
+
+    return (
+      !host.includes('twitch.tv') &&
+      !host.includes('youtube.com') &&
+      !host.includes('youtu.be') &&
+      host !== 'platform.twitter.com' &&
+      host !== 'twitter.com' &&
+      host !== 'x.com' &&
+      host !== 'www.x.com'
+    );
+  } catch {
+    return true;
+  }
+}
+
 function normalizeEmbed(entry: Partial<SocialEmbed>, fallback: SocialEmbed): SocialEmbed {
   const next: SocialEmbed = {
     platform: isValidPlatform(entry.platform) ? entry.platform : fallback.platform,
@@ -31,7 +65,7 @@ function normalizeEmbed(entry: Partial<SocialEmbed>, fallback: SocialEmbed): Soc
       ? entry.embedUrl.trim()
       : fallback.embedUrl;
 
-  if (embedUrl !== undefined) {
+  if (embedUrl !== undefined && !isDisallowedEmbedOverride(embedUrl)) {
     next.embedUrl = embedUrl;
   }
 
@@ -109,6 +143,80 @@ export function subscribeEmbeddedFeedLinks(listener: () => void): () => void {
 
   return () => {
     window.removeEventListener('nami-embedded-feed-links-changed', onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
+
+const COLLAPSED_PREFIX = 'nami.embedded-feed.collapsed.';
+
+function collapsedStorageKey(surface: EmbeddedFeedSurface): string {
+  return COLLAPSED_PREFIX + surface;
+}
+
+export function embedCardKey(embed: SocialEmbed, index: number): string {
+  return embed.platform + ':' + index + ':' + embed.handle;
+}
+
+function readCollapsedMap(surface: EmbeddedFeedSurface): Record<string, boolean> {
+  try {
+    const stored = window.localStorage.getItem(collapsedStorageKey(surface));
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      return {};
+    }
+
+    return parsed as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
+
+export function isEmbedCollapsed(
+  surface: EmbeddedFeedSurface,
+  cardKey: string,
+  featured: boolean
+): boolean {
+  const stored = readCollapsedMap(surface)[cardKey];
+
+  if (stored !== undefined) {
+    return stored;
+  }
+
+  return !featured;
+}
+
+export function saveEmbedCollapsed(
+  surface: EmbeddedFeedSurface,
+  cardKey: string,
+  collapsed: boolean
+): void {
+  const next = {
+    ...readCollapsedMap(surface),
+    [cardKey]: collapsed,
+  };
+
+  window.localStorage.setItem(collapsedStorageKey(surface), JSON.stringify(next));
+  window.dispatchEvent(
+    new CustomEvent('nami-embedded-feed-collapsed-changed', { detail: { surface } })
+  );
+}
+
+export function subscribeEmbedCollapsed(listener: () => void): () => void {
+  function onChange(): void {
+    listener();
+  }
+
+  window.addEventListener('nami-embedded-feed-collapsed-changed', onChange);
+  window.addEventListener('storage', onChange);
+
+  return () => {
+    window.removeEventListener('nami-embedded-feed-collapsed-changed', onChange);
     window.removeEventListener('storage', onChange);
   };
 }

@@ -48,3 +48,13 @@ export function readIndexerUrl(): string | null {
 export function isValidProtocolOwner(owner: string | null | undefined): owner is string {
   return typeof owner === 'string' && owner.startsWith('0x');
 }
+
+export function readWalletAuthRequired(): boolean {
+  const value = import.meta.env.VITE_NAMI_REQUIRE_WALLET_AUTH;
+
+  if (value === undefined || value === '') {
+    return false;
+  }
+
+  return value.toLowerCase() === 'true' || value === '1';
+}

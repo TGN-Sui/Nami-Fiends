@@ -9,10 +9,29 @@ import { members, type NamiMember } from './uiMockData.js';
 
 export const PINNED_PROFILE_MODULE = 'Official Announcements';
 
+export const SELF_MEMBER_ID = 'm1';
+
+export const LEGACY_SELF_MEMBER_NAMES = ['Nozomi', 'NPC Gamer'] as const;
+
 export function getSelfMember(): NamiMember {
-  const baseMember = members.find((member) => member.id === 'm1') ?? members[0]!;
+  const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
 
   return applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)));
+}
+
+export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember = getSelfMember()): boolean {
+  const normalizedAuthor = authorName.trim().toLowerCase();
+  const normalizedSelfName = selfMember.name.trim().toLowerCase();
+
+  if (!normalizedAuthor) {
+    return false;
+  }
+
+  if (normalizedAuthor === normalizedSelfName) {
+    return true;
+  }
+
+  return LEGACY_SELF_MEMBER_NAMES.some((legacyName) => legacyName.toLowerCase() === normalizedAuthor);
 }
 
 export function isMemberVerified(member: NamiMember): boolean {
@@ -80,7 +99,7 @@ export function resolveMessageAuthorMember(
     return directMatch;
   }
 
-  if (message.author === selfMember.name || message.author === 'Nozomi') {
+  if (isSelfMessageAuthor(message.author, selfMember)) {
     return selfMember;
   }
 

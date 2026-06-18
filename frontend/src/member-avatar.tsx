@@ -65,6 +65,18 @@ function usesChatTierFoil(member: NamiMember, baseClass: string): boolean {
   return isChatTierFoilSurface(baseClass) && (member.tier === 'Pro' || member.tier === 'Elite');
 }
 
+function isChatAvatarFoilSweepEligible(
+  member: NamiMember,
+  baseClass: string,
+  signal: ConductSignal = member.signal
+): boolean {
+  if (usesChatTierFoil(member, baseClass)) {
+    return true;
+  }
+
+  return isMemberFoilEligible(member, signal);
+}
+
 function memberAvatarAssetVariables(member: NamiMember): CSSProperties {
   const avatarImageUrl = resolveMemberAvatarImageUrl(member);
 
@@ -89,8 +101,8 @@ function memberAvatarClass(
   baseClass: string,
   signal: ConductSignal = member.signal
 ): string {
-  const foilEligible = isMemberFoilEligible(member, signal);
   const chatTierFoil = usesChatTierFoil(member, baseClass);
+  const foilSweepEligible = isChatAvatarFoilSweepEligible(member, baseClass, signal);
 
   return (
     baseClass +
@@ -99,7 +111,7 @@ function memberAvatarClass(
     signalClass(signal) +
     (resolveMemberAvatarImageUrl(member) ? ' has-member-avatar-image' : '') +
     (chatTierFoil ? ' ' + memberTierSurfaceClass(member) : '') +
-    (foilEligible && !chatTierFoil ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame') +
+    (foilSweepEligible ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame') +
     memberRainbowBorderClass(member)
   );
 }
@@ -150,8 +162,7 @@ export function UniformMemberAvatar(props: {
   const member = withMemberProfile(withMemberAvatar(props.member));
   const signal = props.signal ?? member.signal;
   const baseClass = props.className ?? 'chat-member-avatar';
-  const chatTierFoil = usesChatTierFoil(member, baseClass);
-  const genericFoil = isMemberFoilEligible(member, signal) && !chatTierFoil;
+  const foilSweepEligible = isChatAvatarFoilSweepEligible(member, baseClass, signal);
 
   const isStreamingOnline = useMemberStreamingOnline(member.id);
 
@@ -166,7 +177,7 @@ export function UniformMemberAvatar(props: {
         style={memberAvatarAssetVariables(member)}
       >
         {tierFoilLayer(member, baseClass)}
-        {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
+        {foilSweepEligible ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
         {!resolveMemberAvatarImageUrl(member) ? (
           <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
         ) : null}
@@ -186,8 +197,7 @@ export function UniformMemberAvatarButton(props: {
   const member = withMemberProfile(withMemberAvatar(props.member));
   const signal = props.signal ?? member.signal;
   const baseClass = props.className ?? 'message-avatar message-avatar-button';
-  const chatTierFoil = usesChatTierFoil(member, baseClass);
-  const genericFoil = isMemberFoilEligible(member, signal) && !chatTierFoil;
+  const foilSweepEligible = isChatAvatarFoilSweepEligible(member, baseClass, signal);
 
   const isStreamingOnline = useMemberStreamingOnline(member.id);
 
@@ -204,7 +214,7 @@ export function UniformMemberAvatarButton(props: {
         type="button"
       >
         {tierFoilLayer(member, baseClass)}
-        {genericFoil ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
+        {foilSweepEligible ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
         {!resolveMemberAvatarImageUrl(member) ? (
           <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
         ) : null}

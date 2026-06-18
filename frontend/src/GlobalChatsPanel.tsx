@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -31,6 +39,7 @@ import {
   type GlobalChatRoom,
 } from './global-chats.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, userProfile, type NamiMember } from './uiMockData.js';
@@ -40,12 +49,16 @@ type GlobalChatsPanelProps = {
   tagHandlers?: TagNavigationHandlers;
 };
 
-function GlobalChatRoomView(props: {
+export function GlobalChatRoomView(props: {
   chat: GlobalChatRoom;
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
   onClose?: () => void;
   compact?: boolean;
+  showCompactHead?: boolean;
+  expandedAside?: ReactNode;
+  onChatExpandedChange?: (expanded: boolean) => void;
+  onChatEscape?: () => boolean | void;
 }): ReactElement {
   const selfMember = useSelfMember();
   const messageStore = useMessagesStore();
@@ -80,7 +93,7 @@ function GlobalChatRoomView(props: {
 
   return (
     <div className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}>
-      {props.compact ? (
+      {props.compact && props.showCompactHead !== false ? (
         <div className="global-chat-compact-head">
           <div className="global-chat-compact-title-row">
             <span className="global-chat-compact-mark">{props.chat.title.slice(0, 2).toUpperCase()}</span>
@@ -135,7 +148,11 @@ function GlobalChatRoomView(props: {
         </div>
       )}
 
-      <article className="chat-window chat-window-buildout">
+      <ChatWindowExpandable
+        {...(props.expandedAside ? { expandedAside: props.expandedAside } : {})}
+        {...(props.onChatExpandedChange ? { onExpandedChange: props.onChatExpandedChange } : {})}
+        {...(props.onChatEscape ? { onEscape: props.onChatEscape } : {})}
+      >
         {!props.compact ? (
           <div className="chat-window-heading">
             <div>
@@ -215,7 +232,7 @@ function GlobalChatRoomView(props: {
             </button>
           </div>
         ) : null}
-      </article>
+      </ChatWindowExpandable>
     </div>
   );
 }

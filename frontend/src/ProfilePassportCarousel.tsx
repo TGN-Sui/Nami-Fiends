@@ -6,6 +6,7 @@ type ProfilePassportCarouselProps = {
   activeSlide: 'passport' | 'badges';
   passportLayout?: 'vertical' | 'horizontal';
   sideRail?: ReactNode;
+  toolbar?: ReactNode;
 };
 
 export function ProfilePassportCarousel(props: ProfilePassportCarouselProps): ReactElement {
@@ -18,16 +19,22 @@ export function ProfilePassportCarousel(props: ProfilePassportCarouselProps): Re
       }
     >
       <div className="profile-passport-carousel-layout">
-        <div className="profile-passport-carousel-viewport">
-          {props.activeSlide === 'passport' ? (
-            <div className="profile-passport-carousel-slide is-active-profile-slide" role="tabpanel">
-              {props.passportView}
-            </div>
-          ) : (
-            <div className="profile-passport-carousel-slide is-active-profile-slide" role="tabpanel">
-              {props.badgeBookView}
-            </div>
-          )}
+        <div className="profile-passport-carousel-main">
+          {props.toolbar ? (
+            <div className="profile-passport-carousel-toolbar">{props.toolbar}</div>
+          ) : null}
+
+          <div className="profile-passport-carousel-viewport">
+            {props.activeSlide === 'passport' ? (
+              <div className="profile-passport-carousel-slide is-active-profile-slide" role="tabpanel">
+                {props.passportView}
+              </div>
+            ) : (
+              <div className="profile-passport-carousel-slide is-active-profile-slide" role="tabpanel">
+                {props.badgeBookView}
+              </div>
+            )}
+          </div>
         </div>
 
         {props.sideRail ? (

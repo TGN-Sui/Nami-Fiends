@@ -93,7 +93,7 @@ export function TagNotificationsPanel(props: TagNotificationsPanelProps): ReactE
 
       <div className="tag-notification-list">
         {notifications.length === 0 ? (
-          <p className="tag-notification-empty">No tag mentions yet. Try @Nozomi or &amp;Wave Raiders in chat.</p>
+          <p className="tag-notification-empty">No tag mentions yet. Try @Robbos or &amp;Wave Raiders in chat.</p>
         ) : (
           notifications.slice(0, props.compact ? 5 : 12).map((notification) => (
             <button

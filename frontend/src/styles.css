@@ -484,6 +484,8 @@ button {
 
 .mini-badge {
   display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
   min-height: 24px;
   align-items: center;
   border-radius: 999px;
@@ -491,6 +493,7 @@ button {
   background: rgba(255,255,255,0.1);
   font-size: 0.75rem;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 dl {
@@ -7454,20 +7457,25 @@ button:disabled {
 
 .settings-brand-color-grid-polished {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 16px;
+  width: 100%;
 }
 
 .settings-brand-color-chip-polished {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   justify-items: center;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 14px 12px;
   border: 1px solid rgba(117, 215, 255, 0.16);
   border-radius: 18px;
   background:
     radial-gradient(circle at top, rgba(117, 215, 255, 0.12), transparent 34%),
     rgba(5, 9, 15, 0.38);
+  overflow: hidden;
 }
 
 .settings-brand-color-number {
@@ -7487,12 +7495,14 @@ button:disabled {
 }
 
 .settings-brand-color-chip-polished input {
-  width: 58px;
+  width: min(100%, 58px);
+  max-width: 58px;
   height: 32px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .settings-brand-color-chip-polished small {
@@ -10177,18 +10187,20 @@ body::after {
 }
 
 .member-spotlight-copy strong,
-.member-spotlight-copy span {
+.member-spotlight-copy .member-spotlight-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.member-spotlight-copy strong {
+.member-spotlight-copy strong,
+.member-spotlight-copy .member-spotlight-name {
   color: #eef7ff;
   font-size: 0.9rem;
 }
 
-.member-spotlight-copy span {
+.member-spotlight-copy .member-spotlight-meta span,
+.member-spotlight-copy .member-spotlight-level-label {
   color: #9fb5ca;
   font-size: 0.76rem;
   font-weight: 800;
@@ -10573,18 +10585,20 @@ body::after {
 }
 
 .member-spotlight-copy strong,
-.member-spotlight-copy span {
+.member-spotlight-copy .member-spotlight-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.member-spotlight-copy strong {
+.member-spotlight-copy strong,
+.member-spotlight-copy .member-spotlight-name {
   color: #eef7ff;
   font-size: 0.9rem;
 }
 
-.member-spotlight-copy span {
+.member-spotlight-copy .member-spotlight-meta span,
+.member-spotlight-copy .member-spotlight-level-label {
   color: #9fb5ca;
   font-size: 0.76rem;
   font-weight: 800;
@@ -11011,11 +11025,11 @@ body::after {
   align-content: center;
   gap: 2px;
   padding: 12px;
-  border: 1px solid rgba(117, 215, 255, 0.2);
+  border: 1px solid rgba(117, 215, 255, 0.34);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), transparent 18%),
-    radial-gradient(circle at center, rgba(67, 245, 167, 0.16), rgba(77, 163, 255, 0.08) 46%, rgba(5, 9, 15, 0.78) 72%);
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.24), transparent 20%),
+    radial-gradient(circle at center, rgba(67, 245, 167, 0.2), rgba(77, 163, 255, 0.12) 52%, rgba(18, 32, 52, 0.55) 78%);
   color: #eef7ff;
   cursor: pointer;
   text-align: center;
@@ -11026,8 +11040,8 @@ body::after {
     rotateY(var(--bubble-tilt-y));
   transform-style: preserve-3d;
   box-shadow:
-    inset 0 0 22px rgba(117, 215, 255, 0.08),
-    0 10px 26px rgba(0, 0, 0, 0.2);
+    inset 0 0 18px rgba(117, 215, 255, 0.1),
+    0 10px 24px rgba(0, 0, 0, 0.16);
   animation: cryptoBubbleFloat 5.6s ease-in-out infinite;
   animation-delay: var(--bubble-delay);
   transition:
@@ -14188,7 +14202,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   position: relative !important;
   isolation: isolate !important;
   overflow: hidden !important;
-  padding-right: 42px !important;
+  padding-right: 10px !important;
 }
 
 .member-spotlight-card.is-npc-member {
@@ -14265,7 +14279,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   border-color: rgba(117, 215, 255, 0.34) !important;
 }
 
-.member-spotlight-card > :not(.member-spotlight-foil) {
+.member-spotlight-card
+  > :not(.member-spotlight-foil):not(.nami-official-galaxy-sky):not(.member-spotlight-rainbow-border):not(
+    .member-spotlight-bubble-lane
+  ):not(.member-spotlight-glitter-lane):not(.member-spotlight-content) {
   position: relative !important;
   z-index: 2 !important;
 }
@@ -14353,8 +14370,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   line-height: 1 !important;
 }
 
-.member-spotlight-card .verification-check-chip,
-.member-spotlight-card .member-spotlight-verified {
+.member-spotlight-card > .verification-check-chip,
+.member-spotlight-card > .member-spotlight-verified {
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;
@@ -14372,40 +14389,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   font-weight: 950 !important;
 }
 
-/* ---------- Sidebar Nozomi avatar match ---------- */
-
-.sidebar-profile-shell [class*='avatar'],
-.sidebar-profile-card [class*='avatar'],
-.sidebar-profile-trigger [class*='avatar'],
-.profile-mini-avatar,
-.sidebar-profile-avatar {
-  background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%239fffd2%22%20stop-opacity%3D%22.26%22%2F%3E%20%3Cstop%20offset%3D%22.46%22%20stop-color%3D%22%23062a22%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%239fffd2%22%20stop-opacity%3D%22.18%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2272%22%20fill%3D%22%23062a22%22%2F%3E%20%3Cpath%20d%3D%22M0%20270%20C74%20218%20142%20322%20220%20270%20C292%20222%20330%20252%20400%20214%20L400%20400%20L0%20400%20Z%22%20fill%3D%22%239fffd2%22%20opacity%3D%22.18%22%2F%3E%20%3Cpath%20d%3D%22M-28%2074%20C56%2018%20132%20112%20220%2062%20C306%2012%20356%2044%20428%200%20L428%20148%20C334%20196%20284%20156%20216%20190%20C130%20232%2062%20148%20-28%20198%20Z%22%20fill%3D%22%239fffd2%22%20opacity%3D%22.13%22%2F%3E%20%3Ctext%20x%3D%22200%22%20y%3D%22228%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%20Black%2C%20Arial%2C%20sans-serif%22%20font-size%3D%22118%22%20fill%3D%22%239fffd2%22%20letter-spacing%3D%22-10%22%3ENO%3C%2Ftext%3E%20%3C%2Fsvg%3E") !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: cover !important;
-}
-
-.sidebar-profile-shell [class*='avatar'] > *:not([class*='level']),
-.sidebar-profile-card [class*='avatar'] > *:not([class*='level']),
-.sidebar-profile-trigger [class*='avatar'] > *:not([class*='level']),
-.profile-mini-avatar > *:not([class*='level']),
-.sidebar-profile-avatar > *:not([class*='level']) {
-  opacity: 0 !important;
-  color: transparent !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-}
-
-.sidebar-profile-shell [class*='level'],
-.sidebar-profile-card [class*='level'],
-.sidebar-profile-trigger [class*='level'],
-.profile-mini-avatar [class*='level'],
-.sidebar-profile-avatar [class*='level'] {
-  opacity: 1 !important;
-  color: #ffffff !important;
-  font-size: 0.68rem !important;
-  line-height: 1 !important;
-}
+/* Pinned profile avatar uses member-avatar CSS variables from PinnedProfileAvatar.tsx */
 
 @keyframes memberSpotlightEliteFoilPanA198 {
   0% {
@@ -14429,7 +14413,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   position: relative !important;
   isolation: isolate !important;
   overflow: hidden !important;
-  padding-right: 48px !important;
+  padding-right: 10px !important;
 }
 
 .member-spotlight-card.is-elite-spotlight-member > .member-spotlight-foil {
@@ -14493,12 +14477,15 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   animation: none !important;
 }
 
-.member-spotlight-card > :not(.member-spotlight-foil) {
+.member-spotlight-card
+  > :not(.member-spotlight-foil):not(.nami-official-galaxy-sky):not(.member-spotlight-rainbow-border):not(
+    .member-spotlight-bubble-lane
+  ):not(.member-spotlight-glitter-lane):not(.member-spotlight-content) {
   position: relative !important;
   z-index: 2 !important;
 }
 
-.member-spotlight-card .verification-check-chip {
+.member-spotlight-card > .verification-check-chip {
   position: absolute !important;
   inset: auto 10px auto auto !important;
   top: 10px !important;
@@ -14559,7 +14546,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   overflow: hidden !important;
 }
 
-.member-spotlight-card .verification-check-chip {
+.member-spotlight-card > .verification-check-chip {
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;

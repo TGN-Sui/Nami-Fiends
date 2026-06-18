@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { playChatSendSfx } from './nami-sfx.js';
-import { getSelfMember } from './member-access.js';
+import { getSelfMember, isSelfMessageAuthor } from './member-access.js';
 import { processMessageTags } from './nami-notifications-store.js';
 import { chatMessages, members, type ChatMessage, type ConductSignal } from './uiMockData.js';
 import type { ThreadMessage } from './messages-data.js';
@@ -9,6 +9,7 @@ import type { ThreadMessage } from './messages-data.js';
 const THREADS_KEY = 'nami.user.message-threads';
 const CHANNEL_MESSAGES_KEY = 'nami.user.channel-messages';
 const GLOBAL_MESSAGES_KEY = 'nami.user.global-chat-messages';
+const GUILD_MESSAGES_KEY = 'nami.user.guild-chat-messages';
 
 type StoredThread = {
   memberId: string;
@@ -23,6 +24,7 @@ type StoreSnapshot = {
   threads: StoredThread[];
   channelMessages: ChatMessage[];
   globalMessages: Record<string, ChatMessage[]>;
+  guildMessages: Record<string, ChatMessage[]>;
   unreadCount: number;
 };
 
@@ -49,14 +51,14 @@ function seedThreads(): StoredThread[] {
     .filter((member) => member.id !== 'm1')
     .map((member, index) => {
       const baseMessages = chatMessages
-        .filter((message) => message.author === member.name || message.author === 'Nozomi')
+        .filter((message) => message.author === member.name || isSelfMessageAuthor(message.author))
         .map((message, messageIndex) => ({
           id: member.id + '-seed-' + messageIndex,
-          author: message.author,
+          author: isSelfMessageAuthor(message.author) ? getSelfMember().name : message.author,
           body: message.body,
           time: message.time,
           signal: message.signal,
-          outgoing: message.author === 'Nozomi',
+          outgoing: isSelfMessageAuthor(message.author),
         }));
 
       const preview = baseMessages[baseMessages.length - 1]?.body ?? 'Hey — are you joining tonight?';
@@ -139,6 +141,27 @@ function writeGlobalMessages(messages: Record<string, ChatMessage[]>): void {
   emit();
 }
 
+function readGuildMessages(): Record<string, ChatMessage[]> {
+  try {
+    const stored = window.localStorage.getItem(GUILD_MESSAGES_KEY);
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, ChatMessage[]>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeGuildMessages(messages: Record<string, ChatMessage[]>): void {
+  window.localStorage.setItem(GUILD_MESSAGES_KEY, JSON.stringify(messages));
+  emit();
+}
+
 function buildSnapshot(): StoreSnapshot {
   const threads = readThreads();
 
@@ -146,6 +169,7 @@ function buildSnapshot(): StoreSnapshot {
     threads,
     channelMessages: readChannelMessages(),
     globalMessages: readGlobalMessages(),
+    guildMessages: readGuildMessages(),
     unreadCount: threads.reduce((sum, thread) => sum + thread.unread, 0),
   };
 }
@@ -244,20 +268,77 @@ export function appendGlobalChatMessage(
   return message;
 }
 
+export function appendGuildChatMessage(
+  guildId: string,
+  guildName: string,
+  body: string,
+  author = getSelfMember().name,
+  signal: ConductSignal = 'Green'
+): ChatMessage {
+  const message: ChatMessage = {
+    id: 'user-guild-' + guildId + '-' + Date.now(),
+    time: nowTime(),
+    author,
+    signal,
+    body: body.trim(),
+  };
+
+  const guildMessages = readGuildMessages();
+
+  writeGuildMessages({
+    ...guildMessages,
+    [guildId]: [...(guildMessages[guildId] ?? []), message],
+  });
+
+  processMessageTags({
+    body: message.body,
+    authorName: author,
+    context: 'channel',
+    contextLabel: 'Guild Chat · ' + guildName,
+  });
+  playChatSendSfx();
+  return message;
+}
+
 const INCOMING_REPLY_SNIPPETS = [
   'Got your message — hopping on now.',
   'Copy that. See you in the lounge.',
   'Nice. I will ping %Alpha Squad.',
   'On it. Want me to invite &Wave Raiders?',
-  'Heard you @Nozomi — grabbing a squad slot.',
+  'Heard you @{selfName} — grabbing a squad slot.',
 ];
+
+function incomingReplySnippet(): string {
+  const template = INCOMING_REPLY_SNIPPETS[Math.floor(Math.random() * INCOMING_REPLY_SNIPPETS.length)]!;
+
+  return template.replace('{selfName}', getSelfMember().name);
+}
+
+export function deliverIncomingPrivateMessage(input: {
+  memberId: string;
+  memberName: string;
+  body: string;
+  authorName: string;
+  signal: ConductSignal;
+  markUnread?: boolean;
+}): void {
+  appendIncomingPrivateMessage(
+    input.memberId,
+    input.memberName,
+    input.body,
+    input.authorName,
+    input.signal,
+    input.markUnread !== false
+  );
+}
 
 function appendIncomingPrivateMessage(
   memberId: string,
   memberName: string,
   body: string,
   authorName: string,
-  signal: ConductSignal
+  signal: ConductSignal,
+  markUnread = true
 ): void {
   const incoming: ThreadMessage = {
     id: 'in-' + Date.now(),
@@ -282,7 +363,7 @@ function appendIncomingPrivateMessage(
           ...thread,
           preview: body,
           updatedAt: incoming.time,
-          unread: thread.unread + 1,
+          unread: markUnread ? thread.unread + 1 : thread.unread,
           messages: [...thread.messages, incoming],
         };
       })
@@ -296,7 +377,7 @@ function appendIncomingPrivateMessage(
       memberName,
       preview: body,
       updatedAt: incoming.time,
-      unread: 1,
+      unread: markUnread ? 1 : 0,
       messages: [incoming],
     },
     ...threads,
@@ -313,7 +394,7 @@ function scheduleIncomingThreadReply(memberId: string, memberName: string): void
   const delayMs = 1400 + Math.floor(Math.random() * 2200);
 
   window.setTimeout(() => {
-    const body = INCOMING_REPLY_SNIPPETS[Math.floor(Math.random() * INCOMING_REPLY_SNIPPETS.length)]!;
+    const body = incomingReplySnippet();
 
     appendIncomingPrivateMessage(memberId, memberName, body, member.name, member.signal);
     processMessageTags({
