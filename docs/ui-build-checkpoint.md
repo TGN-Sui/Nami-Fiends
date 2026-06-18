@@ -76,7 +76,7 @@ Copy for the landing page is centralized in `frontend/src/landing-content.ts`. S
 | Member pinned chat | Compact mode skips presence rail; composer stays visible. |
 | Badge Book | Single-scale closed cover, 3D open animation, frame-by-frame spread flips. |
 
-Latest commit for this wave: `8267009` — Polish Game Hub surfaces and interactive Badge Book.
+Latest commit for this wave: `04e3631` — Polish Game Hub surfaces and interactive Badge Book.
 
 ## Latest UI Commits
 
