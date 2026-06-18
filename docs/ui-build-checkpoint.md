@@ -78,10 +78,26 @@ Copy for the landing page is centralized in `frontend/src/landing-content.ts`. S
 
 Latest commit for this wave: `04e3631` — Polish Game Hub surfaces and interactive Badge Book.
 
+## Hub Interaction Polish
+
+| Area | Summary |
+| --- | --- |
+| Hub performance | `CryptoBubbleBoard.tsx` extracted from `App.tsx`; transform-only bubble positioning, spatial-hash collisions, 30fps cap, rAF pauses when idle/offscreen. |
+| App spotlight | Dark-mode spotlight contrast tokens; signed-in pages use static `is-nami-app-spotlight-static` (no moving html spotlight on hub surfaces). |
+| Bubble highlights | Per-bubble `--bubble-proximity` drives border, glow, brightness, and z-index with smooth cursor falloff (Nami Hub Top 50 + Game Hub genre board). |
+| Member Spotlight | Pro/Elite foil, bubble drift, glitter, rainbow border, and Nami Official galaxy motion start on card `:hover` / `:focus-visible` only. |
+| Game Hub tiles | `useHorizontalScrollStrip.ts` adds drag momentum + smooth wheel interpolation; strip hard-clips at browser edges (no snap, no right-edge fade). |
+
+Key files: `frontend/src/CryptoBubbleBoard.tsx`, `frontend/src/useHorizontalScrollStrip.ts`, `frontend/src/NamiGridSpotlight.tsx`, `frontend/src/phase7-ui.css`, `frontend/src/styles.css`.
+
+Latest commits for this wave: `4b5fd36` (proximity highlights, hover motion, tile scroll) and `99c42c4` (performance baseline).
+
 ## Latest UI Commits
 
 | Commit | Summary |
 | --- | --- |
+| `4b5fd36` | Uniform bubble proximity highlights, Member Spotlight hover-only motion, Game Hub tile strip smooth scroll |
+| `99c42c4` | Hub performance, dark spotlight contrast, bubble physics (`CryptoBubbleBoard`) |
 | `347511f` | Slice 9 operator UX + Hub fixture fallback during discovery load |
 | `fdc78bf` | Slice 8 payment/X gating + Game Hub empty-state fix |
 | `bda07a4` | Slice 7 channel and member directory providers |

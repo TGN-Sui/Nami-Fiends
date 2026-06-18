@@ -1889,10 +1889,9 @@ html.is-ambient-motion-paused.is-nami-app-spotlight {
   --member-spotlight-foil-left: -38%;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .member-spotlight-grid {
-    animation: memberSpotlightFoilLoop 7.6s ease-in-out infinite;
-  }
+.member-spotlight-card.is-pro-spotlight-member,
+.member-spotlight-card.is-elite-spotlight-member {
+  --member-spotlight-foil-left: -38%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3167,7 +3166,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .gamehub-browser {
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
+  overflow: hidden;
 }
 
 .gamehub-channel-tile-strip {
@@ -3179,34 +3178,24 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(117, 215, 255, 0.42) rgba(255, 255, 255, 0.06);
   contain: inline-size;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 }
 
 .gamehub-channel-tile-strip.is-drag-scrolling {
   cursor: grabbing;
   user-select: none;
-  scroll-snap-type: none;
+  scroll-behavior: auto;
 }
 
 .gamehub-channel-tile-strip.is-drag-scrolling .gamehub-channel-tile {
   pointer-events: none;
-}
-
-.gamehub-channel-tile-strip::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 12px;
-  width: clamp(36px, 6vw, 72px);
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--nami-theme-panel));
+  transition: none;
 }
 
 .gamehub-channel-tile-strip::-webkit-scrollbar {
@@ -3232,7 +3221,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   gap: 14px 18px;
   width: max-content;
   min-width: 100%;
-  padding: 4px 4px 14px;
+  padding: 4px 0 14px;
 }
 
 .gamehub-channel-tile {
@@ -3246,7 +3235,6 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   display: block;
   width: var(--channel-tile-width, 168px);
   aspect-ratio: 2.5 / 3.5;
-  scroll-snap-align: start;
   min-height: 0;
   padding: 0;
   border: none;
@@ -8955,7 +8943,7 @@ body.is-nami-owner-edit-mode .main-stage {
 }
 
 .crypto-community-bubble {
-  z-index: 1;
+  z-index: calc(1 + var(--bubble-highlight, var(--bubble-proximity, 0)) * 9);
 }
 
 .profile-guest-preview-toggle {
@@ -9837,7 +9825,7 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -9869,8 +9857,8 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
   display: flex;
   flex-direction: column;
   width: 100%;
-  will-change: transform;
-  animation: member-spotlight-pro-bubble-drift 14s linear infinite;
+  will-change: auto;
+  animation: none;
 }
 
 .member-spotlight-bubble-pass {
@@ -9901,8 +9889,8 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
   display: flex;
   flex-direction: column;
   width: 100%;
-  will-change: transform;
-  animation: member-spotlight-elite-glitter-drift 18s linear infinite;
+  will-change: auto;
+  animation: none;
 }
 
 .member-spotlight-glitter-pass {
@@ -9928,8 +9916,8 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
   box-shadow:
     0 0 8px rgba(255, 212, 92, 0.42),
     0 0 2px rgba(255, 255, 255, 0.72);
-  opacity: 0.2;
-  animation: member-spotlight-glitter-twinkle 2.8s ease-in-out infinite;
+  opacity: 0.22;
+  animation: none;
   animation-delay: var(--member-spotlight-glitter-delay, 0s);
 }
 
@@ -10450,7 +10438,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     145% 145%,
     130% 130%,
     100% 100%;
-  animation: nami-official-galaxy-spotlight-drift 14s ease-in-out infinite alternate;
+  animation: none;
 }
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight .nami-official-galaxy-sky::before,
@@ -10477,7 +10465,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     radial-gradient(2.4px 2.4px at 64% 88%, rgba(255, 255, 255, 0.92), transparent 52%),
     radial-gradient(2.8px 2.8px at 78% 76%, rgba(255, 255, 255, 0.94), transparent 54%),
     radial-gradient(2.2px 2.2px at 90% 62%, rgba(255, 255, 255, 0.86), transparent 52%);
-  animation: nami-official-galaxy-spotlight-twinkle-a 3.6s ease-in-out infinite alternate;
+  animation: none;
 }
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight .nami-official-galaxy-sky::after {
@@ -10491,7 +10479,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     radial-gradient(2.2px 2.2px at 22% 58%, rgba(255, 255, 255, 0.8), transparent 52%),
     radial-gradient(2.6px 2.6px at 56% 14%, rgba(220, 240, 255, 0.76), transparent 52%),
     radial-gradient(2px 2px at 70% 66%, rgba(255, 255, 255, 0.72), transparent 50%);
-  animation: nami-official-galaxy-spotlight-twinkle-b 5s ease-in-out infinite alternate;
+  animation: none;
   animation-delay: -1.8s;
 }
 
@@ -10516,7 +10504,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     0 0 18px rgba(117, 215, 255, 0.34);
   opacity: 0;
   transform: rotate(-32deg) translate3d(0, 0, 0);
-  animation: nami-official-galaxy-spotlight-shooting-star 10s ease-in-out infinite;
+  animation: none;
 }
 
 .tcg-foil-passport-shell.is-nami-official-galaxy-passport .tcg-foil-passport-frame::after {
@@ -11705,18 +11693,62 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   }
 }
 
-.nami-app[data-active-page='hub'] .member-spotlight-grid {
-  animation: none;
-}
+@media (prefers-reduced-motion: no-preference) {
+  .member-spotlight-card.is-pro-spotlight-member:hover,
+  .member-spotlight-card.is-pro-spotlight-member:focus-visible,
+  .member-spotlight-card.is-elite-spotlight-member:hover,
+  .member-spotlight-card.is-elite-spotlight-member:focus-visible {
+    animation: memberSpotlightFoilLoop 7.6s ease-in-out infinite;
+  }
 
-.nami-app[data-active-page='hub'] .member-spotlight-bubble-loop,
-.nami-app[data-active-page='hub'] .member-spotlight-glitter-loop {
-  animation: none;
-}
+  .member-spotlight-card:hover .member-spotlight-bubble-loop,
+  .member-spotlight-card:focus-visible .member-spotlight-bubble-loop {
+    will-change: transform;
+    animation: member-spotlight-pro-bubble-drift 14s linear infinite;
+  }
 
-.nami-app[data-active-page='hub'] .member-spotlight-glitter-shard {
-  animation: none;
-  opacity: 0.24;
+  .member-spotlight-card:hover .member-spotlight-glitter-loop,
+  .member-spotlight-card:focus-visible .member-spotlight-glitter-loop {
+    will-change: transform;
+    animation: member-spotlight-elite-glitter-drift 18s linear infinite;
+  }
+
+  .member-spotlight-card:hover .member-spotlight-glitter-shard,
+  .member-spotlight-card:focus-visible .member-spotlight-glitter-shard {
+    animation: member-spotlight-glitter-twinkle 2.8s ease-in-out infinite;
+    animation-delay: var(--member-spotlight-glitter-delay, 0s);
+  }
+
+  .member-spotlight-card:hover .member-spotlight-rainbow-border,
+  .member-spotlight-card:focus-visible .member-spotlight-rainbow-border {
+    animation: namiRainbowFoilBorder 4.8s linear infinite;
+  }
+
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:hover > .nami-official-galaxy-sky,
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible > .nami-official-galaxy-sky {
+    animation: nami-official-galaxy-spotlight-drift 14s ease-in-out infinite alternate;
+  }
+
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-sky::before,
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-sky::before {
+    animation: nami-official-galaxy-spotlight-twinkle-a 3.6s ease-in-out infinite alternate;
+  }
+
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-sky::after,
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-sky::after {
+    animation: nami-official-galaxy-spotlight-twinkle-b 5s ease-in-out infinite alternate;
+    animation-delay: -1.8s;
+  }
+
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-shooting-star,
+  .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-shooting-star {
+    animation: nami-official-galaxy-spotlight-shooting-star 10s ease-in-out infinite;
+  }
+
+  .member-spotlight-card:hover .member-spotlight-avatar.is-elite-surface::after,
+  .member-spotlight-card:focus-visible .member-spotlight-avatar.is-elite-surface::after {
+    animation: memberSpotlightEliteFoilPanA198 1.8s ease-in-out infinite alternate !important;
+  }
 }
 
 .nami-app[data-active-page='hub'] .member-spotlight-panel,
@@ -11913,10 +11945,21 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .crypto-bubbles-board.is-genre-bubble-board .crypto-community-bubble {
-  border-color: rgba(117, 215, 255, 0.38);
+  border-color: rgba(117, 215, 255, calc(0.28 + var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.34));
   background:
     radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.26), transparent 20%),
     radial-gradient(circle at center, rgba(90, 220, 170, 0.18), rgba(77, 163, 255, 0.1) 50%, rgba(20, 36, 56, 0.5) 80%);
+}
+
+.crypto-bubbles-board.is-cursor-active .crypto-community-bubble.is-nami-rainbow-foil-border {
+  box-shadow:
+    inset 0 0 calc(16px + var(--bubble-highlight, var(--bubble-proximity, 0)) * 8px)
+      rgba(117, 215, 255, calc(0.08 + var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.06)),
+    0 0 calc(var(--bubble-highlight, var(--bubble-proximity, 0)) * 22px)
+      rgba(67, 245, 167, calc(var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.14)),
+    0 calc(10px + var(--bubble-highlight, var(--bubble-proximity, 0)) * 10px)
+      calc(24px + var(--bubble-highlight, var(--bubble-proximity, 0)) * 12px)
+      rgba(0, 0, 0, calc(0.14 + var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.1)) !important;
 }
 
 .event-timezone-note,

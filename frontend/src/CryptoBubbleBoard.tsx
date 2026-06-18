@@ -27,6 +27,8 @@ type NamiCryptoBubbleNode = {
   renderX: number;
   renderY: number;
   renderGrowth: number;
+  cursorProximity: number;
+  renderProximity: number;
 };
 
 const COLLISION_GRID_CELL_PX = 132;
@@ -145,6 +147,8 @@ function buildNamiCryptoBubbleNodes(
       renderX: bestX,
       renderY: bestY,
       renderGrowth: 1,
+      cursorProximity: 0,
+      renderProximity: 0,
     };
 
     placedNodes.push(node);
@@ -163,7 +167,33 @@ function mountBubbleElement(
 
   element.style.width = size + 'px';
   element.style.height = size + 'px';
-  applyBubbleNodeStyles(node, boardWidth, boardHeight, element, true);
+  applyBubbleNodeStyles(node, boardWidth, boardHeight, element, { force: true });
+}
+
+function computeCursorProximity(
+  node: NamiCryptoBubbleNode,
+  cursorX: number,
+  cursorY: number,
+  boardWidth: number,
+  boardHeight: number,
+  pointerInside: boolean,
+  influenceRadius: number,
+): number {
+  if (!pointerInside) {
+    return 0;
+  }
+
+  const px = node.x * boardWidth;
+  const py = node.y * boardHeight;
+  const dx = px - cursorX;
+  const dy = py - cursorY;
+  const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+
+  if (distance >= influenceRadius) {
+    return 0;
+  }
+
+  return smoothFalloff(1 - distance / influenceRadius);
 }
 
 function applyBubbleNodeStyles(
@@ -171,8 +201,13 @@ function applyBubbleNodeStyles(
   boardWidth: number,
   boardHeight: number,
   element: HTMLButtonElement,
-  force = false,
+  options: {
+    force?: boolean;
+    highlight?: number;
+  } = {},
 ): void {
+  const force = options.force ?? false;
+  const highlight = clamp(options.highlight ?? node.cursorProximity, 0, 1);
   const px = node.x * boardWidth;
   const py = node.y * boardHeight;
   const growth = node.radius / node.baseRadius;
@@ -184,7 +219,8 @@ function applyBubbleNodeStyles(
     !force &&
     Math.abs(node.renderX - translateX) < 0.35 &&
     Math.abs(node.renderY - translateY) < 0.35 &&
-    Math.abs(node.renderGrowth - growth) < 0.004
+    Math.abs(node.renderGrowth - growth) < 0.004 &&
+    Math.abs(node.renderProximity - highlight) < 0.012
   ) {
     return;
   }
@@ -192,7 +228,60 @@ function applyBubbleNodeStyles(
   node.renderX = translateX;
   node.renderY = translateY;
   node.renderGrowth = growth;
+  node.renderProximity = highlight;
+  element.style.setProperty('--bubble-proximity', highlight.toFixed(3));
   element.style.transform = 'translate3d(' + translateX + 'px,' + translateY + 'px,0) scale(' + growth + ')';
+}
+
+function resetBubbleHighlights(nodes: NamiCryptoBubbleNode[], elements: Map<string, HTMLButtonElement>): void {
+  for (const node of nodes) {
+    node.cursorProximity = 0;
+    node.renderProximity = 0;
+
+    const element = elements.get(node.id);
+
+    if (element) {
+      element.style.setProperty('--bubble-proximity', '0');
+    }
+  }
+}
+
+function paintBubbleHighlights(
+  nodes: NamiCryptoBubbleNode[],
+  elements: Map<string, HTMLButtonElement>,
+  boardWidth: number,
+  boardHeight: number,
+  pointer: { x: number; y: number; inside: boolean },
+  activeChannelId: string,
+): void {
+  const cursorX = pointer.x * boardWidth;
+  const cursorY = pointer.y * boardHeight;
+  const influenceRadius = Math.min(boardWidth, boardHeight) * 0.44;
+
+  for (const node of nodes) {
+    const element = elements.get(node.id);
+
+    if (!element) {
+      continue;
+    }
+
+    const proximity = computeCursorProximity(
+      node,
+      cursorX,
+      cursorY,
+      boardWidth,
+      boardHeight,
+      pointer.inside,
+      influenceRadius,
+    );
+
+    node.cursorProximity = proximity;
+
+    const highlight =
+      node.channel.id === activeChannelId ? Math.max(proximity, 0.82) : proximity;
+
+    applyBubbleNodeStyles(node, boardWidth, boardHeight, element, { highlight });
+  }
 }
 
 function effectiveMass(node: NamiCryptoBubbleNode): number {
@@ -400,13 +489,33 @@ export function CryptoBubbleBoard(props: {
   const entriesSignature = visibleEntries.map((entry) => entry.slotId).join('|');
   const nodesRef = useRef<NamiCryptoBubbleNode[]>(buildNamiCryptoBubbleNodes(visibleEntries, bubbleScale));
   const startLoopRef = useRef<() => void>(() => undefined);
+  const activeChannelIdRef = useRef(props.activeChannelId);
   const [layoutRevision, setLayoutRevision] = useState(0);
+
+  activeChannelIdRef.current = props.activeChannelId;
 
   useEffect(() => {
     nodesRef.current = buildNamiCryptoBubbleNodes(visibleEntries, bubbleScale);
     bubbleElementsRef.current.clear();
     setLayoutRevision((value) => value + 1);
   }, [entriesSignature, bubbleScale]);
+
+  useEffect(() => {
+    const board = boardRef.current;
+
+    if (!board || !pointerRef.current.inside) {
+      return;
+    }
+
+    paintBubbleHighlights(
+      nodesRef.current,
+      bubbleElementsRef.current,
+      boardSizeRef.current.width,
+      boardSizeRef.current.height,
+      pointerRef.current,
+      props.activeChannelId,
+    );
+  }, [props.activeChannelId, layoutRevision]);
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -482,7 +591,7 @@ export function CryptoBubbleBoard(props: {
         const element = bubbleElementsRef.current.get(node.id);
 
         if (element) {
-          applyBubbleNodeStyles(node, width, height, element, true);
+          applyBubbleNodeStyles(node, width, height, element, { force: true });
         }
       }
 
@@ -512,6 +621,10 @@ export function CryptoBubbleBoard(props: {
         }
 
         if (Math.abs(node.radius - node.baseRadius) > 0.35) {
+          return true;
+        }
+
+        if (node.cursorProximity > 0.02 || node.renderProximity > 0.02) {
           return true;
         }
       }
@@ -563,7 +676,6 @@ export function CryptoBubbleBoard(props: {
       const cursorY = pointerRef.current.y * height;
       const pointerInside = pointerRef.current.inside;
       const influenceRadius = Math.min(width, height) * 0.44;
-      const influenceRadiusSquared = influenceRadius * influenceRadius;
 
       for (const node of nodes) {
         node.collisionStress = 0;
@@ -576,30 +688,33 @@ export function CryptoBubbleBoard(props: {
         node.vx += (anchorX - px) * 0.00115 * frameDelta;
         node.vy += (anchorY - py) * 0.00115 * frameDelta;
 
-        if (pointerInside) {
+        const falloff = computeCursorProximity(
+          node,
+          cursorX,
+          cursorY,
+          width,
+          height,
+          pointerInside,
+          influenceRadius,
+        );
+
+        node.cursorProximity = falloff;
+
+        if (falloff > 0) {
           const dx = px - cursorX;
           const dy = py - cursorY;
-          const distanceSquared = dx * dx + dy * dy;
+          const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+          const nx = dx / distance;
+          const ny = dy / distance;
+          const isLargeBubble = node.baseRadius * node.scale >= 48;
+          const proximityForce = isLargeBubble ? 0.42 * falloff : -0.2 * falloff;
 
-          if (distanceSquared < influenceRadiusSquared) {
-            const distance = Math.sqrt(distanceSquared) || 0.0001;
-            const normalized = 1 - distance / influenceRadius;
-            const falloff = smoothFalloff(normalized);
-            const nx = dx / distance;
-            const ny = dy / distance;
-            const isLargeBubble = node.baseRadius * node.scale >= 48;
-            const proximityForce = isLargeBubble ? 0.42 * falloff : -0.2 * falloff;
+          node.vx += nx * proximityForce * frameDelta;
+          node.vy += ny * proximityForce * frameDelta;
 
-            node.vx += nx * proximityForce * frameDelta;
-            node.vy += ny * proximityForce * frameDelta;
+          const radiusTarget = node.baseRadius * (1 + falloff * 0.08);
 
-            const radiusTarget =
-              node.baseRadius * (isLargeBubble ? 1 + falloff * 0.05 : 1 + falloff * 0.11);
-
-            node.radius += (radiusTarget - node.radius) * 0.14;
-          } else {
-            node.radius += (node.baseRadius - node.radius) * 0.08;
-          }
+          node.radius += (radiusTarget - node.radius) * 0.14;
         } else {
           node.radius += (node.baseRadius - node.radius) * 0.08;
         }
@@ -654,11 +769,18 @@ export function CryptoBubbleBoard(props: {
         }
       }
 
+      const activeChannelId = activeChannelIdRef.current;
+
       for (const node of nodes) {
         const element = bubbleElementsRef.current.get(node.id);
 
         if (element) {
-          applyBubbleNodeStyles(node, width, height, element);
+          const highlight =
+            node.channel.id === activeChannelId
+              ? Math.max(node.cursorProximity, 0.82)
+              : node.cursorProximity;
+
+          applyBubbleNodeStyles(node, width, height, element, { highlight });
         }
       }
 
@@ -689,11 +811,23 @@ export function CryptoBubbleBoard(props: {
     pointerRef.current.y = y;
     board.style.setProperty('--crypto-cursor-x', x * 100 + '%');
     board.style.setProperty('--crypto-cursor-y', y * 100 + '%');
+    board.classList.toggle('is-cursor-active', inside);
 
     if (inside) {
       lastPointerAtRef.current = performance.now();
+      paintBubbleHighlights(
+        nodesRef.current,
+        bubbleElementsRef.current,
+        boardSizeRef.current.width,
+        boardSizeRef.current.height,
+        pointerRef.current,
+        activeChannelIdRef.current,
+      );
       startLoopRef.current();
+      return;
     }
+
+    resetBubbleHighlights(nodesRef.current, bubbleElementsRef.current);
   }
 
   return (

@@ -16,6 +16,8 @@ See [docs/landing-page.md](../docs/landing-page.md) for the full map of exports 
 
 Layout and behavior live in `EntryPage.tsx` and the `Landing*.tsx` components.
 
+Hub interaction polish (bubbles, Member Spotlight motion, Game Hub tile strip) is documented in [docs/ui-build-checkpoint.md](../docs/ui-build-checkpoint.md#hub-interaction-polish). Key modules: `CryptoBubbleBoard.tsx`, `useHorizontalScrollStrip.ts`, `NamiGridSpotlight.tsx`.
+
 ## Current Status
 
 Current frontend capabilities:

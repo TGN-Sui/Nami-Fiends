@@ -10923,6 +10923,8 @@ body::after {
 
 .crypto-community-bubble {
   --bubble-size: 86px;
+  --bubble-proximity: 0;
+  --bubble-highlight: var(--bubble-proximity);
 
   position: absolute;
   top: 0;
@@ -10934,7 +10936,7 @@ body::after {
   align-content: center;
   gap: 2px;
   padding: 12px;
-  border: 1px solid rgba(117, 215, 255, 0.34);
+  border: 1px solid rgba(117, 215, 255, calc(0.34 + var(--bubble-highlight) * 0.3));
   border-radius: 999px;
   background:
     radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.24), transparent 20%),
@@ -10944,26 +10946,17 @@ body::after {
   text-align: center;
   transform-origin: center center;
   box-shadow:
-    inset 0 0 18px rgba(117, 215, 255, 0.1),
-    0 10px 24px rgba(0, 0, 0, 0.16);
+    inset 0 0 calc(18px + var(--bubble-highlight) * 8px) rgba(117, 215, 255, calc(0.1 + var(--bubble-highlight) * 0.02)),
+    0 0 calc(var(--bubble-highlight) * 28px) rgba(67, 245, 167, calc(var(--bubble-highlight) * 0.16)),
+    0 calc(10px + var(--bubble-highlight) * 10px) calc(24px + var(--bubble-highlight) * 14px)
+      rgba(0, 0, 0, calc(0.16 + var(--bubble-highlight) * 0.1));
   animation: none;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
     filter 160ms ease;
   will-change: transform;
-  z-index: 2;
-}
-
-.crypto-community-bubble:hover,
-.crypto-community-bubble.is-active-crypto-bubble {
-  border-color: rgba(67, 245, 167, 0.64);
-  box-shadow:
-    inset 0 0 26px rgba(67, 245, 167, 0.12),
-    0 0 28px rgba(67, 245, 167, 0.16),
-    0 20px 38px rgba(0, 0, 0, 0.26);
-  filter: brightness(1.12);
-  z-index: 8;
+  z-index: calc(2 + var(--bubble-highlight) * 6);
 }
 
 .crypto-bubble-rank {
@@ -11127,6 +11120,8 @@ body::after {
 
 .crypto-community-bubble {
   --bubble-size: 100px;
+  --bubble-proximity: 0;
+  --bubble-highlight: var(--bubble-proximity);
 
   position: absolute !important;
   top: 0 !important;
@@ -11138,7 +11133,7 @@ body::after {
   align-content: center;
   gap: 2px;
   padding: 10px;
-  border: 1px solid rgba(117, 215, 255, 0.18);
+  border: 1px solid rgba(117, 215, 255, calc(0.18 + var(--bubble-highlight) * 0.44));
   border-radius: 999px;
   background:
     radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.24), transparent 18%),
@@ -11149,25 +11144,24 @@ body::after {
   transform-origin: center center;
   animation: none !important;
   box-shadow:
-    inset 0 0 20px rgba(117, 215, 255, 0.08),
-    0 10px 26px rgba(0, 0, 0, 0.2);
+    inset 0 0 calc(20px + var(--bubble-highlight) * 4px) rgba(117, 215, 255, calc(0.08 + var(--bubble-highlight) * 0.04)),
+    0 0 calc(var(--bubble-highlight) * 24px) rgba(67, 245, 167, calc(var(--bubble-highlight) * 0.12)),
+    0 calc(10px + var(--bubble-highlight) * 10px) calc(26px + var(--bubble-highlight) * 12px)
+      rgba(0, 0, 0, calc(0.2 + var(--bubble-highlight) * 0.04));
   transition:
     border-color 220ms ease,
     box-shadow 220ms ease,
     filter 220ms ease;
   will-change: transform;
-  z-index: 2;
+  z-index: calc(2 + var(--bubble-highlight) * 8);
 }
 
-.crypto-community-bubble:hover,
+.crypto-bubbles-board.is-cursor-active .crypto-community-bubble {
+  filter: brightness(calc(0.94 + var(--bubble-highlight) * 0.14));
+}
+
 .crypto-community-bubble.is-active-crypto-bubble {
-  border-color: rgba(67, 245, 167, 0.62);
-  box-shadow:
-    inset 0 0 24px rgba(67, 245, 167, 0.12),
-    0 0 24px rgba(67, 245, 167, 0.12),
-    0 20px 38px rgba(0, 0, 0, 0.24);
-  filter: brightness(1.08);
-  z-index: 10;
+  --bubble-highlight: max(var(--bubble-proximity), 0.82);
 }
 
 .crypto-bubble-rank {
@@ -14104,7 +14098,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
       rgba(255, 212, 92, 0.28) 62%,
       transparent 100%
     ) !important;
-  animation: memberSpotlightEliteFoilPanA198 1.8s ease-in-out infinite alternate !important;
+  animation: none !important;
 }
 
 .member-spotlight-card.is-elite-spotlight-member {
@@ -14189,7 +14183,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
       rgba(255, 212, 92, 0.28) 62%,
       transparent 100%
     ) !important;
-  animation: memberSpotlightEliteFoilPanA198 1.8s ease-in-out infinite alternate !important;
+  animation: none !important;
 }
 
 .member-spotlight-level {
