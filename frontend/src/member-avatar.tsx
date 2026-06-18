@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
 import { memberRainbowBorderClass } from './channel-surface.js';
 import { resolveMemberAvatarImageUrl, withMemberAvatar } from './member-avatar-store.js';
+import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
 import { useMemberStreamingOnline } from './member-online-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
@@ -85,8 +86,12 @@ function isChatAvatarFoilSweepEligible(
   return isMemberFoilEligible(member, signal);
 }
 
+function resolveDisplayedAvatarImageUrl(member: NamiMember): string | null {
+  return resolveMemberAvatarImageUrl(member) ?? resolveOwnerAssetUrl('default-member-avatar');
+}
+
 function memberAvatarAssetVariables(member: NamiMember): CSSProperties {
-  const avatarImageUrl = resolveMemberAvatarImageUrl(member);
+  const avatarImageUrl = resolveDisplayedAvatarImageUrl(member);
 
   if (!avatarImageUrl) {
     return {
@@ -117,7 +122,7 @@ function memberAvatarClass(
     ' uniform-member-avatar' +
     ' ' +
     signalClass(signal) +
-    (resolveMemberAvatarImageUrl(member) ? ' has-member-avatar-image' : '') +
+    (resolveDisplayedAvatarImageUrl(member) ? ' has-member-avatar-image' : '') +
     (chatTierFoil ? ' ' + memberTierSurfaceClass(member) : '') +
     (foilSweepEligible ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame') +
     memberRainbowBorderClass(member)
@@ -186,7 +191,7 @@ export function UniformMemberAvatar(props: {
       >
         {tierFoilLayer(member, baseClass)}
         {foilSweepEligible ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
-        {!resolveMemberAvatarImageUrl(member) ? (
+        {!resolveDisplayedAvatarImageUrl(member) ? (
           <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
         ) : null}
         {props.children}
@@ -223,7 +228,7 @@ export function UniformMemberAvatarButton(props: {
       >
         {tierFoilLayer(member, baseClass)}
         {foilSweepEligible ? <span className="uniform-member-avatar-foil" aria-hidden="true" /> : null}
-        {!resolveMemberAvatarImageUrl(member) ? (
+        {!resolveDisplayedAvatarImageUrl(member) ? (
           <span className="member-avatar-initials">{member.name.slice(0, 2).toUpperCase()}</span>
         ) : null}
       </button>

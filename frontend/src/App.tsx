@@ -103,6 +103,8 @@ import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
+import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
+import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { requestSettingsSection, SettingsScreen } from './SettingsScreen.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
 import {
@@ -729,14 +731,16 @@ function Sidebar(props: {
           type="button"
         >
           <div aria-hidden="true" className="sidebar-hub-swap-mark-stack">
-            <div
+            <OwnerEditableImage
               className={
                 'diamond-mark sidebar-hub-swap-mark is-nami-hub-mark' +
                 (isOnGameHub ? ' is-alt-hub-mark' : ' is-current-hub-mark')
               }
-            >
-              N
-            </div>
+              fallback={<span aria-hidden="true">N</span>}
+              label="Hub sidebar logo"
+              nested
+              slotId="hub-sidebar-logo"
+            />
             <div
               className={
                 'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
@@ -755,8 +759,22 @@ function Sidebar(props: {
         </button>
       ) : (
         <button className="sidebar-brand" onClick={() => props.onNavigate('hub')} type="button">
-          <div className="diamond-mark">N</div>
-          {!props.collapsed && <span>Nami Hub</span>}
+          <OwnerEditableImage
+            className="diamond-mark"
+            fallback={<span aria-hidden="true">N</span>}
+            label="Hub sidebar logo"
+            nested
+            slotId="hub-sidebar-logo"
+          />
+          {!props.collapsed ? (
+            <OwnerEditableImage
+              className="sidebar-brand-wordmark"
+              fallback={<span>Nami Hub</span>}
+              label="Hub wordmark"
+              nested
+              slotId="hub-sidebar-wordmark"
+            />
+          ) : null}
         </button>
       )}
 
@@ -7131,6 +7149,8 @@ if (activePage === 'userProfile') {
           Enter Nami
         </button>
       )}
+
+      <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
 
       <section className="main-stage">
         {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (

@@ -5,6 +5,7 @@ import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
+import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
@@ -514,6 +515,9 @@ export function SettingsScreen(props: {
 
         {activeSection === 'advanced' ? (
           <div className="settings-section-stack">
+            <NamiOwnerAssetEditPanel
+              onEnterEditMode={() => props.onNavigate?.('hub')}
+            />
             <NamiOwnerSettingsPanel />
             <NamiOwnerEmojiPanel />
             {showIndexedDataPanel ? <IndexedDataPanel /> : null}

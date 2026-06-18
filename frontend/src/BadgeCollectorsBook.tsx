@@ -19,6 +19,8 @@ import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { collectedBadgesForMember, userCollectedBadges, type CollectedBadge } from './global-chats.js';
 
 import { badgeGlyph } from './nami-badge-glyphs.js';
+import { ownerAssetBadgeSlotId } from './nami-owner-assets-store.js';
+import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { type NamiMember } from './uiMockData.js';
 
 const SLOTS_PER_FACE = 6;
@@ -95,7 +97,14 @@ function BadgeSlotButton(props: {
       {badge ? (
         <>
           <span className="badge-slot-foil" />
-          <span className="badge-glyph-mark">{badgeGlyph(badge)}</span>
+          <OwnerEditableImage
+            className="badge-glyph-editable"
+            fallback={<span className="badge-glyph-mark">{badgeGlyph(badge)}</span>}
+            imageClassName="badge-glyph-image"
+            label={badge.name + ' badge'}
+            nested
+            slotId={ownerAssetBadgeSlotId(badge.name)}
+          />
           <strong>{badge.name}</strong>
           <small>{badge.rarity}</small>
         </>
