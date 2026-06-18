@@ -11,6 +11,8 @@ type FloatingGenreBubble = {
   vx: number;
   vy: number;
   radius: number;
+  scale: number;
+  riseSpeed: number;
   opacity: number;
   bornAt: number;
 };
@@ -18,10 +20,9 @@ type FloatingGenreBubble = {
 const MAX_BUBBLES = 14;
 const SPAWN_INTERVAL_MS = 2200;
 const BUBBLE_LIFETIME_MS = 15000;
-const RISE_SPEED = 1.05;
 const CURSOR_RADIUS = 140;
 
-function bubbleRadius(members: number): number {
+function bubbleBaseRadius(members: number): number {
   return 34 + Math.min(26, Math.round(members / 45));
 }
 
@@ -30,10 +31,12 @@ function spawnBubble(width: number, height: number): FloatingGenreBubble {
   const spawnLeft = Math.random() < 0.5;
   const sidePadding = width * 0.06;
   const sideWidth = width * 0.28;
+  const scale = 0.78 + Math.random() * 0.48;
+  const riseSpeed = 0.55 + Math.random() * 1.35;
+  const radius = bubbleBaseRadius(chat.activeMembers) * scale;
   const x = spawnLeft
     ? sidePadding + Math.random() * sideWidth
     : width - sidePadding - Math.random() * sideWidth;
-  const radius = bubbleRadius(chat.activeMembers);
 
   return {
     id: chat.id + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
@@ -41,9 +44,11 @@ function spawnBubble(width: number, height: number): FloatingGenreBubble {
     members: chat.activeMembers,
     x,
     y: height + radius + 12,
-    vx: (Math.random() - 0.5) * 0.35,
-    vy: -RISE_SPEED - Math.random() * 0.35,
+    vx: (Math.random() - 0.5) * 0.42,
+    vy: -riseSpeed - Math.random() * 0.45,
     radius,
+    scale,
+    riseSpeed,
     opacity: 0,
     bornAt: performance.now(),
   };
@@ -114,7 +119,7 @@ export function LandingGenreBubbleField(): ReactElement {
           continue;
         }
 
-        bubble.vy = Math.min(bubble.vy, -RISE_SPEED * 0.88);
+        bubble.vy = Math.min(bubble.vy, -bubble.riseSpeed * 0.9);
         bubble.vx *= 0.97;
         bubble.vy *= 0.996;
         pushBubbleAway(bubble);
@@ -185,7 +190,8 @@ export function LandingGenreBubbleField(): ReactElement {
               width: bubble.radius * 2 + 'px',
               height: bubble.radius * 2 + 'px',
               opacity: bubble.opacity,
-              transform: 'translate3d(' + (bubble.x - bubble.radius) + 'px,' + (bubble.y - bubble.radius) + 'px,0)',
+              transform:
+                'translate3d(' + (bubble.x - bubble.radius) + 'px,' + (bubble.y - bubble.radius) + 'px,0)',
             } as CSSProperties
           }
         >

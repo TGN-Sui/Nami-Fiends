@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { LandingGenreBubbleField } from './LandingGenreBubbleField.js';
+import { LandingGridSpotlight } from './LandingGridSpotlight.js';
 import { LandingHeroVisual } from './LandingHeroVisual.js';
 import { LandingScenarioDeck } from './LandingScenarioDeck.js';
 import { genreOfficialChats } from './global-chats.js';
@@ -24,6 +25,7 @@ function LandingOverview(props: {
 }): ReactElement {
   return (
     <div className="nami-landing-shell">
+      <LandingGridSpotlight />
       <LandingGenreBubbleField />
 
       <div className="nami-landing-foreground">
