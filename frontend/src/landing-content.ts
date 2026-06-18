@@ -47,13 +47,14 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
     outcome: 'Your people live in the genre room, not the launch week server.',
   },
   {
-    id: 'creator',
-    title: 'A creator outgrew one Discord and one link in bio',
+    id: 'spam-bots',
+    title: '"FREE GOLD — CLICK HERE"',
     pain:
-      'A studio runs multiple games, each with its own chat, events calendar, and subscriber list, all disconnected.',
+      'A great gamer group chat runs clean for a week. Then blank accounts roll in with the same scams, ' +
+      'the same links, the same noise. Real members go quiet. You stop opening the tab.',
     namiWay:
-      'Each game gets a Nami channel: verified studio profile, official events, genre chat, badges, and follower slots in one surface.',
-    outcome: 'Fans know where home is for every title you ship.',
+      'Bots can\'t claim a passport, so bots can\'t sit wit us.',
+    outcome: 'Good chat survives the bot wave.',
   },
   {
     id: 'toxicity',
