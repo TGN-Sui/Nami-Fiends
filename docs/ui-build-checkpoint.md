@@ -31,6 +31,7 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat and 
 | UI-B21.10 | Complete | Live-streaming dot on avatars (top-right inset). |
 | UI-B21.11 | Complete | TCG passport vertical layout + tier header polish. |
 | UI-B21.12 | Complete | Chat emojis, @tags, notifications, social embeds. |
+| UI-B21.22 | Complete | Cross-user AdminCap fulfillment for queued subscriber passports. |
 
 ## Latest UI Commits
 
@@ -46,6 +47,7 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat and 
 | `aea188d` | Refine member spotlight foil sweep |
 | `eac3938` | Polish member spotlight foil effects |
 | `f95e69f` | Phase 7 UI-B21 surfaces, guild spaces, spotlight layout polish |
+| `324833e` | Cross-user AdminCap membership fulfillment |
 
 ## Verification Commands
 
@@ -73,8 +75,7 @@ Phase 7 surfaces are active. Membership checkout, subscription state, avatar upl
 
 Recommended next lane:
 
-1. UI-B21.22 cross-user AdminCap fulfillment for queued subscriber passports (in progress).
-2. Phase 8 launch prep: testnet live, security review, production dashboards.
+1. Phase 8 launch prep: testnet live, security review, production dashboards.
 3. Extend Walrus-backed media references when storage proofs ship.
 4. Continue avoiding any wording that implies payment equals trust.
 
