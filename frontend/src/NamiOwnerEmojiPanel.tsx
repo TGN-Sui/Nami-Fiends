@@ -1,8 +1,8 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
-import { isOfficialOwner } from './nami-capabilities.js';
+import { canManageCustomEmojis } from './nami-capabilities.js';
 import {
-  addNamiCustomEmoji,
+  addNamiCustomEmojisBatch,
   emojiShortcodeToken,
   NAMI_EMOJI_ACCEPTED_FORMATS,
   normalizeEmojiShortcode,
@@ -12,6 +12,38 @@ import {
   validateEmojiUploadFile,
 } from './nami-custom-emojis-store.js';
 import { useProtocolOwner } from './wallet.js';
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error('Could not read that image.'));
+    };
+
+    reader.onerror = () => reject(new Error('Could not read that image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function uniqueShortcode(base: string, used: Set<string>): string {
+  const normalized = normalizeEmojiShortcode(base) || 'emoji';
+  let candidate = normalized;
+  let suffix = 2;
+
+  while (used.has(candidate)) {
+    candidate = normalized + '-' + String(suffix);
+    suffix += 1;
+  }
+
+  used.add(candidate);
+  return candidate;
+}
 
 export function NamiOwnerEmojiPanel(): ReactElement | null {
   const { owner } = useProtocolOwner();
@@ -24,7 +56,7 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
   const [error, setError] = useState<string | null>(null);
   const [isReadingFile, setIsReadingFile] = useState(false);
 
-  if (!isOfficialOwner(owner)) {
+  if (!canManageCustomEmojis(owner)) {
     return null;
   }
 
@@ -37,66 +69,87 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
     fileInputRef.current?.click();
   }
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const files = Array.from(event.target.files ?? []);
 
     event.target.value = '';
 
-    if (!file) {
+    if (files.length === 0) {
       return;
     }
 
     clearMessages();
+    setIsReadingFile(true);
 
-    const validationError = validateEmojiUploadFile(file);
+    const usedShortcodes = new Set(emojis.map((emoji) => emoji.shortcode));
+    const prepared: Array<{ label: string; shortcode: string; imageUrl: string; fileName: string }> =
+      [];
+    const readErrors: string[] = [];
 
-    if (validationError) {
-      setError(validationError);
+    for (const file of files) {
+      const validationError = validateEmojiUploadFile(file);
+
+      if (validationError) {
+        readErrors.push(file.name + ': ' + validationError);
+        continue;
+      }
+
+      try {
+        const imageUrl = await readFileAsDataUrl(file);
+        const baseLabel = label.trim() || file.name.replace(/\.[^.]+$/, '');
+        const baseShortcode =
+          files.length === 1 && shortcode.trim()
+            ? normalizeEmojiShortcode(shortcode)
+            : suggestEmojiShortcodeFromLabel(file.name);
+
+        prepared.push({
+          label: baseLabel,
+          shortcode: uniqueShortcode(baseShortcode, usedShortcodes),
+          imageUrl,
+          fileName: file.name,
+        });
+      } catch (readError) {
+        readErrors.push(
+          file.name + ': ' + (readError instanceof Error ? readError.message : 'Read failed.')
+        );
+      }
+    }
+
+    setIsReadingFile(false);
+
+    if (prepared.length === 0) {
+      setError(readErrors[0] ?? 'No emoji images were uploaded.');
       return;
     }
 
-    const nextLabel = label.trim() || file.name.replace(/\.[^.]+$/, '');
-    const nextShortcode = shortcode.trim() || suggestEmojiShortcodeFromLabel(file.name);
+    const { uploaded, errors } = addNamiCustomEmojisBatch({
+      actorOwner: owner,
+      items: prepared.map((entry) => ({
+        label: entry.label,
+        shortcode: entry.shortcode,
+        imageUrl: entry.imageUrl,
+      })),
+    });
 
-    setIsReadingFile(true);
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      setIsReadingFile(false);
-
-      if (typeof reader.result !== 'string') {
-        setError('Could not read that image. Try another file.');
-        return;
-      }
-
-      const result = addNamiCustomEmoji({
-        label: nextLabel,
-        shortcode: nextShortcode,
-        imageUrl: reader.result,
-        actorOwner: owner,
-      });
-
-      if (!result.ok) {
-        setError(result.reason);
-        return;
-      }
-
+    if (uploaded.length > 0) {
       setLabel('');
       setShortcode('');
       setNotice(
-        'Uploaded :' +
-          result.emoji.shortcode +
-          ': — members can insert it from the emoji picker in chat.'
+        uploaded.length === 1
+          ? 'Uploaded :' +
+              uploaded[0]!.shortcode +
+              ': — all members can insert it from chat emoji pickers.'
+          : 'Uploaded ' +
+              String(uploaded.length) +
+              ' emojis — all members can use them from chat emoji pickers.'
       );
-    };
+    }
 
-    reader.onerror = () => {
-      setIsReadingFile(false);
-      setError('Could not read that image. Try another file.');
-    };
+    const combinedErrors = [...readErrors, ...errors];
 
-    reader.readAsDataURL(file);
+    if (combinedErrors.length > 0) {
+      setError(combinedErrors.slice(0, 3).join(' '));
+    }
   }
 
   function handleRemove(emojiId: string): void {
@@ -113,17 +166,18 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
   return (
     <section className="panel settings-card nami-owner-emoji-panel">
       <div className="profile-panel-heading">
-        <span className="mini-badge">Nami Owner</span>
+        <span className="mini-badge">Nami Official Owner</span>
         <h2>Chat Emoji Library</h2>
         <p>
-          Upload custom emojis for every chat composer. Members insert them as shortcodes like{' '}
-          <code>:wave:</code> from the emoji picker beside the message field.
+          Upload custom emojis for every member. Only the Nami Official owner can add or remove
+          images here. Members insert them as shortcodes like <code>:wave:</code> from the emoji
+          picker beside chat composers.
         </p>
       </div>
 
       <div className="nami-owner-emoji-upload-form">
         <label className="member-profile-action-field">
-          <span>Display label</span>
+          <span>Display label (optional for batch uploads)</span>
           <input
             aria-label="Emoji display label"
             onChange={(event) => setLabel(event.target.value)}
@@ -133,7 +187,7 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
         </label>
 
         <label className="member-profile-action-field">
-          <span>Shortcode</span>
+          <span>Shortcode (optional — auto-generated per file when uploading many)</span>
           <input
             aria-label="Emoji shortcode"
             onChange={(event) => setShortcode(normalizeEmojiShortcode(event.target.value))}
@@ -143,7 +197,8 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
         </label>
 
         <p className="nami-owner-emoji-hint">
-          Accepted formats: {NAMI_EMOJI_ACCEPTED_FORMATS}. Max 512 KB per emoji.
+          Accepted formats: {NAMI_EMOJI_ACCEPTED_FORMATS}. Max 512 KB per emoji. Upload one or many
+          images at once.
         </p>
 
         <div className="nami-owner-emoji-upload-actions">
@@ -153,12 +208,15 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
             onClick={openFilePicker}
             type="button"
           >
-            {isReadingFile ? 'Reading image…' : 'Upload emoji image'}
+            {isReadingFile ? 'Reading images…' : 'Upload emoji images'}
           </button>
           <input
             accept="image/png,image/jpeg,image/webp,image/gif"
             className="sr-only"
-            onChange={handleFileChange}
+            multiple
+            onChange={(event) => {
+              void handleFileChange(event);
+            }}
             ref={fileInputRef}
             type="file"
           />

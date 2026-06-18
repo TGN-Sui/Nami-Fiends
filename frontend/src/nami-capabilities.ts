@@ -122,6 +122,10 @@ export function canManageModerators(connectedOwner: string | null): boolean {
   return hasOwnerCapability(connectedOwner, 'moderator-management');
 }
 
+export function canManageCustomEmojis(connectedOwner: string | null): boolean {
+  return hasOwnerCapability(connectedOwner, 'custom-emojis');
+}
+
 export const OWNER_CAPABILITY_LABELS: Record<NamiOwnerCapability, string> = {
   'core-settings': 'Change Nami core settings',
   'official-panels': 'Update Official Nami panels',

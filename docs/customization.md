@@ -281,6 +281,20 @@ Black Passport should pause active customization changes, not erase history by d
 
 ---
 
+# Frontend — Shared Chat Emojis
+
+The signed-in app exposes a shared emoji library for all members to **use** in chat composers. Upload and removal are restricted to the **Nami Official owner** wallet (`VITE_NAMI_OFFICIAL_OWNER`).
+
+| Role | Capability |
+| --- | --- |
+| Nami Official owner | Upload one or many PNG/JPG/WebP/GIF images in **Settings → Advanced → Chat Emoji Library** (max 64 emojis, 512 KB each). |
+| All other members | Insert uploaded emojis from the ☺ picker beside chat composers when the library is non-empty. No upload UI is shown. |
+| Future tiers | Branded emoji uploads for high tiers are planned; not enabled in the UI yet. |
+
+Implementation: `nami-custom-emojis-store.ts`, `NamiOwnerEmojiPanel.tsx`, `ChatEmojiPicker.tsx`, `TaggedMessageBody.tsx`.
+
+---
+
 # Related Docs
 
 ```text

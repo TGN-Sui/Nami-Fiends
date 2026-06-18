@@ -338,8 +338,14 @@ export function SettingsScreen(props: {
     'feeds',
     'safety',
     'appearance',
-    'advanced',
+    ...(showIndexedDataPanel ? (['advanced'] as const) : []),
   ];
+
+  useEffect(() => {
+    if (activeSection === 'advanced' && !showIndexedDataPanel) {
+      setActiveSection('overview');
+    }
+  }, [activeSection, showIndexedDataPanel]);
 
   return (
     <div className="settings-screen-layout settings-screen-redesign" data-settings-screen="true">

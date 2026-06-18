@@ -857,7 +857,14 @@ function ChannelInfoCard(props: {
         <div className="action-row">
           <button onClick={props.onSubscribe} type="button">Subscribe</button>
           <button onClick={props.onJoinChat} type="button">Join Chat</button>
-          <button onClick={props.onGetBanners} type="button">Get Banners</button>
+          <button
+            className="is-coming-soon-action"
+            disabled
+            title="Banner system coming soon"
+            type="button"
+          >
+            Get Banners
+          </button>
         </div>
       </div>
     </article>
@@ -3693,7 +3700,12 @@ function ChannelProfile(props: {
               Join Chat
             </button>
 
-            <button className="secondary-action" type="button">
+            <button
+              className="secondary-action is-coming-soon-action"
+              disabled
+              title="Banner system coming soon"
+              type="button"
+            >
               Get Banners
             </button>
           </div>

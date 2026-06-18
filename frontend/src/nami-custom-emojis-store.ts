@@ -100,6 +100,30 @@ function shortcodeInUse(shortcode: string, ignoreId?: string): boolean {
   );
 }
 
+export function addNamiCustomEmojisBatch(input: {
+  items: Array<{ label: string; shortcode: string; imageUrl: string }>;
+  actorOwner: string | null;
+}): { uploaded: NamiCustomEmoji[]; errors: string[] } {
+  const uploaded: NamiCustomEmoji[] = [];
+  const errors: string[] = [];
+
+  for (const item of input.items) {
+    const result = addNamiCustomEmoji({
+      ...item,
+      actorOwner: input.actorOwner,
+    });
+
+    if (result.ok) {
+      uploaded.push(result.emoji);
+      continue;
+    }
+
+    errors.push(result.reason);
+  }
+
+  return { uploaded, errors };
+}
+
 export function addNamiCustomEmoji(input: {
   label: string;
   shortcode: string;
