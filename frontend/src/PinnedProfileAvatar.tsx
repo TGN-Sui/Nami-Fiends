@@ -1,8 +1,10 @@
 import { type CSSProperties, type ReactElement } from 'react';
 
 import { memberRainbowBorderClass } from './channel-surface.js';
+import { BUILTIN_DEFAULT_MEMBER_AVATAR_URL } from './fixtures/seed-data.js';
 import { MemberStreamingLiveDot, signalClass } from './member-avatar.js';
 import { resolveMemberAvatarImageUrl, useSelfMember } from './member-avatar-store.js';
+import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
 import { useMemberStreamingOnline } from './member-online-store.js';
 
 type PinnedProfileAvatarProps = {
@@ -27,7 +29,10 @@ function pinnedAvatarStyle(avatarImageUrl: string | null): CSSProperties {
 
 export function PinnedProfileAvatar(props: PinnedProfileAvatarProps): ReactElement {
   const member = useSelfMember();
-  const avatarImageUrl = resolveMemberAvatarImageUrl(member);
+  const avatarImageUrl =
+    resolveMemberAvatarImageUrl(member) ??
+    resolveOwnerAssetUrl('default-member-avatar') ??
+    BUILTIN_DEFAULT_MEMBER_AVATAR_URL;
   const isStreamingOnline = useMemberStreamingOnline(member.id);
 
   return (

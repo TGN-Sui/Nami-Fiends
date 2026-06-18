@@ -29,6 +29,60 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     hint: 'Wide logo beside the hub label.',
   },
   {
+    id: 'sidebar-nav-gamehub',
+    label: 'Game hub sidebar icon',
+    category: 'button',
+    hint: 'Icon for the game hub in the hub switcher.',
+  },
+  {
+    id: 'sidebar-nav-userProfile',
+    label: 'Profile nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for My Profile.',
+  },
+  {
+    id: 'sidebar-nav-guilds',
+    label: 'Guild nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for My Guild.',
+  },
+  {
+    id: 'sidebar-nav-messages',
+    label: 'Messages nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for Messages.',
+  },
+  {
+    id: 'sidebar-nav-events',
+    label: 'Events nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for My Events.',
+  },
+  {
+    id: 'sidebar-nav-settings',
+    label: 'Settings nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for Settings.',
+  },
+  {
+    id: 'sidebar-nav-radio',
+    label: 'Ignite Radio nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for Ignite Radio.',
+  },
+  {
+    id: 'badge-book-cover-sphere',
+    label: 'Badge book cover emblem',
+    category: 'brand',
+    hint: 'Circular logo on the badge book front cover.',
+  },
+  {
+    id: 'badge-book-cover-title',
+    label: 'Badge book title logo',
+    category: 'brand',
+    hint: 'Branded title image replacing the Nami Badges heading.',
+  },
+  {
     id: 'platform-footer-mark',
     label: 'Platform footer mark',
     category: 'brand',
@@ -38,7 +92,7 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     id: 'default-member-avatar',
     label: 'Default member avatar',
     category: 'profile',
-    hint: 'Fallback portrait when a member has no upload.',
+    hint: 'Fallback portrait when a member has no upload. Uses the DeadlySin mock portrait until replaced.',
   },
   {
     id: 'badge-default',
@@ -149,6 +203,10 @@ export function readAllOwnerAssets(): OwnerAssetMap {
 
 export function readOwnerAsset(slotId: string): string | null {
   return readAssets()[slotId] ?? null;
+}
+
+export function ownerAssetNavSlotId(page: string): string {
+  return 'sidebar-nav-' + page;
 }
 
 export function ownerAssetBadgeSlotId(badgeName: string): string {

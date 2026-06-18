@@ -104,6 +104,7 @@ import { membershipPlanForTier, useMembershipPlanState } from './membership-plan
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
+import { ownerAssetNavSlotId } from './nami-owner-assets-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { requestSettingsSection, SettingsScreen } from './SettingsScreen.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
@@ -741,14 +742,16 @@ function Sidebar(props: {
               nested
               slotId="hub-sidebar-logo"
             />
-            <div
+            <OwnerEditableImage
               className={
                 'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
                 (isOnGameHub ? ' is-current-hub-mark' : ' is-alt-hub-mark')
               }
-            >
-              G
-            </div>
+              fallback={<span aria-hidden="true">G</span>}
+              label="Game hub sidebar icon"
+              nested
+              slotId="sidebar-nav-gamehub"
+            />
           </div>
           {!props.collapsed ? (
             <span className="sidebar-hub-swap-copy">
@@ -794,7 +797,13 @@ function Sidebar(props: {
             onClick={() => props.onNavigate(item.page)}
             type="button"
           >
-            <span className="nav-icon">{item.shortLabel.slice(0, 1)}</span>
+            <OwnerEditableImage
+              className="nav-icon"
+              fallback={<span aria-hidden="true">{item.shortLabel.slice(0, 1)}</span>}
+              label={item.shortLabel + ' nav icon'}
+              nested
+              slotId={ownerAssetNavSlotId(item.page)}
+            />
             {!props.collapsed && <span>{item.shortLabel}</span>}
             {item.page === 'guilds' && props.guildEventUnreadCount > 0 ? (
               <span
@@ -820,7 +829,13 @@ function Sidebar(props: {
           onClick={() => saveIgniteRadioEnabled(!igniteRadioEnabled)}
           type="button"
         >
-          <span className="nav-icon">♫</span>
+          <OwnerEditableImage
+            className="nav-icon"
+            fallback={<span aria-hidden="true">♫</span>}
+            label="Ignite Radio nav icon"
+            nested
+            slotId="sidebar-nav-radio"
+          />
           {!props.collapsed ? (
             <span>{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
           ) : null}

@@ -556,9 +556,21 @@ export function BadgeCollectorsBook(props: {
 
   const coverContent = (
     <>
-      <span className="badge-book-cover-ornament" aria-hidden="true" />
+      <OwnerEditableImage
+        className="badge-book-cover-ornament-editable"
+        fallback={<span aria-hidden="true" className="badge-book-cover-ornament" />}
+        label="Badge book cover emblem"
+        nested
+        slotId="badge-book-cover-sphere"
+      />
       <span className="badge-book-cover-kicker">Collector Edition</span>
-      <h2>Nami Badges</h2>
+      <OwnerEditableImage
+        className="badge-book-cover-title-editable"
+        fallback={<span className="badge-book-cover-title-fallback">Nami Badges</span>}
+        label="Badge book title logo"
+        nested
+        slotId="badge-book-cover-title"
+      />
       {props.ownerLabel ? <p>{props.ownerLabel}</p> : null}
       <span className="badge-book-cover-cta">Tap to open</span>
     </>

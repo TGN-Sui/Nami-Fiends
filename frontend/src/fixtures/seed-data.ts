@@ -650,6 +650,10 @@ export const members: NamiMember[] = [
   { id: 'm19', surfaceType: 'member', avatarSeed: 'HM', name: 'HarborMint', signal: 'Green', tier: 'Adventurer', badge: 'Builder' }
 ];
 
+/** Built-in portrait placeholder until the owner uploads a custom default avatar. */
+export const BUILTIN_DEFAULT_MEMBER_AVATAR_URL =
+  members.find((member) => member.id === 'm2')?.avatarImageUrl ?? null;
+
 export const chatMessages: ChatMessage[] = [
   {
     id: 'c1',

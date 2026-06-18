@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
 import { memberRainbowBorderClass } from './channel-surface.js';
 import { resolveMemberAvatarImageUrl, withMemberAvatar } from './member-avatar-store.js';
+import { BUILTIN_DEFAULT_MEMBER_AVATAR_URL } from './fixtures/seed-data.js';
 import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
 import { useMemberStreamingOnline } from './member-online-store.js';
 import { withMemberProfile } from './member-profile-store.js';
@@ -87,7 +88,11 @@ function isChatAvatarFoilSweepEligible(
 }
 
 function resolveDisplayedAvatarImageUrl(member: NamiMember): string | null {
-  return resolveMemberAvatarImageUrl(member) ?? resolveOwnerAssetUrl('default-member-avatar');
+  return (
+    resolveMemberAvatarImageUrl(member) ??
+    resolveOwnerAssetUrl('default-member-avatar') ??
+    BUILTIN_DEFAULT_MEMBER_AVATAR_URL
+  );
 }
 
 function memberAvatarAssetVariables(member: NamiMember): CSSProperties {

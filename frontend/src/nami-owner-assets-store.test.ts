@@ -2,8 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ownerAssetBadgeSlotId,
+  ownerAssetNavSlotId,
   validateOwnerAssetFile,
 } from './nami-owner-assets-store.js';
+
+describe('ownerAssetNavSlotId', () => {
+  it('maps nav pages to stable sidebar asset slot ids', () => {
+    expect(ownerAssetNavSlotId('messages')).toBe('sidebar-nav-messages');
+    expect(ownerAssetNavSlotId('settings')).toBe('sidebar-nav-settings');
+  });
+});
 
 describe('ownerAssetBadgeSlotId', () => {
   it('maps badge names to stable asset slot ids', () => {
