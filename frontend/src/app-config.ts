@@ -62,13 +62,15 @@ export function isChainConfigured(config: AppConfig = readAppConfig()): boolean 
   return config.packageId !== null;
 }
 
-/** Fixture catalogs remain available until the receiving server is live. */
+/**
+ * Dev fixture catalogs (channels, members, chat seeds).
+ * Disable with VITE_NAMI_DEV_FIXTURES=false.
+ *
+ * Indexer URL configuration alone does not switch catalogs off — live directory
+ * providers take over in Slice 7 once the receiving server is connected.
+ */
 export function shouldUseDevFixtures(config: AppConfig = readAppConfig()): boolean {
-  if (!config.devFixtures) {
-    return false;
-  }
-
-  return !isIndexerLive(config);
+  return config.devFixtures;
 }
 
 export function isTestLaunchMode(config: AppConfig = readAppConfig()): boolean {
