@@ -26,15 +26,22 @@ const INDEXED_TABS = [
 
 type IndexedTabId = (typeof INDEXED_TABS)[number]['id'];
 
-export function IndexedDataPanel(): ReactElement {
+export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactElement {
   const [activeTab, setActiveTab] = useState<IndexedTabId>('identity');
 
   return (
-    <article className="panel settings-indexed-data-panel settings-section-wide">
-      <div className="profile-panel-heading">
-        <h2>Indexed Data</h2>
-        <p>All synced profile, channel, and safety reads in one place.</p>
-      </div>
+    <article
+      className={
+        'panel settings-indexed-data-panel' +
+        (props.embedded ? ' nami-owner-advanced-embedded-panel' : ' settings-section-wide')
+      }
+    >
+      {props.embedded ? null : (
+        <div className="profile-panel-heading">
+          <h2>Indexed Data</h2>
+          <p>All synced profile, channel, and safety reads in one place.</p>
+        </div>
+      )}
 
       <div className="settings-indexed-tab-row tab-row" role="tablist" aria-label="Indexed data tabs">
         {INDEXED_TABS.map((tab) => (
@@ -51,7 +58,7 @@ export function IndexedDataPanel(): ReactElement {
         ))}
       </div>
 
-      <div className="settings-indexed-tab-body">
+      <div className="settings-indexed-tab-body nami-owner-advanced-scroll-region">
         {activeTab === 'identity' ? <ProtocolIdentityPanel /> : null}
         {activeTab === 'profile' ? <ProtocolProfilePanel /> : null}
         {activeTab === 'conduct' ? <ProtocolConductPanel /> : null}

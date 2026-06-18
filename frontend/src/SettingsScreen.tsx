@@ -2,12 +2,9 @@ import { useEffect, useState, type ReactElement } from 'react';
 
 import { AccountConnectSection } from './account-connect.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
-import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
-import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
-import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
-import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
+import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
@@ -515,12 +512,7 @@ export function SettingsScreen(props: {
 
         {activeSection === 'advanced' ? (
           <div className="settings-section-stack">
-            <NamiOwnerAssetEditPanel
-              onEnterEditMode={() => props.onNavigate?.('hub')}
-            />
-            <NamiOwnerSettingsPanel />
-            <NamiOwnerEmojiPanel />
-            {showIndexedDataPanel ? <IndexedDataPanel /> : null}
+            <NamiOwnerAdvancedPanel onEnterEditMode={() => props.onNavigate?.('hub')} />
           </div>
         ) : null}
       </section>

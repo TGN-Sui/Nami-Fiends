@@ -7671,9 +7671,80 @@ body.is-nami-owner-edit-mode .main-stage {
   pointer-events: none;
 }
 
+.nami-owner-advanced-dashboard {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+}
+
+.nami-owner-advanced-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.nami-owner-advanced-heading h2 {
+  margin: 0;
+}
+
+.nami-owner-advanced-heading p {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.nami-owner-advanced-tab-row {
+  margin: 0;
+}
+
+.nami-owner-advanced-tab-hint {
+  margin: 0;
+  color: rgba(185, 210, 235, 0.72);
+  font-size: 0.84rem;
+}
+
+.nami-owner-advanced-body {
+  display: grid;
+  min-height: 0;
+  max-height: min(68vh, 720px);
+  overflow: hidden;
+}
+
+.nami-owner-advanced-embedded-panel {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  height: 100%;
+  margin-top: 0 !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.nami-owner-advanced-embedded-panel.panel,
+.nami-owner-advanced-embedded-panel.settings-card {
+  min-height: 0;
+}
+
+.nami-owner-advanced-scroll-region {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.nami-owner-advanced-inline-status {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .nami-owner-asset-edit {
   display: grid;
   gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
 }
 
 .nami-owner-asset-edit-toolbar {
@@ -7771,6 +7842,17 @@ body.is-nami-owner-edit-mode .main-stage {
   margin-top: 16px;
   display: grid;
   gap: 14px;
+}
+
+.nami-owner-settings.nami-owner-advanced-embedded-panel {
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.nami-owner-settings-body {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
 }
 
 .nami-owner-settings-header {
@@ -11083,10 +11165,28 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   display: inline-block;
 }
 
+.nami-owner-emoji-panel {
+  min-height: 0;
+  height: 100%;
+}
+
+.nami-owner-emoji-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 14px;
+  min-height: 0;
+  height: 100%;
+}
+
+.nami-owner-emoji-upload-column {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
 .nami-owner-emoji-panel .nami-owner-emoji-upload-form {
   display: grid;
   gap: 12px;
-  margin-bottom: 14px;
 }
 
 .nami-owner-emoji-hint {
@@ -11101,30 +11201,118 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   font-size: 0.84rem;
 }
 
-.nami-owner-emoji-grid {
+.nami-owner-emoji-library {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
-}
-
-.nami-owner-emoji-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
+  min-height: 0;
   padding: 12px;
   border: 1px solid rgba(117, 188, 224, 0.18);
-  border-radius: 12px;
-  background: rgba(5, 9, 15, 0.38);
+  border-radius: 14px;
+  background: rgba(5, 9, 15, 0.34);
 }
 
-.nami-owner-emoji-card-copy {
-  display: grid;
-  gap: 4px;
+.nami-owner-emoji-library-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.nami-owner-emoji-card-copy code {
-  color: #ffd36e;
+.nami-owner-emoji-library-header strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.nami-owner-emoji-library-header p {
+  margin: 4px 0 0;
+  color: rgba(185, 210, 235, 0.72);
   font-size: 0.8rem;
+}
+
+.nami-owner-emoji-count-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 188, 224, 0.24);
+  background: rgba(8, 12, 20, 0.55);
+  color: rgba(220, 235, 250, 0.92);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.nami-owner-emoji-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+
+.nami-owner-emoji-tile {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  border-radius: 12px;
+  background: rgba(5, 9, 15, 0.45);
+}
+
+.nami-owner-emoji-tile-preview {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.nami-owner-emoji-tile-image {
+  width: 36px;
+  height: 36px;
+}
+
+.nami-owner-emoji-tile-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nami-owner-emoji-tile-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.nami-owner-emoji-tile-copy code {
+  color: #ffd36e;
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nami-owner-emoji-remove-btn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 143, 157, 0.28);
+  background: rgba(255, 143, 157, 0.08);
+  color: #ff9fad;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nami-owner-emoji-remove-btn:hover {
+  background: rgba(255, 143, 157, 0.16);
+}
+
+@media (max-width: 900px) {
+  .nami-owner-emoji-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(240px, 1fr);
+  }
 }
 
 .is-coming-soon-action:disabled {
@@ -11134,8 +11322,19 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .nami-owner-emoji-empty {
   margin: 0;
+  grid-column: 1 / -1;
   color: rgba(185, 210, 235, 0.72);
   font-size: 0.86rem;
+}
+
+.settings-indexed-data-panel.nami-owner-advanced-embedded-panel {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+}
+
+.settings-indexed-data-panel.nami-owner-advanced-embedded-panel .settings-indexed-tab-body {
+  min-height: 0;
 }
 
 .sr-only {

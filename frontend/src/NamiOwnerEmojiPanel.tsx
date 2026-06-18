@@ -5,6 +5,7 @@ import {
   addNamiCustomEmojisBatch,
   emojiShortcodeToken,
   NAMI_EMOJI_ACCEPTED_FORMATS,
+  NAMI_EMOJI_MAX_COUNT,
   normalizeEmojiShortcode,
   removeNamiCustomEmoji,
   suggestEmojiShortcodeFromLabel,
@@ -45,7 +46,7 @@ function uniqueShortcode(base: string, used: Set<string>): string {
   return candidate;
 }
 
-export function NamiOwnerEmojiPanel(): ReactElement | null {
+export function NamiOwnerEmojiPanel(props: { embedded?: boolean } = {}): ReactElement | null {
   const { owner } = useProtocolOwner();
   const emojis = useNamiCustomEmojis();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -59,6 +60,8 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
   if (!canManageCustomEmojis(owner)) {
     return null;
   }
+
+  const libraryFull = emojis.length >= NAMI_EMOJI_MAX_COUNT;
 
   function clearMessages(): void {
     setNotice(null);
@@ -164,89 +167,125 @@ export function NamiOwnerEmojiPanel(): ReactElement | null {
   }
 
   return (
-    <section className="panel settings-card nami-owner-emoji-panel">
-      <div className="profile-panel-heading">
-        <span className="mini-badge">Nami Official Owner</span>
-        <h2>Chat Emoji Library</h2>
-        <p>
-          Upload custom emojis for every member. Only the Nami Official owner can add or remove
-          images here. Members insert them as shortcodes like <code>:wave:</code> from the emoji
-          picker beside chat composers.
-        </p>
-      </div>
-
-      <div className="nami-owner-emoji-upload-form">
-        <label className="member-profile-action-field">
-          <span>Display label (optional for batch uploads)</span>
-          <input
-            aria-label="Emoji display label"
-            onChange={(event) => setLabel(event.target.value)}
-            placeholder="Wave hello"
-            value={label}
-          />
-        </label>
-
-        <label className="member-profile-action-field">
-          <span>Shortcode (optional — auto-generated per file when uploading many)</span>
-          <input
-            aria-label="Emoji shortcode"
-            onChange={(event) => setShortcode(normalizeEmojiShortcode(event.target.value))}
-            placeholder="wave"
-            value={shortcode}
-          />
-        </label>
-
-        <p className="nami-owner-emoji-hint">
-          Accepted formats: {NAMI_EMOJI_ACCEPTED_FORMATS}. Max 512 KB per emoji. Upload one or many
-          images at once.
-        </p>
-
-        <div className="nami-owner-emoji-upload-actions">
-          <button
-            className="primary-action"
-            disabled={isReadingFile}
-            onClick={openFilePicker}
-            type="button"
-          >
-            {isReadingFile ? 'Reading images…' : 'Upload emoji images'}
-          </button>
-          <input
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="sr-only"
-            multiple
-            onChange={(event) => {
-              void handleFileChange(event);
-            }}
-            ref={fileInputRef}
-            type="file"
-          />
+    <section
+      className={
+        'panel settings-card nami-owner-emoji-panel' +
+        (props.embedded ? ' nami-owner-advanced-embedded-panel' : '')
+      }
+    >
+      {props.embedded ? null : (
+        <div className="profile-panel-heading">
+          <span className="mini-badge">Nami Official Owner</span>
+          <h2>Chat Emoji Library</h2>
+          <p>
+            Upload custom emojis for every member. Only the Nami Official owner can add or remove
+            images here. Members insert them as shortcodes like <code>:wave:</code> from the emoji
+            picker beside chat composers.
+          </p>
         </div>
-      </div>
+      )}
 
-      {notice ? <p className="member-profile-action-status">{notice}</p> : null}
-      {error ? <p className="nami-owner-emoji-error">{error}</p> : null}
+      <div className="nami-owner-emoji-layout">
+        <div className="nami-owner-emoji-upload-column">
+          <div className="nami-owner-emoji-upload-form">
+            <label className="member-profile-action-field">
+              <span>Display label (optional for batch uploads)</span>
+              <input
+                aria-label="Emoji display label"
+                onChange={(event) => setLabel(event.target.value)}
+                placeholder="Wave hello"
+                value={label}
+              />
+            </label>
 
-      <div className="nami-owner-emoji-grid" role="list">
-        {emojis.length === 0 ? (
-          <p className="nami-owner-emoji-empty">No custom emojis yet. Upload images to populate the picker.</p>
-        ) : (
-          emojis.map((emoji) => (
-            <article className="nami-owner-emoji-card" key={emoji.id} role="listitem">
-              <img alt={emoji.label} className="nami-custom-emoji-image" src={emoji.imageUrl} />
-              <div className="nami-owner-emoji-card-copy">
-                <strong>{emoji.label}</strong>
-                <code>{emojiShortcodeToken(emoji.shortcode)}</code>
-              </div>
+            <label className="member-profile-action-field">
+              <span>Shortcode (optional — auto-generated per file when uploading many)</span>
+              <input
+                aria-label="Emoji shortcode"
+                onChange={(event) => setShortcode(normalizeEmojiShortcode(event.target.value))}
+                placeholder="wave"
+                value={shortcode}
+              />
+            </label>
+
+            <p className="nami-owner-emoji-hint">
+              Accepted formats: {NAMI_EMOJI_ACCEPTED_FORMATS}. Max 512 KB per emoji. Upload one or
+              many images at once.
+            </p>
+
+            <div className="nami-owner-emoji-upload-actions">
               <button
-                className="secondary-action"
-                onClick={() => handleRemove(emoji.id)}
+                className="primary-action"
+                disabled={isReadingFile || libraryFull}
+                onClick={openFilePicker}
                 type="button"
               >
-                Remove
+                {isReadingFile
+                  ? 'Reading images…'
+                  : libraryFull
+                    ? 'Library full'
+                    : 'Upload emoji images'}
               </button>
-            </article>
-          ))
-        )}
+              <input
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="sr-only"
+                multiple
+                onChange={(event) => {
+                  void handleFileChange(event);
+                }}
+                ref={fileInputRef}
+                type="file"
+              />
+            </div>
+          </div>
+
+          {notice ? <p className="member-profile-action-status">{notice}</p> : null}
+          {error ? <p className="nami-owner-emoji-error">{error}</p> : null}
+        </div>
+
+        <div className="nami-owner-emoji-library">
+          <div className="nami-owner-emoji-library-header">
+            <div>
+              <strong>Shared library</strong>
+              <p>Members insert these from chat emoji pickers.</p>
+            </div>
+            <span className="nami-owner-emoji-count-badge">
+              {emojis.length} / {NAMI_EMOJI_MAX_COUNT}
+            </span>
+          </div>
+
+          <div className="nami-owner-emoji-tile-grid nami-owner-advanced-scroll-region" role="list">
+            {emojis.length === 0 ? (
+              <p className="nami-owner-emoji-empty">
+                No custom emojis yet. Upload images to populate the picker.
+              </p>
+            ) : (
+              emojis.map((emoji) => (
+                <article className="nami-owner-emoji-tile" key={emoji.id} role="listitem">
+                  <div className="nami-owner-emoji-tile-preview">
+                    <img
+                      alt={emoji.label}
+                      className="nami-custom-emoji-image nami-owner-emoji-tile-image"
+                      src={emoji.imageUrl}
+                    />
+                  </div>
+                  <div className="nami-owner-emoji-tile-copy">
+                    <strong title={emoji.label}>{emoji.label}</strong>
+                    <code>{emojiShortcodeToken(emoji.shortcode)}</code>
+                  </div>
+                  <button
+                    aria-label={'Remove ' + emoji.label}
+                    className="nami-owner-emoji-remove-btn"
+                    onClick={() => handleRemove(emoji.id)}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

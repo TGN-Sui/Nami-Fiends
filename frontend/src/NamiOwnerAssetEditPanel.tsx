@@ -14,6 +14,7 @@ import { enterNamiOwnerEditMode, setOwnerAssetDraft, useNamiOwnerEditMode } from
 import { useProtocolOwner } from './wallet.js';
 
 export function NamiOwnerAssetEditPanel(props: {
+  embedded?: boolean;
   onEnterEditMode: () => void;
 }): ReactElement | null {
   const { owner } = useProtocolOwner();
@@ -77,17 +78,23 @@ export function NamiOwnerAssetEditPanel(props: {
   }
 
   return (
-    <section className="nami-owner-asset-edit panel">
-      <div className="nami-owner-settings-header">
-        <div>
-          <span className="mini-badge">Visual Assets</span>
-          <h2>Platform artwork editor</h2>
-          <p>
-            Upload badges, logos, button accents, and default profile portraits. Enter edit mode to
-            click placeholders across the hub, or upload directly from this catalog.
-          </p>
+    <section
+      className={
+        'nami-owner-asset-edit panel' + (props.embedded ? ' nami-owner-advanced-embedded-panel' : '')
+      }
+    >
+      {props.embedded ? null : (
+        <div className="nami-owner-settings-header">
+          <div>
+            <span className="mini-badge">Visual Assets</span>
+            <h2>Platform artwork editor</h2>
+            <p>
+              Upload badges, logos, button accents, and default profile portraits. Enter edit mode to
+              click placeholders across the hub, or upload directly from this catalog.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="nami-owner-asset-edit-toolbar">
         <button className="onboarding-primary-btn" onClick={handleEnterEditMode} type="button">
@@ -98,7 +105,7 @@ export function NamiOwnerAssetEditPanel(props: {
         </p>
       </div>
 
-      <div className="nami-owner-asset-catalog">
+      <div className="nami-owner-asset-catalog nami-owner-advanced-scroll-region">
         {OWNER_ASSET_SLOTS.map((slot) => {
           const imageUrl = readOwnerAsset(slot.id);
 

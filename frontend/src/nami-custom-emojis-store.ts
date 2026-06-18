@@ -243,3 +243,4 @@ export function parseCustomEmojiSegments(text: string): ParsedEmojiSegment[] {
 }
 
 export const NAMI_EMOJI_ACCEPTED_FORMATS = 'PNG, JPG, WebP, GIF';
+export const NAMI_EMOJI_MAX_COUNT = MAX_EMOJI_COUNT;

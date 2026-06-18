@@ -28,7 +28,7 @@ function shortenAddress(value: string): string {
   return value.slice(0, 10) + '…' + value.slice(-6);
 }
 
-export function NamiOwnerSettingsPanel(): ReactElement | null {
+export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): ReactElement | null {
   const { owner } = useProtocolOwner();
   const { pendingClaims, openPendingCount, banList, moderators } = useNamiAdminStore();
 
@@ -183,23 +183,46 @@ export function NamiOwnerSettingsPanel(): ReactElement | null {
   }
 
   return (
-    <section className="nami-owner-settings panel">
-      <div className="nami-owner-settings-header">
-        <div>
-          <span className="mini-badge">Nami Owner Settings</span>
-          <h2>Official security console</h2>
-          <p>
-            Sole-owner console for nodename claims, enforcement, jury control, and moderator
-            promotion. Connected as <strong>Official Owner</strong>.
-          </p>
+    <section
+      className={
+        'nami-owner-settings panel' + (props.embedded ? ' nami-owner-advanced-embedded-panel' : '')
+      }
+    >
+      {props.embedded ? (
+        openPendingCount > 0 ? (
+          <div className="nami-owner-advanced-inline-status">
+            <span
+              className="nami-owner-pending-badge"
+              aria-label={'Pending claims: ' + openPendingCount}
+            >
+              {openPendingCount} pending claims
+            </span>
+          </div>
+        ) : null
+      ) : (
+        <div className="nami-owner-settings-header">
+          <div>
+            <span className="mini-badge">Nami Owner Settings</span>
+            <h2>Official security console</h2>
+            <p>
+              Sole-owner console for nodename claims, enforcement, jury control, and moderator
+              promotion. Connected as <strong>Official Owner</strong>.
+            </p>
+          </div>
+          {openPendingCount > 0 ? (
+            <span
+              className="nami-owner-pending-badge"
+              aria-label={'Pending claims: ' + openPendingCount}
+            >
+              {openPendingCount} pending
+            </span>
+          ) : null}
         </div>
-        {openPendingCount > 0 ? (
-          <span className="nami-owner-pending-badge" aria-label={'Pending claims: ' + openPendingCount}>
-            {openPendingCount} pending
-          </span>
-        ) : null}
-      </div>
+      )}
 
+      <div
+        className={props.embedded ? 'nami-owner-advanced-scroll-region nami-owner-settings-body' : 'nami-owner-settings-body'}
+      >
       {officialOwner ? (
         <p className="protocol-hint nami-owner-official-wallet">
           Official owner wallet: <code>{shortenAddress(officialOwner)}</code>
@@ -389,6 +412,7 @@ export function NamiOwnerSettingsPanel(): ReactElement | null {
 
       {actionError ? <p className="onboarding-field-error">{actionError}</p> : null}
       {actionNotice ? <p className="protocol-hint nami-owner-action-notice">{actionNotice}</p> : null}
+      </div>
     </section>
   );
 }
