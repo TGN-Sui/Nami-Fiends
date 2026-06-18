@@ -787,6 +787,9 @@ dd {
 .gamehub-browser {
   display: grid;
   gap: 18px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .browser-heading {

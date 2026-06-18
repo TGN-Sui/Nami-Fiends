@@ -1,4 +1,5 @@
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { LANDING_GENRE_LOUNGES } from './landing-content.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { channels, members, userProfile, type ConductSignal, type NamiChannel, type NamiMember } from './uiMockData.js';
@@ -88,104 +89,44 @@ export const hubGlobalChats: GlobalChatRoom[] = [
   },
 ];
 
-export const genreOfficialChats: GlobalChatRoom[] = [
-  {
-    id: 'genre-fps',
-    title: 'FPS Arena',
-    kind: 'genre',
-    genre: 'FPS / Shooter',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 920,
-    voiceEnabled: true,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-rpg',
-    title: 'RPG Quest Hall',
-    kind: 'genre',
-    genre: 'RPG / Adventure',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 740,
-    voiceEnabled: true,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-moba',
-    title: 'MOBA Strategy',
-    kind: 'genre',
-    genre: 'MOBA / Strategy',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 612,
-    voiceEnabled: true,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-sports',
-    title: 'Sports & Racing',
-    kind: 'genre',
-    genre: 'Sports / Racing',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 388,
-    voiceEnabled: false,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-sandbox',
-    title: 'Sandbox Builders',
-    kind: 'genre',
-    genre: 'Sandbox / Builder',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 455,
-    voiceEnabled: true,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-social',
-    title: 'Social & Party',
-    kind: 'genre',
-    genre: 'Gaming / Social',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 1032,
-    voiceEnabled: false,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-horror',
-    title: 'Horror Nights',
-    kind: 'genre',
-    genre: 'Horror / Survival',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 266,
-    voiceEnabled: true,
-    isOfficial: true,
-    closesOnExit: false,
-  },
-  {
-    id: 'genre-indie',
-    title: 'Indie Spotlight',
-    kind: 'genre',
-    genre: 'Indie / Experimental',
-    createdBy: 'Nami',
-    creatorVerified: true,
-    activeMembers: 198,
-    voiceEnabled: false,
-    isOfficial: true,
-    closesOnExit: false,
-  },
+const GENRE_LOUNGE_ACTIVE_MEMBERS: readonly number[] = [
+  920, 812, 748, 688, 612, 568, 528, 492, 458, 428, 398, 372, 348, 322, 298, 276, 254, 234, 216, 198, 182, 168, 154,
 ];
+
+const GENRE_LOUNGE_VOICE_ENABLED = new Set<(typeof LANDING_GENRE_LOUNGES)[number]>([
+  'Shooter',
+  'MOBA',
+  'Sport',
+  'Racing',
+  'Fighting',
+  'RTS',
+  'Tactical',
+  'Hack & Slash',
+  'Arcade',
+]);
+
+function genreLoungeId(title: (typeof LANDING_GENRE_LOUNGES)[number]): string {
+  return (
+    'genre-' +
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+  );
+}
+
+export const genreOfficialChats: GlobalChatRoom[] = LANDING_GENRE_LOUNGES.map((title, index) => ({
+  id: genreLoungeId(title),
+  title,
+  kind: 'genre',
+  genre: title,
+  createdBy: 'Nami',
+  creatorVerified: true,
+  activeMembers: GENRE_LOUNGE_ACTIVE_MEMBERS[index] ?? 150,
+  voiceEnabled: GENRE_LOUNGE_VOICE_ENABLED.has(title),
+  isOfficial: true,
+  closesOnExit: false,
+}));
 
 const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
   [OFFICIAL_NAMI_GLOBAL_CHAT_ID]: [

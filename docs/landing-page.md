@@ -14,8 +14,8 @@ frontend/src/landing-content.ts
 | --- | --- |
 | `LANDING_HERO` | Hero eyebrow, headline, description (`subhead`), trust note |
 | `LANDING_SCENARIOS` | TCG scenario deck cards (`title`, `pain`, `namiWay`, `outcome`) |
-| `LANDING_GENRE_LOUNGES` | Genre lounge chip labels in the showcase |
-| `LANDING_PILLARS` | “What Nami is” pillar cards |
+| `LANDING_GENRE_LOUNGES` | 23 official IGDB genre lounge labels (chips, Game Hub genre chats, floating bubbles) |
+| `LANDING_PILLARS` | “What Nami is” pillar cards (`id`, `index`, `tag`, `title`, `detail`, optional `variant: 'featured'`) |
 | `LANDING_STEPS` | Three-step onboarding section |
 | `GAME_HUB_INTRO` | Game Hub intro after entering Nami |
 

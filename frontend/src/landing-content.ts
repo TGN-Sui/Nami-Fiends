@@ -7,8 +7,12 @@ export type LandingScenario = {
 };
 
 export type LandingPillar = {
+  id: string;
+  index: string;
+  tag: string;
   title: string;
   detail: string;
+  variant?: 'featured';
 };
 
 export const LANDING_HERO = {
@@ -42,8 +46,7 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
       'When the meta moves, the lobby empties and the gamer group goes dead. General chat is too loud. ' +
       'You want people who play your way, no matter what title they are on tonight.',
     namiWay:
-      'Official Nami genre lounges for FPS, MMORPG, MOBA, Sports & Racing, Sandbox, Souls-Like, and JRPG ' +
-      'give fans a public home that outlives any single launch.',
+      'Official Nami genre lounges across all 23 IGDB genre rooms give fans a public home that outlives any single launch.',
     outcome: 'Your people live in the genre room, not the launch week server.',
   },
   {
@@ -76,38 +79,80 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
   },
 ];
 
+/** IGDB defines 23 official top-level video game genres; Nami mirrors that lounge set in Game Hub. */
 export const LANDING_GENRE_LOUNGES = [
-  'FPS',
-  'MMORPG',
+  'Shooter',
   'MOBA',
-  'Sports & Racing',
-  'Sandbox',
-  'Souls-Like',
-  'JRPG',
+  'RPG',
+  'Sport',
+  'Racing',
+  'Fighting',
+  'Adventure',
+  'Strategy',
+  'RTS',
+  'Indie',
+  'Platform',
+  'Simulator',
+  'Puzzle',
+  'Tactical',
+  'TBS',
+  'Hack & Slash',
+  'Music',
+  'Arcade',
+  'Visual Novel',
+  'Card & Board',
+  'Point & Click',
+  'Quiz & Trivia',
+  'Pinball',
 ] as const;
 
 export const LANDING_PILLARS: LandingPillar[] = [
   {
+    id: 'passport',
+    index: '01',
+    tag: 'Identity',
     title: 'Passport & badges',
-    detail: 'Level, reputation, and collectible proof that follows you channel to channel.',
-  },
-  {
-    title: 'Channels & studios',
-    detail: 'Every game or community gets a verified home with chat, events, guilds, and modules.',
-  },
-  {
-    title: 'Genre global chats',
     detail:
-      'Official genre lounges for FPS, RPG, MOBA, sports, sandbox, and more, where gamers meet ' +
-      'across every channel before they follow a specific game.',
+      'Your TCG style gamer card with level, reputation, badges, and platform links in one profile ' +
+      'other members can read at a glance.',
+    variant: 'featured',
   },
   {
+    id: 'channels',
+    index: '02',
+    tag: 'Home',
+    title: 'Channels & studios',
+    detail:
+      'Every game or community gets a verified channel with chat, events, guilds, and modules. ' +
+      'One permanent home, not a scatter of invite links.',
+    variant: 'featured',
+  },
+  {
+    id: 'genre-lounges',
+    index: '03',
+    tag: 'Lounges',
+    title: 'Genre lounges',
+    detail:
+      'Official lounges across 23 IGDB genre rooms from Shooter and MOBA to Visual Novel and Pinball. ' +
+      'Meet your people by play style, not just by launch week.',
+  },
+  {
+    id: 'squads',
+    index: '04',
+    tag: 'Crew',
     title: 'Squads & guilds',
-    detail: 'Persistent groups that survive game hops and seasonal roster churn.',
+    detail:
+      'Persistent squads and guilds that survive platform hops, renames, and seasonal roster churn. ' +
+      'Your crew stays on the passport, not one gamertag.',
   },
   {
+    id: 'safety',
+    index: '05',
+    tag: 'Trust',
     title: 'Safety & conduct',
-    detail: 'Color signals, reports, appeals, and moderation that protect playable rooms.',
+    detail:
+      'Passport gated rooms, conduct signals, reports, and moderation you control. Real members stay, ' +
+      'bots and bad faith noise don\'t get a seat.',
   },
 ];
 

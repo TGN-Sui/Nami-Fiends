@@ -130,7 +130,11 @@ import {
 import { GenreChatRoomPanel, PinnedGenreChatDock, HubGlobalChatsSection } from './GlobalChatsPanel.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
+import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
+import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
+import { GameHubChannelTile } from './GameHubChannelTile.js';
+import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import { pendingApprovalsForMember } from './approval-requests-store.js';
 import {
   GuildDetailScreen,
@@ -1857,6 +1861,14 @@ function GameHub(props: {
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
+
+  useEffect(() => {
+    releaseExpandedChatScrollLock();
+
+    return () => {
+      releaseExpandedChatScrollLock();
+    };
+  }, []);
   const [interestModules, setInterestModules] = useState<GameHubInterestModule[]>(() => {
     return readGameHubInterestModules();
   });
@@ -1883,6 +1895,7 @@ function GameHub(props: {
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
   const [swipeIndex, setSwipeIndex] = useState(0);
+  const tileStripRef = useHorizontalScrollStrip<HTMLDivElement>();
 
   function openGenreBubbleChannel(channel: NamiChannel): void {
     const genreChat = genreOfficialChats.find((chat) => chat.id === channel.id);
@@ -1929,24 +1942,6 @@ function GameHub(props: {
       const nextValue = direction === 'previous' ? value - 1 : value + 1;
       return (nextValue + filteredBrowserChannels.length) % filteredBrowserChannels.length;
     });
-  }
-
-  function updateFoilCardTilt(element: HTMLElement, clientX: number, clientY: number): void {
-    const rect = element.getBoundingClientRect();
-    const pointerX = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    const pointerY = Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
-
-    element.style.setProperty('--game-card-tilt-x', ((pointerX - 0.5) * 12).toFixed(2) + 'deg');
-    element.style.setProperty('--game-card-tilt-y', ((0.5 - pointerY) * 10).toFixed(2) + 'deg');
-    element.style.setProperty('--game-card-foil-x', (pointerX * 100).toFixed(2) + '%');
-    element.style.setProperty('--game-card-foil-y', (pointerY * 100).toFixed(2) + '%');
-  }
-
-  function resetFoilCardTilt(element: HTMLElement): void {
-    element.style.setProperty('--game-card-tilt-x', '0deg');
-    element.style.setProperty('--game-card-tilt-y', '0deg');
-    element.style.setProperty('--game-card-foil-x', '50%');
-    element.style.setProperty('--game-card-foil-y', '18%');
   }
 
   function persistInterestModules(nextModules: GameHubInterestModule[]): void {
@@ -2178,8 +2173,8 @@ function GameHub(props: {
           <div>
             <h2>Channel Browser</h2>
             <p>
-              Swipe or grid through game cover art — verified titles get the foil sleeve, partners
-              get the rainbow border.
+              Scroll three rows of TCG cover tiles horizontally. Partner channels get the graded foil
+              slab. Hover a tile to reveal channel details.
             </p>
           </div>
 
@@ -2190,7 +2185,7 @@ function GameHub(props: {
                 onClick={() => setBrowserViewMode('tiles')}
                 type="button"
               >
-                Tile Grid
+                Tile Strip
               </button>
               <button
                 className={'nami-surface-button' + (browserViewMode === 'swipe' ? ' is-active-view' : '')}
@@ -2227,76 +2222,28 @@ function GameHub(props: {
         ) : null}
 
         {browserViewMode === 'tiles' ? (
-          <div className="discovery-grid gamehub-discovery-grid">
-            {filteredBrowserEntries.map(({ channel, copyIndex }) => {
-              const channelTheme = getStoredChannelBrandTheme(channel.id);
-              const developerProfile = channelDeveloper(channel);
+          <div
+            aria-label="Channel browser tile grid"
+            className="gamehub-channel-tile-strip"
+            ref={tileStripRef}
+            role="region"
+            tabIndex={0}
+          >
+            <div className="gamehub-channel-tile-grid">
+              {filteredBrowserEntries.map(({ channel, copyIndex }) => {
+                const channelTheme = getStoredChannelBrandTheme(channel.id);
 
-              return (
-                <button
-                  className={
-                    'discovery-card discovery-card-expanded gamehub-discovery-card gamehub-cover-card ' +
-                    gameVerificationClass(channel) +
-                    (channel.verifiedGame ? ' is-verified-foil-card' : ' is-static-card') +
-                    channelRainbowBorderClass(channel)
-                  }
-                  key={channel.id + '-' + copyIndex}
-                  onClick={() => props.onOpenProfile(channel)}
-                  onPointerLeave={(event) => {
-                    if (channel.verifiedGame) resetFoilCardTilt(event.currentTarget);
-                  }}
-                  onPointerMove={(event) => {
-                    if (channel.verifiedGame) {
-                      updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
-                    }
-                  }}
-                  style={
-                    {
-                      '--game-card-brand': channelTheme.primary,
-                      '--game-card-brand-soft': channelTheme.secondary,
-                        ...gameCoverAssetVariables(channel)
-                    } as CSSProperties
-                  }
-                  type="button"
-                >
-                  <div
-                      className={'gamehub-cover-art' + (resolveChannelCoverUrl(channel) ? ' has-game-cover-image' : '')}
-                      aria-hidden="true"
-                    >
-                    <span className="gamehub-cover-face-scrim" />
-                    <span className="gamehub-cover-face-frame" />
-                    <span className="gamehub-cover-title-chip">{channel.name}</span>
-                    <span className="gamehub-cover-monogram">{channel.name.slice(0, 2).toUpperCase()}</span>
-                    <span className="gamehub-cover-surface-chip" title="Game channel">
-                      <i className="gamehub-cover-surface-icon" aria-hidden="true">▣</i>
-                      <span>Game</span>
-                    </span>
-                    <span
-                      className={'gamehub-cover-verification-chip ' + gameVerificationClass(channel)}
-                      title={gameVerificationBadgeLabel(channel)}
-                    >
-                      {gameVerificationShortLabel(channel)}
-                    </span>
-                  </div>
-
-                  <div className="gamehub-cover-overlay">
-                    <div className="gamehub-cover-topline">
-                      <span className="gamehub-dev-logo" title={developerProfile.name + ' developer mark'}>
-                        {developerProfile.logoSeed}
-                      </span>
-
-                      <span className="gamehub-cover-icons">
-                        {channel.verifiedGame && <i className="gamehub-grade-icon" title="Verified">◆</i>}
-                        {channel.partner && <i className="gamehub-partner-icon" title="Partner">✦</i>}
-                      </span>
-                    </div>
-
-                    <strong>{channel.name}</strong>
-                    <small>{channel.platforms.slice(0, 2).join(' / ')} · {channel.genre.split('/')[0]}</small>
-                  </div>
-                </button>
-              );
-            })}
+                return (
+                  <GameHubChannelTile
+                    brandPrimary={channelTheme.primary}
+                    brandSoft={channelTheme.secondary}
+                    channel={channel}
+                    key={channel.id + '-' + copyIndex}
+                    onOpen={() => props.onOpenProfile(channel)}
+                  />
+                );
+              })}
+            </div>
           </div>
         ) : (
           <section className="gamehub-swipe-stage" aria-label="Swipe deck channel browser">
@@ -2328,12 +2275,10 @@ function GameHub(props: {
                   (activeSwipeChannel.verifiedGame ? ' is-verified-foil' : '')
                 }
                 onPointerLeave={(event) => {
-                  if (activeSwipeChannel.verifiedGame) resetFoilCardTilt(event.currentTarget);
+                  resetGameCardTilt(event.currentTarget);
                 }}
                 onPointerMove={(event) => {
-                  if (activeSwipeChannel.verifiedGame) {
-                    updateFoilCardTilt(event.currentTarget, event.clientX, event.clientY);
-                  }
+                  updateGameCardTilt(event.currentTarget, event.clientX, event.clientY);
                 }}
                 style={
                   {
@@ -2424,15 +2369,15 @@ function GameHub(props: {
             activeChannelId={activeGenreChatId}
             badgeLabel="Genre lounges"
             boardClassName="is-genre-bubble-board"
-            bubbleScale={2.15}
+            bubbleScale={1.28}
             entries={genreBubbleEntries}
             heading="Genre Chats"
             onHoverChannel={() => undefined}
             onOpenChannel={openGenreBubbleChannel}
             subheading={
               genreDockPinned
-                ? 'Official genre lounges under Channel Browser. Bubble size reflects active members.'
-                : 'Unpinned panel view. Pick a lounge below or pin the floating dock again.'
+                ? '23 official IGDB genre lounges under Channel Browser. Bubble size reflects active members.'
+                : 'Unpinned panel view. Pick from 23 official genre lounges below or pin the floating dock again.'
             }
           />
 

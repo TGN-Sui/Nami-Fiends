@@ -32,8 +32,9 @@ export function LandingScenarioDeck(): ReactElement {
   const phaseTimerRef = useRef<number | null>(null);
 
   const cardsRemaining = Math.max(0, deckOrder.length - deckCursor);
-  const nextScenarioIndex = deckOrder[deckCursor % deckOrder.length] ?? 0;
-  const nextScenario = LANDING_SCENARIOS[nextScenarioIndex]!;
+  const deckIsEmpty = cardsRemaining === 0;
+  const nextScenario =
+    cardsRemaining > 0 ? LANDING_SCENARIOS[deckOrder[deckCursor]!]! : null;
 
   const clearTimers = useCallback((): void => {
     if (flipTimerRef.current !== null) {
@@ -58,6 +59,13 @@ export function LandingScenarioDeck(): ReactElement {
   }
 
   function pullScenario(order: number[], cursor: number): void {
+    if (cursor >= order.length) {
+      setPhase('ready');
+      setActiveScenario(null);
+      setIsFlipped(false);
+      return;
+    }
+
     const scenario = LANDING_SCENARIOS[order[cursor]!]!;
 
     setDeckCursor(cursor + 1);
@@ -81,13 +89,11 @@ export function LandingScenarioDeck(): ReactElement {
 
     clearTimers();
 
-    let nextOrder = deckOrder;
-    let nextCursor = deckCursor;
+    const nextOrder = deckOrder;
+    const nextCursor = deckCursor;
 
-    if (nextCursor >= nextOrder.length) {
-      nextOrder = shuffleDeck(LANDING_SCENARIOS.length);
-      nextCursor = 0;
-      setDeckOrder(nextOrder);
+    if (phase === 'ready' && deckIsEmpty) {
+      return;
     }
 
     if (phase === 'revealed' && isFlipped && activeScenario) {
@@ -98,8 +104,18 @@ export function LandingScenarioDeck(): ReactElement {
 
       phaseTimerRef.current = window.setTimeout(() => {
         setDiscardingScenario(null);
+
+        if (nextCursor >= nextOrder.length) {
+          setPhase('ready');
+          return;
+        }
+
         pullScenario(nextOrder, nextCursor);
       }, DISCARD_MS);
+      return;
+    }
+
+    if (nextCursor >= nextOrder.length) {
       return;
     }
 
@@ -108,35 +124,39 @@ export function LandingScenarioDeck(): ReactElement {
 
   const showActiveCard = activeScenario !== null && phase !== 'ready' && phase !== 'discarding';
   const drawLabel =
-    phase === 'discarding'
-      ? 'Discarding…'
-      : phase === 'drawing'
-        ? 'Drawing…'
-        : phase === 'revealed' && !isFlipped
-          ? 'Flipping soon…'
-          : phase === 'revealed'
-            ? 'Draw next scenario'
-            : 'Draw a scenario card';
+    deckIsEmpty && phase === 'ready'
+      ? 'Deck finished'
+      : phase === 'discarding'
+        ? 'Discarding…'
+        : phase === 'drawing'
+          ? 'Drawing…'
+          : phase === 'revealed' && !isFlipped
+            ? 'Flipping soon…'
+            : phase === 'revealed'
+              ? 'Draw next scenario'
+              : 'Draw a scenario card';
 
   return (
     <div className="nami-landing-scenario-deck">
       <div className="nami-landing-scenario-deck-stage" aria-live="polite">
-        <div
-          className={
-            'nami-landing-scenario-deck-stack' + (phase === 'discarding' ? ' is-advancing' : '')
-          }
-        >
-          <div className="nami-landing-scenario-deck-card is-shadow is-third" />
-          <div className="nami-landing-scenario-deck-card is-shadow is-second" />
-          <article className="nami-landing-scenario-deck-card is-face is-top">
-            <span className="nami-landing-scenario-deck-brand-mark" aria-hidden="true">
-              Nami
-            </span>
-            <span className="mini-badge">Next scenario</span>
-            <h4>{nextScenario.title}</h4>
-            <small>{cardsRemaining} ready to draw</small>
-          </article>
-        </div>
+        {cardsRemaining > 0 && nextScenario ? (
+          <div className="nami-landing-scenario-deck-stack">
+            {cardsRemaining >= 3 ? (
+              <div className="nami-landing-scenario-deck-card is-shadow is-third" />
+            ) : null}
+            {cardsRemaining >= 2 ? (
+              <div className="nami-landing-scenario-deck-card is-shadow is-second" />
+            ) : null}
+            <article className="nami-landing-scenario-deck-card is-face is-top">
+              <span className="nami-landing-scenario-deck-brand-mark" aria-hidden="true">
+                Nami
+              </span>
+              <span className="mini-badge">Next scenario</span>
+              <h4>{nextScenario.title}</h4>
+              <small>{cardsRemaining} ready to draw</small>
+            </article>
+          </div>
+        ) : null}
 
         {discardingScenario ? (
           <article className="nami-landing-scenario-flip-card is-discarding">
@@ -194,6 +214,7 @@ export function LandingScenarioDeck(): ReactElement {
         <button
           className="primary-action"
           disabled={
+            (deckIsEmpty && phase === 'ready') ||
             phase === 'discarding' ||
             phase === 'drawing' ||
             (phase === 'revealed' && !isFlipped)
@@ -204,8 +225,8 @@ export function LandingScenarioDeck(): ReactElement {
           {drawLabel}
         </button>
         <p className="nami-landing-scenario-deck-note">
-          Pull from the deck to reveal a real gamer situation. The stack only shifts while the last
-          card is discarded, then the next one waits three seconds before it flips.
+          Pull from the deck to reveal a real gamer situation. The top card updates as you draw; the
+          stack thins until the deck is gone. Each drawn card waits three seconds before it flips.
         </p>
       </div>
     </div>

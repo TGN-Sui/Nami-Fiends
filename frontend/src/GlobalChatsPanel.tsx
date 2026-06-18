@@ -40,6 +40,8 @@ import {
 } from './global-chats.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
+import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
+import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, userProfile, type NamiMember } from './uiMockData.js';
@@ -49,6 +51,41 @@ type GlobalChatsPanelProps = {
   tagHandlers?: TagNavigationHandlers;
 };
 
+function genreChatExpandProps(
+  chat: GlobalChatRoom,
+  options?: { compact?: boolean }
+): {
+  renderExpandedAside?: () => ReactElement;
+  expandedChatNotice?: ReactElement;
+  expandedChatHeading?: ReactElement;
+} {
+  const compactHeading =
+    options?.compact === true ? (
+      <div className="chat-window-expanded-heading-copy">
+        <span className="mini-badge">Genre Lounge</span>
+        <h2>{chat.title}</h2>
+        <p>{chat.activeMembers.toLocaleString()} active in lounge</p>
+      </div>
+    ) : undefined;
+
+  if (hasTaggedGenreBroadcasts(chat)) {
+    return {
+      ...(compactHeading ? { expandedChatHeading: compactHeading } : {}),
+      renderExpandedAside: () => <GenreChatBroadcastAside chat={chat} isExpanded={true} />,
+    };
+  }
+
+  return {
+    ...(compactHeading ? { expandedChatHeading: compactHeading } : {}),
+    expandedChatNotice: (
+      <p>
+        No tagged live streams in {chat.title} yet. Expanded view is chat-only until members
+        publish streams with matching tags.
+      </p>
+    ),
+  };
+}
+
 export function GlobalChatRoomView(props: {
   chat: GlobalChatRoom;
   onOpenMember: (member: NamiMember) => void;
@@ -57,6 +94,9 @@ export function GlobalChatRoomView(props: {
   compact?: boolean;
   showCompactHead?: boolean;
   expandedAside?: ReactNode;
+  renderExpandedAside?: () => ReactNode;
+  expandedChatNotice?: ReactNode;
+  expandedChatHeading?: ReactNode;
   onChatExpandedChange?: (expanded: boolean) => void;
   onChatEscape?: () => boolean | void;
 }): ReactElement {
@@ -91,6 +131,86 @@ export function GlobalChatRoomView(props: {
     setDraft('');
   }
 
+  const chatWindowBody = (
+    <>
+      {!props.compact ? (
+        <div className="chat-window-heading">
+          <div>
+            <h2>{props.chat.title}</h2>
+            <p>{messages.length} messages · live global room</p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="message-stack global-message-stack" ref={messageStackRef}>
+        {messages.map((message) => {
+          const member = resolveMessageAuthorMember(message, selfMember);
+
+          return (
+            <div className="chat-message-row" key={message.id}>
+              {member ? (
+                <UniformMemberAvatarButton
+                  member={member}
+                  onClick={() => props.onOpenMember(member)}
+                  signal={message.signal}
+                />
+              ) : (
+                <span className="message-avatar">??</span>
+              )}
+
+              <div className={'message-bubble' + messageBubbleClass(member, message.author)}>
+                <div className="message-meta">
+                  <button
+                    className={'message-author-button signal-text-' + message.signal.toLowerCase()}
+                    onClick={() => member && props.onOpenMember(member)}
+                    type="button"
+                  >
+                    {message.author}
+                  </button>
+                  <span>{message.time}</span>
+                  <ConductSignalDot signal={message.signal} size="sm" />
+                </div>
+                <p>
+                  <TaggedMessageBody
+                    body={message.body}
+                    {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
+                  />
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <ChatComposerWithEmojis
+        ariaLabel="Message global chat"
+        canSend={canSend}
+        className="global-chat-composer chat-composer-row"
+        onChange={setDraft}
+        onSend={sendMessage}
+        placeholder={
+          canSend
+            ? props.chat.isOfficial
+              ? 'Say something to the official room… · ' + tagSuggestionHint()
+              : 'Say something to the room… · ' + tagSuggestionHint()
+            : 'Sign in and verify to send official chat messages'
+        }
+        value={draft}
+      />
+
+      {props.chat.voiceEnabled && isOwner ? (
+        <div className="global-chat-voice-controls">
+          <button className="secondary-action" type="button">
+            Mute all voice
+          </button>
+          <button className="secondary-action" type="button">
+            Mute selected
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+
   return (
     <div className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}>
       {props.compact && props.showCompactHead !== false ? (
@@ -114,7 +234,13 @@ export function GlobalChatRoomView(props: {
             <div className="global-chat-presence-mark">{props.chat.title.slice(0, 2).toUpperCase()}</div>
             <div className="global-chat-presence-copy">
               <span className="mini-badge">
-                {props.chat.isOfficial ? 'Official Global' : props.chat.closesOnExit ? 'Temporary' : 'Community'}
+                {props.chat.kind === 'genre'
+                  ? 'Genre Lounge'
+                  : props.chat.isOfficial
+                    ? 'Official Global'
+                    : props.chat.closesOnExit
+                      ? 'Temporary'
+                      : 'Community'}
               </span>
               <h2>{props.chat.title}</h2>
               <p>
@@ -149,89 +275,15 @@ export function GlobalChatRoomView(props: {
       )}
 
       <ChatWindowExpandable
+        {...(props.chat.kind === 'genre' ? { className: 'chat-theme-ocean' } : {})}
         {...(props.expandedAside ? { expandedAside: props.expandedAside } : {})}
+        {...(props.renderExpandedAside ? { renderExpandedAside: props.renderExpandedAside } : {})}
+        {...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {})}
+        {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
         {...(props.onChatExpandedChange ? { onExpandedChange: props.onChatExpandedChange } : {})}
         {...(props.onChatEscape ? { onEscape: props.onChatEscape } : {})}
       >
-        {!props.compact ? (
-          <div className="chat-window-heading">
-            <div>
-              <h2>{props.chat.title}</h2>
-              <p>{messages.length} messages · live global room</p>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="message-stack global-message-stack" ref={messageStackRef}>
-          {messages.map((message) => {
-            const member = resolveMessageAuthorMember(message, selfMember);
-
-            return (
-              <div className="chat-message-row" key={message.id}>
-                {member ? (
-                  <UniformMemberAvatarButton
-                    member={member}
-                    onClick={() => props.onOpenMember(member)}
-                    signal={message.signal}
-                  />
-                ) : (
-                  <span className="message-avatar">??</span>
-                )}
-
-                <div
-                  className={
-                    'message-bubble' + messageBubbleClass(member, message.author)
-                  }
-                >
-                  <div className="message-meta">
-                    <button
-                      className={'message-author-button signal-text-' + message.signal.toLowerCase()}
-                      onClick={() => member && props.onOpenMember(member)}
-                      type="button"
-                    >
-                      {message.author}
-                    </button>
-                    <span>{message.time}</span>
-                    <ConductSignalDot signal={message.signal} size="sm" />
-                  </div>
-                  <p>
-                    <TaggedMessageBody
-                      body={message.body}
-                      {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
-                    />
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <ChatComposerWithEmojis
-          ariaLabel="Message global chat"
-          canSend={canSend}
-          className="global-chat-composer chat-composer-row"
-          onChange={setDraft}
-          onSend={sendMessage}
-          placeholder={
-            canSend
-              ? props.chat.isOfficial
-                ? 'Say something to the official room… · ' + tagSuggestionHint()
-                : 'Say something to the room… · ' + tagSuggestionHint()
-              : 'Sign in and verify to send official chat messages'
-          }
-          value={draft}
-        />
-
-        {props.chat.voiceEnabled && isOwner ? (
-          <div className="global-chat-voice-controls">
-            <button className="secondary-action" type="button">
-              Mute all voice
-            </button>
-            <button className="secondary-action" type="button">
-              Mute selected
-            </button>
-          </div>
-        ) : null}
+        {chatWindowBody}
       </ChatWindowExpandable>
     </div>
   );
@@ -250,6 +302,8 @@ export function GenreChatRoomPanel(props: {
     <GlobalChatRoomView
       chat={activeChat}
       onOpenMember={props.onOpenMember}
+      {...genreChatExpandProps(activeChat)}
+      showCompactHead={false}
       {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       {...(props.compact ? { compact: true } : {})}
     />
@@ -528,6 +582,8 @@ export function PinnedGenreChatDock(props: {
         chat={activeChat}
         compact
         onOpenMember={props.onOpenMember}
+        {...genreChatExpandProps(activeChat, { compact: true })}
+        showCompactHead={false}
         {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       />
 

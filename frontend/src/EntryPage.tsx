@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { LandingGenreBubbleField } from './LandingGenreBubbleField.js';
 import { LandingGridSpotlight } from './LandingGridSpotlight.js';
@@ -19,14 +19,41 @@ import {
 } from './member-session-store.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
 
+const GENRE_SHOWCASE_POP_HIGHLIGHT_MS = 1200;
+
 function LandingOverview(props: {
   onEnterNami: () => void;
   signedOutNotice?: boolean;
 }): ReactElement {
+  const [genrePopHighlight, setGenrePopHighlight] = useState<{ chatId: string; pulse: number } | null>(
+    null
+  );
+  const genreHighlightTimerRef = useRef<number | null>(null);
+
+  const handleGenreBubblePop = useCallback((chatId: string): void => {
+    if (genreHighlightTimerRef.current !== null) {
+      window.clearTimeout(genreHighlightTimerRef.current);
+    }
+
+    setGenrePopHighlight({ chatId, pulse: Date.now() });
+    genreHighlightTimerRef.current = window.setTimeout(() => {
+      setGenrePopHighlight(null);
+      genreHighlightTimerRef.current = null;
+    }, GENRE_SHOWCASE_POP_HIGHLIGHT_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (genreHighlightTimerRef.current !== null) {
+        window.clearTimeout(genreHighlightTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="nami-landing-shell">
       <LandingGridSpotlight />
-      <LandingGenreBubbleField />
+      <LandingGenreBubbleField onGenrePop={handleGenreBubblePop} />
 
       <div className="nami-landing-foreground">
       {props.signedOutNotice ? (
@@ -87,22 +114,28 @@ function LandingOverview(props: {
           <span className="mini-badge">Genre global chats</span>
           <h2>Every genre has an official lounge, not just every game</h2>
           <p>
-            After signup, jump into Nami Hub and Game Hub to find global chats grouped by how you
-            play: FPS, RPG, MOBA, sports, sandbox, and more. Bubble size reflects live activity.
+            After signup, jump into Nami Hub and Game Hub for all 23 official IGDB genre lounges,
+            from Shooter and MOBA to Visual Novel and Pinball. Bubble size reflects live activity.
           </p>
         </header>
 
         <div className="nami-landing-genre-showcase" aria-label="Official genre lounge bubbles preview">
-          {genreOfficialChats.slice(0, 6).map((chat) => (
+          {genreOfficialChats.slice(0, 8).map((chat) => {
+            const isHighlighted = genrePopHighlight?.chatId === chat.id;
+
+            return (
             <div
-              className="nami-landing-genre-showcase-bubble"
-              key={chat.id}
-              style={{ '--bubble-scale': String(0.78 + chat.activeMembers / 1400) } as CSSProperties}
+              className={
+                'nami-landing-genre-showcase-bubble' + (isHighlighted ? ' is-genre-pop-highlight' : '')
+              }
+              key={isHighlighted ? chat.id + '-' + genrePopHighlight.pulse : chat.id}
+              style={{ '--bubble-scale': String(0.62 + chat.activeMembers / 1800) } as CSSProperties}
             >
               <strong>{chat.title}</strong>
               <small>{chat.activeMembers.toLocaleString()} active</small>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <ul className="nami-landing-genre-chip-list" aria-label="Official genre lounges">
@@ -115,12 +148,30 @@ function LandingOverview(props: {
       <section className="nami-landing-section panel nami-landing-pillars-panel">
         <header className="nami-landing-section-head">
           <span className="mini-badge">What Nami is</span>
-          <h2>Identity, community, and safety in one gamer native world</h2>
+          <h2>Five pillars that keep your gamer life portable</h2>
+          <p>
+            Each piece solves a different break point: identity, home channels, genre rooms, persistent
+            crews, and rooms worth staying in.
+          </p>
         </header>
 
-        <div className="nami-landing-pillar-grid">
+        <div className="nami-landing-pillar-grid" aria-label="Nami platform pillars">
           {LANDING_PILLARS.map((pillar) => (
-            <article className="nami-landing-pillar-card" key={pillar.title}>
+            <article
+              className={[
+                'nami-landing-pillar-card',
+                pillar.variant === 'featured' ? 'is-featured' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              key={pillar.id}
+            >
+              <div className="nami-landing-pillar-card-head">
+                <span className="nami-landing-pillar-index" aria-hidden="true">
+                  {pillar.index}
+                </span>
+                <span className="nami-landing-pillar-tag">{pillar.tag}</span>
+              </div>
               <strong>{pillar.title}</strong>
               <p>{pillar.detail}</p>
             </article>

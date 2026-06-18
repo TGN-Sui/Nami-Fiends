@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+
+import { ExpandedChatOverlay, releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 
 type ChatWindowExpandableProps = {
   className?: string;
   children: ReactNode;
   expandedAside?: ReactNode;
+  renderExpandedAside?: () => ReactNode;
+  expandedNotice?: ReactNode;
+  expandedHeading?: ReactNode;
   onExpandedChange?: (expanded: boolean) => void;
   onEscape?: () => boolean | void;
 };
@@ -13,103 +17,61 @@ export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactEle
   const [expanded, setExpanded] = useState(false);
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const hasExpandedAside = props.expandedAside !== undefined && props.expandedAside !== null;
 
-  function setExpandedState(nextExpanded: boolean): void {
-    setExpanded(nextExpanded);
-    props.onExpandedChange?.(nextExpanded);
-  }
+  const closeExpanded = useCallback((): void => {
+    releaseExpandedChatScrollLock();
+    setExpanded(false);
+    props.onExpandedChange?.(false);
+  }, [props.onExpandedChange]);
 
   function openExpanded(): void {
     if (hostRef.current) {
       setPlaceholderHeight(hostRef.current.offsetHeight);
     }
 
-    setExpandedState(true);
-  }
-
-  function closeExpanded(): void {
-    setExpandedState(false);
+    setExpanded(true);
+    props.onExpandedChange?.(true);
   }
 
   useEffect(() => {
-    if (!expanded) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent): void {
-      if (event.key === 'Escape') {
-        if (props.onEscape?.() === true) {
-          return;
-        }
-
-        closeExpanded();
-      }
-    }
-
-    const previousOverflow = document.body.style.overflow;
-
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleKeyDown);
-
     return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
+      releaseExpandedChatScrollLock();
     };
-  }, [expanded, props.onEscape]);
+  }, []);
 
   const articleClass =
     'chat-window chat-window-buildout' +
     (props.className ? ' ' + props.className : '') +
-    (expanded ? ' is-chat-window-expanded-panel' : '');
+    ' is-chat-window-expanded-panel';
 
-  const expandedOverlay = (
-    <div
-      className={
-        'chat-window-expand-host is-chat-window-expanded' +
-        (hasExpandedAside ? ' is-chat-window-expand-split' : '')
-      }
-      role="dialog"
-      aria-modal={true}
-      aria-label={hasExpandedAside ? 'Expanded live chat and broadcast' : 'Expanded chat'}
-    >
+  const expandedAside =
+    expanded && props.renderExpandedAside
+      ? props.renderExpandedAside()
+      : expanded
+        ? props.expandedAside
+        : undefined;
+
+  const hasExpandedAside = expandedAside !== undefined && expandedAside !== null;
+  const overlayLabel = hasExpandedAside ? 'Expanded live chat and broadcast' : 'Expanded chat';
+
+  const expandedPanel = (
+    <article className={articleClass}>
       <button
         aria-label="Close expanded chat"
-        className="chat-window-expand-backdrop"
+        className="nami-surface-button chat-window-expand-toggle chat-window-expand-dismiss"
         onClick={closeExpanded}
         type="button"
-      />
-
-      {hasExpandedAside ? (
-        <div className="chat-window-expand-split-layout">
-          <aside aria-label="Live broadcast" className="chat-window-expand-broadcast-aside">
-            {props.expandedAside}
-          </aside>
-
-          <article className={articleClass}>
-            <button
-              className="nami-surface-button chat-window-expand-toggle"
-              onClick={closeExpanded}
-              type="button"
-            >
-              Close
-            </button>
-            {props.children}
-          </article>
-        </div>
-      ) : (
-        <article className={articleClass}>
-          <button
-            className="nami-surface-button chat-window-expand-toggle"
-            onClick={closeExpanded}
-            type="button"
-          >
-            Close
-          </button>
-          {props.children}
-        </article>
-      )}
-    </div>
+      >
+        Close
+      </button>
+      {props.expandedHeading ? (
+        <div className="chat-window-expanded-heading">{props.expandedHeading}</div>
+      ) : null}
+      {props.expandedNotice ? (
+        <div className="chat-window-expanded-notice">{props.expandedNotice}</div>
+      ) : null}
+      {props.children}
+    </article>
   );
 
   return (
@@ -124,7 +86,7 @@ export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactEle
 
       {!expanded ? (
         <div className="chat-window-expand-host" ref={hostRef}>
-          <article className={articleClass}>
+          <article className={'chat-window chat-window-buildout' + (props.className ? ' ' + props.className : '')}>
             <button
               className="nami-surface-button chat-window-expand-toggle"
               onClick={openExpanded}
@@ -139,7 +101,15 @@ export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactEle
         <div className="chat-window-expand-host" ref={hostRef} />
       )}
 
-      {expanded ? createPortal(expandedOverlay, document.body) : null}
+      <ExpandedChatOverlay
+        aside={hasExpandedAside ? expandedAside : undefined}
+        label={overlayLabel}
+        onClose={closeExpanded}
+        {...(props.onEscape ? { onEscape: props.onEscape } : {})}
+        open={expanded}
+      >
+        {expandedPanel}
+      </ExpandedChatOverlay>
     </>
   );
 }
