@@ -17,8 +17,8 @@ type FloatingGenreBubble = {
 
 const MAX_BUBBLES = 14;
 const SPAWN_INTERVAL_MS = 2200;
-const BUBBLE_LIFETIME_MS = 11000;
-const RISE_SPEED = 0.42;
+const BUBBLE_LIFETIME_MS = 15000;
+const RISE_SPEED = 1.05;
 const CURSOR_RADIUS = 140;
 
 function bubbleRadius(members: number): number {
@@ -42,7 +42,7 @@ function spawnBubble(width: number, height: number): FloatingGenreBubble {
     x,
     y: height + radius + 12,
     vx: (Math.random() - 0.5) * 0.35,
-    vy: -RISE_SPEED - Math.random() * 0.18,
+    vy: -RISE_SPEED - Math.random() * 0.35,
     radius,
     opacity: 0,
     bornAt: performance.now(),
@@ -114,23 +114,23 @@ export function LandingGenreBubbleField(): ReactElement {
           continue;
         }
 
-        bubble.vy = Math.min(bubble.vy, -RISE_SPEED * 0.72);
-        bubble.vx *= 0.96;
-        bubble.vy *= 0.992;
+        bubble.vy = Math.min(bubble.vy, -RISE_SPEED * 0.88);
+        bubble.vx *= 0.97;
+        bubble.vy *= 0.996;
         pushBubbleAway(bubble);
 
         bubble.x += bubble.vx;
         bubble.y += bubble.vy;
 
-        if (age < 700) {
-          bubble.opacity = Math.min(0.82, age / 700);
-        } else if (life > 0.62) {
-          bubble.opacity = Math.max(0, 0.82 * (1 - (life - 0.62) / 0.38));
+        if (age < 500) {
+          bubble.opacity = Math.min(1, age / 500);
+        } else if (life > 0.72) {
+          bubble.opacity = Math.max(0, 1 - (life - 0.72) / 0.28);
         } else {
-          bubble.opacity = 0.82;
+          bubble.opacity = 1;
         }
 
-        if (bubble.y + bubble.radius < -40) {
+        if (bubble.y + bubble.radius < -120) {
           continue;
         }
 
