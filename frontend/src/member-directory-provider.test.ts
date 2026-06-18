@@ -50,7 +50,7 @@ describe('member-directory-provider', () => {
     expect(items[0]?.member.name).toBe('Fixture Member');
   });
 
-  it('returns no members when live query succeeds with an empty directory set', () => {
+  it('falls back to fixtures when live member directory is empty during dev polish', () => {
     const items = resolveMemberDirectory({
       liveMembers: [],
       loadState: 'ready',
@@ -58,7 +58,8 @@ describe('member-directory-provider', () => {
       fixtureMembers: [fixtureMember],
     });
 
-    expect(items).toHaveLength(0);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.source).toBe('fixture');
   });
 
   it('falls back to fixtures after a live member load error', () => {

@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { claimAdventurerMembershipViaX } from './membership-plans-store.js';
 import {
   authorizeXAccount,
+  isXVerificationMockEnabled,
   unlinkXAccount,
   useXVerificationState,
 } from './x-verification-store.js';
@@ -14,6 +15,7 @@ type MembershipAdventurerClaimCardProps = {
 
 export function MembershipAdventurerClaimCard(props: MembershipAdventurerClaimCardProps): ReactElement {
   const xState = useXVerificationState();
+  const xMockEnabled = isXVerificationMockEnabled();
 
   function handleAuthorizeX(): void {
     const result = authorizeXAccount();
@@ -77,10 +79,15 @@ export function MembershipAdventurerClaimCard(props: MembershipAdventurerClaimCa
               Unlink X.com
             </button>
           </>
-        ) : (
+        ) : xMockEnabled ? (
           <button className="primary-action" onClick={handleAuthorizeX} type="button">
             Authorize with X.com
           </button>
+        ) : (
+          <p className="protocol-hint">
+            X.com OAuth authorization ships with the live receiving server. Use paid Adventurer checkout
+            until then.
+          </p>
         )}
       </div>
     </article>

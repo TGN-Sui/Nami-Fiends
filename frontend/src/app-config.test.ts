@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isMockMembershipCheckoutEnabled,
   shouldAutoSeedLocalData,
+  shouldUseFixtureCatalogFallback,
   type AppConfig,
 } from './app-config.js';
 
@@ -37,5 +39,31 @@ describe('app-config seed policy', () => {
     expect(
       shouldAutoSeedLocalData(createConfig({ testLaunch: true, devFixtures: false }))
     ).toBe(false);
+  });
+});
+
+describe('app-config directory fallback', () => {
+  it('keeps fixture catalogs during dev polish when live discovery is empty', () => {
+    expect(shouldUseFixtureCatalogFallback(0, 'ready', createConfig({}))).toBe(true);
+  });
+
+  it('skips fixture fallback when live rows are present', () => {
+    expect(shouldUseFixtureCatalogFallback(2, 'ready', createConfig({}))).toBe(false);
+  });
+
+  it('skips fixture fallback when dev fixtures are disabled', () => {
+    expect(shouldUseFixtureCatalogFallback(0, 'ready', createConfig({ devFixtures: false }))).toBe(
+      false
+    );
+  });
+});
+
+describe('app-config mock checkout policy', () => {
+  it('allows mock checkout in dev fixture mode', () => {
+    expect(isMockMembershipCheckoutEnabled(createConfig({}))).toBe(true);
+  });
+
+  it('blocks mock checkout during test launch', () => {
+    expect(isMockMembershipCheckoutEnabled(createConfig({ testLaunch: true }))).toBe(false);
   });
 });

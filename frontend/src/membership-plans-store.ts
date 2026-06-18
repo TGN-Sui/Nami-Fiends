@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import {
   isMembershipSubscriptionApiAvailable,
   syncMembershipSubscriptionToBackend,
@@ -510,6 +511,13 @@ export function confirmMembershipUpgrade(): MembershipActionResult {
 
   if (state.status !== 'pending-upgrade' || !state.pendingTier) {
     return { ok: false, reason: 'No pending upgrade to confirm.' };
+  }
+
+  if (!isMockMembershipCheckoutEnabled()) {
+    return {
+      ok: false,
+      reason: 'Complete checkout through the payment API. Local mock checkout is disabled.',
+    };
   }
 
   return finalizeMembershipUpgradeAfterPayment(state.pendingPaymentId ?? 'local-mock');

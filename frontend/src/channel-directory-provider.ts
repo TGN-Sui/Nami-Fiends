@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { shouldUseDevFixtures } from './app-config.js';
+import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { ChannelModule, ConductSignal, NamiChannel } from './domain/types.js';
 import { channels as seedChannels } from './fixtures/seed-data.js';
 import type { DiscoveryChannelRanking } from './protocol.js';
@@ -29,26 +29,6 @@ const COVER_ART_STYLES: NamiChannel['coverArtStyle'][] = [
   'arcade',
   'builder',
 ];
-
-function shouldUseFixtureDirectory(
-  liveItems: unknown[],
-  loadState: ProtocolLoadState,
-  liveQueryEnabled: boolean
-): boolean {
-  if (liveItems.length > 0) {
-    return false;
-  }
-
-  if (!shouldUseDevFixtures()) {
-    return false;
-  }
-
-  if (liveQueryEnabled && loadState === 'ready') {
-    return false;
-  }
-
-  return loadState !== 'loading';
-}
 
 function conductSignalFromSignals(signals: string[]): ConductSignal {
   const normalized = signals.map((signal) => signal.toLowerCase());
@@ -172,7 +152,7 @@ export function resolveChannelDirectory(input: {
     return input.liveRankings.map((ranking) => mapLiveRanking(ranking, fixtureChannels));
   }
 
-  if (!shouldUseFixtureDirectory(input.liveRankings, input.loadState, input.liveQueryEnabled)) {
+  if (!shouldUseFixtureCatalogFallback(input.liveRankings.length, input.loadState)) {
     return [];
   }
 

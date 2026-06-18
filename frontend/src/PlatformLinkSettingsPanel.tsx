@@ -5,6 +5,7 @@ import { useMemberSession } from './member-session-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
 import {
   authorizeXAccount,
+  isXVerificationMockEnabled,
   unlinkXAccount,
   useXVerificationState,
 } from './x-verification-store.js';
@@ -60,6 +61,7 @@ export function PlatformLinkSettingsPanel(): ReactElement {
   const { userClaimStatus } = useNamiAdminStore();
   const { data: passportView } = usePassportQuery();
   const xVerification = useXVerificationState();
+  const xMockEnabled = isXVerificationMockEnabled();
 
   const [linkedPlatforms, setLinkedPlatforms] = useState<Set<PlatformLinkId>>(() => {
     return xVerification.verified ? new Set<PlatformLinkId>(['x']) : new Set();
@@ -141,18 +143,23 @@ export function PlatformLinkSettingsPanel(): ReactElement {
         {PLATFORM_LINKS.map((platform) => {
           const linked =
             platform.id === 'x' ? xVerification.verified : linkedPlatforms.has(platform.id);
+          const xActionDisabled = platform.id === 'x' && !linked && !xMockEnabled;
 
           return (
             <li className="platform-link-row" key={platform.id}>
               <div className="platform-link-copy">
                 <strong>{platform.label}</strong>
-                <p>{platform.hint}</p>
+                <p>
+                  {platform.id === 'x' && !xMockEnabled && !linked
+                    ? 'Live X OAuth authorization ships with the receiving server.'
+                    : platform.hint}
+                </p>
               </div>
               <button
                 className={
                   'profile-secondary-link platform-link-action' + (linked ? ' is-linked' : '')
                 }
-                disabled={!canLink}
+                disabled={!canLink || xActionDisabled}
                 onClick={() => togglePlatform(platform.id)}
                 type="button"
               >

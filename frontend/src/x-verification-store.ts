@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldUseDevFixtures } from './app-config.js';
+
 const X_VERIFICATION_KEY = 'nami.x.verification';
 
 export type XVerificationState = {
@@ -97,8 +99,19 @@ export type XVerificationActionResult =
   | { ok: true; message: string }
   | { ok: false; reason: string };
 
+export function isXVerificationMockEnabled(): boolean {
+  return shouldUseDevFixtures();
+}
+
 /** Simulates X.com OAuth authorization until the live OAuth callback ships. */
 export function authorizeXAccount(mockHandle = 'npcgamer'): XVerificationActionResult {
+  if (!isXVerificationMockEnabled()) {
+    return {
+      ok: false,
+      reason: 'X.com authorization is not available until the live OAuth flow ships.',
+    };
+  }
+
   const now = Date.now();
 
   saveState({

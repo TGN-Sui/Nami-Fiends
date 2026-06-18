@@ -85,3 +85,25 @@ export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): bo
 
   return shouldUseDevFixtures(config);
 }
+
+/** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */
+export function shouldUseFixtureCatalogFallback(
+  liveItemCount: number,
+  loadState: 'idle' | 'loading' | 'ready' | 'error',
+  config: AppConfig = readAppConfig()
+): boolean {
+  if (liveItemCount > 0) {
+    return false;
+  }
+
+  if (!shouldUseDevFixtures(config)) {
+    return false;
+  }
+
+  return loadState !== 'loading';
+}
+
+/** Local mock checkout and provider simulation (dev only, never in test launch). */
+export function isMockMembershipCheckoutEnabled(config: AppConfig = readAppConfig()): boolean {
+  return shouldUseDevFixtures(config) && !isTestLaunchMode(config);
+}

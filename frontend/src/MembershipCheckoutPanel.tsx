@@ -17,6 +17,7 @@ import {
   isMembershipSubscriptionApiAvailable,
   subscriptionToPlanState,
 } from './membership-subscriptions-api.js';
+import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import {
   finalizeMembershipUpgradeAfterPayment,
   hydrateMembershipPlanState,
@@ -64,6 +65,7 @@ export function MembershipCheckoutPanel(props: MembershipCheckoutPanelProps): Re
 
   const plan = membershipPlanForTier(pendingTier);
   const payerAddress = walletAccount?.address ?? owner;
+  const mockCheckoutEnabled = isMockMembershipCheckoutEnabled();
 
   async function beginCheckout(): Promise<void> {
     if (!pendingTier || !checkoutRail) {
@@ -250,29 +252,47 @@ export function MembershipCheckoutPanel(props: MembershipCheckoutPanelProps): Re
 
           {checkoutRail === 'card' && checkout.card?.mode === 'mock' ? (
             <div className="membership-checkout-provider-panel">
-              <p>Stripe is not configured — mock card checkout simulates server receipt + webhook.</p>
-              <button
-                className="primary-action"
-                disabled={loading}
-                onClick={() => void handleMockProviderConfirm()}
-                type="button"
-              >
-                Simulate card payment
-              </button>
+              {mockCheckoutEnabled ? (
+                <>
+                  <p>Stripe is not configured — mock card checkout simulates server receipt + webhook.</p>
+                  <button
+                    className="primary-action"
+                    disabled={loading}
+                    onClick={() => void handleMockProviderConfirm()}
+                    type="button"
+                  >
+                    Simulate card payment
+                  </button>
+                </>
+              ) : (
+                <p className="membership-plan-notice is-error">
+                  Stripe is not configured. Mock checkout is disabled for test launch — configure live
+                  card checkout on the receiving server.
+                </p>
+              )}
             </div>
           ) : null}
 
           {checkoutRail === 'paypal' && checkout.paypal?.mode === 'mock' ? (
             <div className="membership-checkout-provider-panel">
-              <p>PayPal is not configured — mock approval simulates capture on the receiving server.</p>
-              <button
-                className="primary-action"
-                disabled={loading}
-                onClick={() => void handleMockProviderConfirm()}
-                type="button"
-              >
-                Simulate PayPal approval
-              </button>
+              {mockCheckoutEnabled ? (
+                <>
+                  <p>PayPal is not configured — mock approval simulates capture on the receiving server.</p>
+                  <button
+                    className="primary-action"
+                    disabled={loading}
+                    onClick={() => void handleMockProviderConfirm()}
+                    type="button"
+                  >
+                    Simulate PayPal approval
+                  </button>
+                </>
+              ) : (
+                <p className="membership-plan-notice is-error">
+                  PayPal is not configured. Mock checkout is disabled for test launch — configure live
+                  PayPal on the receiving server.
+                </p>
+              )}
             </div>
           ) : null}
 

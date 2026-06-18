@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { shouldUseDevFixtures } from './app-config.js';
+import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { NamiMember } from './domain/types.js';
 import { members as seedMembers } from './fixtures/seed-data.js';
 import type { ProtocolLoadState } from './protocol-query.js';
@@ -11,26 +11,6 @@ export type MemberDirectoryItem = {
   member: NamiMember;
   source: DirectoryDataSource;
 };
-
-function shouldUseFixtureDirectory(
-  liveItems: unknown[],
-  loadState: ProtocolLoadState,
-  liveQueryEnabled: boolean
-): boolean {
-  if (liveItems.length > 0) {
-    return false;
-  }
-
-  if (!shouldUseDevFixtures()) {
-    return false;
-  }
-
-  if (liveQueryEnabled && loadState === 'ready') {
-    return false;
-  }
-
-  return loadState !== 'loading';
-}
 
 function mapFixtureMember(member: NamiMember): MemberDirectoryItem {
   return {
@@ -56,7 +36,7 @@ export function resolveMemberDirectory(input: {
     }));
   }
 
-  if (!shouldUseFixtureDirectory(input.liveMembers, input.loadState, input.liveQueryEnabled)) {
+  if (!shouldUseFixtureCatalogFallback(input.liveMembers.length, input.loadState)) {
     return [];
   }
 

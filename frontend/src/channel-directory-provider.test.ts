@@ -73,7 +73,7 @@ describe('channel-directory-provider', () => {
     expect(items[0]?.channel.name).toBe('FIENDS');
   });
 
-  it('returns no channels when live query succeeds with an empty discovery set', () => {
+  it('falls back to fixtures when live discovery is empty during dev polish', () => {
     const items = resolveChannelDirectory({
       liveRankings: [],
       loadState: 'ready',
@@ -81,7 +81,8 @@ describe('channel-directory-provider', () => {
       fixtureChannels: [fixtureChannel],
     });
 
-    expect(items).toHaveLength(0);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.source).toBe('fixture');
   });
 
   it('falls back to fixtures after a live discovery load error', () => {
