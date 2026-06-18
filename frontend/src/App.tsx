@@ -6827,17 +6827,10 @@ export function App(): ReactElement {
     setActivePage('hub');
   }
 
-  function enterGameHub(): void {
-    setEntryStartOnboarding(false);
-    setEntrySignedOutNotice(false);
-    setActivePage('gamehub');
-  }
-
   const screen = useMemo(() => {
     if (activePage === 'entry') {
       return (
         <EntryPage
-          onBrowseGameHub={enterGameHub}
           onEnterHub={enterNamiHub}
           onNavigateToSettings={() => setActivePage('settings')}
           onStartOnboardingHandled={() => setEntryStartOnboarding(false)}

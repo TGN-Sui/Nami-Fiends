@@ -68,6 +68,14 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
   },
 ];
 
+export const LANDING_GENRE_LOUNGES = [
+  'FPS Arena',
+  'RPG Quest Hall',
+  'MOBA Strategy',
+  'Sports & Racing',
+  'Sandbox Builders',
+] as const;
+
 export const LANDING_PILLARS: LandingPillar[] = [
   {
     title: 'Passport & badges',
@@ -76,6 +84,12 @@ export const LANDING_PILLARS: LandingPillar[] = [
   {
     title: 'Channels & studios',
     detail: 'Every game or community gets a verified home — chat, events, guilds, and modules.',
+  },
+  {
+    title: 'Genre global chats',
+    detail:
+      'Official genre lounges — FPS, RPG, MOBA, sports, sandbox, and more — where gamers meet ' +
+      'across every channel before they follow a specific game.',
   },
   {
     title: 'Squads & guilds',
@@ -101,7 +115,8 @@ export const LANDING_STEPS = [
   {
     step: '3',
     title: 'Join the world',
-    detail: 'Browse Game Hub, follow channels, join genre chats, and show up to live events.',
+    detail:
+      'Enter Game Hub, follow channels, jump into official genre lounges, and show up to live events.',
   },
 ];
 

@@ -234,7 +234,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
       className={
         'nami-profile-card-shell tcg-foil-passport-shell ' +
         (layout === 'horizontal'
-          ? 'nami-profile-card-shell-horizontal is-horizontal-tcg-passport'
+          ? 'nami-profile-card-shell-horizontal is-horizontal-tcg-passport is-uniform-horizontal-passport'
           : 'nami-profile-card-shell-vertical is-uniform-vertical-passport') +
         (passportInteractive ? ' is-tcg-foil-eligible' : '') +
         (isClickable ? ' is-clickable-passport' : '') +
