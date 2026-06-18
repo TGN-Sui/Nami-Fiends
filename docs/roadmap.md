@@ -393,7 +393,7 @@ Recovery service
 Status:
 
 ```text
-UI polish + owner/membership flows in progress; production protocol wiring not started
+UI-B21 + test-launch polish complete; core surfaces wired to receiving server with fixture fallback
 ```
 
 Recent Phase 3 UI checkpoints:
@@ -515,42 +515,22 @@ Discovery should be mostly off-chain and anchored by on-chain signals.
 Status:
 
 ```text
-Active — UI/UX redesign and new surfaces (no testnet launch in this phase)
+Complete — UI-B21 surfaces shipped; test-launch polish slices 1–10 landed (commit 347511f)
 ```
 
-Prior UI checkpoint: `docs/ui-build-checkpoint.md` (UI-A20.5 complete).
+Checkpoint: `docs/ui-build-checkpoint.md` (UI-A20.5 + UI-B21 + test-launch polish complete).
 
-Phase 7 goals:
+Phase 7 delivered:
 
 ```text
-Redesign existing screens and flows for clarity, delight, and gamer-native UX
-Integrate protocol panels into cohesive product surfaces (not dev-only side panels)
-Add new UI functions and interaction patterns agreed in Phase 7 intake
-Update docs (roadmap, onboarding, architecture, events) when new surfaces need protocol or indexer support
-Introduce frontend helpers / SDK reads only where UI needs real data — no launch ops
+UI-B21 product surfaces (Hub, Game Hub, profiles, chat, membership, media, guild spaces)
+Backend receiving server wiring (payments, preferences, media, fulfillment)
+Unified frontend architecture for test launch (config, providers, stores)
+Operator vs user surface separation (IndexedDataPanel gated to official owner)
+Fixture/live directory policy for Hub and Game Hub discovery
 ```
 
-Current surfaces to evolve:
-
-```text
-Hub, Game Hub, Subscriptions
-Channel / Studio / Member profiles
-Chat, Channel Events, Safety Center
-Passport, User Profile, Guilds
-Messages, Events, Settings
-Onboarding wizard, UX Preview Console
-Protocol panels (identity, conduct, moderation, recovery, discovery, etc.)
-```
-
-Product rules (unchanged):
-
-```text
-Paid features add capability or customization only — never verification or trust
-Owner vs member preview modes stay explicit
-Mock data remains acceptable until a surface is wired
-```
-
-Phase 7 intake (UI-B21 — in progress):
+Phase 7 intake (UI-B21 — complete):
 
 ```text
 UI-B21.1 Account sign-in moved to Settings (web2 copy, no sidebar connect)
@@ -567,9 +547,7 @@ UI-B21.11 TCG passport vertical layout polish (tier header, centered photo, stat
 UI-B21.12 Chat emojis, @member tags, tag notifications, social embed player
 ```
 
-Latest UI checkpoint: `docs/ui-build-checkpoint.md` (UI-B21.1 through UI-B21.12 recorded).
-
-Phase 7 wiring (server-backed demo):
+Phase 7 wiring (server-backed — complete):
 
 ```text
 UI-B21.13 Payment webhooks activate backend membership subscriptions
@@ -584,6 +562,39 @@ UI-B21.21 Subscriber on-chain fulfillment card in membership panel
 UI-B21.22 Cross-user AdminCap fulfillment for queued subscriber passports
 ```
 
+Test-launch polish (slices 1–10 — complete):
+
+```text
+Slice 1  app-config, protocol-availability, preference/safety stores, ProtocolStatusBar
+Slice 2  Remove dead demo UI (UxPreviewConsole, MediaUploadPrepCard, demo tag seed mount)
+Slice 3  Split domain/types from fixtures/seed-data; uiMockData compatibility facade
+Slice 4  preferences-sync + media-upload-service unified paths
+Slice 5  affiliation-provider for guild/squad surfaces
+Slice 6  Gate local store auto-seeding when VITE_NAMI_TEST_LAUNCH=true
+Slice 7  channel-directory-provider + member-directory-provider (Hub / Game Hub)
+Slice 8  Gate local-mock checkout and X verification mock behind dev/test policy
+Slice 9  Gate IndexedDataPanel to official owner; user-facing protocol copy cleanup
+Slice 10 Documentation sync and Phase 7 completion (this checkpoint)
+```
+
+Fixture and discovery policy (locked for test launch):
+
+```text
+VITE_NAMI_DEV_FIXTURES=true (default) keeps fixture catalogs for polish and offline dev
+Indexer URL alone does not disable fixtures — live discovery replaces fixtures when ranked rows return
+Empty or loading discovery cycles still show fixtures while dev fixtures are enabled
+VITE_NAMI_DEV_FIXTURES=false forces strict empty states on directory surfaces
+VITE_NAMI_TEST_LAUNCH=true disables auto-seed, local-mock checkout, and mock provider buttons
+```
+
+Product rules (unchanged):
+
+```text
+Paid features add capability or customization only — never verification or trust
+Owner vs member preview modes stay explicit
+Provider interfaces (affiliation, channel directory, member directory) are the partnership extension points
+```
+
 ---
 
 # Phase 8 — Public Launch Preparation
@@ -591,7 +602,7 @@ UI-B21.22 Cross-user AdminCap fulfillment for queued subscriber passports
 Status:
 
 ```text
-Deferred — after Phase 7 UX is stable
+Unblocked — Phase 7 complete; begin launch ops when ready
 ```
 
 Launch requirements:

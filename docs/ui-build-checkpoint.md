@@ -1,8 +1,8 @@
 # Nami Chat UI Build Checkpoint
 
-Status: UI build checkpoint complete through UI-A20.5; Phase 7 intake UI-B21.1–UI-B21.12 in progress.
+Status: **Phase 7 complete** — UI-A20.5, UI-B21.1–UI-B21.22, and test-launch polish slices 1–10 landed (`347511f`).
 
-This checkpoint records the completed frontend UI polish pass for Nami Chat and the active Phase 7 product surfaces. It confirms the current UI build is clean, visually reviewed, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
+This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
 ## Completed UI Scope
 
@@ -33,11 +33,34 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat and 
 | UI-B21.12 | Complete | Chat emojis, @tags, notifications, social embeds. |
 | UI-B21.22 | Complete | Cross-user AdminCap fulfillment for queued subscriber passports. |
 
+## Test-Launch Polish (Slices 1–10)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| Slice 1 | Complete | `app-config`, `protocol-availability`, preference/safety stores, `ProtocolStatusBar`. |
+| Slice 2 | Complete | Removed dead demo UI (`UxPreviewConsole`, `MediaUploadPrepCard`, demo tag seed mount). |
+| Slice 3 | Complete | `domain/types` + `fixtures/seed-data`; gated `uiMockData` facade. |
+| Slice 4 | Complete | `preferences-sync` + `media-upload-service` unified upload paths. |
+| Slice 5 | Complete | `affiliation-provider` for guild/squad surfaces. |
+| Slice 6 | Complete | Auto-seed gated by `VITE_NAMI_TEST_LAUNCH`. |
+| Slice 7 | Complete | `channel-directory-provider` + `member-directory-provider` for Hub / Game Hub. |
+| Slice 8 | Complete | Mock checkout and X verification gated behind dev/test policy. |
+| Slice 9 | Complete | `IndexedDataPanel` official-owner gate; user-facing protocol copy cleanup. |
+| Slice 10 | Complete | Roadmap + checkpoint docs; Phase 7 marked complete. |
+
 ## Latest UI Commits
 
 | Commit | Summary |
 | --- | --- |
-| latest | Phase 7 payments, pinned avatar, passport polish, chat tags |
+| `347511f` | Slice 9 operator UX + Hub fixture fallback during discovery load |
+| `fdc78bf` | Slice 8 payment/X gating + Game Hub empty-state fix |
+| `bda07a4` | Slice 7 channel and member directory providers |
+| `7482c2b` | Slice 6 gate local store auto-seeding |
+| `413a989` | Slice 5 affiliation provider |
+| `9d74b90` | Slice 4 preferences sync + media uploads |
+| `71e8b19` | Slice 3 domain types vs fixtures |
+| `80cc9f8` | Slice 2 remove dead demo UI |
+| `5b32205` | Slice 1 app config + unified stores |
 | `dd918d4` | Add Phase 7 UI, owner-only admin caps, membership billing |
 | `57746d0` | Add final responsive accessibility polish |
 | `a437426` | Polish owner tool action states |
@@ -51,14 +74,15 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat and 
 
 ## Verification Commands
 
-The checkpoint was verified with:
+Phase 7 completion was verified with:
 
 ```bash
 npm --prefix frontend run typecheck
 npm --prefix frontend run build
+npm --prefix frontend test
 ```
 
-Both checks passed.
+All checks passed (47 unit tests at completion).
 
 ## Product Rules Preserved
 
@@ -67,15 +91,23 @@ Both checks passed.
 - Member Spotlight excludes NPC/Black status members and keeps verified checkmarks reserved for valid verified member states.
 - Channel Colors are member-facing cosmetic selections from owner-approved palette options.
 - Owner tools are operational controls only. They do not override Nami-controlled proofs, verification, or trust decisions.
-- Media upload controls remain preparation surfaces until live authorization and storage persistence are implemented.
+- Media uploads route through `media-upload-service` when the receiving server is configured; Walrus proofs remain a later phase.
+
+## Architecture Notes (Test Launch)
+
+- **Config:** `app-config.ts` centralizes env flags (`VITE_NAMI_DEV_FIXTURES`, `VITE_NAMI_TEST_LAUNCH`, indexer URL).
+- **Protocol status:** `protocol-availability.ts` exposes Connected / Online / Preview / Setup badges (no user-facing “Mock” label).
+- **Providers:** `affiliation-provider`, `channel-directory-provider`, `member-directory-provider` unify live indexer data vs fixture fallback.
+- **Fixture policy:** Dev fixtures stay on during polish; live discovery replaces them only when ranked rows return. Hub and Game Hub show fixtures immediately (including while discovery loads).
+- **Operator tools:** `IndexedDataPanel` is visible only to `VITE_NAMI_OFFICIAL_OWNER` in Settings → Advanced.
 
 ## UI Build Outcome
 
-Phase 7 surfaces are active. Membership checkout, subscription state, avatar uploads, and streaming presence now sync through the backend receiving server when `VITE_NAMI_INDEXER_URL` is set.
+Phase 7 is complete. Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
 
-Recommended next lane:
+**Phase 8 is unblocked.** Recommended next lane:
 
-1. Phase 8 launch prep: testnet live, security review, production dashboards.
-3. Extend Walrus-backed media references when storage proofs ship.
-4. Continue avoiding any wording that implies payment equals trust.
+1. Testnet deployment and launch ops (security review, moderation dashboards, analytics).
+2. Extend Walrus-backed media references when storage proofs ship.
+3. Continue avoiding any wording that implies payment equals trust.
 
