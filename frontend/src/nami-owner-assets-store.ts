@@ -116,7 +116,7 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     id: 'default-member-avatar',
     label: 'Default member avatar',
     category: 'profile',
-    hint: 'Fallback portrait when a member has no upload. Uses the DeadlySin mock portrait until replaced.',
+    hint: 'Fallback portrait when a member has no upload. Replaces the built-in silhouette placeholder.',
   },
   {
     id: 'badge-default',

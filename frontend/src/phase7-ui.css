@@ -6380,6 +6380,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
+  border-radius: 18px;
+  overflow: hidden;
 }
 
 .nami-pinned-profile-card .sidebar-player-progress-button::before {
@@ -6389,6 +6391,15 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .nami-pinned-profile-card .sidebar-player-progress-button:hover {
   border-color: transparent;
   box-shadow: none;
+}
+
+.nami-pinned-profile-card .sidebar-profile-shell {
+  border-radius: 18px;
+}
+
+.nami-pinned-profile-card .sidebar-profile-menu {
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .sidebar-profile-tag-bell {
@@ -7068,7 +7079,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat {
   min-height: 0;
   height: 100%;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-presence-rail {
@@ -7080,13 +7091,43 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   display: none;
 }
 
+.genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window-expand-host {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window {
   min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: 8px;
+  padding: 10px 10px 12px;
+}
+
+.genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window-buildout {
+  min-height: 0 !important;
+  align-content: stretch;
 }
 
 .genre-chat-pinned-dock .global-message-stack {
+  min-height: 0;
+  height: auto;
   max-height: none;
-  height: 100%;
+  overflow-y: auto;
+}
+
+.genre-chat-pinned-dock .global-chat-composer,
+.genre-chat-pinned-dock .chat-composer-with-emojis {
+  flex-shrink: 0;
+}
+
+.genre-chat-pinned-dock .chat-composer-with-emojis {
+  padding: 0 0 6px;
 }
 
 .genre-chat-pinned-collapse {
@@ -11508,7 +11549,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .genre-chat-pinned-dock .chat-composer-with-emojis {
-  padding: 0 10px 10px;
+  padding: 0;
 }
 
 /* Member streaming live indicator */

@@ -630,7 +630,14 @@ export const members: NamiMember[] = [
     isNamiTeam: true,
   },
   {
-    avatarImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffd36e%22%20stop-opacity%3D%22.26%22%2F%3E%20%3Cstop%20offset%3D%22.46%22%20stop-color%3D%22%23201807%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffd36e%22%20stop-opacity%3D%22.18%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2272%22%20fill%3D%22%23201807%22%2F%3E%20%3Cpath%20d%3D%22M0%20270%20C74%20218%20142%20322%20220%20270%20C292%20222%20330%20252%20400%20214%20L400%20400%20L0%20400%20Z%22%20fill%3D%22%23ffd36e%22%20opacity%3D%22.18%22%2F%3E%20%3Cpath%20d%3D%22M-28%2074%20C56%2018%20132%20112%20220%2062%20C306%2012%20356%2044%20428%200%20L428%20148%20C334%20196%20284%20156%20216%20190%20C130%20232%2062%20148%20-28%20198%20Z%22%20fill%3D%22%23ffd36e%22%20opacity%3D%22.13%22%2F%3E%20%3Ctext%20x%3D%22200%22%20y%3D%22228%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%20Black%2C%20Arial%2C%20sans-serif%22%20font-size%3D%22118%22%20fill%3D%22%23ffd36e%22%20letter-spacing%3D%22-10%22%3ERH%3C%2Ftext%3E%20%3C%2Fsvg%3E', id: 'm2', surfaceType: 'member', avatarSeed: 'DS', name: 'DeadlySin', signal: 'Orange', tier: 'Adventurer', badge: 'Raider' },
+    id: 'm2',
+    surfaceType: 'member',
+    avatarSeed: 'DS',
+    name: 'DeadlySin',
+    signal: 'Orange',
+    tier: 'Adventurer',
+    badge: 'Raider',
+  },
   { id: 'm3', surfaceType: 'member', avatarSeed: 'RH', name: 'Rhokdelar', signal: 'Red', tier: 'Elite', badge: 'PvP' },
   { id: 'm4', surfaceType: 'member', avatarSeed: 'PF', name: 'PebbleFan', signal: 'Green', tier: 'NPC', badge: 'Newbie' },
   { id: 'm5', surfaceType: 'member', avatarSeed: 'MG', name: 'MutedGhost', signal: 'Black', tier: 'Adventurer', badge: 'Respawn' },
@@ -649,10 +656,6 @@ export const members: NamiMember[] = [
   { id: 'm18', surfaceType: 'member', avatarSeed: 'ZL', name: 'ZenithLoop', signal: 'Green', tier: 'Pro', badge: 'Strategist' },
   { id: 'm19', surfaceType: 'member', avatarSeed: 'HM', name: 'HarborMint', signal: 'Green', tier: 'Adventurer', badge: 'Builder' }
 ];
-
-/** Built-in portrait placeholder until the owner uploads a custom default avatar. */
-export const BUILTIN_DEFAULT_MEMBER_AVATAR_URL =
-  members.find((member) => member.id === 'm2')?.avatarImageUrl ?? null;
 
 export const chatMessages: ChatMessage[] = [
   {
