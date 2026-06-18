@@ -1,0 +1,222 @@
+/* Custom mode — organic palette driven by user-picked theme variables */
+
+[data-nami-theme='custom'] .sidebar,
+[data-nami-theme='custom'] .nami-pinned-profile-card,
+[data-nami-theme='custom'] .panel,
+[data-nami-theme='custom'] .chat-shell,
+[data-nami-theme='custom'] .member-rail,
+[data-nami-theme='custom'] .feature-rail,
+[data-nami-theme='custom'] .chat-window,
+[data-nami-theme='custom'] .chat-side-panel,
+[data-nami-theme='custom'] .channel-browser,
+[data-nami-theme='custom'] .community-showcase,
+[data-nami-theme='custom'] .profile-hero-panel,
+[data-nami-theme='custom'] .member-profile-hero,
+[data-nami-theme='custom'] .passport-hero-card-refined,
+[data-nami-theme='custom'] .gamehub-discovery-panel,
+[data-nami-theme='custom'] .chat-rail-collapsible-panel,
+[data-nami-theme='custom'] .settings-screen-layout,
+[data-nami-theme='custom'] .ignite-radio-dock,
+[data-nami-theme='custom'] .nami-season-progress {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-panel);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow:
+    0 10px 24px var(--nami-theme-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-nami-theme='custom'] .sidebar-brand,
+[data-nami-theme='custom'] .sidebar-nav button,
+[data-nami-theme='custom'] .sidebar-toggle,
+[data-nami-theme='custom'] .sidebar-radio-toggle {
+  color: var(--nami-theme-nav-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='custom'] .sidebar-nav button .nav-icon {
+  color: var(--nami-theme-nav-icon);
+  background: var(--nami-theme-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--nami-theme-accent-medium);
+}
+
+[data-nami-theme='custom'] .sidebar-nav button.is-active {
+  color: var(--nami-theme-active-text);
+  border-color: var(--nami-theme-accent-border);
+  background: var(--nami-theme-active-bg);
+}
+
+[data-nami-theme='custom'] .sidebar-nav button.is-active .nav-icon {
+  color: var(--nami-theme-active-text);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+
+[data-nami-theme='custom'] .diamond-mark {
+  border-color: var(--nami-theme-accent-border);
+  background: var(--nami-theme-surface-raised);
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='custom'] .panel:hover,
+[data-nami-theme='custom'] .discovery-card:hover,
+[data-nami-theme='custom'] .module-card:hover,
+[data-nami-theme='custom'] .gamehub-feature-card:hover {
+  border-color: var(--nami-theme-accent-border);
+  box-shadow:
+    0 14px 30px var(--nami-theme-shadow),
+    0 0 0 1px var(--nami-theme-accent-soft);
+}
+
+[data-nami-theme='custom'] .page-title p {
+  color: var(--nami-theme-heading-accent);
+}
+
+[data-nami-theme='custom'] .page-title h1,
+[data-nami-theme='custom'] .panel h2,
+[data-nami-theme='custom'] .rail-heading h2,
+[data-nami-theme='custom'] h1,
+[data-nami-theme='custom'] h2,
+[data-nami-theme='custom'] h3,
+[data-nami-theme='custom'] strong,
+[data-nami-theme='custom'] label {
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='custom'] .rail-heading p,
+[data-nami-theme='custom'] .profile-panel-heading p,
+[data-nami-theme='custom'] .protocol-hint,
+[data-nami-theme='custom'] small,
+[data-nami-theme='custom'] .message-meta span,
+[data-nami-theme='custom'] .message-meta i {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='custom'] .message-bubble,
+[data-nami-theme='custom'] .chat-input-placeholder,
+[data-nami-theme='custom'] .chat-composer-shell,
+[data-nami-theme='custom'] input,
+[data-nami-theme='custom'] textarea,
+[data-nami-theme='custom'] select {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='custom'] .tab-row button,
+[data-nami-theme='custom'] .filter-row button,
+[data-nami-theme='custom'] .nami-surface-button:not(.is-primary-surface-button):not(.is-active-filter):not(.is-active-view),
+[data-nami-theme='custom'] .profile-secondary-link,
+[data-nami-theme='custom'] .secondary-action,
+[data-nami-theme='custom'] .embedded-feed-toggle:not(.is-active-view),
+[data-nami-theme='custom'] .event-interested-button:not(.is-active-view) {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='custom'] .nami-surface-button.is-primary-surface-button,
+[data-nami-theme='custom'] .nami-surface-button.is-active-view,
+[data-nami-theme='custom'] .primary-action,
+[data-nami-theme='custom'] .membership-access-upgrade-btn,
+[data-nami-theme='custom'] .embedded-feed-toggle.is-active-view,
+[data-nami-theme='custom'] .event-interested-button.is-active-view {
+  color: var(--nami-theme-active-text);
+  background: var(--nami-theme-active-bg);
+  border-color: var(--nami-theme-accent-border);
+  box-shadow: 0 8px 20px var(--nami-theme-accent-glow);
+}
+
+[data-nami-theme='custom']:not([data-nami-theme-light]) .nami-surface-button.is-primary-surface-button,
+[data-nami-theme='custom']:not([data-nami-theme-light]) .nami-surface-button.is-active-view,
+[data-nami-theme='custom']:not([data-nami-theme-light]) .primary-action,
+[data-nami-theme='custom']:not([data-nami-theme-light]) .membership-access-upgrade-btn,
+[data-nami-theme='custom']:not([data-nami-theme-light]) .embedded-feed-toggle.is-active-view,
+[data-nami-theme='custom']:not([data-nami-theme-light]) .event-interested-button.is-active-view {
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='custom'][data-nami-theme-light='true'] .nami-surface-button.is-primary-surface-button,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .primary-action,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .membership-access-upgrade-btn {
+  background: linear-gradient(135deg, var(--nami-theme-accent-strong), var(--nami-theme-active-bg));
+}
+
+[data-nami-theme='custom'] .embedded-social-feed-count,
+[data-nami-theme='custom'] .membership-access-copy p,
+[data-nami-theme='custom'] .membership-access-meta span,
+[data-nami-theme='custom'] .event-interested-count,
+[data-nami-theme='custom'] .protocol-hint {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='custom'] .tab-row button.is-active-tab,
+[data-nami-theme='custom'] .filter-row button.is-active-filter {
+  color: var(--nami-theme-active-text);
+  background: var(--nami-theme-active-bg);
+  border-color: var(--nami-theme-accent-border);
+}
+
+[data-nami-theme='custom'] .global-chat-list-row,
+[data-nami-theme='custom'] .messages-thread-row,
+[data-nami-theme='custom'] .embedded-social-card,
+[data-nami-theme='custom'] .gamehub-discovery-channel-card,
+[data-nami-theme='custom'] .discovery-card,
+[data-nami-theme='custom'] .module-card {
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='custom'] .settings-screen-layout .panel,
+[data-nami-theme='custom'] .settings-screen-layout article.panel,
+[data-nami-theme='custom'] .settings-screen-layout section.panel {
+  background: var(--nami-theme-surface-raised);
+  color: var(--nami-theme-text);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='custom'] .settings-appearance-option {
+  border-color: var(--nami-theme-border);
+  background: var(--nami-theme-surface-raised);
+}
+
+[data-nami-theme='custom'] .settings-appearance-option:hover {
+  border-color: var(--nami-theme-accent-border);
+}
+
+[data-nami-theme='custom'] .settings-appearance-option.is-active-appearance-option {
+  border-color: var(--nami-theme-accent-border);
+  background: var(--nami-theme-accent-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--nami-theme-accent-medium),
+    0 8px 18px var(--nami-theme-accent-glow);
+}
+
+[data-nami-theme='custom'] .settings-toggle-list span {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-accent-soft);
+}
+
+[data-nami-theme='custom'] .member-spotlight-card {
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 10px 24px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='custom'] .sidebar-hub-swap {
+  --hub-swap-portal-glow: var(--nami-theme-accent-glow);
+  --hub-swap-portal-accent: var(--nami-theme-accent-border);
+  background:
+    radial-gradient(ellipse 120% 90% at 18% 8%, var(--nami-theme-accent-soft), transparent 58%),
+    radial-gradient(ellipse 110% 85% at 82% 92%, var(--nami-theme-accent-glow), transparent 54%),
+    linear-gradient(180deg, var(--nami-theme-surface-raised), var(--nami-theme-panel));
+}
+
+[data-nami-theme='custom']:not([data-nami-ui='glass']) .panel,
+[data-nami-theme='custom']:not([data-nami-ui='glass']) .sidebar,
+[data-nami-theme='custom']:not([data-nami-ui='glass']) .chat-shell,
+[data-nami-theme='custom']:not([data-nami-ui='glass']) .chat-window {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

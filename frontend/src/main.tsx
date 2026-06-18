@@ -9,6 +9,7 @@ import './styles.css';
 import './phase7-ui.css';
 import './nami-light-theme.css';
 import './nami-dark-theme.css';
+import './nami-custom-theme.css';
 
 initNamiSoundscape();
 

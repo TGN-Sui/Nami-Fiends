@@ -1,5 +1,21 @@
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
+import {
+  BADGE_BOOK_LIFT_MS,
+  badgeBookLiftTransform,
+  badgeBookSpreadCssVars,
+  computeBadgeBookLiftFrames,
+  computeBadgeBookOpenPose,
+  computeBadgeBookSpreadLayout,
+  interpolateLiftFrame,
+  prefersReducedBadgeBookMotion,
+  readBadgeBookLiftHandoffTarget,
+  type BadgeBookLiftFrame,
+  type BadgeBookLiftTarget,
+} from './badge-book-lift.js';
+import { BadgeBookOverlay } from './BadgeBookOverlay.js';
+import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { collectedBadgesForMember, userCollectedBadges, type CollectedBadge } from './global-chats.js';
 
 import { badgeGlyph } from './nami-badge-glyphs.js';
@@ -7,7 +23,6 @@ import { type NamiMember } from './uiMockData.js';
 
 const SLOTS_PER_FACE = 6;
 const SLOTS_PER_SPREAD = SLOTS_PER_FACE * 2;
-const COVER_OPEN_MS = 820;
 const PAGE_FLIP_MS = 680;
 const DRAG_FLIP_THRESHOLD = 0.34;
 
@@ -144,8 +159,14 @@ export function BadgeCollectorsBook(props: {
 }): ReactElement {
   const badges = resolveBadges(props.member, props.badges);
   const totalSpreads = totalSpreadsFor(badges.length);
-  const [bookOpen, setBookOpen] = useState(false);
-  const [coverOpening, setCoverOpening] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [liftActive, setLiftActive] = useState(false);
+  const [liftHandoff, setLiftHandoff] = useState(false);
+  const [handoffTarget, setHandoffTarget] = useState<BadgeBookLiftTarget | null>(null);
+  const [liftFrame, setLiftFrame] = useState<BadgeBookLiftFrame | null>(null);
+  const [liftOpenProgress, setLiftOpenProgress] = useState(0);
+  const [liftTarget, setLiftTarget] = useState<BadgeBookLiftTarget | null>(null);
+  const [sourceHidden, setSourceHidden] = useState(false);
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [selectedBadge, setSelectedBadge] = useState<CollectedBadge | null>(null);
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev' | null>(null);
@@ -154,6 +175,14 @@ export function BadgeCollectorsBook(props: {
   const dragStartXRef = useRef(0);
   const flipFrameRef = useRef<number | null>(null);
   const spreadViewportRef = useRef<HTMLDivElement | null>(null);
+  const coverStackRef = useRef<HTMLDivElement | null>(null);
+  const liftTimeoutRef = useRef<number | null>(null);
+  const liftFrameRef = useRef<number | null>(null);
+  const liftFinishingRef = useRef(false);
+  const liftTargetRef = useRef<BadgeBookLiftTarget | null>(null);
+  const liftSpreadTargetRef = useRef<BadgeBookLiftTarget | null>(null);
+  const liftKeyframesRef = useRef<{ from: BadgeBookLiftFrame; to: BadgeBookLiftFrame } | null>(null);
+  const liftHandoffMeasureRef = useRef<HTMLDivElement | null>(null);
 
   const currentSpread = spreadFaces(spreadIndex, badges);
   const nextSpreadIndex = flipDirection === 'next' ? Math.min(totalSpreads - 1, spreadIndex + 1) : spreadIndex;
@@ -166,44 +195,200 @@ export function BadgeCollectorsBook(props: {
       if (flipFrameRef.current !== null) {
         window.cancelAnimationFrame(flipFrameRef.current);
       }
+
+      if (liftTimeoutRef.current !== null) {
+        window.clearTimeout(liftTimeoutRef.current);
+      }
+
+      if (liftFrameRef.current !== null) {
+        window.cancelAnimationFrame(liftFrameRef.current);
+      }
+
+      releaseExpandedChatScrollLock();
     };
   }, []);
 
   useEffect(() => {
     setSpreadIndex(0);
     setSelectedBadge(null);
-    setBookOpen(false);
-    setCoverOpening(false);
+    setOverlayOpen(false);
+    setLiftActive(false);
+    setLiftHandoff(false);
+    setHandoffTarget(null);
+    setLiftFrame(null);
+    setLiftOpenProgress(0);
+    setLiftTarget(null);
+    setSourceHidden(false);
     setFlipDirection(null);
     setFlipProgress(0);
     setIsDraggingFlip(false);
   }, [props.member?.id, badges.length]);
 
-  function openBook(): void {
-    if (bookOpen || coverOpening) {
-      return;
-    }
-
-    setCoverOpening(true);
-    window.setTimeout(() => {
-      setBookOpen(true);
-      setCoverOpening(false);
-    }, COVER_OPEN_MS);
-  }
-
-  function closeBook(): void {
+  function resetBookState(): void {
     if (flipFrameRef.current !== null) {
       window.cancelAnimationFrame(flipFrameRef.current);
       flipFrameRef.current = null;
     }
 
-    setBookOpen(false);
-    setCoverOpening(false);
     setSpreadIndex(0);
     setSelectedBadge(null);
     setFlipDirection(null);
     setFlipProgress(0);
     setIsDraggingFlip(false);
+  }
+
+  function clearLiftState(): void {
+    if (liftTimeoutRef.current !== null) {
+      window.clearTimeout(liftTimeoutRef.current);
+      liftTimeoutRef.current = null;
+    }
+
+    setLiftActive(false);
+    setLiftHandoff(false);
+    setHandoffTarget(null);
+    setLiftFrame(null);
+    setLiftOpenProgress(0);
+    setLiftTarget(null);
+    liftTargetRef.current = null;
+    liftSpreadTargetRef.current = null;
+    liftKeyframesRef.current = null;
+    setSourceHidden(false);
+
+    if (liftFrameRef.current !== null) {
+      window.cancelAnimationFrame(liftFrameRef.current);
+      liftFrameRef.current = null;
+    }
+
+    releaseExpandedChatScrollLock();
+  }
+
+  function finishLiftHandoff(
+    spreadTarget: BadgeBookLiftTarget | null = liftSpreadTargetRef.current
+  ): void {
+    if (liftFinishingRef.current) {
+      return;
+    }
+
+    liftFinishingRef.current = true;
+
+    const fallbackTarget = spreadTarget ?? liftSpreadTargetRef.current;
+
+    if (!fallbackTarget) {
+      setOverlayOpen(true);
+      return;
+    }
+
+    const handoffTarget = readBadgeBookLiftHandoffTarget(
+      liftHandoffMeasureRef.current,
+      fallbackTarget
+    );
+
+    setHandoffTarget(handoffTarget);
+    setLiftHandoff(true);
+    setOverlayOpen(true);
+    setLiftActive(false);
+    setLiftFrame(null);
+    setLiftOpenProgress(0);
+    setLiftTarget(null);
+    liftTargetRef.current = null;
+    liftSpreadTargetRef.current = null;
+    liftKeyframesRef.current = null;
+    setSourceHidden(false);
+
+    if (liftFrameRef.current !== null) {
+      window.cancelAnimationFrame(liftFrameRef.current);
+      liftFrameRef.current = null;
+    }
+  }
+
+  function runLiftAnimation(layout: ReturnType<typeof computeBadgeBookSpreadLayout>): void {
+    const keyframes = liftKeyframesRef.current;
+
+    if (!keyframes) {
+      finishLiftHandoff(layout.spread);
+      return;
+    }
+
+    const fromFrame = keyframes.from;
+    const toFrame = keyframes.to;
+    const startedAt = performance.now();
+
+    function frame(now: number): void {
+      const linear = Math.min(1, (now - startedAt) / BADGE_BOOK_LIFT_MS);
+      const eased = easeInOutCubic(linear);
+      const pose = computeBadgeBookOpenPose(eased);
+
+      setLiftOpenProgress(eased);
+      setLiftFrame(interpolateLiftFrame(fromFrame, toFrame, pose.layoutProgress));
+
+      if (linear < 1) {
+        liftFrameRef.current = window.requestAnimationFrame(frame);
+        return;
+      }
+
+      liftFrameRef.current = null;
+
+      if (liftTimeoutRef.current !== null) {
+        window.clearTimeout(liftTimeoutRef.current);
+        liftTimeoutRef.current = null;
+      }
+
+      finishLiftHandoff(layout.spread);
+    }
+
+    liftFrameRef.current = window.requestAnimationFrame(frame);
+  }
+
+  function openBook(): void {
+    if (overlayOpen || liftActive) {
+      return;
+    }
+
+    liftFinishingRef.current = false;
+    resetBookState();
+
+    if (prefersReducedBadgeBookMotion()) {
+      setOverlayOpen(true);
+      return;
+    }
+
+    const source = coverStackRef.current?.getBoundingClientRect();
+
+    if (!source) {
+      setOverlayOpen(true);
+      return;
+    }
+
+    const layout = computeBadgeBookSpreadLayout();
+    const frames = computeBadgeBookLiftFrames(source, layout.spread);
+
+    document.body.style.overflow = 'hidden';
+    liftTargetRef.current = layout.spread;
+    liftSpreadTargetRef.current = layout.spread;
+    liftKeyframesRef.current = frames;
+    setLiftTarget(layout.spread);
+    setLiftFrame(frames.from);
+    setLiftOpenProgress(0);
+    setSourceHidden(true);
+    setLiftActive(true);
+
+    window.requestAnimationFrame(() => {
+      runLiftAnimation(layout);
+    });
+
+    liftTimeoutRef.current = window.setTimeout(() => {
+      liftTimeoutRef.current = null;
+      finishLiftHandoff(layout.spread);
+    }, BADGE_BOOK_LIFT_MS + 80);
+  }
+
+  function closeBook(): void {
+    liftFinishingRef.current = false;
+    resetBookState();
+    clearLiftState();
+    setOverlayOpen(false);
+    setLiftHandoff(false);
+    setHandoffTarget(null);
   }
 
   function runFlipAnimation(direction: 'next' | 'prev', startProgress = 0): void {
@@ -248,7 +433,7 @@ export function BadgeCollectorsBook(props: {
   }
 
   function flipSpread(direction: 'prev' | 'next'): void {
-    if (flipDirection || coverOpening || !bookOpen) {
+    if (flipDirection || !overlayOpen) {
       return;
     }
 
@@ -266,7 +451,7 @@ export function BadgeCollectorsBook(props: {
   }
 
   function handleSpreadWheel(event: React.WheelEvent<HTMLDivElement>): void {
-    if (!bookOpen || flipDirection) {
+    if (!overlayOpen || flipDirection) {
       return;
     }
 
@@ -281,7 +466,7 @@ export function BadgeCollectorsBook(props: {
   }
 
   function handleSpreadPointerDown(event: React.PointerEvent<HTMLDivElement>): void {
-    if (!bookOpen || flipDirection) {
+    if (!overlayOpen || flipDirection) {
       return;
     }
 
@@ -366,211 +551,283 @@ export function BadgeCollectorsBook(props: {
       <span className="badge-book-cover-kicker">Collector Edition</span>
       <h2>Nami Badges</h2>
       {props.ownerLabel ? <p>{props.ownerLabel}</p> : null}
-      <span className="badge-book-cover-cta">{coverOpening ? 'Opening…' : 'Tap to open'}</span>
+      <span className="badge-book-cover-cta">Tap to open</span>
     </>
   );
 
-  const showSpread = bookOpen || coverOpening;
   const flipAngle = flipDirection === 'next' ? -flipProgress * 180 : flipDirection === 'prev' ? flipProgress * 180 : 0;
+  const liftPose = liftActive ? computeBadgeBookOpenPose(liftOpenProgress) : null;
 
-  return (
-    <section
-      aria-label="Nami Badge Book"
-      className={
-        'badge-collectors-book badge-book-interactive tcg-binder-book' +
-        (bookOpen ? ' is-book-open' : '') +
-        (coverOpening ? ' is-book-opening' : '') +
-        (flipDirection ? ' is-page-flipping' : '')
-      }
-    >
-      <div className="badge-book-stage">
-        {showSpread ? (
-          <div
-            className={
-              'badge-book-open-layer' + (bookOpen && !coverOpening ? ' is-book-fully-open' : ' is-book-revealing')
-            }
-          >
+  const liftPortal =
+    liftActive && liftTarget && liftFrame && liftPose
+      ? createPortal(
+          <div aria-hidden="true" className="badge-book-lift-host">
+            <div className="badge-book-lift-backdrop" />
             <div
-              className="badge-book-spread-viewport"
-              onWheel={handleSpreadWheel}
-              ref={spreadViewportRef}
+              className="badge-book-lift-frame"
+              style={{
+                left: liftTarget.left,
+                top: liftTarget.top,
+                width: liftTarget.width,
+                height: liftTarget.height,
+                ...badgeBookSpreadCssVars(liftTarget),
+              }}
             >
               <div
-                className={
-                  'badge-book-spread' + (isDraggingFlip || flipDirection ? ' is-dragging-spread' : '')
-                }
-                onPointerCancel={finishSpreadDrag}
-                onPointerDown={handleSpreadPointerDown}
-                onPointerMove={handleSpreadPointerMove}
-                onPointerUp={finishSpreadDrag}
+                className="badge-book-lift-motion"
+                style={{ transform: badgeBookLiftTransform(liftFrame) }}
               >
-                <div className="badge-book-left-slot">
-                  {flipDirection === 'prev' && flipProgress > 0 ? (
+                <div className="badge-book-open-scene" ref={liftHandoffMeasureRef}>
+                  <div
+                    className="badge-book-lift-left-page"
+                    style={{
+                      transform: 'rotateY(' + String(liftPose.leftPageRotateY) + 'deg)',
+                      opacity: liftPose.leftPageOpacity,
+                    }}
+                  >
                     <BadgeBookPageFace
-                      onSelect={setSelectedBadge}
-                      selectedBadgeId={selectedBadge?.id}
-                      side="left"
-                      slots={prevSpread.left}
-                    />
-                  ) : (
-                    <BadgeBookPageFace
-                      onSelect={setSelectedBadge}
-                      selectedBadgeId={selectedBadge?.id}
+                      onSelect={() => undefined}
                       side="left"
                       slots={currentSpread.left}
                     />
-                  )}
+                  </div>
 
-                  {flipDirection === 'prev' && flipProgress > 0 ? (
-                    <div
-                      className="badge-book-page-flip is-flip-backward"
-                      style={{ transform: 'rotateY(' + String(flipAngle) + 'deg)' }}
-                    >
-                      <div className="badge-book-page-flip-face is-flip-front">
-                        <BadgeBookPageFace
-                          onSelect={setSelectedBadge}
-                          selectedBadgeId={selectedBadge?.id}
-                          side="left"
-                          slots={currentSpread.left}
-                        />
-                      </div>
-                      <div className="badge-book-page-flip-face is-flip-back">
-                        <BadgeBookPageFace
-                          onSelect={setSelectedBadge}
-                          selectedBadgeId={selectedBadge?.id}
-                          side="right"
-                          slots={prevSpread.right}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
+                  <div aria-hidden="true" className="badge-book-spine-gutter">
+                    <span />
+                  </div>
 
-                <div aria-hidden="true" className="badge-book-spine-gutter">
-                  <span />
-                </div>
-
-                <div className="badge-book-right-slot">
-                  {flipDirection === 'next' && flipProgress > 0 ? (
+                  <div className="badge-book-lift-right-slot">
                     <BadgeBookPageFace
-                      onSelect={setSelectedBadge}
-                      selectedBadgeId={selectedBadge?.id}
-                      side="right"
-                      slots={nextSpread.right}
-                    />
-                  ) : (
-                    <BadgeBookPageFace
-                      onSelect={setSelectedBadge}
-                      selectedBadgeId={selectedBadge?.id}
+                      onSelect={() => undefined}
                       side="right"
                       slots={currentSpread.right}
                     />
-                  )}
-
-                  {flipDirection === 'next' && flipProgress > 0 ? (
                     <div
-                      className="badge-book-page-flip is-flip-forward"
-                      style={{ transform: 'rotateY(' + String(flipAngle) + 'deg)' }}
+                      className="badge-book-lift-cover-flip"
+                      style={{
+                        transform: 'rotateY(' + String(liftPose.coverRotateY) + 'deg)',
+                        opacity: liftPose.coverOpacity,
+                      }}
                     >
-                      <div className="badge-book-page-flip-face is-flip-front">
-                        <BadgeBookPageFace
-                          onSelect={setSelectedBadge}
-                          selectedBadgeId={selectedBadge?.id}
-                          side="right"
-                          slots={currentSpread.right}
-                        />
-                      </div>
-                      <div className="badge-book-page-flip-face is-flip-back">
-                        <BadgeBookPageFace
-                          onSelect={setSelectedBadge}
-                          selectedBadgeId={selectedBadge?.id}
-                          side="left"
-                          slots={nextSpread.left}
-                        />
-                      </div>
+                      <BadgeBookPageFace
+                        coverContent={coverContent}
+                        onSelect={() => undefined}
+                        side="right"
+                        slots={[]}
+                        variant="cover"
+                      />
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               </div>
             </div>
+          </div>,
+          document.body
+        )
+      : null;
 
-            {bookOpen ? (
-              <div className="badge-book-open-controls">
-                <button
-                  aria-label="Previous spread"
-                  className="badge-book-flip-button secondary-action"
-                  disabled={spreadIndex === 0 || Boolean(flipDirection)}
-                  onClick={() => flipSpread('prev')}
-                  type="button"
-                >
-                  ‹
-                </button>
-                <p className="badge-book-page-hint">
-                  Spread {spreadIndex + 1} of {totalSpreads} · drag or scroll to flip
-                </p>
-                <button
-                  aria-label="Next spread"
-                  className="badge-book-flip-button secondary-action"
-                  disabled={spreadIndex >= totalSpreads - 1 || Boolean(flipDirection)}
-                  onClick={() => flipSpread('next')}
-                  type="button"
-                >
-                  ›
-                </button>
-                <button className="badge-book-close-button secondary-action" onClick={closeBook} type="button">
-                  Close book
-                </button>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {!bookOpen || coverOpening ? (
-          <div className={'badge-book-closed-shell' + (coverOpening ? ' is-cover-opening' : '')}>
-            {coverOpening ? (
-              <div aria-hidden="true" className="badge-book-opening-slot" />
-            ) : (
-              <BadgeBookPageFace side="left" slots={[]} variant="back-cover" onSelect={() => undefined} />
-            )}
-            <div aria-hidden="true" className="badge-book-spine-gutter">
-              <span />
+  return (
+    <>
+      {liftPortal}
+      <section
+        aria-label="Nami Badge Book"
+        className={
+          'badge-collectors-book badge-book-interactive tcg-binder-book' +
+          (flipDirection ? ' is-page-flipping' : '')
+        }
+      >
+        <div className="badge-book-stage">
+          <div
+            className={
+              'badge-book-cover-preview' + (sourceHidden ? ' is-source-lifted' : '')
+            }
+          >
+            <div className="badge-book-cover-stack" ref={coverStackRef}>
+              <span aria-hidden="true" className="badge-book-cover-page-edge is-page-edge-3" />
+              <span aria-hidden="true" className="badge-book-cover-page-edge is-page-edge-2" />
+              <span aria-hidden="true" className="badge-book-cover-page-edge is-page-edge-1" />
+              <button
+                aria-expanded={overlayOpen}
+                aria-haspopup="dialog"
+                aria-label="Open Nami Badges book"
+                className="badge-book-front-cover"
+                onClick={openBook}
+                type="button"
+              >
+                <BadgeBookPageFace
+                  coverContent={coverContent}
+                  onSelect={() => undefined}
+                  side="right"
+                  slots={[]}
+                  variant="cover"
+                />
+              </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <BadgeBookOverlay
+        handoffFromLift={liftHandoff}
+        handoffTarget={handoffTarget}
+        label="Nami Badge Book"
+        onClose={closeBook}
+        open={overlayOpen}
+      >
+        <div
+          className={
+            'badge-book-overlay-panel' + (flipDirection ? ' is-page-flipping' : '')
+          }
+        >
+          <div
+            className="badge-book-spread-viewport"
+            onWheel={handleSpreadWheel}
+            ref={spreadViewportRef}
+          >
+            <div
+              className={
+                'badge-book-spread' + (isDraggingFlip || flipDirection ? ' is-dragging-spread' : '')
+              }
+              onPointerCancel={finishSpreadDrag}
+              onPointerDown={handleSpreadPointerDown}
+              onPointerMove={handleSpreadPointerMove}
+              onPointerUp={finishSpreadDrag}
+            >
+              <div className="badge-book-left-slot">
+                {flipDirection === 'prev' && flipProgress > 0 ? (
+                  <BadgeBookPageFace
+                    onSelect={setSelectedBadge}
+                    selectedBadgeId={selectedBadge?.id}
+                    side="left"
+                    slots={prevSpread.left}
+                  />
+                ) : (
+                  <BadgeBookPageFace
+                    onSelect={setSelectedBadge}
+                    selectedBadgeId={selectedBadge?.id}
+                    side="left"
+                    slots={currentSpread.left}
+                  />
+                )}
+
+                {flipDirection === 'prev' && flipProgress > 0 ? (
+                  <div
+                    className="badge-book-page-flip is-flip-backward"
+                    style={{ transform: 'rotateY(' + String(flipAngle) + 'deg)' }}
+                  >
+                    <div className="badge-book-page-flip-face is-flip-front">
+                      <BadgeBookPageFace
+                        onSelect={setSelectedBadge}
+                        selectedBadgeId={selectedBadge?.id}
+                        side="left"
+                        slots={currentSpread.left}
+                      />
+                    </div>
+                    <div className="badge-book-page-flip-face is-flip-back">
+                      <BadgeBookPageFace
+                        onSelect={setSelectedBadge}
+                        selectedBadgeId={selectedBadge?.id}
+                        side="right"
+                        slots={prevSpread.right}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div aria-hidden="true" className="badge-book-spine-gutter">
+                <span />
+              </div>
+
+              <div className="badge-book-right-slot">
+                {flipDirection === 'next' && flipProgress > 0 ? (
+                  <BadgeBookPageFace
+                    onSelect={setSelectedBadge}
+                    selectedBadgeId={selectedBadge?.id}
+                    side="right"
+                    slots={nextSpread.right}
+                  />
+                ) : (
+                  <BadgeBookPageFace
+                    onSelect={setSelectedBadge}
+                    selectedBadgeId={selectedBadge?.id}
+                    side="right"
+                    slots={currentSpread.right}
+                  />
+                )}
+
+                {flipDirection === 'next' && flipProgress > 0 ? (
+                  <div
+                    className="badge-book-page-flip is-flip-forward"
+                    style={{ transform: 'rotateY(' + String(flipAngle) + 'deg)' }}
+                  >
+                    <div className="badge-book-page-flip-face is-flip-front">
+                      <BadgeBookPageFace
+                        onSelect={setSelectedBadge}
+                        selectedBadgeId={selectedBadge?.id}
+                        side="right"
+                        slots={currentSpread.right}
+                      />
+                    </div>
+                    <div className="badge-book-page-flip-face is-flip-back">
+                      <BadgeBookPageFace
+                        onSelect={setSelectedBadge}
+                        selectedBadgeId={selectedBadge?.id}
+                        side="left"
+                        slots={nextSpread.left}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="badge-book-open-controls">
             <button
-              aria-expanded={bookOpen}
-              aria-label="Open Nami Badges book"
-              className="badge-book-front-cover"
-              disabled={coverOpening}
-              onClick={openBook}
+              aria-label="Previous spread"
+              className="badge-book-flip-button secondary-action"
+              disabled={spreadIndex === 0 || Boolean(flipDirection)}
+              onClick={() => flipSpread('prev')}
               type="button"
             >
-              <BadgeBookPageFace
-                coverContent={coverContent}
-                onSelect={() => undefined}
-                side="right"
-                slots={[]}
-                variant="cover"
-              />
+              ‹
+            </button>
+            <p className="badge-book-page-hint">
+              Spread {spreadIndex + 1} of {totalSpreads} · drag or scroll to flip
+            </p>
+            <button
+              aria-label="Next spread"
+              className="badge-book-flip-button secondary-action"
+              disabled={spreadIndex >= totalSpreads - 1 || Boolean(flipDirection)}
+              onClick={() => flipSpread('next')}
+              type="button"
+            >
+              ›
+            </button>
+            <button className="badge-book-close-button secondary-action" onClick={closeBook} type="button">
+              Close book
             </button>
           </div>
-        ) : null}
-      </div>
 
-      {selectedBadge ? (
-        <article className="panel badge-book-detail">
-          <div className="badge-book-detail-head">
-            <span className="badge-glyph-mark is-large">{badgeGlyph(selectedBadge)}</span>
-            <h3>{selectedBadge.name}</h3>
-          </div>
-          <div className="badge-book-detail-grid">
-            <span>Claimed</span>
-            <strong>{formatClaimDate(selectedBadge.claimedAt)}</strong>
-            <span>Collectors</span>
-            <strong>{selectedBadge.collectorsCount.toLocaleString()} members</strong>
-            <span>Rarity</span>
-            <strong>{selectedBadge.rarity}</strong>
-          </div>
-        </article>
-      ) : null}
-    </section>
+          {selectedBadge ? (
+            <article className="panel badge-book-detail">
+              <div className="badge-book-detail-head">
+                <span className="badge-glyph-mark is-large">{badgeGlyph(selectedBadge)}</span>
+                <h3>{selectedBadge.name}</h3>
+              </div>
+              <div className="badge-book-detail-grid">
+                <span>Claimed</span>
+                <strong>{formatClaimDate(selectedBadge.claimedAt)}</strong>
+                <span>Collectors</span>
+                <strong>{selectedBadge.collectorsCount.toLocaleString()} members</strong>
+                <span>Rarity</span>
+                <strong>{selectedBadge.rarity}</strong>
+              </div>
+            </article>
+          ) : null}
+        </div>
+      </BadgeBookOverlay>
+    </>
   );
 }

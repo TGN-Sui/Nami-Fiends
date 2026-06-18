@@ -1,38 +1,37 @@
 /* Light mode — softer canvas, stronger panel separation, readable text */
 
-[data-nami-theme='light'] body {
-  background:
-    radial-gradient(circle at 14% 0%, rgba(24, 111, 255, 0.09), transparent 26rem),
-    linear-gradient(180deg, #d8e0e8 0%, #ccd6e0 100%);
-  color: var(--nami-theme-text);
-}
-
-[data-nami-theme='light'] body::before {
-  opacity: 0.42;
-  background-image:
-    linear-gradient(rgba(19, 48, 82, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(19, 48, 82, 0.07) 1px, transparent 1px);
-}
-
-[data-nami-theme='light'] html.is-landing-page body::after,
-[data-nami-theme='light'] html.is-nami-app-spotlight body::after {
-  visibility: visible;
-  opacity: 0.12;
-  mix-blend-mode: multiply;
-  background:
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50%) var(--nami-spotlight-y, 40%),
-      rgba(24, 111, 255, 0.16) 0%,
-      rgba(24, 111, 255, 0.05) 10%,
-      transparent 28%
-    );
-}
-
 [data-nami-theme='light'] .nami-landing-grid-spotlight {
-  opacity: 0.34;
-  background-image:
-    linear-gradient(rgba(19, 48, 82, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(19, 48, 82, 0.1) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(
+    circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.84) 11%,
+    rgba(0, 0, 0, 0.34) 20%,
+    transparent 36%
+  );
+  mask-image: radial-gradient(
+    circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.84) 11%,
+    rgba(0, 0, 0, 0.34) 20%,
+    transparent 36%
+  );
+}
+
+[data-nami-theme='custom'][data-nami-theme-light='true'] .nami-landing-grid-spotlight {
+  -webkit-mask-image: radial-gradient(
+    circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.84) 11%,
+    rgba(0, 0, 0, 0.34) 20%,
+    transparent 36%
+  );
+  mask-image: radial-gradient(
+    circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.84) 11%,
+    rgba(0, 0, 0, 0.34) 20%,
+    transparent 36%
+  );
 }
 
 [data-nami-theme='light'] .sidebar {
@@ -54,8 +53,8 @@
 
 [data-nami-theme='light'] .sidebar-nav button .nav-icon {
   color: var(--nami-theme-nav-icon);
-  background: rgba(24, 111, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(24, 111, 255, 0.12);
+  background: var(--nami-theme-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--nami-theme-accent-medium);
 }
 
 [data-nami-theme='light'] .sidebar-nav button.is-active {
@@ -68,6 +67,33 @@
   border-color: rgba(24, 111, 255, 0.42);
   background: linear-gradient(135deg, #f4f7fa, #dbe4ee);
   color: #1a4f86;
+}
+
+[data-nami-theme='light'] .sidebar-hub-swap {
+  --hub-swap-portal-glow: rgba(24, 111, 255, 0.14);
+  --hub-swap-portal-accent: rgba(24, 111, 255, 0.24);
+  background:
+    radial-gradient(ellipse 120% 90% at 18% 8%, rgba(24, 111, 255, 0.1), transparent 58%),
+    radial-gradient(ellipse 110% 85% at 82% 92%, rgba(52, 140, 110, 0.08), transparent 54%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(232, 237, 243, 0.92));
+  box-shadow:
+    0 0 0 1px rgba(24, 111, 255, 0.08),
+    0 10px 24px rgba(15, 35, 58, 0.1),
+    0 0 32px var(--hub-swap-portal-glow);
+}
+
+[data-nami-theme='light'] .sidebar-hub-swap .diamond-mark.sidebar-hub-swap-mark {
+  background: linear-gradient(145deg, #f7fafc, #d5e0ec);
+  color: #1a4f86;
+}
+
+[data-nami-theme='light'] .sidebar-hub-swap .tcg-mark.sidebar-hub-swap-mark {
+  background: linear-gradient(165deg, #eef3f8, #c8d5e4);
+  color: #1a4f86;
+}
+
+[data-nami-theme='light'] .sidebar-hub-swap-hint {
+  color: #3d5f82;
 }
 
 [data-nami-theme='light'] .nami-pinned-profile-card {
@@ -102,18 +128,18 @@
 [data-nami-theme='light'] .discovery-card:hover,
 [data-nami-theme='light'] .module-card:hover,
 [data-nami-theme='light'] .gamehub-feature-card:hover {
-  border-color: rgba(24, 111, 255, 0.28);
+  border-color: var(--nami-theme-accent-border);
   box-shadow:
     0 14px 30px rgba(19, 40, 70, 0.12),
-    0 0 0 1px rgba(24, 111, 255, 0.08);
+    0 0 0 1px var(--nami-theme-accent-soft);
 }
 
 [data-nami-theme='light'] .page-title p {
-  color: #2d6f9d;
+  color: var(--nami-theme-heading-accent);
 }
 
 [data-nami-theme='light'] .page-title h1 {
-  color: #1a5f9c;
+  color: var(--nami-theme-text);
 }
 
 [data-nami-theme='light'] .rail-heading p,
@@ -121,7 +147,11 @@
 [data-nami-theme='light'] .protocol-hint,
 [data-nami-theme='light'] small,
 [data-nami-theme='light'] .message-meta span,
-[data-nami-theme='light'] .message-meta i {
+[data-nami-theme='light'] .message-meta i,
+[data-nami-theme='light'] .embedded-social-feed-count,
+[data-nami-theme='light'] .membership-access-copy p,
+[data-nami-theme='light'] .membership-access-meta span,
+[data-nami-theme='light'] .event-interested-count {
   color: var(--nami-theme-muted);
 }
 
@@ -156,17 +186,53 @@
 
 [data-nami-theme='light'] .tab-row button,
 [data-nami-theme='light'] .filter-row button,
-[data-nami-theme='light'] .nami-surface-button {
-  color: var(--nami-theme-nav-text);
+[data-nami-theme='light'] .nami-surface-button:not(.is-primary-surface-button):not(.is-active-filter):not(.is-active-view),
+[data-nami-theme='light'] .profile-secondary-link,
+[data-nami-theme='light'] .secondary-action,
+[data-nami-theme='light'] .embedded-feed-toggle:not(.is-active-view),
+[data-nami-theme='light'] .event-interested-button:not(.is-active-view) {
+  color: var(--nami-theme-text);
   background: var(--nami-theme-surface-raised);
   border-color: var(--nami-theme-border);
 }
 
+[data-nami-theme='light'] .nami-surface-button.is-primary-surface-button,
+[data-nami-theme='light'] .primary-action,
+[data-nami-theme='light'] .membership-access-upgrade-btn {
+  color: var(--nami-theme-active-text);
+  background: linear-gradient(135deg, var(--nami-theme-accent-strong), var(--nami-theme-active-bg));
+  border-color: var(--nami-theme-accent-border);
+  box-shadow: 0 8px 20px var(--nami-theme-accent-glow);
+}
+
+[data-nami-theme='light'] .sidebar-profile-menu {
+  background: var(--nami-theme-panel);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 18px 42px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='light'] .sidebar-profile-menu button {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='light'] .embedded-feed-bulk-toggles .profile-secondary-link,
+[data-nami-theme='light'] .embedded-social-panel-actions .profile-secondary-link {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='light'] .embedded-social-feed-count {
+  color: var(--nami-theme-subtle);
+}
+
 [data-nami-theme='light'] .tab-row button.is-active-tab,
 [data-nami-theme='light'] .filter-row button.is-active-filter {
-  color: #ffffff;
-  background: rgba(24, 111, 255, 0.88);
-  border-color: rgba(24, 111, 255, 0.45);
+  color: var(--nami-theme-active-text);
+  background: var(--nami-theme-active-bg);
+  border-color: var(--nami-theme-accent-border);
 }
 
 [data-nami-theme='light'] .nami-season-progress {
@@ -240,16 +306,16 @@
 }
 
 [data-nami-theme='light'] .settings-appearance-option:hover {
-  border-color: rgba(24, 111, 255, 0.28);
+  border-color: var(--nami-theme-accent-border);
   background: #ffffff;
 }
 
 [data-nami-theme='light'] .settings-appearance-option.is-active-appearance-option {
-  border-color: rgba(24, 111, 255, 0.42);
-  background: rgba(24, 111, 255, 0.08);
+  border-color: var(--nami-theme-accent-border);
+  background: var(--nami-theme-accent-soft);
   box-shadow:
-    inset 0 0 0 1px rgba(24, 111, 255, 0.14),
-    0 8px 18px rgba(24, 111, 255, 0.08);
+    inset 0 0 0 1px var(--nami-theme-accent-medium),
+    0 8px 18px var(--nami-theme-accent-glow);
 }
 
 [data-nami-theme='light'] .settings-appearance-option-copy small {
@@ -288,41 +354,12 @@
   color: var(--nami-theme-text);
 }
 
-[data-nami-theme='light'][data-nami-ui='glass'] .sidebar,
-[data-nami-theme='light'][data-nami-ui='glass'] .nami-pinned-profile-card,
-[data-nami-theme='light'][data-nami-ui='glass'] .panel,
-[data-nami-theme='light'][data-nami-ui='glass'] .chat-window,
-[data-nami-theme='light'][data-nami-ui='glass'] .chat-shell,
-[data-nami-theme='light'][data-nami-ui='glass'] .settings-screen-layout,
-[data-nami-theme='light'][data-nami-ui='glass'] .ignite-radio-dock,
-[data-nami-theme='light'][data-nami-ui='glass'] .nami-season-progress,
-[data-nami-theme='light'][data-nami-ui='glass'] .gamehub-discovery-panel,
-[data-nami-theme='light'][data-nami-ui='glass'] .genre-chat-pinned-dock,
-[data-nami-theme='light'][data-nami-ui='glass'] .chat-rail-collapsible-panel,
-[data-nami-theme='light'][data-nami-ui='glass'] .feature-rail,
-[data-nami-theme='light'][data-nami-ui='glass'] .member-rail {
-  background: var(--nami-glass-panel-tint), var(--nami-glass-panel-fill);
-  backdrop-filter: blur(var(--nami-glass-blur-strong)) saturate(var(--nami-glass-saturate));
-  -webkit-backdrop-filter: blur(var(--nami-glass-blur-strong)) saturate(var(--nami-glass-saturate));
-  border-color: var(--nami-glass-panel-border);
-  box-shadow: var(--nami-glass-outer-shadow), var(--nami-glass-inset-highlight);
-}
-
-[data-nami-theme='light'][data-nami-ui='glass'] .tab-row button,
-[data-nami-theme='light'][data-nami-ui='glass'] .filter-row button,
-[data-nami-theme='light'][data-nami-ui='glass'] .nami-surface-button,
-[data-nami-theme='light'][data-nami-ui='glass'] .sidebar-brand,
-[data-nami-theme='light'][data-nami-ui='glass'] .sidebar-nav button,
-[data-nami-theme='light'][data-nami-ui='glass'] .sidebar-toggle,
-[data-nami-theme='light'][data-nami-ui='glass'] .message-bubble,
-[data-nami-theme='light'][data-nami-ui='glass'] .chat-input-placeholder,
-[data-nami-theme='light'][data-nami-ui='glass'] .settings-appearance-option {
-  background: var(--nami-glass-button-tint), var(--nami-glass-button-fill);
-  border-color: var(--nami-glass-button-border);
-  backdrop-filter: blur(var(--nami-glass-blur-medium)) saturate(var(--nami-glass-saturate));
-  -webkit-backdrop-filter: blur(var(--nami-glass-blur-medium)) saturate(var(--nami-glass-saturate));
-  box-shadow: var(--nami-glass-inset-highlight);
-  color: var(--nami-theme-text);
+[data-nami-theme='light']:not([data-nami-ui='glass']) .panel,
+[data-nami-theme='light']:not([data-nami-ui='glass']) .sidebar,
+[data-nami-theme='light']:not([data-nami-ui='glass']) .chat-shell,
+[data-nami-theme='light']:not([data-nami-ui='glass']) .chat-window {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

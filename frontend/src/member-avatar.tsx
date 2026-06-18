@@ -57,12 +57,16 @@ export function chatMemberCardTierClass(member: NamiMember): string {
   return '';
 }
 
-function isChatTierFoilSurface(baseClass: string): boolean {
-  return baseClass.includes('chat-member-avatar') || baseClass.includes('message-avatar');
+function isChatAvatarSurface(baseClass: string): boolean {
+  return (
+    baseClass.includes('chat-member-avatar') ||
+    baseClass.includes('message-avatar') ||
+    baseClass.includes('messages-thread-avatar')
+  );
 }
 
 function usesChatTierFoil(member: NamiMember, baseClass: string): boolean {
-  return isChatTierFoilSurface(baseClass) && (member.tier === 'Pro' || member.tier === 'Elite');
+  return isChatAvatarSurface(baseClass) && (member.tier === 'Pro' || member.tier === 'Elite');
 }
 
 function isChatAvatarFoilSweepEligible(
@@ -72,6 +76,10 @@ function isChatAvatarFoilSweepEligible(
 ): boolean {
   if (usesChatTierFoil(member, baseClass)) {
     return true;
+  }
+
+  if (isChatAvatarSurface(baseClass)) {
+    return false;
   }
 
   return isMemberFoilEligible(member, signal);

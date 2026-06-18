@@ -720,6 +720,7 @@ function Sidebar(props: {
     <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
       {isOnGameHub || isOnNamiHub ? (
         <button
+          aria-label={'Switch to ' + hubSwapLabel}
           className={
             'sidebar-brand sidebar-hub-swap is-active-sidebar-brand' +
             (hubSwapIdleHint ? ' is-hub-swap-idle-hint' : '')
@@ -745,7 +746,12 @@ function Sidebar(props: {
               G
             </div>
           </div>
-          {!props.collapsed && <span>{hubSwapLabel}</span>}
+          {!props.collapsed ? (
+            <span className="sidebar-hub-swap-copy">
+              <span className="sidebar-hub-swap-label">{hubSwapLabel}</span>
+              <span className="sidebar-hub-swap-hint">Switch hub</span>
+            </span>
+          ) : null}
         </button>
       ) : (
         <button className="sidebar-brand" onClick={() => props.onNavigate('hub')} type="button">
