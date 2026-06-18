@@ -90,13 +90,13 @@ Latest commit for this wave: `04e3631` — Polish Game Hub surfaces and interact
 
 Key files: `frontend/src/CryptoBubbleBoard.tsx`, `frontend/src/useHorizontalScrollStrip.ts`, `frontend/src/NamiGridSpotlight.tsx`, `frontend/src/phase7-ui.css`, `frontend/src/styles.css`.
 
-Latest commits for this wave: `4b5fd36` (proximity highlights, hover motion, tile scroll) and `99c42c4` (performance baseline).
+Latest commits for this wave: `6069b6a` (proximity highlights, hover motion, tile scroll) and `99c42c4` (performance baseline).
 
 ## Latest UI Commits
 
 | Commit | Summary |
 | --- | --- |
-| `4b5fd36` | Uniform bubble proximity highlights, Member Spotlight hover-only motion, Game Hub tile strip smooth scroll |
+| `6069b6a` | Uniform bubble proximity highlights, Member Spotlight hover-only motion, Game Hub tile strip smooth scroll |
 | `99c42c4` | Hub performance, dark spotlight contrast, bubble physics (`CryptoBubbleBoard`) |
 | `347511f` | Slice 9 operator UX + Hub fixture fallback during discovery load |
 | `fdc78bf` | Slice 8 payment/X gating + Game Hub empty-state fix |
