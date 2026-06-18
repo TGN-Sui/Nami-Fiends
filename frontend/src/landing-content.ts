@@ -15,8 +15,8 @@ export const LANDING_HERO = {
   eyebrow: 'Portable gamer identity',
   headline: 'One Identity. Every Game.',
   subhead:
-    'Nami is where your reputation, squads, guilds, events, and channel homes stay with you, ' +
-    'instead of resetting every time a new Discord, launcher, or season drops.',
+    'Nami is where your reputation, squads, guilds, events, chats, and achievements stay with you ' +
+    'instead of resetting every time a new Chat App, launcher, or season drops.',
   trustNote:
     'Paid tiers unlock slots and tools. Verification and trust come from proofs, conduct, and moderation, never from a subscription.',
 };
