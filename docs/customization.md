@@ -293,6 +293,8 @@ The signed-in app exposes a shared emoji library for all members to **use** in c
 
 Implementation: `nami-custom-emojis-store.ts`, `NamiOwnerEmojiPanel.tsx`, `ChatEmojiPicker.tsx`, `TaggedMessageBody.tsx`.
 
+**Display scale:** Picker tiles and inline shortcode renders use a fixed **28×28px** size with `max-width: none` so global `img { max-width: 100% }` rules cannot shrink emojis inside narrow chat grids (including the game channel profile Chat tab).
+
 ---
 
 # Related Docs

@@ -547,6 +547,20 @@ UI-B21.11 TCG passport vertical layout polish (tier header, centered photo, stat
 UI-B21.12 Chat emojis, @member tags, tag notifications, social embed player
 ```
 
+Phase 8 intake (UI-B22 — game channel profile — complete):
+
+```text
+UI-B22.1 Tabbed game channel profile (News, Events, Reviews, About, Chat, Owner)
+UI-B22.2 Unified profile shell; main chat on profile page instead of separate chat route
+UI-B22.3 News detail overlay; related channel cover tiles
+UI-B22.4 Channel events on profile; owner publish entry to channel events screen
+UI-B22.5 Badge-gated community reviews (verified + channel badge, one review per member)
+UI-B22.6 Focused banner alerts (owner editor, preview, subscriber popup, reminder bar)
+UI-B22.7 Channel profile brand theme + shared chrome hook
+UI-B22.8 Reviews/badge store snapshot caching (blank-page guard)
+UI-B22.9 Game channel chat emoji scale parity (28px picker + inline)
+```
+
 Phase 7 wiring (server-backed — complete):
 
 ```text

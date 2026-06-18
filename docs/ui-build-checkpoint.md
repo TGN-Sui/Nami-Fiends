@@ -92,6 +92,24 @@ Key files: `frontend/src/CryptoBubbleBoard.tsx`, `frontend/src/useHorizontalScro
 
 Latest commits for this wave: `6069b6a` (proximity highlights, hover motion, tile scroll) and `99c42c4` (performance baseline).
 
+## Game Channel Profile Redesign (UI-B22)
+
+| Phase | Status | Result |
+| --- | --- | --- |
+| UI-B22.1 | Complete | Tabbed game channel profile: News, Events, Reviews, About, Chat, Owner. |
+| UI-B22.2 | Complete | Shared `ChannelProfileShell` hero + nav; chat lives on the same page (no separate `chat` route). |
+| UI-B22.3 | Complete | Clickable news cards + `ChannelNewsDetailOverlay`. |
+| UI-B22.4 | Complete | Owner-only channel events publish entry; subscriber Interested flow on profile Events tab. |
+| UI-B22.5 | Complete | Badge-gated community reviews (`channel-game-reviews-store`, `ChannelGameReviewsSection`). |
+| UI-B22.6 | Complete | Focused banner alerts: editor, owner preview, subscriber popup, reminder bar (`channel-banner-notifications-store`). |
+| UI-B22.7 | Complete | Related channel compact cover tiles; profile brand theme helpers. |
+| UI-B22.8 | Complete | Store snapshot caching fix for reviews/badges (prevents blank profile from `useSyncExternalStore` loops). |
+| UI-B22.9 | Complete | Nami emoji display at standard 28×28px in game channel chat (picker + inline). |
+
+Key files: `ChannelProfileScreen.tsx`, `ChannelProfileShell.tsx`, `ChannelProfileChatSection.tsx`, `channel-profile-sections.ts`, `useChannelProfileChrome.ts`, `channel-banner-notifications-store.ts`, `channel-game-reviews-store.ts`, `channel-game-badge-store.ts`, `phase7-ui.css`.
+
+Verification (UI-B22): `npm --prefix frontend run build` and `npm --prefix frontend test` — **74** unit tests passing.
+
 ## Latest UI Commits
 
 | Commit | Summary |
@@ -128,7 +146,7 @@ npm --prefix frontend run build
 npm --prefix frontend test
 ```
 
-All checks passed (47 unit tests at completion).
+All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22).
 
 ## Product Rules Preserved
 

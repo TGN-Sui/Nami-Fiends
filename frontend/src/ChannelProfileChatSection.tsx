@@ -1,0 +1,484 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+
+import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatWindowExpandable } from './ChatWindowExpandable.js';
+import type { ChannelBrandTheme } from './channel-profile-brand.js';
+import {
+  canSendChatMessages,
+  getSelfMember,
+  messageBubbleClass,
+  resolveMessageAuthorMember,
+} from './member-access.js';
+import {
+  chatMemberCardTierClass,
+  ConductSignalDot,
+  UniformMemberAvatar,
+  UniformMemberAvatarButton,
+} from './member-avatar.js';
+import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
+import { appendChannelChatMessage, useMessagesStore } from './messages-store.js';
+import { tagSuggestionHint } from './nami-tag-registry.js';
+import { saveSafetyReport } from './safety-report-store.js';
+import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
+import { chatMessages, members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
+
+const conductLanguageTerms = [
+  'nsfw',
+  'explicit',
+  'adult-only',
+  '18+',
+  'xxx',
+  'sexual',
+  'harassment',
+  'threat',
+];
+
+function hasAdultLanguage(content: string): boolean {
+  const normalizedContent = content.toLowerCase();
+
+  return conductLanguageTerms.some((term) => normalizedContent.includes(term));
+}
+
+function censorAdultLanguage(content: string): string {
+  return conductLanguageTerms.reduce((censoredContent, term) => {
+    const charactersToEscape = '\\^$.*+?()[]{}|';
+    const escapedTerm = term
+      .split('')
+      .map((character) => (charactersToEscape.includes(character) ? '\\' + character : character))
+      .join('');
+    const termPattern = new RegExp(escapedTerm, 'gi');
+
+    return censoredContent.replace(termPattern, (match) => '•'.repeat(Math.max(4, match.length)));
+  }, content);
+}
+
+export function ChannelProfileChatSection(props: {
+  channel: NamiChannel;
+  channelBrandTheme: ChannelBrandTheme;
+  onNavigate: (page: NamiPage) => void;
+  onOpenMember: (member: NamiMember) => void;
+  tagHandlers: TagNavigationHandlers;
+}): ReactElement {
+  const [hideNpc, setHideNpc] = useState(false);
+  const [hideRed, setHideRed] = useState(false);
+  const [proEliteOnly, setProEliteOnly] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
+  const [customizationCollapsed, setCustomizationCollapsed] = useState(true);
+  const [gatedAccessCollapsed, setGatedAccessCollapsed] = useState(true);
+  const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(true);
+  const [reportPulse, setReportPulse] = useState('');
+  const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
+
+  useEffect(() => {
+    setFiltersCollapsed(true);
+    setCustomizationCollapsed(true);
+    setGatedAccessCollapsed(true);
+    setAdultLanguageCollapsed(true);
+  }, [props.channel.id]);
+
+  const preferencesVersion = useMemberPreferencesVersion();
+  const chatEligibleMembers = useMemo(
+    () => members.filter((member) => member.signal !== 'Black'),
+    [],
+  );
+
+  const visibleChatMembers = useMemo(() => {
+    return chatEligibleMembers.filter((member) => !readMemberPreference(member.id).blocked);
+  }, [chatEligibleMembers, preferencesVersion]);
+
+  const selfChatMember = getSelfMember();
+  const messageStore = useMessagesStore();
+  const [chatDraft, setChatDraft] = useState('');
+  const messageStackRef = useRef<HTMLDivElement | null>(null);
+  const canSend = canSendChatMessages();
+
+  const resolveChatMessageMember = useCallback((message: ChatMessage): NamiMember | undefined => {
+    return resolveMessageAuthorMember(message, selfChatMember, chatEligibleMembers);
+  }, [selfChatMember, chatEligibleMembers]);
+
+  const visibleMessages = useMemo(() => {
+    return [...chatMessages, ...messageStore.channelMessages].filter((message) => {
+      if (message.signal === 'Black') return false;
+      if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
+
+      const member = resolveChatMessageMember(message);
+
+      if (!member) return false;
+      if (readMemberPreference(member.id).blocked) return false;
+      if (hideNpc && member.tier === 'NPC') return false;
+      if (hideRed && message.signal === 'Red') return false;
+      if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
+
+      return true;
+    });
+  }, [
+    adultLanguageMode,
+    hideNpc,
+    hideRed,
+    messageStore.channelMessages,
+    preferencesVersion,
+    proEliteOnly,
+    resolveChatMessageMember,
+  ]);
+
+  useEffect(() => {
+    const stack = messageStackRef.current;
+
+    if (!stack) {
+      return;
+    }
+
+    stack.scrollTop = stack.scrollHeight;
+  }, [visibleMessages.length, messageStore.channelMessages.length]);
+
+  const onlineMembers = visibleChatMembers.slice(0, 4);
+  const offlineMembers = visibleChatMembers.slice(4);
+
+  function reportMessage(member: NamiMember, messageBody: string): void {
+    saveSafetyReport({
+      source: 'message',
+      targetId: member.id,
+      targetName: member.name,
+      reason: messageBody,
+      channelName: props.channel.name,
+    });
+
+    setReportPulse('Report queued for ' + member.name);
+  }
+
+  return (
+    <section className="channel-profile-section channel-profile-chat-panel">
+      <section className="chat-presence-rail channel-profile-chat-presence">
+        <div className="chat-presence-channel">
+          <span className="mini-badge">Live room</span>
+          <h2>Main chat</h2>
+          <p>{visibleChatMembers.length} members visible in this room</p>
+        </div>
+
+        <div className="chat-member-strip">
+          {onlineMembers.map((member) => {
+            const preference = readMemberPreference(member.id);
+
+            return (
+              <button
+                className={
+                  'chat-member-card' +
+                  chatMemberCardTierClass(member) +
+                  (preference.muted ? ' is-muted-member-card' : '')
+                }
+                key={member.id}
+                onClick={() => props.onOpenMember(member)}
+                type="button"
+              >
+                <UniformMemberAvatar member={member} />
+                <strong>{member.name}</strong>
+                <span>{preference.muted ? 'Muted' : member.tier}</span>
+              </button>
+            );
+          })}
+
+          {offlineMembers.map((member) => {
+            const preference = readMemberPreference(member.id);
+
+            return (
+              <button
+                className={
+                  'chat-member-card is-offline' +
+                  chatMemberCardTierClass(member) +
+                  (preference.muted ? ' is-muted-member-card' : '')
+                }
+                key={member.id}
+                onClick={() => props.onOpenMember(member)}
+                type="button"
+              >
+                <UniformMemberAvatar member={member} />
+                <strong>{member.name}</strong>
+                <span>{preference.muted ? 'Muted' : 'Offline'}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="chat-shell chat-shell-buildout channel-profile-chat-shell">
+        <div className="chat-layout chat-layout-buildout">
+          <ChatWindowExpandable className="chat-theme-channel-brand">
+            <div className="chat-window-heading">
+              <div>
+                <h2>{props.channel.name} Main Chat</h2>
+                <p>
+                  {visibleMessages.length} visible messages · {visibleChatMembers.length} visible members
+                </p>
+              </div>
+
+              <div className="chat-heading-actions">
+                {reportPulse ? <span className="report-pulse">{reportPulse}</span> : null}
+                <button onClick={() => props.onNavigate('safetyCenter')} type="button">
+                  Safety Center
+                </button>
+              </div>
+            </div>
+
+            <div className="message-stack global-message-stack" ref={messageStackRef}>
+              {visibleMessages.map((message) => {
+                const member = resolveChatMessageMember(message);
+
+                if (!member) {
+                  return null;
+                }
+
+                const preference = readMemberPreference(member.id);
+
+                return (
+                  <div
+                    className={'chat-message-row' + (preference.muted ? ' is-muted-chat-row' : '')}
+                    key={message.id}
+                  >
+                    <UniformMemberAvatarButton
+                      member={member}
+                      onClick={() => props.onOpenMember(member)}
+                      signal={message.signal}
+                    />
+
+                    <div className={'message-bubble' + messageBubbleClass(member, message.author)}>
+                      <div className="message-meta">
+                        <button
+                          className={'message-author-button signal-text-' + message.signal.toLowerCase()}
+                          onClick={() => props.onOpenMember(member)}
+                          type="button"
+                        >
+                          {message.author}
+                        </button>
+
+                        <span>{message.time}</span>
+                        <i>{preference.muted ? 'Muted' : member.tier}</i>
+                        <ConductSignalDot signal={message.signal} size="sm" />
+
+                        <button
+                          className="message-report-button"
+                          onClick={() => reportMessage(member, message.body)}
+                          type="button"
+                        >
+                          Report
+                        </button>
+                      </div>
+
+                      <p>
+                        <TaggedMessageBody
+                          body={message.body}
+                          handlers={props.tagHandlers}
+                          {...(adultLanguageMode === 'censor'
+                            ? { transformText: censorAdultLanguage }
+                            : {})}
+                        />
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <ChatComposerWithEmojis
+              ariaLabel={'Message ' + props.channel.name}
+              canSend={canSend}
+              className="chat-composer-row chat-input-placeholder"
+              onChange={setChatDraft}
+              onSend={() => {
+                if (!canSend || !chatDraft.trim()) {
+                  return;
+                }
+
+                appendChannelChatMessage(chatDraft);
+                setChatDraft('');
+              }}
+              placeholder={
+                canSend
+                  ? 'Message ' + props.channel.name + ' · ' + tagSuggestionHint()
+                  : 'Sign in and verify to send messages'
+              }
+              sendButtonClassName=""
+              value={chatDraft}
+            />
+          </ChatWindowExpandable>
+
+          <aside className="chat-side-panel chat-side-panel-collapsible">
+            <section
+              className={
+                'gated-access-panel chat-rail-collapsible-panel' +
+                (gatedAccessCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setGatedAccessCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Gated Access</span>
+                <strong>{gatedAccessCollapsed ? '+' : '−'}</strong>
+              </button>
+
+              {!gatedAccessCollapsed ? (
+                <div className="chat-rail-panel-body">
+                  <div className="profile-panel-heading">
+                    <h2>Passport Gates</h2>
+                    <p>Proof-based access for verified rooms, holder chats, and guild areas.</p>
+                  </div>
+
+                  <div className="gated-access-mini-list">
+                    <span>Wallet linked</span>
+                    <span>SuiNS verified</span>
+                    <span>Guild standing clear</span>
+                  </div>
+
+                  <button
+                    className="profile-secondary-link chat-rail-action-button"
+                    onClick={() => props.onNavigate('passport')}
+                    type="button"
+                  >
+                    Passport
+                  </button>
+                </div>
+              ) : null}
+            </section>
+
+            <section
+              className={
+                'chat-filter-panel chat-rail-collapsible-panel' +
+                (filtersCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setFiltersCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Filters</span>
+                <strong>{filtersCollapsed ? '+' : '−'}</strong>
+              </button>
+
+              {!filtersCollapsed ? (
+                <div className="chat-rail-panel-body filter-options-stack">
+                  <label>
+                    <input checked={hideNpc} onChange={(event) => setHideNpc(event.target.checked)} type="checkbox" />
+                    Hide NPCs
+                  </label>
+
+                  <label>
+                    <input checked={hideRed} onChange={(event) => setHideRed(event.target.checked)} type="checkbox" />
+                    Hide Red Signal
+                  </label>
+
+                  <label>
+                    <input
+                      checked={proEliteOnly}
+                      onChange={(event) => setProEliteOnly(event.target.checked)}
+                      type="checkbox"
+                    />
+                    Pro / Elite only
+                  </label>
+                </div>
+              ) : null}
+            </section>
+
+            <section
+              className={
+                'adult-language-settings-panel chat-rail-collapsible-panel' +
+                (adultLanguageCollapsed ? ' is-chat-rail-collapsed' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setAdultLanguageCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Language</span>
+                <strong>{adultLanguageCollapsed ? '+' : '−'}</strong>
+              </button>
+
+              {!adultLanguageCollapsed ? (
+                <div className="chat-rail-panel-body">
+                  <div className="profile-panel-heading">
+                    <h2>Adult Language</h2>
+                    <p>Channel owner moderation setting. Default behavior is censoring.</p>
+                  </div>
+
+                  <div className="adult-language-control">
+                    <strong>Mode</strong>
+
+                    <div className="adult-language-mode-row">
+                      {(['censor', 'filter', 'show'] as const).map((mode) => (
+                        <button
+                          className={adultLanguageMode === mode ? 'is-active-adult-mode' : ''}
+                          key={mode}
+                          onClick={() => setAdultLanguageMode(mode)}
+                          type="button"
+                        >
+                          {mode === 'censor' ? 'Censor' : mode === 'filter' ? 'Filter' : 'Show'}
+                        </button>
+                      ))}
+                    </div>
+
+                    <small>Censor masks matching words. Filter removes matching messages.</small>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            <section
+              className={
+                'chat-customization-panel chat-rail-collapsible-panel' +
+                (customizationCollapsed ? ' is-chat-rail-collapsed is-collapsed-customization' : '')
+              }
+            >
+              <button
+                className="chat-rail-collapse-button"
+                onClick={() => setCustomizationCollapsed((value) => !value)}
+                type="button"
+              >
+                <span>Chat Style</span>
+                <strong>{customizationCollapsed ? '+' : '−'}</strong>
+              </button>
+
+              {!customizationCollapsed ? (
+                <div className="chat-rail-panel-body chat-customization-body chat-style-body">
+                  <div className="profile-panel-heading">
+                    <h2>Chat Box Style</h2>
+                    <p>Use channel-approved accents and future earned cosmetic rewards.</p>
+                  </div>
+
+                  <div className="chat-style-brand-card">
+                    <span
+                      style={{
+                        background:
+                          'linear-gradient(135deg, ' +
+                          props.channelBrandTheme.primary +
+                          ', ' +
+                          props.channelBrandTheme.secondary +
+                          ')',
+                      }}
+                    />
+                    <div>
+                      <strong>{props.channelBrandTheme.label}</strong>
+                      <small>Channel-approved accent</small>
+                    </div>
+                  </div>
+
+                  <div className="chat-style-reward-grid">
+                    <span>Default Bubble</span>
+                    <span>Wave Frame</span>
+                    <span>Signal Glow</span>
+                  </div>
+
+                  <div className="customization-note">
+                    Cosmetic rewards will unlock fonts, overlays, message skins, and animation intensity. Owner brand
+                    colors stay in Settings.
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          </aside>
+        </div>
+      </section>
+    </section>
+  );
+}

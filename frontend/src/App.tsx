@@ -28,6 +28,11 @@ import { ProtocolConductPanel } from './ProtocolConductPanel.js';
 
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { EventLivePopup } from './EventLivePopup.js';
+import { ChannelProfileScreen } from './ChannelProfileScreen.js';
+import type { ChannelProfileSection } from './channel-profile-sections.js';
+import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
+import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
+
 import {
   createChannelEvent,
   formatEventTimeInTimezone,
@@ -52,7 +57,6 @@ import {
   canSendPrivateMessages,
   getSelfMember,
   messageBubbleClass,
-  PINNED_PROFILE_MODULE,
   resolveMessageAuthorMember,
 } from './member-access.js';
 import {
@@ -85,7 +89,7 @@ import { useGuildCardsQuery, useOwnerHistoryQuery, usePassportQuery, useSquadCar
 
 import { clearLocalNamiSession } from './session-sign-out.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
-import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
+
 import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
 import { useStudioLogoVersion, withStudioLogo } from './studio-logo-store.js';
 import {
@@ -882,6 +886,7 @@ function ChannelInfoCard(props: {
   onSubscribe?: () => void;
   onJoinChat?: () => void;
   onGetBanners?: () => void;
+  bannerAlertsEnabled?: boolean;
 }): ReactElement {
   return (
     <article className="featured-partner-banner-card channel-info-card">
@@ -918,12 +923,18 @@ function ChannelInfoCard(props: {
           <button onClick={props.onSubscribe} type="button">Subscribe</button>
           <button onClick={props.onJoinChat} type="button">Join Chat</button>
           <button
-            className="is-coming-soon-action"
-            disabled
-            title="Banner system coming soon"
+            className={
+              'secondary-action' + (props.bannerAlertsEnabled ? ' is-banner-alerts-active' : '')
+            }
+            onClick={props.onGetBanners}
+            title={
+              props.bannerAlertsEnabled
+                ? 'Focused banner alerts are on for this channel'
+                : 'Receive focused banner alerts from this game channel'
+            }
             type="button"
           >
-            Get Banners
+            {props.bannerAlertsEnabled ? 'Banners On' : 'Get Banners'}
           </button>
         </div>
       </div>
@@ -1050,23 +1061,34 @@ function NamiHub(props: {
     return right.subscribers - left.subscribers;
   });
 
-  const growthChannels = Array.from({ length: 14 }, (_, index) => {
-    return sortedGrowthChannels[index % sortedGrowthChannels.length]!;
-  });
+  const growthChannels =
+    sortedGrowthChannels.length > 0
+      ? Array.from({ length: 14 }, (_, index) => {
+          return sortedGrowthChannels[index % sortedGrowthChannels.length]!;
+        })
+      : [props.selectedChannel];
 
   const maxCommunitySubscribers = Math.max(
     1,
     ...growthChannels.map((channel) => channel.subscribers)
   );
 
-  const topCommunityBubbles = Array.from({ length: 50 }, (_, index) => {
-    const channel = sortedGrowthChannels[index % sortedGrowthChannels.length]!;
+  const topCommunityBubbles =
+    sortedGrowthChannels.length > 0
+      ? Array.from({ length: 50 }, (_, index) => {
+          const channel = sortedGrowthChannels[index % sortedGrowthChannels.length]!;
 
-    return {
-      channel,
-      slotId: channel.id + '-top-community-' + index
-    };
-  });
+          return {
+            channel,
+            slotId: channel.id + '-top-community-' + index,
+          };
+        })
+      : Array.from({ length: 50 }, (_, index) => {
+          return {
+            channel: props.selectedChannel,
+            slotId: props.selectedChannel.id + '-top-community-' + index,
+          };
+        });
 
   const spotlightEligibleMembers = directoryMembers.filter((member) => {
     return member.tier !== 'NPC' && member.signal !== 'Black';
@@ -2362,1012 +2384,6 @@ function StudioProfileScreen(props: {
 }
 
 
-function ChannelProfile(props: {
-  channel: NamiChannel;
-  onNavigate: (page: NamiPage) => void;
-  onOpenProfile?: (channel: NamiChannel) => void;
-  onOpenStudioProfile?: (developer: (typeof developers)[number]) => void;
-  returnPage: NamiPage;
-  returnLabel: string;
-}): ReactElement {
-  const developerProfile = channelDeveloper(props.channel);
-
-  const profileModuleDefaults = [
-    PINNED_PROFILE_MODULE,
-    'Main Chat',
-    'Events',
-    'Official Badges',
-    'Timeline',
-    'Guilds',
-    'Patch Notes',
-    'Support',
-    'Esports',
-    'Gated Rooms',
-  ];
-
-  const profilePanelDefaults = [
-    'Channel Modules',
-    'Official Announcements',
-    'Nami Badges',
-    'Channel Badges',
-    'Profile Customization',
-    'Related Channels',
-  ];
-
-  const profileBrandThemes = [
-    {
-      key: 'nami',
-      label: 'Nami Blue',
-      primary: '#75d7ff',
-      secondary: '#1f65ff',
-      glow: 'rgba(117, 215, 255, 0.2)'
-    },
-    {
-      key: 'fiends',
-      label: 'Fiends Red',
-      primary: '#ff3152',
-      secondary: '#a01c30',
-      glow: 'rgba(255, 49, 82, 0.2)'
-    },
-    {
-      key: 'ocean',
-      label: 'Ocean Mint',
-      primary: '#43f5a7',
-      secondary: '#0c7f65',
-      glow: 'rgba(67, 245, 167, 0.2)'
-    },
-    {
-      key: 'ember',
-      label: 'Ember Gold',
-      primary: '#ffb84d',
-      secondary: '#ff3152',
-      glow: 'rgba(255, 184, 77, 0.2)'
-    }
-  ];
-
-  const [profileModules, setProfileModules] = useState(profileModuleDefaults);
-  const [profilePanels, setProfilePanels] = useState(profilePanelDefaults);
-  const [collapsedPanels, setCollapsedPanels] = useState<string[]>([]);
-  const [draggedModule, setDraggedModule] = useState<string | null>(null);
-  const [draggedPanel, setDraggedPanel] = useState<string | null>(null);
-  const defaultBrandTheme = profileBrandThemes[0]!;
-
-  const [brandKey, setBrandKey] = useState(defaultBrandTheme.key);
-  const [collapsedModules, setCollapsedModules] = useState<string[]>([]);
-  const [subscribeNotice, setSubscribeNotice] = useState('');
-  const selfMember = getSelfMember();
-  const channelIsSubscribed = isChannelSubscribed(props.channel.id);
-  const [showChannelData, setShowChannelData] = useState(false);
-  const [moduleOrderSaved, setModuleOrderSaved] = useState(false);
-  const [panelOrderSaved, setPanelOrderSaved] = useState(false);
-  const [collapsedPanelsSaved, setCollapsedPanelsSaved] = useState(false);
-  const [collapsedModulesSaved, setCollapsedModulesSaved] = useState(false);
-  const [brandSaved, setBrandSaved] = useState(false);
-
-  const relatedChannels = channels
-    .filter((channel) => channel.id !== props.channel.id)
-    .slice(0, 4);
-
-  const officialBadgeIcons = [
-    { icon: '✓', label: 'Verified Channel' },
-    { icon: '◇', label: 'SuiNS Linked' },
-    { icon: 'N', label: 'Nami Approved' },
-    { icon: '!', label: 'Official Announcements' }
-  ];
-
-  const customBadgeIcons = [
-    { icon: 'L', label: 'Launch Crew' },
-    { icon: 'G', label: 'Guild Friendly' },
-    { icon: 'E', label: 'Event Host' },
-    { icon: '★', label: 'Creator Pick' }
-  ];
-
-  const verifiedLinks = [
-    {
-      icon: 'S',
-      label: 'SuiNS',
-      value: props.channel.handle + '.sui',
-      status: 'Verified'
-    },
-    {
-      icon: 'D',
-      label: 'Developer',
-      value: 'Owner proof linked',
-      status: 'Verified'
-    },
-    {
-      icon: 'W',
-      label: 'Website',
-      value: props.channel.name + ' profile hub',
-      status: 'Verified'
-    }
-  ];
-
-  const announcements = [
-    {
-      title: 'Official event board is live',
-      body: 'The latest community event banner, guild schedule, and reward notes are now available from this profile.',
-      tag: 'Official'
-    },
-    {
-      title: 'Patch notes synced',
-      body: 'Developer notes and support updates can be surfaced here without burying them inside main chat.',
-      tag: 'Update'
-    },
-    {
-      title: 'Custom banner slot available',
-      body: 'Higher-tier channel owners can rotate profile banners, frames, and featured modules.',
-      tag: 'Pro / Elite'
-    }
-  ];
-
-  const moduleStorageKey = 'nami-profile-module-order-' + props.channel.id;
-  const panelStorageKey = 'nami-profile-panel-order-' + props.channel.id;
-  const collapsedStorageKey = 'nami-profile-collapsed-panels-' + props.channel.id;
-  const collapsedModulesStorageKey = 'nami-profile-collapsed-modules-' + props.channel.id;
-  const brandStorageKey = 'nami-profile-brand-theme-' + props.channel.id;
-  const layoutSaved =
-    moduleOrderSaved && panelOrderSaved && collapsedPanelsSaved && collapsedModulesSaved && brandSaved;
-
-  const selectedBrandTheme =
-    profileBrandThemes.find((theme) => theme.key === brandKey) ?? defaultBrandTheme;
-
-  const selectedSurfaceBrandColor = readSelectedChannelBrandColor();
-
-  const profileBrandStyle = {
-    '--profile-brand-primary': selectedSurfaceBrandColor,
-    '--profile-brand-secondary': selectedSurfaceBrandColor,
-    '--profile-brand-glow': selectedSurfaceBrandColor
-  } as CSSProperties;
-
-  useEffect(() => {
-    applyChannelBrandToDocument(selectedBrandTheme);
-  }, [brandKey, selectedBrandTheme]);
-
-  const expandedPanels = profilePanels.filter((panelName) => {
-    return !collapsedPanels.includes(panelName);
-  });
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    });
-
-    function loadSavedOrder(
-      savedValue: string | null,
-      defaultItems: string[]
-    ): {
-      items: string[];
-      saved: boolean;
-    } {
-      if (!savedValue) {
-        return {
-          items: [...defaultItems],
-          saved: false
-        };
-      }
-
-      try {
-        const parsedValue = JSON.parse(savedValue);
-
-        if (!Array.isArray(parsedValue)) {
-          return {
-            items: [...defaultItems],
-            saved: false
-          };
-        }
-
-        const validSavedItems = parsedValue.filter((item): item is string => {
-          return typeof item === 'string' && defaultItems.includes(item);
-        });
-
-        const missingItems = defaultItems.filter((item) => {
-          return !validSavedItems.includes(item);
-        });
-
-        return {
-          items: [...validSavedItems, ...missingItems],
-          saved: validSavedItems.length > 0
-        };
-      } catch {
-        return {
-          items: [...defaultItems],
-          saved: false
-        };
-      }
-    }
-
-    function loadCollapsedItems(
-      savedValue: string | null,
-      defaultItems: string[]
-    ): {
-      items: string[];
-      saved: boolean;
-    } {
-      if (!savedValue) {
-        return {
-          items: [],
-          saved: false
-        };
-      }
-
-      try {
-        const parsedValue = JSON.parse(savedValue);
-
-        if (!Array.isArray(parsedValue)) {
-          return {
-            items: [],
-            saved: false
-          };
-        }
-
-        return {
-          items: parsedValue.filter((itemName): itemName is string => {
-            return typeof itemName === 'string' && defaultItems.includes(itemName);
-          }),
-          saved: true
-        };
-      } catch {
-        return {
-          items: [],
-          saved: false
-        };
-      }
-    }
-
-    const savedModules = loadSavedOrder(
-      window.localStorage.getItem(moduleStorageKey),
-      profileModuleDefaults
-    );
-
-    const savedPanels = loadSavedOrder(
-      window.localStorage.getItem(panelStorageKey),
-      profilePanelDefaults
-    );
-
-    const savedCollapsedPanels = loadCollapsedItems(
-      window.localStorage.getItem(collapsedStorageKey),
-      profilePanelDefaults
-    );
-
-    const savedCollapsedModules = loadCollapsedItems(
-      window.localStorage.getItem(collapsedModulesStorageKey),
-      profileModuleDefaults
-    );
-
-    const savedBrandKey = window.localStorage.getItem(brandStorageKey);
-    const savedBrandIsValid = profileBrandThemes.some((theme) => theme.key === savedBrandKey);
-
-    setProfileModules(
-      (() => {
-        const pinned = PINNED_PROFILE_MODULE;
-        const validModules = savedModules.items.filter((item) => profileModuleDefaults.includes(item));
-        const withoutPinned = validModules.filter((item) => item !== pinned);
-        const missingModules = profileModuleDefaults.filter(
-          (item) => item !== pinned && !withoutPinned.includes(item)
-        );
-
-        return [pinned, ...withoutPinned, ...missingModules];
-      })()
-    );
-    setProfilePanels(savedPanels.items);
-    setCollapsedPanels(savedCollapsedPanels.items);
-    setCollapsedModules(savedCollapsedModules.items);
-    setBrandKey(savedBrandIsValid && savedBrandKey ? savedBrandKey : defaultBrandTheme.key);
-    setModuleOrderSaved(savedModules.saved);
-    setPanelOrderSaved(savedPanels.saved);
-    setCollapsedPanelsSaved(savedCollapsedPanels.saved);
-    setCollapsedModulesSaved(savedCollapsedModules.saved);
-    setBrandSaved(savedBrandIsValid);
-  }, [
-    moduleStorageKey,
-    panelStorageKey,
-    collapsedStorageKey,
-    collapsedModulesStorageKey,
-    brandStorageKey,
-    props.channel.id
-  ]);
-
-  function openModule(moduleName: string): void {
-    if (moduleName === 'Main Chat') {
-      props.onNavigate('chat');
-      return;
-    }
-
-    if (moduleName === 'Events') {
-      props.onNavigate('channelEvents');
-    }
-  }
-
-  function normalizeModuleOrder(moduleNames: string[]): string[] {
-    const pinned = PINNED_PROFILE_MODULE;
-    const validModules = moduleNames.filter((moduleName) => profileModuleDefaults.includes(moduleName));
-    const withoutPinned = validModules.filter((moduleName) => moduleName !== pinned);
-    const missingModules = profileModuleDefaults.filter(
-      (moduleName) => moduleName !== pinned && !withoutPinned.includes(moduleName)
-    );
-
-    return [pinned, ...withoutPinned, ...missingModules];
-  }
-
-  function dropModule(targetModule: string): void {
-    const movingModule = draggedModule;
-
-    if (
-      !movingModule ||
-      movingModule === targetModule ||
-      movingModule === PINNED_PROFILE_MODULE ||
-      targetModule === PINNED_PROFILE_MODULE
-    ) {
-      setDraggedModule(null);
-      return;
-    }
-
-    setProfileModules((currentModules) => {
-      const nextModules = currentModules.filter((moduleName) => moduleName !== movingModule);
-      const targetIndex = nextModules.indexOf(targetModule);
-
-      if (targetIndex === -1) {
-        return currentModules;
-      }
-
-      nextModules.splice(targetIndex, 0, movingModule);
-      return normalizeModuleOrder(nextModules);
-    });
-
-    setDraggedModule(null);
-    setModuleOrderSaved(false);
-  }
-
-  function handleSubscribe(): void {
-    if (channelIsSubscribed) {
-      setSubscribeNotice('Already subscribed to ' + props.channel.name + '.');
-      return;
-    }
-
-    const result = subscribeToChannel(props.channel.id, selfMember.tier);
-
-    if (!result.ok) {
-      if (result.reason === 'slots-full') {
-        setSubscribeNotice(
-          'Subscription slots full (' +
-            subscriptionSlotLimit(selfMember.tier) +
-            ' max for ' +
-            selfMember.tier +
-            ' tier).'
-        );
-      } else {
-        setSubscribeNotice('Already subscribed to this channel.');
-      }
-
-      return;
-    }
-
-    setSubscribeNotice('Subscribed to ' + props.channel.name + '. Find it in My Profile → My Subscriptions.');
-  }
-
-  function dropPanel(targetPanel: string): void {
-    const movingPanel = draggedPanel;
-
-    if (!movingPanel || movingPanel === targetPanel) {
-      setDraggedPanel(null);
-      return;
-    }
-
-    setProfilePanels((currentPanels) => {
-      const nextPanels = currentPanels.filter((panelName) => panelName !== movingPanel);
-      const targetIndex = nextPanels.indexOf(targetPanel);
-
-      if (targetIndex === -1) {
-        return currentPanels;
-      }
-
-      nextPanels.splice(targetIndex, 0, movingPanel);
-      return nextPanels;
-    });
-
-    setDraggedPanel(null);
-    setPanelOrderSaved(false);
-  }
-
-  function togglePanel(panelName: string): void {
-    setCollapsedPanels((currentPanels) => {
-      if (currentPanels.includes(panelName)) {
-        return currentPanels.filter((currentPanel) => currentPanel !== panelName);
-      }
-
-      return [...currentPanels, panelName];
-    });
-
-    setCollapsedPanelsSaved(false);
-  }
-
-  function toggleModule(moduleName: string): void {
-    setCollapsedModules((currentModules) => {
-      if (currentModules.includes(moduleName)) {
-        return currentModules.filter((currentModule) => currentModule !== moduleName);
-      }
-
-      return [...currentModules, moduleName];
-    });
-
-    setCollapsedModulesSaved(false);
-  }
-
-  function saveProfileLayout(): void {
-    window.localStorage.setItem(moduleStorageKey, JSON.stringify(profileModules));
-    window.localStorage.setItem(panelStorageKey, JSON.stringify(profilePanels));
-    window.localStorage.setItem(collapsedStorageKey, JSON.stringify(collapsedPanels));
-    window.localStorage.setItem(collapsedModulesStorageKey, JSON.stringify(collapsedModules));
-    window.localStorage.setItem(brandStorageKey, brandKey);
-    setModuleOrderSaved(true);
-    setPanelOrderSaved(true);
-    setCollapsedPanelsSaved(true);
-    setCollapsedModulesSaved(true);
-    setBrandSaved(true);
-  }
-
-  function renderBadgeIcon(
-    badge: {
-      icon: string;
-      label: string;
-    },
-    badgeType: 'official' | 'custom'
-  ): ReactElement {
-    return (
-      <span
-        className={'profile-badge-icon profile-badge-icon-' + badgeType}
-        key={badge.label}
-        title={badge.label}
-      >
-        {badge.icon}
-      </span>
-    );
-  }
-
-  function renderOfficialLinkIcon(link: {
-    icon: string;
-    label: string;
-    value: string;
-    status: string;
-  }): ReactElement {
-    return (
-      <button
-        className="profile-link-icon"
-        key={link.label}
-        title={link.label + ': ' + link.value}
-        type="button"
-      >
-        <span>{link.icon}</span>
-        <small>{link.label}</small>
-      </button>
-    );
-  }
-
-  function renderProfilePanel(panelName: string): ReactElement | null {
-    if (panelName === 'Channel Modules') {
-
-  return (
-        <article className="panel profile-module-manager">
-          <div className="profile-panel-heading">
-            <h2>Channel Modules</h2>
-            <p>Drag module tiles to personalize this channel layout.</p>
-          </div>
-
-          <div className="profile-module-grid is-reorderable">
-            {profileModules.map((moduleName) => (
-              <div
-                className={
-                  'profile-module-tile' +
-                  (moduleName === draggedModule ? ' is-dragging-module' : '')
-                }
-                draggable
-                key={moduleName}
-                onDragEnd={() => setDraggedModule(null)}
-                onDragOver={(event) => event.preventDefault()}
-                onDragStart={() => setDraggedModule(moduleName)}
-                onDrop={() => dropModule(moduleName)}
-              >
-                <button
-                  className={
-                    moduleName === 'Main Chat'
-                      ? 'profile-module-main-button is-primary-module'
-                      : 'profile-module-main-button'
-                  }
-                  onClick={() => openModule(moduleName)}
-                  type="button"
-                >
-                  <span className="profile-module-title-line">
-                    <i className="module-dot-handle">⋮⋮</i>
-                    <strong>{moduleName}</strong>
-                  </span>
-
-                  <span>
-                    {moduleName === 'Main Chat'
-                      ? 'Open live room'
-                      : 'Module placeholder'}
-                  </span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Official Announcements') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Official Announcements</h2>
-            <p>Developer-owned updates remain separate from normal community chat.</p>
-          </div>
-
-          <div className="profile-announcement-stack">
-            {announcements.map((announcement) => (
-              <div className="announcement-card" key={announcement.title}>
-                <span>{announcement.tag}</span>
-                <strong>{announcement.title}</strong>
-                <p>{announcement.body}</p>
-              </div>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Official Links') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Official Links</h2>
-            <p>Verified identity links displayed as clickable profile icons.</p>
-          </div>
-
-          <div className="verified-link-grid">
-            {verifiedLinks.map((link) => (
-              <button className="verified-link-card verified-link-button" key={link.label} type="button">
-                <span>{link.label}</span>
-                <strong>{link.value}</strong>
-                <i>{link.status}</i>
-              </button>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Official Badges') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Official Badges</h2>
-            <p>Nami-issued badges are locked and cannot be faked.</p>
-          </div>
-
-          <div className="profile-badge-icon-grid">
-            {officialBadgeIcons.map((badge) => (
-              <div className="profile-badge-detail-card" key={badge.label}>
-                {renderBadgeIcon(badge, 'official')}
-                <strong>{badge.label}</strong>
-              </div>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Custom Badges') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Custom Badges</h2>
-            <p>Cosmetic badge slots for community flavor.</p>
-          </div>
-
-          <div className="profile-badge-icon-grid">
-            {customBadgeIcons.map((badge) => (
-              <div className="profile-badge-detail-card" key={badge.label}>
-                {renderBadgeIcon(badge, 'custom')}
-                <strong>{badge.label}</strong>
-              </div>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Profile Customization') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Profile Customization</h2>
-            <p>Paid upgrades add cosmetic control, not verification.</p>
-          </div>
-
-          <div className="customization-control-grid">
-            <div className="locked-badge-card">
-              <strong>Profile Frame</strong>
-              <span>Pro / Elite</span>
-            </div>
-
-            <div className="locked-badge-card">
-              <strong>Banner Rotation</strong>
-              <span>Elite</span>
-            </div>
-
-            <div className="locked-badge-card">
-              <strong>Badge Layout</strong>
-              <span>Pro / Elite</span>
-            </div>
-          </div>
-        </article>
-      );
-    }
-
-    if (panelName === 'Related Channels') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Related Channels</h2>
-            <p>Same network, genre, or community overlap.</p>
-          </div>
-
-          <div className="related-channel-stack">
-            {relatedChannels.map((channel) => (
-              <button
-                className="related-channel-card"
-                key={channel.id}
-                onClick={() => props.onOpenProfile?.(channel)}
-                type="button"
-              >
-                <ChannelAvatar channel={channel} size="sm" />
-                <div>
-                  <strong>{channel.name}</strong>
-                  <span>{channel.genre}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </article>
-      );
-    }
-
-    return null;
-  }
-
-  function renderModuleContent(moduleName: string): ReactElement | null {
-    if (moduleName === PINNED_PROFILE_MODULE) {
-      return renderProfilePanel('Official Announcements');
-    }
-
-    if (moduleName === 'Main Chat') {
-      return (
-        <>
-          <EmbeddedSocialPanel surface="game" title="Game Feed" />
-          <article className="panel channel-main-chat-preview">
-            <div className="profile-panel-heading">
-              <h2>{props.channel.name} Main Chat</h2>
-              <p>Live community room for this game channel.</p>
-            </div>
-            <button className="primary-action" onClick={() => props.onNavigate('chat')} type="button">
-              Open Main Chat
-            </button>
-          </article>
-        </>
-      );
-    }
-
-    if (moduleName === 'Official Badges') {
-      return renderProfilePanel('Official Badges');
-    }
-
-    if (moduleName === 'Timeline') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Timeline</h2>
-            <p>Channel activity feed and milestone highlights.</p>
-          </div>
-        </article>
-      );
-    }
-
-    if (moduleName === 'Guilds') {
-      return renderProfilePanel('Related Channels');
-    }
-
-    if (moduleName === 'Events') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Channel Events</h2>
-            <p>Game channel owners create events from this module.</p>
-          </div>
-          <button className="primary-action" onClick={() => props.onNavigate('channelEvents')} type="button">
-            Manage channel events
-          </button>
-        </article>
-      );
-    }
-
-    if (moduleName === 'Patch Notes') {
-      return renderProfilePanel('Official Announcements');
-    }
-
-    if (moduleName === 'Support') {
-      return (
-        <article className="panel">
-          <div className="profile-panel-heading">
-            <h2>Support</h2>
-            <p>Help desk links and player support routing for this channel.</p>
-          </div>
-        </article>
-      );
-    }
-
-    if (moduleName === 'Esports') {
-      return renderProfilePanel('Official Badges');
-    }
-
-    if (moduleName === 'Gated Rooms') {
-      return renderProfilePanel('Profile Customization');
-    }
-
-    return null;
-  }
-
-  const [channelBrandPalette, setChannelBrandPalette] = useState<string[]>(() => {
-    return readChannelBrandPalette();
-  });
-  const [selectedChannelBrandColor, setSelectedChannelBrandColor] = useState(() => {
-    const savedColor = readSelectedChannelBrandColor();
-    const palette = readChannelBrandPalette();
-
-    return palette.includes(savedColor) ? savedColor : palette[0] ?? '#4da3ff';
-  });
-
-  function updateChannelBrandColor(index: number, color: string): void {
-    const nextPalette = channelBrandPalette.map((currentColor, currentIndex) => {
-      return currentIndex === index ? color : currentColor;
-    }).slice(0, 4);
-
-    setChannelBrandPalette(nextPalette);
-    saveChannelBrandPalette(nextPalette);
-
-    if (!nextPalette.includes(selectedChannelBrandColor)) {
-      const nextSelectedColor = nextPalette[0] ?? color;
-
-      setSelectedChannelBrandColor(nextSelectedColor);
-      saveSelectedChannelBrandColor(nextSelectedColor);
-    }
-  }
-
-  function chooseChannelBrandColor(color: string): void {
-    setSelectedChannelBrandColor(color);
-    saveSelectedChannelBrandColor(color);
-  }
-
-  return (
-    <>
-      <header className="page-title">
-        <p>Contextual channel profile</p>
-        <h1>Game Profile</h1>
-      </header>
-
-      <section className="channel-profile-page" style={profileBrandStyle}>
-                  
-            <article
-              data-channel-hero="true"
-              className={
-                'profile-hero-panel' + (props.channel.partner ? ' is-partner-galaxy-hero' : '')
-              }
-            >
-          {props.channel.partner ? (
-            <div aria-hidden="true" className="nami-official-galaxy-sky">
-              <span className="nami-official-galaxy-shooting-star" />
-            </div>
-          ) : null}
-
-          <div className="profile-hero-main">
-            <ChannelAvatar channel={props.channel} size="lg" />
-
-            <div className="profile-hero-copy">
-              <div className="profile-signal-badge-row">
-                <div className="profile-badge-icon-row" aria-label="Channel badge icons">
-                  {officialBadgeIcons.slice(0, 4).map((badge) => renderBadgeIcon(badge, 'official'))}
-                  {customBadgeIcons.slice(0, 2).map((badge) => renderBadgeIcon(badge, 'custom'))}
-                </div>
-              </div>
-
-              <h2>{props.channel.name}</h2>
-              <p>{props.channel.tagline}</p>
-
-                <div className="surface-separation-row game-surface-row">
-                  <span>Game Channel</span>
-                  <span>{developerProfile.name}</span>
-                  <i className={gameVerificationClass(props.channel)}>{gameVerificationLabel(props.channel)}</i>
-                  <button
-                    className="surface-studio-link"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      props.onOpenStudioProfile?.(developerProfile);
-                    }}
-                    type="button"
-                  >
-                    Open Studio
-                  </button>
-                </div>
-
-              <div className="profile-meta-row">
-                <span>{props.channel.handle}</span>
-                <span>{props.channel.genre}</span>
-                <span>{props.channel.platforms.join(' / ')}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-hero-actions">
-              <button
-                className="secondary-action profile-return-button"
-                onClick={() => props.onNavigate(props.returnPage)}
-                type="button"
-              >
-                {props.returnLabel}
-              </button>
-            <button
-              className={'primary-action' + (channelIsSubscribed ? ' is-subscribed-channel-action' : '')}
-              onClick={handleSubscribe}
-              type="button"
-            >
-              {channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
-            </button>
-
-            <button
-              className="secondary-action"
-              onClick={() => props.onNavigate('chat')}
-              type="button"
-            >
-              Join Chat
-            </button>
-
-            <button
-              className="secondary-action is-coming-soon-action"
-              disabled
-              title="Banner system coming soon"
-              type="button"
-            >
-              Get Banners
-            </button>
-          </div>
-        </article>
-
-                      
-          
-
-        <section className="profile-stat-grid">
-          <article className="profile-stat-card">
-            <span>Subscribers</span>
-            <strong>{props.channel.subscribers.toLocaleString()}</strong>
-          </article>
-
-          <article className="profile-stat-card profile-link-stat-card">
-            <span>Official Links</span>
-            <div className="profile-link-icon-row">
-              {verifiedLinks.map((link) => renderOfficialLinkIcon(link))}
-            </div>
-          </article>
-
-          
-
-          <article className="profile-stat-card">
-            <span>Platforms</span>
-            <strong>{props.channel.platforms.length}</strong>
-          </article>
-        
-
-            <article className="profile-stat-card channel-colors-stat-card" aria-label="Channel Colors">
-              <span>Channel Colors</span>
-              <div className="channel-member-brand-strip channel-member-brand-strip-compact">
-                {channelBrandPalette.slice(0, 4).map((color: string) => (
-                  <button
-                    aria-label={'Use channel brand color ' + color}
-                    aria-pressed={selectedChannelBrandColor === color}
-                    className={
-                      'channel-member-brand-dot' +
-                      (selectedChannelBrandColor === color ? ' is-selected-channel-brand-color' : '')
-                    }
-                    key={color}
-                    onClick={() => chooseChannelBrandColor(color)}
-                    type="button"
-                  >
-                    <span style={{ backgroundColor: color }} />
-                  </button>
-                ))}
-              </div>
-            </article></section>
-
-        {subscribeNotice ? <p className="report-pulse">{subscribeNotice}</p> : null}
-
-        <div className="channel-module-tab-row tab-row" role="tablist" aria-label="Channel modules">
-          {profileModules.map((moduleName) => {
-            const isCollapsed = collapsedModules.includes(moduleName);
-            const isPinned = moduleName === PINNED_PROFILE_MODULE;
-
-            return (
-              <button
-                aria-expanded={!isCollapsed}
-                className={
-                  (isCollapsed ? 'is-collapsed-tab' : 'is-expanded-tab') +
-                  (moduleName === draggedModule ? ' is-dragging-module-tab' : '') +
-                  (isPinned ? ' is-pinned-module-tab' : ' is-draggable-module-tab')
-                }
-                draggable={!isPinned}
-                aria-grabbed={moduleName === draggedModule}
-                key={moduleName}
-                onClick={() => toggleModule(moduleName)}
-                onDragEnd={() => setDraggedModule(null)}
-                onDragOver={(event) => {
-                  if (!isPinned) {
-                    event.preventDefault();
-                  }
-                }}
-                onDragStart={() => {
-                  if (!isPinned) {
-                    setDraggedModule(moduleName);
-                  }
-                }}
-                onDrop={() => dropModule(moduleName)}
-                type="button"
-              >
-                {!isPinned ? <i className="module-dot-handle">⋮⋮</i> : null}
-                {moduleName}
-              </button>
-            );
-          })}
-        </div>
-
-        <section className="channel-module-tab-body">
-          {profileModules.map((moduleName) => {
-            if (collapsedModules.includes(moduleName)) {
-              return null;
-            }
-
-            return (
-              <div className="channel-module-section" key={moduleName}>
-                {renderModuleContent(moduleName)}
-              </div>
-            );
-          })}
-        </section>
-
-        <article className="panel channel-data-collapse">
-          <button
-            className="secondary-action"
-            onClick={() => setShowChannelData((value) => !value)}
-            type="button"
-          >
-            {showChannelData ? 'Hide channel data' : 'Show channel data'}
-          </button>
-
-          {showChannelData ? (
-            <div className="channel-data-tab-body">
-              <ProtocolChannelPanel />
-              <ProtocolChannelAccessPanel />
-            </div>
-          ) : null}
-        </article>
-
-        {readViewingAsChannelOwner() ? <ChannelCoverUploadCard channel={props.channel} /> : null}
-</section>
-    </>
-  );
-}
-
-
-
 function readMemberSignalReviews(): Record<string, NamiChannel['signal']> {
   try {
     const savedReviews = window.localStorage.getItem('nami-member-signal-reviews');
@@ -3429,535 +2445,6 @@ function readChannelAdultLanguageMode(channelId: string): AdultLanguageMode {
 
 function saveChannelAdultLanguageMode(channelId: string, mode: AdultLanguageMode): void {
   window.localStorage.setItem('nami-channel-adult-language-mode-' + channelId, mode);
-}
-
-const conductLanguageTerms = [
-  'nsfw',
-  'explicit',
-  'adult-only',
-  '18+',
-  'xxx',
-  'sexual',
-  'harassment',
-  'threat'
-];
-
-function hasAdultLanguage(content: string): boolean {
-  const normalizedContent = content.toLowerCase();
-
-  return conductLanguageTerms.some((term) => normalizedContent.includes(term));
-}
-
-function censorAdultLanguage(content: string): string {
-  return conductLanguageTerms.reduce((censoredContent, term) => {
-    const charactersToEscape = '\\^$.*+?()[]{}|';
-    const escapedTerm = term
-      .split('')
-      .map((character) => (charactersToEscape.includes(character) ? '\\' + character : character))
-      .join('');
-    const termPattern = new RegExp(escapedTerm, 'gi');
-
-    return censoredContent.replace(termPattern, (match) => '•'.repeat(Math.max(4, match.length)));
-  }, content);
-}
-
-function GameChat(props: {
-  channel: NamiChannel;
-  onNavigate: (page: NamiPage) => void;
-  onOpenMember: (member: (typeof members)[number]) => void;
-  tagHandlers: TagNavigationHandlers;
-}): ReactElement {
-  const [hideNpc, setHideNpc] = useState(false);
-  const [hideRed, setHideRed] = useState(false);
-  const [proEliteOnly, setProEliteOnly] = useState(false);
-  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
-  const [customizationCollapsed, setCustomizationCollapsed] = useState(true);
-  const [gatedAccessCollapsed, setGatedAccessCollapsed] = useState(true);
-  const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(true);
-  const [reportPulse, setReportPulse] = useState('');
-  const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
-
-  const channelBrandTheme = useMemo(() => {
-    return getStoredChannelBrandTheme(props.channel.id);
-  }, [props.channel.id]);
-
-  useEffect(() => {
-    applyChannelBrandToDocument(channelBrandTheme);
-  }, [channelBrandTheme, props.channel.id]);
-
-  // UI-A13B force collapse on channel entry
-  useEffect(() => {
-    setFiltersCollapsed(true);
-    setCustomizationCollapsed(true);
-    setGatedAccessCollapsed(true);
-    setAdultLanguageCollapsed(true);
-  }, [props.channel.id]);
-
-  const preferencesVersion = useMemberPreferencesVersion();
-  const chatEligibleMembers = useMemo(
-    () => members.filter((member) => member.signal !== 'Black'),
-    [],
-  );
-
-  const visibleChatMembers = useMemo(() => {
-    return chatEligibleMembers.filter((member) => !readMemberPreference(member.id).blocked);
-  }, [chatEligibleMembers, preferencesVersion]);
-
-  const selfChatMember = useSelfMember();
-  const messageStore = useMessagesStore();
-  const [chatDraft, setChatDraft] = useState('');
-  const messageStackRef = useRef<HTMLDivElement | null>(null);
-  const canSend = canSendChatMessages();
-
-  const resolveChatMessageMember = useCallback((message: ChatMessage): (typeof members)[number] | undefined => {
-    return resolveMessageAuthorMember(message, selfChatMember, chatEligibleMembers);
-  }, [selfChatMember, chatEligibleMembers]);
-
-  const visibleMessages = useMemo(() => {
-    return [...chatMessages, ...messageStore.channelMessages].filter((message) => {
-      if (message.signal === 'Black') return false;
-      if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
-
-      const member = resolveChatMessageMember(message);
-
-      if (!member) return false;
-      if (readMemberPreference(member.id).blocked) return false;
-      if (hideNpc && member.tier === 'NPC') return false;
-      if (hideRed && message.signal === 'Red') return false;
-      if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
-
-      return true;
-    });
-  }, [
-    adultLanguageMode,
-    chatEligibleMembers,
-    hideNpc,
-    hideRed,
-    messageStore.channelMessages,
-    preferencesVersion,
-    proEliteOnly,
-    resolveChatMessageMember,
-  ]);
-
-  useEffect(() => {
-    const stack = messageStackRef.current;
-
-    if (!stack) {
-      return;
-    }
-
-    stack.scrollTop = stack.scrollHeight;
-  }, [visibleMessages.length, messageStore.channelMessages.length]);
-
-  const onlineMembers = visibleChatMembers.slice(0, 4);
-  const offlineMembers = visibleChatMembers.slice(4);
-
-  function reportMessage(member: (typeof members)[number], messageBody: string): void {
-    saveSafetyReport({
-      source: 'message',
-      targetId: member.id,
-      targetName: member.name,
-      reason: messageBody,
-      channelName: props.channel.name
-    });
-
-    setReportPulse('Report queued for ' + member.name);
-  }
-
-  return (
-    <>
-      <header className="page-title">
-        <p>Live community room</p>
-        <h1>Game Chat</h1>
-      </header>
-
-      <section className="chat-presence-rail">
-        <div className="chat-presence-channel">
-          <ChannelAvatar channel={props.channel} size="lg" />
-          <div>
-            <span className="mini-badge">Live Channel</span>
-            <h2>{props.channel.name}</h2>
-            <p>{props.channel.tagline}</p>
-          </div>
-        </div>
-
-        <div className="chat-member-strip">
-          {onlineMembers.map((member) => {
-            const preference = readMemberPreference(member.id);
-
-            return (
-              <button
-                className={
-                  'chat-member-card' +
-                  chatMemberCardTierClass(member) +
-                  (preference.muted ? ' is-muted-member-card' : '')
-                }
-                key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
-              >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>{preference.muted ? 'Muted' : member.tier}</span>
-              </button>
-            );
-          })}
-
-          {offlineMembers.map((member) => {
-            const preference = readMemberPreference(member.id);
-
-            return (
-              <button
-                className={
-                  'chat-member-card is-offline' +
-                  chatMemberCardTierClass(member) +
-                  (preference.muted ? ' is-muted-member-card' : '')
-                }
-                key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
-              >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>{preference.muted ? 'Muted' : 'Offline'}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="chat-shell chat-shell-buildout">
-        <div className="tab-row channel-tab-row">
-          {[
-            'Profile',
-            'Timeline',
-            'Guilds',
-            'Events',
-            'Main Chat',
-            'Esports',
-            'Party',
-            'Patch Notes',
-            'Gated',
-            'Support'
-          ].map((tab) => (
-            <button
-              className={tab === 'Main Chat' ? 'is-active-tab' : ''}
-              key={tab}
-              onClick={() => {
-                if (tab === 'Profile') {
-                  props.onNavigate('channelProfile');
-                }
-
-                if (tab === 'Events') {
-                  props.onNavigate('channelEvents');
-                }
-              }}
-              type="button"
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        <div
-          className="chat-layout chat-layout-buildout"
-        >
-          <ChatWindowExpandable className="chat-theme-channel-brand">
-            <div className="chat-window-heading">
-              <div>
-                <h2>{props.channel.name} Main Chat</h2>
-                <p>
-                  {visibleMessages.length} visible messages · {visibleChatMembers.length} visible members
-                </p>
-              </div>
-
-              <div className="chat-heading-actions">
-                {reportPulse && <span className="report-pulse">{reportPulse}</span>}
-                <button onClick={() => props.onNavigate('safetyCenter')} type="button">
-                  Safety Center
-                </button>
-              </div>
-            </div>
-
-            <div className="message-stack" ref={messageStackRef}>
-              {visibleMessages.map((message) => {
-                const member = resolveChatMessageMember(message);
-
-                if (!member) {
-                  return null;
-                }
-
-                const preference = readMemberPreference(member.id);
-
-                return (
-                  <div
-                    className={
-                      'chat-message-row' +
-                      (preference.muted ? ' is-muted-chat-row' : '')
-                    }
-                    key={message.id}
-                  >
-                    <UniformMemberAvatarButton
-                      member={member}
-                      onClick={() => props.onOpenMember(member)}
-                      signal={message.signal}
-                    />
-
-                    <div
-                      className={
-                        'message-bubble' + messageBubbleClass(member, message.author)
-                      }
-                    >
-                      <div className="message-meta">
-                        <button
-                          className={'message-author-button signal-text-' + message.signal.toLowerCase()}
-                          onClick={() => props.onOpenMember(member)}
-                          type="button"
-                        >
-                          {message.author}
-                        </button>
-
-                        <span>{message.time}</span>
-                        <i>{preference.muted ? 'Muted' : member.tier}</i>
-                        <ConductSignalDot signal={message.signal} size="sm" />
-
-                        <button
-                          className="message-report-button"
-                          onClick={() => reportMessage(member, message.body)}
-                          type="button"
-                        >
-                          Report
-                        </button>
-                      </div>
-
-                      <p>
-                        <TaggedMessageBody
-                          body={message.body}
-                          handlers={props.tagHandlers}
-                          {...(adultLanguageMode === 'censor'
-                            ? { transformText: censorAdultLanguage }
-                            : {})}
-                        />
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <ChatComposerWithEmojis
-              ariaLabel={'Message ' + props.channel.name}
-              canSend={canSend}
-              className="chat-composer-row chat-input-placeholder"
-              onChange={setChatDraft}
-              onSend={() => {
-                if (!canSend || !chatDraft.trim()) {
-                  return;
-                }
-
-                appendChannelChatMessage(chatDraft);
-                setChatDraft('');
-              }}
-              placeholder={
-                canSend
-                  ? 'Message ' + props.channel.name + ' · ' + tagSuggestionHint()
-                  : 'Sign in and verify to send messages'
-              }
-              sendButtonClassName=""
-              value={chatDraft}
-            />
-          </ChatWindowExpandable>
-
-                    <aside className="chat-side-panel chat-side-panel-collapsible">
-            <section
-              className={
-                'gated-access-panel chat-rail-collapsible-panel' +
-                (gatedAccessCollapsed ? ' is-chat-rail-collapsed' : '')
-              }
-            >
-              <button
-                className="chat-rail-collapse-button"
-                onClick={() => setGatedAccessCollapsed((value) => !value)}
-                type="button"
-              >
-                <span>Gated Access</span>
-                <strong>{gatedAccessCollapsed ? '+' : '−'}</strong>
-              </button>
-
-              {!gatedAccessCollapsed && (
-                <div className="chat-rail-panel-body">
-                  <div className="profile-panel-heading">
-                    <h2>Passport Gates</h2>
-                    <p>Proof-based access for verified rooms, holder chats, and guild areas.</p>
-                  </div>
-
-                  <div className="gated-access-mini-list">
-                    <span>Wallet linked</span>
-                    <span>SuiNS verified</span>
-                    <span>Guild standing clear</span>
-                  </div>
-
-                  <button
-                    className="profile-secondary-link chat-rail-action-button"
-                    onClick={() => props.onNavigate('passport')}
-                    type="button"
-                  >
-                    Passport
-                  </button>
-                </div>
-              )}
-            </section>
-
-            <section
-              className={
-                'chat-filter-panel chat-rail-collapsible-panel' +
-                (filtersCollapsed ? ' is-chat-rail-collapsed' : '')
-              }
-            >
-              <button
-                className="chat-rail-collapse-button"
-                onClick={() => setFiltersCollapsed((value) => !value)}
-                type="button"
-              >
-                <span>Filters</span>
-                <strong>{filtersCollapsed ? '+' : '−'}</strong>
-              </button>
-
-              {!filtersCollapsed && (
-                <div className="chat-rail-panel-body filter-options-stack">
-                  <label>
-                    <input
-                      checked={hideNpc}
-                      onChange={(event) => setHideNpc(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Hide NPCs
-                  </label>
-
-                  <label>
-                    <input
-                      checked={hideRed}
-                      onChange={(event) => setHideRed(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Hide Red Signal
-                  </label>
-
-                  <label>
-                    <input
-                      checked={proEliteOnly}
-                      onChange={(event) => setProEliteOnly(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Pro / Elite only
-                  </label>
-                </div>
-              )}
-            </section>
-
-            <section
-              className={
-                'adult-language-settings-panel chat-rail-collapsible-panel' +
-                (adultLanguageCollapsed ? ' is-chat-rail-collapsed' : '')
-              }
-            >
-              <button
-                className="chat-rail-collapse-button"
-                onClick={() => setAdultLanguageCollapsed((value) => !value)}
-                type="button"
-              >
-                <span>Language</span>
-                <strong>{adultLanguageCollapsed ? '+' : '−'}</strong>
-              </button>
-
-              {!adultLanguageCollapsed && (
-                <div className="chat-rail-panel-body">
-                  <div className="profile-panel-heading">
-                    <h2>Adult Language</h2>
-                    <p>Channel owner moderation setting. Default behavior is censoring.</p>
-                  </div>
-
-                  <div className="adult-language-control">
-                    <strong>Mode</strong>
-
-                    <div className="adult-language-mode-row">
-                      {(['censor', 'filter', 'show'] as const).map((mode) => (
-                        <button
-                          className={adultLanguageMode === mode ? 'is-active-adult-mode' : ''}
-                          key={mode}
-                          onClick={() => setAdultLanguageMode(mode)}
-                          type="button"
-                        >
-                          {mode === 'censor' ? 'Censor' : mode === 'filter' ? 'Filter' : 'Show'}
-                        </button>
-                      ))}
-                    </div>
-
-                    <small>
-                      Censor masks matching words. Filter removes matching messages.
-                    </small>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section
-              className={
-                'chat-customization-panel chat-rail-collapsible-panel' +
-                (customizationCollapsed ? ' is-chat-rail-collapsed is-collapsed-customization' : '')
-              }
-            >
-              <button
-                className="chat-rail-collapse-button"
-                onClick={() => setCustomizationCollapsed((value) => !value)}
-                type="button"
-              >
-                <span>Chat Style</span>
-                <strong>{customizationCollapsed ? '+' : '−'}</strong>
-              </button>
-
-              {!customizationCollapsed && (
-                <div className="chat-rail-panel-body chat-customization-body chat-style-body">
-                  <div className="profile-panel-heading">
-                    <h2>Chat Box Style</h2>
-                    <p>Use channel-approved accents and future earned cosmetic rewards.</p>
-                  </div>
-
-                  <div className="chat-style-brand-card">
-                    <span
-                      style={{
-                        background:
-                          'linear-gradient(135deg, ' +
-                          channelBrandTheme.primary +
-                          ', ' +
-                          channelBrandTheme.secondary +
-                          ')'
-                      }}
-                    />
-                    <div>
-                      <strong>{channelBrandTheme.label}</strong>
-                      <small>Channel-approved accent</small>
-                    </div>
-                  </div>
-
-                  <div className="chat-style-reward-grid">
-                    <span>Default Bubble</span>
-                    <span>Wave Frame</span>
-                    <span>Signal Glow</span>
-                  </div>
-
-                  <div className="customization-note">
-                    Cosmetic rewards will unlock fonts, overlays, message skins, and animation
-                    intensity. Owner brand colors stay in Settings.
-                  </div>
-                </div>
-              )}
-            </section>
-          </aside>
-        </div>
-      </section>
-    </>
-  );
 }
 
 function MemberProfileScreen(props: {
@@ -5943,8 +4430,14 @@ function ChannelEventsScreen(props: {
   }, [channelBrandTheme, props.channel.id]);
 
   const gameEvents = getChannelEvents(props.channel);
+  const isChannelOwner = readViewingAsChannelOwner();
 
   function publishChannelEvent(): void {
+    if (!isChannelOwner) {
+      setNotice('Only the game channel owner can publish events for this channel.');
+      return;
+    }
+
     if (!title.trim() || !startsAtLocal) {
       setNotice('Add a title and start time before publishing.');
       return;
@@ -6005,34 +4498,41 @@ function ChannelEventsScreen(props: {
           </div>
         </article>
 
-        <article className="panel event-creator-form">
-          <h2>Publish channel event</h2>
-          <p>Subscribed members receive a notification when you submit a new event.</p>
-          <label>
-            <span>Title</span>
-            <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
-          </label>
-          <label>
-            <span>Description</span>
-            <input
-              onChange={(event) => setDescription(event.target.value)}
-              type="text"
-              value={description}
-            />
-          </label>
-          <label>
-            <span>Starts at (your local time)</span>
-            <input
-              onChange={(event) => setStartsAtLocal(event.target.value)}
-              type="datetime-local"
-              value={startsAtLocal}
-            />
-          </label>
-          <button className="primary-action" onClick={publishChannelEvent} type="button">
-            Submit event
-          </button>
-          {notice ? <p className="event-creator-notice">{notice}</p> : null}
-        </article>
+        {isChannelOwner ? (
+          <article className="panel event-creator-form">
+            <h2>Publish channel event</h2>
+            <p>Subscribed members receive a notification when you submit a new event.</p>
+            <label>
+              <span>Title</span>
+              <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
+            </label>
+            <label>
+              <span>Description</span>
+              <input
+                onChange={(event) => setDescription(event.target.value)}
+                type="text"
+                value={description}
+              />
+            </label>
+            <label>
+              <span>Starts at (your local time)</span>
+              <input
+                onChange={(event) => setStartsAtLocal(event.target.value)}
+                type="datetime-local"
+                value={startsAtLocal}
+              />
+            </label>
+            <button className="primary-action" onClick={publishChannelEvent} type="button">
+              Submit event
+            </button>
+            {notice ? <p className="event-creator-notice">{notice}</p> : null}
+          </article>
+        ) : (
+          <article className="panel channel-events-viewer-note">
+            <h2>Official channel events</h2>
+            <p>Events on this page are published by the game channel owner. Members can mark Interested and view details.</p>
+          </article>
+        )}
 
         <section className="channel-event-grid">
           {gameEvents.map((event) => (
@@ -6198,6 +4698,7 @@ export function App(): ReactElement {
   const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() => channelDeveloper(channels[0]!));
   const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
   const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
+  const [channelProfileSection, setChannelProfileSection] = useState<ChannelProfileSection>('news');
   const [selectedThreadMemberId, setSelectedThreadMemberId] = useState<string>(members[1]?.id ?? 'm2');
   const [selectedEvent, setSelectedEvent] = useState<StoredEvent | null>(null);
   const [selectedGuild, setSelectedGuild] = useState<NamiGuildRecord>(namiGuilds[0]!);
@@ -6223,9 +4724,10 @@ export function App(): ReactElement {
   }, [activePage]);
 
 
-  const openChannelProfile = useCallback((channel: NamiChannel): void => {
+  const openChannelProfile = useCallback((channel: NamiChannel, section: ChannelProfileSection = 'news'): void => {
     setSelectedChannel(channel);
     setSelectedDeveloper(channelDeveloper(channel));
+    setChannelProfileSection(section);
     setContextReturnPage((returnPage) => (activePage === 'channelProfile' ? returnPage : activePage));
     setActivePage('channelProfile');
   }, [activePage]);
@@ -6282,9 +4784,23 @@ export function App(): ReactElement {
     },
   }), [openMemberProfile, openChannelProfile, openStudioProfile]);
 
-  const navigateFromCurrentPage = (page: NamiPage): void => {
+  const navigateFromCurrentPage = useCallback((page: NamiPage): void => {
+    if (page === 'chat') {
+      if (activePage !== 'channelProfile') {
+        setContextReturnPage(activePage);
+      }
+
+      setChannelProfileSection('chat');
+      setActivePage('channelProfile');
+      return;
+    }
+
     if ((page === 'channelProfile' || page === 'memberProfile' || page === 'studioProfile') && page !== activePage) {
       setContextReturnPage(activePage);
+    }
+
+    if (page === 'channelProfile' && activePage !== 'channelProfile') {
+      setChannelProfileSection('news');
     }
 
     if (page === 'guilds') {
@@ -6292,7 +4808,7 @@ export function App(): ReactElement {
     }
 
     setActivePage(page);
-  };
+  }, [activePage]);
 
   function navigateHubSwap(page: 'hub' | 'gamehub'): void {
     if (page !== activePage) {
@@ -6405,25 +4921,30 @@ export function App(): ReactElement {
 
     if (activePage === 'channelProfile') {
       return (
-        <ChannelProfile
-            channel={selectedChannel}
-            onNavigate={navigateFromCurrentPage}
-            onOpenProfile={openChannelProfile}
-            onOpenStudioProfile={openStudioProfile}
-            returnPage={contextReturnPage}
-            returnLabel={profileReturnLabel(contextReturnPage)}
-          />
+        <ChannelProfileScreen
+          channel={selectedChannel}
+          initialSection={channelProfileSection}
+          onNavigate={navigateFromCurrentPage}
+          onOpenChatMember={openMemberProfile}
+          onOpenMember={(memberId) => {
+            const member = members.find((entry) => entry.id === memberId);
+
+            if (member) {
+              openMemberProfile(member);
+            }
+          }}
+          onOpenProfile={openChannelProfile}
+          onOpenStudioProfile={openStudioProfile}
+          onViewEvent={(event) => {
+            setSelectedEvent(event);
+            setActivePage('eventDetail');
+          }}
+          returnPage={contextReturnPage}
+          returnLabel={profileReturnLabel(contextReturnPage)}
+          tagHandlers={tagHandlers}
+        />
       );
     }
-
-    if (activePage === 'chat') {
-    return <GameChat
-        channel={selectedChannel}
-        onNavigate={navigateFromCurrentPage}
-        onOpenMember={openMemberProfile}
-        tagHandlers={tagHandlers}
-      />;
-  }
 
   if (activePage === 'channelEvents') {
     return (
@@ -6464,8 +4985,7 @@ export function App(): ReactElement {
       <PassportScreen
         onNavigate={navigateFromCurrentPage}
         onOpenProfile={(channel) => {
-          setSelectedChannel(channel);
-          setActivePage('channelProfile');
+          openChannelProfile(channel);
         }}
       />
     );
@@ -6569,7 +5089,7 @@ if (activePage === 'userProfile') {
           }}
           tagHandlers={tagHandlers}
         />;
-  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, selectedGuild, selectedSquad, squadShowInviteOnOpen, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding, entrySignedOutNotice, tagHandlers]);
+  }, [activePage, channelProfileSection, contextReturnPage, entrySignedOutNotice, entryStartOnboarding, navigateFromCurrentPage, openChannelProfile, openMemberProfile, selectedChannel, selectedDeveloper, selectedEvent, selectedGuild, selectedMember, selectedSquad, selectedThreadMemberId, squadShowInviteOnOpen, studioReturnPage, tagHandlers]);
 
   async function signOutToEntry(): Promise<void> {
     clearLocalNamiSession();
@@ -6631,6 +5151,7 @@ if (activePage === 'userProfile') {
         {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (
           <NamiSeasonProgressBar member={selfMember} />
         ) : null}
+        {showSidebar ? <ChannelBannerReminderBar /> : null}
         {showSidebar ? (
           <MemberFeedOfficialAlertBanner onOpenSafetyCenter={() => setActivePage('safetyCenter')} />
         ) : null}
@@ -6651,6 +5172,14 @@ if (activePage === 'userProfile') {
           onOpenEvent={(event) => {
             setSelectedEvent(event);
             setActivePage('eventDetail');
+          }}
+        />
+      ) : null}
+      {showSidebar ? (
+        <ChannelBannerNotificationOverlay
+          onOpenChannel={(channel) => {
+            setSelectedChannel(channel);
+            openChannelProfile(channel);
           }}
         />
       ) : null}

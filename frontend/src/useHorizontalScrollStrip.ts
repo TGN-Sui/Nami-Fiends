@@ -150,8 +150,6 @@ export function useHorizontalScrollStrip<T extends HTMLElement>(): RefObject<T |
         startScrollLeft: host.scrollLeft,
         dragging: false,
       };
-
-      host.setPointerCapture(event.pointerId);
     }
 
     function onPointerMove(event: PointerEvent): void {
@@ -168,6 +166,10 @@ export function useHorizontalScrollStrip<T extends HTMLElement>(): RefObject<T |
       if (!dragState.dragging) {
         dragState.dragging = true;
         host.classList.add('is-drag-scrolling');
+
+        if (!host.hasPointerCapture(event.pointerId)) {
+          host.setPointerCapture(event.pointerId);
+        }
       }
 
       host.scrollLeft = clampScrollLeft(host, dragState.startScrollLeft - deltaX);
