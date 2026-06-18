@@ -581,6 +581,7 @@ UI-B21.18 Wallet-signed auth for preference and media writes
 UI-B21.19 Channel cover media upload + preferences API
 UI-B21.20 Studio logo media upload + preferences API
 UI-B21.21 Subscriber on-chain fulfillment card in membership panel
+UI-B21.22 Cross-user AdminCap fulfillment for queued subscriber passports
 ```
 
 ---

@@ -419,7 +419,7 @@ GET  /api/memberships/fulfillment/owner/:owner
 POST /api/memberships/fulfillment/:fulfillmentId/complete
 ```
 
-Paid Pro/Elite intents queue `pending_onchain` fulfillments. The official owner can self-fulfill when the subscriber wallet owns the passport and signs with AdminCap (`MembershipFulfillmentPanel`). Other subscribers keep app-tier access while on-chain passport updates remain queued.
+Paid Pro/Elite intents queue `pending_onchain` fulfillments. The official owner signs with AdminCap in `MembershipFulfillmentPanel` to upgrade any queued subscriber passport on-chain. Subscribers keep app-tier access while on-chain passport updates remain queued; the owner wallet can also self-fulfill from `MembershipOnChainFulfillmentCard` when it owns the subscriber passport.
 
 Wallet-signed writes (optional, `NAMI_REQUIRE_WALLET_AUTH=true`):
 

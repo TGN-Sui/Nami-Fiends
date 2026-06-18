@@ -45,6 +45,7 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat and 
 | `6b974b5` | Add ownership mode clarity |
 | `aea188d` | Refine member spotlight foil sweep |
 | `eac3938` | Polish member spotlight foil effects |
+| `f95e69f` | Phase 7 UI-B21 surfaces, guild spaces, spotlight layout polish |
 
 ## Verification Commands
 
@@ -72,7 +73,7 @@ Phase 7 surfaces are active. Membership checkout, subscription state, avatar upl
 
 Recommended next lane:
 
-1. Wire cross-user subscription proofs to on-chain tier updates (shared passport or delegated fulfillment cap).
+1. UI-B21.22 cross-user AdminCap fulfillment for queued subscriber passports (in progress).
 2. Phase 8 launch prep: testnet live, security review, production dashboards.
 3. Extend Walrus-backed media references when storage proofs ship.
 4. Continue avoiding any wording that implies payment equals trust.

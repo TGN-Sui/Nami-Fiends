@@ -57,13 +57,6 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
       return;
     }
 
-    if (fulfillment.owner.toLowerCase() !== owner.toLowerCase()) {
-      setError(
-        'Passport upgrades must be signed by the subscriber wallet in this MVP model. Queue item kept for audit.'
-      );
-      return;
-    }
-
     const chain = createConfiguredNamiClient();
 
     if (!chain) {
@@ -77,11 +70,11 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
     setError(null);
 
     try {
-      const membershipView = await loadMembershipProtocolView(chain, owner);
+      const membershipView = await loadMembershipProtocolView(chain, fulfillment.owner);
       const passportId = membershipView.passport?.objectId;
 
       if (!passportId) {
-        throw new Error('No owned passport found for this wallet.');
+        throw new Error('No owned passport found for ' + shortenAddress(fulfillment.owner) + '.');
       }
 
       const tx = buildMembershipAdminUpgradeTransaction({
@@ -95,7 +88,13 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
       const result = await signAndExecute({ transaction: tx });
       await completeMembershipFulfillment(fulfillment.id, result.digest);
 
-      setNotice('On-chain ' + fulfillment.tier + ' upgrade applied for ' + shortenAddress(owner) + '.');
+      setNotice(
+        'On-chain ' +
+          fulfillment.tier +
+          ' upgrade applied for subscriber ' +
+          shortenAddress(fulfillment.owner) +
+          '.'
+      );
       setFulfillments((rows) => rows.filter((row) => row.id !== fulfillment.id));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'On-chain fulfillment failed.');
@@ -110,8 +109,8 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
       <div className="profile-panel-heading">
         <h2>Membership fulfillment queue</h2>
         <p>
-          Paid Pro and Elite checkouts queue on-chain passport upgrades. In this MVP, the official
-          owner wallet can self-fulfill when it owns the subscriber passport and AdminCap.
+          Paid Pro and Elite checkouts queue on-chain passport upgrades. The official owner wallet
+          signs with AdminCap to apply queued upgrades to any subscriber passport on-chain.
         </p>
       </div>
 
@@ -128,10 +127,7 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
               </div>
               <button
                 className="nami-surface-button is-primary-surface-button"
-                disabled={
-                  loading ||
-                  fulfillment.owner.toLowerCase() !== (owner ?? '').toLowerCase()
-                }
+                disabled={loading}
                 onClick={() => void applyOnChain(fulfillment)}
                 type="button"
               >
