@@ -281,16 +281,16 @@ function ambientTokensForMode(mode: NamiThemeMode, colors: NamiCustomThemeColors
   if (mode === 'dark') {
     return {
       bodyBackground:
-        'radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.03), transparent 24rem), linear-gradient(180deg, #070707 0%, #050505 100%)',
-      gridLine: 'rgba(255, 255, 255, 0.04)',
-      gridLineStrong: 'rgba(255, 255, 255, 0.08)',
-      gridOpacity: '0.22',
-      spotlightCore: 'rgba(255, 255, 255, 0.16)',
-      spotlightMid: 'rgba(255, 255, 255, 0.05)',
-      spotlightOuter: 'rgba(255, 255, 255, 0.02)',
-      spotlightOpacity: '0.14',
+        'radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.05), transparent 24rem), linear-gradient(180deg, #070707 0%, #050505 100%)',
+      gridLine: 'rgba(255, 255, 255, 0.05)',
+      gridLineStrong: 'rgba(255, 255, 255, 0.13)',
+      gridOpacity: '0.28',
+      spotlightCore: 'rgba(255, 255, 255, 0.28)',
+      spotlightMid: 'rgba(255, 255, 255, 0.1)',
+      spotlightOuter: 'rgba(255, 255, 255, 0.04)',
+      spotlightOpacity: '0.24',
       spotlightBlendMode: 'normal',
-      spotlightGridOpacity: '0.28',
+      spotlightGridOpacity: '0.46',
     };
   }
 

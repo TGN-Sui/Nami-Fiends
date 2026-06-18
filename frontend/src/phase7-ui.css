@@ -1829,9 +1829,24 @@
   }
 }
 
-html.is-landing-page,
-html.is-nami-app-spotlight {
+html.is-landing-page {
   animation: namiSpotlightLoop 36s ease-in-out infinite;
+}
+
+html.is-nami-app-spotlight-static {
+  animation: none !important;
+  --nami-spotlight-x: 42%;
+  --nami-spotlight-y: 34%;
+}
+
+html.is-nami-app-spotlight-static body::after {
+  mask-image: none;
+  -webkit-mask-image: none;
+  opacity: calc(var(--nami-spotlight-opacity, 0.46) * 0.62);
+}
+
+html.is-nami-app-spotlight-static .nami-landing-grid-spotlight {
+  opacity: calc(var(--nami-spotlight-grid-opacity, 1) * 0.72);
 }
 
 html.is-landing-page body::before,
@@ -6494,11 +6509,16 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .sidebar-hub-swap:hover {
+  transform: none;
   border-color: rgba(255, 255, 255, 0.22) !important;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08),
     0 14px 32px rgba(0, 0, 0, 0.24),
     0 0 44px var(--hub-swap-portal-glow);
+}
+
+.sidebar-hub-swap:hover .sidebar-hub-swap-mark-stack {
+  transform: scale(1.04);
 }
 
 .sidebar-hub-swap:hover::before {
@@ -6562,6 +6582,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   width: 54px;
   height: 54px;
   margin: 0 auto 8px;
+  isolation: isolate;
+  transform-origin: center;
+  transition: transform 160ms ease;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
 }
 
@@ -6806,6 +6829,10 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .sidebar.is-collapsed .sidebar-hub-swap:hover {
+  transform: none;
+}
+
+.sidebar.is-collapsed .sidebar-hub-swap:hover .sidebar-hub-swap-mark-stack {
   transform: scale(1.06);
 }
 
@@ -7966,8 +7993,18 @@ body.is-nami-owner-edit-mode .main-stage {
 
 .sidebar-brand .owner-editable-image.diamond-mark,
 .sidebar-hub-swap-mark.owner-editable-image {
+  position: absolute;
+  display: grid;
   width: 100%;
   height: 100%;
+}
+
+.sidebar-hub-swap-mark.owner-editable-image.is-current-hub-mark {
+  z-index: 2;
+}
+
+.sidebar-hub-swap-mark.owner-editable-image.is-alt-hub-mark {
+  z-index: 1;
 }
 
 .sidebar-brand-wordmark.owner-editable-image {
@@ -11598,8 +11635,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   border-radius: 50%;
   background: #ff3152;
   border: 2px solid rgba(8, 14, 22, 0.95);
-  box-shadow: 0 0 0 0 rgba(255, 49, 82, 0.55);
+  box-shadow: 0 0 6px rgba(255, 49, 82, 0.42);
+  transform-origin: center;
   animation: member-streaming-live-pulse 1.5s ease-in-out infinite;
+  will-change: transform, opacity;
   pointer-events: none;
 }
 
@@ -11656,12 +11695,41 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 @keyframes member-streaming-live-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 49, 82, 0.5);
+    transform: scale(1);
+    opacity: 1;
   }
 
   50% {
-    box-shadow: 0 0 0 7px rgba(255, 49, 82, 0);
+    transform: scale(1.12);
+    opacity: 0.82;
   }
+}
+
+.nami-app[data-active-page='hub'] .member-spotlight-grid {
+  animation: none;
+}
+
+.nami-app[data-active-page='hub'] .member-spotlight-bubble-loop,
+.nami-app[data-active-page='hub'] .member-spotlight-glitter-loop {
+  animation: none;
+}
+
+.nami-app[data-active-page='hub'] .member-spotlight-glitter-shard {
+  animation: none;
+  opacity: 0.24;
+}
+
+.nami-app[data-active-page='hub'] .member-spotlight-panel,
+.nami-app[data-active-page='hub'] .crypto-bubbles-panel,
+.nami-app[data-active-page='hub'] .nami-hub-events-panel,
+.nami-app[data-active-page='hub'] .global-chats-unified-panel {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
+.nami-app[data-active-page='hub'] .crypto-bubbles-board::before,
+.nami-app[data-active-page='hub'] .crypto-bubbles-board::after {
+  transition: none;
 }
 
 .sidebar-profile-online-toggle {
