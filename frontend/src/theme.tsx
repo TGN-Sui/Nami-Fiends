@@ -38,18 +38,74 @@ const PRESETS: Record<Exclude<NamiThemeMode, 'custom'>, NamiCustomThemeColors> =
     text: '#eef7ff',
   },
   dark: {
-    background: '#010408',
-    panel: 'rgba(8, 12, 20, 0.92)',
-    accent: 'rgba(72, 132, 255, 0.75)',
-    text: '#f4f8ff',
+    background: '#070707',
+    panel: '#111111',
+    accent: 'rgba(255, 255, 255, 0.18)',
+    text: '#e8e8ec',
   },
   light: {
-    background: '#f3f7fc',
-    panel: 'rgba(255, 255, 255, 0.94)',
-    accent: 'rgba(24, 111, 255, 0.55)',
-    text: '#0d1b2a',
+    background: '#d0d9e3',
+    panel: '#e8edf3',
+    accent: 'rgba(24, 111, 255, 0.62)',
+    text: '#152536',
   },
 };
+
+const LIGHT_SEMANTIC_TOKENS = {
+  muted: '#4a5f75',
+  subtle: '#5f7388',
+  border: 'rgba(19, 48, 82, 0.16)',
+  borderStrong: 'rgba(19, 48, 82, 0.24)',
+  surfaceRaised: '#f4f7fa',
+  shadow: 'rgba(19, 40, 70, 0.1)',
+  navText: '#2a4560',
+  navIcon: '#1a6fd4',
+} as const;
+
+const DEFAULT_SEMANTIC_TOKENS = {
+  muted: 'rgba(190, 210, 235, 0.86)',
+  subtle: '#9fb5ca',
+  border: 'rgba(117, 215, 255, 0.16)',
+  borderStrong: 'rgba(117, 215, 255, 0.28)',
+  surfaceRaised: 'rgba(255, 255, 255, 0.06)',
+  shadow: 'rgba(0, 0, 0, 0.22)',
+  navText: '#84d9ff',
+  navIcon: '#75d7ff',
+} as const;
+
+const DARK_MODE_SEMANTIC_TOKENS = {
+  muted: '#9a9aa3',
+  subtle: '#71717a',
+  border: 'rgba(255, 255, 255, 0.1)',
+  borderStrong: 'rgba(255, 255, 255, 0.16)',
+  surfaceRaised: '#1a1a1a',
+  shadow: 'rgba(0, 0, 0, 0.48)',
+  navText: '#d4d4d8',
+  navIcon: '#a1a1aa',
+} as const;
+
+type NamiSemanticTokens = {
+  muted: string;
+  subtle: string;
+  border: string;
+  borderStrong: string;
+  surfaceRaised: string;
+  shadow: string;
+  navText: string;
+  navIcon: string;
+};
+
+function semanticTokensForMode(mode: NamiThemeMode): NamiSemanticTokens {
+  if (mode === 'light') {
+    return LIGHT_SEMANTIC_TOKENS;
+  }
+
+  if (mode === 'dark') {
+    return DARK_MODE_SEMANTIC_TOKENS;
+  }
+
+  return DEFAULT_SEMANTIC_TOKENS;
+}
 
 type NamiThemeContextValue = {
   mode: NamiThemeMode;
@@ -120,12 +176,23 @@ function applyThemeToDocument(
   const colors = mode === 'custom' ? custom : PRESETS[mode];
   const root = document.documentElement;
 
+  const semantic = semanticTokensForMode(mode);
+
   root.dataset.namiTheme = mode;
   root.dataset.namiUi = uiShell;
+  root.style.colorScheme = mode === 'light' ? 'light' : 'dark';
   root.style.setProperty('--nami-theme-bg', colors.background);
   root.style.setProperty('--nami-theme-panel', colors.panel);
   root.style.setProperty('--nami-theme-accent', colors.accent);
   root.style.setProperty('--nami-theme-text', colors.text);
+  root.style.setProperty('--nami-theme-muted', semantic.muted);
+  root.style.setProperty('--nami-theme-subtle', semantic.subtle);
+  root.style.setProperty('--nami-theme-border', semantic.border);
+  root.style.setProperty('--nami-theme-border-strong', semantic.borderStrong);
+  root.style.setProperty('--nami-theme-surface-raised', semantic.surfaceRaised);
+  root.style.setProperty('--nami-theme-shadow', semantic.shadow);
+  root.style.setProperty('--nami-theme-nav-text', semantic.navText);
+  root.style.setProperty('--nami-theme-nav-icon', semantic.navIcon);
   root.style.color = colors.text;
   root.style.backgroundColor = colors.background;
 }
@@ -203,7 +270,7 @@ const SHELL_OPTIONS: Array<{
   {
     id: 'glass',
     label: 'Modern Glass',
-    detail: 'Frosted blur, translucent depth, and softer panel edges.',
+    detail: 'Apple-style frosted glass with heavy blur, soft highlights, and readable depth.',
     previewClass: 'settings-appearance-shell-preview-glass',
   },
 ];
@@ -221,12 +288,12 @@ const MODE_OPTIONS: Array<{
   {
     id: 'dark',
     label: 'Dark Mode',
-    detail: 'Deeper blacks and higher contrast for low-light use.',
+    detail: 'Neutral charcoal surfaces with no saturated accents. Glass uses a thick epoxy depth coat.',
   },
   {
     id: 'light',
     label: 'Light Mode',
-    detail: 'Bright surfaces and dark text for daytime reading.',
+    detail: 'Soft blue-gray surfaces with stronger panel contrast for daytime reading.',
   },
   {
     id: 'custom',

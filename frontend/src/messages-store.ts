@@ -187,6 +187,14 @@ export function useMessagesStore(): StoreSnapshot {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+function getUnreadCountSnapshot(): number {
+  return getSnapshot().unreadCount;
+}
+
+export function useMessageUnreadCount(): number {
+  return useSyncExternalStore(subscribe, getUnreadCountSnapshot, getUnreadCountSnapshot);
+}
+
 export function readMessageThreads(): StoredThread[] {
   return readThreads();
 }

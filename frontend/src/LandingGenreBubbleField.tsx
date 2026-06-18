@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 
 import { genreOfficialChats } from './global-chats.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
+import { prefersReducedMotion, subscribeVisibilityPause } from './perf-utils.js';
 
 const genreLoungesByTitle = new Map(genreOfficialChats.map((chat) => [chat.title, chat]));
 
@@ -76,16 +77,47 @@ function spawnBubble(width: number, height: number, now: number): FloatingGenreB
   };
 }
 
+function bubbleIdSignature(bubbles: FloatingGenreBubble[]): string {
+  return bubbles.map((bubble) => bubble.id).join('|');
+}
+
+function applyBubbleStyles(element: HTMLButtonElement, bubble: FloatingGenreBubble, now: number): void {
+  const popProgress = bubble.popClicks / bubble.popClicksRequired;
+  const recentlyClicked = now - bubble.lastClickAt <= POP_CLICK_HIT_MS;
+  const isPopping = bubble.poppedAt !== null;
+
+  element.style.opacity = String(bubble.opacity);
+  element.style.setProperty('--bubble-scale', String(bubble.scale));
+  element.style.setProperty('--pop-progress', String(popProgress));
+  element.style.setProperty('--pop-x', bubble.x - bubble.radius + 'px');
+  element.style.setProperty('--pop-y', bubble.y - bubble.radius + 'px');
+  element.style.width = bubble.radius * 2 + 'px';
+  element.style.height = bubble.radius * 2 + 'px';
+
+  if (!isPopping) {
+    element.style.transform =
+      'translate3d(' + (bubble.x - bubble.radius) + 'px,' + (bubble.y - bubble.radius) + 'px,0)';
+  }
+
+  element.className =
+    'nami-landing-floating-genre-bubble' +
+    (recentlyClicked ? ' is-pop-hit' : '') +
+    (isPopping ? ' is-popping' : '') +
+    (popProgress > 0 && !isPopping ? ' is-pop-charging' : '');
+}
+
 export function LandingGenreBubbleField(props: {
   onGenrePop?: (chatId: string) => void;
 }): ReactElement {
   const fieldRef = useRef<HTMLDivElement | null>(null);
   const bubblesRef = useRef<FloatingGenreBubble[]>([]);
+  const bubbleElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const pointerRef = useRef({ x: -9999, y: -9999, active: false });
   const scoreRef = useRef(0);
   const frameRef = useRef<number | null>(null);
   const spawnRef = useRef<number | null>(null);
-  const [renderTick, setRenderTick] = useState(0);
+  const pausedRef = useRef(false);
+  const [bubbleRevision, setBubbleRevision] = useState(0);
   const [score, setScore] = useState(0);
 
   const handleBubblePop = useCallback((bubbleId: string): void => {
@@ -108,7 +140,11 @@ export function LandingGenreBubbleField(props: {
       props.onGenrePop?.(bubble.chatId);
     }
 
-    setRenderTick((tick) => tick + 1);
+    const element = bubbleElementsRef.current.get(bubbleId);
+
+    if (element) {
+      applyBubbleStyles(element, bubble, now);
+    }
   }, [props.onGenrePop]);
 
   useEffect(() => {
@@ -134,6 +170,22 @@ export function LandingGenreBubbleField(props: {
   }, []);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
+    return subscribeVisibilityPause((paused) => {
+      pausedRef.current = paused;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
+    let lastIdSignature = bubbleIdSignature(bubblesRef.current);
+
     function pushBubbleAway(bubble: FloatingGenreBubble): void {
       const pointer = pointerRef.current;
 
@@ -156,6 +208,11 @@ export function LandingGenreBubbleField(props: {
     }
 
     function step(now: number): void {
+      if (pausedRef.current) {
+        frameRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
       const width = window.innerWidth;
       const height = window.innerHeight;
       const next: FloatingGenreBubble[] = [];
@@ -199,7 +256,22 @@ export function LandingGenreBubbleField(props: {
       }
 
       bubblesRef.current = next;
-      setRenderTick((tick) => tick + 1);
+
+      for (const bubble of next) {
+        const element = bubbleElementsRef.current.get(bubble.id);
+
+        if (element) {
+          applyBubbleStyles(element, bubble, now);
+        }
+      }
+
+      const nextIdSignature = bubbleIdSignature(next);
+
+      if (nextIdSignature !== lastIdSignature) {
+        lastIdSignature = nextIdSignature;
+        setBubbleRevision((revision) => revision + 1);
+      }
+
       frameRef.current = window.requestAnimationFrame(step);
     }
 
@@ -216,12 +288,14 @@ export function LandingGenreBubbleField(props: {
         ...bubblesRef.current,
         spawnBubble(window.innerWidth, window.innerHeight, performance.now()),
       ];
+      setBubbleRevision((revision) => revision + 1);
     }, SPAWN_INTERVAL_MS);
 
     bubblesRef.current = [
       spawnBubble(window.innerWidth, window.innerHeight, bootNow),
       spawnBubble(window.innerWidth, window.innerHeight, bootNow + 1),
     ];
+    setBubbleRevision((revision) => revision + 1);
 
     return () => {
       if (frameRef.current !== null) {
@@ -234,7 +308,7 @@ export function LandingGenreBubbleField(props: {
     };
   }, []);
 
-  void renderTick;
+  void bubbleRevision;
   const now = performance.now();
 
   return (
@@ -270,6 +344,14 @@ export function LandingGenreBubbleField(props: {
               }
               key={bubble.id}
               onClick={() => handleBubblePop(bubble.id)}
+              ref={(element) => {
+                if (element) {
+                  bubbleElementsRef.current.set(bubble.id, element);
+                  applyBubbleStyles(element, bubble, now);
+                } else {
+                  bubbleElementsRef.current.delete(bubble.id);
+                }
+              }}
               style={
                 {
                   '--bubble-scale': String(bubble.scale),

@@ -15,18 +15,8 @@ export function NamiGridSpotlight(props: NamiGridSpotlightProps): ReactElement {
 
     document.documentElement.classList.add(scopeClass);
 
-    function onPointerMove(event: PointerEvent): void {
-      document.documentElement.style.setProperty('--nami-spotlight-x', event.clientX + 'px');
-      document.documentElement.style.setProperty('--nami-spotlight-y', event.clientY + 'px');
-    }
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-
     return () => {
-      window.removeEventListener('pointermove', onPointerMove);
       document.documentElement.classList.remove(scopeClass);
-      document.documentElement.style.removeProperty('--nami-spotlight-x');
-      document.documentElement.style.removeProperty('--nami-spotlight-y');
     };
   }, [props.scope]);
 

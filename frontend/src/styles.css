@@ -14180,6 +14180,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   display: none !important;
 }
 
+.member-spotlight-grid {
+  --member-spotlight-foil-left: -38%;
+}
+
 .member-spotlight-foil {
   position: absolute !important;
   inset: -42% !important;

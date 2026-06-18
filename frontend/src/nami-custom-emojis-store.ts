@@ -203,7 +203,7 @@ export function lookupCustomEmoji(shortcode: string): NamiCustomEmoji | undefine
 }
 
 export function parseCustomEmojiSegments(text: string): ParsedEmojiSegment[] {
-  const emojis = readEmojis();
+  const emojis = getSnapshot();
 
   if (emojis.length === 0) {
     return [{ type: 'text', value: text }];

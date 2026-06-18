@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -58,6 +59,7 @@ import {
   markThreadRead,
   readChannelChatMessages,
   sendPrivateMessage,
+  useMessageUnreadCount,
   useMessagesStore,
 } from './messages-store.js';
 import {
@@ -192,11 +194,17 @@ import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 
 import { triggerHubSpotlightBurst } from './hub-spotlight.js';
 import { NamiGridSpotlight } from './NamiGridSpotlight.js';
+import {
+  prefersReducedMotion,
+  subscribeIntersectionPause,
+  subscribeVisibilityPause,
+} from './perf-utils.js';
 import { IgniteRadioDock } from './IgniteRadioDock.js';
 import { saveIgniteRadioEnabled, useIgniteRadioEnabled } from './ignite-radio-store.js';
 import {
   readMemberPreference,
   saveMemberPreference,
+  useMemberPreferencesVersion,
 } from './member-preference-store.js';
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
 import {
@@ -432,7 +440,7 @@ function NamiSeasonProgressBar(props: {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setProgressTick(Date.now());
-    }, 3000);
+    }, 15000);
 
     return () => window.clearInterval(intervalId);
   }, []);
@@ -677,18 +685,30 @@ function Sidebar(props: {
     }
 
     let idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
+    let resetFrameId = 0;
 
     function resetIdleTimer(): void {
-      setHubSwapIdleHint(false);
-      window.clearTimeout(idleTimer);
-      idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
+      if (resetFrameId !== 0) {
+        return;
+      }
+
+      resetFrameId = window.requestAnimationFrame(() => {
+        resetFrameId = 0;
+        setHubSwapIdleHint(false);
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
+      });
     }
 
-    window.addEventListener('pointermove', resetIdleTimer);
+    window.addEventListener('pointermove', resetIdleTimer, { passive: true });
     window.addEventListener('keydown', resetIdleTimer);
-    window.addEventListener('scroll', resetIdleTimer, true);
+    window.addEventListener('scroll', resetIdleTimer, { capture: true, passive: true });
 
     return () => {
+      if (resetFrameId !== 0) {
+        window.cancelAnimationFrame(resetFrameId);
+      }
+
       window.clearTimeout(idleTimer);
       window.removeEventListener('pointermove', resetIdleTimer);
       window.removeEventListener('keydown', resetIdleTimer);
@@ -1092,12 +1112,14 @@ function CryptoBubbleBoard(props: {
   const visibleEntries = props.entries.slice(0, maxEntries);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
+  const bubbleElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const hiddenRef = useRef(false);
+  const offscreenRef = useRef(false);
   const pointerRef = useRef({
     x: 0.5,
     y: 0.5,
     inside: false
   });
-  const [renderTick, setRenderTick] = useState(0);
   const entriesSignature = visibleEntries.map((entry) => entry.slotId).join('|');
   const nodesRef = useRef<NamiCryptoBubbleNode[]>(
     buildNamiCryptoBubbleNodes(visibleEntries, bubbleScale)
@@ -1108,7 +1130,32 @@ function CryptoBubbleBoard(props: {
   }, [entriesSignature, bubbleScale]);
 
   useEffect(() => {
-    let lastRenderTime = 0;
+    if (prefersReducedMotion()) {
+      return;
+    }
+
+    return subscribeVisibilityPause((paused) => {
+      hiddenRef.current = paused;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
+    const board = boardRef.current;
+
+    if (!board) {
+      return;
+    }
+
+    return subscribeIntersectionPause(board, (offscreen) => {
+      offscreenRef.current = offscreen;
+    });
+  }, [entriesSignature]);
+
+  useEffect(() => {
     let lastFrameTime = 0;
 
     function effectiveMass(node: NamiCryptoBubbleNode): number {
@@ -1126,11 +1173,24 @@ function CryptoBubbleBoard(props: {
       }
     }
 
+    function applyBubbleNodeStyles(node: NamiCryptoBubbleNode): void {
+      const element = bubbleElementsRef.current.get(node.id);
+
+      if (!element) {
+        return;
+      }
+
+      element.style.setProperty('--bubble-size', node.radius * 2 + 'px');
+      element.style.setProperty('--bubble-x', node.x * 100 + '%');
+      element.style.setProperty('--bubble-y', node.y * 100 + '%');
+      element.style.setProperty('--bubble-scale', node.scale.toFixed(3));
+    }
+
     const step = (time: number) => {
       const board = boardRef.current;
       const nodes = nodesRef.current;
 
-      if (!board || nodes.length === 0) {
+      if (prefersReducedMotion() || hiddenRef.current || offscreenRef.current || !board || nodes.length === 0) {
         animationRef.current = window.requestAnimationFrame(step);
         return;
       }
@@ -1326,9 +1386,8 @@ function CryptoBubbleBoard(props: {
         }
       }
 
-      if (time - lastRenderTime > 22) {
-        lastRenderTime = time;
-        setRenderTick((value) => (value + 1) % 100000);
+      for (const node of nodes) {
+        applyBubbleNodeStyles(node);
       }
 
       animationRef.current = window.requestAnimationFrame(step);
@@ -1378,7 +1437,6 @@ function CryptoBubbleBoard(props: {
 
       <div
         className={'crypto-bubbles-board' + (props.boardClassName ? ' ' + props.boardClassName : '')}
-        data-physics-tick={renderTick}
         onPointerLeave={() => {
           pointerRef.current.inside = false;
           props.onHoverChannel(null);
@@ -1389,9 +1447,6 @@ function CryptoBubbleBoard(props: {
           pointerRef.current.inside = true;
           pointerRef.current.x = namiClamp((event.clientX - rect.left) / rect.width, 0, 1);
           pointerRef.current.y = namiClamp((event.clientY - rect.top) / rect.height, 0, 1);
-
-          event.currentTarget.style.setProperty('--crypto-cursor-x', pointerRef.current.x * 100 + '%');
-          event.currentTarget.style.setProperty('--crypto-cursor-y', pointerRef.current.y * 100 + '%');
         }}
         ref={boardRef}
       >
@@ -1407,6 +1462,17 @@ function CryptoBubbleBoard(props: {
               onClick={() => props.onOpenChannel(node.channel)}
               onMouseEnter={() => props.onHoverChannel(node.channel.id)}
               onMouseLeave={() => props.onHoverChannel(null)}
+              ref={(element) => {
+                if (element) {
+                  bubbleElementsRef.current.set(node.id, element);
+                  element.style.setProperty('--bubble-size', node.radius * 2 + 'px');
+                  element.style.setProperty('--bubble-x', node.x * 100 + '%');
+                  element.style.setProperty('--bubble-y', node.y * 100 + '%');
+                  element.style.setProperty('--bubble-scale', node.scale.toFixed(3));
+                } else {
+                  bubbleElementsRef.current.delete(node.id);
+                }
+              }}
               style={
                 {
                   '--bubble-size': node.radius * 2 + 'px',
@@ -1503,20 +1569,30 @@ function NamiHub(props: {
     };
   });
 
-  const [spotlightFoilPhase, setSpotlightFoilPhase] = useState(0);
+  const spotlightGridRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     let animationFrameId = 0;
 
     function updateSpotlightFoil(timestamp: number): void {
-      const spotlightFoilCycle = (timestamp % 7600) / 7600;
-      const spotlightFoilBounce =
-        spotlightFoilCycle <= 0.5
-          ? spotlightFoilCycle * 2
-          : (1 - spotlightFoilCycle) * 2;
-      const spotlightFoilEase = 0.5 - Math.cos(spotlightFoilBounce * Math.PI) / 2;
+      const grid = spotlightGridRef.current;
 
-      setSpotlightFoilPhase(spotlightFoilEase);
+      if (grid) {
+        const spotlightFoilCycle = (timestamp % 7600) / 7600;
+        const spotlightFoilBounce =
+          spotlightFoilCycle <= 0.5
+            ? spotlightFoilCycle * 2
+            : (1 - spotlightFoilCycle) * 2;
+        const spotlightFoilEase = 0.5 - Math.cos(spotlightFoilBounce * Math.PI) / 2;
+        const memberSpotlightFoilLeft = Math.round(spotlightFoilEase * 132 - 38);
+
+        grid.style.setProperty('--member-spotlight-foil-left', memberSpotlightFoilLeft + '%');
+      }
+
       animationFrameId = window.requestAnimationFrame(updateSpotlightFoil);
     }
 
@@ -1654,17 +1730,9 @@ function NamiHub(props: {
             <p>18 verified members featured in a scrollable daily rotation with highlight badges and levels.</p>
           </div>
 
-          <div className="member-spotlight-grid">
+          <div className="member-spotlight-grid" ref={spotlightGridRef}>
             {spotlightMembers.map(({ member, slotId }) => {
               const progression = getNamiProgression(member);
-                const memberSpotlightFoilLeft = Math.round(spotlightFoilPhase * 132 - 38);
-                const memberSpotlightFoilStyle =
-                  member.tier === 'Elite'
-                    ? ({
-                        '--member-spotlight-foil-left': String(memberSpotlightFoilLeft) + '%'
-                      } as CSSProperties)
-                    : undefined;
-
 
               return (
                 <button
@@ -1776,7 +1844,7 @@ function NamiHub(props: {
                     </span>
                   ) : null}
 
-                  <span className="member-spotlight-foil" aria-hidden="true" style={memberSpotlightFoilStyle} />
+                  <span className="member-spotlight-foil" aria-hidden="true" />
 
                   <div className="member-spotlight-content">
                     <div className="member-spotlight-avatar-wrap">
@@ -3960,11 +4028,15 @@ function GameChat(props: {
     setAdultLanguageCollapsed(true);
   }, [props.channel.id]);
 
-  const chatEligibleMembers = members.filter((member) => member.signal !== 'Black');
+  const preferencesVersion = useMemberPreferencesVersion();
+  const chatEligibleMembers = useMemo(
+    () => members.filter((member) => member.signal !== 'Black'),
+    [],
+  );
 
-  const visibleChatMembers = chatEligibleMembers.filter((member) => {
-    return !readMemberPreference(member.id).blocked;
-  });
+  const visibleChatMembers = useMemo(() => {
+    return chatEligibleMembers.filter((member) => !readMemberPreference(member.id).blocked);
+  }, [chatEligibleMembers, preferencesVersion]);
 
   const selfChatMember = useSelfMember();
   const messageStore = useMessagesStore();
@@ -3972,24 +4044,35 @@ function GameChat(props: {
   const messageStackRef = useRef<HTMLDivElement | null>(null);
   const canSend = canSendChatMessages();
 
-  function resolveChatMessageMember(message: ChatMessage): (typeof members)[number] | undefined {
+  const resolveChatMessageMember = useCallback((message: ChatMessage): (typeof members)[number] | undefined => {
     return resolveMessageAuthorMember(message, selfChatMember, chatEligibleMembers);
-  }
+  }, [selfChatMember, chatEligibleMembers]);
 
-  const visibleMessages = [...chatMessages, ...messageStore.channelMessages].filter((message) => {
-    if (message.signal === 'Black') return false;
-    if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
+  const visibleMessages = useMemo(() => {
+    return [...chatMessages, ...messageStore.channelMessages].filter((message) => {
+      if (message.signal === 'Black') return false;
+      if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
 
-    const member = resolveChatMessageMember(message);
+      const member = resolveChatMessageMember(message);
 
-    if (!member) return false;
-    if (readMemberPreference(member.id).blocked) return false;
-    if (hideNpc && member.tier === 'NPC') return false;
-    if (hideRed && message.signal === 'Red') return false;
-    if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
+      if (!member) return false;
+      if (readMemberPreference(member.id).blocked) return false;
+      if (hideNpc && member.tier === 'NPC') return false;
+      if (hideRed && message.signal === 'Red') return false;
+      if (proEliteOnly && member.tier !== 'Pro' && member.tier !== 'Elite') return false;
 
-    return true;
-  });
+      return true;
+    });
+  }, [
+    adultLanguageMode,
+    chatEligibleMembers,
+    hideNpc,
+    hideRed,
+    messageStore.channelMessages,
+    preferencesVersion,
+    proEliteOnly,
+    resolveChatMessageMember,
+  ]);
 
   useEffect(() => {
     const stack = messageStackRef.current;
@@ -6627,7 +6710,7 @@ function MemberFeedOfficialAlertBanner(props: {
 }
 
 export function App(): ReactElement {
-  const messageStore = useMessagesStore();
+  const messageUnreadCount = useMessageUnreadCount();
   const guildEventsStore = useGuildEventsStore();
   const selfMember = useSelfMember();
   const disconnectWallet = useWalletDisconnect();
@@ -6667,27 +6750,27 @@ export function App(): ReactElement {
     return 'Back';
   }
 
-  const openMemberProfile = (member: (typeof members)[number]): void => {
+  const openMemberProfile = useCallback((member: (typeof members)[number]): void => {
     setSelectedMember(member);
-    setContextReturnPage(activePage === 'memberProfile' ? contextReturnPage : activePage);
+    setContextReturnPage((returnPage) => (activePage === 'memberProfile' ? returnPage : activePage));
     window.localStorage.setItem('nami-selected-member-id', member.id);
     setActivePage('memberProfile');
-  };
+  }, [activePage]);
 
 
-  const openChannelProfile = (channel: NamiChannel): void => {
+  const openChannelProfile = useCallback((channel: NamiChannel): void => {
     setSelectedChannel(channel);
     setSelectedDeveloper(channelDeveloper(channel));
-    setContextReturnPage(activePage === 'channelProfile' ? contextReturnPage : activePage);
+    setContextReturnPage((returnPage) => (activePage === 'channelProfile' ? returnPage : activePage));
     setActivePage('channelProfile');
-  };
+  }, [activePage]);
 
 
-  const openStudioProfile = (developer: (typeof developers)[number]): void => {
+  const openStudioProfile = useCallback((developer: (typeof developers)[number]): void => {
     setSelectedDeveloper(developer);
-    setStudioReturnPage(activePage === 'studioProfile' ? studioReturnPage : activePage);
+    setStudioReturnPage((returnPage) => (activePage === 'studioProfile' ? returnPage : activePage));
     setActivePage('studioProfile');
-  };
+  }, [activePage]);
 
   const openGuild = (guild: NamiGuildRecord): void => {
     setSelectedGuild(guild);
@@ -6706,7 +6789,7 @@ export function App(): ReactElement {
     setActivePage('messageLog');
   };
 
-  const tagHandlers: TagNavigationHandlers = {
+  const tagHandlers = useMemo<TagNavigationHandlers>(() => ({
     onOpenMember: (memberId) => {
       const member = members.find((entry) => entry.id === memberId);
 
@@ -6732,7 +6815,7 @@ export function App(): ReactElement {
       markGuildEventsSeen();
       setActivePage('guilds');
     },
-  };
+  }), [openMemberProfile, openChannelProfile, openStudioProfile]);
 
   const navigateFromCurrentPage = (page: NamiPage): void => {
     if ((page === 'channelProfile' || page === 'memberProfile' || page === 'studioProfile') && page !== activePage) {
@@ -7061,7 +7144,7 @@ if (activePage === 'userProfile') {
             activePage={activePage}
             collapsed={sidebarCollapsed}
             guildEventUnreadCount={guildEventsStore.unreadCount}
-            messageUnreadCount={messageStore.unreadCount}
+            messageUnreadCount={messageUnreadCount}
             onHubSwap={navigateHubSwap}
             onNavigate={navigateFromCurrentPage}
             onToggle={() => setSidebarCollapsed((value) => !value)}
@@ -7078,7 +7161,9 @@ if (activePage === 'userProfile') {
       )}
 
       <section className="main-stage">
-        {showSidebar ? <NamiSeasonProgressBar member={selfMember} /> : null}
+        {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (
+          <NamiSeasonProgressBar member={selfMember} />
+        ) : null}
         {showSidebar ? (
           <MemberFeedOfficialAlertBanner onOpenSafetyCenter={() => setActivePage('safetyCenter')} />
         ) : null}

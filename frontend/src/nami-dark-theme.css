@@ -1,0 +1,260 @@
+/* Dark mode — neutral charcoal palette, no saturated accents */
+
+[data-nami-theme='dark'] body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.03), transparent 24rem),
+    linear-gradient(180deg, #070707 0%, #050505 100%);
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='dark'] body::before {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+[data-nami-theme='dark'] body::after {
+  opacity: 0.06;
+  mix-blend-mode: normal;
+  filter: none;
+  background:
+    radial-gradient(
+      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 34%
+    );
+}
+
+[data-nami-theme='dark'] html.is-landing-page body::after,
+[data-nami-theme='dark'] html.is-nami-app-spotlight body::after {
+  opacity: 0.08;
+  background:
+    radial-gradient(
+      circle at var(--nami-spotlight-x, 50%) var(--nami-spotlight-y, 40%),
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 30%
+    );
+}
+
+[data-nami-theme='dark'] .nami-landing-grid-spotlight {
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+[data-nami-theme='dark'] .sidebar {
+  background: var(--nami-theme-panel);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 12px 32px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='dark'] .sidebar-brand,
+[data-nami-theme='dark'] .sidebar-nav button,
+[data-nami-theme='dark'] .sidebar-toggle,
+[data-nami-theme='dark'] .sidebar-radio-toggle {
+  color: var(--nami-theme-nav-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='dark'] .sidebar-nav button .nav-icon {
+  color: var(--nami-theme-nav-icon);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+[data-nami-theme='dark'] .sidebar-nav button.is-active {
+  color: #fafafa;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-nami-theme='dark'] .sidebar-nav button.is-active .nav-icon {
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-nami-theme='dark'] .diamond-mark {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, #141414, #1f1f1f);
+  color: #d4d4d8;
+}
+
+[data-nami-theme='dark'] .nami-pinned-profile-card,
+[data-nami-theme='dark'] .panel,
+[data-nami-theme='dark'] .chat-shell,
+[data-nami-theme='dark'] .member-rail,
+[data-nami-theme='dark'] .feature-rail,
+[data-nami-theme='dark'] .chat-window,
+[data-nami-theme='dark'] .chat-side-panel,
+[data-nami-theme='dark'] .channel-browser,
+[data-nami-theme='dark'] .community-showcase,
+[data-nami-theme='dark'] .profile-hero-panel,
+[data-nami-theme='dark'] .member-profile-hero,
+[data-nami-theme='dark'] .passport-hero-card-refined,
+[data-nami-theme='dark'] .gamehub-discovery-panel,
+[data-nami-theme='dark'] .chat-rail-collapsible-panel,
+[data-nami-theme='dark'] .ignite-radio-dock,
+[data-nami-theme='dark'] .nami-season-progress {
+  background: var(--nami-theme-panel);
+  color: var(--nami-theme-text);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 12px 28px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='dark'] .page-title p,
+[data-nami-theme='dark'] .settings-screen-layout .settings-page-title p {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='dark'] .page-title h1,
+[data-nami-theme='dark'] .settings-screen-layout .settings-page-title h1 {
+  color: #f4f4f5;
+}
+
+[data-nami-theme='dark'] .rail-heading p,
+[data-nami-theme='dark'] .profile-panel-heading p,
+[data-nami-theme='dark'] .protocol-hint,
+[data-nami-theme='dark'] small,
+[data-nami-theme='dark'] .message-meta span,
+[data-nami-theme='dark'] .message-meta i {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='dark'] .panel h2,
+[data-nami-theme='dark'] .rail-heading h2,
+[data-nami-theme='dark'] h1,
+[data-nami-theme='dark'] h2,
+[data-nami-theme='dark'] h3,
+[data-nami-theme='dark'] strong,
+[data-nami-theme='dark'] label {
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='dark'] .message-bubble,
+[data-nami-theme='dark'] .chat-input-placeholder,
+[data-nami-theme='dark'] .chat-composer-shell,
+[data-nami-theme='dark'] .nami-surface-button,
+[data-nami-theme='dark'] .tab-row button,
+[data-nami-theme='dark'] .filter-row button,
+[data-nami-theme='dark'] .global-chat-list-row,
+[data-nami-theme='dark'] .messages-thread-row,
+[data-nami-theme='dark'] .discovery-card,
+[data-nami-theme='dark'] .module-card,
+[data-nami-theme='dark'] .embedded-social-card,
+[data-nami-theme='dark'] .gamehub-discovery-channel-card,
+[data-nami-theme='dark'] .settings-appearance-option {
+  color: var(--nami-theme-nav-text);
+  background: var(--nami-theme-surface-raised);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='dark'] .message-bubble p {
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='dark'] .tab-row button.is-active-tab,
+[data-nami-theme='dark'] .filter-row button.is-active-filter,
+[data-nami-theme='dark'] .nami-surface-button.is-primary-surface-button,
+[data-nami-theme='dark'] .nami-surface-button.is-active-filter,
+[data-nami-theme='dark'] .nami-surface-button.is-active-view {
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-nami-theme='dark'] .settings-screen-layout {
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-panel);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 16px 36px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='dark'] .settings-screen-layout .panel,
+[data-nami-theme='dark'] .settings-screen-layout article.panel,
+[data-nami-theme='dark'] .settings-screen-layout section.panel {
+  background: var(--nami-theme-surface-raised);
+  color: var(--nami-theme-text);
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='dark'] .settings-screen-layout .settings-toggle-list span {
+  color: var(--nami-theme-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-nami-theme='dark'] .nami-season-progress {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    var(--nami-theme-panel);
+}
+
+[data-nami-theme='dark'] .nami-season-progress-copy span,
+[data-nami-theme='dark'] .nami-season-progress-copy small {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='dark'] .nami-season-progress-copy strong {
+  color: var(--nami-theme-text);
+}
+
+[data-nami-theme='dark'] .crypto-bubbles-board {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.03), transparent 28%),
+    radial-gradient(circle at 85% 82%, rgba(255, 255, 255, 0.02), transparent 32%),
+    #0a0a0a;
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-theme='dark'] .panel:hover,
+[data-nami-theme='dark'] .discovery-card:hover,
+[data-nami-theme='dark'] .module-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+}
+
+[data-nami-theme='dark'][data-nami-ui='glass'] .sidebar,
+[data-nami-theme='dark'][data-nami-ui='glass'] .nami-pinned-profile-card,
+[data-nami-theme='dark'][data-nami-ui='glass'] .panel,
+[data-nami-theme='dark'][data-nami-ui='glass'] .chat-window,
+[data-nami-theme='dark'][data-nami-ui='glass'] .chat-shell,
+[data-nami-theme='dark'][data-nami-ui='glass'] .settings-screen-layout,
+[data-nami-theme='dark'][data-nami-ui='glass'] .ignite-radio-dock,
+[data-nami-theme='dark'][data-nami-ui='glass'] .nami-season-progress,
+[data-nami-theme='dark'][data-nami-ui='glass'] .gamehub-discovery-panel,
+[data-nami-theme='dark'][data-nami-ui='glass'] .genre-chat-pinned-dock,
+[data-nami-theme='dark'][data-nami-ui='glass'] .chat-rail-collapsible-panel,
+[data-nami-theme='dark'][data-nami-ui='glass'] .feature-rail,
+[data-nami-theme='dark'][data-nami-ui='glass'] .member-rail {
+  background: var(--nami-glass-panel-tint), var(--nami-glass-panel-fill);
+  backdrop-filter: blur(var(--nami-glass-blur-strong)) saturate(var(--nami-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--nami-glass-blur-strong)) saturate(var(--nami-glass-saturate));
+  border-color: var(--nami-glass-panel-border);
+  box-shadow:
+    var(--nami-glass-outer-shadow),
+    var(--nami-glass-inset-highlight),
+    var(--nami-glass-epoxy-depth);
+}
+
+[data-nami-theme='dark'][data-nami-ui='glass'] .tab-row button,
+[data-nami-theme='dark'][data-nami-ui='glass'] .filter-row button,
+[data-nami-theme='dark'][data-nami-ui='glass'] .nami-surface-button,
+[data-nami-theme='dark'][data-nami-ui='glass'] .sidebar-brand,
+[data-nami-theme='dark'][data-nami-ui='glass'] .sidebar-nav button,
+[data-nami-theme='dark'][data-nami-ui='glass'] .sidebar-toggle,
+[data-nami-theme='dark'][data-nami-ui='glass'] .message-bubble,
+[data-nami-theme='dark'][data-nami-ui='glass'] .settings-appearance-option,
+[data-nami-theme='dark'][data-nami-ui='glass'] .global-chat-list-row,
+[data-nami-theme='dark'][data-nami-ui='glass'] .messages-thread-row,
+[data-nami-theme='dark'][data-nami-ui='glass'] .discovery-card,
+[data-nami-theme='dark'][data-nami-ui='glass'] .module-card {
+  background: var(--nami-glass-button-tint), var(--nami-glass-button-fill);
+  border-color: var(--nami-glass-button-border);
+  backdrop-filter: blur(var(--nami-glass-blur-medium)) saturate(var(--nami-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--nami-glass-blur-medium)) saturate(var(--nami-glass-saturate));
+  box-shadow: var(--nami-glass-inset-highlight), var(--nami-glass-epoxy-depth);
+  color: var(--nami-theme-text);
+}
