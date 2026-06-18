@@ -24,12 +24,16 @@ export const LANDING_HERO = {
 export const LANDING_SCENARIOS: LandingScenario[] = [
   {
     id: 'squad',
-    title: 'Your raid team keeps splitting across games',
+    title: '"Add me on the new game"',
     pain:
-      'You found a great squad in one title, then the crew scatters into separate Discords when the next game launches.',
+      'Launch week the squad chat is on fire. Everyone says they\'ll add you when they get the new game. ' +
+      'Then someone switches console, someone renames for the new season, and friend requests sit pending ' +
+      'while the group chat turns into "anyone on?" Your best teammate didn\'t ghost you — you lost the thread ' +
+      'that tied your tags together.',
     namiWay:
-      'Squads and guilds live on your Nami passport. Same roster, new channel. Jump from FIENDS to Walrus Raiders without rebuilding the group chat from scratch.',
-    outcome: 'Keep the people, not just the server history.',
+      'Squads live on your Nami passport, not one gamertag or one chat app. When a member changes platform ' +
+      'or name, the roster still knows who they are — same squad, new game, no rebuild from zero.',
+    outcome: 'Keep the squad, not the scavenger hunt.',
   },
   {
     id: 'tournament',
@@ -70,11 +74,13 @@ export const LANDING_SCENARIOS: LandingScenario[] = [
 ];
 
 export const LANDING_GENRE_LOUNGES = [
-  'FPS Arena',
-  'RPG Quest Hall',
-  'MOBA Strategy',
+  'FPS',
+  'MMORPG',
+  'MOBA',
   'Sports & Racing',
-  'Sandbox Builders',
+  'Sandbox',
+  'Souls-Like',
+  'JRPG',
 ] as const;
 
 export const LANDING_PILLARS: LandingPillar[] = [
