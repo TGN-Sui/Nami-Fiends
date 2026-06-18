@@ -1733,15 +1733,13 @@ html.is-landing-page body::after {
 
 .nami-landing-hero-collage {
   position: relative;
-  width: min(100%, 20rem);
-  min-height: 20rem;
+  width: min(100%, 26rem);
+  min-height: 22rem;
   margin-inline: auto;
   overflow: visible;
 }
 
 .nami-landing-tcg-card-wrap {
-  --landing-tcg-source-width: 348px;
-  --landing-tcg-scale: 0.662;
   position: relative;
   width: 2.5in;
   height: 3.5in;
@@ -1751,31 +1749,114 @@ html.is-landing-page body::after {
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-shell {
-  width: var(--landing-tcg-source-width) !important;
+  width: 100% !important;
   max-width: none !important;
-  margin: 0 auto !important;
-  transform: scale(var(--landing-tcg-scale));
-  transform-origin: top center;
+  height: 100%;
+  margin: 0 !important;
+  transform: none;
 }
 
-.nami-landing-hero-passport-slot.is-desktop-passport,
-.nami-landing-hero-elite-passport-slot.is-desktop-passport {
+.nami-landing-tcg-card-wrap .nami-profile-card-frame,
+.nami-landing-tcg-card-wrap .tcg-foil-passport-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 10px 11px;
+  border-radius: 0.72rem;
+  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  align-content: start;
+  opacity: 1;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-frame::before {
+  inset: 5px;
+  border-radius: 0.58rem;
+}
+
+.nami-landing-tcg-card-wrap .member-avatar-live-shell {
+  width: min(100%, 74px);
+  margin-inline: auto;
+  margin-bottom: 0;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-avatar {
+  width: 74px !important;
+  height: 74px !important;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  border-width: 2px;
+  border-radius: 15px;
+  box-shadow:
+    0 0 0 1px rgba(117, 215, 255, 0.14) inset,
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-avatar.has-member-avatar-image::before {
+  opacity: 1;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-nameplate h2 {
+  margin: 4px 0 2px;
+  font-size: 0.98rem;
+  line-height: 1.15;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-nameplate p {
+  font-size: 0.64rem;
+  line-height: 1.32;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-nameplate .profile-signal-badge-row {
+  gap: 6px;
+}
+
+.nami-landing-tcg-card-wrap .profile-signal-chip.is-signal-icon-only {
+  min-height: 22px;
+  min-width: 22px;
+}
+
+.nami-landing-tcg-card-wrap .profile-signal-chip.is-signal-icon-only i,
+.nami-landing-tcg-card-wrap .profile-signal-chip.is-signal-icon-only .conduct-signal-dot {
+  width: 10px;
+  height: 10px;
+}
+
+.nami-landing-tcg-card-wrap .profile-badge-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 0.62rem;
+}
+
+.nami-landing-hero-official-passport-slot.is-desktop-passport,
+.nami-landing-hero-elite-passport-slot.is-desktop-passport,
+.nami-landing-hero-pro-passport-slot.is-desktop-passport {
   position: absolute;
-  z-index: 2;
+  opacity: 1;
 }
 
-.nami-landing-hero-passport-slot.is-desktop-passport {
-  left: -1.35rem;
-  bottom: -0.85rem;
-  transform: rotate(-11deg);
-  z-index: 2;
+.nami-landing-hero-official-passport-slot.is-desktop-passport {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
 }
 
 .nami-landing-hero-elite-passport-slot.is-desktop-passport {
-  right: -1.55rem;
-  top: -1.1rem;
-  transform: rotate(9deg);
-  z-index: 3;
+  left: -0.35rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(-11deg);
+  z-index: 1;
+}
+
+.nami-landing-hero-pro-passport-slot.is-desktop-passport {
+  right: -0.35rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(11deg);
+  z-index: 2;
 }
 
 .nami-landing-tcg-card-wrap .nami-landing-elite-glitter-lane {
@@ -1789,39 +1870,54 @@ html.is-landing-page body::after {
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-header,
-.nami-landing-hero-passport-slot .nami-profile-card-header,
+.nami-landing-hero-official-passport-slot .nami-profile-card-header,
+.nami-landing-hero-elite-passport-slot .nami-profile-card-header,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-header,
 .nami-landing-hero-mobile-pass .nami-profile-card-header {
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 4px;
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-header .mini-badge,
-.nami-landing-hero-passport-slot .nami-profile-card-header .mini-badge,
+.nami-landing-hero-official-passport-slot .nami-profile-card-header .mini-badge,
+.nami-landing-hero-elite-passport-slot .nami-profile-card-header .mini-badge,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-header .mini-badge,
 .nami-landing-hero-mobile-pass .nami-profile-card-header .mini-badge {
   max-width: 100%;
   width: fit-content;
   align-self: flex-start;
   white-space: nowrap;
+  min-height: 18px;
+  padding: 0 7px;
+  font-size: 0.58rem;
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-header > strong,
-.nami-landing-hero-passport-slot .nami-profile-card-header > strong,
+.nami-landing-hero-official-passport-slot .nami-profile-card-header > strong,
+.nami-landing-hero-elite-passport-slot .nami-profile-card-header > strong,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-header > strong,
 .nami-landing-hero-mobile-pass .nami-profile-card-header > strong {
   margin-left: 0;
   align-self: flex-start;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-stats,
-.nami-landing-hero-passport-slot .nami-profile-card-stats,
+.nami-landing-hero-official-passport-slot .nami-profile-card-stats,
 .nami-landing-hero-elite-passport-slot .nami-profile-card-stats,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-stats,
 .nami-landing-hero-mobile-pass .nami-profile-card-stats {
   width: 100%;
+  align-self: end;
+  gap: 5px;
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-stats div,
-.nami-landing-hero-passport-slot .nami-profile-card-stats div,
+.nami-landing-hero-official-passport-slot .nami-profile-card-stats div,
 .nami-landing-hero-elite-passport-slot .nami-profile-card-stats div,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-stats div,
 .nami-landing-hero-mobile-pass .nami-profile-card-stats div {
   display: flex;
   flex-direction: column;
@@ -1830,12 +1926,19 @@ html.is-landing-page body::after {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  padding: 11px 12px;
+  padding: 5px 4px;
+  border-radius: 8px;
+}
+
+.nami-landing-tcg-card-wrap .nami-profile-card-stats span {
+  font-size: 0.54rem;
+  line-height: 1.2;
 }
 
 .nami-landing-tcg-card-wrap .nami-profile-card-stats strong,
-.nami-landing-hero-passport-slot .nami-profile-card-stats strong,
+.nami-landing-hero-official-passport-slot .nami-profile-card-stats strong,
 .nami-landing-hero-elite-passport-slot .nami-profile-card-stats strong,
+.nami-landing-hero-pro-passport-slot .nami-profile-card-stats strong,
 .nami-landing-hero-mobile-pass .nami-profile-card-stats strong {
   display: block;
   width: 100%;
@@ -1843,7 +1946,7 @@ html.is-landing-page body::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.86rem;
+  font-size: 0.72rem;
 }
 
 .nami-landing-hero-mobile-pass {

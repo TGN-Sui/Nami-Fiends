@@ -3,8 +3,60 @@ import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import { members, type NamiMember } from './uiMockData.js';
 
-const HERO_MEMBER = members[0]!;
-const HERO_ELITE_MEMBER = members.find((member) => member.tier === 'Elite' && member.signal === 'Green') ?? members[7]!;
+const HERO_OFFICIAL_MEMBER = members.find((member) => member.isNamiTeam) ?? members[0]!;
+const HERO_ELITE_MEMBER =
+  members.find((member) => member.tier === 'Elite' && member.signal === 'Green') ??
+  members.find((member) => member.tier === 'Elite') ??
+  members[7]!;
+const HERO_PRO_MEMBER =
+  members.find((member) => member.tier === 'Pro' && member.signal === 'Green' && !member.isNamiTeam) ??
+  members.find((member) => member.tier === 'Pro' && !member.isNamiTeam) ??
+  members[9]!;
+
+function landingFixtureAvatarUrl(initials: string, accent: string, base: string): string {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">' +
+    '<defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1">' +
+    '<stop offset="0" stop-color="' +
+    accent +
+    '" stop-opacity=".26"/>' +
+    '<stop offset=".46" stop-color="' +
+    base +
+    '"/>' +
+    '<stop offset="1" stop-color="' +
+    accent +
+    '" stop-opacity=".18"/>' +
+    '</linearGradient></defs>' +
+    '<rect width="400" height="400" rx="72" fill="' +
+    base +
+    '"/>' +
+    '<path d="M0 270 C74 218 142 322 220 270 C292 222 330 252 400 214 L400 400 L0 400 Z" fill="' +
+    accent +
+    '" opacity=".18"/>' +
+    '<text x="200" y="228" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="118" fill="' +
+    accent +
+    '" letter-spacing="-10">' +
+    initials +
+    '</text></svg>';
+
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function withLandingAvatar(member: NamiMember, initials: string, theme: 'elite' | 'pro'): NamiMember {
+  if (member.avatarImageUrl?.trim()) {
+    return member;
+  }
+
+  const palette =
+    theme === 'elite'
+      ? { accent: '#ffd36e', base: '#201807' }
+      : { accent: '#75d7ff', base: '#071828' };
+
+  return {
+    ...member,
+    avatarImageUrl: landingFixtureAvatarUrl(initials, palette.accent, palette.base),
+  };
+}
 
 const ELITE_GLITTER_SPACING_PX = 12;
 const ELITE_GLITTER_COUNT = 8;
@@ -76,17 +128,26 @@ export function LandingHeroVisual(): ReactElement {
   return (
     <div className="nami-landing-hero-visual" aria-hidden="true">
       <div className="nami-landing-hero-collage">
-        <div className="nami-landing-hero-passport-slot is-desktop-passport">
-          <LandingPassportCard member={HERO_MEMBER} />
+        <div className="nami-landing-hero-elite-passport-slot is-desktop-passport">
+          <LandingPassportCard
+            member={withLandingAvatar(HERO_ELITE_MEMBER, HERO_ELITE_MEMBER.avatarSeed, 'elite')}
+            withGlitter
+          />
         </div>
 
-        <div className="nami-landing-hero-elite-passport-slot is-desktop-passport">
-          <LandingPassportCard member={HERO_ELITE_MEMBER} withGlitter />
+        <div className="nami-landing-hero-official-passport-slot is-desktop-passport">
+          <LandingPassportCard member={HERO_OFFICIAL_MEMBER} />
+        </div>
+
+        <div className="nami-landing-hero-pro-passport-slot is-desktop-passport">
+          <LandingPassportCard
+            member={withLandingAvatar(HERO_PRO_MEMBER, HERO_PRO_MEMBER.avatarSeed, 'pro')}
+          />
         </div>
       </div>
 
       <div className="nami-landing-hero-mobile-pass">
-        <LandingPassportCard member={HERO_MEMBER} />
+        <LandingPassportCard member={HERO_OFFICIAL_MEMBER} />
       </div>
     </div>
   );

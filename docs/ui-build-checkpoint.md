@@ -48,6 +48,21 @@ This checkpoint records the completed frontend UI polish pass for Nami Chat, the
 | Slice 9 | Complete | `IndexedDataPanel` official-owner gate; user-facing protocol copy cleanup. |
 | Slice 10 | Complete | Roadmap + checkpoint docs; Phase 7 marked complete. |
 
+## Landing Page Polish
+
+| Commit | Summary |
+| --- | --- |
+| `6c869e0` | Landing TCG deck, hero visual, uniform horizontal passport, no guest browse |
+| `2a66666` | Deck animation, floating genre bubbles, hero passport layout |
+| `e9881a1` | Elite passport + glitter, wider cards, deck shift on discard only |
+| `85ef2dc` | TCG 2.5″×3.5″ sizing, table overlap, white grid spotlight, varied bubbles |
+| `7858c6e` | Sharper spotlight falloff |
+| `2858b5f` | Spotlight bloom aligned to cursor pixels |
+
+| `e0cc86c` | Native TCG passport fit, three-card stack, hero headline, landing copy docs |
+
+Copy for the landing page is centralized in `frontend/src/landing-content.ts`. See [landing-page.md](./landing-page.md).
+
 ## Latest UI Commits
 
 | Commit | Summary |

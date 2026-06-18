@@ -271,6 +271,7 @@ docs/resilience.md
 docs/sui-layer.md
 docs/trust-system.md
 docs/vision.md
+docs/landing-page.md
 ```
 
 ---
