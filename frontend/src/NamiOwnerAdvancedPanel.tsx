@@ -51,8 +51,7 @@ export function NamiOwnerAdvancedPanel(props: {
         <h2>Advanced platform controls</h2>
         <p>
           Manage artwork, shared chat emojis, security enforcement, and indexed protocol data from
-          one console. Each area opens in a fixed workspace so long libraries do not stretch the
-          page.
+          one console. Each tab scrolls inside this workspace so long catalogs stay reachable.
         </p>
       </div>
 

@@ -7795,22 +7795,30 @@ body.is-nami-owner-edit-mode .main-stage {
 }
 
 .nami-owner-advanced-body {
-  display: grid;
-  min-height: 0;
-  max-height: min(68vh, 720px);
-  overflow: hidden;
+  display: block;
+  min-height: 420px;
+  max-height: calc(100vh - 260px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 20px;
 }
 
 .nami-owner-advanced-embedded-panel {
   display: grid;
   gap: 12px;
   min-height: 0;
-  height: 100%;
+  height: auto;
   margin-top: 0 !important;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.nami-owner-advanced-body .nami-owner-advanced-scroll-region {
+  overflow: visible;
+  max-height: none;
 }
 
 .nami-owner-advanced-embedded-panel.panel,
@@ -7833,9 +7841,10 @@ body.is-nami-owner-edit-mode .main-stage {
 .nami-owner-asset-edit {
   display: grid;
   gap: 14px;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-height: 0;
-  height: 100%;
+}
+
+.nami-owner-advanced-body .nami-owner-asset-edit {
+  height: auto;
 }
 
 .nami-owner-asset-edit-toolbar {
@@ -7927,6 +7936,51 @@ body.is-nami-owner-edit-mode .main-stage {
 
 .sidebar-brand-wordmark .owner-editable-image-asset {
   max-height: 22px;
+}
+
+.passport-header-mark-editable {
+  display: inline-flex;
+  max-width: calc(100% - 88px);
+}
+
+.passport-header-mark-editable .mini-badge {
+  display: inline-flex;
+}
+
+.passport-header-mark-image {
+  max-height: 28px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.passport-tier-chip-editable {
+  display: inline-flex;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.passport-tier-chip-editable strong {
+  margin: 0;
+}
+
+.passport-tier-chip-image {
+  max-height: 24px;
+  max-width: 96px;
+  object-fit: contain;
+}
+
+.passport-tier-badge-editable.owner-editable-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.passport-tier-badge-editable .owner-editable-image-asset {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .nami-owner-settings {
@@ -11258,7 +11312,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .nami-owner-emoji-panel {
   min-height: 0;
-  height: 100%;
+}
+
+.nami-owner-advanced-body .nami-owner-emoji-panel {
+  height: auto;
 }
 
 .nami-owner-emoji-layout {
@@ -11266,7 +11323,11 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
   gap: 14px;
   min-height: 0;
-  height: 100%;
+}
+
+.nami-owner-advanced-body .nami-owner-emoji-layout {
+  height: auto;
+  min-height: 360px;
 }
 
 .nami-owner-emoji-upload-column {
@@ -11338,6 +11399,12 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
   gap: 10px;
   align-content: start;
+}
+
+.nami-owner-advanced-body .nami-owner-emoji-tile-grid {
+  max-height: min(52vh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nami-owner-emoji-tile {

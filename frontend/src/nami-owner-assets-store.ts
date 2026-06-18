@@ -83,6 +83,30 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     hint: 'Branded title image replacing the Nami Badges heading.',
   },
   {
+    id: 'passport-header-mark',
+    label: 'Passport header mark',
+    category: 'brand',
+    hint: 'Logo or wordmark in the passport card header.',
+  },
+  {
+    id: 'passport-tier-chip',
+    label: 'Passport tier chip',
+    category: 'button',
+    hint: 'Tier label icon in the passport card header.',
+  },
+  {
+    id: 'passport-tier-badge',
+    label: 'Passport tier badge',
+    category: 'button',
+    hint: 'Circular tier badge beside the conduct signal on passports.',
+  },
+  {
+    id: 'passport-official-team-mark',
+    label: 'Official team passport mark',
+    category: 'brand',
+    hint: 'Header mark shown on Official Nami Team passports.',
+  },
+  {
     id: 'platform-footer-mark',
     label: 'Platform footer mark',
     category: 'brand',

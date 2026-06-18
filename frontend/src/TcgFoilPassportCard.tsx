@@ -1,6 +1,7 @@
 import { useRef, type ReactElement, type ReactNode } from 'react';
 
 import { isNamiTeamMember, memberRainbowBorderClass } from './channel-surface.js';
+import { OwnerEditableImage } from './OwnerEditableImage.js';
 import {
   ConductSignalDot,
   memberTierSurfaceClass,
@@ -228,6 +229,25 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
     props.onOpenPassport?.();
   }
 
+  const isOfficialTeam = isNamiTeamMember(props.member);
+
+  function passportNameplateIcons(): ReactElement {
+    return (
+      <div className="profile-signal-badge-row">
+        <span className="profile-signal-chip is-signal-icon-only" title={reviewedSignal + ' signal'}>
+          <ConductSignalDot signal={reviewedSignal} />
+        </span>
+        <OwnerEditableImage
+          className="profile-badge-icon profile-badge-icon-custom passport-tier-badge-editable"
+          fallback={<span aria-hidden="true">{props.member.tier.slice(0, 1)}</span>}
+          label="Passport tier badge"
+          nested
+          slotId="passport-tier-badge"
+        />
+      </div>
+    );
+  }
+
   return (
     <article
       aria-label={isClickable ? 'Open Nami Passport' : undefined}
@@ -276,10 +296,26 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         ) : null}
 
         <div className="nami-profile-card-header">
-          <span className="mini-badge">
-            {isNamiTeamMember(props.member) ? 'Official Nami Team Passport' : 'Nami Passport'}
-          </span>
-          <strong>{props.member.tier}</strong>
+          <OwnerEditableImage
+            className="passport-header-mark-editable"
+            fallback={
+              <span className="mini-badge">
+                {isOfficialTeam ? 'Official Nami Team Passport' : 'Nami Passport'}
+              </span>
+            }
+            imageClassName="passport-header-mark-image"
+            label={isOfficialTeam ? 'Official team passport mark' : 'Passport header mark'}
+            nested
+            slotId={isOfficialTeam ? 'passport-official-team-mark' : 'passport-header-mark'}
+          />
+          <OwnerEditableImage
+            className="passport-tier-chip-editable"
+            fallback={<strong>{props.member.tier}</strong>}
+            imageClassName="passport-tier-chip-image"
+            label="Passport tier chip"
+            nested
+            slotId="passport-tier-chip"
+          />
         </div>
 
         {layout === 'horizontal' ? (
@@ -287,12 +323,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
 
             <div className="nami-profile-card-nameplate">
-              <div className="profile-signal-badge-row">
-                <span className="profile-signal-chip is-signal-icon-only" title={reviewedSignal + ' signal'}>
-                  <ConductSignalDot signal={reviewedSignal} />
-                </span>
-                <span className="profile-badge-icon profile-badge-icon-custom">{props.member.tier.slice(0, 1)}</span>
-              </div>
+              {passportNameplateIcons()}
               <h2>{props.member.name}</h2>
               <p>{props.member.badge} · {reviewedSignal === 'Green' ? 'Verified member' : 'Under review'}</p>
             </div>
@@ -302,12 +333,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
 
             <div className="nami-profile-card-nameplate">
-              <div className="profile-signal-badge-row">
-                <span className="profile-signal-chip is-signal-icon-only" title={reviewedSignal + ' signal'}>
-                  <ConductSignalDot signal={reviewedSignal} />
-                </span>
-                <span className="profile-badge-icon profile-badge-icon-custom">{props.member.tier.slice(0, 1)}</span>
-              </div>
+              {passportNameplateIcons()}
               <h2>{props.member.name}</h2>
               <p>{props.member.badge} · {reviewedSignal === 'Green' ? 'Verified member' : 'Under review'}</p>
             </div>
