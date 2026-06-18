@@ -140,6 +140,7 @@ import {
 import { markGuildEventsSeen, useGuildEventsStore } from './guild-events-store.js';
 import { resolveMemberGuildAffiliations } from './affiliation-provider.js';
 import { useChannelDirectory } from './channel-directory-provider.js';
+import { GAME_HUB_INTRO } from './landing-content.js';
 import { useMemberDirectory } from './member-directory-provider.js';
 import {
   namiGuilds,
@@ -1836,6 +1837,15 @@ function NamiHub(props: {
 
 
 
+function GameHubDirectoryEmpty(props: { title: string; copy: string }): ReactElement {
+  return (
+    <div className="profile-empty-state-copy gamehub-directory-empty">
+      <strong>{props.title}</strong>
+      <p>{props.copy}</p>
+    </div>
+  );
+}
+
 function GameHub(props: {
   selectedChannel: NamiChannel;
   onSelect: (channel: NamiChannel) => void;
@@ -1844,7 +1854,7 @@ function GameHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
-  const { channels: directoryChannels } = useChannelDirectory(50);
+  const { channels: directoryChannels, usesFixtures, loadState } = useChannelDirectory(50);
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
@@ -2029,13 +2039,38 @@ function GameHub(props: {
 
   return (
     <>
-      <header className="page-title">
-        <p>Browse and discover</p>
-        <h1>GameHub</h1>
+      <header className="page-title gamehub-page-title">
+        <p>{GAME_HUB_INTRO.eyebrow}</p>
+        <h1>Game Hub</h1>
       </header>
 
+      <section className="panel gamehub-intro-panel">
+        <div className="gamehub-intro-copy">
+          <h2>{GAME_HUB_INTRO.headline}</h2>
+          <p>{GAME_HUB_INTRO.subhead}</p>
+          {usesFixtures && loadState !== 'error' ? (
+            <span className="gamehub-intro-preview-note">{GAME_HUB_INTRO.previewNote}</span>
+          ) : null}
+        </div>
+
+        <div className="gamehub-intro-jump-row" aria-label="Game Hub sections">
+          <a className="nami-surface-button" href="#gamehub-partners">
+            Partners
+          </a>
+          <a className="nami-surface-button" href="#gamehub-trending">
+            Trending
+          </a>
+          <a className="nami-surface-button" href="#gamehub-browser">
+            Browser
+          </a>
+          <a className="nami-surface-button" href="#gamehub-genre">
+            Genre chats
+          </a>
+        </div>
+      </section>
+
       <section className="gamehub-top-panel gamehub-discovery-panels">
-        <article className="gamehub-discovery-panel is-partner-panel">
+        <article className="gamehub-discovery-panel is-partner-panel" id="gamehub-partners">
           <header className="gamehub-discovery-panel-head">
             <span className="gamehub-discovery-eyebrow">Partner Channels</span>
             <h2>Official partner spaces</h2>
@@ -2043,6 +2078,12 @@ function GameHub(props: {
           </header>
 
           <div className="gamehub-discovery-channel-grid">
+            {partnerChannels.length === 0 ? (
+              <GameHubDirectoryEmpty
+                copy="Partner channels appear here once studios claim verified placement. Browse the channel grid below while the catalog fills in."
+                title="No partner channels ranked yet"
+              />
+            ) : null}
             {partnerChannels.map((channel) => (
               <button
                 className={'gamehub-discovery-channel-card' + channelRainbowBorderClass(channel)}
@@ -2062,14 +2103,22 @@ function GameHub(props: {
           </div>
         </article>
 
-        <article className="gamehub-discovery-panel is-top-panel">
+        <article className="gamehub-discovery-panel is-top-panel" id="gamehub-trending">
           <header className="gamehub-discovery-panel-head">
             <span className="gamehub-discovery-eyebrow">Top Channels</span>
             <h2>Trending right now</h2>
-            <p>Ranked by live subscriber momentum across GameHub.</p>
+            <p>Ranked by live subscriber momentum across Game Hub.</p>
           </header>
 
           <ol className="gamehub-discovery-rank-list">
+            {topChannels.length === 0 ? (
+              <li>
+                <GameHubDirectoryEmpty
+                  copy="Trending ranks populate from live discovery cycles. Follow channels you like — momentum updates as communities grow."
+                  title="Trending list is warming up"
+                />
+              </li>
+            ) : null}
             {topChannels.map((channel, index) => {
               const topMax = topChannels[0]?.subscribers ?? 1;
               const momentum = Math.max(12, (channel.subscribers / topMax) * 100);
@@ -2125,11 +2174,14 @@ function GameHub(props: {
         </article>
       </section>
 
-      <section className="panel gamehub-browser">
+      <section className="panel gamehub-browser" id="gamehub-browser">
         <div className="browser-heading gamehub-browser-heading">
           <div>
             <h2>Channel Browser</h2>
-            <p>Randomized game cover cards with dev marks, badges, and verified foil grading.</p>
+            <p>
+              Swipe or grid through game cover art — verified titles get the foil sleeve, partners
+              get the rainbow border.
+            </p>
           </div>
 
           <div className="gamehub-browser-controls">
@@ -2167,6 +2219,13 @@ function GameHub(props: {
             </button>
           ))}
         </div>
+
+        {filteredBrowserEntries.length === 0 ? (
+          <GameHubDirectoryEmpty
+            copy="Try a different filter or check back after the next discovery cycle. Preview channels stay visible while dev fixtures are enabled."
+            title="No channels match this filter"
+          />
+        ) : null}
 
         {browserViewMode === 'tiles' ? (
           <div className="discovery-grid gamehub-discovery-grid">
@@ -2361,7 +2420,7 @@ function GameHub(props: {
           </section>
         )}
 
-        <div className="gamehub-genre-chats-under-browser">
+        <div className="gamehub-genre-chats-under-browser" id="gamehub-genre">
           <CryptoBubbleBoard
             activeChannelId={activeGenreChatId}
             badgeLabel="Genre lounges"
@@ -6766,10 +6825,16 @@ export function App(): ReactElement {
     setActivePage('hub');
   }
 
+  function enterGameHub(): void {
+    setEntryStartOnboarding(false);
+    setActivePage('gamehub');
+  }
+
   const screen = useMemo(() => {
     if (activePage === 'entry') {
       return (
         <EntryPage
+          onBrowseGameHub={enterGameHub}
           onEnterHub={enterNamiHub}
           onNavigateToSettings={() => setActivePage('settings')}
           onStartOnboardingHandled={() => setEntryStartOnboarding(false)}
