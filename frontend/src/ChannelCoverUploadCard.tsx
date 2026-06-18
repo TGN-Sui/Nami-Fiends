@@ -1,46 +1,24 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
-  isChannelPreferencesApiAvailable,
-  uploadChannelCoverToBackend,
-} from './channel-preferences-api.js';
-import { fetchChannelPreferences } from './channel-preferences-api.js';
-import {
   clearChannelCoverOverride,
-  hydrateChannelCoverOverride,
   readChannelCoverOverride,
   resolveChannelCoverUrl,
   saveChannelCoverOverride,
 } from './channel-cover-store.js';
+import {
+  MEDIA_UPLOAD_ACCEPTED_LABEL,
+  persistMediaImage,
+  readFileAsDataUrl,
+  validateMediaFile,
+} from './media-upload-service.js';
+import {
+  hydrateChannelCoverPreference,
+  isPreferencesApiAvailable,
+  preferencesStorageHint,
+} from './preferences-sync.js';
 import { type NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
-
-const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      const commaIndex = reader.result.indexOf(',');
-
-      if (commaIndex < 0) {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      resolve(reader.result.slice(commaIndex + 1));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read image.'));
-    reader.readAsDataURL(file);
-  });
-}
 
 export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactElement {
   const { owner } = useProtocolOwner();
@@ -51,47 +29,13 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
   const override = readChannelCoverOverride(props.channel.id);
   const activeCover = resolveChannelCoverUrl(props.channel);
   const hasOwnerUpload = override !== null && override.length > 0;
+
   useEffect(() => {
-    if (!isChannelPreferencesApiAvailable()) {
-      return;
-    }
-
-    void fetchChannelPreferences(props.channel.id)
-      .then((preferences) => {
-        if (preferences?.coverUrl) {
-          hydrateChannelCoverOverride(props.channel.id, preferences.coverUrl);
-        }
-      })
-      .catch(() => {
-        // Channel preference hydration is best-effort.
-      });
+    void hydrateChannelCoverPreference(props.channel.id);
   }, [props.channel.id]);
-
-  const storageHint = isChannelPreferencesApiAvailable()
-    ? 'Synced to the receiving server for this channel owner wallet.'
-    : 'Stored locally until the backend API is available.';
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
-  }
-
-  async function persistCover(file: File, dataUrl: string): Promise<void> {
-    if (isChannelPreferencesApiAvailable() && owner?.startsWith('0x')) {
-      const dataBase64 = await fileToBase64(file);
-      const uploaded = await uploadChannelCoverToBackend({
-        owner,
-        channelId: props.channel.id,
-        contentType: file.type,
-        dataBase64,
-      });
-
-      if (uploaded?.url) {
-        saveChannelCoverOverride(props.channel.id, uploaded.url);
-        return;
-      }
-    }
-
-    saveChannelCoverOverride(props.channel.id, dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -103,44 +47,36 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
       return;
     }
 
-    if (!ACCEPTED_TYPES.has(file.type)) {
-      setErrorMessage('Use a PNG, JPG, or WebP image.');
-      return;
-    }
+    const validationError = validateMediaFile(file, 'channel-cover');
 
-    if (file.size > 4 * 1024 * 1024) {
-      setErrorMessage('Cover image must be 4 MB or smaller.');
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 
     setErrorMessage(null);
     setIsReadingFile(true);
 
-    const reader = new FileReader();
+    void (async () => {
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
 
-    reader.onload = () => {
-      void (async () => {
-        try {
-          if (typeof reader.result !== 'string') {
-            setErrorMessage('Could not read that image. Try another file.');
-            return;
-          }
-
-          await persistCover(file, reader.result);
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
-        } finally {
-          setIsReadingFile(false);
-        }
-      })();
-    };
-
-    reader.onerror = () => {
-      setIsReadingFile(false);
-      setErrorMessage('Could not read that image. Try another file.');
-    };
-
-    reader.readAsDataURL(file);
+        await persistMediaImage({
+          kind: 'channel-cover',
+          owner,
+          file,
+          dataUrl,
+          channelId: props.channel.id,
+          isApiAvailable: isPreferencesApiAvailable('channel'),
+          onSaved: (url) => saveChannelCoverOverride(props.channel.id, url),
+          onLocalFallback: (url) => saveChannelCoverOverride(props.channel.id, url),
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
+      } finally {
+        setIsReadingFile(false);
+      }
+    })();
   }
 
   function removeCover(): void {
@@ -168,8 +104,8 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
       ) : null}
 
       <div className="media-upload-prep-details">
-        <span>PNG, JPG, WebP</span>
-        <span>{storageHint}</span>
+        <span>{MEDIA_UPLOAD_ACCEPTED_LABEL}</span>
+        <span>{preferencesStorageHint('channel')}</span>
       </div>
 
       <input

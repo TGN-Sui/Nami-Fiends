@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
 import {
   collectedBadgesForMember,
@@ -6,13 +6,10 @@ import {
   collectedTitlesForMember,
   cosmeticsForKind,
 } from './global-chats.js';
+import { MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
 import {
-  clearSelfAvatarOverride,
   consumeProfileEditFocus,
   PROFILE_EDIT_PANEL_ID,
-  readSelfAvatarOverride,
-  requestProfileEditFocus,
-  saveSelfAvatarOverride,
   useSelfMember,
 } from './member-avatar-store.js';
 import {
@@ -22,9 +19,6 @@ import {
   useSelfProfileEdits,
   type SelfProfileEdits,
 } from './member-profile-store.js';
-
-const ACCEPTED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 function toggleChip(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
@@ -42,12 +36,6 @@ export function ProfileEditPanel(): ReactElement {
   const [expanded, setExpanded] = useState(() => consumeProfileEditFocus());
   const [draft, setDraft] = useState<SelfProfileEdits>(savedProfile);
   const [savedNotice, setSavedNotice] = useState(false);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [isReadingAvatar, setIsReadingAvatar] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const avatarOverride = readSelfAvatarOverride();
-  const hasCustomAvatar = avatarOverride !== null && avatarOverride.length > 0;
 
   useEffect(() => {
     setDraft(savedProfile);
@@ -78,63 +66,6 @@ export function ProfileEditPanel(): ReactElement {
     setSavedNotice(true);
   }
 
-  function openAvatarPicker(): void {
-    if (!expanded) {
-      requestProfileEditFocus();
-      setExpanded(true);
-    }
-
-    fileInputRef.current?.click();
-  }
-
-  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
-    if (!ACCEPTED_AVATAR_TYPES.has(file.type)) {
-      setAvatarError('Use a PNG, JPG, or WebP image.');
-      return;
-    }
-
-    if (file.size > MAX_AVATAR_BYTES) {
-      setAvatarError('Image must be 2 MB or smaller.');
-      return;
-    }
-
-    setAvatarError(null);
-    setIsReadingAvatar(true);
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      setIsReadingAvatar(false);
-
-      if (typeof reader.result !== 'string') {
-        setAvatarError('Could not read that image. Try another file.');
-        return;
-      }
-
-      saveSelfAvatarOverride(reader.result);
-    };
-
-    reader.onerror = () => {
-      setIsReadingAvatar(false);
-      setAvatarError('Could not read that image. Try another file.');
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  function removeAvatar(): void {
-    setAvatarError(null);
-    clearSelfAvatarOverride();
-  }
-
   if (!expanded) {
     return (
       <article className="profile-edit-panel profile-edit-panel-collapsed panel" id={PROFILE_EDIT_PANEL_ID}>
@@ -157,45 +88,7 @@ export function ProfileEditPanel(): ReactElement {
         <p>Update how you appear across Nami. These edits do not change verification or trust status.</p>
       </div>
 
-      <section className="profile-edit-media-block">
-        <div className="profile-edit-media-copy">
-          <strong>Profile avatar</strong>
-          <small>
-            {hasCustomAvatar
-              ? 'Custom display photo active across Nami.'
-              : member.avatarImageUrl
-                ? 'Default demo avatar active. Upload to replace it site-wide.'
-                : 'Initials fallback active. Upload a display photo for your profile.'}
-          </small>
-        </div>
-
-        <input
-          accept="image/png,image/jpeg,image/webp"
-          className="member-avatar-upload-input"
-          onChange={handleAvatarChange}
-          ref={fileInputRef}
-          type="file"
-        />
-
-        <div className="member-avatar-upload-actions">
-          <button
-            className="nami-surface-button is-primary-surface-button"
-            disabled={isReadingAvatar}
-            onClick={openAvatarPicker}
-            type="button"
-          >
-            {isReadingAvatar ? 'Reading image…' : 'Upload display photo'}
-          </button>
-
-          {hasCustomAvatar || member.avatarImageUrl ? (
-            <button className="nami-surface-button" onClick={removeAvatar} type="button">
-              Remove photo
-            </button>
-          ) : null}
-        </div>
-
-        {avatarError ? <p className="member-avatar-upload-error">{avatarError}</p> : null}
-      </section>
+      <MemberAvatarUploadCard />
 
       <div className="profile-edit-form">
         <label className="profile-edit-field">

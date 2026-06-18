@@ -1,48 +1,19 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
-  isMemberPreferencesApiAvailable,
-  uploadAvatarToBackend,
-} from './member-preferences-api.js';
+  MEDIA_UPLOAD_ACCEPTED_LABEL,
+  persistMediaImage,
+  readFileAsDataUrl,
+  validateMediaFile,
+} from './media-upload-service.js';
 import {
   clearSelfAvatarOverride,
   readSelfAvatarOverride,
   saveSelfAvatarOverride,
   useSelfMember,
 } from './member-avatar-store.js';
+import { isPreferencesApiAvailable, preferencesStorageHint } from './preferences-sync.js';
 import { useProtocolOwner } from './wallet.js';
-
-const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const MAX_FILE_BYTES = 2 * 1024 * 1024;
-
-function formatAcceptedTypes(): string {
-  return 'PNG, JPG, WebP';
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      const commaIndex = reader.result.indexOf(',');
-
-      if (commaIndex < 0) {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      resolve(reader.result.slice(commaIndex + 1));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read image.'));
-    reader.readAsDataURL(file);
-  });
-}
 
 export function MemberAvatarUploadCard(): ReactElement {
   const member = useSelfMember();
@@ -52,9 +23,7 @@ export function MemberAvatarUploadCard(): ReactElement {
   const [isReadingFile, setIsReadingFile] = useState(false);
   const override = readSelfAvatarOverride();
   const hasCustomAvatar = override !== null && override.length > 0;
-  const storageHint = isMemberPreferencesApiAvailable()
-    ? 'Synced to the receiving server for this wallet.'
-    : 'Stored locally until the backend API is available.';
+  const storageHint = preferencesStorageHint('member');
   const currentState = hasCustomAvatar
     ? 'Custom display photo active across Nami.'
     : member.avatarImageUrl
@@ -63,24 +32,6 @@ export function MemberAvatarUploadCard(): ReactElement {
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
-  }
-
-  async function persistAvatar(file: File, dataUrl: string): Promise<void> {
-    if (isMemberPreferencesApiAvailable() && owner?.startsWith('0x')) {
-      const dataBase64 = await fileToBase64(file);
-      const uploaded = await uploadAvatarToBackend({
-        owner,
-        contentType: file.type,
-        dataBase64,
-      });
-
-      if (uploaded?.url) {
-        saveSelfAvatarOverride(uploaded.url);
-        return;
-      }
-    }
-
-    saveSelfAvatarOverride(dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -92,44 +43,35 @@ export function MemberAvatarUploadCard(): ReactElement {
       return;
     }
 
-    if (!ACCEPTED_TYPES.has(file.type)) {
-      setErrorMessage('Use a PNG, JPG, or WebP image.');
-      return;
-    }
+    const validationError = validateMediaFile(file, 'avatar');
 
-    if (file.size > MAX_FILE_BYTES) {
-      setErrorMessage('Image must be 2 MB or smaller.');
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 
     setErrorMessage(null);
     setIsReadingFile(true);
 
-    const reader = new FileReader();
+    void (async () => {
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
 
-    reader.onload = () => {
-      void (async () => {
-        try {
-          if (typeof reader.result !== 'string') {
-            setErrorMessage('Could not read that image. Try another file.');
-            return;
-          }
-
-          await persistAvatar(file, reader.result);
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
-        } finally {
-          setIsReadingFile(false);
-        }
-      })();
-    };
-
-    reader.onerror = () => {
-      setIsReadingFile(false);
-      setErrorMessage('Could not read that image. Try another file.');
-    };
-
-    reader.readAsDataURL(file);
+        await persistMediaImage({
+          kind: 'avatar',
+          owner,
+          file,
+          dataUrl,
+          isApiAvailable: isPreferencesApiAvailable('member'),
+          onSaved: saveSelfAvatarOverride,
+          onLocalFallback: saveSelfAvatarOverride,
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
+      } finally {
+        setIsReadingFile(false);
+      }
+    })();
   }
 
   function removeAvatar(): void {
@@ -146,7 +88,7 @@ export function MemberAvatarUploadCard(): ReactElement {
       </div>
 
       <div className="media-upload-prep-details">
-        <span>{formatAcceptedTypes()}</span>
+        <span>{MEDIA_UPLOAD_ACCEPTED_LABEL}</span>
         <span>{storageHint}</span>
       </div>
 

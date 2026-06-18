@@ -1,47 +1,24 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import {
-  fetchStudioPreferences,
-  isStudioPreferencesApiAvailable,
-  uploadStudioLogoToBackend,
-} from './studio-preferences-api.js';
+  MEDIA_UPLOAD_ACCEPTED_LABEL,
+  persistMediaImage,
+  readFileAsDataUrl,
+  validateMediaFile,
+} from './media-upload-service.js';
 import {
   clearStudioLogoOverride,
-  hydrateStudioLogoOverride,
   readStudioLogoOverride,
   resolveStudioLogoUrl,
   saveStudioLogoOverride,
 } from './studio-logo-store.js';
+import {
+  hydrateStudioLogoPreference,
+  isPreferencesApiAvailable,
+  preferencesStorageHint,
+} from './preferences-sync.js';
 import { type NamiDeveloperProfile } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
-
-const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const MAX_FILE_BYTES = 2 * 1024 * 1024;
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      const commaIndex = reader.result.indexOf(',');
-
-      if (commaIndex < 0) {
-        reject(new Error('Could not read image.'));
-        return;
-      }
-
-      resolve(reader.result.slice(commaIndex + 1));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read image.'));
-    reader.readAsDataURL(file);
-  });
-}
 
 export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile }): ReactElement {
   const { owner } = useProtocolOwner();
@@ -52,47 +29,13 @@ export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile })
   const override = readStudioLogoOverride(props.developer.id);
   const activeLogo = resolveStudioLogoUrl(props.developer);
   const hasCustomLogo = override !== null && override.length > 0;
-  const storageHint = isStudioPreferencesApiAvailable()
-    ? 'Synced to the receiving server for this studio owner wallet.'
-    : 'Stored locally until the backend API is available.';
 
   useEffect(() => {
-    if (!isStudioPreferencesApiAvailable()) {
-      return;
-    }
-
-    void fetchStudioPreferences(props.developer.id)
-      .then((preferences) => {
-        if (preferences?.logoUrl) {
-          hydrateStudioLogoOverride(props.developer.id, preferences.logoUrl);
-        }
-      })
-      .catch(() => {
-        // Studio preference hydration is best-effort.
-      });
+    void hydrateStudioLogoPreference(props.developer.id);
   }, [props.developer.id]);
 
   function openFilePicker(): void {
     fileInputRef.current?.click();
-  }
-
-  async function persistLogo(file: File, dataUrl: string): Promise<void> {
-    if (isStudioPreferencesApiAvailable() && owner?.startsWith('0x')) {
-      const dataBase64 = await fileToBase64(file);
-      const uploaded = await uploadStudioLogoToBackend({
-        owner,
-        studioId: props.developer.id,
-        contentType: file.type,
-        dataBase64,
-      });
-
-      if (uploaded?.url) {
-        saveStudioLogoOverride(props.developer.id, uploaded.url);
-        return;
-      }
-    }
-
-    saveStudioLogoOverride(props.developer.id, dataUrl);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -104,44 +47,36 @@ export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile })
       return;
     }
 
-    if (!ACCEPTED_TYPES.has(file.type)) {
-      setErrorMessage('Use a PNG, JPG, or WebP image.');
-      return;
-    }
+    const validationError = validateMediaFile(file, 'studio-logo');
 
-    if (file.size > MAX_FILE_BYTES) {
-      setErrorMessage('Logo must be 2 MB or smaller.');
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 
     setErrorMessage(null);
     setIsReadingFile(true);
 
-    const reader = new FileReader();
+    void (async () => {
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
 
-    reader.onload = () => {
-      void (async () => {
-        try {
-          if (typeof reader.result !== 'string') {
-            setErrorMessage('Could not read that image. Try another file.');
-            return;
-          }
-
-          await persistLogo(file, reader.result);
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
-        } finally {
-          setIsReadingFile(false);
-        }
-      })();
-    };
-
-    reader.onerror = () => {
-      setIsReadingFile(false);
-      setErrorMessage('Could not read that image. Try another file.');
-    };
-
-    reader.readAsDataURL(file);
+        await persistMediaImage({
+          kind: 'studio-logo',
+          owner,
+          file,
+          dataUrl,
+          studioId: props.developer.id,
+          isApiAvailable: isPreferencesApiAvailable('studio'),
+          onSaved: (url) => saveStudioLogoOverride(props.developer.id, url),
+          onLocalFallback: (url) => saveStudioLogoOverride(props.developer.id, url),
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
+      } finally {
+        setIsReadingFile(false);
+      }
+    })();
   }
 
   function removeLogo(): void {
@@ -158,7 +93,7 @@ export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile })
           {hasCustomLogo
             ? 'Custom studio logo active across studio surfaces.'
             : activeLogo
-              ? 'Demo studio logo active. Upload to replace it site-wide.'
+              ? 'Default studio logo active. Upload to replace it site-wide.'
               : 'Logo seed fallback active. Upload a studio logo for this profile.'}
         </small>
       </div>
@@ -171,8 +106,8 @@ export function StudioLogoUploadCard(props: { developer: NamiDeveloperProfile })
       ) : null}
 
       <div className="media-upload-prep-details">
-        <span>PNG, JPG, WebP</span>
-        <span>{storageHint}</span>
+        <span>{MEDIA_UPLOAD_ACCEPTED_LABEL}</span>
+        <span>{preferencesStorageHint('studio')}</span>
       </div>
 
       <input
