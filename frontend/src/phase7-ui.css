@@ -1578,6 +1578,16 @@
   gap: 22px;
 }
 
+.nami-landing-signed-out-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.22);
+  background: rgba(117, 215, 255, 0.08);
+  color: rgba(214, 232, 255, 0.95);
+  line-height: 1.45;
+}
+
 .nami-landing-hero {
   display: grid;
   gap: 20px;

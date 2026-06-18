@@ -80,7 +80,7 @@ import {
 } from './protocol.js';
 import { useGuildCardsQuery, useOwnerHistoryQuery, usePassportQuery, useSquadCardsQuery } from './protocol-query.js';
 
-import { markSignedOut } from './member-auth-store.js';
+import { clearLocalNamiSession } from './session-sign-out.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
 import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
 import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
@@ -178,7 +178,6 @@ import {
   useSelfMember,
 } from './member-avatar-store.js';
 import { useSelfProfileEdits } from './member-profile-store.js';
-import { clearZkLoginSession } from './zklogin.js';
 import {
   isSelfMember,
   readEmbeddedFeedEnabled,
@@ -206,7 +205,7 @@ import {
   type SafetyActionRecord,
   type SafetyReport,
 } from './safety-report-store.js';
-import { useProtocolOwner } from './wallet.js';
+import { useProtocolOwner, useWalletDisconnect } from './wallet.js';
 
 function signalClass(signal: ConductSignal): string {
   return 'signal-ring signal-' + signal.toLowerCase();
@@ -491,7 +490,7 @@ function isGuildNavPage(page: NamiPage): boolean {
 
 function SidebarProfileCard(props: {
   onNavigate: (page: NamiPage) => void;
-  onSignOut: () => void;
+  onSignOut: () => void | Promise<void>;
 }): ReactElement {
   const sidebarMember = useSelfMember();
   const sidebarProgression = getNamiProgression(sidebarMember);
@@ -637,7 +636,7 @@ function SidebarProfileCard(props: {
             <button
               onClick={() => {
                 setSidebarProfileMenuOpen(false);
-                props.onSignOut();
+                void props.onSignOut();
               }}
               type="button"
             >
@@ -6669,9 +6668,11 @@ export function App(): ReactElement {
   const messageStore = useMessagesStore();
   const guildEventsStore = useGuildEventsStore();
   const selfMember = useSelfMember();
+  const disconnectWallet = useWalletDisconnect();
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');
   const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);
+  const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
     const defaultChannel = channels[0];
@@ -6822,11 +6823,13 @@ export function App(): ReactElement {
 
   function enterNamiHub(): void {
     setEntryStartOnboarding(false);
+    setEntrySignedOutNotice(false);
     setActivePage('hub');
   }
 
   function enterGameHub(): void {
     setEntryStartOnboarding(false);
+    setEntrySignedOutNotice(false);
     setActivePage('gamehub');
   }
 
@@ -6838,6 +6841,7 @@ export function App(): ReactElement {
           onEnterHub={enterNamiHub}
           onNavigateToSettings={() => setActivePage('settings')}
           onStartOnboardingHandled={() => setEntryStartOnboarding(false)}
+          signedOutNotice={entrySignedOutNotice}
           startOnboarding={entryStartOnboarding}
         />
       );
@@ -7058,12 +7062,19 @@ if (activePage === 'userProfile') {
           }}
           tagHandlers={tagHandlers}
         />;
-  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, selectedGuild, selectedSquad, squadShowInviteOnOpen, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding, tagHandlers]);
+  }, [activePage, selectedChannel, selectedMember, selectedDeveloper, selectedGuild, selectedSquad, squadShowInviteOnOpen, studioReturnPage, contextReturnPage, selectedThreadMemberId, selectedEvent, entryStartOnboarding, entrySignedOutNotice, tagHandlers]);
 
-  function signOutToEntry(): void {
-    clearZkLoginSession();
-    markSignedOut();
+  async function signOutToEntry(): Promise<void> {
+    clearLocalNamiSession();
+
+    try {
+      await disconnectWallet();
+    } catch {
+      // Wallet extension may already be disconnected.
+    }
+
     setEntryStartOnboarding(false);
+    setEntrySignedOutNotice(true);
     setActivePage('entry');
   }
 

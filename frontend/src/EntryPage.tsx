@@ -1,20 +1,18 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
-import { AccountConnectSection } from './account-connect.js';
 import {
   LANDING_HERO,
   LANDING_PILLARS,
   LANDING_SCENARIOS,
   LANDING_STEPS,
 } from './landing-content.js';
-import { clearSignedOut, isSignedOut, useSignedOut } from './member-auth-store.js';
+import { clearSignedOut } from './member-auth-store.js';
 import {
   clearMemberSession,
   hasActiveMemberSession,
   useMemberSession,
 } from './member-session-store.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
-import { useProtocolOwner } from './wallet.js';
 
 function LandingScenarioCard(props: { scenario: (typeof LANDING_SCENARIOS)[number] }): ReactElement {
   return (
@@ -40,9 +38,16 @@ function LandingScenarioCard(props: { scenario: (typeof LANDING_SCENARIOS)[numbe
 function LandingOverview(props: {
   onEnterNami: () => void;
   onBrowseGuest: () => void;
+  signedOutNotice?: boolean;
 }): ReactElement {
   return (
     <div className="nami-landing-shell">
+      {props.signedOutNotice ? (
+        <p className="nami-landing-signed-out-note">
+          Your session ended. Sign up again or browse as a guest.
+        </p>
+      ) : null}
+
       <section className="nami-landing-hero panel">
         <div className="nami-landing-hero-copy">
           <span className="mini-badge">{LANDING_HERO.eyebrow}</span>
@@ -147,10 +152,9 @@ export function EntryPage(props: {
   onNavigateToSettings?: () => void;
   startOnboarding?: boolean;
   onStartOnboardingHandled?: () => void;
+  signedOutNotice?: boolean;
 }): ReactElement {
   const session = useMemberSession();
-  const signedOut = useSignedOut();
-  const { owner } = useProtocolOwner();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -161,13 +165,6 @@ export function EntryPage(props: {
     setShowOnboarding(true);
     props.onStartOnboardingHandled?.();
   }, [props.startOnboarding, props.onStartOnboardingHandled]);
-
-  useEffect(() => {
-    if (signedOut && owner) {
-      clearSignedOut();
-      props.onEnterHub();
-    }
-  }, [signedOut, owner, props.onEnterHub]);
 
   function startFreshSignup(): void {
     clearMemberSession();
@@ -209,29 +206,6 @@ export function EntryPage(props: {
     );
   }
 
-  if (signedOut || isSignedOut()) {
-    return (
-      <section className="nami-entry-page panel nami-entry-signed-out">
-        <div className="nami-entry-hero">
-          <span className="mini-badge">Signed out</span>
-          <h1>Sign back in to continue</h1>
-          <p>
-            Use your preferred login to return to Nami. If you cannot restore your session, sign up
-            again and complete the passport creation flow.
-          </p>
-        </div>
-
-        <AccountConnectSection />
-
-        <div className="nami-entry-actions">
-          <button className="primary-action" onClick={startFreshSignup} type="button">
-            Sign up again
-          </button>
-        </div>
-      </section>
-    );
-  }
-
   if (hasActiveMemberSession() && session) {
     return (
       <section className="nami-entry-page panel nami-entry-returning">
@@ -266,7 +240,8 @@ export function EntryPage(props: {
   return (
     <LandingOverview
       onBrowseGuest={browseAsGuest}
-      onEnterNami={() => setShowOnboarding(true)}
+      onEnterNami={startFreshSignup}
+      {...(props.signedOutNotice ? { signedOutNotice: true } : {})}
     />
   );
 }
