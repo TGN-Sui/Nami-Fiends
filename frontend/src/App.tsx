@@ -1569,40 +1569,6 @@ function NamiHub(props: {
     };
   });
 
-  const spotlightGridRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (prefersReducedMotion()) {
-      return;
-    }
-
-    let animationFrameId = 0;
-
-    function updateSpotlightFoil(timestamp: number): void {
-      const grid = spotlightGridRef.current;
-
-      if (grid) {
-        const spotlightFoilCycle = (timestamp % 7600) / 7600;
-        const spotlightFoilBounce =
-          spotlightFoilCycle <= 0.5
-            ? spotlightFoilCycle * 2
-            : (1 - spotlightFoilCycle) * 2;
-        const spotlightFoilEase = 0.5 - Math.cos(spotlightFoilBounce * Math.PI) / 2;
-        const memberSpotlightFoilLeft = Math.round(spotlightFoilEase * 132 - 38);
-
-        grid.style.setProperty('--member-spotlight-foil-left', memberSpotlightFoilLeft + '%');
-      }
-
-      animationFrameId = window.requestAnimationFrame(updateSpotlightFoil);
-    }
-
-    animationFrameId = window.requestAnimationFrame(updateSpotlightFoil);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
   const spotlightEligibleMembers = directoryMembers.filter((member) => {
     return member.tier !== 'NPC' && member.signal !== 'Black';
   });
@@ -1730,7 +1696,7 @@ function NamiHub(props: {
             <p>18 verified members featured in a scrollable daily rotation with highlight badges and levels.</p>
           </div>
 
-          <div className="member-spotlight-grid" ref={spotlightGridRef}>
+          <div className="member-spotlight-grid">
             {spotlightMembers.map(({ member, slotId }) => {
               const progression = getNamiProgression(member);
 

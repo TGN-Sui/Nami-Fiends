@@ -14,21 +14,9 @@
     linear-gradient(90deg, rgba(19, 48, 82, 0.07) 1px, transparent 1px);
 }
 
-[data-nami-theme='light'] body::after {
-  opacity: 0.1;
-  mix-blend-mode: multiply;
-  filter: blur(0.6px) saturate(95%);
-  background:
-    radial-gradient(
-      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-      rgba(24, 111, 255, 0.14) 0%,
-      rgba(24, 111, 255, 0.05) 12%,
-      transparent 32%
-    );
-}
-
 [data-nami-theme='light'] html.is-landing-page body::after,
 [data-nami-theme='light'] html.is-nami-app-spotlight body::after {
+  visibility: visible;
   opacity: 0.12;
   mix-blend-mode: multiply;
   background:

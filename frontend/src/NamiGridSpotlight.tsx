@@ -1,5 +1,7 @@
 import { useEffect, type ReactElement } from 'react';
 
+import { subscribeVisibilityPause } from './perf-utils.js';
+
 type NamiGridSpotlightProps = {
   scope: 'landing' | 'app';
 };
@@ -15,8 +17,14 @@ export function NamiGridSpotlight(props: NamiGridSpotlightProps): ReactElement {
 
     document.documentElement.classList.add(scopeClass);
 
+    const unsubscribeVisibility = subscribeVisibilityPause((hidden) => {
+      document.documentElement.classList.toggle('is-ambient-motion-paused', hidden);
+    });
+
     return () => {
+      unsubscribeVisibility();
       document.documentElement.classList.remove(scopeClass);
+      document.documentElement.classList.remove('is-ambient-motion-paused');
     };
   }, [props.scope]);
 

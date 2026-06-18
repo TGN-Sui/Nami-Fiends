@@ -1834,6 +1834,45 @@ html.is-nami-app-spotlight {
   animation: namiSpotlightLoop 36s ease-in-out infinite;
 }
 
+html:not(.is-landing-page):not(.is-nami-app-spotlight) body::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  animation: none !important;
+}
+
+html.is-ambient-motion-paused body::before,
+html.is-ambient-motion-paused.is-landing-page,
+html.is-ambient-motion-paused.is-nami-app-spotlight {
+  animation-play-state: paused !important;
+}
+
+@property --member-spotlight-foil-left {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: -38%;
+}
+
+@keyframes memberSpotlightFoilLoop {
+  0%,
+  100% {
+    --member-spotlight-foil-left: -38%;
+  }
+
+  50% {
+    --member-spotlight-foil-left: 94%;
+  }
+}
+
+.member-spotlight-grid {
+  --member-spotlight-foil-left: -38%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .member-spotlight-grid {
+    animation: memberSpotlightFoilLoop 7.6s ease-in-out infinite;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.is-landing-page,
   html.is-nami-app-spotlight {
@@ -1874,6 +1913,7 @@ html.is-nami-app-spotlight {
 html.is-landing-page body::after,
 html.is-nami-app-spotlight body::after {
   opacity: 0.46;
+  visibility: visible;
   mix-blend-mode: screen;
   animation: none;
   transform: none;

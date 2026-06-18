@@ -8877,83 +8877,16 @@ button {
   z-index: 120;
 }
 
-/* Secondary animated lens that tints the grid and gives a subtle
-   warped / curved zoom feel without overpowering the interface. */
+/* Ambient lens layer is only active while landing/app spotlight scopes are mounted. */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.34;
-  mix-blend-mode: screen;
-  transform-origin: center center;
-  background:
-    radial-gradient(
-      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-      rgba(116, 215, 255, 0.18) 0%,
-      rgba(116, 215, 255, 0.10) 10%,
-      rgba(67, 245, 167, 0.06) 18%,
-      rgba(0, 0, 0, 0) 34%
-    );
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.92) 12%,
-      rgba(0, 0, 0, 0.56) 24%,
-      rgba(0, 0, 0, 0.16) 34%,
-      rgba(0, 0, 0, 0) 46%
-    );
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x) var(--nami-spotlight-y),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.92) 12%,
-      rgba(0, 0, 0, 0.56) 24%,
-      rgba(0, 0, 0, 0.16) 34%,
-      rgba(0, 0, 0, 0) 46%
-    );
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
-  filter: blur(0.4px) saturate(116%);
-  animation: namiOrganicGridLens 24s ease-in-out infinite;
-}
-
-@keyframes namiOrganicGridLens {
-  0% {
-    transform: translate3d(4%, 6%, 0) scale(0.98);
-    opacity: 0.28;
-  }
-
-  20% {
-    transform: translate3d(8%, 4%, 0) scale(1.04);
-    opacity: 0.34;
-  }
-
-  42% {
-    transform: translate3d(10%, 8%, 0) scale(1.1);
-    opacity: 0.38;
-  }
-
-  62% {
-    transform: translate3d(6%, 10%, 0) scale(1.06);
-    opacity: 0.32;
-  }
-
-  82% {
-    transform: translate3d(3%, 7%, 0) scale(1.01);
-    opacity: 0.3;
-  }
-
-  100% {
-    transform: translate3d(4%, 6%, 0) scale(0.98);
-    opacity: 0.28;
-  }
+  opacity: 0;
+  visibility: hidden;
+  animation: none;
 }
 
 /* -----------------------------------------
