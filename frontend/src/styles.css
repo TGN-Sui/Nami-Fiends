@@ -8600,10 +8600,6 @@ button {
 }
 
 .sidebar-profile-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 100%;
   display: grid;
   gap: 6px;
   padding: 8px;
@@ -8611,6 +8607,13 @@ button {
   border-radius: 16px;
   background: var(--nami-theme-panel, rgba(5, 9, 15, 0.96));
   box-shadow: 0 18px 42px var(--nami-theme-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.sidebar .sidebar-profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
   z-index: 80;
 }
 
@@ -8943,8 +8946,8 @@ body::after {
   overflow: visible;
 }
 
-.sidebar-profile-menu,
-.sidebar-profile-popover {
+.sidebar .sidebar-profile-menu,
+.sidebar .sidebar-profile-popover {
   position: absolute;
   top: 50%;
   left: calc(100% + 0.75rem);
@@ -8957,8 +8960,8 @@ body::after {
 
 /* Optional small-screen fallback */
 @media (max-width: 900px) {
-  .sidebar-profile-menu,
-  .sidebar-profile-popover {
+  .sidebar .sidebar-profile-menu,
+  .sidebar .sidebar-profile-popover {
     top: 0;
     left: calc(100% + 0.5rem);
     transform: none;

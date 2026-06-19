@@ -96,13 +96,11 @@
   color: #3d5f82;
 }
 
-[data-nami-theme='light'] .nami-pinned-profile-card {
+[data-nami-theme='light'] .nami-pinned-profile-stack {
   background: var(--nami-theme-panel);
-  border: 1px solid var(--nami-theme-border-strong);
-  border-radius: 18px;
+  border-color: var(--nami-theme-border-strong);
   box-shadow: 0 12px 28px var(--nami-theme-shadow);
   color: var(--nami-theme-text);
-  overflow: visible;
 }
 
 [data-nami-theme='light'] .panel,
@@ -207,10 +205,17 @@
   box-shadow: 0 8px 20px var(--nami-theme-accent-glow);
 }
 
-[data-nami-theme='light'] .sidebar-profile-menu {
+[data-nami-theme='light'] .sidebar-profile-menu:not(.nami-pinned-profile-menu) {
   background: var(--nami-theme-panel);
   border-color: var(--nami-theme-border-strong);
   box-shadow: 0 18px 42px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='light'] .nami-pinned-profile-stack .sidebar-profile-menu {
+  background: color-mix(in srgb, var(--nami-theme-panel) 88%, transparent);
+  border: 0;
+  border-top: 1px solid var(--nami-theme-border);
+  box-shadow: none;
 }
 
 [data-nami-theme='light'] .sidebar-profile-menu button {

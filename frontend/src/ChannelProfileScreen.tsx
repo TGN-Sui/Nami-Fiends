@@ -563,12 +563,15 @@ export function ChannelProfileScreen(props: {
         mode={activeSection === 'chat' ? 'chat' : 'profile'}
         bannerAlertsEnabled={chrome.bannerAlertsEnabled}
         bannerNotice={chrome.bannerNotice}
+        boostNotice={chrome.boostNotice}
         channel={props.channel}
+        channelBoostPower={chrome.channelBoostPower}
         channelIsSubscribed={chrome.channelIsSubscribed}
         developerName={chrome.developerProfile.name}
         eventCount={gameEvents.length}
         isChannelOwner={chrome.isChannelOwner}
         onBannerAlertsToggle={chrome.handleBannerAlertsToggle}
+        onBoostChannel={chrome.handleBoostChannel}
         onNavigate={props.onNavigate}
         onSelectSection={handleSelectSection}
         onSubscribe={chrome.handleSubscribe}
@@ -576,6 +579,7 @@ export function ChannelProfileScreen(props: {
         returnLabel={props.returnLabel}
         returnPage={props.returnPage}
         reviewCount={reviewCount}
+        selfMember={chrome.selfMember}
         subscribeNotice={chrome.subscribeNotice}
       >
         {renderActiveSection()}

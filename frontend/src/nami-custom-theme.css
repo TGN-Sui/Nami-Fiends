@@ -1,7 +1,7 @@
 /* Custom mode — organic palette driven by user-picked theme variables */
 
 [data-nami-theme='custom'] .sidebar,
-[data-nami-theme='custom'] .nami-pinned-profile-card,
+[data-nami-theme='custom'] .nami-pinned-profile-stack,
 [data-nami-theme='custom'] .panel,
 [data-nami-theme='custom'] .chat-shell,
 [data-nami-theme='custom'] .member-rail,

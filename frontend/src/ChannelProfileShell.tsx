@@ -1,8 +1,9 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
+import { ChannelBoostButton } from './ChannelBoostButton.js';
 import { buildChannelProfileNavItems, type ChannelProfileSection } from './channel-profile-sections.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
-import type { NamiChannel, NamiPage } from './uiMockData.js';
+import type { NamiChannel, NamiMember, NamiPage } from './uiMockData.js';
 
 type ChannelProfileShellProps = {
   channel: NamiChannel;
@@ -19,6 +20,10 @@ type ChannelProfileShellProps = {
   onBannerAlertsToggle: () => void;
   subscribeNotice?: string;
   bannerNotice?: string;
+  boostNotice?: string;
+  selfMember: NamiMember;
+  channelBoostPower: number;
+  onBoostChannel: () => void;
   eventCount: number;
   reviewCount: number;
   isChannelOwner: boolean;
@@ -108,6 +113,11 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
                 <span>{props.channel.genre}</span>
                 <span>{props.channel.platforms.join(' · ')}</span>
                 <span>{props.channel.subscribers.toLocaleString()} subscribers</span>
+                {props.channelBoostPower > 0 ? (
+                  <span className="channel-profile-boost-power-pill">
+                    {props.channelBoostPower.toLocaleString()} boost power this cycle
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
@@ -127,6 +137,12 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
             >
               {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
             </button>
+            <ChannelBoostButton
+              channelBoostPower={props.channelBoostPower}
+              channelId={props.channel.id}
+              member={props.selfMember}
+              onBoost={props.onBoostChannel}
+            />
             {props.activeSection !== 'chat' ? (
               <button className="secondary-action" onClick={() => props.onSelectSection('chat')} type="button">
                 Join chat
@@ -148,6 +164,7 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
         </article>
 
         {props.subscribeNotice ? <p className="report-pulse">{props.subscribeNotice}</p> : null}
+        {props.boostNotice ? <p className="report-pulse channel-boost-notice">{props.boostNotice}</p> : null}
         {props.bannerNotice ? <p className="report-pulse">{props.bannerNotice}</p> : null}
 
         <nav aria-label="Channel sections" className="channel-profile-nav" role="tablist">

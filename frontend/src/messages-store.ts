@@ -23,7 +23,7 @@ type StoredThread = {
 
 type StoreSnapshot = {
   threads: StoredThread[];
-  channelMessages: ChatMessage[];
+  channelMessages: Record<string, ChatMessage[]>;
   globalMessages: Record<string, ChatMessage[]>;
   guildMessages: Record<string, ChatMessage[]>;
   unreadCount: number;
@@ -104,23 +104,27 @@ function writeThreads(threads: StoredThread[]): void {
   emit();
 }
 
-function readChannelMessages(): ChatMessage[] {
+function readChannelMessagesMap(): Record<string, ChatMessage[]> {
   try {
     const stored = window.localStorage.getItem(CHANNEL_MESSAGES_KEY);
 
     if (!stored) {
-      return [];
+      return {};
     }
 
     const parsed = JSON.parse(stored);
 
-    return Array.isArray(parsed) ? (parsed as ChatMessage[]) : [];
+    if (Array.isArray(parsed)) {
+      return {};
+    }
+
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, ChatMessage[]>) : {};
   } catch {
-    return [];
+    return {};
   }
 }
 
-function writeChannelMessages(messages: ChatMessage[]): void {
+function writeChannelMessagesMap(messages: Record<string, ChatMessage[]>): void {
   window.localStorage.setItem(CHANNEL_MESSAGES_KEY, JSON.stringify(messages));
   emit();
 }
@@ -172,7 +176,7 @@ function buildSnapshot(): StoreSnapshot {
 
   return {
     threads,
-    channelMessages: readChannelMessages(),
+    channelMessages: readChannelMessagesMap(),
     globalMessages: readGlobalMessages(),
     guildMessages: readGuildMessages(),
     unreadCount: threads.reduce((sum, thread) => sum + thread.unread, 0),
@@ -223,31 +227,42 @@ export function markThreadRead(memberId: string): void {
 }
 
 export function appendChannelChatMessage(
+  channelId: string,
   body: string,
+  channelName: string,
   author = getSelfMember().name,
   signal: ConductSignal = 'Green'
 ): ChatMessage {
   const message: ChatMessage = {
-    id: 'user-cm-' + Date.now(),
+    id: 'user-cm-' + channelId + '-' + Date.now(),
     time: nowTime(),
     author,
     signal,
     body: body.trim(),
   };
 
-  writeChannelMessages([...readChannelMessages(), message]);
+  const channelMessages = readChannelMessagesMap();
+
+  writeChannelMessagesMap({
+    ...channelMessages,
+    [channelId]: [...(channelMessages[channelId] ?? []), message],
+  });
   processMessageTags({
     body: message.body,
     authorName: author,
     context: 'channel',
-    contextLabel: 'Game Chat',
+    contextLabel: channelName + ' Game Chat',
   });
   playChatSendSfx();
   return message;
 }
 
-export function readChannelChatMessages(): ChatMessage[] {
-  return readChannelMessages();
+export function readChannelChatOverlay(channelId: string): ChatMessage[] {
+  return readChannelMessagesMap()[channelId] ?? [];
+}
+
+export function readChannelChatMessages(channelId: string): ChatMessage[] {
+  return readChannelChatOverlay(channelId);
 }
 
 export function appendGlobalChatMessage(

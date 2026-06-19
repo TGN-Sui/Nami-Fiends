@@ -6375,7 +6375,10 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   pointer-events: none;
   overflow: visible;
   contain: none;
+  border: 0;
   border-radius: 18px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .nami-pinned-profile-card > * {
@@ -6390,26 +6393,30 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   margin-bottom: 0;
 }
 
-.nami-pinned-profile-card .sidebar-player-progress-button {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
-}
-
 .nami-pinned-profile-card .sidebar-player-copy {
   text-align: left;
 }
 
-.nami-pinned-profile-card .sidebar-profile-shell {
+.nami-pinned-profile-stack {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  border: 1px solid rgba(117, 215, 255, 0.2);
   border-radius: 18px;
-  padding: 8px 8px 0 0;
+  background: rgba(6, 10, 16, 0.92);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.nami-pinned-profile-stack.is-profile-menu-open {
+  border-color: rgba(117, 215, 255, 0.3);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(117, 215, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .nami-pinned-profile-card .sidebar-player-progress {
@@ -6418,29 +6425,54 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   background: transparent;
 }
 
-.nami-pinned-profile-card .sidebar-player-progress-button {
+.nami-pinned-profile-trigger.sidebar-player-progress-button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-  border-color: transparent;
   box-shadow: none;
-  border-radius: 18px;
-  overflow: visible;
-  padding: 0 8px 10px 0;
+  overflow: hidden;
 }
 
-.nami-pinned-profile-card .sidebar-player-progress-button::before {
-  opacity: 0;
+.nami-pinned-profile-trigger.sidebar-player-progress-button::before {
+  opacity: 0.34;
   inset: 0;
-  border-radius: inherit;
+  border-radius: 0;
 }
 
-.nami-pinned-profile-card .sidebar-player-progress-button:hover {
+.nami-pinned-profile-trigger.sidebar-player-progress-button:hover {
   border-color: transparent;
   box-shadow: none;
+  background: rgba(117, 215, 255, 0.04);
 }
 
-.nami-pinned-profile-card .sidebar-profile-menu {
-  border-radius: 16px;
-  overflow: visible;
+.nami-pinned-profile-chevron {
+  flex: 0 0 10px;
+  width: 8px;
+  height: 8px;
+  margin-top: -2px;
+  border-right: 2px solid rgba(186, 210, 232, 0.82);
+  border-bottom: 2px solid rgba(186, 210, 232, 0.82);
+  transform: rotate(45deg);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.nami-pinned-profile-stack.is-profile-menu-open .nami-pinned-profile-chevron {
+  margin-top: 2px;
+  transform: rotate(225deg);
+  border-color: rgba(210, 232, 255, 0.95);
+}
+
+.nami-pinned-profile-stack-body {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid rgba(117, 215, 255, 0.12);
 }
 
 .sidebar-profile-tag-bell {
@@ -6473,14 +6505,89 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   line-height: 1;
 }
 
-.nami-pinned-profile-card .sidebar-profile-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  right: 0;
+.sidebar-profile-capacity-strip {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px 0;
+}
+
+.sidebar-profile-capacity-line {
+  color: rgba(186, 210, 232, 0.82);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-profile-streaming-panel {
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-profile-capacity-strip + .sidebar-profile-streaming-panel {
+  border-top: 1px solid rgba(117, 215, 255, 0.1);
+}
+
+.nami-pinned-profile-stack .sidebar-profile-streaming-panel .sidebar-profile-online-toggle {
+  margin: 0;
+  padding: 8px 12px 10px;
+  border-bottom: 0;
+  gap: 8px;
+}
+
+.nami-pinned-profile-stack .sidebar-profile-online-toggle-copy small {
+  font-size: 0.68rem;
+}
+
+.nami-pinned-profile-stack .sidebar-profile-menu {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
   width: 100%;
-  margin-top: 0;
-  z-index: 200;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  border-top: 1px solid rgba(117, 215, 255, 0.14);
+  border-radius: 0;
+  background: rgba(4, 8, 14, 0.55);
+  box-shadow: none;
+  transform: none;
+  z-index: auto;
+}
+
+.nami-pinned-profile-stack.is-profile-menu-open .sidebar-profile-streaming-panel {
+  border-bottom: 1px solid rgba(117, 215, 255, 0.1);
+}
+
+.boost-cycle-settings-grid {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.boost-cycle-settings-grid > div {
+  display: grid;
+  gap: 4px;
+}
+
+.boost-cycle-settings-grid dt {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.88);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.boost-cycle-settings-grid dd {
+  margin: 0;
+  color: #e8f4ff;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .sidebar-hub-swap {
@@ -9391,7 +9498,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 }
 
 [data-nami-ui='glass'] .sidebar,
-[data-nami-ui='glass'] .nami-pinned-profile-card,
+[data-nami-ui='glass'] .nami-pinned-profile-stack,
 [data-nami-ui='glass'] .panel,
 [data-nami-ui='glass'] .chat-window,
 [data-nami-ui='glass'] .chat-shell,
@@ -12749,6 +12856,36 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   gap: 12px;
 }
 
+.channel-profile-boost-power-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 196, 92, 0.34);
+  background: rgba(255, 196, 92, 0.12);
+  color: #ffe7b0;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.channel-boost-action {
+  border-color: rgba(255, 196, 92, 0.42) !important;
+  color: #ffe7b0 !important;
+}
+
+.channel-boost-action.is-channel-boost-active {
+  border-color: rgba(255, 196, 92, 0.72) !important;
+  background: rgba(255, 196, 92, 0.16) !important;
+  box-shadow: 0 0 18px rgba(255, 196, 92, 0.22);
+}
+
+.channel-boost-action.is-channel-boost-unavailable {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.channel-boost-notice {
+  color: #ffe7b0;
+}
+
 .channel-profile-nav {
   display: flex;
   flex-wrap: wrap;
@@ -14122,13 +14259,38 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   );
   --sidebar-rail-center: calc(var(--sidebar-icon-rail-inset) + var(--sidebar-glyph-size) / 2);
   --sidebar-rail-axis-width: calc(var(--sidebar-glyph-size) * var(--official-nami-logo-scale));
-  --sidebar-rail-scale-duration: 320ms;
-  --sidebar-rail-scale-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --sidebar-rail-shift-duration: 220ms;
+  --sidebar-rail-scale-duration: 720ms;
+  --sidebar-rail-scale-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-rail-shift-duration: 720ms;
 }
 
 .nami-app:has(.sidebar.is-icon-rail) {
-  padding-left: calc(var(--sidebar-rail-axis-width) + var(--sidebar-rail-expand) + 24px);
+  --main-stage-centered-width: 960px;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.nami-app:has(.sidebar.is-icon-rail) > .main-stage {
+  --main-stage-centered-width: 960px;
+  position: relative !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  flex: none !important;
+  width: min(var(--main-stage-centered-width), calc(100vw - 32px)) !important;
+  max-width: var(--main-stage-centered-width) !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+.nami-app:has(.sidebar.is-icon-rail) > .main-stage:has(.channel-profile-redesign) {
+  --main-stage-centered-width: 1120px;
+  width: min(1120px, calc(100vw - 32px)) !important;
+  max-width: 1120px !important;
 }
 
 .sidebar.is-icon-rail {
@@ -14323,6 +14485,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   border-radius: 0;
   color: var(--nami-theme-nav-icon, #9fdcff);
   box-sizing: border-box;
+  transform: none;
+  transition:
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
 .sidebar.is-icon-rail .sidebar-nav > button.sidebar-hub-rail-button.sidebar-hub-swap {
@@ -14510,8 +14676,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   transform-origin: left center;
   transition:
     transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
-    color var(--sidebar-rail-scale-duration) ease,
-    filter var(--sidebar-rail-scale-duration) ease;
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
 .sidebar.is-icon-rail .sidebar-hub-rail-mark-stack.nav-icon,
@@ -14532,8 +14698,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   transform-origin: center center;
   transition:
     transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
-    color var(--sidebar-rail-scale-duration) ease,
-    filter var(--sidebar-rail-scale-duration) ease;
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
 .sidebar.is-icon-rail .sidebar-nav > button.sidebar-hub-rail-button {
@@ -14629,9 +14795,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   visibility: hidden;
   transform: translateY(-50%) translateX(-8px);
   transition:
-    opacity var(--sidebar-rail-scale-duration) ease,
+    opacity var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
     transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
-    visibility var(--sidebar-rail-scale-duration) ease;
+    visibility var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
 .sidebar.is-icon-rail .sidebar-hub-swap-copy.sidebar-nav-label {
@@ -14665,6 +14831,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   right: auto;
   z-index: 3;
   transform: scale(0.82);
+  transition:
+    top var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    left var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
 .sidebar.is-icon-rail .sidebar-nav > button:hover .sidebar-nav-unread-pill,
@@ -14685,7 +14855,17 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 @media (max-width: 900px) {
   .nami-app:has(.sidebar.is-icon-rail) {
-    padding-left: calc(var(--sidebar-rail-axis-width) + var(--sidebar-rail-expand) + 18px);
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: calc(16px + 84px) !important;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) > .main-stage {
+    width: min(var(--main-stage-centered-width), calc(100vw - 24px)) !important;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) > .main-stage:has(.channel-profile-redesign) {
+    width: min(1120px, calc(100vw - 24px)) !important;
   }
 
   .sidebar.is-icon-rail {

@@ -15,8 +15,9 @@ import {
   UniformMemberAvatar,
   UniformMemberAvatarButton,
 } from './member-avatar.js';
+import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
-import { appendChannelChatMessage, readChannelChatMessages } from './messages-store.js';
+import { appendChannelChatMessage } from './messages-store.js';
 import {
   useChatAutoScroll,
   useChatViewportPause,
@@ -26,7 +27,7 @@ import {
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
-import { chatMessages, members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
+import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 
 const conductLanguageTerms = [
   'nsfw',
@@ -83,18 +84,21 @@ export function ChannelProfileChatSection(props: {
   }, [props.channel.id]);
 
   const preferencesVersion = useMemberPreferencesVersion();
+  const selfChatMember = getSelfMember();
+  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
+  const storeSignal = usePausedMessagesStoreSignal(paused);
   const chatEligibleMembers = useMemo(
     () => members.filter((member) => member.signal !== 'Black'),
     [],
   );
 
-  const visibleChatMembers = useMemo(() => {
-    return chatEligibleMembers.filter((member) => !readMemberPreference(member.id).blocked);
-  }, [chatEligibleMembers, preferencesVersion]);
+  const channelPresenceMembers = useMemo(() => {
+    return getChannelChatPresenceMembers(props.channel.id, getChannelChatMessages(props.channel.id));
+  }, [props.channel.id, preferencesVersion, storeSignal]);
 
-  const selfChatMember = getSelfMember();
-  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
-  const storeSignal = usePausedMessagesStoreSignal(paused);
+  const visibleChatMembers = useMemo(() => {
+    return channelPresenceMembers.filter((member) => !readMemberPreference(member.id).blocked);
+  }, [channelPresenceMembers, preferencesVersion]);
   const [chatDraft, setChatDraft] = useState('');
   const canSend = canSendChatMessages();
 
@@ -103,7 +107,7 @@ export function ChannelProfileChatSection(props: {
   }, [selfChatMember, chatEligibleMembers]);
 
   const computeVisibleMessages = useCallback(() => {
-    return [...chatMessages, ...readChannelChatMessages()].filter((message) => {
+    return getChannelChatMessages(props.channel.id).filter((message) => {
       if (message.signal === 'Black') return false;
       if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
 
@@ -123,6 +127,7 @@ export function ChannelProfileChatSection(props: {
     hideRed,
     preferencesVersion,
     proEliteOnly,
+    props.channel.id,
     resolveChatMessageMember,
   ]);
 
@@ -296,7 +301,7 @@ export function ChannelProfileChatSection(props: {
                   return;
                 }
 
-                appendChannelChatMessage(chatDraft);
+                appendChannelChatMessage(props.channel.id, chatDraft, props.channel.name);
                 setChatDraft('');
               }}
               placeholder={

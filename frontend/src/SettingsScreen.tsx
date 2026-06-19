@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { AccountConnectSection } from './account-connect.js';
+import { BoostCycleSettingsCard } from './BoostCycleSettingsCard.js';
 import { MemberDailyStatusSettingsField } from './MemberDailyStatusEditor.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
@@ -466,6 +467,7 @@ export function SettingsScreen(props: {
         {activeSection === 'membership' ? (
           <div className="settings-section-stack">
             <MembershipAccessCard />
+            <BoostCycleSettingsCard />
             <MembershipFulfillmentPanel />
             <SurfaceRoleSettingsPanel />
           </div>

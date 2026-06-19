@@ -11,7 +11,6 @@ import { createPortal } from 'react-dom';
 
 import {
   channels,
-  chatMessages,
   developers,
   members,
   navItems,
@@ -61,9 +60,7 @@ import {
   resolveMessageAuthorMember,
 } from './member-access.js';
 import {
-  appendChannelChatMessage,
   markThreadRead,
-  readChannelChatMessages,
   readMessageThreads,
   sendPrivateMessage,
   useMessageUnreadCount,
@@ -187,6 +184,7 @@ import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBo
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
 import { ProfileEditPanel } from './ProfileEditPanel.js';
 import { PinnedProfileAvatar } from './PinnedProfileAvatar.js';
+import { PinnedProfileCapacityStrip } from './PinnedProfileCapacityStrip.js';
 
 
 import {
@@ -527,7 +525,13 @@ function SidebarProfileCard(props: {
 
   return (
     <div aria-label="Signed-in member profile" className="nami-pinned-profile-card">
-      <div className="sidebar-profile-shell" ref={sidebarProfileShellRef}>
+      <div
+        className={
+          'sidebar-profile-shell nami-pinned-profile-stack' +
+          (sidebarProfileMenuOpen ? ' is-profile-menu-open' : '')
+        }
+        ref={sidebarProfileShellRef}
+      >
         {unreadTagNotificationCount > 0 ? (
           <span
             aria-label={
@@ -548,7 +552,8 @@ function SidebarProfileCard(props: {
         ) : null}
 
         <button
-          className="sidebar-player-progress sidebar-player-progress-button"
+          aria-expanded={sidebarProfileMenuOpen}
+          className="sidebar-player-progress sidebar-player-progress-button nami-pinned-profile-trigger"
           onClick={() => setSidebarProfileMenuOpen((value) => !value)}
           onPointerLeave={resetSidebarProfileFoil}
           onPointerMove={updateSidebarProfileFoil}
@@ -563,11 +568,18 @@ function SidebarProfileCard(props: {
               <i style={{ width: (sidebarProgression.currentXp / sidebarProgression.nextLevelXp) * 100 + '%' }} />
             </div>
           </div>
+
+          <span aria-hidden="true" className="nami-pinned-profile-chevron" />
         </button>
 
-        {sidebarProfileMenuOpen ? (
-          <div className="sidebar-profile-menu">
-            <label className="sidebar-profile-online-toggle">
+        <div className="nami-pinned-profile-stack-body">
+          <PinnedProfileCapacityStrip />
+
+          <div className="sidebar-profile-streaming-panel">
+            <label
+              className="sidebar-profile-online-toggle"
+              title="Shows a live dot on your avatar for other members"
+            >
               <input
                 checked={isStreamingOnline}
                 onChange={(event) => setStreamingOnline(event.target.checked)}
@@ -575,7 +587,7 @@ function SidebarProfileCard(props: {
               />
               <span className="sidebar-profile-online-toggle-copy">
                 <strong>I'm streaming</strong>
-                <small>Shows a live dot on your avatar for other members</small>
+                <small>Live dot on avatar</small>
               </span>
               <span aria-hidden={!isStreamingOnline} className="sidebar-profile-online-toggle-indicator">
                 {isStreamingOnline ? (
@@ -583,47 +595,56 @@ function SidebarProfileCard(props: {
                 ) : null}
               </span>
             </label>
-            <button
-              onClick={() => {
-                setSidebarProfileMenuOpen(false);
-                requestProfileEditFocus();
-                props.onNavigate('userProfile');
-              }}
-              type="button"
-            >
-              Edit Profile
-            </button>
-            {unreadTagNotificationCount > 0 ? (
+          </div>
+
+          {sidebarProfileMenuOpen ? (
+            <div className="sidebar-profile-menu nami-pinned-profile-menu" role="menu">
               <button
                 onClick={() => {
                   setSidebarProfileMenuOpen(false);
-                  props.onNavigate('settings');
+                  requestProfileEditFocus();
+                  props.onNavigate('userProfile');
                 }}
+                role="menuitem"
                 type="button"
               >
-                Tag Mentions ({unreadTagNotificationCount})
+                Edit Profile
               </button>
-            ) : null}
-            <button
-              onClick={() => {
-                setSidebarProfileMenuOpen(false);
-                void shareMemberProfile(sidebarMember);
-              }}
-              type="button"
-            >
-              Share Passport
-            </button>
-            <button
-              onClick={() => {
-                setSidebarProfileMenuOpen(false);
-                void props.onSignOut();
-              }}
-              type="button"
-            >
-              Sign Out
-            </button>
-          </div>
-        ) : null}
+              {unreadTagNotificationCount > 0 ? (
+                <button
+                  onClick={() => {
+                    setSidebarProfileMenuOpen(false);
+                    props.onNavigate('settings');
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  Tag Mentions ({unreadTagNotificationCount})
+                </button>
+              ) : null}
+              <button
+                onClick={() => {
+                  setSidebarProfileMenuOpen(false);
+                  void shareMemberProfile(sidebarMember);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                Share Passport
+              </button>
+              <button
+                onClick={() => {
+                  setSidebarProfileMenuOpen(false);
+                  void props.onSignOut();
+                }}
+                role="menuitem"
+                type="button"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,13 @@ import {
   useChannelBannerNotificationsStore,
 } from './channel-banner-notifications-store.js';
 import { applyChannelBrandToDocument, channelBrandThemes, getStoredChannelBrandTheme } from './channel-profile-brand.js';
+import {
+  boostChannel,
+  getChannelBoostPower,
+  getMemberChannelBoostCount,
+  getRemainingBoosts,
+  useChannelBoostStore,
+} from './channel-boost-store.js';
 import { getSelfMember } from './member-access.js';
 import { readViewingAsChannelOwner } from './surface-preferences.js';
 import {
@@ -24,6 +31,7 @@ function channelDeveloper(channel: NamiChannel): (typeof developers)[number] {
 
 export function useChannelProfileChrome(channel: NamiChannel) {
   useChannelBannerNotificationsStore();
+  useChannelBoostStore();
 
   const developerProfile = channelDeveloper(channel);
   const selfMember = getSelfMember();
@@ -42,6 +50,11 @@ export function useChannelProfileChrome(channel: NamiChannel) {
 
   const [subscribeNotice, setSubscribeNotice] = useState('');
   const [bannerNotice, setBannerNotice] = useState('');
+  const [boostNotice, setBoostNotice] = useState('');
+
+  const channelBoostPower = getChannelBoostPower(channel.id);
+  const memberChannelBoostCount = getMemberChannelBoostCount(selfMember.id, channel.id);
+  const remainingBoosts = getRemainingBoosts(selfMember);
 
   useEffect(() => {
     applyChannelBrandToDocument(selectedBrandTheme);
@@ -97,6 +110,56 @@ export function useChannelProfileChrome(channel: NamiChannel) {
     scheduleWelcomeBannerNotification(channel.id);
   }
 
+  function handleBoostChannel(): void {
+    const result = boostChannel(channel.id, selfMember);
+
+    if (!result.ok) {
+      if (result.reason === 'black-signal') {
+        setBoostNotice('Boost access is disabled while Black Passport conduct restrictions are active.');
+        return;
+      }
+
+      if (result.reason === 'npc-tier') {
+        setBoostNotice('Upgrade to Adventurer or higher to boost game channels during weekly discovery cycles.');
+        return;
+      }
+
+      if (result.reason === 'not-verified') {
+        setBoostNotice('Verify your membership before boosting channels.');
+        return;
+      }
+
+      if (result.reason === 'cycle-limit') {
+        setBoostNotice('No boosts left this discovery cycle. Boosts reset next week.');
+        return;
+      }
+
+      if (result.reason === 'channel-limit') {
+        setBoostNotice(
+          'You already boosted ' +
+            channel.name +
+            ' the maximum number of times for this discovery cycle.',
+        );
+        return;
+      }
+
+      setBoostNotice('Could not apply a boost for this channel.');
+      return;
+    }
+
+    setBoostNotice(
+      'Boosted ' +
+        channel.name +
+        ' with +' +
+        result.entry.power +
+        ' discovery power. ' +
+        result.remainingBoosts +
+        ' boost' +
+        (result.remainingBoosts === 1 ? '' : 's') +
+        ' left this cycle.',
+    );
+  }
+
   function handleSimulateSubscribedBurst(): void {
     const created = simulateChannelBannerBurst();
 
@@ -119,8 +182,13 @@ export function useChannelProfileChrome(channel: NamiChannel) {
     brandThemes: channelBrandThemes,
     subscribeNotice,
     bannerNotice,
+    boostNotice,
+    channelBoostPower,
+    memberChannelBoostCount,
+    remainingBoosts,
     handleSubscribe,
     handleBannerAlertsToggle,
+    handleBoostChannel,
     handleSimulateSubscribedBurst,
   };
 }

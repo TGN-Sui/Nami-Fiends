@@ -1,3 +1,4 @@
+import { getMemberBoostedChannels } from './channel-boost-store.js';
 import { readChannelGameReviews, type ChannelGameReview } from './channel-game-reviews-store.js';
 import {
   collectedBadgesForMember,
@@ -148,6 +149,24 @@ function chatPoolForMember(member: NamiMember) {
 }
 
 function boostedChannelsForMember(member: NamiMember): MemberBoostedChannel[] {
+  const liveBoosts = getMemberBoostedChannels(member.id);
+
+  if (liveBoosts.length > 0) {
+    return liveBoosts
+      .map((boost) => {
+        const channel = channels.find((entry) => entry.id === boost.channelId);
+
+        return {
+          channelId: boost.channelId,
+          channelName: channel?.name ?? boost.channelId,
+          genre: channel?.genre ?? 'Game',
+          boostsApplied: boost.boostsApplied,
+          lastBoostedLabel: boost.lastBoostedLabel,
+        };
+      })
+      .slice(0, 4);
+  }
+
   const index = memberIndex(member);
   const boostBudget = member.tier === 'Elite' ? 3 : member.tier === 'Pro' ? 2 : member.tier === 'Adventurer' ? 1 : 0;
 
