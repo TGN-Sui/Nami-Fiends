@@ -305,6 +305,7 @@ export function GenreChatRoomPanel(props: {
   return (
     <GlobalChatRoomView
       chat={activeChat}
+      key={activeChat.id}
       onOpenMember={props.onOpenMember}
         {...genreChatExpandProps(activeChat, { compact: false })}
         showCompactHead={false}
@@ -437,6 +438,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
 
         <GlobalChatRoomView
           chat={activeChat}
+          key={activeChat.id}
           onOpenMember={props.onOpenMember}
           {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
         />
@@ -589,6 +591,7 @@ export function PinnedGenreChatDock(props: {
       <GlobalChatRoomView
         chat={activeChat}
         compact
+        key={activeChat.id}
         onOpenMember={props.onOpenMember}
         {...genreChatExpandProps(activeChat, { compact: true })}
         showCompactHead={false}

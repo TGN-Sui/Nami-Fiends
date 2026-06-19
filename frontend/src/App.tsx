@@ -1377,7 +1377,7 @@ function GameHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
-  const { channels: directoryChannels, usesFixtures, loadState } = useChannelDirectory(50);
+  const { channels: directoryChannels } = useChannelDirectory(50);
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
@@ -1557,31 +1557,6 @@ function GameHub(props: {
         <p>{GAME_HUB_INTRO.eyebrow}</p>
         <h1>Game Hub</h1>
       </header>
-
-      <section className="panel gamehub-intro-panel">
-        <div className="gamehub-intro-copy">
-          <h2>{GAME_HUB_INTRO.headline}</h2>
-          <p>{GAME_HUB_INTRO.subhead}</p>
-          {usesFixtures && loadState !== 'error' ? (
-            <span className="gamehub-intro-preview-note">{GAME_HUB_INTRO.previewNote}</span>
-          ) : null}
-        </div>
-
-        <div className="gamehub-intro-jump-row" aria-label="Game Hub sections">
-          <a className="nami-surface-button" href="#gamehub-partners">
-            Partners
-          </a>
-          <a className="nami-surface-button" href="#gamehub-trending">
-            Trending
-          </a>
-          <a className="nami-surface-button" href="#gamehub-browser">
-            Browser
-          </a>
-          <a className="nami-surface-button" href="#gamehub-genre">
-            Genre chats
-          </a>
-        </div>
-      </section>
 
       <section className="gamehub-top-panel gamehub-discovery-panels">
         <article className="gamehub-discovery-panel is-partner-panel" id="gamehub-partners">

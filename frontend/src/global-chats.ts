@@ -154,25 +154,89 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
   ],
 };
 
-const GLOBAL_CHAT_TEMPLATES = [
+const HUB_CHAT_TEMPLATES: Record<string, string[]> = {
+  [OFFICIAL_NAMI_GLOBAL_CHAT_ID]: [
+    'Welcome to the official global lounge — say hi!',
+    'LFG for ranked runs tonight.',
+    'Voice lounge is open if you want comms.',
+    'Anyone hitting the event board later?',
+  ],
+  'global-welcome-lounge': [
+    'Welcome Lounge check-in — new members start here.',
+    'Drop your passport tier if you want squad invites.',
+    'Official onboarding thread is pinned above.',
+    'Ask moderation anything before you jump into genre rooms.',
+  ],
+  'global-lfg-arena': [
+    'LFG Arena is open — post your role and rank.',
+    'Need one more for ranked queue.',
+    'Voice channel link is in the pinned post.',
+    'Squad fill in progress for tonight\'s run.',
+  ],
+  'global-creator-pitch': [
+    'Creator Pitch Room — share your project hook in one line.',
+    'Looking for playtesters for an indie demo.',
+    'Feedback thread opens after each pitch.',
+    'Collab requests go in replies, not main chat.',
+  ],
+  'global-cozy-corner': [
+    'Cozy corner crew checking in.',
+    'Low-pressure chat only — no rank sweat.',
+    'Share what you are playing tonight.',
+    'Chill playlist recommendations welcome.',
+  ],
+};
+
+const DEFAULT_HUB_CHAT_TEMPLATES = [
   'Welcome in — drop a hello.',
   'LFG for ranked runs tonight.',
   'Voice lounge is open if you want comms.',
   'Anyone hitting the event board later?',
-  'Cozy corner crew checking in.',
   'Guild recruitment thread is live.',
   'Patch notes watch party at 8.',
   'Looking for squad members for PvP.',
   'Official banner just dropped in Hub.',
-  'Builder showcase starts soon.',
 ];
+
+function genreFixtureTemplates(genre: string): string[] {
+  return [
+    'Welcome to the official ' + genre + ' lounge — intro thread is pinned.',
+    'LFG: looking for ' + genre + ' regulars for tonight\'s session.',
+    genre + ' voice channel is open if you want comms.',
+    'Anyone tracking the latest ' + genre + ' meta shift?',
+    'Event board for ' + genre + ' rooms just updated in Hub.',
+    'Squad recruiting in ' + genre + ' — verified members preferred.',
+    'Patch watch party for ' + genre + ' fans starts at 8.',
+    'Share your ' + genre + ' highlights in the clips thread.',
+    'Room topic tonight: best entry points for new ' + genre + ' players.',
+    'Moderator note: keep spoilers in the tagged thread.',
+  ];
+}
+
+function resolveFixtureChat(chatId: string): GlobalChatRoom | undefined {
+  return (
+    genreOfficialChats.find((chat) => chat.id === chatId) ??
+    hubGlobalChats.find((chat) => chat.id === chatId)
+  );
+}
+
+function fixtureMessageBody(chatId: string, chat: GlobalChatRoom | undefined, index: number): string {
+  if (chat?.kind === 'genre' && chat.genre) {
+    return genreFixtureTemplates(chat.genre)[index % genreFixtureTemplates(chat.genre).length]!;
+  }
+
+  const hubTemplates = HUB_CHAT_TEMPLATES[chatId] ?? DEFAULT_HUB_CHAT_TEMPLATES;
+
+  return hubTemplates[index % hubTemplates.length]!;
+}
 
 function buildFixtureGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   const seeded = mockMessagesByChat[chatId];
+  const chat = resolveFixtureChat(chatId);
   const authors = members.filter((member) => member.signal !== 'Black');
 
   return Array.from({ length: 20 }, (_, index) => {
-    const author = authors[index % authors.length] ?? members[0]!;
+    const author = authors[(index + chatId.length) % authors.length] ?? members[0]!;
     const seededMessage = seeded?.[index];
 
     if (seededMessage) {
@@ -184,7 +248,7 @@ function buildFixtureGlobalChatMessages(chatId: string): GlobalChatMessage[] {
       time: String(12 + Math.floor(index / 4)).padStart(2, '0') + ':' + String((index * 3) % 60).padStart(2, '0'),
       author: author.name,
       signal: author.signal,
-      body: GLOBAL_CHAT_TEMPLATES[index % GLOBAL_CHAT_TEMPLATES.length]!,
+      body: fixtureMessageBody(chatId, chat, index),
     };
   });
 }
