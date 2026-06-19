@@ -160,10 +160,10 @@ button {
 
 .nav-icon {
   display: grid;
-  width: 39px;
-  height: 39px;
+  width: 50.7px;
+  height: 50.7px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 15.6px;
   background: rgba(255, 255, 255, 0.08);
   font-weight: 800;
 }

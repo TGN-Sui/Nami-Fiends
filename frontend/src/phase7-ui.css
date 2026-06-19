@@ -5306,9 +5306,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .nav-icon.owner-editable-image {
-  width: 39px;
-  height: 39px;
-  border-radius: 12px;
+  width: 50.7px;
+  height: 50.7px;
+  border-radius: 15.6px;
   overflow: hidden;
 }
 
@@ -14572,7 +14572,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
    ========================================================= */
 
 .sidebar.is-icon-rail {
-  --sidebar-glyph-size: 41.6px;
+  --sidebar-glyph-size: 54.08px;
   --official-nami-logo-scale: 4;
   --sidebar-glyph-hover-scale: 2;
   --sidebar-glyph-neighbor-scale: calc(1 + (var(--sidebar-glyph-hover-scale) - 1) * 0.15);
@@ -14594,6 +14594,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   --sidebar-rail-scale-duration: 720ms;
   --sidebar-rail-scale-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-rail-shift-duration: 720ms;
+  --sidebar-rail-icon-gap: calc(var(--sidebar-glyph-size) * 0.28);
+  --sidebar-rail-section-gap: calc(var(--sidebar-glyph-size) * 0.35);
+  --sidebar-rail-item-slot: calc(var(--sidebar-glyph-size) * var(--sidebar-glyph-hover-scale));
 }
 
 .nami-app:has(.sidebar.is-icon-rail) {
@@ -14702,9 +14705,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   flex-direction: column;
   align-items: flex-start;
   align-self: stretch;
-  gap: 14px;
+  gap: var(--sidebar-rail-section-gap);
   width: 100%;
-  margin-top: 10px;
+  margin-top: var(--sidebar-rail-section-gap);
   transform: none;
   pointer-events: none;
 }
@@ -14804,8 +14807,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   justify-content: flex-start;
   width: 100%;
   min-width: 0;
-  min-height: var(--sidebar-glyph-size);
-  height: var(--sidebar-glyph-size);
+  min-height: var(--sidebar-rail-item-slot);
+  height: var(--sidebar-rail-item-slot);
   margin: 0;
   padding: 0 0 0 var(--sidebar-icon-rail-inset);
   overflow: visible;
@@ -14979,11 +14982,12 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .sidebar.is-icon-rail .sidebar-icon-rail-controls .sidebar-nav {
-  gap: 14px;
+  gap: var(--sidebar-rail-icon-gap);
 }
 
-.sidebar.is-icon-rail .sidebar-nav > button {
-  min-height: 0;
+.sidebar.is-icon-rail .sidebar-nav > button.sidebar-hub-rail-button {
+  min-height: var(--sidebar-rail-slot);
+  height: var(--sidebar-rail-slot);
 }
 
 .sidebar.is-icon-rail .nav-icon,
@@ -15036,8 +15040,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .sidebar.is-icon-rail .sidebar-nav > button.sidebar-hub-rail-button {
   z-index: 12;
-  margin-bottom: var(--sidebar-hub-bottom-clearance);
-  padding: 0 0 4px var(--sidebar-icon-rail-inset);
+  margin-bottom: 0;
+  padding: 0 0 0 var(--sidebar-icon-rail-inset);
 }
 
 .sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):hover .nav-icon,
