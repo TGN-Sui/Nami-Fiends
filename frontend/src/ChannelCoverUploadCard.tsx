@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
 import {
   clearChannelCoverOverride,
@@ -6,12 +6,8 @@ import {
   resolveChannelCoverUrl,
   saveChannelCoverOverride,
 } from './channel-cover-store.js';
-import {
-  MEDIA_UPLOAD_ACCEPTED_LABEL,
-  persistMediaImage,
-  readFileAsDataUrl,
-  validateMediaFile,
-} from './media-upload-service.js';
+import { persistMediaImage } from './media-upload-service.js';
+import { OwnerMediaUploadField } from './OwnerMediaUploadField.js';
 import {
   hydrateChannelCoverPreference,
   isPreferencesApiAvailable,
@@ -22,8 +18,8 @@ import { useProtocolOwner } from './wallet.js';
 
 export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactElement {
   const { owner } = useProtocolOwner();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
   const [isReadingFile, setIsReadingFile] = useState(false);
 
   const override = readChannelCoverOverride(props.channel.id);
@@ -34,33 +30,12 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
     void hydrateChannelCoverPreference(props.channel.id);
   }, [props.channel.id]);
 
-  function openFilePicker(): void {
-    fileInputRef.current?.click();
-  }
-
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
-    const validationError = validateMediaFile(file, 'channel-cover');
-
-    if (validationError) {
-      setErrorMessage(validationError);
-      return;
-    }
-
+  function handleUpload(dataUrl: string, file: File): void {
     setErrorMessage(null);
     setIsReadingFile(true);
 
     void (async () => {
       try {
-        const dataUrl = await readFileAsDataUrl(file);
-
         await persistMediaImage({
           kind: 'channel-cover',
           owner,
@@ -71,6 +46,7 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
           onSaved: (url) => saveChannelCoverOverride(props.channel.id, url),
           onLocalFallback: (url) => saveChannelCoverOverride(props.channel.id, url),
         });
+        setNotice('Cover image updated.');
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
       } finally {
@@ -79,61 +55,34 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
     })();
   }
 
-  function removeCover(): void {
-    setErrorMessage(null);
-    clearChannelCoverOverride(props.channel.id);
-  }
-
   return (
-    <article className="media-upload-prep-card channel-cover-upload-card">
-      <div className="media-upload-prep-copy">
-        <span className="media-upload-prep-eyebrow">Game Channel media</span>
-        <strong>Cover image</strong>
-        <small>
-          {hasOwnerUpload
-            ? 'Owner upload active across Game Hub cards and channel surfaces.'
-            : 'Upload a cover for this channel card and hub surfaces.'}
-        </small>
+    <article className="panel channel-owner-tool-card channel-cover-upload-card">
+      <div className="channel-owner-tool-card-head">
+        <div>
+          <span className="mini-badge">Game Channel media</span>
+          <h3>Cover image</h3>
+          <p>
+            {hasOwnerUpload
+              ? 'Owner upload active across Game Hub cards and channel surfaces.'
+              : 'Upload a cover for this channel card and hub surfaces.'}
+          </p>
+        </div>
       </div>
 
-      {activeCover ? (
-        <div
-          className="channel-cover-upload-preview"
-          style={{ backgroundImage: 'url(' + JSON.stringify(activeCover) + ')' }}
-        />
-      ) : null}
-
-      <div className="media-upload-prep-details">
-        <span>{MEDIA_UPLOAD_ACCEPTED_LABEL}</span>
-        <span>{preferencesStorageHint('channel')}</span>
-      </div>
-
-      <input
-        accept="image/png,image/jpeg,image/webp"
-        className="member-avatar-upload-input"
-        onChange={handleFileChange}
-        ref={fileInputRef}
-        type="file"
+      <OwnerMediaUploadField
+        notice={notice || errorMessage}
+        onRemove={() => {
+          setErrorMessage(null);
+          clearChannelCoverOverride(props.channel.id);
+          setNotice('Cover image removed.');
+        }}
+        onUpload={(dataUrl, file) => handleUpload(dataUrl, file)}
+        previewUrl={activeCover ?? null}
+        slot="channel-cover"
+        uploadLabel={isReadingFile ? 'Uploading cover…' : 'Upload cover image'}
       />
 
-      <div className="member-avatar-upload-actions">
-        <button
-          className="nami-surface-button is-primary-surface-button"
-          disabled={isReadingFile}
-          onClick={openFilePicker}
-          type="button"
-        >
-          {isReadingFile ? 'Uploading cover…' : 'Upload cover image'}
-        </button>
-
-        {hasOwnerUpload ? (
-          <button className="nami-surface-button" onClick={removeCover} type="button">
-            Remove upload
-          </button>
-        ) : null}
-      </div>
-
-      {errorMessage ? <p className="member-avatar-upload-error">{errorMessage}</p> : null}
+      <small className="channel-owner-tool-footnote">{preferencesStorageHint('channel')}</small>
     </article>
   );
 }

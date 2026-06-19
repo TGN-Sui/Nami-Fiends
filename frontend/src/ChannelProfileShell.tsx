@@ -31,6 +31,7 @@ type ChannelProfileShellProps = {
   showMemberConsumerActions?: boolean;
   pageEyebrow?: string;
   pageTitle?: string;
+  heroBackgroundUrl?: string;
   children: ReactNode;
   mode?: 'profile' | 'chat';
 };
@@ -99,8 +100,19 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
 
       <section className={shellClassName} style={props.profileBrandStyle}>
         <article
-          className={'channel-profile-hero' + (props.channel.partner ? ' is-partner-galaxy-hero' : '')}
+          className={
+            'channel-profile-hero' +
+            (props.channel.partner ? ' is-partner-galaxy-hero' : '') +
+            (props.heroBackgroundUrl ? ' has-owner-hero-background' : '')
+          }
           data-channel-hero="true"
+          style={
+            props.heroBackgroundUrl
+              ? ({
+                  '--channel-hero-background-image': cssAssetUrl(props.heroBackgroundUrl),
+                } as CSSProperties)
+              : undefined
+          }
         >
           {props.channel.partner ? (
             <div aria-hidden="true" className="nami-official-galaxy-sky">

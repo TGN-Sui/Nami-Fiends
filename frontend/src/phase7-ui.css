@@ -15689,3 +15689,167 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   box-shadow: 0 0 24px rgba(255, 184, 77, 0.18);
   transition: outline-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+/* Owner media upload previews and dimension notes */
+.owner-media-upload-field {
+  display: grid;
+  gap: 10px;
+}
+
+.owner-media-upload-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.owner-media-upload-copy strong {
+  font-size: 0.92rem;
+}
+
+.owner-media-upload-copy small {
+  color: rgba(223, 236, 250, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.owner-media-dimension-note {
+  color: rgba(159, 214, 255, 0.88) !important;
+}
+
+.owner-media-preview-frame {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px dashed rgba(117, 215, 255, 0.28);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(117, 215, 255, 0.12), transparent 42%),
+    rgba(8, 14, 22, 0.82);
+  background-size: cover;
+  background-position: center;
+}
+
+.owner-media-preview-frame.has-owner-media-preview {
+  border-style: solid;
+  border-color: rgba(117, 215, 255, 0.34);
+}
+
+.owner-media-preview-frame.is-owner-media-preview-square {
+  aspect-ratio: 1 / 1;
+  max-width: 220px;
+}
+
+.owner-media-preview-frame.is-owner-media-preview-wide-3-1 {
+  aspect-ratio: 3 / 1;
+}
+
+.owner-media-preview-frame.is-owner-media-preview-16-10 {
+  aspect-ratio: 16 / 10;
+}
+
+.owner-media-preview-frame.is-owner-media-preview-news-banner {
+  aspect-ratio: 16 / 5;
+}
+
+.owner-media-preview-frame.is-owner-media-preview-hero-background {
+  aspect-ratio: 8 / 3;
+}
+
+.owner-media-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(223, 236, 250, 0.52);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.channel-profile-hero.has-owner-hero-background {
+  background:
+    linear-gradient(180deg, rgba(5, 9, 15, 0.42), rgba(5, 9, 15, 0.78)),
+    var(--channel-hero-background-image) center / cover no-repeat,
+    radial-gradient(circle at top right, var(--profile-brand-glow, rgba(117, 215, 255, 0.14)), transparent 42%),
+    rgba(5, 9, 15, 0.72);
+}
+
+.partner-carousel-inline-preview {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 3 / 1;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: clamp(14px, 3vw, 22px);
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  color: #fff8f4;
+  text-align: center;
+  cursor: default;
+  background-size: cover;
+  background-position: center;
+}
+
+.partner-carousel-inline-preview.has-partner-banner-cover {
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.72);
+}
+
+.partner-carousel-inline-preview span {
+  color: #ffd36d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.partner-carousel-inline-preview strong {
+  font-size: clamp(1.1rem, 2.4vw, 1.65rem);
+}
+
+.partner-carousel-inline-preview small {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.partner-carousel-preview-popup {
+  position: relative;
+  width: min(1180px, calc(100vw - 28px));
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 3vw, 24px);
+  animation: channel-banner-popup-enter 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.partner-carousel-preview-heading {
+  display: grid;
+  gap: 6px;
+  padding-right: 44px;
+}
+
+.partner-carousel-preview-heading h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+}
+
+.partner-carousel-preview-heading p {
+  margin: 0;
+  color: rgba(223, 236, 250, 0.78);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.partner-carousel-preview-banner {
+  width: 100%;
+  min-height: clamp(140px, 22vw, 220px);
+  aspect-ratio: 3 / 1;
+  cursor: default;
+  pointer-events: none;
+}
+
+.partner-carousel-preview-banner.has-partner-banner-cover {
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.78);
+}

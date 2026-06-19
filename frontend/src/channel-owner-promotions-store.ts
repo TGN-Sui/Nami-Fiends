@@ -561,8 +561,8 @@ export function saveSuperBannerDraft(channelId: string, draft: SuperBannerDraft)
       ...state.superBanner,
       draft: {
         coverUrl: draft.coverUrl,
-        headline: draft.headline.trim(),
-        body: draft.body.trim(),
+        headline: draft.headline,
+        body: draft.body,
       },
       updatedAtMs: Date.now(),
     },

@@ -11,6 +11,7 @@ import {
   readFileAsDataUrl,
   validateMediaFile,
 } from './media-upload-service.js';
+import { ownerMediaDimensionNote } from './owner-media-specs.js';
 import { type NamiChannel } from './uiMockData.js';
 
 type BannerPreviewDraft = {
@@ -126,7 +127,10 @@ export function ChannelBannerEditorCard(props: {
           <div>
             <span className="mini-badge">Focused alert</span>
             <h3>Banner alerts panel</h3>
-            <p>Compact editor for Get Banners subscribers — preview before you publish.</p>
+            <p>
+              Compact editor for Get Banners subscribers — preview before you publish.{' '}
+              {ownerMediaDimensionNote('focused-banner-cover')}
+            </p>
           </div>
         </div>
 

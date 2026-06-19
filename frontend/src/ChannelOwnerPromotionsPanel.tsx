@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
@@ -15,11 +15,8 @@ import {
   type PromotionDuration,
   type PromotionProduct,
 } from './channel-owner-promotions-store.js';
-import {
-  MEDIA_UPLOAD_ACCEPTED_LABEL,
-  readFileAsDataUrl,
-  validateMediaFile,
-} from './media-upload-service.js';
+import { OwnerMediaUploadField } from './OwnerMediaUploadField.js';
+import { PartnerCarouselPreviewOverlay } from './PartnerCarouselPreviewOverlay.js';
 import type { MembershipCheckoutRail, MembershipCryptoAsset } from './membership-plans-store.js';
 import type { NamiChannel } from './uiMockData.js';
 
@@ -65,11 +62,27 @@ export function ChannelOwnerPromotionsPanel(props: {
   const [superDuration] = useState<PromotionDuration>('weekly');
   const [hubDuration, setHubDuration] = useState<PromotionDuration>('72h');
   const [partnerDuration, setPartnerDuration] = useState<PromotionDuration>('weekly');
-  const superFileRef = useRef<HTMLInputElement | null>(null);
-  const partnerFileRef = useRef<HTMLInputElement | null>(null);
+  const [showPartnerPreview, setShowPartnerPreview] = useState(false);
+
+  const [superHeadline, setSuperHeadline] = useState(promotions.superBanner.draft.headline);
+  const [superBody, setSuperBody] = useState(promotions.superBanner.draft.body);
+  const [partnerTitle, setPartnerTitle] = useState(promotions.partnerCarousel.ticket?.title ?? '');
+  const [partnerDescription, setPartnerDescription] = useState(
+    promotions.partnerCarousel.ticket?.description ?? '',
+  );
 
   const superGate = canSendSuperBanner();
   const ticket = promotions.partnerCarousel.ticket;
+
+  useEffect(() => {
+    setSuperHeadline(promotions.superBanner.draft.headline);
+    setSuperBody(promotions.superBanner.draft.body);
+  }, [promotions.superBanner.draft.headline, promotions.superBanner.draft.body]);
+
+  useEffect(() => {
+    setPartnerTitle(ticket?.title ?? '');
+    setPartnerDescription(ticket?.description ?? '');
+  }, [ticket?.title, ticket?.description, ticket?.id]);
 
   function clearMessages(): void {
     setNotice('');
@@ -87,58 +100,28 @@ export function ChannelOwnerPromotionsPanel(props: {
     }
   }
 
-  function handleSuperCoverChange(event: ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
-    const validationError = validateMediaFile(file, 'channel-cover');
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    void readFileAsDataUrl(file)
-      .then((dataUrl) => {
-        saveSuperBannerDraft(props.channel.id, {
-          ...promotions.superBanner.draft,
-          coverUrl: dataUrl,
-        });
-        setNotice('Super Banner cover updated.');
-      })
-      .catch((readError: unknown) => {
-        setError(readError instanceof Error ? readError.message : 'Could not read image.');
-      });
+  function persistSuperDraft(headline: string, body: string, coverUrl = promotions.superBanner.draft.coverUrl): void {
+    saveSuperBannerDraft(props.channel.id, {
+      coverUrl,
+      headline,
+      body,
+    });
   }
 
-  function handlePartnerCoverChange(event: ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
-    const validationError = validateMediaFile(file, 'channel-cover');
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    void readFileAsDataUrl(file)
-      .then((dataUrl) => {
-        savePartnerCarouselTicket(props.channel.id, { coverUrl: dataUrl });
-        setNotice('Partner banner cover updated.');
-      })
-      .catch((readError: unknown) => {
-        setError(readError instanceof Error ? readError.message : 'Could not read image.');
-      });
+  function persistPartnerDraft(
+    title: string,
+    description: string,
+    coverUrl = ticket?.coverUrl ?? '',
+  ): void {
+    savePartnerCarouselTicket(props.channel.id, {
+      title,
+      description,
+      ...(coverUrl ? { coverUrl } : {}),
+    });
   }
+
+  const partnerPreviewTitle = partnerTitle.trim() || props.channel.name;
+  const partnerPreviewDescription = partnerDescription.trim() || props.channel.genre;
 
   return (
     <section className="channel-owner-promotions-stack">
@@ -175,8 +158,8 @@ export function ChannelOwnerPromotionsPanel(props: {
           }
         >
           <div className="channel-owner-super-banner-preview-copy">
-            <strong>{promotions.superBanner.draft.headline || props.channel.name}</strong>
-            <p>{promotions.superBanner.draft.body || 'Your Super Banner message appears here.'}</p>
+            <strong>{superHeadline.trim() || props.channel.name}</strong>
+            <p>{superBody.trim() || 'Your Super Banner message appears here.'}</p>
           </div>
         </div>
 
@@ -184,43 +167,34 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Headline</span>
             <input
-              onChange={(event) =>
-                saveSuperBannerDraft(props.channel.id, {
-                  ...promotions.superBanner.draft,
-                  headline: event.target.value,
-                })
-              }
+              onBlur={() => persistSuperDraft(superHeadline, superBody)}
+              onChange={(event) => setSuperHeadline(event.target.value)}
               type="text"
-              value={promotions.superBanner.draft.headline}
+              value={superHeadline}
             />
           </label>
           <label className="channel-owner-tool-field">
             <span>Message</span>
             <textarea
-              onChange={(event) =>
-                saveSuperBannerDraft(props.channel.id, {
-                  ...promotions.superBanner.draft,
-                  body: event.target.value,
-                })
-              }
+              onBlur={() => persistSuperDraft(superHeadline, superBody)}
+              onChange={(event) => setSuperBody(event.target.value)}
               rows={3}
-              value={promotions.superBanner.draft.body}
+              value={superBody}
             />
           </label>
         </div>
 
-        <input
-          accept="image/png,image/jpeg,image/webp"
-          className="member-avatar-upload-input"
-          onChange={handleSuperCoverChange}
-          ref={superFileRef}
-          type="file"
+        <OwnerMediaUploadField
+          onUpload={(dataUrl, _file) => {
+            persistSuperDraft(superHeadline, superBody, dataUrl);
+            setNotice('Super Banner cover updated.');
+          }}
+          previewUrl={promotions.superBanner.draft.coverUrl || null}
+          slot="super-banner-cover"
+          uploadLabel="Upload Super Banner cover"
         />
 
         <div className="channel-owner-tool-actions">
-          <button className="nami-surface-button" onClick={() => superFileRef.current?.click()} type="button">
-            Upload cover
-          </button>
           {promotions.superBanner.status !== 'active' ? (
             <button
               className="nami-surface-button is-primary-surface-button"
@@ -234,6 +208,7 @@ export function ChannelOwnerPromotionsPanel(props: {
               className="nami-surface-button is-primary-surface-button"
               disabled={!superGate.ok}
               onClick={() => {
+                persistSuperDraft(superHeadline, superBody);
                 const result = sendSuperBanner(props.channel.id);
 
                 if (result.ok) {
@@ -255,7 +230,6 @@ export function ChannelOwnerPromotionsPanel(props: {
             product="super-banner"
           />
         </div>
-        <small className="channel-owner-tool-footnote">{MEDIA_UPLOAD_ACCEPTED_LABEL}</small>
       </article>
 
       <article className="panel channel-owner-tool-card" id="channel-owner-hub-featured">
@@ -345,38 +319,64 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Banner title</span>
             <input
-              onChange={(event) => savePartnerCarouselTicket(props.channel.id, { title: event.target.value })}
+              onBlur={() => persistPartnerDraft(partnerTitle, partnerDescription)}
+              onChange={(event) => setPartnerTitle(event.target.value)}
               type="text"
-              value={ticket?.title ?? ''}
+              value={partnerTitle}
             />
           </label>
           <label className="channel-owner-tool-field">
             <span>Description</span>
             <textarea
-              onChange={(event) =>
-                savePartnerCarouselTicket(props.channel.id, { description: event.target.value })
-              }
+              onBlur={() => persistPartnerDraft(partnerTitle, partnerDescription)}
+              onChange={(event) => setPartnerDescription(event.target.value)}
               rows={3}
-              value={ticket?.description ?? ''}
+              value={partnerDescription}
             />
           </label>
         </div>
 
-        <input
-          accept="image/png,image/jpeg,image/webp"
-          className="member-avatar-upload-input"
-          onChange={handlePartnerCoverChange}
-          ref={partnerFileRef}
-          type="file"
+        <div
+          className={
+            'banner-panel featured-banner-carousel nami-hub-rotating-banner partner-carousel-inline-preview' +
+            (ticket?.coverUrl ? ' has-partner-banner-cover' : '')
+          }
+          style={
+            ticket?.coverUrl
+              ? { backgroundImage: 'url(' + JSON.stringify(ticket.coverUrl) + ')' }
+              : undefined
+          }
+        >
+          <span>Featured Partner Banner Carousel</span>
+          <strong>{partnerPreviewTitle}</strong>
+          <small>{partnerPreviewDescription}</small>
+        </div>
+
+        <OwnerMediaUploadField
+          onUpload={(dataUrl, _file) => {
+            persistPartnerDraft(partnerTitle, partnerDescription, dataUrl);
+            setNotice('Partner banner cover updated.');
+          }}
+          previewUrl={ticket?.coverUrl || null}
+          slot="partner-carousel-banner"
+          uploadLabel="Upload partner banner cover"
         />
 
         <div className="channel-owner-tool-actions">
-          <button className="nami-surface-button" onClick={() => partnerFileRef.current?.click()} type="button">
-            Upload banner cover
+          <button
+            className="nami-surface-button"
+            onClick={() => {
+              persistPartnerDraft(partnerTitle, partnerDescription);
+              setShowPartnerPreview(true);
+            }}
+            type="button"
+          >
+            Preview on Nami Hub
           </button>
           <button
             className="nami-surface-button"
             onClick={() => {
+              persistPartnerDraft(partnerTitle, partnerDescription);
               const result = savePartnerCarouselTicket(props.channel.id, { duration: partnerDuration });
 
               if (result.ok) {
@@ -389,7 +389,10 @@ export function ChannelOwnerPromotionsPanel(props: {
           </button>
           <button
             className="nami-surface-button is-primary-surface-button"
-            onClick={() => purchase('partner-carousel', partnerDuration)}
+            onClick={() => {
+              persistPartnerDraft(partnerTitle, partnerDescription);
+              purchase('partner-carousel', partnerDuration);
+            }}
             type="button"
           >
             Submit ticket for approval
@@ -420,6 +423,16 @@ export function ChannelOwnerPromotionsPanel(props: {
 
       {notice ? <p className="channel-owner-tool-notice is-success">{notice}</p> : null}
       {error ? <p className="channel-owner-tool-notice is-error">{error}</p> : null}
+
+      {showPartnerPreview ? (
+        <PartnerCarouselPreviewOverlay
+          channel={props.channel}
+          coverUrl={ticket?.coverUrl ?? ''}
+          description={partnerDescription}
+          onClose={() => setShowPartnerPreview(false)}
+          title={partnerTitle}
+        />
+      ) : null}
     </section>
   );
 }

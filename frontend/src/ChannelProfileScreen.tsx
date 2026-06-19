@@ -12,6 +12,13 @@ import { ChannelGameReviewsSection } from './ChannelGameReviewsSection.js';
 import { ChannelProfileShell } from './ChannelProfileShell.js';
 import { RelatedChannelCoverTile } from './RelatedChannelCoverTile.js';
 import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
+import { ChannelHeroBackgroundUploadCard } from './ChannelHeroBackgroundUploadCard.js';
+import { ChannelNewsBannerUploadCard } from './ChannelNewsBannerUploadCard.js';
+import {
+  readChannelHeroBackgroundOverride,
+  readChannelNewsBannerOverride,
+  useChannelOwnerMediaVersion,
+} from './channel-owner-media-store.js';
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
@@ -99,12 +106,15 @@ export function ChannelProfileScreen(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
+  useChannelOwnerMediaVersion();
   useEventsStore();
   useChannelBannerNotificationsStore();
   useChannelGameReviewsStore();
 
   const chrome = useChannelProfileChrome(props.channel);
   const channelCoverUrl = resolveChannelCoverUrl(props.channel)?.trim() ?? '';
+  const newsBannerUrl = readChannelNewsBannerOverride(props.channel.id)?.trim() ?? '';
+  const heroBackgroundUrl = readChannelHeroBackgroundOverride(props.channel.id)?.trim() ?? '';
   const gameEvents = getChannelEvents(props.channel);
   const reviewCount = getChannelGameReviews(props.channel.id).length;
 
@@ -290,10 +300,12 @@ export function ChannelProfileScreen(props: {
   function renderNewsSection(): ReactElement {
     return (
       <section className="channel-profile-section channel-profile-news">
-        {channelCoverUrl ? (
+        {newsBannerUrl || channelCoverUrl ? (
           <div
             className="channel-profile-news-cover"
-            style={{ backgroundImage: 'url(' + JSON.stringify(channelCoverUrl) + ')' }}
+            style={{
+              backgroundImage: 'url(' + JSON.stringify(newsBannerUrl || channelCoverUrl) + ')',
+            }}
           />
         ) : null}
 
@@ -499,6 +511,8 @@ export function ChannelProfileScreen(props: {
         />
 
         <ChannelCoverUploadCard channel={props.channel} />
+        <ChannelHeroBackgroundUploadCard channel={props.channel} />
+        <ChannelNewsBannerUploadCard channel={props.channel} />
         <ChannelBannerEditorCard channel={props.channel} isEliteOwner={chrome.isEliteChannelOwner} />
 
         <article className="panel channel-data-collapse">
@@ -570,6 +584,7 @@ export function ChannelProfileScreen(props: {
         {...(chrome.isChannelOwner
           ? { pageEyebrow: 'My game channel', pageTitle: 'My Profile' }
           : {})}
+        {...(heroBackgroundUrl ? { heroBackgroundUrl } : {})}
         showMemberConsumerActions={chrome.showMemberConsumerActions}
         onBannerAlertsToggle={chrome.handleBannerAlertsToggle}
         onBoostChannel={chrome.handleBoostChannel}
