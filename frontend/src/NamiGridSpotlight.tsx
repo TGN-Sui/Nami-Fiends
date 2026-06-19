@@ -11,21 +11,11 @@ const SCOPE_CLASS = {
   app: 'is-nami-app-spotlight',
 } as const;
 
-const STATIC_SCOPE_CLASS = {
-  landing: null,
-  app: 'is-nami-app-spotlight-static',
-} as const;
-
 export function NamiGridSpotlight(props: NamiGridSpotlightProps): ReactElement {
   useEffect(() => {
     const scopeClass = SCOPE_CLASS[props.scope];
-    const staticScopeClass = STATIC_SCOPE_CLASS[props.scope];
 
     document.documentElement.classList.add(scopeClass);
-
-    if (staticScopeClass) {
-      document.documentElement.classList.add(staticScopeClass);
-    }
 
     const unsubscribeVisibility = subscribeVisibilityPause((hidden) => {
       document.documentElement.classList.toggle('is-ambient-motion-paused', hidden);
@@ -34,11 +24,6 @@ export function NamiGridSpotlight(props: NamiGridSpotlightProps): ReactElement {
     return () => {
       unsubscribeVisibility();
       document.documentElement.classList.remove(scopeClass);
-
-      if (staticScopeClass) {
-        document.documentElement.classList.remove(staticScopeClass);
-      }
-
       document.documentElement.classList.remove('is-ambient-motion-paused');
     };
   }, [props.scope]);

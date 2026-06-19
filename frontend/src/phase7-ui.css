@@ -1829,7 +1829,8 @@
   }
 }
 
-html.is-landing-page {
+html.is-landing-page,
+html.is-nami-app-spotlight {
   animation: namiSpotlightLoop 36s ease-in-out infinite;
 }
 
