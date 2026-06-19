@@ -90,6 +90,13 @@ button {
     box-shadow 160ms ease;
 }
 
+.sidebar-brand.sidebar-hub-swap {
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
 .sidebar-brand:not(.sidebar-hub-swap):hover,
 .sidebar-nav button:hover,
 .sidebar-toggle:hover,

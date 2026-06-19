@@ -1829,10 +1829,7 @@
   }
 }
 
-html.is-landing-page,
-html.is-nami-app-spotlight {
-  animation: namiSpotlightLoop 36s ease-in-out infinite;
-}
+/* Spotlight coordinates are driven in JS via --nami-spotlight-x/y. */
 
 html.is-nami-app-spotlight-static {
   animation: none !important;
@@ -1935,42 +1932,12 @@ html.is-ambient-motion-paused.is-nami-app-spotlight {
 
 html.is-landing-page body::after,
 html.is-nami-app-spotlight body::after {
-  opacity: var(--nami-spotlight-opacity, 0.46);
-  visibility: visible;
-  mix-blend-mode: var(--nami-spotlight-blend-mode, screen);
-  animation: none;
-  transform: none;
-  filter: none;
-  background:
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
-      var(--nami-spotlight-core, rgba(255, 255, 255, 0.34)) 0%,
-      var(--nami-spotlight-mid, rgba(255, 255, 255, 0.102)) 8%,
-      var(--nami-spotlight-outer, rgba(255, 255, 255, 0.04)) 15%,
-      transparent 32%
-    );
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.3) 9%,
-      rgba(0, 0, 0, 0.1) 17%,
-      transparent 30%
-    );
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.3) 9%,
-      rgba(0, 0, 0, 0.1) 17%,
-      transparent 30%
-    );
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  animation: none !important;
+  background: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
 }
 
 html.is-nami-app-spotlight .nami-landing-grid-spotlight {
@@ -6512,10 +6479,6 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
     0 0 44px var(--hub-swap-portal-glow);
 }
 
-.sidebar-hub-swap:hover .sidebar-hub-swap-mark-stack {
-  transform: scale(1.04);
-}
-
 .sidebar-hub-swap:hover::before {
   opacity: 0.82;
 }
@@ -6541,6 +6504,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   gap: 2px;
   justify-items: center;
   width: 100%;
+  min-height: 2.8em;
 }
 
 .sidebar-hub-swap-label {
@@ -6556,20 +6520,13 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1.2;
-  max-height: 0;
-  overflow: hidden;
+  min-height: 1.2em;
   opacity: 0;
-  transform: translateY(3px);
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease,
-    max-height 180ms ease;
+  transition: opacity 180ms ease;
 }
 
 .sidebar-hub-swap:hover .sidebar-hub-swap-hint {
-  max-height: 1.4em;
   opacity: 0.92;
-  transform: translateY(0);
 }
 
 .sidebar-hub-swap-mark-stack {
@@ -6577,9 +6534,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   width: 54px;
   height: 54px;
   margin: 0 auto 8px;
+  flex: 0 0 54px;
   isolation: isolate;
-  transform-origin: center;
-  transition: transform 160ms ease;
+  transform: none;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
 }
 
@@ -6601,11 +6558,13 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .sidebar-hub-swap-mark.is-nami-hub-mark.is-current-hub-mark {
-  transform: rotate(45deg) scale(1);
+  inset: 0;
+  transform: rotate(45deg);
 }
 
 .sidebar-hub-swap-mark.is-game-hub-mark.is-current-hub-mark {
-  transform: scale(1);
+  inset: 0;
+  transform: none;
 }
 
 .sidebar-hub-swap-mark.is-alt-hub-mark {
@@ -6633,6 +6592,32 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 
 .sidebar-hub-swap:hover .sidebar-hub-swap-mark.is-game-hub-mark.is-alt-hub-mark {
   transform: scale(0.9) translate(2px, 3px);
+}
+
+.sidebar-brand.sidebar-hub-swap,
+.sidebar-brand.sidebar-hub-swap:hover,
+[data-nami-ui='glass'] .sidebar-brand.sidebar-hub-swap,
+[data-nami-ui='glass'] .sidebar-brand.sidebar-hub-swap:hover,
+[data-nami-ui='classic'] .sidebar-brand.sidebar-hub-swap,
+[data-nami-ui='classic'] .sidebar-brand.sidebar-hub-swap:hover {
+  transform: none;
+}
+
+[data-nami-ui='glass'] .sidebar-hub-swap .sidebar-hub-swap-mark-stack,
+[data-nami-ui='glass'] .sidebar-hub-swap .sidebar-hub-swap-mark,
+[data-nami-ui='classic'] .sidebar-hub-swap .sidebar-hub-swap-mark-stack,
+[data-nami-ui='classic'] .sidebar-hub-swap .sidebar-hub-swap-mark {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.sidebar-hub-swap:hover .sidebar-hub-swap-mark.is-nami-hub-mark.is-current-hub-mark,
+.sidebar-hub-swap:hover .sidebar-hub-swap-mark.is-game-hub-mark.is-current-hub-mark {
+  transform: rotate(45deg);
+}
+
+.sidebar-hub-swap:hover .sidebar-hub-swap-mark.is-game-hub-mark.is-current-hub-mark {
+  transform: none;
 }
 
 .sidebar-hub-swap.is-hub-swap-idle-hint {
@@ -6800,11 +6785,11 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .sidebar.is-collapsed .sidebar-hub-swap-mark.is-nami-hub-mark.is-current-hub-mark {
-  transform: rotate(45deg) scale(1);
+  transform: rotate(45deg);
 }
 
 .sidebar.is-collapsed .sidebar-hub-swap-mark.is-game-hub-mark.is-current-hub-mark {
-  transform: scale(1);
+  transform: none;
 }
 
 .sidebar.is-collapsed .sidebar-hub-swap-mark.is-nami-hub-mark.is-alt-hub-mark {

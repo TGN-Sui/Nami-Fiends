@@ -17,31 +17,7 @@
   );
 }
 
-[data-nami-theme='dark'] html.is-landing-page body::after,
-[data-nami-theme='dark'] html.is-nami-app-spotlight body::after {
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.44) 10%,
-      rgba(0, 0, 0, 0.18) 18%,
-      transparent 34%
-    );
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 1) 94%, transparent 100%),
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 1) 4%, rgba(0, 0, 0, 1) 96%, transparent 100%),
-    radial-gradient(
-      circle at var(--nami-spotlight-x, 50vw) var(--nami-spotlight-y, 40vh),
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.44) 10%,
-      rgba(0, 0, 0, 0.18) 18%,
-      transparent 34%
-    );
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
-}
+
 
 [data-nami-theme='dark'] .sidebar {
   background: var(--nami-theme-panel);

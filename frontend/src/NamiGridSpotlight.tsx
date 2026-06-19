@@ -1,5 +1,6 @@
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useRef, type ReactElement } from 'react';
 
+import { startSpotlightMotion } from './nami-spotlight-motion.js';
 import { subscribeVisibilityPause } from './perf-utils.js';
 
 type NamiGridSpotlightProps = {
@@ -12,17 +13,23 @@ const SCOPE_CLASS = {
 } as const;
 
 export function NamiGridSpotlight(props: NamiGridSpotlightProps): ReactElement {
+  const motionPausedRef = useRef(false);
+
   useEffect(() => {
     const scopeClass = SCOPE_CLASS[props.scope];
 
     document.documentElement.classList.add(scopeClass);
 
     const unsubscribeVisibility = subscribeVisibilityPause((hidden) => {
+      motionPausedRef.current = hidden;
       document.documentElement.classList.toggle('is-ambient-motion-paused', hidden);
     });
 
+    const stopSpotlightMotion = startSpotlightMotion(() => motionPausedRef.current);
+
     return () => {
       unsubscribeVisibility();
+      stopSpotlightMotion();
       document.documentElement.classList.remove(scopeClass);
       document.documentElement.classList.remove('is-ambient-motion-paused');
     };
