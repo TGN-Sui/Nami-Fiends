@@ -19,7 +19,9 @@ import {
   useMemberSession,
 } from './member-session-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
+import { GameOnboardingPanel } from './GameOnboardingPanel.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
+import { OnboardingRoleSelector, type OnboardingRole } from './OnboardingRoleSelector.js';
 
 const GENRE_SHOWCASE_POP_HIGHLIGHT_MS = 1200;
 
@@ -390,6 +392,7 @@ function LandingOverview(props: {
 
 export function EntryPage(props: {
   onEnterHub: () => void;
+  onEnterPreApprovedGame?: () => void;
   onEntryGateHandled?: () => void;
   onNavigateToSettings?: () => void;
   showEntryGate?: boolean;
@@ -399,20 +402,38 @@ export function EntryPage(props: {
 }): ReactElement {
   const session = useMemberSession();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
+  const [onboardingRole, setOnboardingRole] = useState<OnboardingRole | null>(null);
 
   useEffect(() => {
     if (!props.startOnboarding) {
       return;
     }
 
-    setShowOnboarding(true);
+    setShowRoleSelector(true);
+    setShowOnboarding(false);
+    setOnboardingRole(null);
     props.onStartOnboardingHandled?.();
   }, [props.startOnboarding, props.onStartOnboardingHandled]);
 
   function startFreshSignup(): void {
     clearMemberSession();
     clearSignedOut();
+    setShowRoleSelector(true);
+    setShowOnboarding(false);
+    setOnboardingRole(null);
+  }
+
+  function handleRoleSelection(role: OnboardingRole): void {
+    setOnboardingRole(role);
+    setShowRoleSelector(false);
     setShowOnboarding(true);
+  }
+
+  function resetOnboardingFlow(): void {
+    setShowOnboarding(false);
+    setShowRoleSelector(false);
+    setOnboardingRole(null);
   }
 
   function closeEntryGate(): void {
@@ -437,7 +458,64 @@ export function EntryPage(props: {
     </div>
   ) : null;
 
-  if (showOnboarding) {
+  if (showRoleSelector) {
+    return (
+      <>
+        <div className="nami-entry-onboarding-shell">
+          <header className="page-title nami-entry-onboarding-title">
+            <p>Welcome to Nami</p>
+            <h1>Choose your path</h1>
+          </header>
+
+          <OnboardingRoleSelector onSelect={handleRoleSelection} />
+
+          <button
+            className="secondary-action entry-back-button"
+            onClick={resetOnboardingFlow}
+            type="button"
+          >
+            Back to overview
+          </button>
+        </div>
+        {entryGateOverlay}
+      </>
+    );
+  }
+
+  if (showOnboarding && onboardingRole === 'game') {
+    return (
+      <>
+        <div className="nami-entry-onboarding-shell">
+          <header className="page-title nami-entry-onboarding-title">
+            <p>Game studio onboarding</p>
+            <h1>Submit your game</h1>
+          </header>
+
+          <GameOnboardingPanel
+            onBack={() => {
+              setShowOnboarding(false);
+              setShowRoleSelector(true);
+              setOnboardingRole(null);
+            }}
+            onEnterPreApprovedChannel={() => {
+              props.onEnterPreApprovedGame?.();
+            }}
+          />
+
+          <button
+            className="secondary-action entry-back-button"
+            onClick={resetOnboardingFlow}
+            type="button"
+          >
+            Back to overview
+          </button>
+        </div>
+        {entryGateOverlay}
+      </>
+    );
+  }
+
+  if (showOnboarding && onboardingRole === 'gamer') {
     return (
       <>
         <div className="nami-entry-onboarding-shell">
@@ -458,10 +536,14 @@ export function EntryPage(props: {
 
           <button
             className="secondary-action entry-back-button"
-            onClick={() => setShowOnboarding(false)}
+            onClick={() => {
+              setShowOnboarding(false);
+              setShowRoleSelector(true);
+              setOnboardingRole(null);
+            }}
             type="button"
           >
-            Back to overview
+            Back to role selection
           </button>
         </div>
         {entryGateOverlay}

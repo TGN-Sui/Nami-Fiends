@@ -39,6 +39,11 @@ import {
   resolveOwnedGameChannel,
 } from './channel-owner-access.js';
 import {
+  isFullyApprovedGameOwner,
+  isPreApprovedGameOwner,
+} from './game-owner-session-store.js';
+import { isChannelHiddenFromPublic } from './game-submission-ticket-store.js';
+import {
   readActiveHubFeaturedChannelId,
   readApprovedPartnerCarouselChannelIds,
   readChannelOwnerPromotionsState,
@@ -4748,6 +4753,13 @@ export function App(): ReactElement {
     section: ChannelProfileSection = 'news',
     ownerFocus: ChannelProfileOwnerFocus = null,
   ): void => {
+    if (
+      isChannelHiddenFromPublic(channel.id) &&
+      !(isGameChannelOwner() && ownsGameChannel(channel.id))
+    ) {
+      return;
+    }
+
     setSelectedChannel(channel);
     setSelectedDeveloper(channelDeveloper(channel));
     setChannelProfileSection(section);
@@ -4858,6 +4870,19 @@ export function App(): ReactElement {
   }), [openMemberProfile, openChannelProfile, openStudioProfile]);
 
   const navigateFromCurrentPage = useCallback((page: NamiPage): void => {
+    if (isPreApprovedGameOwner() && !isFullyApprovedGameOwner()) {
+      if (page === 'channelProfile') {
+        openOwnedGameChannelProfile(null);
+        return;
+      }
+
+      if (page === 'settings') {
+        return;
+      }
+
+      return;
+    }
+
     if (page === 'userProfile' && isGameChannelOwner()) {
       openOwnedGameChannelProfile();
       return;
@@ -4961,11 +4986,31 @@ export function App(): ReactElement {
     setActivePage('entry');
   }
 
+  function enterPreApprovedGameChannel(): void {
+    setEntryShowGate(false);
+    setEntryStartOnboarding(false);
+    setEntrySignedOutNotice(false);
+
+    const ownedChannel = resolveOwnedGameChannel();
+
+    if (ownedChannel) {
+      setSelectedChannel(ownedChannel);
+      setChannelProfileSection('about');
+      setChannelProfileOwnerFocus(null);
+      setContextReturnPage('entry');
+      setActivePage('channelProfile');
+      return;
+    }
+
+    openOwnedGameChannelProfile(null);
+  }
+
   const screen = useMemo(() => {
     if (activePage === 'entry') {
       return (
         <EntryPage
           onEnterHub={enterNamiHub}
+          onEnterPreApprovedGame={enterPreApprovedGameChannel}
           onEntryGateHandled={() => setEntryShowGate(false)}
           onNavigateToSettings={() => setActivePage('settings')}
           onStartOnboardingHandled={() => setEntryStartOnboarding(false)}
@@ -5230,16 +5275,29 @@ if (activePage === 'userProfile') {
     saveIgniteRadioEnabled(false);
   }, [activePage]);
 
-  const showSidebar = activePage !== 'entry';
+  const isPreApprovedGameOwnerOnly = isPreApprovedGameOwner() && !isFullyApprovedGameOwner();
+  const showSidebar = activePage !== 'entry' && !isPreApprovedGameOwnerOnly;
+  const showProfileDropdown = showSidebar && !isPreApprovedGameOwnerOnly;
+
+  useEffect(() => {
+    if (!isPreApprovedGameOwnerOnly) {
+      return;
+    }
+
+    if (activePage === 'settings') {
+      enterPreApprovedGameChannel();
+    }
+  }, [activePage, isPreApprovedGameOwnerOnly]);
 
   return (
     <main
       className="nami-app"
       data-active-page={activePage}
       data-grid-pulse-key={gridPulseKey}
+      {...(isPreApprovedGameOwnerOnly ? { 'data-preapproved-game-owner': 'true' } : {})}
     >
       {showSidebar ? <NamiGridSpotlight scope="app" /> : null}
-      {showSidebar
+      {showProfileDropdown
         ? createPortal(
             isGameChannelOwner() ? (
               <PinnedGameChannelProfileCard
@@ -5278,11 +5336,15 @@ if (activePage === 'userProfile') {
         </button>
       )}
 
-      <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
-      <DemoPerspectiveBar
-        onNavigate={navigateFromCurrentPage}
-        onRestoreOwner={handleRestoreOwnerDashboard}
-      />
+      {!isPreApprovedGameOwnerOnly ? (
+        <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
+      ) : null}
+      {!isPreApprovedGameOwnerOnly ? (
+        <DemoPerspectiveBar
+          onNavigate={navigateFromCurrentPage}
+          onRestoreOwner={handleRestoreOwnerDashboard}
+        />
+      ) : null}
 
       <section className="main-stage">
         {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (

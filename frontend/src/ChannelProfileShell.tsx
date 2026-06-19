@@ -2,7 +2,11 @@ import { useState, type CSSProperties, type DragEvent, type ReactElement, type R
 
 import { canSubscribeToChannelBanners } from './member-access.js';
 import { ChannelBoostButton } from './ChannelBoostButton.js';
-import { buildChannelProfileNavItems, type ChannelProfileSection } from './channel-profile-sections.js';
+import {
+  buildChannelProfileNavItems,
+  buildPreApprovedChannelProfileNavItems,
+  type ChannelProfileSection,
+} from './channel-profile-sections.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import type { NamiChannel, NamiMember, NamiPage } from './uiMockData.js';
 
@@ -33,6 +37,7 @@ type ChannelProfileShellProps = {
   pageTitle?: string;
   heroBackgroundUrl?: string;
   profileEditMode?: boolean;
+  preApprovedOwnerView?: boolean;
   tabOrder?: ChannelProfileSection[];
   onReorderTabs?: (tabOrder: ChannelProfileSection[]) => void;
   children: ReactNode;
@@ -85,12 +90,14 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
   const showMemberConsumerActions = props.showMemberConsumerActions ?? true;
   const [draggedTabId, setDraggedTabId] = useState<ChannelProfileSection | null>(null);
 
-  const navItems = buildChannelProfileNavItems({
-    eventCount: props.eventCount,
-    reviewCount: props.reviewCount,
-    isChannelOwner: props.isChannelOwner,
-    ...(props.tabOrder ? { tabOrder: props.tabOrder } : {}),
-  });
+  const navItems = props.preApprovedOwnerView
+    ? buildPreApprovedChannelProfileNavItems({ eventCount: props.eventCount })
+    : buildChannelProfileNavItems({
+        eventCount: props.eventCount,
+        reviewCount: props.reviewCount,
+        isChannelOwner: props.isChannelOwner,
+        ...(props.tabOrder ? { tabOrder: props.tabOrder } : {}),
+      });
 
   const shellClassName =
     'channel-profile-page channel-profile-redesign' +
@@ -200,7 +207,7 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
                 />
               </>
             ) : null}
-            {props.activeSection !== 'chat' ? (
+            {!props.preApprovedOwnerView && props.activeSection !== 'chat' ? (
               <button className="secondary-action" onClick={() => props.onSelectSection('chat')} type="button">
                 Join chat
               </button>

@@ -304,13 +304,22 @@ export function computePlayerScoreFromDraft(input: {
   displayName: string;
   email: string;
   quizAnswers: Record<string, string>;
+  socialXVerified?: boolean;
+  socialTwitchVerified?: boolean;
+  optionalPlatformLinks?: string[];
 }): PlayerScoreBreakdown {
+  const linkedPlatforms = [...(input.optionalPlatformLinks ?? [])];
+
+  if (input.socialTwitchVerified) {
+    linkedPlatforms.push('twitch');
+  }
+
   return computePlayerScore({
     displayName: input.displayName,
     email: input.email,
     quizAnswers: input.quizAnswers,
-    linkedPlatforms: [],
-    xVerified: false,
+    linkedPlatforms,
+    xVerified: input.socialXVerified === true,
     walletLinked: false,
     walletSource: null,
     claimApproved: false,

@@ -1,4 +1,6 @@
 import { channels as seedChannels } from './fixtures/seed-data.js';
+import { readGameOwnerSession } from './game-owner-session-store.js';
+import { buildProvisionalGameChannel } from './provisional-game-channel.js';
 import { readViewingAsChannelOwner } from './surface-preferences.js';
 import { channels, type NamiChannel } from './uiMockData.js';
 
@@ -39,6 +41,18 @@ function findChannelById(channelId: string): NamiChannel | undefined {
 }
 
 export function resolveOwnedGameChannel(): NamiChannel | undefined {
+  const gameOwnerSession = readGameOwnerSession();
+
+  if (gameOwnerSession) {
+    const seeded = findChannelById(gameOwnerSession.provisionalChannelId);
+
+    if (seeded) {
+      return seeded;
+    }
+
+    return buildProvisionalGameChannel(gameOwnerSession);
+  }
+
   const channelId = readOwnedGameChannelId();
 
   if (!channelId) {

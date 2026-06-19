@@ -37,6 +37,8 @@ import {
   type StoredEvent,
   useEventsStore,
 } from './events-store.js';
+import { isPreApprovedGameOwner, isFullyApprovedGameOwner } from './game-owner-session-store.js';
+import { ownsGameChannel } from './channel-owner-access.js';
 import { useChannelProfileChrome } from './useChannelProfileChrome.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
@@ -111,6 +113,8 @@ export function ChannelProfileScreen(props: {
   useChannelGameReviewsStore();
 
   const chrome = useChannelProfileChrome(props.channel);
+  const preApprovedOwnerView =
+    isPreApprovedGameOwner() && !isFullyApprovedGameOwner() && ownsGameChannel(props.channel.id);
   const channelCoverUrl = resolveChannelCoverUrl(props.channel)?.trim() ?? '';
   const newsBannerUrl = readChannelNewsBannerOverride(props.channel.id)?.trim() ?? '';
   const heroBackgroundUrl = readChannelHeroBackgroundOverride(props.channel.id)?.trim() ?? '';
@@ -120,8 +124,9 @@ export function ChannelProfileScreen(props: {
   const gameEvents = getChannelEvents(props.channel);
   const reviewCount = getChannelGameReviews(props.channel.id).length;
 
-  const defaultSection: ChannelProfileSection =
-    props.initialSection ?? (chrome.isChannelOwner ? 'owner' : 'news');
+  const defaultSection: ChannelProfileSection = preApprovedOwnerView
+    ? 'about'
+    : props.initialSection ?? (chrome.isChannelOwner ? 'owner' : 'news');
   const [activeSection, setActiveSection] = useState<ChannelProfileSection>(defaultSection);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
   const [ownerBrandPalette, setOwnerBrandPalette] = useState<string[]>(() => readOwnerBrandPalette());
@@ -241,6 +246,10 @@ export function ChannelProfileScreen(props: {
   }, [activeSection, chrome.isChannelOwner]);
 
   function handleSelectSection(section: ChannelProfileSection): void {
+    if (preApprovedOwnerView && section !== 'about' && section !== 'owner' && section !== 'events') {
+      return;
+    }
+
     if (section === 'owner' && !chrome.isChannelOwner) {
       setActiveSection('news');
       return;
@@ -553,6 +562,15 @@ export function ChannelProfileScreen(props: {
 
   return (
     <>
+      {preApprovedOwnerView ? (
+        <div className="preapproved-game-owner-banner" role="status">
+          <strong>Pre-approved workspace</strong>
+          <p>
+            Your game channel is hidden from other users until Nami Officials approve it. You can edit
+            About, Owner, and Events only. Sidebar navigation unlocks after approval.
+          </p>
+        </div>
+      ) : null}
       <ChannelProfileShell
         activeSection={activeSection}
         mode={activeSection === 'chat' ? 'chat' : 'profile'}
@@ -576,7 +594,8 @@ export function ChannelProfileScreen(props: {
               onReorderTabs: (tabOrder) => reorderProfileTabs(props.channel.id, tabOrder),
             }
           : {})}
-        showMemberConsumerActions={chrome.showMemberConsumerActions}
+        {...(preApprovedOwnerView ? { preApprovedOwnerView: true } : {})}
+        showMemberConsumerActions={chrome.showMemberConsumerActions && !preApprovedOwnerView}
         onBannerAlertsToggle={chrome.handleBannerAlertsToggle}
         onBoostChannel={chrome.handleBoostChannel}
         onNavigate={props.onNavigate}

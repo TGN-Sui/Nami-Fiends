@@ -174,11 +174,76 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
             <button
               className="onboarding-primary-btn"
               disabled={!createReady}
-              onClick={() => setAct('preview')}
+              onClick={() => setAct('social')}
               type="button"
             >
-              Preview passport
+              Continue to social verification
             </button>
+          </div>
+        ) : null}
+
+        {act === 'social' ? (
+          <div className="onboarding-step-body">
+            <h3>Optional social verification</h3>
+            <p className="protocol-hint">
+              Verify an X or Twitch handle now to boost your starting Player Score. You can skip and
+              link platforms later from Settings.
+            </p>
+
+            <label className="onboarding-field">
+              <span>X handle (optional)</span>
+              <input
+                onChange={(event) =>
+                  updateDraft({
+                    socialXHandle: event.target.value,
+                    socialXVerified: false,
+                  })
+                }
+                placeholder="@yourhandle"
+                type="text"
+                value={draft.socialXHandle}
+              />
+            </label>
+            <button
+              className="onboarding-secondary-btn"
+              disabled={draft.socialXHandle.trim().length < 2}
+              onClick={() => updateDraft({ socialXVerified: true })}
+              type="button"
+            >
+              {draft.socialXVerified ? 'X verified' : 'Verify X account'}
+            </button>
+
+            <label className="onboarding-field">
+              <span>Twitch handle (optional)</span>
+              <input
+                onChange={(event) =>
+                  updateDraft({
+                    socialTwitchHandle: event.target.value,
+                    socialTwitchVerified: false,
+                  })
+                }
+                placeholder="channelname"
+                type="text"
+                value={draft.socialTwitchHandle}
+              />
+            </label>
+            <button
+              className="onboarding-secondary-btn"
+              disabled={draft.socialTwitchHandle.trim().length < 2}
+              onClick={() => updateDraft({ socialTwitchVerified: true })}
+              type="button"
+            >
+              {draft.socialTwitchVerified ? 'Twitch verified' : 'Verify Twitch account'}
+            </button>
+
+            <div className="onboarding-step-actions">
+              <button className="onboarding-secondary-btn" onClick={() => setAct('create')} type="button">
+                Back
+              </button>
+              <button className="onboarding-primary-btn" onClick={() => setAct('preview')} type="button">
+                Preview passport
+              </button>
+            </div>
           </div>
         ) : null}
 
@@ -203,7 +268,7 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
             {signupError ? <p className="onboarding-field-error">{signupError}</p> : null}
 
             <div className="onboarding-step-actions">
-              <button className="onboarding-secondary-btn" onClick={() => setAct('create')} type="button">
+              <button className="onboarding-secondary-btn" onClick={() => setAct('social')} type="button">
                 Edit draft
               </button>
               <button

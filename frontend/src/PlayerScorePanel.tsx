@@ -22,6 +22,9 @@ export function PlayerScorePanel(props: PlayerScorePanelProps): ReactElement {
           displayName: props.draft.displayName,
           email: props.draft.email,
           quizAnswers: props.draft.quizAnswers,
+          socialXVerified: props.draft.socialXVerified,
+          socialTwitchVerified: props.draft.socialTwitchVerified,
+          optionalPlatformLinks: props.draft.optionalPlatformLinks,
         })
       : liveScore);
 

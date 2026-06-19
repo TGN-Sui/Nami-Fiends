@@ -13,6 +13,11 @@ export interface OnboardingDraft {
   archetype: number;
   archetypeLabel: string;
   flavorBadgeId: string;
+  socialXHandle: string;
+  socialXVerified: boolean;
+  socialTwitchHandle: string;
+  socialTwitchVerified: boolean;
+  optionalPlatformLinks: string[];
   createdAtMs: number;
   updatedAtMs: number;
 }
@@ -28,6 +33,11 @@ export function createEmptyDraft(): OnboardingDraft {
     archetype: 2,
     archetypeLabel: 'Cozy Voyager',
     flavorBadgeId: 'Hearth Basic',
+    socialXHandle: '',
+    socialXVerified: false,
+    socialTwitchHandle: '',
+    socialTwitchVerified: false,
+    optionalPlatformLinks: [],
     createdAtMs: now,
     updatedAtMs: now,
   };
@@ -66,6 +76,14 @@ export function loadOnboardingDraft(): OnboardingDraft | null {
         typeof parsed.archetypeLabel === 'string' ? parsed.archetypeLabel : 'Cozy Voyager',
       flavorBadgeId:
         typeof parsed.flavorBadgeId === 'string' ? parsed.flavorBadgeId : 'Hearth Basic',
+      socialXHandle: typeof parsed.socialXHandle === 'string' ? parsed.socialXHandle : '',
+      socialXVerified: parsed.socialXVerified === true,
+      socialTwitchHandle:
+        typeof parsed.socialTwitchHandle === 'string' ? parsed.socialTwitchHandle : '',
+      socialTwitchVerified: parsed.socialTwitchVerified === true,
+      optionalPlatformLinks: Array.isArray(parsed.optionalPlatformLinks)
+        ? parsed.optionalPlatformLinks.filter((entry): entry is string => typeof entry === 'string')
+        : [],
       createdAtMs: typeof parsed.createdAtMs === 'number' ? parsed.createdAtMs : Date.now(),
       updatedAtMs: typeof parsed.updatedAtMs === 'number' ? parsed.updatedAtMs : Date.now(),
     };

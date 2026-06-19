@@ -1,6 +1,6 @@
 export type OnboardingMethod = 'wallet' | 'zklogin' | 'demo';
 
-export type OnboardingAct = 'create' | 'preview';
+export type OnboardingAct = 'create' | 'social' | 'preview';
 
 export interface OnboardingActStep {
   act: OnboardingAct;
@@ -13,6 +13,11 @@ export const ONBOARDING_ACTS: OnboardingActStep[] = [
     act: 'create',
     label: 'Create',
     description: 'Display name, email, and gamer quiz — no wallet yet.',
+  },
+  {
+    act: 'social',
+    label: 'Social',
+    description: 'Optional social verification to boost your Player Score.',
   },
   {
     act: 'preview',

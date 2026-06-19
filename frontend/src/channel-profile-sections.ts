@@ -55,3 +55,13 @@ export function buildChannelProfileNavItems(options: {
 
   return items;
 }
+
+export function buildPreApprovedChannelProfileNavItems(options: {
+  eventCount: number;
+}): ChannelProfileNavItem[] {
+  return [
+    { id: 'about', label: PROFILE_TAB_LABELS.about },
+    { id: 'owner', label: PROFILE_TAB_LABELS.owner },
+    { id: 'events', label: PROFILE_TAB_LABELS.events, badge: options.eventCount },
+  ];
+}

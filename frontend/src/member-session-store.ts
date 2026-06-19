@@ -233,6 +233,9 @@ export function completeSignupFromDraft(draft: OnboardingDraft): MemberSession |
     displayName: draft.displayName,
     email: draft.email,
     quizAnswers: draft.quizAnswers,
+    socialXVerified: draft.socialXVerified,
+    socialTwitchVerified: draft.socialTwitchVerified,
+    optionalPlatformLinks: draft.optionalPlatformLinks,
   });
   const issuedAtMs = Date.now();
 

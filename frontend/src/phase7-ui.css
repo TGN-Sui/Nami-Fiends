@@ -1924,6 +1924,165 @@
   font-size: 0.92rem;
 }
 
+.onboarding-role-selector {
+  display: grid;
+  gap: 18px;
+}
+
+.onboarding-role-selector-head {
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-role-selector-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.onboarding-role-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 188, 224, 0.28);
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.92), rgba(4, 8, 14, 0.88));
+  text-align: left;
+  color: #eef7ff;
+}
+
+.onboarding-role-card.is-gamer-role {
+  border-color: rgba(90, 220, 170, 0.35);
+}
+
+.onboarding-role-card.is-game-role {
+  border-color: rgba(117, 215, 255, 0.35);
+}
+
+.onboarding-role-card-index {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #8eb6d8;
+}
+
+.game-trust-score-panel,
+.game-onboarding-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.game-trust-score-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.game-trust-score-eyebrow {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #8eb6d8;
+}
+
+.game-trust-score-tier-chip {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.game-trust-score-preapproval-note {
+  margin: 0;
+  color: #8dffc8;
+}
+
+.game-trust-score-preapproval-note.is-below-threshold {
+  color: #ffd28d;
+}
+
+.game-trust-score-category-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.game-trust-score-category {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(8, 14, 24, 0.55);
+}
+
+.game-submission-ticket-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-submission-ticket-card {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto 1fr auto;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  background: rgba(4, 8, 14, 0.72);
+}
+
+.game-submission-ticket-rank {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #8eb6d8;
+}
+
+.game-submission-ticket-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.game-submission-ticket-score {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.game-submission-ticket-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.game-submission-ticket-status.is-preapproved {
+  color: #8dffc8;
+}
+
+.game-submission-ticket-status.is-approved {
+  color: #8eb6ff;
+}
+
+.game-submission-ticket-status.is-rejected {
+  color: #ff9f9f;
+}
+
+.preapproved-game-owner-banner {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 210, 141, 0.35);
+  background: rgba(42, 28, 8, 0.55);
+}
+
+.nami-app[data-preapproved-game-owner='true'] .sidebar-enter-nami-button {
+  display: none;
+}
+
 .nami-landing-shell {
   position: relative;
   isolation: isolate;
