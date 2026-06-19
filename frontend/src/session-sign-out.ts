@@ -1,5 +1,6 @@
 import { clearSignedOut } from './member-auth-store.js';
 import { clearGameOnboardingDraft } from './game-onboarding-draft.js';
+import { clearGameOfficialSocialAuth } from './game-official-social-auth-store.js';
 import { clearGameOwnerSession } from './game-owner-session-store.js';
 import { clearMemberSession } from './member-session-store.js';
 import { clearOnboardingDraft } from './onboarding-draft.js';
@@ -12,6 +13,7 @@ export function clearLocalNamiSession(): void {
   clearGameOwnerSession();
   clearOnboardingDraft();
   clearGameOnboardingDraft();
+  clearGameOfficialSocialAuth();
   clearZkLoginSession();
   clearSignedOut();
   saveUserSurfaceRole('member');

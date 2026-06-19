@@ -17,6 +17,12 @@ import {
   type GameSubmissionTicket,
 } from './game-submission-ticket-store.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
+import { GameOfficialSocialAuthControl } from './GameOfficialSocialAuthControl.js';
+import {
+  clearGameOfficialSocialAuth,
+  readGameOfficialSocialAuthState,
+  useGameOfficialSocialAuthState,
+} from './game-official-social-auth-store.js';
 import { GameTrustScorePanel } from './GameTrustScorePanel.js';
 import { saveOwnedGameChannelId } from './channel-owner-access.js';
 import { saveUserSurfaceRole } from './surface-preferences.js';
@@ -69,6 +75,7 @@ export function GameOnboardingPanel(props: {
   onBack?: () => void;
 }): ReactElement {
   const { owner, source } = useProtocolOwner();
+  const officialSocialAuth = useGameOfficialSocialAuthState();
   const [act, setAct] = useState<GameOnboardingAct>('identity');
   const [draft, setDraft] = useState<GameOnboardingDraft>(() => {
     return loadGameOnboardingDraft() ?? createEmptyGameOnboardingDraft();
@@ -104,9 +111,66 @@ export function GameOnboardingPanel(props: {
     });
   }, [draft, walletAddress, walletLinked]);
 
+  useEffect(() => {
+    if (!draft.officialSocialPlatform) {
+      return;
+    }
+
+    if (
+      officialSocialAuth.platform === draft.officialSocialPlatform &&
+      officialSocialAuth.verified &&
+      officialSocialAuth.handle
+    ) {
+      setDraft((current) => {
+        if (
+          current.officialSocialVerified &&
+          current.officialSocialHandle === officialSocialAuth.handle
+        ) {
+          return current;
+        }
+
+        return {
+          ...current,
+          officialSocialHandle: officialSocialAuth.handle ?? '',
+          officialSocialVerified: true,
+        };
+      });
+      return;
+    }
+
+    if (draft.officialSocialVerified || draft.officialSocialHandle.trim() !== '') {
+      setDraft((current) => ({
+        ...current,
+        officialSocialHandle: '',
+        officialSocialVerified: false,
+      }));
+    }
+  }, [
+    draft.officialSocialPlatform,
+    draft.officialSocialHandle,
+    draft.officialSocialVerified,
+    officialSocialAuth.handle,
+    officialSocialAuth.platform,
+    officialSocialAuth.verified,
+  ]);
+
   const updateDraft = useCallback((patch: Partial<GameOnboardingDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
   }, []);
+
+  function handleOfficialPlatformChange(platform: 'x' | 'twitch'): void {
+    const currentAuth = readGameOfficialSocialAuthState();
+
+    if (currentAuth.platform !== platform) {
+      clearGameOfficialSocialAuth();
+    }
+
+    updateDraft({
+      officialSocialPlatform: platform,
+      officialSocialHandle: '',
+      officialSocialVerified: false,
+    });
+  }
 
   function handleSubmitTicket(): void {
     setSubmitError(null);
@@ -285,18 +349,18 @@ export function GameOnboardingPanel(props: {
         {act === 'officials' ? (
           <div className="onboarding-step-body">
             <fieldset className="onboarding-quiz-question">
-              <legend>Official game account</legend>
+              <legend>Official game account platform</legend>
+              <p className="protocol-hint">
+                Choose the platform where your game maintains its official presence, then sign in
+                through the official {draft.officialSocialPlatform === 'twitch' ? 'Twitch' : 'X'}{' '}
+                authorizer. You cannot type a handle manually.
+              </p>
               <div className="onboarding-quiz-options">
                 <label className="onboarding-quiz-option">
                   <input
                     checked={draft.officialSocialPlatform === 'x'}
                     name="official-social-platform"
-                    onChange={() =>
-                      updateDraft({
-                        officialSocialPlatform: 'x',
-                        officialSocialVerified: false,
-                      })
-                    }
+                    onChange={() => handleOfficialPlatformChange('x')}
                     type="radio"
                   />
                   <span>X (official game account)</span>
@@ -305,12 +369,7 @@ export function GameOnboardingPanel(props: {
                   <input
                     checked={draft.officialSocialPlatform === 'twitch'}
                     name="official-social-platform"
-                    onChange={() =>
-                      updateDraft({
-                        officialSocialPlatform: 'twitch',
-                        officialSocialVerified: false,
-                      })
-                    }
+                    onChange={() => handleOfficialPlatformChange('twitch')}
                     type="radio"
                   />
                   <span>Twitch (official channel)</span>
@@ -318,29 +377,14 @@ export function GameOnboardingPanel(props: {
               </div>
             </fieldset>
 
-            <label className="onboarding-field">
-              <span>Official handle</span>
-              <input
-                onChange={(event) =>
-                  updateDraft({
-                    officialSocialHandle: event.target.value,
-                    officialSocialVerified: false,
-                  })
-                }
-                placeholder={draft.officialSocialPlatform === 'twitch' ? 'channelname' : '@gamehandle'}
-                type="text"
-                value={draft.officialSocialHandle}
+            {draft.officialSocialPlatform ? (
+              <GameOfficialSocialAuthControl
+                gameTitle={draft.gameTitle}
+                platform={draft.officialSocialPlatform}
               />
-            </label>
-
-            <button
-              className="onboarding-secondary-btn"
-              disabled={draft.officialSocialHandle.trim().length < 2 || !draft.officialSocialPlatform}
-              onClick={() => updateDraft({ officialSocialVerified: true })}
-              type="button"
-            >
-              {draft.officialSocialVerified ? 'Official account authorized' : 'Authorize official account'}
-            </button>
+            ) : (
+              <p className="protocol-hint">Select X or Twitch to open the official sign-in authorizer.</p>
+            )}
 
             <div className="onboarding-zklogin-block">
               <p className="protocol-hint">Link zkLogin so Nami Officials can verify wallet ownership.</p>
