@@ -29,8 +29,8 @@ export function canShowMemberPublicChat(member: NamiMember, isStreamingOnline: b
   return isMemberVerified(member) && isStreamingOnline;
 }
 
-export function memberLiveBroadcastEmbed(): SocialEmbed | undefined {
-  const embeds = readEmbeddedFeedLinks('member');
+export function memberLiveBroadcastEmbed(memberId: string): SocialEmbed | undefined {
+  const embeds = readEmbeddedFeedLinks('member', memberId);
 
   return (
     embeds.find((embed) => embed.platform === 'twitch' && embed.live) ??

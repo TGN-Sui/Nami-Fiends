@@ -165,6 +165,8 @@ import {
 } from './nami-affiliations.js';
 import { MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
 import { MemberProfileActions } from './MemberProfileActions.js';
+import { MemberProfileShowcase } from './MemberProfileShowcase.js';
+import { getNamiProgression, percentForNamiSeasonLevel } from './member-progression.js';
 import { MemberPublicPinnedChat } from './MemberPublicPinnedChat.js';
 import { canShowMemberPublicChat } from './member-public-chat.js';
 import { readMemberIdFromShareUrl, shareMemberProfile } from './profile-share.js';
@@ -382,61 +384,10 @@ function ChannelAvatar(props: {
   );
 }
 
-type NamiProgressionSnapshot = {
-  level: number;
-  levelPercent: number;
-  currentXp: number;
-  nextLevelXp: number;
-  seasonXp: number;
-  guilds: string[];
-  squads: string[];
-};
-
 const namiSeasonLevelMarkers = [1, 15, 30, 45, 60, 75, 90, 100] as const;
 
 function memberInitials(member: (typeof members)[number]): string {
   return member.name.slice(0, 2).toUpperCase();
-}
-
-function percentForNamiLevel(level: number, currentXp = 0, nextLevelXp = 1000): number {
-  const safeLevel = Math.min(100, Math.max(1, level));
-  const safeXpPercent = Math.min(1, Math.max(0, currentXp / nextLevelXp));
-  const preciseLevel = safeLevel - 1 + safeXpPercent;
-
-  return Math.min(100, Math.max(0, (preciseLevel / 99) * 100));
-}
-
-function getNamiProgression(member: (typeof members)[number], tick = Date.now()): NamiProgressionSnapshot {
-  const memberIndex = Math.max(0, members.findIndex((currentMember) => currentMember.id === member.id));
-  const baseLevel = Math.min(100, 18 + memberIndex * 9 + (member.name.length % 8));
-  const nextLevelXp = 1000;
-  const liveXpPulse = Math.floor((tick / 1000) % 120);
-  const currentXp = Math.min(nextLevelXp - 1, 420 + memberIndex * 73 + liveXpPulse);
-  const levelPercent = percentForNamiLevel(baseLevel, currentXp, nextLevelXp);
-
-  const guildSets = [
-    ['Wave Raiders', 'Creator Circle'],
-    ['Night Market PvP', 'Retro Arena'],
-    ['Builder League', 'Sui Creators'],
-    ['Ocean Mint Crew', 'Signal Watch']
-  ];
-
-  const squadSets = [
-    ['Alpha Squad', 'Mint Watch'],
-    ['Raid Team', 'Patch Crew'],
-    ['Builder Squad', 'Event Ops'],
-    ['Support Squad', 'Lore Team']
-  ];
-
-  return {
-    level: baseLevel,
-    levelPercent,
-    currentXp,
-    nextLevelXp,
-    seasonXp: baseLevel * nextLevelXp + currentXp,
-    guilds: guildSets[memberIndex % guildSets.length] ?? guildSets[0]!,
-    squads: squadSets[memberIndex % squadSets.length] ?? squadSets[0]!
-  };
 }
 
 function NamiSeasonProgressBar(props: {
@@ -471,7 +422,7 @@ function NamiSeasonProgressBar(props: {
           <span
             className="nami-season-marker"
             key={level}
-            style={{ left: percentForNamiLevel(level) + '%' }}
+            style={{ left: percentForNamiSeasonLevel(level) + '%' }}
           >
             <i>{level}</i>
           </span>
@@ -2451,6 +2402,7 @@ function MemberProfileScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  onOpenProfile: (channel: NamiChannel) => void;
   onOpenThread: (memberId: string) => void;
   onNavigateGuilds: () => void;
   returnPage: NamiPage;
@@ -2464,9 +2416,6 @@ function MemberProfileScreen(props: {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
-  const memberProgression = getNamiProgression(props.member);
-  const memberVerificationStatus =
-    reviewedSignal === 'Green' ? 'Verified' : reviewedSignal + ' Review';
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [privateDraft, setPrivateDraft] = useState('');
   const canMessage = canSendPrivateMessages() && props.member.id !== 'm1';
@@ -2520,7 +2469,7 @@ function MemberProfileScreen(props: {
     <>
       <header className="page-title member-profile-page-title">
         <div className="member-profile-page-title-copy">
-          <p>Member profile, history, and preference controls</p>
+          <p>Passport, activity showcase, and member surfaces</p>
           <h1>{props.member.name}</h1>
         </div>
         <SharePassportButton member={props.member} />
@@ -2636,132 +2585,98 @@ function MemberProfileScreen(props: {
           />
         </div>
 
-        <MemberProfileActions member={props.member} onNavigateGuilds={props.onNavigateGuilds} />
+        <MemberProfileShowcase
+          isStreamingOnline={isStreamingOnline}
+          member={props.member}
+          mode="visitor"
+          onOpenChannel={props.onOpenProfile}
+          onNavigate={props.onNavigate}
+          belowShowcase={
+            <>
+              <MemberProfileActions member={props.member} onNavigateGuilds={props.onNavigateGuilds} />
 
-        {canMessage ? (
-          <article className="panel member-private-message-panel">
-            <div className="profile-panel-heading">
-              <h2>Private Message</h2>
-              <p>Verified members can send direct messages that appear in Messages.</p>
-            </div>
-            <ChatComposerWithEmojis
-              ariaLabel={'Private message to ' + props.member.name}
-              canSend={true}
-              className="chat-composer-row message-log-composer"
-              onChange={setPrivateDraft}
-              onSend={() => {
-                if (!privateDraft.trim()) {
-                  return;
-                }
+              {canMessage ? (
+                <details className="panel member-profile-collapsible-panel">
+                  <summary>
+                    <strong>Private Message</strong>
+                    <small>Send a direct message</small>
+                  </summary>
+                  <ChatComposerWithEmojis
+                    ariaLabel={'Private message to ' + props.member.name}
+                    canSend={true}
+                    className="chat-composer-row message-log-composer"
+                    onChange={setPrivateDraft}
+                    onSend={() => {
+                      if (!privateDraft.trim()) {
+                        return;
+                      }
 
-                sendPrivateMessage(props.member.id, props.member.name, privateDraft);
-                setPrivateDraft('');
-                props.onOpenThread(props.member.id);
-              }}
-              placeholder={'Write to ' + props.member.name}
-              value={privateDraft}
-            />
-          </article>
-        ) : null}
+                      sendPrivateMessage(props.member.id, props.member.name, privateDraft);
+                      setPrivateDraft('');
+                      props.onOpenThread(props.member.id);
+                    }}
+                    placeholder={'Write to ' + props.member.name}
+                    value={privateDraft}
+                  />
+                </details>
+              ) : null}
 
-        <EmbeddedSocialPanel feedOwnerMemberId={props.member.id} surface="member" title="Member Feed" />
+              <details className="panel member-profile-collapsible-panel" open={isStreamingOnline}>
+                <summary>
+                  <strong>Member Feed</strong>
+                  <small>Live & social embeds</small>
+                </summary>
+                <EmbeddedSocialPanel feedOwnerMemberId={props.member.id} surface="member" title="Member Feed" />
+              </details>
 
-        {canShowMemberPublicChat(props.member, isStreamingOnline) ? (
-          <MemberPublicPinnedChat
-            member={props.member}
-            onOpenMember={props.onOpenMember}
-            {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
-          />
-        ) : null}
+              {canShowMemberPublicChat(props.member, isStreamingOnline) ? (
+                <MemberPublicPinnedChat
+                  member={props.member}
+                  onOpenMember={props.onOpenMember}
+                  {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+                />
+              ) : null}
 
-        {reportQueued ? <p className="report-pulse">Report added to moderation queue.</p> : null}
+              {reportQueued ? <p className="report-pulse">Report added to moderation queue.</p> : null}
 
-        <section className="member-profile-grid">
-            <article className="panel member-affiliation-panel">
-              <div className="profile-panel-heading">
-                <h2>Guilds & Squads</h2>
-                <p>Current guild standing, squad identity, and seasonal level.</p>
+              {isSelfMember(props.member.id) ? <MemberAvatarUploadCard /> : null}
+            </>
+          }
+          safetyPanel={
+            <details className="panel member-showcase-safety-drawer">
+              <summary>
+                <span className="mini-badge">Moderation</span>
+                <strong>Safety history</strong>
+                <small>Reports and actions connected to this member</small>
+              </summary>
+              <div className="member-history-stack">
+                {memberReports.length === 0 && memberActions.length === 0 ? (
+                  <span className="empty-safety-note">No safety history for this member.</span>
+                ) : null}
+
+                {memberReports.map((report) => (
+                  <div className="member-history-card" key={report.id}>
+                    <span className="mini-badge">{report.status}</span>
+                    <strong>{report.source} report</strong>
+                    <p>{report.reason}</p>
+                    <small>
+                      {report.channelName} · {report.createdAt}
+                    </small>
+                  </div>
+                ))}
+
+                {memberActions.map((action) => (
+                  <div className="member-history-card" key={action.id}>
+                    <span className="mini-badge">{action.action}</span>
+                    <strong>{action.note}</strong>
+                    <p>{action.channelName}</p>
+                    <small>{action.createdAt}</small>
+                  </div>
+                ))}
               </div>
-
-              <div className="nami-affiliation-grid">
-                <div>
-                  <span>Guilds</span>
-                  {memberProgression.guilds.map((guild) => (
-                    <strong key={guild}>{guild}</strong>
-                  ))}
-                </div>
-
-                <div>
-                  <span>Squads</span>
-                  {memberProgression.squads.map((squad) => (
-                    <strong key={squad}>{squad}</strong>
-                  ))}
-                </div>
-
-                <div>
-                  <span>Season XP</span>
-                  <strong>{memberProgression.seasonXp.toLocaleString()}</strong>
-                  <small>Lv {memberProgression.level} Nami Reputation</small>
-                </div>
-              </div>
-            </article>
-          <article className="panel">
-            <div className="profile-panel-heading">
-              <h2>Safety History</h2>
-              <p>Reports and moderator actions connected to this member.</p>
-            </div>
-
-            <div className="member-history-stack">
-              {memberReports.length === 0 && memberActions.length === 0 && (
-                <span className="empty-safety-note">No safety history for this member.</span>
-              )}
-
-              {memberReports.map((report) => (
-                <div className="member-history-card" key={report.id}>
-                  <span className="mini-badge">{report.status}</span>
-                  <strong>{report.source} report</strong>
-                  <p>{report.reason}</p>
-                  <small>{report.channelName} · {report.createdAt}</small>
-                </div>
-              ))}
-
-              {memberActions.map((action) => (
-                <div className="member-history-card" key={action.id}>
-                  <span className="mini-badge">{action.action}</span>
-                  <strong>{action.note}</strong>
-                  <p>{action.channelName}</p>
-                  <small>{action.createdAt}</small>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel">
-            <div className="profile-panel-heading">
-              <h2>Preference Notes</h2>
-              <p>Mute, Block, and Report are user-owned preference controls on your account.</p>
-            </div>
-
-            <div className="preference-note-stack">
-              <div>
-                <strong>Mute</strong>
-                <span>Quiet this member’s messages and reduce future notifications.</span>
-              </div>
-
-              <div>
-                <strong>Block</strong>
-                <span>Hide this member from chat and reduce unwanted interaction.</span>
-              </div>
-
-              <div>
-                <strong>Report</strong>
-                <span>Adds this member or message to a moderation review queue.</span>
-              </div>
-            </div>
-          </article>
-        </section>
-      
-        {isSelfMember(props.member.id) ? <MemberAvatarUploadCard /> : null}
+            </details>
+          }
+        />
 </section>
     </>
   );
@@ -3838,13 +3753,12 @@ function UserProfileScreen(props: {
   const profileMember = useSelfMember();
   const selfStreamingOnline = useMemberStreamingOnline(profileMember.id);
   const profileEdits = useSelfProfileEdits();
-  const profileProgression = getNamiProgression(profileMember);
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [viewAsGuest, setViewAsGuest] = useState(false);
   const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>(() => {
     return readProfileCardLayout();
   });
-  const memberFeedEnabled = readEmbeddedFeedEnabled('member');
+  const memberFeedEnabled = readEmbeddedFeedEnabled('member', profileMember.id);
 
   const mySubscriptions = useSubscribedChannels();
   const { owner: protocolOwner, context } = useProtocolOwner();
@@ -3874,7 +3788,7 @@ function UserProfileScreen(props: {
     <>
       <header className="page-title user-profile-page-title">
         <div className="user-profile-page-title-copy">
-          <p>Member identity and passport</p>
+          <p>Passport, activity showcase, and profile surfaces</p>
           <h1>
             My Profile
             {isNamiTeamMember(profileMember) ? (
@@ -4018,7 +3932,7 @@ function UserProfileScreen(props: {
               <button
                 className="profile-secondary-link"
                 onClick={() => {
-                  saveEmbeddedFeedEnabled('member', true);
+                  saveEmbeddedFeedEnabled('member', true, profileMember.id);
                 }}
                 type="button"
               >
@@ -4027,101 +3941,50 @@ function UserProfileScreen(props: {
             </article>
           )
         ) : (
-          <EmbeddedSocialPanel
-            feedOwnerMemberId={profileMember.id}
-            onOpenFeedSettings={() => {
-              requestSettingsSection('feeds');
+          <MemberProfileShowcase
+            guildAffiliations={profileGuildAffiliations}
+            isStreamingOnline={selfStreamingOnline}
+            member={profileMember}
+            mode="self"
+            subscriptions={mySubscriptions}
+            onOpenStatusSettings={() => {
+              requestSettingsSection('account');
               props.onNavigate?.('settings');
             }}
-            showFeedSettings
-            surface="member"
-            title="Member Feed"
+            {...(props.onNavigate ? { onNavigate: props.onNavigate } : {})}
+            {...(props.onOpenProfile ? { onOpenChannel: props.onOpenProfile } : {})}
+            {...(props.onOpenGuild ? { onOpenGuild: props.onOpenGuild } : {})}
+            belowShowcase={
+              <>
+                <details className="panel member-profile-collapsible-panel" open={selfStreamingOnline}>
+                  <summary>
+                    <strong>Member Feed</strong>
+                    <small>Live & social embeds</small>
+                  </summary>
+                  <EmbeddedSocialPanel
+                    feedOwnerMemberId={profileMember.id}
+                    onOpenFeedSettings={() => {
+                      requestSettingsSection('feeds');
+                      props.onNavigate?.('settings');
+                    }}
+                    showFeedSettings
+                    surface="member"
+                    title="Member Feed"
+                  />
+                </details>
+                <details className="panel member-profile-collapsible-panel">
+                  <summary>
+                    <strong>Membership & Profile</strong>
+                    <small>Plans and identity edits</small>
+                  </summary>
+                  <MembershipAccessCard />
+                  <ProfileEditPanel />
+                </details>
+              </>
+            }
           />
         )}
-
-        {viewAsGuest ? null : (
-        <section className="profile-quick-grid">
-          <article className="panel profile-embedded-card">
-            <div className="profile-panel-heading">
-              <h2>My Subscriptions</h2>
-              <p>Your subscribed channels now live inside your profile hub.</p>
-            </div>
-
-            <div className="profile-subscription-mini-grid">
-              {mySubscriptions.length > 0 ? (
-                mySubscriptions.map((channel) => (
-                  <button
-                    className="profile-mini-channel-card"
-                    key={channel.id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      props.onOpenProfile?.(channel);
-                    }}
-                    type="button"
-                  >
-                    <ChannelAvatar channel={channel} size="sm" />
-                    <div>
-                      <strong>{channel.name}</strong>
-                      <span>{channel.genre}</span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p className="profile-empty-state-copy">
-                  No subscribed channels yet. Subscribe from any Game Profile to fill a slot.
-                </p>
-              )}
-            </div>
-
-            <button
-              className="profile-secondary-link"
-              onClick={() => props.onNavigate?.('subscriptions')}
-              type="button"
-            >
-              Manage Subs
-            </button>
-          </article>
-
-          <article className="panel profile-embedded-card">
-            <div className="profile-panel-heading">
-              <h2>My Guilds</h2>
-              <p>Guild memberships and social groups connected to your passport.</p>
-            </div>
-
-            <div className="profile-guild-mini-grid">
-              {profileGuildAffiliations.map((guild) => (
-                <button
-                  className="profile-mini-guild-card"
-                  key={guild.id}
-                  onClick={() => props.onOpenGuild?.(guild.record)}
-                  type="button"
-                >
-                  <span className="legend-dot signal-ring signal-green" />
-                  <div>
-                    <strong>{guild.title}</strong>
-                    <small>
-                      {guild.isPublic ? 'Public' : 'Private'} · {guild.memberCount} members
-                    </small>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <button
-              className="profile-secondary-link"
-              onClick={() => props.onNavigate?.('guilds')}
-              type="button"
-            >
-              Manage Guilds
-            </button>
-          </article>
-
-        </section>
-        )}
-
-        {viewAsGuest ? null : <MembershipAccessCard />}
-        {viewAsGuest ? null : <ProfileEditPanel />}
-</section>
+      </section>
 
       {!viewAsGuest && canShowMemberPublicChat(profileMember, selfStreamingOnline) ? (
         <MemberPublicPinnedChat
@@ -4968,6 +4831,7 @@ export function App(): ReactElement {
         member={selectedMember}
         onNavigate={navigateFromCurrentPage}
         onNavigateGuilds={() => setActivePage('guilds')}
+        onOpenProfile={openChannelProfile}
         onOpenMember={openMemberProfile}
         onOpenThread={(memberId) => {
           setSelectedThreadMemberId(memberId);

@@ -18,6 +18,7 @@ export const profileGenreOptions = gameHubBrowserFilters.filter(
 
 export type SelfProfileEdits = {
   displayName: string;
+  dailyStatus: string;
   bio: string;
   badgeDisplay: string;
   titleDisplay: string;
@@ -30,6 +31,7 @@ export type SelfProfileEdits = {
 
 const defaultProfileEdits = (): SelfProfileEdits => ({
   displayName: '',
+  dailyStatus: '',
   bio: '',
   badgeDisplay: '',
   titleDisplay: '',
@@ -52,6 +54,7 @@ export function readSelfProfileEdits(): SelfProfileEdits {
 
     return {
       displayName: typeof parsed.displayName === 'string' ? parsed.displayName : '',
+      dailyStatus: typeof parsed.dailyStatus === 'string' ? parsed.dailyStatus : '',
       bio: typeof parsed.bio === 'string' ? parsed.bio : '',
       badgeDisplay: typeof parsed.badgeDisplay === 'string' ? parsed.badgeDisplay : '',
       titleDisplay: typeof parsed.titleDisplay === 'string' ? parsed.titleDisplay : '',

@@ -20,20 +20,22 @@ const PLATFORM_LABELS: Record<SocialEmbed['platform'], string> = {
 export function EmbeddedFeedLinksPanel(props: {
   surface: EmbeddedFeedSurface;
   enabled: boolean;
+  memberId?: string;
 }): ReactElement | null {
-  const [links, setLinks] = useState<SocialEmbed[]>(() => readEmbeddedFeedLinks(props.surface));
+  const memberId = props.surface === 'member' ? props.memberId : undefined;
+  const [links, setLinks] = useState<SocialEmbed[]>(() => readEmbeddedFeedLinks(props.surface, memberId));
 
   useEffect(() => {
     function refreshLinks(): void {
-      setLinks(readEmbeddedFeedLinks(props.surface));
+      setLinks(readEmbeddedFeedLinks(props.surface, memberId));
     }
 
     refreshLinks();
 
     return subscribeEmbeddedFeedLinks(refreshLinks);
-  }, [props.surface]);
+  }, [props.surface, memberId]);
 
-  if (!props.enabled || !readEmbeddedFeedEnabled(props.surface)) {
+  if (!props.enabled || !readEmbeddedFeedEnabled(props.surface, memberId)) {
     return null;
   }
 
@@ -48,7 +50,7 @@ export function EmbeddedFeedLinksPanel(props: {
             <span>Title</span>
             <input
               onChange={(event) => {
-                setLinks(updateEmbeddedFeedLink(props.surface, index, { title: event.target.value }));
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { title: event.target.value }, memberId));
               }}
               type="text"
               value={link.title}
@@ -59,7 +61,7 @@ export function EmbeddedFeedLinksPanel(props: {
             <span>Handle</span>
             <input
               onChange={(event) => {
-                setLinks(updateEmbeddedFeedLink(props.surface, index, { handle: event.target.value }));
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { handle: event.target.value }, memberId));
               }}
               type="text"
               value={link.handle}
@@ -70,7 +72,9 @@ export function EmbeddedFeedLinksPanel(props: {
             <span>Link URL</span>
             <input
               onChange={(event) => {
-                setLinks(updateEmbeddedFeedLink(props.surface, index, { previewUrl: event.target.value }));
+                setLinks(
+                  updateEmbeddedFeedLink(props.surface, index, { previewUrl: event.target.value }, memberId)
+                );
               }}
               placeholder="https://"
               type="url"
@@ -82,7 +86,7 @@ export function EmbeddedFeedLinksPanel(props: {
             <span>Embed URL (optional)</span>
             <input
               onChange={(event) => {
-                setLinks(updateEmbeddedFeedLink(props.surface, index, { embedUrl: event.target.value }));
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { embedUrl: event.target.value }, memberId));
               }}
               placeholder="https://player.twitch.tv/…"
               type="url"
@@ -94,7 +98,7 @@ export function EmbeddedFeedLinksPanel(props: {
             <input
               checked={link.live === true}
               onChange={(event) => {
-                setLinks(updateEmbeddedFeedLink(props.surface, index, { live: event.target.checked }));
+                setLinks(updateEmbeddedFeedLink(props.surface, index, { live: event.target.checked }, memberId));
               }}
               type="checkbox"
             />

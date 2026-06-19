@@ -104,6 +104,11 @@ export function OwnerEditableImage(props: {
           }
           className={className}
           onClick={(event) => openPicker(event)}
+          onPointerDown={(event) => {
+            if (editable) {
+              event.stopPropagation();
+            }
+          }}
           onKeyDown={(event) => {
             if (!editable) {
               return;
@@ -131,6 +136,11 @@ export function OwnerEditableImage(props: {
           className={className}
           disabled={!editable}
           onClick={() => openPicker()}
+          onPointerDown={(event) => {
+            if (editable) {
+              event.stopPropagation();
+            }
+          }}
           style={style}
           type="button"
         >

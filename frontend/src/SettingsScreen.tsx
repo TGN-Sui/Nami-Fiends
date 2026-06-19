@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { AccountConnectSection } from './account-connect.js';
+import { MemberDailyStatusSettingsField } from './MemberDailyStatusEditor.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
@@ -216,32 +217,41 @@ function EmbeddedFeedSettingsPanel(): ReactElement {
       </div>
 
       <div className="settings-toggle-list" key={revision + role}>
-        {visibleSurfaces.map((surface) => (
-          <button
-            className="secondary-action settings-embedded-toggle"
-            key={surface}
-            onClick={() => {
-              if (!canConfigureEmbeddedFeedSurface(surface, role, selfMember)) {
-                return;
-              }
+        {visibleSurfaces.map((surface) => {
+          const memberId = surface === 'member' ? selfMember.id : undefined;
 
-              saveEmbeddedFeedEnabled(surface, !readEmbeddedFeedEnabled(surface));
-              setRevision((value) => value + 1);
-            }}
-            type="button"
-          >
-            {surfaceLabels[surface]}: {readEmbeddedFeedEnabled(surface) ? 'On' : 'Off'}
-          </button>
-        ))}
+          return (
+            <button
+              className="secondary-action settings-embedded-toggle"
+              key={surface}
+              onClick={() => {
+                if (!canConfigureEmbeddedFeedSurface(surface, role, selfMember)) {
+                  return;
+                }
+
+                saveEmbeddedFeedEnabled(surface, !readEmbeddedFeedEnabled(surface, memberId), memberId);
+                setRevision((value) => value + 1);
+              }}
+              type="button"
+            >
+              {surfaceLabels[surface]}: {readEmbeddedFeedEnabled(surface, memberId) ? 'On' : 'Off'}
+            </button>
+          );
+        })}
       </div>
 
-      {visibleSurfaces.map((surface) => (
-        <EmbeddedFeedLinksPanel
-          enabled={readEmbeddedFeedEnabled(surface)}
-          key={surface + '-links-' + revision}
-          surface={surface}
-        />
-      ))}
+      {visibleSurfaces.map((surface) => {
+        const memberId = surface === 'member' ? selfMember.id : undefined;
+
+        return (
+          <EmbeddedFeedLinksPanel
+            enabled={readEmbeddedFeedEnabled(surface, memberId)}
+            key={surface + '-links-' + revision}
+            {...(memberId ? { memberId } : {})}
+            surface={surface}
+          />
+        );
+      })}
     </article>
   );
 }
@@ -430,6 +440,7 @@ export function SettingsScreen(props: {
 
         {activeSection === 'account' ? (
           <div className="settings-section-stack">
+            <MemberDailyStatusSettingsField />
             <article className="panel settings-card settings-compact-card">
               <div className="profile-panel-heading">
                 <h2>Edit Profile</h2>

@@ -167,10 +167,15 @@ export function EmbeddedSocialPanel(props: {
 }): ReactElement {
   const selfMember = getSelfMember();
   const role = readUserSurfaceRole();
-  const canConfigure = canConfigureEmbeddedFeedSurface(props.surface, role, selfMember);
-  const canShowPanel = canShowEmbeddedFeedSurface(props.surface, role, selfMember);
   const isMemberSurface = props.surface === 'member';
   const feedOwner = memberById(props.feedOwnerMemberId);
+  const feedOwnerMemberId = isMemberSurface ? props.feedOwnerMemberId : undefined;
+  const isOwnMemberFeed = isMemberSurface && feedOwner !== undefined && isSelfMember(feedOwner.id);
+  const canConfigure =
+    isMemberSurface
+      ? isOwnMemberFeed && canConfigureEmbeddedFeedSurface(props.surface, role, selfMember)
+      : canConfigureEmbeddedFeedSurface(props.surface, role, selfMember);
+  const canShowPanel = canShowEmbeddedFeedSurface(props.surface, role, selfMember);
   const viewer =
     props.viewerAccess === 'guest'
       ? { ...selfMember, signal: 'Orange' as const, tier: 'Adventurer' as const }
@@ -178,9 +183,11 @@ export function EmbeddedSocialPanel(props: {
 
   useMemberFeedAbuseReports();
 
-  const [feedEnabled, setFeedEnabled] = useState(() => readEmbeddedFeedEnabled(props.surface));
+  const [feedEnabled, setFeedEnabled] = useState(() =>
+    readEmbeddedFeedEnabled(props.surface, feedOwnerMemberId)
+  );
   const [embeds, setEmbeds] = useState<SocialEmbed[]>(() => {
-    return props.embeds ?? readEmbeddedFeedLinks(props.surface);
+    return props.embeds ?? readEmbeddedFeedLinks(props.surface, feedOwnerMemberId);
   });
   const [collapseRevision, setCollapseRevision] = useState(0);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -188,9 +195,9 @@ export function EmbeddedSocialPanel(props: {
 
   useEffect(() => {
     return subscribeEmbeddedFeedEnabled(() => {
-      setFeedEnabled(readEmbeddedFeedEnabled(props.surface));
+      setFeedEnabled(readEmbeddedFeedEnabled(props.surface, feedOwnerMemberId));
     });
-  }, [props.surface]);
+  }, [props.surface, feedOwnerMemberId]);
 
   useEffect(() => {
     if (props.embeds) {
@@ -198,13 +205,13 @@ export function EmbeddedSocialPanel(props: {
     }
 
     function refreshEmbeds(): void {
-      setEmbeds(readEmbeddedFeedLinks(props.surface));
+      setEmbeds(readEmbeddedFeedLinks(props.surface, feedOwnerMemberId));
     }
 
     refreshEmbeds();
 
     return subscribeEmbeddedFeedLinks(refreshEmbeds);
-  }, [props.embeds, props.surface]);
+  }, [props.embeds, props.surface, feedOwnerMemberId]);
 
   useEffect(() => subscribeEmbedCollapsed(() => setCollapseRevision((value) => value + 1)), []);
 
@@ -256,7 +263,7 @@ export function EmbeddedSocialPanel(props: {
   }
 
   function toggleFeed(): void {
-    saveEmbeddedFeedEnabled(props.surface, !feedEnabled);
+    saveEmbeddedFeedEnabled(props.surface, !feedEnabled, feedOwnerMemberId);
     setFeedEnabled(!feedEnabled);
   }
 
@@ -264,7 +271,7 @@ export function EmbeddedSocialPanel(props: {
   const orderedEmbeds = [...embeds.filter((embed) => embed.live), ...embeds.filter((embed) => !embed.live)];
   const expandedCount = orderedEmbeds.filter((embed, index) => {
     const key = embedCardKey(embed, index);
-    return !isEmbedCollapsed(props.surface, key, embed.live === true);
+    return !isEmbedCollapsed(props.surface, key, embed.live === true, feedOwnerMemberId);
   }).length;
 
   const canReportAbuse =
@@ -274,28 +281,28 @@ export function EmbeddedSocialPanel(props: {
     canReportMemberFeedAbuse(selfMember);
 
   function toggleEmbed(cardKey: string, featured: boolean): void {
-    const collapsed = isEmbedCollapsed(props.surface, cardKey, featured);
-    saveEmbedCollapsed(props.surface, cardKey, !collapsed);
+    const collapsed = isEmbedCollapsed(props.surface, cardKey, featured, feedOwnerMemberId);
+    saveEmbedCollapsed(props.surface, cardKey, !collapsed, feedOwnerMemberId);
     setCollapseRevision((value) => value + 1);
   }
 
   function expandAllEmbeds(): void {
     orderedEmbeds.forEach((embed, index) => {
-      saveEmbedCollapsed(props.surface, embedCardKey(embed, index), false);
+      saveEmbedCollapsed(props.surface, embedCardKey(embed, index), false, feedOwnerMemberId);
     });
     setCollapseRevision((value) => value + 1);
   }
 
   function collapseAllEmbeds(): void {
     orderedEmbeds.forEach((embed, index) => {
-      saveEmbedCollapsed(props.surface, embedCardKey(embed, index), true);
+      saveEmbedCollapsed(props.surface, embedCardKey(embed, index), true, feedOwnerMemberId);
     });
     setCollapseRevision((value) => value + 1);
   }
 
   function renderEmbedCard(embed: SocialEmbed, listIndex: number, featured = false): ReactElement {
     const cardKey = embedCardKey(embed, listIndex);
-    const collapsed = isEmbedCollapsed(props.surface, cardKey, embed.live === true);
+    const collapsed = isEmbedCollapsed(props.surface, cardKey, embed.live === true, feedOwnerMemberId);
     const resolved = resolveSocialEmbed(embed, parentHost);
 
     return (

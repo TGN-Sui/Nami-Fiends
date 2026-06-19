@@ -20,6 +20,7 @@ import { collectedBadgesForMember, userCollectedBadges, type CollectedBadge } fr
 
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { ownerAssetBadgeSlotId } from './nami-owner-assets-store.js';
+import { useNamiOwnerEditMode } from './nami-owner-edit-mode-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { type NamiMember } from './uiMockData.js';
 
@@ -74,6 +75,10 @@ function easeInOutCubic(value: number): number {
   return value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
 }
 
+function isOwnerEditTarget(element: EventTarget | null): boolean {
+  return element instanceof Element && Boolean(element.closest('.owner-editable-image.is-edit-target'));
+}
+
 function BadgeSlotButton(props: {
   badge: CollectedBadge | null;
   faceKey: string;
@@ -81,36 +86,76 @@ function BadgeSlotButton(props: {
   selectedBadgeId?: string | undefined;
   onSelect: (badge: CollectedBadge | null) => void;
 }): ReactElement {
+  const editMode = useNamiOwnerEditMode();
   const { badge } = props;
+  const className =
+    'badge-book-slot tcg-binder-slot' +
+    (badge ? ' has-badge is-rarity-' + badge.rarity : ' is-empty-slot') +
+    (props.selectedBadgeId === badge?.id ? ' is-selected-badge-slot' : '');
+
+  const slotContent = badge ? (
+    <>
+      <span className="badge-slot-foil" />
+      <OwnerEditableImage
+        className="badge-glyph-editable"
+        fallback={<span className="badge-glyph-mark">{badgeGlyph(badge)}</span>}
+        imageClassName="badge-glyph-image"
+        label={badge.name + ' badge'}
+        nested
+        slotId={ownerAssetBadgeSlotId(badge.name)}
+      />
+      <strong>{badge.name}</strong>
+      <small>{badge.rarity}</small>
+    </>
+  ) : editMode.active ? (
+    <OwnerEditableImage
+      className="badge-glyph-editable"
+      fallback={<span className="badge-empty-label">Open slot</span>}
+      imageClassName="badge-glyph-image"
+      label="Default badge icon"
+      nested
+      slotId="badge-default"
+    />
+  ) : (
+    <span className="badge-empty-label">Open slot</span>
+  );
+
+  function handleSlotActivate(event: { target: EventTarget | null }): void {
+    if (editMode.active && isOwnerEditTarget(event.target)) {
+      return;
+    }
+
+    props.onSelect(badge);
+  }
+
+  if (editMode.active) {
+    return (
+      <div
+        className={className}
+        key={props.faceKey + '-slot-' + props.slotIndex}
+        onClick={handleSlotActivate}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleSlotActivate(event);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        {slotContent}
+      </div>
+    );
+  }
 
   return (
     <button
-      className={
-        'badge-book-slot tcg-binder-slot' +
-        (badge ? ' has-badge is-rarity-' + badge.rarity : ' is-empty-slot') +
-        (props.selectedBadgeId === badge?.id ? ' is-selected-badge-slot' : '')
-      }
+      className={className}
       key={props.faceKey + '-slot-' + props.slotIndex}
       onClick={() => props.onSelect(badge)}
       type="button"
     >
-      {badge ? (
-        <>
-          <span className="badge-slot-foil" />
-          <OwnerEditableImage
-            className="badge-glyph-editable"
-            fallback={<span className="badge-glyph-mark">{badgeGlyph(badge)}</span>}
-            imageClassName="badge-glyph-image"
-            label={badge.name + ' badge'}
-            nested
-            slotId={ownerAssetBadgeSlotId(badge.name)}
-          />
-          <strong>{badge.name}</strong>
-          <small>{badge.rarity}</small>
-        </>
-      ) : (
-        <span className="badge-empty-label">Open slot</span>
-      )}
+      {slotContent}
     </button>
   );
 }
@@ -166,6 +211,7 @@ export function BadgeCollectorsBook(props: {
   badges?: CollectedBadge[];
   ownerLabel?: string;
 }): ReactElement {
+  const editMode = useNamiOwnerEditMode();
   const badges = resolveBadges(props.member, props.badges);
   const totalSpreads = totalSpreadsFor(badges.length);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -672,7 +718,13 @@ export function BadgeCollectorsBook(props: {
                 aria-haspopup="dialog"
                 aria-label="Open Nami Badges book"
                 className="badge-book-front-cover"
-                onClick={openBook}
+                onClick={(event) => {
+                  if (editMode.active && isOwnerEditTarget(event.target)) {
+                    return;
+                  }
+
+                  openBook();
+                }}
                 type="button"
               >
                 <BadgeBookPageFace

@@ -1,4 +1,4 @@
-import { getSelfMember, isMemberVerified } from './member-access.js';
+import { getSelfMember, isMemberVerified, SELF_MEMBER_ID } from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
 export type EmbeddedFeedSurface = 'member' | 'studio' | 'game' | 'guild';
@@ -32,17 +32,73 @@ export function saveUserSurfaceRole(role: UserSurfaceRole): void {
   window.dispatchEvent(new CustomEvent('nami-surface-role-changed'));
 }
 
-export function readEmbeddedFeedEnabled(surface: EmbeddedFeedSurface): boolean {
+const LEGACY_MEMBER_FEED_ENABLED_KEY = EMBEDDED_PREFIX + 'member';
+
+function embeddedFeedEnabledKey(surface: EmbeddedFeedSurface, memberId?: string): string {
+  if (surface === 'member') {
+    return EMBEDDED_PREFIX + 'member.' + (memberId ?? SELF_MEMBER_ID);
+  }
+
+  return EMBEDDED_PREFIX + surface;
+}
+
+function migrateLegacyMemberFeedEnabled(memberId: string): boolean | null {
+  if (memberId !== SELF_MEMBER_ID) {
+    return null;
+  }
+
+  const legacy = window.localStorage.getItem(LEGACY_MEMBER_FEED_ENABLED_KEY);
+
+  if (legacy === null) {
+    return null;
+  }
+
+  const enabled = legacy === 'true';
+  window.localStorage.setItem(embeddedFeedEnabledKey('member', memberId), legacy);
+  window.localStorage.removeItem(LEGACY_MEMBER_FEED_ENABLED_KEY);
+
+  return enabled;
+}
+
+export function readEmbeddedFeedEnabled(surface: EmbeddedFeedSurface, memberId?: string): boolean {
   try {
-    return window.localStorage.getItem(EMBEDDED_PREFIX + surface) === 'true';
+    const key = embeddedFeedEnabledKey(surface, memberId);
+    const stored = window.localStorage.getItem(key);
+
+    if (stored !== null) {
+      return stored === 'true';
+    }
+
+    if (surface === 'member') {
+      const migrated = migrateLegacyMemberFeedEnabled(memberId ?? SELF_MEMBER_ID);
+
+      if (migrated !== null) {
+        return migrated;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }
 }
 
-export function saveEmbeddedFeedEnabled(surface: EmbeddedFeedSurface, enabled: boolean): void {
-  window.localStorage.setItem(EMBEDDED_PREFIX + surface, enabled ? 'true' : 'false');
-  window.dispatchEvent(new CustomEvent('nami-embedded-feed-enabled-changed', { detail: { surface } }));
+export function saveEmbeddedFeedEnabled(
+  surface: EmbeddedFeedSurface,
+  enabled: boolean,
+  memberId?: string
+): void {
+  const resolvedMemberId = surface === 'member' ? memberId ?? SELF_MEMBER_ID : undefined;
+
+  window.localStorage.setItem(
+    embeddedFeedEnabledKey(surface, resolvedMemberId),
+    enabled ? 'true' : 'false'
+  );
+  window.dispatchEvent(
+    new CustomEvent('nami-embedded-feed-enabled-changed', {
+      detail: { surface, memberId: resolvedMemberId },
+    })
+  );
 }
 
 export function subscribeEmbeddedFeedEnabled(listener: () => void): () => void {
@@ -125,5 +181,5 @@ export function subscribeSurfaceRole(listener: () => void): () => void {
 }
 
 export function isSelfMember(memberId: string): boolean {
-  return memberId === 'm1';
+  return memberId === SELF_MEMBER_ID;
 }

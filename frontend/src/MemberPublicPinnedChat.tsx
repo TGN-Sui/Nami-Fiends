@@ -32,7 +32,7 @@ export function MemberPublicPinnedChat(props: {
   const [chatExpanded, setChatExpanded] = useState(false);
   const [peekMember, setPeekMember] = useState<NamiMember | null>(null);
   const [peekPassportLayout, setPeekPassportLayout] = useState<PassportPeekLayout>('vertical');
-  const liveBroadcast = useMemo(() => memberLiveBroadcastEmbed(), []);
+  const liveBroadcast = useMemo(() => memberLiveBroadcastEmbed(props.member.id), [props.member.id]);
 
   useEffect(() => {
     setPeekPassportLayout('vertical');
@@ -169,14 +169,14 @@ export function MemberPublicPinnedChat(props: {
       return;
     }
 
-    const embeds = readEmbeddedFeedLinks('member');
+    const embeds = readEmbeddedFeedLinks('member', props.member.id);
     const twitchIndex = embeds.findIndex((embed) => embed.platform === 'twitch');
 
     if (twitchIndex < 0) {
       return;
     }
 
-    saveEmbedCollapsed('member', embedCardKey(embeds[twitchIndex]!, twitchIndex), false);
+    saveEmbedCollapsed('member', embedCardKey(embeds[twitchIndex]!, twitchIndex), false, props.member.id);
   }
 
   function toggleCollapsed(nextCollapsed: boolean): void {

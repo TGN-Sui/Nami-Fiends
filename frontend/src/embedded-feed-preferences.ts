@@ -1,9 +1,19 @@
+import { SELF_MEMBER_ID } from './member-access.js';
 import { defaultSocialEmbeds, type SocialEmbed } from './global-chats.js';
 import type { EmbeddedFeedSurface } from './surface-preferences.js';
 
 const LINKS_PREFIX = 'nami.embedded-feed.links.';
+const LEGACY_MEMBER_LINKS_KEY = LINKS_PREFIX + 'member';
 
-function linksStorageKey(surface: EmbeddedFeedSurface): string {
+function memberLinksStorageKey(memberId: string): string {
+  return LINKS_PREFIX + 'member.' + memberId;
+}
+
+function linksStorageKey(surface: EmbeddedFeedSurface, memberId?: string): string {
+  if (surface === 'member') {
+    return memberLinksStorageKey(memberId ?? SELF_MEMBER_ID);
+  }
+
   return LINKS_PREFIX + surface;
 }
 
@@ -78,47 +88,93 @@ function normalizeEmbed(entry: Partial<SocialEmbed>, fallback: SocialEmbed): Soc
   return next;
 }
 
-export function readEmbeddedFeedLinks(surface: EmbeddedFeedSurface): SocialEmbed[] {
+function migrateLegacyMemberLinks(memberId: string): string | null {
+  if (memberId !== SELF_MEMBER_ID) {
+    return null;
+  }
+
+  const legacy = window.localStorage.getItem(LEGACY_MEMBER_LINKS_KEY);
+
+  if (!legacy) {
+    return null;
+  }
+
+  window.localStorage.setItem(memberLinksStorageKey(memberId), legacy);
+  window.localStorage.removeItem(LEGACY_MEMBER_LINKS_KEY);
+
+  return legacy;
+}
+
+function parseStoredLinks(stored: string): SocialEmbed[] | null {
+  const parsed = JSON.parse(stored);
+
+  if (!Array.isArray(parsed)) {
+    return null;
+  }
+
+  const defaults = defaultSocialEmbeds.map((embed) => ({ ...embed }));
+
+  return defaults.map((fallback, index) => {
+    const entry = parsed[index];
+
+    if (!entry || typeof entry !== 'object') {
+      return fallback;
+    }
+
+    return normalizeEmbed(entry as Partial<SocialEmbed>, fallback);
+  });
+}
+
+export function readEmbeddedFeedLinks(
+  surface: EmbeddedFeedSurface,
+  memberId?: string
+): SocialEmbed[] {
   const defaults = defaultSocialEmbeds.map((embed) => ({ ...embed }));
 
   try {
-    const stored = window.localStorage.getItem(linksStorageKey(surface));
+    const key = linksStorageKey(surface, memberId);
+    let stored = window.localStorage.getItem(key);
+
+    if (!stored && surface === 'member') {
+      const migrated = migrateLegacyMemberLinks(memberId ?? SELF_MEMBER_ID);
+
+      if (migrated) {
+        stored = migrated;
+      }
+    }
 
     if (!stored) {
       return defaults;
     }
 
-    const parsed = JSON.parse(stored);
-
-    if (!Array.isArray(parsed)) {
-      return defaults;
-    }
-
-    return defaults.map((fallback, index) => {
-      const entry = parsed[index];
-
-      if (!entry || typeof entry !== 'object') {
-        return fallback;
-      }
-
-      return normalizeEmbed(entry as Partial<SocialEmbed>, fallback);
-    });
+    return parseStoredLinks(stored) ?? defaults;
   } catch {
     return defaults;
   }
 }
 
-export function saveEmbeddedFeedLinks(surface: EmbeddedFeedSurface, links: SocialEmbed[]): void {
-  window.localStorage.setItem(linksStorageKey(surface), JSON.stringify(links));
-  window.dispatchEvent(new CustomEvent('nami-embedded-feed-links-changed', { detail: { surface } }));
+export function saveEmbeddedFeedLinks(
+  surface: EmbeddedFeedSurface,
+  links: SocialEmbed[],
+  memberId?: string
+): void {
+  const resolvedMemberId = surface === 'member' ? memberId ?? SELF_MEMBER_ID : undefined;
+
+  window.localStorage.setItem(linksStorageKey(surface, resolvedMemberId), JSON.stringify(links));
+  window.dispatchEvent(
+    new CustomEvent('nami-embedded-feed-links-changed', {
+      detail: { surface, memberId: resolvedMemberId },
+    })
+  );
 }
 
 export function updateEmbeddedFeedLink(
   surface: EmbeddedFeedSurface,
   index: number,
-  patch: Partial<SocialEmbed>
+  patch: Partial<SocialEmbed>,
+  memberId?: string
 ): SocialEmbed[] {
-  const current = readEmbeddedFeedLinks(surface);
+  const current = readEmbeddedFeedLinks(surface, memberId);
   const fallback = current[index] ?? defaultSocialEmbeds[index] ?? defaultSocialEmbeds[0]!;
   const next = current.map((embed, embedIndex) => {
     if (embedIndex !== index) {
@@ -128,7 +184,7 @@ export function updateEmbeddedFeedLink(
     return normalizeEmbed({ ...embed, ...patch }, fallback);
   });
 
-  saveEmbeddedFeedLinks(surface, next);
+  saveEmbeddedFeedLinks(surface, next, memberId);
 
   return next;
 }
@@ -149,7 +205,11 @@ export function subscribeEmbeddedFeedLinks(listener: () => void): () => void {
 
 const COLLAPSED_PREFIX = 'nami.embedded-feed.collapsed.';
 
-function collapsedStorageKey(surface: EmbeddedFeedSurface): string {
+function collapsedStorageKey(surface: EmbeddedFeedSurface, memberId?: string): string {
+  if (surface === 'member') {
+    return COLLAPSED_PREFIX + 'member.' + (memberId ?? SELF_MEMBER_ID);
+  }
+
   return COLLAPSED_PREFIX + surface;
 }
 
@@ -157,9 +217,9 @@ export function embedCardKey(embed: SocialEmbed, index: number): string {
   return embed.platform + ':' + index + ':' + embed.handle;
 }
 
-function readCollapsedMap(surface: EmbeddedFeedSurface): Record<string, boolean> {
+function readCollapsedMap(surface: EmbeddedFeedSurface, memberId?: string): Record<string, boolean> {
   try {
-    const stored = window.localStorage.getItem(collapsedStorageKey(surface));
+    const stored = window.localStorage.getItem(collapsedStorageKey(surface, memberId));
 
     if (!stored) {
       return {};
@@ -180,9 +240,10 @@ function readCollapsedMap(surface: EmbeddedFeedSurface): Record<string, boolean>
 export function isEmbedCollapsed(
   surface: EmbeddedFeedSurface,
   cardKey: string,
-  featured: boolean
+  featured: boolean,
+  memberId?: string
 ): boolean {
-  const stored = readCollapsedMap(surface)[cardKey];
+  const stored = readCollapsedMap(surface, memberId)[cardKey];
 
   if (stored !== undefined) {
     return stored;
@@ -194,16 +255,19 @@ export function isEmbedCollapsed(
 export function saveEmbedCollapsed(
   surface: EmbeddedFeedSurface,
   cardKey: string,
-  collapsed: boolean
+  collapsed: boolean,
+  memberId?: string
 ): void {
   const next = {
-    ...readCollapsedMap(surface),
+    ...readCollapsedMap(surface, memberId),
     [cardKey]: collapsed,
   };
 
-  window.localStorage.setItem(collapsedStorageKey(surface), JSON.stringify(next));
+  window.localStorage.setItem(collapsedStorageKey(surface, memberId), JSON.stringify(next));
   window.dispatchEvent(
-    new CustomEvent('nami-embedded-feed-collapsed-changed', { detail: { surface } })
+    new CustomEvent('nami-embedded-feed-collapsed-changed', {
+      detail: { surface, memberId: surface === 'member' ? memberId ?? SELF_MEMBER_ID : undefined },
+    })
   );
 }
 

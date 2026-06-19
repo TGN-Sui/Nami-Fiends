@@ -103,6 +103,17 @@ export function ProfileEditPanel(): ReactElement {
         </label>
 
         <label className="profile-edit-field">
+          <span>Daily status</span>
+          <textarea
+            maxLength={160}
+            onChange={(event) => updateDraft({ dailyStatus: event.target.value })}
+            placeholder="Short note for your profile showcase."
+            rows={2}
+            value={draft.dailyStatus}
+          />
+        </label>
+
+        <label className="profile-edit-field">
           <span>Bio</span>
           <textarea
             maxLength={280}

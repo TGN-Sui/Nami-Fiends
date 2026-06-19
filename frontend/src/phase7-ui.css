@@ -7985,6 +7985,20 @@ body.is-nami-owner-edit-mode .main-stage {
   font-size: 1.8rem;
 }
 
+body.is-nami-owner-edit-mode .badge-book-front-cover .owner-editable-image.is-edit-target,
+body.is-nami-owner-edit-mode .badge-book-cover-content .owner-editable-image.is-edit-target,
+body.is-nami-owner-edit-mode .badge-book-slot .owner-editable-image.is-edit-target {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
+body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-image.is-edit-target {
+  width: 100%;
+  max-width: none;
+  min-height: 72px;
+}
+
 .sidebar-brand .owner-editable-image.diamond-mark,
 .sidebar-hub-swap-mark.owner-editable-image {
   position: absolute;
@@ -13376,4 +13390,585 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   z-index: 2 !important;
   color: transparent !important;
   font-size: 0 !important;
+}
+
+.member-profile-page .member-profile-showcase,
+.user-profile-page .member-profile-showcase {
+  width: 100%;
+}
+
+.member-profile-showcase {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.member-showcase-eyebrow {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(170, 198, 235, 0.82);
+}
+
+.member-showcase-status-panel {
+  padding: 18px 20px;
+}
+
+.member-showcase-status-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.member-showcase-status-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-showcase-daily-status {
+  margin: 8px 0 0;
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: #eef5ff;
+}
+
+.member-showcase-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-showcase-metric-card {
+  display: grid;
+  gap: 6px;
+  min-height: 132px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 190, 255, 0.2);
+  background: rgba(8, 14, 28, 0.48);
+}
+
+.member-showcase-metric-card.is-muted-metric {
+  opacity: 0.82;
+}
+
+.member-showcase-metric-card.is-live-metric-card {
+  border-color: rgba(255, 92, 122, 0.42);
+  background: rgba(48, 12, 24, 0.42);
+}
+
+.member-showcase-metric-value {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.member-showcase-metric-detail,
+.member-showcase-metric-foot {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: rgba(190, 210, 235, 0.88);
+}
+
+.member-showcase-metric-foot {
+  margin-top: auto;
+  font-size: 0.86rem;
+  color: rgba(170, 190, 220, 0.78);
+}
+
+.member-showcase-season-track {
+  position: relative;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(120, 190, 255, 0.14);
+}
+
+.member-showcase-season-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(95, 180, 255, 0.9), rgba(170, 120, 255, 0.95));
+}
+
+.member-showcase-tab-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 6px 4px 10px;
+}
+
+.member-showcase-tab {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-height: 72px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 190, 255, 0.22);
+  background: rgba(8, 14, 28, 0.48);
+  color: #eef5ff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.member-showcase-tab:hover {
+  border-color: rgba(120, 190, 255, 0.34);
+  background: rgba(14, 24, 44, 0.56);
+}
+
+.member-showcase-tab strong {
+  font-size: 1.06rem;
+}
+
+.member-showcase-tab span {
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: rgba(180, 200, 230, 0.82);
+}
+
+.member-showcase-tab.is-active-showcase-tab {
+  border-color: rgba(120, 190, 255, 0.5);
+  background: rgba(24, 44, 78, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 190, 255, 0.16),
+    0 8px 22px rgba(8, 18, 36, 0.28);
+}
+
+.member-showcase-tab-panel {
+  padding: 18px 20px;
+}
+
+.member-showcase-section {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.member-showcase-section-head h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.member-showcase-section-head p {
+  margin: 6px 0 0;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: rgba(190, 210, 235, 0.88);
+}
+
+.member-showcase-overview-grid,
+.member-showcase-activity-grid,
+.member-showcase-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.member-showcase-chat-card-grid,
+.member-showcase-badge-card-grid,
+.member-showcase-guild-card-grid,
+.member-showcase-channel-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-showcase-chat-card,
+.member-showcase-badge-card,
+.member-showcase-guild-card,
+.member-showcase-channel-card {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-height: 108px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  background: rgba(6, 12, 24, 0.42);
+  text-align: left;
+}
+
+.member-showcase-chat-card,
+.member-showcase-guild-card,
+.member-showcase-channel-card {
+  cursor: pointer;
+}
+
+.member-showcase-chat-card strong,
+.member-showcase-badge-card strong,
+.member-showcase-guild-card strong,
+.member-showcase-channel-card strong {
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.member-showcase-chat-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.member-showcase-chat-hours,
+.member-showcase-stat-value {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #dff0ff;
+}
+
+.member-showcase-chat-surface,
+.member-showcase-badge-card span,
+.member-showcase-guild-card span,
+.member-showcase-channel-card span {
+  font-size: 0.92rem;
+  color: rgba(180, 200, 230, 0.84);
+}
+
+.member-showcase-chat-card.is-active-chat-card {
+  border-color: rgba(72, 220, 140, 0.42);
+}
+
+.member-showcase-chat-card.is-more-chat-card {
+  border-style: dashed;
+  place-content: center;
+}
+
+.member-showcase-badge-card {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.member-showcase-badge-glyph {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.member-showcase-badge-card.is-rarity-legendary {
+  border-color: rgba(255, 196, 84, 0.48);
+}
+
+.member-showcase-badge-card.is-rarity-epic {
+  border-color: rgba(180, 120, 255, 0.45);
+}
+
+.member-showcase-badge-card.is-rarity-rare {
+  border-color: rgba(95, 180, 255, 0.42);
+}
+
+.member-showcase-activity-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.member-showcase-activity-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 190, 255, 0.14);
+  background: rgba(6, 12, 24, 0.34);
+}
+
+.member-showcase-activity-row.has-row-avatar {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.member-showcase-activity-row.is-clickable-activity-row {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.member-showcase-activity-row-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.member-showcase-activity-row-copy strong {
+  font-size: 1rem;
+}
+
+.member-showcase-activity-row-copy span {
+  font-size: 0.92rem;
+  color: rgba(180, 200, 230, 0.84);
+}
+
+.member-showcase-activity-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-showcase-row-tag {
+  display: inline-flex;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(120, 190, 255, 0.14);
+  color: rgba(210, 228, 255, 0.92);
+}
+
+.member-showcase-presence-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.member-showcase-presence-pill.is-active-now {
+  background: rgba(72, 220, 140, 0.2);
+  color: #9dffc8;
+}
+
+.member-showcase-review-stars {
+  font-size: 1rem;
+  color: #ffd978;
+  letter-spacing: 0.06em;
+}
+
+.member-showcase-group-lanes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-showcase-group-lane {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 190, 255, 0.14);
+  background: rgba(6, 12, 24, 0.34);
+}
+
+.member-showcase-group-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-showcase-group-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  background: rgba(8, 14, 28, 0.48);
+  font-size: 0.96rem;
+}
+
+.member-showcase-group-chip.is-squad-chip {
+  border-color: rgba(170, 120, 255, 0.32);
+}
+
+.member-showcase-guild-card,
+.member-showcase-channel-card {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.member-showcase-section-action {
+  justify-self: start;
+}
+
+.member-showcase-section-summary {
+  place-content: start;
+}
+
+.member-showcase-summary-stat {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  background: rgba(6, 12, 24, 0.34);
+}
+
+.member-showcase-summary-stat span {
+  font-size: 0.96rem;
+  color: rgba(180, 200, 230, 0.84);
+}
+
+.member-showcase-channel-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(70, 120, 220, 0.35), rgba(20, 30, 60, 0.8));
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.member-showcase-channel-avatar-sm {
+  width: 40px;
+  height: 40px;
+}
+
+.member-showcase-channel-avatar span {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.member-showcase-channel-avatar.has-channel-cover-avatar span {
+  opacity: 0;
+}
+
+.member-daily-status-quick-edit {
+  position: relative;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.member-daily-status-quick-button {
+  white-space: nowrap;
+}
+
+.member-daily-status-quick-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 4;
+  width: min(360px, 82vw);
+  padding: 14px;
+}
+
+.member-daily-status-quick-actions,
+.member-daily-status-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.member-daily-status-saved-note {
+  font-size: 0.9rem;
+  color: #9dffc8;
+}
+
+.member-profile-collapsible-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.member-profile-collapsible-panel summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+}
+
+.member-profile-collapsible-panel summary strong {
+  font-size: 1.02rem;
+}
+
+.member-profile-collapsible-panel summary small {
+  font-size: 0.92rem;
+  color: rgba(180, 200, 230, 0.84);
+}
+
+.member-profile-collapsible-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.member-profile-collapsible-panel[open] summary {
+  border-bottom: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.member-profile-collapsible-panel > :not(summary) {
+  padding: 0 16px 16px;
+}
+
+.member-profile-collapsible-panel .embedded-social-panel {
+  margin-top: 12px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.member-showcase-safety-drawer {
+  padding: 0;
+  overflow: hidden;
+}
+
+.member-showcase-safety-drawer summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+}
+
+.member-showcase-safety-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.member-showcase-safety-drawer[open] summary {
+  border-bottom: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.member-showcase-safety-drawer .member-history-stack {
+  padding: 12px 16px 16px;
+}
+
+.member-showcase-below-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 980px) {
+  .member-showcase-metric-grid,
+  .member-showcase-overview-grid,
+  .member-showcase-activity-grid,
+  .member-showcase-groups-grid,
+  .member-showcase-chat-card-grid,
+  .member-showcase-badge-card-grid,
+  .member-showcase-guild-card-grid,
+  .member-showcase-channel-card-grid,
+  .member-showcase-group-lanes {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .member-showcase-status-hero {
+    flex-direction: column;
+  }
+
+  .member-daily-status-quick-edit {
+    justify-items: start;
+    width: 100%;
+  }
+
+  .member-daily-status-quick-popover {
+    right: auto;
+    left: 0;
+  }
+
+  .member-showcase-tab-nav {
+    grid-template-columns: 1fr;
+  }
 }
