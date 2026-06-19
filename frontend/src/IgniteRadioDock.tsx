@@ -14,10 +14,11 @@ import {
   type IgniteRadioPosition,
 } from './ignite-radio-store.js';
 
-const EMBED_ORIGIN = 'https://harmonyhub.love';
-const EMBED_SRC = EMBED_ORIGIN + '/embed/ignite-radio-mini.html?s=wavroot-fm';
+const EMBED_SRC =
+  'https://igniteradio.xyz/embed/?s=gmyth-radio&skin=minimal&accent=black&radius=sm&size=compact&art=0&brand=0&viz=pulse&transparent=1';
 const DOCK_WIDTH_PX = 320;
-const DOCK_HEIGHT_PX = 140;
+const DOCK_HEIGHT_PX = 164;
+const EMBED_HEIGHT_PX = 120;
 const DEFAULT_TOP_PX = 148;
 const DEFAULT_RIGHT_PX = 28;
 
@@ -38,17 +39,8 @@ function defaultDockPosition(): IgniteRadioPosition {
   });
 }
 
-function postMessageToIgniteEmbed(
-  iframe: HTMLIFrameElement | null,
-  type: 'ignite:play' | 'ignite:pause'
-): void {
-  iframe?.contentWindow?.postMessage({ type }, EMBED_ORIGIN);
-}
-
 export function IgniteRadioDock(): ReactElement | null {
   const enabled = useIgniteRadioEnabled();
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const shouldSyncEmbedRef = useRef(false);
   const [position, setPosition] = useState<IgniteRadioPosition>(() => {
     return readIgniteRadioPosition() ?? defaultDockPosition();
   });
@@ -59,30 +51,6 @@ export function IgniteRadioDock(): ReactElement | null {
     originX: number;
     originY: number;
   } | null>(null);
-
-  function syncEmbedPlayback(): void {
-    if (!shouldSyncEmbedRef.current) {
-      return;
-    }
-
-    postMessageToIgniteEmbed(iframeRef.current, 'ignite:play');
-  }
-
-  useEffect(() => {
-    if (!enabled) {
-      shouldSyncEmbedRef.current = false;
-      postMessageToIgniteEmbed(iframeRef.current, 'ignite:pause');
-      return;
-    }
-
-    shouldSyncEmbedRef.current = true;
-    syncEmbedPlayback();
-
-    return () => {
-      shouldSyncEmbedRef.current = false;
-      postMessageToIgniteEmbed(iframeRef.current, 'ignite:pause');
-    };
-  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) {
@@ -183,22 +151,19 @@ export function IgniteRadioDock(): ReactElement | null {
         role="button"
         tabIndex={0}
       >
-        <span className="mini-badge">WavRoot Radio</span>
+        <span className="mini-badge">Ignite Radio</span>
         <small>Drag to reposition</small>
       </div>
 
       <div className="ignite-radio-embed-inner">
         <iframe
-          allow="autoplay; encrypted-media"
+          allow="autoplay"
           className="ignite-radio-embed-frame"
-          height="96"
+          height={EMBED_HEIGHT_PX}
           loading="lazy"
-          onLoad={syncEmbedPlayback}
-          ref={iframeRef}
-          referrerPolicy="strict-origin-when-cross-origin"
           src={EMBED_SRC}
-          title="Ignite Radio — WavRoot Radio"
-          width="320"
+          title="Ignite Radio Player"
+          width="100%"
         />
       </div>
     </div>,

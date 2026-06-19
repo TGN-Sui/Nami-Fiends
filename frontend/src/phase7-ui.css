@@ -9531,10 +9531,12 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 
 .ignite-radio-embed-frame {
   border: 0;
-  width: 320px;
+  width: 100%;
   max-width: 320px;
-  height: 96px;
+  height: 120px;
   background: transparent;
+  border-radius: 12px;
+  overflow: hidden;
   display: block;
 }
 
