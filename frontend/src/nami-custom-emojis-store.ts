@@ -202,14 +202,14 @@ export function lookupCustomEmoji(shortcode: string): NamiCustomEmoji | undefine
   return readEmojis().find((emoji) => emoji.shortcode === normalized);
 }
 
-export function parseCustomEmojiSegments(text: string): ParsedEmojiSegment[] {
-  const emojis = getSnapshot();
+export function parseCustomEmojiSegments(text: string, emojis?: NamiCustomEmoji[]): ParsedEmojiSegment[] {
+  const library = emojis ?? getSnapshot();
 
-  if (emojis.length === 0) {
+  if (library.length === 0) {
     return [{ type: 'text', value: text }];
   }
 
-  const shortcodeMap = new Map(emojis.map((emoji) => [emoji.shortcode, emoji]));
+  const shortcodeMap = new Map(library.map((emoji) => [emoji.shortcode, emoji]));
   const segments: ParsedEmojiSegment[] = [];
   const pattern = /:([a-zA-Z0-9_-]+):/g;
   let lastIndex = 0;

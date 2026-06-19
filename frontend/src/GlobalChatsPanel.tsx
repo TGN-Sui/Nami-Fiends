@@ -51,6 +51,8 @@ import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
 import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
+import { useChannelEmojiLibraryVersion } from './channel-custom-emojis-store.js';
+import { readChannelEmojisForGenreLounge } from './channel-genre-emoji-scope.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, userProfile, type NamiMember } from './uiMockData.js';
 
@@ -111,6 +113,11 @@ export function GlobalChatRoomView(props: {
   onChatEscape?: () => boolean | void;
 }): ReactElement {
   const selfMember = useSelfMember();
+  useChannelEmojiLibraryVersion();
+  const genreEmojis =
+    props.chat.kind === 'genre' && props.chat.genre
+      ? readChannelEmojisForGenreLounge(props.chat.genre)
+      : [];
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
   const computeMessages = useCallback(
@@ -180,6 +187,7 @@ export function GlobalChatRoomView(props: {
                 <p>
                   <TaggedMessageBody
                     body={message.body}
+                    {...(genreEmojis.length > 0 ? { customEmojis: genreEmojis } : {})}
                     {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
                   />
                 </p>
@@ -193,6 +201,12 @@ export function GlobalChatRoomView(props: {
         ariaLabel="Message global chat"
         canSend={canSend}
         className="global-chat-composer chat-composer-row"
+        {...(genreEmojis.length > 0
+          ? {
+              customEmojis: genreEmojis,
+              emojiPickerLabel: props.chat.title + ' genre emojis',
+            }
+          : {})}
         onChange={setDraft}
         onSend={sendMessage}
         placeholder={

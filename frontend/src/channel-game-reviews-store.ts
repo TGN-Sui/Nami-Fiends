@@ -74,6 +74,30 @@ const defaultReviews: ChannelGameReview[] = [
     badgeLabel: 'Founder Room',
     createdAtLabel: 'Reviewed 2 weeks ago',
   },
+  {
+    id: 'review-vortex-m8',
+    channelId: 'vortex',
+    memberId: 'm8',
+    memberName: 'StormRelay',
+    rating: 5,
+    title: 'Tight tactical community',
+    body:
+      'Events and chat stay organized even during busy raid nights. The owner reply tools make it easy to answer player questions on the review wall.',
+    badgeLabel: 'Raid Captain',
+    createdAtLabel: 'Reviewed 4 days ago',
+  },
+  {
+    id: 'review-vortex-m6',
+    channelId: 'vortex',
+    memberId: 'm6',
+    memberName: 'KiteVoyager',
+    rating: 4,
+    title: 'Great for squad matchmaking',
+    body:
+      'Badge holders actually show up for ranked runs. Would love more trailer highlights on the About tab, but the channel feels polished.',
+    badgeLabel: 'Strike Team',
+    createdAtLabel: 'Reviewed 1 week ago',
+  },
 ];
 
 function isValidReview(entry: unknown): entry is ChannelGameReview {

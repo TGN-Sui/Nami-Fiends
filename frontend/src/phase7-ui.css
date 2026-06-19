@@ -15853,3 +15853,163 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .partner-carousel-preview-banner.has-partner-banner-cover {
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.78);
 }
+
+/* Channel owner edit mode, trailer, and channel emojis */
+.channel-profile-page.is-channel-owner-edit-mode .channel-profile-nav-tab.is-profile-tab-editable {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.channel-profile-page.is-channel-owner-edit-mode .channel-profile-nav-tab.is-dragging-profile-tab {
+  opacity: 0.55;
+}
+
+.channel-profile-tab-drag-grip {
+  margin-right: 6px;
+  color: rgba(159, 214, 255, 0.72);
+  font-size: 0.72rem;
+  letter-spacing: -0.12em;
+}
+
+.channel-owner-edit-mode-head {
+  align-items: flex-start;
+}
+
+.channel-owner-edit-mode-hint {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 184, 77, 0.28);
+  background: rgba(255, 184, 77, 0.08);
+  color: rgba(255, 232, 196, 0.92);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.channel-owner-layout-panel-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.channel-owner-layout-panel-shell {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px dashed rgba(117, 215, 255, 0.28);
+  background: rgba(8, 14, 22, 0.42);
+}
+
+.channel-owner-layout-panel-shell.is-dragging-owner-panel {
+  opacity: 0.58;
+}
+
+.channel-owner-layout-panel-shell.is-owner-panel-collapsed .channel-owner-layout-panel-body {
+  display: none;
+}
+
+.channel-owner-layout-panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.channel-owner-layout-panel-toolbar strong {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.channel-owner-layout-drag-handle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(5, 9, 15, 0.72);
+  color: rgba(223, 236, 250, 0.82);
+  cursor: grab;
+}
+
+.channel-trailer-preview-frame {
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px dashed rgba(117, 215, 255, 0.28);
+  background: rgba(8, 14, 22, 0.82);
+  display: grid;
+  place-items: center;
+}
+
+.channel-trailer-preview-frame.has-channel-trailer {
+  border-style: solid;
+}
+
+.channel-trailer-preview-player,
+.channel-profile-about-trailer-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #05070d;
+}
+
+.channel-trailer-preview-placeholder {
+  color: rgba(223, 236, 250, 0.52);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.channel-profile-about-trailer {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.channel-profile-about-trailer h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.channel-profile-about-trailer-player {
+  border-radius: 18px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  min-height: clamp(180px, 32vw, 320px);
+}
+
+.channel-owner-emoji-upload-form {
+  display: grid;
+  gap: 10px;
+}
+
+.channel-owner-emoji-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.channel-owner-emoji-tile {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  background: rgba(5, 9, 15, 0.62);
+}
+
+.channel-owner-emoji-tile img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.channel-owner-emoji-tile-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.channel-owner-emoji-tile-copy code {
+  font-size: 0.72rem;
+  color: rgba(159, 214, 255, 0.88);
+}

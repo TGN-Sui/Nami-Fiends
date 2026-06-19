@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import { useState, type CSSProperties, type DragEvent, type ReactElement, type ReactNode } from 'react';
 
 import { canSubscribeToChannelBanners } from './member-access.js';
 import { ChannelBoostButton } from './ChannelBoostButton.js';
@@ -32,6 +32,9 @@ type ChannelProfileShellProps = {
   pageEyebrow?: string;
   pageTitle?: string;
   heroBackgroundUrl?: string;
+  profileEditMode?: boolean;
+  tabOrder?: ChannelProfileSection[];
+  onReorderTabs?: (tabOrder: ChannelProfileSection[]) => void;
   children: ReactNode;
   mode?: 'profile' | 'chat';
 };
@@ -80,16 +83,46 @@ function ChannelAvatar(props: { channel: NamiChannel; size?: 'sm' | 'md' | 'lg' 
 
 export function ChannelProfileShell(props: ChannelProfileShellProps): ReactElement {
   const showMemberConsumerActions = props.showMemberConsumerActions ?? true;
+  const [draggedTabId, setDraggedTabId] = useState<ChannelProfileSection | null>(null);
 
   const navItems = buildChannelProfileNavItems({
     eventCount: props.eventCount,
     reviewCount: props.reviewCount,
     isChannelOwner: props.isChannelOwner,
+    ...(props.tabOrder ? { tabOrder: props.tabOrder } : {}),
   });
 
   const shellClassName =
     'channel-profile-page channel-profile-redesign' +
-    (props.mode === 'chat' ? ' channel-profile-chat-mode' : '');
+    (props.mode === 'chat' ? ' channel-profile-chat-mode' : '') +
+    (props.profileEditMode ? ' is-channel-owner-edit-mode' : '');
+
+  function handleTabDrop(targetTabId: ChannelProfileSection): void {
+    if (!props.profileEditMode || !props.onReorderTabs || !props.tabOrder || !draggedTabId) {
+      setDraggedTabId(null);
+      return;
+    }
+
+    const fromIndex = props.tabOrder.indexOf(draggedTabId);
+    const toIndex = props.tabOrder.indexOf(targetTabId);
+
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+      setDraggedTabId(null);
+      return;
+    }
+
+    const nextOrder = [...props.tabOrder];
+    const [moved] = nextOrder.splice(fromIndex, 1);
+
+    if (!moved) {
+      setDraggedTabId(null);
+      return;
+    }
+
+    nextOrder.splice(toIndex, 0, moved);
+    props.onReorderTabs(nextOrder);
+    setDraggedTabId(null);
+  }
 
   return (
     <>
@@ -198,13 +231,30 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
             <button
               aria-selected={props.activeSection === item.id}
               className={
-                'channel-profile-nav-tab' + (props.activeSection === item.id ? ' is-active-profile-tab' : '')
+                'channel-profile-nav-tab' +
+                (props.activeSection === item.id ? ' is-active-profile-tab' : '') +
+                (props.profileEditMode ? ' is-profile-tab-editable' : '') +
+                (draggedTabId === item.id ? ' is-dragging-profile-tab' : '')
               }
+              draggable={props.profileEditMode}
               key={item.id}
               onClick={() => props.onSelectSection(item.id)}
+              onDragEnd={() => setDraggedTabId(null)}
+              onDragOver={(event: DragEvent<HTMLButtonElement>) => {
+                if (props.profileEditMode) {
+                  event.preventDefault();
+                }
+              }}
+              onDragStart={() => {
+                if (props.profileEditMode) {
+                  setDraggedTabId(item.id);
+                }
+              }}
+              onDrop={() => handleTabDrop(item.id)}
               role="tab"
               type="button"
             >
+              {props.profileEditMode ? <span className="channel-profile-tab-drag-grip">⋮⋮</span> : null}
               {item.label}
               {item.badge && item.badge > 0 ? (
                 <span className="channel-profile-nav-badge">{item.badge}</span>

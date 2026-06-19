@@ -26,6 +26,7 @@ import {
 } from './use-chat-viewport.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
+import { resolveChatEmojisForChannel, useChannelCustomEmojis } from './channel-custom-emojis-store.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 
@@ -75,6 +76,8 @@ export function ChannelProfileChatSection(props: {
   const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(true);
   const [reportPulse, setReportPulse] = useState('');
   const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
+  useChannelCustomEmojis(props.channel.id);
+  const channelEmojis = resolveChatEmojisForChannel(props.channel.id);
 
   useEffect(() => {
     setFiltersCollapsed(true);
@@ -279,6 +282,7 @@ export function ChannelProfileChatSection(props: {
                       <p>
                         <TaggedMessageBody
                           body={message.body}
+                          customEmojis={channelEmojis}
                           handlers={props.tagHandlers}
                           {...(adultLanguageMode === 'censor'
                             ? { transformText: censorAdultLanguage }
@@ -295,6 +299,8 @@ export function ChannelProfileChatSection(props: {
               ariaLabel={'Message ' + props.channel.name}
               canSend={canSend}
               className="chat-composer-row chat-input-placeholder"
+              customEmojis={channelEmojis}
+              emojiPickerLabel={props.channel.name + ' emojis'}
               onChange={setChatDraft}
               onSend={() => {
                 if (!canSend || !chatDraft.trim()) {

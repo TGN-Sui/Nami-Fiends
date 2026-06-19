@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
-import { emojiShortcodeToken, useNamiCustomEmojis } from './nami-custom-emojis-store.js';
+import { emojiShortcodeToken, useNamiCustomEmojis, type NamiCustomEmoji } from './nami-custom-emojis-store.js';
 
 type ChatEmojiPickerProps = {
   disabled?: boolean;
+  emojis?: NamiCustomEmoji[];
+  pickerLabel?: string;
   onSelect: (token: string) => void;
 };
 
 export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | null {
-  const emojis = useNamiCustomEmojis();
+  const platformEmojis = useNamiCustomEmojis();
+  const emojis = props.emojis ?? platformEmojis;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -64,7 +67,7 @@ export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | nul
       {open ? (
         <div className="chat-emoji-picker-popover" role="dialog" aria-label="Emoji picker">
           <div className="chat-emoji-picker-heading">
-            <strong>Nami emojis</strong>
+            <strong>{props.pickerLabel ?? 'Nami emojis'}</strong>
             <span>{emojis.length} available</span>
           </div>
           <div className="chat-emoji-picker-grid">

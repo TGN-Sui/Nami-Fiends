@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { parseCustomEmojiSegments } from './nami-custom-emojis-store.js';
+import { parseCustomEmojiSegments, type NamiCustomEmoji } from './nami-custom-emojis-store.js';
 import { parseTaggedMessage } from './nami-tag-registry.js';
 
 export type TagNavigationHandlers = {
@@ -12,6 +12,7 @@ export type TagNavigationHandlers = {
 
 type TaggedMessageBodyProps = {
   body: string;
+  customEmojis?: NamiCustomEmoji[];
   transformText?: (text: string) => string;
   handlers?: TagNavigationHandlers;
 };
@@ -20,8 +21,12 @@ function tagClassName(kind: string): string {
   return 'nami-message-tag nami-message-tag-' + kind;
 }
 
-function renderTextWithEmojis(text: string, keyPrefix: string): ReactElement {
-  const segments = parseCustomEmojiSegments(text);
+function renderTextWithEmojis(
+  text: string,
+  keyPrefix: string,
+  customEmojis?: NamiCustomEmoji[],
+): ReactElement {
+  const segments = parseCustomEmojiSegments(text, customEmojis);
 
   return (
     <span className="nami-emoji-rich-text">
@@ -54,7 +59,11 @@ export function TaggedMessageBody(props: TaggedMessageBodyProps): ReactElement {
         if (segment.type === 'text') {
           const value = props.transformText ? props.transformText(segment.value) : segment.value;
 
-          return <span key={'text-' + index}>{renderTextWithEmojis(value, 'tag-text-' + index)}</span>;
+          return (
+            <span key={'text-' + index}>
+              {renderTextWithEmojis(value, 'tag-text-' + index, props.customEmojis)}
+            </span>
+          );
         }
 
         const tagSegment = segment;

@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 const COMMENTS_KEY = 'nami.channel-game-review-comments';
 
+let cachedComments: ChannelGameReviewComment[] | null = null;
+
 export type ChannelGameReviewComment = {
   id: string;
   reviewId: string;
@@ -12,24 +14,36 @@ export type ChannelGameReviewComment = {
   createdAtLabel: string;
 };
 
+function invalidateCommentsCache(): void {
+  cachedComments = null;
+}
+
 function readComments(): ChannelGameReviewComment[] {
+  if (cachedComments) {
+    return cachedComments;
+  }
+
   try {
     const stored = window.localStorage.getItem(COMMENTS_KEY);
 
     if (!stored) {
-      return [];
+      cachedComments = [];
+      return cachedComments;
     }
 
     const parsed = JSON.parse(stored);
 
-    return Array.isArray(parsed) ? (parsed as ChannelGameReviewComment[]) : [];
+    cachedComments = Array.isArray(parsed) ? (parsed as ChannelGameReviewComment[]) : [];
+    return cachedComments;
   } catch {
-    return [];
+    cachedComments = [];
+    return cachedComments;
   }
 }
 
 function writeComments(comments: ChannelGameReviewComment[]): void {
   window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+  invalidateCommentsCache();
   window.dispatchEvent(new CustomEvent('nami-channel-game-review-comments-changed'));
 }
 
@@ -73,6 +87,10 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+function getCommentsSnapshot(): ChannelGameReviewComment[] {
+  return readComments();
+}
+
 export function useChannelGameReviewComments(): ChannelGameReviewComment[] {
-  return useSyncExternalStore(subscribe, readComments, readComments);
+  return useSyncExternalStore(subscribe, getCommentsSnapshot, getCommentsSnapshot);
 }

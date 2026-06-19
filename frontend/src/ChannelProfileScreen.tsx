@@ -4,24 +4,23 @@ import {
   ChannelNewsDetailOverlay,
   type ChannelNewsItem,
 } from './ChannelNewsDetailOverlay.js';
-import { ChannelBannerEditorCard } from './ChannelBannerEditorCard.js';
-import { ChannelOwnerBrandPaletteCard } from './ChannelOwnerBrandPaletteCard.js';
-import { ChannelOwnerPromotionsPanel } from './ChannelOwnerPromotionsPanel.js';
+import { ChannelOwnerSection } from './ChannelOwnerSection.js';
 import { ChannelProfileChatSection } from './ChannelProfileChatSection.js';
 import { ChannelGameReviewsSection } from './ChannelGameReviewsSection.js';
 import { ChannelProfileShell } from './ChannelProfileShell.js';
 import { RelatedChannelCoverTile } from './RelatedChannelCoverTile.js';
-import { ChannelCoverUploadCard } from './ChannelCoverUploadCard.js';
-import { ChannelHeroBackgroundUploadCard } from './ChannelHeroBackgroundUploadCard.js';
-import { ChannelNewsBannerUploadCard } from './ChannelNewsBannerUploadCard.js';
 import {
   readChannelHeroBackgroundOverride,
   readChannelNewsBannerOverride,
+  readChannelTrailerOverride,
   useChannelOwnerMediaVersion,
 } from './channel-owner-media-store.js';
+import {
+  reorderProfileTabs,
+  useChannelOwnerEditMode,
+  useChannelOwnerLayout,
+} from './channel-owner-layout-store.js';
 import { EventInterestedButton } from './EventInterestedButton.js';
-import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
-import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { useChannelBannerNotificationsStore } from './channel-banner-notifications-store.js';
 import { getChannelBrandThemeForTile } from './channel-profile-brand.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
@@ -115,6 +114,9 @@ export function ChannelProfileScreen(props: {
   const channelCoverUrl = resolveChannelCoverUrl(props.channel)?.trim() ?? '';
   const newsBannerUrl = readChannelNewsBannerOverride(props.channel.id)?.trim() ?? '';
   const heroBackgroundUrl = readChannelHeroBackgroundOverride(props.channel.id)?.trim() ?? '';
+  const trailerUrl = readChannelTrailerOverride(props.channel.id)?.trim() ?? '';
+  const ownerLayout = useChannelOwnerLayout(props.channel.id);
+  const profileEditMode = useChannelOwnerEditMode(props.channel.id) && chrome.isChannelOwner;
   const gameEvents = getChannelEvents(props.channel);
   const reviewCount = getChannelGameReviews(props.channel.id).length;
 
@@ -122,7 +124,6 @@ export function ChannelProfileScreen(props: {
     props.initialSection ?? (chrome.isChannelOwner ? 'owner' : 'news');
   const [activeSection, setActiveSection] = useState<ChannelProfileSection>(defaultSection);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
-  const [showChannelData, setShowChannelData] = useState(false);
   const [ownerBrandPalette, setOwnerBrandPalette] = useState<string[]>(() => readOwnerBrandPalette());
   const relatedChannels = channels
     .filter((channel) => channel.id !== props.channel.id)
@@ -409,6 +410,20 @@ export function ChannelProfileScreen(props: {
         <div className="channel-profile-about-intro">
           <h2>About {props.channel.name}</h2>
           <p>{props.channel.tagline}</p>
+
+          {trailerUrl ? (
+            <div className="channel-profile-about-trailer">
+              <h3>Game trailer</h3>
+              <video
+                className="channel-profile-about-trailer-player"
+                controls
+                playsInline
+                preload="metadata"
+                src={trailerUrl}
+              />
+            </div>
+          ) : null}
+
           <div className="channel-profile-about-meta">
             <span>{props.channel.handle}</span>
             <span>{props.channel.genre}</span>
@@ -494,44 +509,13 @@ export function ChannelProfileScreen(props: {
 
   function renderOwnerSection(): ReactElement {
     return (
-      <section className="channel-profile-section channel-profile-owner">
-        <div className="channel-profile-section-head">
-          <div>
-            <h2>Owner tools</h2>
-            <p>Promotions, brand palette, banners, cover art, and channel data for {props.channel.name}.</p>
-          </div>
-        </div>
-
-        <ChannelOwnerPromotionsPanel channel={props.channel} />
-
-        <ChannelOwnerBrandPaletteCard
-          onChangeColor={updateOwnerBrandColor}
-          onReset={resetOwnerBrandPalette}
-          palette={ownerBrandPalette}
-        />
-
-        <ChannelCoverUploadCard channel={props.channel} />
-        <ChannelHeroBackgroundUploadCard channel={props.channel} />
-        <ChannelNewsBannerUploadCard channel={props.channel} />
-        <ChannelBannerEditorCard channel={props.channel} isEliteOwner={chrome.isEliteChannelOwner} />
-
-        <article className="panel channel-data-collapse">
-          <button
-            className="secondary-action"
-            onClick={() => setShowChannelData((value) => !value)}
-            type="button"
-          >
-            {showChannelData ? 'Hide channel data' : 'Show channel data'}
-          </button>
-
-          {showChannelData ? (
-            <div className="channel-data-tab-body">
-              <ProtocolChannelPanel />
-              <ProtocolChannelAccessPanel />
-            </div>
-          ) : null}
-        </article>
-      </section>
+      <ChannelOwnerSection
+        channel={props.channel}
+        isEliteOwner={chrome.isEliteChannelOwner}
+        onChangeBrandColor={updateOwnerBrandColor}
+        onResetBrandPalette={resetOwnerBrandPalette}
+        ownerBrandPalette={ownerBrandPalette}
+      />
     );
   }
 
@@ -585,6 +569,13 @@ export function ChannelProfileScreen(props: {
           ? { pageEyebrow: 'My game channel', pageTitle: 'My Profile' }
           : {})}
         {...(heroBackgroundUrl ? { heroBackgroundUrl } : {})}
+        {...(chrome.isChannelOwner
+          ? {
+              profileEditMode,
+              tabOrder: ownerLayout.tabOrder,
+              onReorderTabs: (tabOrder) => reorderProfileTabs(props.channel.id, tabOrder),
+            }
+          : {})}
         showMemberConsumerActions={chrome.showMemberConsumerActions}
         onBannerAlertsToggle={chrome.handleBannerAlertsToggle}
         onBoostChannel={chrome.handleBoostChannel}

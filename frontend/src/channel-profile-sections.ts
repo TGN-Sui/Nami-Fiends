@@ -6,21 +6,51 @@ export type ChannelProfileNavItem = {
   badge?: number;
 };
 
+const PROFILE_TAB_LABELS: Record<ChannelProfileSection, string> = {
+  news: 'News',
+  events: 'Events',
+  reviews: 'Reviews',
+  about: 'About',
+  chat: 'Chat',
+  owner: 'Owner',
+};
+
 export function buildChannelProfileNavItems(options: {
   eventCount: number;
   reviewCount: number;
   isChannelOwner: boolean;
+  tabOrder?: ChannelProfileSection[];
 }): ChannelProfileNavItem[] {
-  const items: ChannelProfileNavItem[] = [
-    { id: 'news', label: 'News' },
-    { id: 'events', label: 'Events', badge: options.eventCount },
-    { id: 'reviews', label: 'Reviews', badge: options.reviewCount },
-    { id: 'about', label: 'About' },
-    { id: 'chat', label: 'Chat' },
+  const baseOrder = options.tabOrder ?? [
+    'news',
+    'events',
+    'reviews',
+    'about',
+    'chat',
+    ...(options.isChannelOwner ? (['owner'] as ChannelProfileSection[]) : []),
   ];
 
-  if (options.isChannelOwner) {
-    items.push({ id: 'owner', label: 'Owner' });
+  const items: ChannelProfileNavItem[] = [];
+
+  for (const section of baseOrder) {
+    if (section === 'owner' && !options.isChannelOwner) {
+      continue;
+    }
+
+    const item: ChannelProfileNavItem = {
+      id: section,
+      label: PROFILE_TAB_LABELS[section],
+    };
+
+    if (section === 'events') {
+      item.badge = options.eventCount;
+    }
+
+    if (section === 'reviews') {
+      item.badge = options.reviewCount;
+    }
+
+    items.push(item);
   }
 
   return items;

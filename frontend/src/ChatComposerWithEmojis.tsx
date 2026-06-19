@@ -1,11 +1,14 @@
 import { useRef, type KeyboardEvent, type ReactElement } from 'react';
 
 import { ChatEmojiPicker } from './ChatEmojiPicker.js';
+import type { NamiCustomEmoji } from './nami-custom-emojis-store.js';
 
 type ChatComposerWithEmojisProps = {
   ariaLabel: string;
   canSend: boolean;
   className?: string;
+  customEmojis?: NamiCustomEmoji[];
+  emojiPickerLabel?: string;
   onChange: (value: string) => void;
   onSend: () => void;
   placeholder: string;
@@ -50,7 +53,12 @@ export function ChatComposerWithEmojis(props: ChatComposerWithEmojisProps): Reac
 
   return (
     <div className={'chat-composer-with-emojis' + (props.className ? ' ' + props.className : '')}>
-      <ChatEmojiPicker disabled={!props.canSend} onSelect={insertEmojiToken} />
+      <ChatEmojiPicker
+        disabled={!props.canSend}
+        {...(props.customEmojis ? { emojis: props.customEmojis } : {})}
+        {...(props.emojiPickerLabel ? { pickerLabel: props.emojiPickerLabel } : {})}
+        onSelect={insertEmojiToken}
+      />
       <input
         aria-label={props.ariaLabel}
         disabled={!props.canSend}

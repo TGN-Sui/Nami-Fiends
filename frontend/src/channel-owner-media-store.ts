@@ -2,6 +2,11 @@ import { useSyncExternalStore } from 'react';
 
 const NEWS_BANNER_PREFIX = 'nami.channel.news-banner.';
 const HERO_BACKGROUND_PREFIX = 'nami.channel.hero-background.';
+const TRAILER_PREFIX = 'nami.channel.trailer.';
+
+export const CHANNEL_TRAILER_ACCEPTED_TYPES = new Set(['video/mp4', 'video/webm']);
+export const CHANNEL_TRAILER_ACCEPTED_LABEL = 'MP4 or WebM';
+export const CHANNEL_TRAILER_MAX_BYTES = 24 * 1024 * 1024;
 
 let mediaVersion = 0;
 
@@ -60,6 +65,30 @@ export function saveChannelHeroBackgroundOverride(channelId: string, dataUrl: st
 
 export function clearChannelHeroBackgroundOverride(channelId: string): void {
   clearOverride(HERO_BACKGROUND_PREFIX, channelId);
+}
+
+export function validateChannelTrailerFile(file: File): string | null {
+  if (!CHANNEL_TRAILER_ACCEPTED_TYPES.has(file.type)) {
+    return 'Use an MP4 or WebM video file.';
+  }
+
+  if (file.size > CHANNEL_TRAILER_MAX_BYTES) {
+    return 'Trailer must be 24 MB or smaller.';
+  }
+
+  return null;
+}
+
+export function readChannelTrailerOverride(channelId: string): string | null {
+  return readOverride(TRAILER_PREFIX, channelId);
+}
+
+export function saveChannelTrailerOverride(channelId: string, dataUrl: string): void {
+  saveOverride(TRAILER_PREFIX, channelId, dataUrl);
+}
+
+export function clearChannelTrailerOverride(channelId: string): void {
+  clearOverride(TRAILER_PREFIX, channelId);
 }
 
 function subscribeOwnerMedia(listener: () => void): () => void {
