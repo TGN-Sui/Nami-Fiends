@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -23,7 +24,13 @@ import {
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
-import { appendGlobalChatMessage, useMessagesStore } from './messages-store.js';
+import { appendGlobalChatMessage } from './messages-store.js';
+import {
+  useChatAutoScroll,
+  useChatViewportPause,
+  useFrozenChatMessages,
+  usePausedMessagesStoreSignal,
+} from './use-chat-viewport.js';
 import {
   chatMemberCardTierClass,
   ConductSignalDot,
@@ -103,25 +110,22 @@ export function GlobalChatRoomView(props: {
   onChatEscape?: () => boolean | void;
 }): ReactElement {
   const selfMember = useSelfMember();
-  const messageStore = useMessagesStore();
-  const messages = useMemo(
+  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
+  const storeSignal = usePausedMessagesStoreSignal(paused);
+  const computeMessages = useCallback(
     () => getGlobalChatMessages(props.chat.id),
-    [props.chat.id, messageStore.globalMessages]
+    [props.chat.id]
   );
+  const messages = useFrozenChatMessages(paused, resumeCount, storeSignal, computeMessages);
   const isOwner = props.chat.createdBy === userProfile.displayName;
   const [draft, setDraft] = useState('');
-  const messageStackRef = useRef<HTMLDivElement | null>(null);
   const canSend = props.chat.isOfficial ? canSendOfficialChatMessages() : canSendChatMessages();
 
-  useEffect(() => {
-    const stack = messageStackRef.current;
-
-    if (!stack) {
-      return;
-    }
-
-    stack.scrollTop = stack.scrollHeight;
-  }, [messages.length, messageStore.globalMessages]);
+  useChatAutoScroll(messageStackRef, {
+    paused,
+    resumeCount,
+    messageCount: messages.length,
+  });
   const visibleMembers = members.filter((member) => member.signal !== 'Black').slice(0, 6);
 
   function sendMessage(): void {
@@ -214,7 +218,10 @@ export function GlobalChatRoomView(props: {
   );
 
   return (
-    <div className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}>
+    <div
+      className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}
+      ref={viewportRef}
+    >
       {props.compact ? (
         props.showCompactHead !== false ? (
           <div className="global-chat-compact-head">

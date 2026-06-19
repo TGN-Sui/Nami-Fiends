@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -16,7 +16,13 @@ import {
   UniformMemberAvatarButton,
 } from './member-avatar.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
-import { appendChannelChatMessage, useMessagesStore } from './messages-store.js';
+import { appendChannelChatMessage, readChannelChatMessages } from './messages-store.js';
+import {
+  useChatAutoScroll,
+  useChatViewportPause,
+  useFrozenChatMessages,
+  usePausedMessagesStoreSignal,
+} from './use-chat-viewport.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
@@ -87,17 +93,17 @@ export function ChannelProfileChatSection(props: {
   }, [chatEligibleMembers, preferencesVersion]);
 
   const selfChatMember = getSelfMember();
-  const messageStore = useMessagesStore();
+  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
+  const storeSignal = usePausedMessagesStoreSignal(paused);
   const [chatDraft, setChatDraft] = useState('');
-  const messageStackRef = useRef<HTMLDivElement | null>(null);
   const canSend = canSendChatMessages();
 
   const resolveChatMessageMember = useCallback((message: ChatMessage): NamiMember | undefined => {
     return resolveMessageAuthorMember(message, selfChatMember, chatEligibleMembers);
   }, [selfChatMember, chatEligibleMembers]);
 
-  const visibleMessages = useMemo(() => {
-    return [...chatMessages, ...messageStore.channelMessages].filter((message) => {
+  const computeVisibleMessages = useCallback(() => {
+    return [...chatMessages, ...readChannelChatMessages()].filter((message) => {
       if (message.signal === 'Black') return false;
       if (adultLanguageMode === 'filter' && hasAdultLanguage(message.body)) return false;
 
@@ -115,21 +121,23 @@ export function ChannelProfileChatSection(props: {
     adultLanguageMode,
     hideNpc,
     hideRed,
-    messageStore.channelMessages,
     preferencesVersion,
     proEliteOnly,
     resolveChatMessageMember,
   ]);
 
-  useEffect(() => {
-    const stack = messageStackRef.current;
+  const visibleMessages = useFrozenChatMessages(
+    paused,
+    resumeCount,
+    storeSignal,
+    computeVisibleMessages
+  );
 
-    if (!stack) {
-      return;
-    }
-
-    stack.scrollTop = stack.scrollHeight;
-  }, [visibleMessages.length, messageStore.channelMessages.length]);
+  useChatAutoScroll(messageStackRef, {
+    paused,
+    resumeCount,
+    messageCount: visibleMessages.length,
+  });
 
   const onlineMembers = visibleChatMembers.slice(0, 4);
   const offlineMembers = visibleChatMembers.slice(4);
@@ -147,7 +155,7 @@ export function ChannelProfileChatSection(props: {
   }
 
   return (
-    <section className="channel-profile-section channel-profile-chat-panel">
+    <section className="channel-profile-section channel-profile-chat-panel" ref={viewportRef}>
       <section className="chat-presence-rail channel-profile-chat-presence">
         <div className="chat-presence-channel">
           <span className="mini-badge">Live room</span>

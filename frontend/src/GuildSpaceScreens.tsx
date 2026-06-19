@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -24,7 +24,13 @@ import {
   useGuildEventsStore,
   type StoredGuildEvent,
 } from './guild-events-store.js';
-import { appendGuildChatMessage, useMessagesStore } from './messages-store.js';
+import { appendGuildChatMessage, readGuildChatMessages } from './messages-store.js';
+import {
+  useChatAutoScroll,
+  useChatViewportPause,
+  useFrozenChatMessages,
+  usePausedMessagesStoreSignal,
+} from './use-chat-viewport.js';
 import { MemberPassportCarousel } from './MemberPassportCarousel.js';
 import {
   cofounderPendingGuildApprovals,
@@ -165,23 +171,23 @@ function GuildChatPanel(props: {
   tagHandlers?: TagNavigationHandlers;
 }): ReactElement {
   const selfMember = useSelfMember();
-  const messageStore = useMessagesStore();
+  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
+  const storeSignal = usePausedMessagesStoreSignal(paused);
   const guildMembers = useMemo(() => guildRosterMembers(props.guild), [props.guild]);
-  const messages = messageStore.guildMessages[props.guild.id] ?? [];
+  const computeMessages = useCallback(
+    () => readGuildChatMessages(props.guild.id),
+    [props.guild.id]
+  );
+  const messages = useFrozenChatMessages(paused, resumeCount, storeSignal, computeMessages);
   const [draft, setDraft] = useState('');
-  const messageStackRef = useRef<HTMLDivElement | null>(null);
   const canSend = canSendChatMessages();
   const visibleMembers = guildMembers.filter((member) => member.signal !== 'Black').slice(0, 6);
 
-  useEffect(() => {
-    const stack = messageStackRef.current;
-
-    if (!stack) {
-      return;
-    }
-
-    stack.scrollTop = stack.scrollHeight;
-  }, [messages.length, messageStore.guildMessages]);
+  useChatAutoScroll(messageStackRef, {
+    paused,
+    resumeCount,
+    messageCount: messages.length,
+  });
 
   function sendMessage(): void {
     if (!canSend || !draft.trim()) {
@@ -193,7 +199,7 @@ function GuildChatPanel(props: {
   }
 
   return (
-    <section className="guild-space-chat-section">
+    <section className="guild-space-chat-section" ref={viewportRef}>
       <div className="chat-presence-rail">
         <div className="chat-presence-channel">
           <div className="global-chat-presence-mark">{props.guild.name.slice(0, 2).toUpperCase()}</div>

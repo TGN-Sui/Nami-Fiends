@@ -42,6 +42,10 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+export function subscribeMessagesStore(listener: () => void): () => void {
+  return subscribe(listener);
+}
+
 function nowTime(): string {
   const date = new Date();
   return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
@@ -417,6 +421,10 @@ function scheduleIncomingThreadReply(memberId: string, memberName: string): void
 
 export function readGlobalChatOverlay(chatId: string): ChatMessage[] {
   return readGlobalMessages()[chatId] ?? [];
+}
+
+export function readGuildChatMessages(guildId: string): ChatMessage[] {
+  return readGuildMessages()[guildId] ?? [];
 }
 
 export function sendPrivateMessage(memberId: string, memberName: string, body: string): void {

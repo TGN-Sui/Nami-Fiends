@@ -63,10 +63,17 @@ import {
   appendChannelChatMessage,
   markThreadRead,
   readChannelChatMessages,
+  readMessageThreads,
   sendPrivateMessage,
   useMessageUnreadCount,
   useMessagesStore,
 } from './messages-store.js';
+import {
+  useChatAutoScroll,
+  useChatViewportPause,
+  useFrozenChatMessages,
+  usePausedMessagesStoreSignal,
+} from './use-chat-viewport.js';
 import {
   isChannelSubscribed,
   subscribeToChannel,
@@ -4090,28 +4097,33 @@ function MessageLogScreen(props: {
   onOpenMember: (member: (typeof members)[number]) => void;
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
-  const messageStore = useMessagesStore();
-  const activeThread = messageStore.threads.find((thread) => thread.memberId === props.member.id);
-  const threadMessages = activeThread?.messages ?? threadMessagesFor(props.member.id, props.member.name);
+  const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
+  const storeSignal = usePausedMessagesStoreSignal(paused);
+  const computeThreadMessages = useCallback(() => {
+    const activeThread = readMessageThreads().find((thread) => thread.memberId === props.member.id);
+
+    return activeThread?.messages ?? threadMessagesFor(props.member.id, props.member.name);
+  }, [props.member.id, props.member.name]);
+  const threadMessages = useFrozenChatMessages(
+    paused,
+    resumeCount,
+    storeSignal,
+    computeThreadMessages
+  );
   const selfMember = useSelfMember();
   const threadParticipants = threadParticipantsFor(props.member.id, props.member.name);
   const [draft, setDraft] = useState('');
-  const messageStackRef = useRef<HTMLDivElement | null>(null);
   const canSend = canSendPrivateMessages();
 
   useEffect(() => {
     markThreadRead(props.member.id);
   }, [props.member.id]);
 
-  useEffect(() => {
-    const stack = messageStackRef.current;
-
-    if (!stack) {
-      return;
-    }
-
-    stack.scrollTop = stack.scrollHeight;
-  }, [threadMessages.length, messageStore.threads]);
+  useChatAutoScroll(messageStackRef, {
+    paused,
+    resumeCount,
+    messageCount: threadMessages.length,
+  });
 
   function sendPrivateReply(): void {
     if (!canSend || !draft.trim()) {
@@ -4156,7 +4168,7 @@ function MessageLogScreen(props: {
 
       <ApprovalRequestActions counterpartyMemberId={props.member.id} />
 
-      <section className="message-log-page panel">
+      <section className="message-log-page panel" ref={viewportRef}>
         <div className="message-stack" ref={messageStackRef}>
           {threadMessages.map((message) => {
             const messageMember = message.outgoing ? selfMember : props.member;
