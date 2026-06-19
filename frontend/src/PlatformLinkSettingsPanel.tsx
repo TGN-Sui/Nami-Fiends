@@ -4,13 +4,21 @@ import { usePassportQuery } from './protocol-query.js';
 import { useMemberSession } from './member-session-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
 import {
+  isPlayerPlatformLinked,
+  linkPlayerPlatform,
+  unlinkPlayerPlatform,
+  useLinkedPlayerPlatforms,
+  type PlayerLinkPlatform,
+} from './player-link-store.js';
+import { PlayerScorePanel } from './PlayerScorePanel.js';
+import {
   authorizeXAccount,
   isXVerificationMockEnabled,
   unlinkXAccount,
   useXVerificationState,
 } from './x-verification-store.js';
 
-type PlatformLinkId = 'x' | 'steam' | 'epic' | 'xbox' | 'playstation' | 'nintendo' | 'riot';
+type PlatformLinkId = PlayerLinkPlatform | 'x';
 
 type PlatformLinkEntry = {
   id: PlatformLinkId;
@@ -61,11 +69,9 @@ export function PlatformLinkSettingsPanel(): ReactElement {
   const { userClaimStatus } = useNamiAdminStore();
   const { data: passportView } = usePassportQuery();
   const xVerification = useXVerificationState();
+  const linkedPlatforms = useLinkedPlayerPlatforms();
   const xMockEnabled = isXVerificationMockEnabled();
 
-  const [linkedPlatforms, setLinkedPlatforms] = useState<Set<PlatformLinkId>>(() => {
-    return xVerification.verified ? new Set<PlatformLinkId>(['x']) : new Set();
-  });
   const [linkNotice, setLinkNotice] = useState<string | null>(null);
 
   const claimApproved = userClaimStatus.status === 'approved';
@@ -83,38 +89,23 @@ export function PlatformLinkSettingsPanel(): ReactElement {
     if (platformId === 'x') {
       if (xVerification.verified) {
         const result = unlinkXAccount();
-        setLinkedPlatforms((current) => {
-          const next = new Set(current);
-          next.delete('x');
-          return next;
-        });
         setLinkNotice(result.ok ? result.message : result.reason);
       } else {
         const result = authorizeXAccount();
-        setLinkedPlatforms((current) => {
-          const next = new Set(current);
-          next.add('x');
-          return next;
-        });
         setLinkNotice(result.ok ? result.message : result.reason);
       }
 
       return;
     }
 
-    setLinkedPlatforms((current) => {
-      const next = new Set(current);
+    if (isPlayerPlatformLinked(platformId)) {
+      unlinkPlayerPlatform(platformId);
+      setLinkNotice('Platform unlinked. Platform-sourced badges would be removed on-chain.');
+      return;
+    }
 
-      if (next.has(platformId)) {
-        next.delete(platformId);
-        setLinkNotice('Platform unlinked. Platform-sourced badges would be removed on-chain.');
-      } else {
-        next.add(platformId);
-        setLinkNotice('Platform linked locally. OAuth verify flow ships in a later phase.');
-      }
-
-      return next;
-    });
+    linkPlayerPlatform(platformId);
+    setLinkNotice('Platform linked locally. OAuth verify flow ships in a later phase.');
   }
 
   return (
@@ -122,10 +113,16 @@ export function PlatformLinkSettingsPanel(): ReactElement {
       <div className="profile-panel-heading">
         <h2>Platform Linking</h2>
         <p>
-          Connect Steam, Epic, Xbox, and more for achievement-based badges. Only achievements earned
-          after your passport was created can be claimed.
+          Connect Steam, Epic, Xbox, and more to prove you are a gamer and raise your Player Score.
+          Only achievements earned after your passport was created can be claimed.
         </p>
       </div>
+
+      <PlayerScorePanel
+        compact
+        issuedScore={session?.issuedPlayerScore ?? null}
+        showSuggestions
+      />
 
       {!session ? (
         <p className="settings-account-hint">
@@ -142,7 +139,7 @@ export function PlatformLinkSettingsPanel(): ReactElement {
       <ul className="platform-link-list">
         {PLATFORM_LINKS.map((platform) => {
           const linked =
-            platform.id === 'x' ? xVerification.verified : linkedPlatforms.has(platform.id);
+            platform.id === 'x' ? xVerification.verified : linkedPlatforms.includes(platform.id);
           const xActionDisabled = platform.id === 'x' && !linked && !xMockEnabled;
 
           return (

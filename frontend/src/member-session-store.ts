@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { clearOnboardingDraft, loadOnboardingDraft, type OnboardingDraft } from './onboarding-draft.js';
 import { isQuizComplete } from './onboarding-quiz.js';
+import { computePlayerScoreFromDraft, type PlayerScoreTier } from './player-score.js';
 
 const SESSION_KEY = 'nami.member.session';
 
@@ -11,6 +12,10 @@ export type MemberSession = {
   archetype: number;
   archetypeLabel: string;
   flavorBadgeId: string;
+  quizAnswers: Record<string, string>;
+  issuedPlayerScore: number;
+  issuedPlayerScoreTier: PlayerScoreTier;
+  playerScoreIssuedAtMs: number;
   signedUpAtMs: number;
 };
 
@@ -50,6 +55,25 @@ export function readMemberSession(): MemberSession | null {
       archetype: typeof parsed.archetype === 'number' ? parsed.archetype : 2,
       archetypeLabel: typeof parsed.archetypeLabel === 'string' ? parsed.archetypeLabel : 'Cozy Voyager',
       flavorBadgeId: typeof parsed.flavorBadgeId === 'string' ? parsed.flavorBadgeId : 'Hearth Basic',
+      quizAnswers:
+        parsed.quizAnswers !== null &&
+        typeof parsed.quizAnswers === 'object' &&
+        !Array.isArray(parsed.quizAnswers)
+          ? parsed.quizAnswers
+          : {},
+      issuedPlayerScore: typeof parsed.issuedPlayerScore === 'number' ? parsed.issuedPlayerScore : 0,
+      issuedPlayerScoreTier:
+        parsed.issuedPlayerScoreTier === 'basic' ||
+        parsed.issuedPlayerScoreTier === 'verified' ||
+        parsed.issuedPlayerScoreTier === 'premium'
+          ? parsed.issuedPlayerScoreTier
+          : 'basic',
+      playerScoreIssuedAtMs:
+        typeof parsed.playerScoreIssuedAtMs === 'number'
+          ? parsed.playerScoreIssuedAtMs
+          : typeof parsed.signedUpAtMs === 'number'
+            ? parsed.signedUpAtMs
+            : Date.now(),
       signedUpAtMs: typeof parsed.signedUpAtMs === 'number' ? parsed.signedUpAtMs : Date.now(),
     };
 
@@ -85,13 +109,24 @@ export function completeSignupFromDraft(draft: OnboardingDraft): MemberSession |
     return null;
   }
 
+  const issuedScore = computePlayerScoreFromDraft({
+    displayName: draft.displayName,
+    email: draft.email,
+    quizAnswers: draft.quizAnswers,
+  });
+  const issuedAtMs = Date.now();
+
   const session: MemberSession = {
     displayName: draft.displayName.trim(),
     email: draft.email.trim().toLowerCase(),
     archetype: draft.archetype,
     archetypeLabel: draft.archetypeLabel,
     flavorBadgeId: draft.flavorBadgeId,
-    signedUpAtMs: Date.now(),
+    quizAnswers: { ...draft.quizAnswers },
+    issuedPlayerScore: issuedScore.total,
+    issuedPlayerScoreTier: issuedScore.tier,
+    playerScoreIssuedAtMs: issuedAtMs,
+    signedUpAtMs: issuedAtMs,
   };
 
   saveMemberSession(session);

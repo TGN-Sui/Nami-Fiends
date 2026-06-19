@@ -126,6 +126,8 @@ import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
 import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler.js';
 import { MemberSessionSync } from './MemberSessionSync.js';
+import { useMemberSession } from './member-session-store.js';
+import { PlayerScorePanel } from './PlayerScorePanel.js';
 
 import { WalletAuthBridge } from './WalletAuthBridge.js';
 import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
@@ -3559,6 +3561,7 @@ function PassportScreen(props: {
   onOpenProfile: (channel: NamiChannel) => void;
 }): ReactElement {
   const profileMember = useSelfMember();
+  const memberSession = useMemberSession();
   const passportProgression = getNamiProgression(profileMember);
   const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
   const { owner: protocolOwner } = useProtocolOwner();
@@ -3666,6 +3669,8 @@ function PassportScreen(props: {
       ) : null}
 
       <section className="passport-page">
+        <PlayerScorePanel issuedScore={memberSession?.issuedPlayerScore ?? null} showSuggestions />
+
         <article className="panel passport-hero-card passport-hero-card-refined">
           <div className="passport-owner-block">
             <UniformMemberAvatar className="member-profile-avatar" member={profileMember}>

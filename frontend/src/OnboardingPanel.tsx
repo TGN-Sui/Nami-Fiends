@@ -26,6 +26,7 @@ import {
   completeSignupFromDraft,
   isDraftReadyForSignup,
 } from './member-session-store.js';
+import { PlayerScorePanel } from './PlayerScorePanel.js';
 
 interface OnboardingPanelProps {
   onEnterHub?: () => void;
@@ -90,10 +91,12 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
         <p className="eyebrow">Enter Nami</p>
         <h2>Tell us who you are, then step into the hub.</h2>
         <p>
-          Sign up with your display name and email. Claim your on-chain passport and link platforms
-          later from Settings.
+          Sign up with your display name and email. Every passport is issued a Player Score that
+          rises as you link wallets, socials, and game platforms from Settings.
         </p>
       </div>
+
+      <PlayerScorePanel compact draft={draft} showSuggestions />
 
       <div className="onboarding-card panel">
         <div className="onboarding-act-rail" aria-label="Onboarding progress">
@@ -190,10 +193,12 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
                 <span>{draft.flavorBadgeId}</span>
               </div>
               <p className="protocol-hint">
-                Claim your @{normalizeNodename(draft.nodename) || 'nodename'} passport and link Steam,
-                Epic, and more from Settings after you enter the hub.
+                Your passport will be issued with the Player Score below. Link Steam, Epic, X, and your
+                wallet from Settings to raise it after you enter the hub.
               </p>
             </article>
+
+            <PlayerScorePanel compact draft={draft} />
 
             {signupError ? <p className="onboarding-field-error">{signupError}</p> : null}
 
