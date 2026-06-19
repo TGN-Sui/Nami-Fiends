@@ -154,6 +154,12 @@ export function readViewingAsChannelOwner(): boolean {
   return readUserSurfaceRole() === 'channel-owner';
 }
 
+export function canManageChannelBrandPalette(
+  role: UserSurfaceRole = readUserSurfaceRole()
+): boolean {
+  return role === 'channel-owner';
+}
+
 export function saveViewingAsChannelOwner(enabled: boolean): void {
   saveUserSurfaceRole(enabled ? 'channel-owner' : 'member');
 }

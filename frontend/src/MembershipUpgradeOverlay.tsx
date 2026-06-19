@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
+import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
+import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
 import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
 import {
@@ -31,6 +33,7 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 
 export function MembershipUpgradeOverlay(): ReactElement | null {
   const open = useMembershipUpgradeOverlayOpen();
+  const canPurchaseMembership = canPurchaseOrClaimMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
@@ -201,6 +204,10 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
           <p>{statusLabel}</p>
         </div>
 
+        {!canPurchaseMembership ? (
+          <MembershipPurchaseLockedPanel />
+        ) : (
+          <>
         <MembershipAdventurerClaimCard onError={setError} onNotice={setNotice} />
 
         <MembershipPaymentMethods
@@ -321,6 +328,8 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
 
         {notice ? <p className="membership-plan-notice is-success">{notice}</p> : null}
         {error ? <p className="membership-plan-notice is-error">{error}</p> : null}
+          </>
+        )}
       </div>
     </div>,
     document.body

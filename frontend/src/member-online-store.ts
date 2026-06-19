@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { canToggleStreamingStatus, getSelfMember } from './member-access.js';
 import {
   isMemberPreferencesApiAvailable,
   syncMemberPreferencesToBackend,
@@ -91,6 +92,10 @@ export function readSelfStreamingOnline(): boolean {
 }
 
 export function setSelfStreamingOnline(enabled: boolean): void {
+  if (!canToggleStreamingStatus(getSelfMember())) {
+    return;
+  }
+
   const next = { ...readStatusMap(), [SELF_MEMBER_ID]: enabled };
   writeStatusMap(next);
   pushStreamingPreferenceToBackend(enabled);

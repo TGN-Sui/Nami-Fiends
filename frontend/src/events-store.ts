@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { ownsGameChannel } from './channel-owner-access.js';
 import { isNamiTeamMember } from './channel-surface.js';
 import { getSelfMember } from './member-access.js';
 import {
@@ -443,6 +444,10 @@ export function createChannelEvent(
   },
   createdByMemberId = getSelfMember().id
 ): StoredEvent {
+  if (!ownsGameChannel(channel.id)) {
+    throw new Error('Only the game channel owner can publish events for this channel.');
+  }
+
   const event: StoredEvent = {
     id: channel.id + '-event-' + Date.now(),
     title: input.title.trim(),

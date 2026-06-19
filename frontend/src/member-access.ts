@@ -1,4 +1,9 @@
 import { isNamiTeamMember } from './channel-surface.js';
+import {
+  applyDemoMemberOverrides,
+  readDemoSafetyModerationRole,
+} from './demo-perspective-store.js';
+import { resolveNamiAdminRole } from './nami-capabilities.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 import { readDemoOwner } from './protocol-env.js';
@@ -16,7 +21,9 @@ export const LEGACY_SELF_MEMBER_NAMES = ['Nozomi', 'NPC Gamer'] as const;
 export function getSelfMember(): NamiMember {
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
 
-  return applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)));
+  return applyDemoMemberOverrides(
+    applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)))
+  );
 }
 
 export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember = getSelfMember()): boolean {
@@ -36,6 +43,74 @@ export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember =
 
 export function isMemberVerified(member: NamiMember): boolean {
   return member.signal === 'Green' && member.tier !== 'NPC';
+}
+
+export function isNpcMember(member: NamiMember): boolean {
+  return member.tier === 'NPC';
+}
+
+export function canReportMemberProfile(reporter: NamiMember = getSelfMember()): boolean {
+  return isMemberVerified(reporter);
+}
+
+export function canMessageOtherMembers(sender: NamiMember = getSelfMember()): boolean {
+  return isSignedInMember() && isMemberVerified(sender);
+}
+
+export function canAccessBadgeBook(member: NamiMember): boolean {
+  return !isNpcMember(member);
+}
+
+export function canSubscribeToChannelBanners(member: NamiMember = getSelfMember()): boolean {
+  return isMemberVerified(member);
+}
+
+export function canToggleStreamingStatus(member: NamiMember = getSelfMember()): boolean {
+  return isMemberVerified(member);
+}
+
+function isViewingAsGameChannelOwner(): boolean {
+  try {
+    const storedRole = window.localStorage.getItem('nami.user.surface-role');
+
+    if (storedRole === 'channel-owner') {
+      return true;
+    }
+
+    return window.localStorage.getItem('nami.viewing-as-channel-owner') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function canManageTemporaryGlobalChats(member: NamiMember = getSelfMember()): boolean {
+  if (isViewingAsGameChannelOwner()) {
+    return false;
+  }
+
+  return member.tier === 'Elite' && isMemberVerified(member);
+}
+
+export function canEditProfileCosmetics(member: NamiMember = getSelfMember()): boolean {
+  return isMemberVerified(member);
+}
+
+export function canPurchaseOrClaimMembership(member: NamiMember = getSelfMember()): boolean {
+  return isMemberVerified(member);
+}
+
+export function canAccessModerationQueues(
+  connectedOwner: string | null = readSignedInOwner()
+): boolean {
+  const demoRole = readDemoSafetyModerationRole();
+
+  if (demoRole !== null) {
+    return demoRole === 'Nami Moderator' || demoRole === 'Nami Dev';
+  }
+
+  const adminRole = resolveNamiAdminRole(connectedOwner);
+
+  return adminRole === 'official-owner' || adminRole === 'official-moderator';
 }
 
 export function readSignedInOwner(): string | null {
@@ -65,7 +140,7 @@ export function canSendChatMessages(): boolean {
 }
 
 export function canSendPrivateMessages(): boolean {
-  return isSignedInMember();
+  return canMessageOtherMembers();
 }
 
 export function canSendOfficialChatMessages(): boolean {

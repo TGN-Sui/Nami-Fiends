@@ -304,7 +304,7 @@ export function GuildEventEditorCard(props: {
   guildId: string;
 }): ReactElement {
   const selfMember = useSelfMember();
-  const canEdit = canEditGuildEvent(props.event, selfMember.id);
+  const canEdit = canEditGuildEvent(props.guildId, props.event, selfMember.id);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(props.event.title);
   const [description, setDescription] = useState(props.event.description);
@@ -475,11 +475,11 @@ function GuildHierarchyPanel(props: {
   const [rankTitles, setRankTitles] = useState(hierarchy.rankTitles.join(', '));
   const [notice, setNotice] = useState('');
   const isMaster = isGuildMaster(props.guild, props.selfMember.id);
-  const canEditTitles = canGuildMember(props.guild, props.selfMember.id, 'editRankTitles');
+  const canEditTitles = isMaster;
   const canPromote = canGuildMember(props.guild, props.selfMember.id, 'promoteMembers');
   const canDemote = canGuildMember(props.guild, props.selfMember.id, 'demoteMembers');
   const canRemove = canGuildMember(props.guild, props.selfMember.id, 'removeMembers');
-  const canManagePermissions = canGuildMember(props.guild, props.selfMember.id, 'manageRankPermissions');
+  const canManagePermissions = isMaster;
   const masterId = getGuildMasterMemberId(props.guild);
 
   function saveRankTitles(): void {
@@ -1520,13 +1520,12 @@ export function GuildDetailScreen(props: {
   const canJoinRequest = canRequestToJoinGuild(props.guild, selfMember.id);
   const showHierarchy =
     isMember &&
-    (isGuildMaster(props.guild, selfMember.id) ||
-      canGuildMember(props.guild, selfMember.id, 'promoteMembers') ||
-      canGuildMember(props.guild, selfMember.id, 'demoteMembers') ||
-      canGuildMember(props.guild, selfMember.id, 'removeMembers') ||
-      canGuildMember(props.guild, selfMember.id, 'manageRankPermissions') ||
-      canGuildMember(props.guild, selfMember.id, 'editRankTitles'));
-  const showEvents = isMember && canGuildMember(props.guild, selfMember.id, 'createEvents');
+    canUseGuildLeadershipTools(selfMember) &&
+    isGuildMaster(props.guild, selfMember.id);
+  const showEvents =
+    isMember &&
+    canUseGuildLeadershipTools(selfMember) &&
+    isGuildMaster(props.guild, selfMember.id);
   const showInvite =
     canUseGuildLeadershipTools(selfMember) &&
     canGuildMember(props.guild, selfMember.id, 'inviteMembers');
@@ -1540,7 +1539,13 @@ export function GuildDetailScreen(props: {
       return;
     }
 
-    createGuildEvent(props.guild, eventTitle, selfMember.id);
+    const created = createGuildEvent(props.guild, eventTitle, selfMember.id);
+
+    if (!created) {
+      setCreateNotice('Only the guild master can create guild events.');
+      return;
+    }
+
     setEventTitle('');
     setCreateNotice('Guild event created. Members were notified via My Guild.');
   }

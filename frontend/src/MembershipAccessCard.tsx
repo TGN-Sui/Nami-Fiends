@@ -4,6 +4,8 @@ import {
   fetchPendingFulfillmentForOwner,
   isMembershipFulfillmentApiAvailable,
 } from './membership-fulfillment-api.js';
+import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
+import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { openMembershipUpgradeOverlay } from './membership-upgrade-store.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
 import { useProtocolOwner } from './wallet.js';
@@ -15,6 +17,8 @@ type MembershipAccessCardProps = {
 export function MembershipAccessCard(props: MembershipAccessCardProps = {}): ReactElement {
   const planState = useMembershipPlanState();
   const { owner } = useProtocolOwner();
+  const selfMember = getSelfMember();
+  const canPurchaseMembership = canPurchaseOrClaimMembership(selfMember);
   const activePlan = membershipPlanForTier(planState.activeTier);
   const [onChainPending, setOnChainPending] = useState(false);
   const ctaLabel =
@@ -40,13 +44,17 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
           <p>Expand boosts, squads, followed channels, and cosmetics.</p>
         </div>
 
-        <button
-          className="primary-action membership-access-upgrade-btn"
-          onClick={() => openMembershipUpgradeOverlay()}
-          type="button"
-        >
-          {ctaLabel}
-        </button>
+        {canPurchaseMembership ? (
+          <button
+            className="primary-action membership-access-upgrade-btn"
+            onClick={() => openMembershipUpgradeOverlay()}
+            type="button"
+          >
+            {ctaLabel}
+          </button>
+        ) : (
+          <MembershipPurchaseLockedPanel compact />
+        )}
       </article>
     );
   }
@@ -71,13 +79,17 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
         ) : null}
       </div>
 
-      <button
-        className="primary-action membership-access-upgrade-btn"
-        onClick={() => openMembershipUpgradeOverlay()}
-        type="button"
-      >
-        {ctaLabel}
-      </button>
+      {canPurchaseMembership ? (
+        <button
+          className="primary-action membership-access-upgrade-btn"
+          onClick={() => openMembershipUpgradeOverlay()}
+          type="button"
+        >
+          {ctaLabel}
+        </button>
+      ) : (
+        <MembershipPurchaseLockedPanel />
+      )}
     </article>
   );
 }

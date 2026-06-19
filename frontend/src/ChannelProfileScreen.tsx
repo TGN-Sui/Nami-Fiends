@@ -5,6 +5,8 @@ import {
   type ChannelNewsItem,
 } from './ChannelNewsDetailOverlay.js';
 import { ChannelBannerEditorCard } from './ChannelBannerEditorCard.js';
+import { ChannelOwnerBrandPaletteCard } from './ChannelOwnerBrandPaletteCard.js';
+import { ChannelOwnerPromotionsPanel } from './ChannelOwnerPromotionsPanel.js';
 import { ChannelProfileChatSection } from './ChannelProfileChatSection.js';
 import { ChannelGameReviewsSection } from './ChannelGameReviewsSection.js';
 import { ChannelProfileShell } from './ChannelProfileShell.js';
@@ -16,6 +18,10 @@ import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { useChannelBannerNotificationsStore } from './channel-banner-notifications-store.js';
 import { getChannelBrandThemeForTile } from './channel-profile-brand.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
+import {
+  scrollToChannelOwnerFocus,
+  type ChannelProfileOwnerFocus,
+} from './channel-profile-navigation.js';
 import { getChannelGameReviews, useChannelGameReviewsStore } from './channel-game-reviews-store.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
 import {
@@ -38,21 +44,7 @@ function gameVerificationLabel(channel: NamiChannel): string {
   return channel.verifiedGame ? 'Verified Game' : 'Community Game';
 }
 
-function gameVerificationClass(channel: NamiChannel): string {
-  const developer = channelDeveloper(channel);
-
-  if (channel.verifiedGame) {
-    return 'is-verified-game-surface';
-  }
-
-  if (developer.approved) {
-    return 'is-studio-approved-surface';
-  }
-
-  return 'is-community-game-surface';
-}
-
-function readChannelBrandPalette(): string[] {
+function readOwnerBrandPalette(): string[] {
   try {
     const savedPalette = window.localStorage.getItem('nami-channel-brand-palette');
 
@@ -74,16 +66,22 @@ function readChannelBrandPalette(): string[] {
   }
 }
 
-function readSelectedChannelBrandColor(): string {
-  try {
-    return window.localStorage.getItem('nami-selected-channel-brand-color') ?? '#4da3ff';
-  } catch {
-    return '#4da3ff';
-  }
+function saveOwnerBrandPalette(palette: string[]): void {
+  window.localStorage.setItem('nami-channel-brand-palette', JSON.stringify(palette.slice(0, 4)));
 }
 
-function saveSelectedChannelBrandColor(color: string): void {
-  window.localStorage.setItem('nami-selected-channel-brand-color', color);
+function gameVerificationClass(channel: NamiChannel): string {
+  const developer = channelDeveloper(channel);
+
+  if (channel.verifiedGame) {
+    return 'is-verified-game-surface';
+  }
+
+  if (developer.approved) {
+    return 'is-studio-approved-surface';
+  }
+
+  return 'is-community-game-surface';
 }
 
 export function ChannelProfileScreen(props: {
@@ -97,6 +95,7 @@ export function ChannelProfileScreen(props: {
   returnPage: NamiPage;
   returnLabel: string;
   initialSection?: ChannelProfileSection;
+  ownerFocus?: ChannelProfileOwnerFocus;
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
@@ -109,17 +108,12 @@ export function ChannelProfileScreen(props: {
   const gameEvents = getChannelEvents(props.channel);
   const reviewCount = getChannelGameReviews(props.channel.id).length;
 
-  const [activeSection, setActiveSection] = useState<ChannelProfileSection>(props.initialSection ?? 'news');
+  const defaultSection: ChannelProfileSection =
+    props.initialSection ?? (chrome.isChannelOwner ? 'owner' : 'news');
+  const [activeSection, setActiveSection] = useState<ChannelProfileSection>(defaultSection);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
   const [showChannelData, setShowChannelData] = useState(false);
-  const [channelBrandPalette] = useState(readChannelBrandPalette);
-  const [selectedChannelBrandColor, setSelectedChannelBrandColor] = useState(() => {
-    const savedColor = readSelectedChannelBrandColor();
-    const palette = readChannelBrandPalette();
-
-    return palette.includes(savedColor) ? savedColor : palette[0] ?? '#4da3ff';
-  });
-
+  const [ownerBrandPalette, setOwnerBrandPalette] = useState<string[]>(() => readOwnerBrandPalette());
   const relatedChannels = channels
     .filter((channel) => channel.id !== props.channel.id)
     .sort((left, right) => {
@@ -218,6 +212,18 @@ export function ChannelProfileScreen(props: {
   }, [chrome.isChannelOwner, props.channel.id, props.initialSection]);
 
   useEffect(() => {
+    if (!chrome.isChannelOwner || activeSection !== 'owner' || !props.ownerFocus) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      scrollToChannelOwnerFocus(props.ownerFocus ?? null);
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSection, chrome.isChannelOwner, props.channel.id, props.ownerFocus]);
+
+  useEffect(() => {
     if (activeSection === 'owner' && !chrome.isChannelOwner) {
       setActiveSection('news');
     }
@@ -230,11 +236,6 @@ export function ChannelProfileScreen(props: {
     }
 
     setActiveSection(section);
-  }
-
-  function chooseChannelBrandColor(color: string): void {
-    setSelectedChannelBrandColor(color);
-    saveSelectedChannelBrandColor(color);
   }
 
   function renderBadgeIcon(
@@ -459,28 +460,24 @@ export function ChannelProfileScreen(props: {
           </div>
         </div>
 
-        <div className="channel-profile-about-block">
-          <h3>Channel colors</h3>
-          <div className="channel-member-brand-strip channel-member-brand-strip-compact">
-            {channelBrandPalette.slice(0, 4).map((color: string) => (
-              <button
-                aria-label={'Use channel brand color ' + color}
-                aria-pressed={selectedChannelBrandColor === color}
-                className={
-                  'channel-member-brand-dot' +
-                  (selectedChannelBrandColor === color ? ' is-selected-channel-brand-color' : '')
-                }
-                key={color}
-                onClick={() => chooseChannelBrandColor(color)}
-                type="button"
-              >
-                <span style={{ backgroundColor: color }} />
-              </button>
-            ))}
-          </div>
-        </div>
       </section>
     );
+  }
+
+  function updateOwnerBrandColor(index: number, color: string): void {
+    const nextPalette = ownerBrandPalette
+      .map((currentColor, currentIndex) => (currentIndex === index ? color : currentColor))
+      .slice(0, 4);
+
+    setOwnerBrandPalette(nextPalette);
+    saveOwnerBrandPalette(nextPalette);
+  }
+
+  function resetOwnerBrandPalette(): void {
+    const defaultPalette = ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
+
+    setOwnerBrandPalette(defaultPalette);
+    saveOwnerBrandPalette(defaultPalette);
   }
 
   function renderOwnerSection(): ReactElement {
@@ -489,20 +486,20 @@ export function ChannelProfileScreen(props: {
         <div className="channel-profile-section-head">
           <div>
             <h2>Owner tools</h2>
-            <p>Publish banners, update cover art, and manage channel data.</p>
+            <p>Promotions, brand palette, banners, cover art, and channel data for {props.channel.name}.</p>
           </div>
         </div>
 
+        <ChannelOwnerPromotionsPanel channel={props.channel} />
+
+        <ChannelOwnerBrandPaletteCard
+          onChangeColor={updateOwnerBrandColor}
+          onReset={resetOwnerBrandPalette}
+          palette={ownerBrandPalette}
+        />
+
         <ChannelCoverUploadCard channel={props.channel} />
         <ChannelBannerEditorCard channel={props.channel} isEliteOwner={chrome.isEliteChannelOwner} />
-
-        {chrome.bannerAlertsEnabled ? (
-          <div className="channel-banner-demo-tools">
-            <button className="nami-surface-button" onClick={chrome.handleSimulateSubscribedBurst} type="button">
-              Simulate subscribed banner burst
-            </button>
-          </div>
-        ) : null}
 
         <article className="panel channel-data-collapse">
           <button
@@ -570,6 +567,10 @@ export function ChannelProfileScreen(props: {
         developerName={chrome.developerProfile.name}
         eventCount={gameEvents.length}
         isChannelOwner={chrome.isChannelOwner}
+        {...(chrome.isChannelOwner
+          ? { pageEyebrow: 'My game channel', pageTitle: 'My Profile' }
+          : {})}
+        showMemberConsumerActions={chrome.showMemberConsumerActions}
         onBannerAlertsToggle={chrome.handleBannerAlertsToggle}
         onBoostChannel={chrome.handleBoostChannel}
         onNavigate={props.onNavigate}

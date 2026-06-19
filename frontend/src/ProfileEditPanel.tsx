@@ -12,6 +12,7 @@ import {
   PROFILE_EDIT_PANEL_ID,
   useSelfMember,
 } from './member-avatar-store.js';
+import { canEditProfileCosmetics } from './member-access.js';
 import {
   profileGenreOptions,
   profilePlatformOptions,
@@ -26,6 +27,7 @@ function toggleChip(list: string[], value: string): string[] {
 
 export function ProfileEditPanel(): ReactElement {
   const member = useSelfMember();
+  const canEditCosmetics = canEditProfileCosmetics(member);
   const savedProfile = useSelfProfileEdits();
   const collectedBadges = collectedBadgesForMember(member);
   const collectedTitles = collectedTitlesForMember(member);
@@ -124,105 +126,118 @@ export function ProfileEditPanel(): ReactElement {
           />
         </label>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Titles & Cosmetics</legend>
-          <p className="protocol-hint">Equip collected titles, badges, frames, themes, and rings you own.</p>
-        </fieldset>
+        {canEditCosmetics ? (
+          <>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Titles & Cosmetics</legend>
+              <p className="protocol-hint">Equip collected titles, badges, frames, themes, and rings you own.</p>
+            </fieldset>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Title display</legend>
-          <div className="profile-edit-chip-row">
-            {collectedTitles.map((title) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.titleDisplay === title.name ? ' is-active-view' : '')
-                }
-                key={title.id}
-                onClick={() => updateDraft({ titleDisplay: title.name })}
-                type="button"
-              >
-                {title.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Title display</legend>
+              <div className="profile-edit-chip-row">
+                {collectedTitles.map((title) => (
+                  <button
+                    className={
+                      'nami-surface-button profile-edit-chip' +
+                      (draft.titleDisplay === title.name ? ' is-active-view' : '')
+                    }
+                    key={title.id}
+                    onClick={() => updateDraft({ titleDisplay: title.name })}
+                    type="button"
+                  >
+                    {title.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Badge display</legend>
-          <div className="profile-edit-chip-row">
-            {collectedBadges.map((badge) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.badgeDisplay === badge.name ? ' is-active-view' : '')
-                }
-                key={badge.id}
-                onClick={() => updateDraft({ badgeDisplay: badge.name })}
-                type="button"
-              >
-                {badge.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Badge display</legend>
+              <div className="profile-edit-chip-row">
+                {collectedBadges.map((badge) => (
+                  <button
+                    className={
+                      'nami-surface-button profile-edit-chip' +
+                      (draft.badgeDisplay === badge.name ? ' is-active-view' : '')
+                    }
+                    key={badge.id}
+                    onClick={() => updateDraft({ badgeDisplay: badge.name })}
+                    type="button"
+                  >
+                    {badge.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Profile frame</legend>
-          <div className="profile-edit-chip-row">
-            {frameCosmetics.map((cosmetic) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.frameDisplay === cosmetic.name ? ' is-active-view' : '')
-                }
-                key={cosmetic.id}
-                onClick={() => updateDraft({ frameDisplay: cosmetic.name })}
-                type="button"
-              >
-                {cosmetic.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Profile frame</legend>
+              <div className="profile-edit-chip-row">
+                {frameCosmetics.map((cosmetic) => (
+                  <button
+                    className={
+                      'nami-surface-button profile-edit-chip' +
+                      (draft.frameDisplay === cosmetic.name ? ' is-active-view' : '')
+                    }
+                    key={cosmetic.id}
+                    onClick={() => updateDraft({ frameDisplay: cosmetic.name })}
+                    type="button"
+                  >
+                    {cosmetic.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Passport theme</legend>
-          <div className="profile-edit-chip-row">
-            {themeCosmetics.map((cosmetic) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.themeDisplay === cosmetic.name ? ' is-active-view' : '')
-                }
-                key={cosmetic.id}
-                onClick={() => updateDraft({ themeDisplay: cosmetic.name })}
-                type="button"
-              >
-                {cosmetic.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Passport theme</legend>
+              <div className="profile-edit-chip-row">
+                {themeCosmetics.map((cosmetic) => (
+                  <button
+                    className={
+                      'nami-surface-button profile-edit-chip' +
+                      (draft.themeDisplay === cosmetic.name ? ' is-active-view' : '')
+                    }
+                    key={cosmetic.id}
+                    onClick={() => updateDraft({ themeDisplay: cosmetic.name })}
+                    type="button"
+                  >
+                    {cosmetic.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
-        <fieldset className="profile-edit-chip-field">
-          <legend>Signal ring</legend>
-          <div className="profile-edit-chip-row">
-            {ringCosmetics.map((cosmetic) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.ringDisplay === cosmetic.name ? ' is-active-view' : '')
-                }
-                key={cosmetic.id}
-                onClick={() => updateDraft({ ringDisplay: cosmetic.name })}
-                type="button"
-              >
-                {cosmetic.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset className="profile-edit-chip-field">
+              <legend>Signal ring</legend>
+              <div className="profile-edit-chip-row">
+                {ringCosmetics.map((cosmetic) => (
+                  <button
+                    className={
+                      'nami-surface-button profile-edit-chip' +
+                      (draft.ringDisplay === cosmetic.name ? ' is-active-view' : '')
+                    }
+                    key={cosmetic.id}
+                    onClick={() => updateDraft({ ringDisplay: cosmetic.name })}
+                    type="button"
+                  >
+                    {cosmetic.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </>
+        ) : (
+          <article className="profile-edit-cosmetics-locked panel">
+            <span className="mini-badge">Verified members only</span>
+            <h3>Cosmetic loadout locked</h3>
+            <p>
+              Claim and verify your Nami Passport to equip title display, badge display, profile
+              frames, passport themes, and signal rings.
+            </p>
+          </article>
+        )}
 
         <fieldset className="profile-edit-chip-field">
           <legend>Preferred platforms</legend>

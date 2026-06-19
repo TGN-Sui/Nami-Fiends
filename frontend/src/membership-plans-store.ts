@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
+import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
 import {
   isMembershipSubscriptionApiAvailable,
   syncMembershipSubscriptionToBackend,
@@ -374,12 +375,29 @@ export type MembershipActionResult =
   | { ok: true; message: string }
   | { ok: false; reason: string };
 
+export const MEMBERSHIP_VERIFIED_ONLY_REASON =
+  'Claim and verify your Nami Passport before purchasing or claiming membership.';
+
+function membershipPurchaseGuard(): MembershipActionResult | null {
+  if (!canPurchaseOrClaimMembership(getSelfMember())) {
+    return { ok: false, reason: MEMBERSHIP_VERIFIED_ONLY_REASON };
+  }
+
+  return null;
+}
+
 export function requestMembershipUpgrade(
   targetTier: PaidMembershipTier,
   billingCycle: MembershipBillingCycle,
   checkoutRail: MembershipCheckoutRail = 'card',
   cryptoAsset: MembershipCryptoAsset | null = null
 ): MembershipActionResult {
+  const guard = membershipPurchaseGuard();
+
+  if (guard) {
+    return guard;
+  }
+
   const state = readMembershipPlanState();
 
   if (TIER_RANK[targetTier] <= TIER_RANK[state.activeTier] && state.status !== 'pending-cancel') {
@@ -425,6 +443,12 @@ export function requestMembershipUpgrade(
 }
 
 export function claimAdventurerMembershipViaX(): MembershipActionResult {
+  const guard = membershipPurchaseGuard();
+
+  if (guard) {
+    return guard;
+  }
+
   if (!isXVerificationEligibleForAdventurerClaim()) {
     return {
       ok: false,
@@ -471,6 +495,12 @@ export function setMembershipPendingPaymentId(paymentId: string): void {
 }
 
 export function finalizeMembershipUpgradeAfterPayment(paymentId: string): MembershipActionResult {
+  const guard = membershipPurchaseGuard();
+
+  if (guard) {
+    return guard;
+  }
+
   const state = readMembershipPlanState();
 
   if (state.status !== 'pending-upgrade' || !state.pendingTier) {
@@ -507,6 +537,12 @@ export function finalizeMembershipUpgradeAfterPayment(paymentId: string): Member
 
 /** Legacy local-only confirm when payment API is unavailable. */
 export function confirmMembershipUpgrade(): MembershipActionResult {
+  const guard = membershipPurchaseGuard();
+
+  if (guard) {
+    return guard;
+  }
+
   const state = readMembershipPlanState();
 
   if (state.status !== 'pending-upgrade' || !state.pendingTier) {

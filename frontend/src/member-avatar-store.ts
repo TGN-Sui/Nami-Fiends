@@ -4,6 +4,7 @@ import {
   isMemberPreferencesApiAvailable,
   syncMemberPreferencesToBackend,
 } from './member-preferences-api.js';
+import { applyDemoMemberOverrides } from './demo-perspective-store.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -99,7 +100,9 @@ function getSelfMemberSnapshot(): NamiMember {
   }
 
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
-  cachedSelfMember = applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)));
+  cachedSelfMember = applyDemoMemberOverrides(
+    applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)))
+  );
 
   return cachedSelfMember;
 }
@@ -113,11 +116,15 @@ function subscribeSelfMember(onStoreChange: () => void): () => void {
   window.addEventListener('nami-self-avatar-changed', handleChange);
   window.addEventListener('nami-self-profile-changed', handleChange);
   window.addEventListener('nami-member-session-changed', handleChange);
+  window.addEventListener('nami-demo-perspective-changed', handleChange);
+  window.addEventListener('nami-membership-plan-changed', handleChange);
 
   return () => {
     window.removeEventListener('nami-self-avatar-changed', handleChange);
     window.removeEventListener('nami-self-profile-changed', handleChange);
     window.removeEventListener('nami-member-session-changed', handleChange);
+    window.removeEventListener('nami-demo-perspective-changed', handleChange);
+    window.removeEventListener('nami-membership-plan-changed', handleChange);
   };
 }
 

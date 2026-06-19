@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
+import { canSubscribeToChannelBanners } from './member-access.js';
 import { ChannelBoostButton } from './ChannelBoostButton.js';
 import { buildChannelProfileNavItems, type ChannelProfileSection } from './channel-profile-sections.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
@@ -27,6 +28,9 @@ type ChannelProfileShellProps = {
   eventCount: number;
   reviewCount: number;
   isChannelOwner: boolean;
+  showMemberConsumerActions?: boolean;
+  pageEyebrow?: string;
+  pageTitle?: string;
   children: ReactNode;
   mode?: 'profile' | 'chat';
 };
@@ -74,6 +78,8 @@ function ChannelAvatar(props: { channel: NamiChannel; size?: 'sm' | 'md' | 'lg' 
 }
 
 export function ChannelProfileShell(props: ChannelProfileShellProps): ReactElement {
+  const showMemberConsumerActions = props.showMemberConsumerActions ?? true;
+
   const navItems = buildChannelProfileNavItems({
     eventCount: props.eventCount,
     reviewCount: props.reviewCount,
@@ -87,8 +93,8 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
   return (
     <>
       <header className="page-title channel-profile-page-title">
-        <p>{props.channel.genre} channel</p>
-        <h1>{props.channel.name}</h1>
+        <p>{props.pageEyebrow ?? props.channel.genre + ' channel'}</p>
+        <h1>{props.pageTitle ?? props.channel.name}</h1>
       </header>
 
       <section className={shellClassName} style={props.profileBrandStyle}>
@@ -130,36 +136,44 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
             >
               {props.returnLabel}
             </button>
-            <button
-              className={'primary-action' + (props.channelIsSubscribed ? ' is-subscribed-channel-action' : '')}
-              onClick={props.onSubscribe}
-              type="button"
-            >
-              {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
-            </button>
-            <ChannelBoostButton
-              channelBoostPower={props.channelBoostPower}
-              channelId={props.channel.id}
-              member={props.selfMember}
-              onBoost={props.onBoostChannel}
-            />
+            {showMemberConsumerActions ? (
+              <>
+                <button
+                  className={
+                    'primary-action' + (props.channelIsSubscribed ? ' is-subscribed-channel-action' : '')
+                  }
+                  onClick={props.onSubscribe}
+                  type="button"
+                >
+                  {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
+                </button>
+                <ChannelBoostButton
+                  channelBoostPower={props.channelBoostPower}
+                  channelId={props.channel.id}
+                  member={props.selfMember}
+                  onBoost={props.onBoostChannel}
+                />
+              </>
+            ) : null}
             {props.activeSection !== 'chat' ? (
               <button className="secondary-action" onClick={() => props.onSelectSection('chat')} type="button">
                 Join chat
               </button>
             ) : null}
-            <button
-              className={'secondary-action' + (props.bannerAlertsEnabled ? ' is-banner-alerts-active' : '')}
-              onClick={props.onBannerAlertsToggle}
-              title={
-                props.bannerAlertsEnabled
-                  ? 'Turn off focused banner alerts for this channel'
-                  : 'Receive focused banner alerts only from this game channel'
-              }
-              type="button"
-            >
-              {props.bannerAlertsEnabled ? 'Banners on' : 'Get banners'}
-            </button>
+            {showMemberConsumerActions && canSubscribeToChannelBanners(props.selfMember) ? (
+              <button
+                className={'secondary-action' + (props.bannerAlertsEnabled ? ' is-banner-alerts-active' : '')}
+                onClick={props.onBannerAlertsToggle}
+                title={
+                  props.bannerAlertsEnabled
+                    ? 'Turn off focused banner alerts for this channel'
+                    : 'Receive focused banner alerts only from this game channel'
+                }
+                type="button"
+              >
+                {props.bannerAlertsEnabled ? 'Banners on' : 'Get banners'}
+              </button>
+            ) : null}
           </div>
         </article>
 

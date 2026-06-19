@@ -2,6 +2,11 @@ import { useMemo, useState, type ReactElement } from 'react';
 
 import { readMemberChannelBadgeLabel } from './channel-game-badge-store.js';
 import {
+  getCommentsForReview,
+  submitChannelOwnerReviewComment,
+  useChannelGameReviewComments,
+} from './channel-game-review-comments-store.js';
+import {
   averageChannelGameReviewRating,
   canSubmitChannelGameReview,
   getChannelGameReviewEligibility,
@@ -9,6 +14,7 @@ import {
   submitChannelGameReview,
   useChannelGameReviewsStore,
 } from './channel-game-reviews-store.js';
+import { ownsGameChannel } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { UniformMemberAvatar } from './member-avatar.js';
 import type { NamiChannel, NamiMember } from './uiMockData.js';
@@ -40,17 +46,22 @@ export function ChannelGameReviewsSection(props: {
   onOpenMember?: (memberId: string) => void;
 }): ReactElement {
   const allReviews = useChannelGameReviewsStore();
+  useChannelGameReviewComments();
   const selfMember = getSelfMember();
   const reviews = useMemo(() => getChannelGameReviews(props.channel.id), [allReviews, props.channel.id]);
   const averageRating = averageChannelGameReviewRating(props.channel.id);
   const eligibility = getChannelGameReviewEligibility(selfMember, props.channel.id);
   const canSubmit = canSubmitChannelGameReview(selfMember, props.channel.id);
   const ownedBadge = readMemberChannelBadgeLabel(selfMember.id, props.channel.id);
+  const isOwnChannelOwner = ownsGameChannel(props.channel.id);
 
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [notice, setNotice] = useState('');
+  const [activeCommentReviewId, setActiveCommentReviewId] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentNotice, setCommentNotice] = useState('');
 
   function handleSubmit(): void {
     const result = submitChannelGameReview({
@@ -87,8 +98,10 @@ export function ChannelGameReviewsSection(props: {
         <div>
           <h2>Community reviews</h2>
           <p>
-            Player-written reviews from verified members who own a badge from {props.channel.name}. Channel owners cannot
-            edit this wall.
+            Player-written reviews from verified members who own a badge from {props.channel.name}.
+            {isOwnChannelOwner
+              ? ' You can reply to reviews on your channel — posting new reviews is disabled.'
+              : ' Channel owners cannot edit this wall.'}
           </p>
         </div>
 
@@ -107,11 +120,18 @@ export function ChannelGameReviewsSection(props: {
         </div>
       </div>
 
-      <article className="channel-profile-review-eligibility-card">
-        <span className="channel-profile-review-lock-label">Badge-gated reviews</span>
-        <p>{eligibilityMessage(eligibility, props.channel.name)}</p>
-        {ownedBadge ? <span className="channel-profile-review-owned-badge">Your badge: {ownedBadge}</span> : null}
-      </article>
+      {!isOwnChannelOwner ? (
+        <article className="channel-profile-review-eligibility-card">
+          <span className="channel-profile-review-lock-label">Badge-gated reviews</span>
+          <p>{eligibilityMessage(eligibility, props.channel.name)}</p>
+          {ownedBadge ? <span className="channel-profile-review-owned-badge">Your badge: {ownedBadge}</span> : null}
+        </article>
+      ) : (
+        <article className="channel-profile-review-eligibility-card is-owner-review-note">
+          <span className="channel-profile-review-lock-label">Owner replies</span>
+          <p>Use Comment on reviews below to respond to players on your game channel.</p>
+        </article>
+      )}
 
       {canSubmit ? (
         <article className="channel-profile-review-compose-card">
@@ -163,40 +183,119 @@ export function ChannelGameReviewsSection(props: {
         <p className="report-pulse">{notice}</p>
       ) : null}
 
+      {commentNotice ? <p className="report-pulse">{commentNotice}</p> : null}
+
       {reviews.length === 0 ? (
         <div className="channel-profile-empty-state">
           <p>No community reviews yet. Verified badge holders can be the first to share their experience.</p>
         </div>
       ) : (
         <div className="channel-profile-review-list">
-          {reviews.map((review) => (
-            <article className="channel-profile-review-card" key={review.id}>
-              <div className="channel-profile-review-card-head">
-                <ReviewAuthorAvatar memberId={review.memberId} memberName={review.memberName} {...(props.onOpenMember ? { onOpenMember: props.onOpenMember } : {})} />
+          {reviews.map((review) => {
+            const reviewComments = getCommentsForReview(review.id);
+            const isCommenting = activeCommentReviewId === review.id;
 
-                <div>
-                  <div className="channel-profile-review-card-meta">
+            return (
+              <article className="channel-profile-review-card" key={review.id}>
+                <div className="channel-profile-review-card-head">
+                  <ReviewAuthorAvatar
+                    memberId={review.memberId}
+                    memberName={review.memberName}
+                    {...(props.onOpenMember ? { onOpenMember: props.onOpenMember } : {})}
+                  />
+
+                  <div>
+                    <div className="channel-profile-review-card-meta">
+                      <button
+                        className="channel-profile-review-author"
+                        onClick={() => props.onOpenMember?.(review.memberId)}
+                        type="button"
+                      >
+                        {review.memberName}
+                      </button>
+                      <span className="channel-profile-review-stars" aria-label={review.rating + ' out of 5 stars'}>
+                        {renderRatingStars(review.rating)}
+                      </span>
+                    </div>
+                    <small>
+                      {review.badgeLabel} badge · {review.createdAtLabel}
+                    </small>
+                  </div>
+                </div>
+
+                <strong>{review.title}</strong>
+                <p>{review.body}</p>
+
+                {isOwnChannelOwner ? (
+                  <div className="channel-profile-review-owner-reply-block">
                     <button
-                      className="channel-profile-review-author"
-                      onClick={() => props.onOpenMember?.(review.memberId)}
+                      className="nami-surface-button channel-profile-review-comment-button"
+                      onClick={() => {
+                        setCommentNotice('');
+                        setActiveCommentReviewId(isCommenting ? null : review.id);
+                        setCommentDraft('');
+                      }}
                       type="button"
                     >
-                      {review.memberName}
+                      {isCommenting ? 'Close' : 'Comment'}
                     </button>
-                    <span className="channel-profile-review-stars" aria-label={review.rating + ' out of 5 stars'}>
-                      {renderRatingStars(review.rating)}
-                    </span>
-                  </div>
-                  <small>
-                    {review.badgeLabel} badge · {review.createdAtLabel}
-                  </small>
-                </div>
-              </div>
 
-              <strong>{review.title}</strong>
-              <p>{review.body}</p>
-            </article>
-          ))}
+                    {isCommenting ? (
+                      <div className="channel-profile-review-comment-compose">
+                        <label className="channel-profile-review-field">
+                          <span>Owner reply</span>
+                          <textarea
+                            maxLength={400}
+                            onChange={(event) => setCommentDraft(event.target.value)}
+                            placeholder="Thank the reviewer or clarify updates for your community."
+                            rows={3}
+                            value={commentDraft}
+                          />
+                        </label>
+                        <button
+                          className="primary-action"
+                          onClick={() => {
+                            const result = submitChannelOwnerReviewComment({
+                              reviewId: review.id,
+                              channelId: props.channel.id,
+                              authorMemberId: selfMember.id,
+                              authorName: selfMember.name,
+                              body: commentDraft,
+                            });
+
+                            if (!result.ok) {
+                              setCommentNotice(result.reason);
+                              return;
+                            }
+
+                            setCommentDraft('');
+                            setActiveCommentReviewId(null);
+                            setCommentNotice('Owner comment posted.');
+                          }}
+                          type="button"
+                        >
+                          Post comment
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {reviewComments.length > 0 ? (
+                  <div className="channel-profile-review-comment-list">
+                    {reviewComments.map((comment) => (
+                      <article className="channel-profile-review-comment" key={comment.id}>
+                        <span className="mini-badge">Owner</span>
+                        <strong>{comment.authorName}</strong>
+                        <p>{comment.body}</p>
+                        <small>{comment.createdAtLabel}</small>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

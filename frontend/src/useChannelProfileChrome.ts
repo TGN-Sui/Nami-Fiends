@@ -16,8 +16,8 @@ import {
   getRemainingBoosts,
   useChannelBoostStore,
 } from './channel-boost-store.js';
-import { getSelfMember } from './member-access.js';
-import { readViewingAsChannelOwner } from './surface-preferences.js';
+import { isGameChannelOwner, ownsGameChannel } from './channel-owner-access.js';
+import { canSubscribeToChannelBanners, getSelfMember } from './member-access.js';
 import {
   isChannelSubscribed,
   subscribeToChannel,
@@ -37,8 +37,9 @@ export function useChannelProfileChrome(channel: NamiChannel) {
   const selfMember = getSelfMember();
   const channelIsSubscribed = isChannelSubscribed(channel.id);
   const bannerAlertsEnabled = isChannelBannerAlertsEnabled(channel.id);
-  const isChannelOwner = readViewingAsChannelOwner();
+  const isChannelOwner = isGameChannelOwner() && ownsGameChannel(channel.id);
   const isEliteChannelOwner = isChannelOwner && selfMember.tier === 'Elite';
+  const showMemberConsumerActions = !isGameChannelOwner();
 
   const selectedBrandTheme = useMemo(() => getStoredChannelBrandTheme(channel.id), [channel.id]);
 
@@ -88,6 +89,11 @@ export function useChannelProfileChrome(channel: NamiChannel) {
   }
 
   function handleBannerAlertsToggle(): void {
+    if (!canSubscribeToChannelBanners(selfMember)) {
+      setBannerNotice('Claim and verify your passport to receive banner alerts.');
+      return;
+    }
+
     if (bannerAlertsEnabled) {
       unsubscribeFromChannelBannerAlerts(channel.id);
       setBannerNotice('Banner alerts turned off for ' + channel.name + '.');
@@ -97,7 +103,11 @@ export function useChannelProfileChrome(channel: NamiChannel) {
     const result = subscribeToChannelBannerAlerts(channel.id);
 
     if (!result.ok) {
-      setBannerNotice('Could not enable banner alerts for this channel.');
+      setBannerNotice(
+        result.reason === 'not-verified'
+          ? 'Claim and verify your passport to receive banner alerts.'
+          : 'Could not enable banner alerts for this channel.'
+      );
       return;
     }
 
@@ -177,6 +187,7 @@ export function useChannelProfileChrome(channel: NamiChannel) {
     bannerAlertsEnabled,
     isChannelOwner,
     isEliteChannelOwner,
+    showMemberConsumerActions,
     profileBrandStyle,
     selectedBrandTheme,
     brandThemes: channelBrandThemes,

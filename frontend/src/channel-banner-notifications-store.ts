@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { canSubscribeToChannelBanners, getSelfMember } from './member-access.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { channels, type NamiChannel } from './uiMockData.js';
 
@@ -124,9 +125,13 @@ export function isChannelBannerAlertsEnabled(channelId: string): boolean {
 
 export type BannerAlertsSubscribeResult =
   | { ok: true; alreadyEnabled: boolean }
-  | { ok: false; reason: 'unknown-channel' };
+  | { ok: false; reason: 'unknown-channel' | 'not-verified' };
 
 export function subscribeToChannelBannerAlerts(channelId: string): BannerAlertsSubscribeResult {
+  if (!canSubscribeToChannelBanners(getSelfMember())) {
+    return { ok: false, reason: 'not-verified' };
+  }
+
   if (!channels.some((channel) => channel.id === channelId)) {
     return { ok: false, reason: 'unknown-channel' };
   }

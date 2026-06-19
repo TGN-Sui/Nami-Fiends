@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
 import { playChatSendSfx } from './nami-sfx.js';
-import { getSelfMember, isSelfMessageAuthor } from './member-access.js';
+import { canSendPrivateMessages, getSelfMember, isSelfMessageAuthor } from './member-access.js';
 import { processMessageTags } from './nami-notifications-store.js';
 import { chatMessages, members, type ChatMessage, type ConductSignal } from './uiMockData.js';
 import type { ThreadMessage } from './messages-data.js';
@@ -450,6 +450,10 @@ export function sendPrivateMessage(memberId: string, memberName: string, body: s
   }
 
   const selfMember = getSelfMember();
+
+  if (!canSendPrivateMessages()) {
+    return;
+  }
   const outgoing: ThreadMessage = {
     id: 'out-' + Date.now(),
     author: selfMember.name,

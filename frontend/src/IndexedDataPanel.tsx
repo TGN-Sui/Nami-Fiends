@@ -1,5 +1,6 @@
-import { useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
+import { canAccessModerationQueues } from './member-access.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { ProtocolConductPanel } from './ProtocolConductPanel.js';
@@ -10,6 +11,7 @@ import { ProtocolModerationPanel } from './ProtocolModerationPanel.js';
 import { ProtocolModerationRecordsPanel } from './ProtocolModerationRecordsPanel.js';
 import { ProtocolProfilePanel } from './ProtocolProfilePanel.js';
 import { ProtocolRecoveryPanel } from './ProtocolRecoveryPanel.js';
+import { useProtocolOwner } from './wallet.js';
 
 const INDEXED_TABS = [
   { id: 'identity', label: 'Identity' },
@@ -26,8 +28,26 @@ const INDEXED_TABS = [
 
 type IndexedTabId = (typeof INDEXED_TABS)[number]['id'];
 
+const MODERATION_QUEUE_TABS = new Set<IndexedTabId>(['moderation', 'records']);
+
 export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactElement {
+  const { owner } = useProtocolOwner();
+  const canAccessModeration = canAccessModerationQueues(owner);
   const [activeTab, setActiveTab] = useState<IndexedTabId>('identity');
+
+  const visibleTabs = useMemo(
+    () =>
+      INDEXED_TABS.filter(
+        (tab) => canAccessModeration || !MODERATION_QUEUE_TABS.has(tab.id)
+      ),
+    [canAccessModeration]
+  );
+
+  useEffect(() => {
+    if (!visibleTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab(visibleTabs[0]?.id ?? 'identity');
+    }
+  }, [activeTab, visibleTabs]);
 
   return (
     <article
@@ -44,7 +64,7 @@ export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactEleme
       )}
 
       <div className="settings-indexed-tab-row tab-row" role="tablist" aria-label="Indexed data tabs">
-        {INDEXED_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             aria-selected={activeTab === tab.id}
             className={activeTab === tab.id ? 'is-active-tab' : ''}

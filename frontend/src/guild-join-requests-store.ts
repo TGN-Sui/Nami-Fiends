@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember, isMemberVerified } from './member-access.js';
 import { getCreatedGuildRecords } from './guild-creation-store.js';
 import {
@@ -114,6 +115,10 @@ export function effectiveGuildMemberIds(guild: NamiGuildRecord): string[] {
 }
 
 export function canRequestToJoinGuild(guild: NamiGuildRecord, memberId: string = getSelfMember().id): boolean {
+  if (isGameChannelOwner()) {
+    return false;
+  }
+
   if (!guild.isPublic) {
     return false;
   }
@@ -140,6 +145,13 @@ export function canRequestToJoinGuild(guild: NamiGuildRecord, memberId: string =
 
 export function submitGuildJoinRequest(guild: NamiGuildRecord): GuildJoinRequestResult {
   const selfMember = getSelfMember();
+
+  if (isGameChannelOwner()) {
+    return {
+      ok: false,
+      reason: 'Game channel owners manage one official guild and cannot join other guilds.',
+    };
+  }
 
   if (!guild.isPublic) {
     return { ok: false, reason: guild.name + ' is private — join requests are invite only.' };

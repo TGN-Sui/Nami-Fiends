@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-import { getSelfMember } from './member-access.js';
+import { canUseGuildLeadershipTools } from './guild-space-access.js';
+import { getSelfMember, isMemberVerified } from './member-access.js';
 import {
   canMemberInviteToGuild,
   guildMaxMembers,
@@ -80,6 +81,10 @@ export function useGuildInvites(): GuildInvite[] {
 export function invitableGuildsForTarget(targetMemberId: string): NamiGuildRecord[] {
   const selfMember = getSelfMember();
 
+  if (!canUseGuildLeadershipTools(selfMember)) {
+    return [];
+  }
+
   return namiGuilds.filter((guild) => {
     if (!canMemberInviteToGuild(selfMember.id, guild)) {
       return false;
@@ -115,8 +120,16 @@ export function canInviteMemberToAnyGuild(targetMember: NamiMember): boolean {
 export function sendGuildInvite(targetMember: NamiMember, guild: NamiGuildRecord): GuildInviteResult {
   const selfMember = getSelfMember();
 
+  if (!canUseGuildLeadershipTools(selfMember)) {
+    return { ok: false, reason: 'Claim and verify your passport to invite members to guilds.' };
+  }
+
   if (!canMemberInviteToGuild(selfMember.id, guild)) {
     return { ok: false, reason: 'Only guild owners and members can send invites.' };
+  }
+
+  if (!isMemberVerified(targetMember)) {
+    return { ok: false, reason: targetMember.name + ' must verify their passport before guild invites.' };
   }
 
   if (guild.memberIds.includes(targetMember.id)) {

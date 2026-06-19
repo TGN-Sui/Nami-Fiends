@@ -1,6 +1,7 @@
 import { useRef, type ReactElement, type ReactNode } from 'react';
 
 import { isNamiTeamMember, memberRainbowBorderClass } from './channel-surface.js';
+import { isMemberVerified } from './member-access.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import {
   ConductSignalDot,
@@ -383,7 +384,13 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             </div>
             <div>
               <span>Verification</span>
-              <strong>{reviewedSignal === 'Green' ? 'Identity verified' : 'Signal review active'}</strong>
+              <strong>
+                {isMemberVerified(props.member)
+                  ? 'Identity verified'
+                  : props.member.tier === 'NPC'
+                    ? 'Claim passport to verify'
+                    : 'Signal review active'}
+              </strong>
             </div>
             <div>
               <span>Passport</span>

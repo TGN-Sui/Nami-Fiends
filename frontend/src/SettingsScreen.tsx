@@ -17,61 +17,35 @@ import {
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
 import { readSafetyReportCount } from './safety-report-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { useProtocolOwner } from './wallet.js';
 import {
   canConfigureEmbeddedFeedSurface,
   getConfigurableEmbeddedFeedSurfaces,
   readEmbeddedFeedEnabled,
+  canManageChannelBrandPalette,
   readUserSurfaceRole,
   saveEmbeddedFeedEnabled,
-  saveUserSurfaceRole,
   subscribeSurfaceRole,
   type EmbeddedFeedSurface,
   type UserSurfaceRole,
 } from './surface-preferences.js';
+import { DemoPerspectivePanel } from './DemoPerspectivePanel.js';
+import { useDemoPerspective } from './demo-perspective-store.js';
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
 import { members, type NamiMember, type NamiPage } from './uiMockData.js';
 
-export type SettingsSection =
-  | 'overview'
-  | 'account'
-  | 'membership'
-  | 'feeds'
-  | 'safety'
-  | 'appearance'
-  | 'advanced';
+import {
+  consumeSettingsSectionFocus,
+  requestSettingsSection,
+  type SettingsSection,
+} from './settings-navigation.js';
 
-const SETTINGS_SECTION_FOCUS_KEY = 'nami.settings.section-focus';
-
-export function requestSettingsSection(section: SettingsSection): void {
-  try {
-    window.sessionStorage.setItem(SETTINGS_SECTION_FOCUS_KEY, section);
-  } catch {
-    // Ignore storage failures in restricted environments.
-  }
-}
-
-export function consumeSettingsSectionFocus(): SettingsSection | null {
-  try {
-    const stored = window.sessionStorage.getItem(SETTINGS_SECTION_FOCUS_KEY);
-
-    if (!stored) {
-      return null;
-    }
-
-    window.sessionStorage.removeItem(SETTINGS_SECTION_FOCUS_KEY);
-
-    if (stored in SECTION_LABELS) {
-      return stored as SettingsSection;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
+export type { SettingsSection } from './settings-navigation.js';
+export { requestSettingsSection } from './settings-navigation.js';
 
 const SECTION_LABELS: Record<SettingsSection, string> = {
   overview: 'Overview',
@@ -119,64 +93,6 @@ function readSelectedChannelBrandColor(): string {
 
 function saveSelectedChannelBrandColor(color: string): void {
   window.localStorage.setItem('nami-selected-channel-brand-color', color);
-}
-
-
-
-function SurfaceRoleSettingsPanel(): ReactElement {
-  const selfMember = getSelfMember();
-  const [role, setRole] = useState<UserSurfaceRole>(() => readUserSurfaceRole());
-
-  useEffect(() => subscribeSurfaceRole(() => setRole(readUserSurfaceRole())), []);
-
-  const roleOptions: Array<{ id: UserSurfaceRole; label: string; detail: string }> = [
-    {
-      id: 'member',
-      label: 'Member',
-      detail: 'Verified Pro+ members can enable member feeds only.',
-    },
-    {
-      id: 'channel-owner',
-      label: 'Game Channel Owner',
-      detail: 'Game feed settings only.',
-    },
-    {
-      id: 'guild-owner',
-      label: 'Guild Owner',
-      detail: 'Guild feed settings only.',
-    },
-  ];
-
-  return (
-    <article className="panel settings-card settings-compact-card">
-      <div className="profile-panel-heading">
-        <h2>Surface Role</h2>
-        <p>Controls which embedded feed options appear for this account.</p>
-      </div>
-
-      <div className="settings-surface-role-row">
-        {roleOptions.map((option) => (
-          <button
-            className={
-              'secondary-action settings-surface-role-button' +
-              (role === option.id ? ' is-active-surface-role' : '')
-            }
-            key={option.id}
-            onClick={() => saveUserSurfaceRole(option.id)}
-            type="button"
-          >
-            <strong>{option.label}</strong>
-            <small>{option.detail}</small>
-          </button>
-        ))}
-      </div>
-
-      <p className="settings-surface-role-footnote">
-        Tier {selfMember.tier}
-        {selfMember.tier === 'Pro' || selfMember.tier === 'Elite' ? ' · feeds eligible' : ' · member feeds locked'}
-      </p>
-    </article>
-  );
 }
 
 function EmbeddedFeedSettingsPanel(): ReactElement {
@@ -303,8 +219,10 @@ function ChannelBrandPalettePanel(props: {
 export function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
   onOpenMember?: (member: NamiMember) => void;
+  onDemoPerspectiveApplied?: (page: NamiPage, channelId?: string) => void;
 } = {}): ReactElement {
   const { owner } = useProtocolOwner();
+  useDemoPerspective();
   const showIndexedDataPanel = isOfficialOwner(owner);
   const [activeSection, setActiveSection] = useState<SettingsSection>(
     () => consumeSettingsSectionFocus() ?? 'overview'
@@ -313,6 +231,8 @@ export function SettingsScreen(props: {
   const mutedCount = countMutedMembers(memberIds);
   const blockedCount = countBlockedMembers(memberIds);
   const reportCount = readSafetyReportCount();
+  const channelOwnerView = isGameChannelOwner();
+  const showChannelBrandPalette = canManageChannelBrandPalette() && !channelOwnerView;
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
   });
@@ -414,17 +334,19 @@ export function SettingsScreen(props: {
                 Manage account
               </button>
             </article>
-            <article className="panel settings-overview-card">
-              <h2>Membership</h2>
-              <p>Plans, fulfillment, and surface role for feeds.</p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('membership')}
-                type="button"
-              >
-                View membership
-              </button>
-            </article>
+            {!channelOwnerView ? (
+              <article className="panel settings-overview-card">
+                <h2>Membership</h2>
+                <p>Plans, fulfillment, and surface role for feeds.</p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('membership')}
+                  type="button"
+                >
+                  View membership
+                </button>
+              </article>
+            ) : null}
             <article className="panel settings-overview-card">
               <h2>Feeds</h2>
               <p>Enable member, game, guild, or studio embeds.</p>
@@ -436,12 +358,24 @@ export function SettingsScreen(props: {
                 Configure feeds
               </button>
             </article>
+            <article className="panel settings-overview-card">
+              <h2>Dashboard perspectives</h2>
+              <p>Preview NPC, Elite, channel owner, guild owner, and official owner dashboards.</p>
+              <button
+                className="profile-secondary-link"
+                onClick={() => setActiveSection('membership')}
+                type="button"
+              >
+                Open perspective switcher
+              </button>
+            </article>
           </div>
         ) : null}
 
         {activeSection === 'account' ? (
           <div className="settings-section-stack">
-            <MemberDailyStatusSettingsField />
+            {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
+            {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
             <article className="panel settings-card settings-compact-card">
               <div className="profile-panel-heading">
                 <h2>Edit Profile</h2>
@@ -466,10 +400,36 @@ export function SettingsScreen(props: {
 
         {activeSection === 'membership' ? (
           <div className="settings-section-stack">
-            <MembershipAccessCard />
-            <BoostCycleSettingsCard />
-            <MembershipFulfillmentPanel />
-            <SurfaceRoleSettingsPanel />
+            {!channelOwnerView ? (
+              <>
+                <MembershipAccessCard />
+                <BoostCycleSettingsCard />
+                <MembershipFulfillmentPanel />
+              </>
+            ) : (
+              <>
+                <article className="panel settings-card settings-compact-card settings-section-wide">
+                  <div className="profile-panel-heading">
+                    <h2>Game channel owner</h2>
+                    <p>
+                      Membership upgrades, boosts, and purchases are managed through Owner tools on your game profile.
+                    </p>
+                  </div>
+                  <button
+                    className="nami-surface-button is-primary-surface-button"
+                    onClick={() => props.onNavigate?.('userProfile')}
+                    type="button"
+                  >
+                    Open My Game Profile
+                  </button>
+                </article>
+                <ChannelOwnerPromotionsStatusCard />
+              </>
+            )}
+            <DemoPerspectivePanel
+              onNavigate={props.onNavigate}
+              onPerspectiveApplied={props.onDemoPerspectiveApplied}
+            />
           </div>
         ) : null}
 
@@ -515,11 +475,13 @@ export function SettingsScreen(props: {
         {activeSection === 'appearance' ? (
           <div className="settings-section-stack">
             <ThemeSettingsPanel />
-            <ChannelBrandPalettePanel
-              onChangeColor={updateSettingsChannelBrandColor}
-              onReset={resetSettingsChannelBrandPalette}
-              palette={settingsChannelBrandPalette}
-            />
+            {showChannelBrandPalette ? (
+              <ChannelBrandPalettePanel
+                onChangeColor={updateSettingsChannelBrandColor}
+                onReset={resetSettingsChannelBrandPalette}
+                palette={settingsChannelBrandPalette}
+              />
+            ) : null}
           </div>
         ) : null}
 

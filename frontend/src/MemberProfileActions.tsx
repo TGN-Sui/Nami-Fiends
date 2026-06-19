@@ -52,7 +52,10 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
     [props.member.id, guildInvites]
   );
 
-  const showInvite = !isSelfMember(props.member.id) && canInviteMemberToAnyGuild(props.member);
+  const showInvite =
+    !isSelfMember(props.member.id) &&
+    isMemberVerified(selfMember) &&
+    canInviteMemberToAnyGuild(props.member);
   const tipsTotal = totalTipsReceived(props.member.id);
 
   useEffect(() => {

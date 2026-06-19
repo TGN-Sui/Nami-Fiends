@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 
+import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
+import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { claimAdventurerMembershipViaX } from './membership-plans-store.js';
 import {
   authorizeXAccount,
@@ -14,8 +16,13 @@ type MembershipAdventurerClaimCardProps = {
 };
 
 export function MembershipAdventurerClaimCard(props: MembershipAdventurerClaimCardProps): ReactElement {
+  const canClaimMembership = canPurchaseOrClaimMembership(getSelfMember());
   const xState = useXVerificationState();
   const xMockEnabled = isXVerificationMockEnabled();
+
+  if (!canClaimMembership) {
+    return <MembershipPurchaseLockedPanel title="Adventurer claim locked" />;
+  }
 
   function handleAuthorizeX(): void {
     const result = authorizeXAccount();

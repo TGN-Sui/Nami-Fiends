@@ -1,3 +1,4 @@
+import { readDemoAdminRoleOverride } from './demo-perspective-store.js';
 import { readOfficialOwner } from './protocol-env.js';
 
 export type NamiAdminRole = 'none' | 'official-owner' | 'official-moderator';
@@ -60,6 +61,12 @@ export function writeOfficialModerators(addresses: string[], actorOwner: string 
 }
 
 export function resolveNamiAdminRole(connectedOwner: string | null): NamiAdminRole {
+  const demoOverride = readDemoAdminRoleOverride();
+
+  if (demoOverride !== null) {
+    return demoOverride;
+  }
+
   const officialOwner = readOfficialOwner();
 
   if (!connectedOwner || !officialOwner) {

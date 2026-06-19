@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { channels as seedChannels } from './fixtures/seed-data.js';
 import {
   channels,
   developers,
@@ -30,6 +31,19 @@ import { EventInterestedButton } from './EventInterestedButton.js';
 import { EventLivePopup } from './EventLivePopup.js';
 import { ChannelProfileScreen } from './ChannelProfileScreen.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
+import type { ChannelProfileOwnerFocus } from './channel-profile-navigation.js';
+import { PinnedGameChannelProfileCard } from './PinnedGameChannelProfileCard.js';
+import {
+  isGameChannelOwner,
+  ownsGameChannel,
+  resolveOwnedGameChannel,
+} from './channel-owner-access.js';
+import {
+  readActiveHubFeaturedChannelId,
+  readApprovedPartnerCarouselChannelIds,
+  readChannelOwnerPromotionsState,
+} from './channel-owner-promotions-store.js';
+import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
 
@@ -53,8 +67,14 @@ import { EntryPage } from './EntryPage.js';
 
 import { threadMessagesFor, threadParticipantsFor } from './messages-data.js';
 import {
+  canMessageOtherMembers,
+  canReportMemberProfile,
   canSendChatMessages,
   canSendPrivateMessages,
+  canAccessModerationQueues,
+  canEditProfileCosmetics,
+  canSubscribeToChannelBanners,
+  canToggleStreamingStatus,
   getSelfMember,
   messageBubbleClass,
   resolveMessageAuthorMember,
@@ -113,6 +133,8 @@ import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
+import { DemoPerspectiveBar } from './DemoPerspectiveBar.js';
+import { restoreOwnerDemoPerspective, useDemoPerspective } from './demo-perspective-store.js';
 import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
 import { ensureOwnerAssetsHydrated, ownerAssetNavSlotId } from './nami-owner-assets-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
@@ -468,9 +490,11 @@ function isGuildNavPage(page: NamiPage): boolean {
 
 function SidebarProfileCard(props: {
   onNavigate: (page: NamiPage) => void;
+  onOpenOwnedChannel?: () => void;
   onSignOut: () => void | Promise<void>;
 }): ReactElement {
   const sidebarMember = useSelfMember();
+  const channelOwnerView = isGameChannelOwner();
   const sidebarProgression = getNamiProgression(sidebarMember);
   const unreadTagNotificationCount = useUnreadTagNotificationCount();
   const { isStreamingOnline, setStreamingOnline } = useSelfStreamingOnline();
@@ -573,42 +597,52 @@ function SidebarProfileCard(props: {
         </button>
 
         <div className="nami-pinned-profile-stack-body">
-          <PinnedProfileCapacityStrip />
+          {!channelOwnerView && canToggleStreamingStatus(sidebarMember) ? (
+            <>
+              <PinnedProfileCapacityStrip />
 
-          <div className="sidebar-profile-streaming-panel">
-            <label
-              className="sidebar-profile-online-toggle"
-              title="Shows a live dot on your avatar for other members"
-            >
-              <input
-                checked={isStreamingOnline}
-                onChange={(event) => setStreamingOnline(event.target.checked)}
-                type="checkbox"
-              />
-              <span className="sidebar-profile-online-toggle-copy">
-                <strong>I'm streaming</strong>
-                <small>Live dot on avatar</small>
-              </span>
-              <span aria-hidden={!isStreamingOnline} className="sidebar-profile-online-toggle-indicator">
-                {isStreamingOnline ? (
-                  <MemberStreamingLiveDot className="is-menu-streaming-dot" memberId={sidebarMember.id} />
-                ) : null}
-              </span>
-            </label>
-          </div>
+              <div className="sidebar-profile-streaming-panel">
+                <label
+                  className="sidebar-profile-online-toggle"
+                  title="Shows a live dot on your avatar for other members"
+                >
+                  <input
+                    checked={isStreamingOnline}
+                    onChange={(event) => setStreamingOnline(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span className="sidebar-profile-online-toggle-copy">
+                    <strong>I'm streaming</strong>
+                    <small>Live dot on avatar</small>
+                  </span>
+                  <span aria-hidden={!isStreamingOnline} className="sidebar-profile-online-toggle-indicator">
+                    {isStreamingOnline ? (
+                      <MemberStreamingLiveDot className="is-menu-streaming-dot" memberId={sidebarMember.id} />
+                    ) : null}
+                  </span>
+                </label>
+              </div>
+            </>
+          ) : null}
 
           {sidebarProfileMenuOpen ? (
             <div className="sidebar-profile-menu nami-pinned-profile-menu" role="menu">
               <button
                 onClick={() => {
                   setSidebarProfileMenuOpen(false);
+
+                  if (channelOwnerView) {
+                    props.onOpenOwnedChannel?.();
+                    return;
+                  }
+
                   requestProfileEditFocus();
                   props.onNavigate('userProfile');
                 }}
                 role="menuitem"
                 type="button"
               >
-                Edit Profile
+                {channelOwnerView ? 'My Game Profile' : 'Edit Profile'}
               </button>
               {unreadTagNotificationCount > 0 ? (
                 <button
@@ -655,6 +689,7 @@ function Sidebar(props: {
   guildEventUnreadCount: number;
   messageUnreadCount: number;
   onNavigate: (page: NamiPage) => void;
+  onOpenOwnedChannel?: () => void;
   onHubSwap: (page: 'hub' | 'gamehub') => void;
 }): ReactElement {
   const igniteRadioEnabled = useIgniteRadioEnabled();
@@ -783,16 +818,29 @@ function Sidebar(props: {
             </button>
           )}
 
-          {navItems.filter((item) => item.page !== 'hub').map((item) => (
+          {navItems.filter((item) => item.page !== 'hub').map((item) => {
+            const isProfileNavActive =
+              item.page === 'userProfile' &&
+              (props.activePage === 'userProfile' ||
+                (isGameChannelOwner() && props.activePage === 'channelProfile'));
+            const isNavActive =
+              item.page === 'guilds'
+                ? isGuildNavPage(props.activePage)
+                : isProfileNavActive || props.activePage === item.page;
+
+            return (
             <button
               key={item.page}
               aria-label={item.shortLabel}
-              className={
-                (item.page === 'guilds' ? isGuildNavPage(props.activePage) : props.activePage === item.page)
-                  ? 'is-active'
-                  : ''
-              }
-              onClick={() => props.onNavigate(item.page)}
+              className={isNavActive ? 'is-active' : ''}
+              onClick={() => {
+                if (item.page === 'userProfile' && isGameChannelOwner()) {
+                  props.onOpenOwnedChannel?.();
+                  return;
+                }
+
+                props.onNavigate(item.page);
+              }}
               type="button"
             >
               <OwnerEditableImage
@@ -817,7 +865,8 @@ function Sidebar(props: {
                 </span>
               ) : null}
             </button>
-          ))}
+            );
+          })}
         </nav>
 
         <div className="sidebar-radio-block">
@@ -881,6 +930,8 @@ function ChannelInfoCard(props: {
   onGetBanners?: () => void;
   bannerAlertsEnabled?: boolean;
 }): ReactElement {
+  const canGetBanners = canSubscribeToChannelBanners(getSelfMember());
+
   return (
     <article className="featured-partner-banner-card channel-info-card">
       <ChannelAvatar channel={props.channel} size="lg" />
@@ -915,20 +966,22 @@ function ChannelInfoCard(props: {
         <div className="action-row">
           <button onClick={props.onSubscribe} type="button">Subscribe</button>
           <button onClick={props.onJoinChat} type="button">Join Chat</button>
-          <button
-            className={
-              'secondary-action' + (props.bannerAlertsEnabled ? ' is-banner-alerts-active' : '')
-            }
-            onClick={props.onGetBanners}
-            title={
-              props.bannerAlertsEnabled
-                ? 'Focused banner alerts are on for this channel'
-                : 'Receive focused banner alerts from this game channel'
-            }
-            type="button"
-          >
-            {props.bannerAlertsEnabled ? 'Banners On' : 'Get Banners'}
-          </button>
+          {canGetBanners ? (
+            <button
+              className={
+                'secondary-action' + (props.bannerAlertsEnabled ? ' is-banner-alerts-active' : '')
+              }
+              onClick={props.onGetBanners}
+              title={
+                props.bannerAlertsEnabled
+                  ? 'Focused banner alerts are on for this channel'
+                  : 'Receive focused banner alerts from this game channel'
+              }
+              type="button"
+            >
+              {props.bannerAlertsEnabled ? 'Banners On' : 'Get Banners'}
+            </button>
+          ) : null}
         </div>
       </div>
     </article>
@@ -1032,23 +1085,54 @@ function NamiHub(props: {
   onSelect: (channel: NamiChannel) => void;
   onOpenProfile: (channel: NamiChannel) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  onOpenOwnedPartnerTicket?: () => void;
   onViewEvent: (event: StoredEvent) => void;
   onNavigateToSettings?: () => void;
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const bubbleLeaderboardSize = useBubbleLeaderboardSize();
+  const promotions = readChannelOwnerPromotionsState();
   const { channels: directoryChannels } = useChannelDirectory(50);
   const { members: directoryMembers } = useMemberDirectory();
-  const featuredShowcaseChannels = directoryChannels.slice(0, 8);
+  const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
+  const partnerTicket = promotions.partnerCarousel.ticket;
+  const approvedPartnerChannelIds = readApprovedPartnerCarouselChannelIds();
+
+  function resolveDirectoryChannel(channelId: string): NamiChannel | undefined {
+    return (
+      directoryChannels.find((channel) => channel.id === channelId) ??
+      channels.find((channel) => channel.id === channelId) ??
+      seedChannels.find((channel) => channel.id === channelId)
+    );
+  }
+
+  const hubFeaturedChannel = hubFeaturedChannelId ? resolveDirectoryChannel(hubFeaturedChannelId) : null;
+  const partnerCarouselChannel =
+    approvedPartnerChannelIds.length > 0
+      ? resolveDirectoryChannel(approvedPartnerChannelIds[0]!)
+      : partnerTicket?.status === 'submitted' || partnerTicket?.status === 'approved'
+        ? resolveDirectoryChannel(partnerTicket.channelId)
+        : null;
+  const featuredShowcaseChannels =
+    directoryChannels.length > 0
+      ? [
+          ...(hubFeaturedChannel ? [hubFeaturedChannel] : []),
+          ...directoryChannels.filter((channel) => channel.id !== hubFeaturedChannel?.id).slice(0, 8),
+        ]
+      : hubFeaturedChannel
+        ? [hubFeaturedChannel]
+        : [props.selectedChannel];
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
   const [hoveredShowcaseChannelId, setHoveredShowcaseChannelId] = useState<string | null>(null);
 
   const activeFeaturedChannel =
-    hoveredShowcaseChannelId !== null
+    (hoveredShowcaseChannelId !== null
       ? featuredShowcaseChannels.find((channel) => channel.id === hoveredShowcaseChannelId) ??
-        featuredShowcaseChannels[activeShowcaseIndex] ??
-        props.selectedChannel
-      : featuredShowcaseChannels[activeShowcaseIndex] ?? props.selectedChannel;
+        featuredShowcaseChannels[activeShowcaseIndex]
+      : featuredShowcaseChannels[activeShowcaseIndex]) ?? props.selectedChannel;
+  const partnerBannerTitle = partnerTicket?.title?.trim() || activeFeaturedChannel.name;
+  const partnerBannerDescription = partnerTicket?.description?.trim() || activeFeaturedChannel.genre;
+  const partnerBannerCover = partnerTicket?.coverUrl?.trim() ?? '';
 
   const sortedGrowthChannels = [...directoryChannels].sort((left, right) => {
     return right.subscribers - left.subscribers;
@@ -1154,15 +1238,37 @@ function NamiHub(props: {
       </header>
 
       <button
-        className="banner-panel featured-banner-carousel nami-hub-rotating-banner"
-        onClick={() => openFeaturedChannel(activeFeaturedChannel)}
+        className={
+          'banner-panel featured-banner-carousel nami-hub-rotating-banner' +
+          (partnerBannerCover ? ' has-partner-banner-cover' : '') +
+          (hubFeaturedChannel ? ' is-hub-featured-active' : '')
+        }
+        onClick={() => {
+          if (isGameChannelOwner()) {
+            props.onOpenOwnedPartnerTicket?.();
+            return;
+          }
+
+          openFeaturedChannel(activeFeaturedChannel);
+        }}
         onMouseEnter={() => setHoveredShowcaseChannelId(activeFeaturedChannel.id)}
         onMouseLeave={() => setHoveredShowcaseChannelId(null)}
+        style={
+          partnerBannerCover
+            ? { backgroundImage: 'url(' + JSON.stringify(partnerBannerCover) + ')' }
+            : undefined
+        }
         type="button"
       >
-        <span>Featured Partner Banner Carousel</span>
-        <strong>{activeFeaturedChannel.name}</strong>
-        <small>{activeFeaturedChannel.genre}</small>
+        <span>
+          {partnerCarouselChannel
+            ? 'Featured Partner Banner Carousel'
+            : hubFeaturedChannel
+              ? 'Hub Featured Game'
+              : 'Featured Partner Banner Carousel'}
+        </span>
+        <strong>{partnerBannerTitle}</strong>
+        <small>{partnerBannerDescription}</small>
       </button>
 
       <section className="nami-hub-lower-grid">
@@ -2437,7 +2543,8 @@ function MemberProfileScreen(props: {
   const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [privateDraft, setPrivateDraft] = useState('');
-  const canMessage = canSendPrivateMessages() && props.member.id !== 'm1';
+  const canMessage = canMessageOtherMembers() && props.member.id !== 'm1';
+  const canReport = canReportMemberProfile();
   const isStreamingOnline = useMemberStreamingOnline(props.member.id);
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
@@ -2473,6 +2580,10 @@ function MemberProfileScreen(props: {
   }
 
   function reportMember(): void {
+    if (!canReportMemberProfile()) {
+      return;
+    }
+
     saveSafetyReport({
       source: 'member',
       targetId: props.member.id,
@@ -2566,13 +2677,15 @@ function MemberProfileScreen(props: {
                   {isBlocked ? 'Blocked' : 'Block'}
                 </button>
 
-                <button
-                  className="preference-button report-preference"
-                  onClick={reportMember}
-                  type="button"
-                >
-                  Report
-                </button>
+                {canReport ? (
+                  <button
+                    className="preference-button report-preference"
+                    onClick={reportMember}
+                    type="button"
+                  >
+                    Report
+                  </button>
+                ) : null}
 
                 <button
                   className="nami-surface-button"
@@ -2622,7 +2735,7 @@ function MemberProfileScreen(props: {
                   </summary>
                   <ChatComposerWithEmojis
                     ariaLabel={'Private message to ' + props.member.name}
-                    canSend={true}
+                    canSend={canMessage}
                     className="chat-composer-row message-log-composer"
                     onChange={setPrivateDraft}
                     onSend={() => {
@@ -2704,6 +2817,8 @@ function MemberProfileScreen(props: {
 function SafetyCenterScreen(props: {
   onNavigate: (page: NamiPage) => void;
 }): ReactElement {
+  const { owner } = useProtocolOwner();
+  const { activePerspective, isActive: isDemoPerspectiveActive } = useDemoPerspective();
   const [refreshKey, setRefreshKey] = useState(0);
   const [statusFilter, setStatusFilter] = useState<'All' | SafetyReport['status']>('All');
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
@@ -2718,10 +2833,14 @@ function SafetyCenterScreen(props: {
   const mutedMembers = members.filter((member) => readMemberPreference(member.id).muted);
   const blockedMembers = members.filter((member) => readMemberPreference(member.id).blocked);
 
-  const canManuallyReviewSignals =
-    moderationRole === 'Nami Moderator' || moderationRole === 'Nami Dev';
-  const canReviewFeedAbuse =
-    moderationRole === 'Nami Moderator' || moderationRole === 'Nami Dev';
+  const effectiveModerationRole =
+    isDemoPerspectiveActive && activePerspective
+      ? activePerspective.safetyModerationRole
+      : moderationRole;
+
+  const canAccessModeration = canAccessModerationQueues(owner);
+  const canManuallyReviewSignals = canAccessModeration;
+  const canReviewFeedAbuse = canAccessModeration;
 
   const pendingFeedAbuseReports = feedAbuseReports.filter(
     (report) => report.status === 'queued' || report.status === 'reviewing'
@@ -2801,7 +2920,7 @@ function SafetyCenterScreen(props: {
       targetId: member.id,
       targetName: member.name,
       action: 'Signal Review',
-      note: 'Signal manually reviewed as ' + signal + ' by ' + moderationRole,
+      note: 'Signal manually reviewed as ' + signal + ' by ' + effectiveModerationRole,
       channelName: 'Nami Conduct Review'
     });
 
@@ -2845,7 +2964,7 @@ function SafetyCenterScreen(props: {
           </button>
         </article>
 
-        {feedAbuseAlerts.length > 0 ? (
+        {canAccessModeration && feedAbuseAlerts.length > 0 ? (
           <article className="panel member-feed-official-alert-panel">
             <div className="profile-panel-heading">
               <div>
@@ -2883,9 +3002,9 @@ function SafetyCenterScreen(props: {
           <div className="profile-panel-heading">
             <h2>Conduct Signal Policy</h2>
             <p>
-              Channel owners can review reports and take moderation actions, but they cannot
-              manually change Color Signals. Adult language and conduct violations are filtered
-              from chat and routed toward safety review.
+              Nami moderators and the official owner review reports and take enforcement actions.
+              Manual Color Signal changes stay restricted to Nami moderation staff. Adult language
+              and conduct violations are filtered from chat and routed toward safety review.
             </p>
           </div>
 
@@ -2896,7 +3015,7 @@ function SafetyCenterScreen(props: {
             <span>Signal authority</span>
             <strong>Nami Devs / Nami Moderators only</strong>
 
-            <span>Channel owner role</span>
+            <span>Moderator role</span>
             <strong>Review, warn, timeout, escalate</strong>
 
             <span>User controls</span>
@@ -2907,13 +3026,18 @@ function SafetyCenterScreen(props: {
         <article className="panel moderation-role-panel">
           <div className="profile-panel-heading">
             <h2>Preview Access Role</h2>
-            <p>Switch roles to preview who can manually review Color Signals.</p>
+            <p>
+              {isDemoPerspectiveActive
+                ? 'Role is controlled by the active dashboard perspective in Settings.'
+                : 'Switch roles to preview who can manually review Color Signals.'}
+            </p>
           </div>
 
           <div className="moderation-role-row">
             {moderationRoles.map((role) => (
               <button
-                className={role === moderationRole ? 'is-selected-role' : ''}
+                className={role === effectiveModerationRole ? 'is-selected-role' : ''}
+                disabled={isDemoPerspectiveActive}
                 key={role}
                 onClick={() => setModerationRole(role)}
                 type="button"
@@ -3004,11 +3128,12 @@ function SafetyCenterScreen(props: {
           </article>
         </section>
 
+        {canAccessModeration ? (
         <section className="moderation-queue-grid">
           <article className="panel moderation-queue-panel">
             <div className="profile-panel-heading">
               <h2>Report Queue</h2>
-              <p>Channel owners can review reports, but signal changes remain Nami-controlled.</p>
+              <p>Nami moderators and the official owner review reports. Signal changes remain Nami-controlled.</p>
             </div>
 
             <div className="moderation-status-filter-row">
@@ -3129,32 +3254,26 @@ function SafetyCenterScreen(props: {
                     </small>
                   </div>
 
-                  {canReviewFeedAbuse ? (
-                    <div className="moderation-action-row">
-                      <button
-                        onClick={() => {
-                          reviewMemberFeedAbuseReports(report.feedOwnerMemberId);
-                          setRefreshKey((value) => value + 1);
-                        }}
-                        type="button"
-                      >
-                        Review
-                      </button>
-                      <button
-                        onClick={() => {
-                          resolveMemberFeedAbuseForOwner(report.feedOwnerMemberId);
-                          setRefreshKey((value) => value + 1);
-                        }}
-                        type="button"
-                      >
-                        Resolve & restore feeds
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="member-feed-abuse-role-note">
-                      Switch to Nami Moderator or Nami Dev to review feed abuse reports.
-                    </p>
-                  )}
+                  <div className="moderation-action-row">
+                    <button
+                      onClick={() => {
+                        reviewMemberFeedAbuseReports(report.feedOwnerMemberId);
+                        setRefreshKey((value) => value + 1);
+                      }}
+                      type="button"
+                    >
+                      Review
+                    </button>
+                    <button
+                      onClick={() => {
+                        resolveMemberFeedAbuseForOwner(report.feedOwnerMemberId);
+                        setRefreshKey((value) => value + 1);
+                      }}
+                      type="button"
+                    >
+                      Resolve & restore feeds
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -3252,7 +3371,9 @@ function SafetyCenterScreen(props: {
           </article>
           )}
         </section>
+        ) : null}
 
+        {canAccessModeration ? (
         <article className="panel moderation-queue-panel">
           <div className="profile-panel-heading">
             <h2>Action History</h2>
@@ -3280,9 +3401,10 @@ function SafetyCenterScreen(props: {
             </button>
           )}
         </article>
+        ) : null}
 
-        <ProtocolModerationPanel />
-        <ProtocolModerationRecordsPanel />
+        {canAccessModeration ? <ProtocolModerationPanel /> : null}
+        {canAccessModeration ? <ProtocolModerationRecordsPanel /> : null}
       </section>
     </>
   );
@@ -3892,7 +4014,7 @@ function UserProfileScreen(props: {
           <p className="user-profile-bio-preview">{profileEdits.bio}</p>
         ) : null}
 
-        {viewAsGuest
+        {viewAsGuest || !canEditProfileCosmetics(profileMember)
           ? null
           : (() => {
               const equippedIdentity = [
@@ -4317,7 +4439,7 @@ function ChannelEventsScreen(props: {
   }, [channelBrandTheme, props.channel.id]);
 
   const gameEvents = getChannelEvents(props.channel);
-  const isChannelOwner = readViewingAsChannelOwner();
+  const isChannelOwner = ownsGameChannel(props.channel.id);
 
   function publishChannelEvent(): void {
     if (!isChannelOwner) {
@@ -4566,13 +4688,14 @@ export function App(): ReactElement {
   const guildEventsStore = useGuildEventsStore();
   const selfMember = useSelfMember();
   const disconnectWallet = useWalletDisconnect();
+  useDemoPerspective();
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');
   const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);
   const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
-    const defaultChannel = channels[0];
+    const defaultChannel = channels[0] ?? seedChannels[0];
     if (!defaultChannel) {
       throw new Error('Nami mock channels must include at least one channel.');
     }
@@ -4584,6 +4707,7 @@ export function App(): ReactElement {
   const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
   const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
   const [channelProfileSection, setChannelProfileSection] = useState<ChannelProfileSection>('news');
+  const [channelProfileOwnerFocus, setChannelProfileOwnerFocus] = useState<ChannelProfileOwnerFocus>(null);
   const [selectedThreadMemberId, setSelectedThreadMemberId] = useState<string>(members[1]?.id ?? 'm2');
   const [selectedEvent, setSelectedEvent] = useState<StoredEvent | null>(null);
   const [selectedGuild, setSelectedGuild] = useState<NamiGuildRecord>(namiGuilds[0]!);
@@ -4613,13 +4737,67 @@ export function App(): ReactElement {
   }, [activePage]);
 
 
-  const openChannelProfile = useCallback((channel: NamiChannel, section: ChannelProfileSection = 'news'): void => {
+  const openChannelProfile = useCallback((
+    channel: NamiChannel,
+    section: ChannelProfileSection = 'news',
+    ownerFocus: ChannelProfileOwnerFocus = null,
+  ): void => {
     setSelectedChannel(channel);
     setSelectedDeveloper(channelDeveloper(channel));
     setChannelProfileSection(section);
+    setChannelProfileOwnerFocus(ownerFocus);
     setContextReturnPage((returnPage) => (activePage === 'channelProfile' ? returnPage : activePage));
     setActivePage('channelProfile');
   }, [activePage]);
+
+  const handleDemoPerspectiveApplied = useCallback(
+    (page: NamiPage, channelId?: string): void => {
+      if (channelId && isGameChannelOwner()) {
+        const ownedChannel = resolveOwnedGameChannel();
+
+        if (ownedChannel) {
+          setContextReturnPage((returnPage) => (activePage === 'channelProfile' ? returnPage : activePage));
+          openChannelProfile(ownedChannel, 'owner', null);
+          return;
+        }
+      }
+
+      if (channelId) {
+        const channel =
+          channels.find((entry) => entry.id === channelId) ??
+          seedChannels.find((entry) => entry.id === channelId);
+
+        if (channel) {
+          openChannelProfile(channel, 'news', null);
+          return;
+        }
+      }
+
+      setActivePage(page);
+    },
+    [activePage, openChannelProfile]
+  );
+
+  const openOwnedGameChannelProfile = useCallback((ownerFocus: ChannelProfileOwnerFocus = null): void => {
+    const ownedChannel = resolveOwnedGameChannel();
+
+    if (!ownedChannel) {
+      return;
+    }
+
+    setContextReturnPage((returnPage) => (activePage === 'channelProfile' ? returnPage : activePage));
+    openChannelProfile(ownedChannel, 'owner', ownerFocus);
+  }, [activePage, openChannelProfile]);
+
+  const openOwnedPartnerCarouselTicket = useCallback((): void => {
+    openOwnedGameChannelProfile('partner-carousel');
+  }, [openOwnedGameChannelProfile]);
+
+  const handleRestoreOwnerDashboard = useCallback((): void => {
+    restoreOwnerDemoPerspective();
+    requestSettingsSection('advanced');
+    setActivePage('settings');
+  }, []);
 
 
   const openStudioProfile = useCallback((developer: (typeof developers)[number]): void => {
@@ -4674,6 +4852,22 @@ export function App(): ReactElement {
   }), [openMemberProfile, openChannelProfile, openStudioProfile]);
 
   const navigateFromCurrentPage = useCallback((page: NamiPage): void => {
+    if (page === 'userProfile' && isGameChannelOwner()) {
+      openOwnedGameChannelProfile();
+      return;
+    }
+
+    if (page === 'events' && isGameChannelOwner()) {
+      const ownedChannel = resolveOwnedGameChannel();
+
+      if (ownedChannel) {
+        setSelectedChannel(ownedChannel);
+        setContextReturnPage((returnPage) => (activePage === 'channelEvents' ? returnPage : activePage));
+        setActivePage('channelEvents');
+        return;
+      }
+    }
+
     if (page === 'chat') {
       if (activePage !== 'channelProfile') {
         setContextReturnPage(activePage);
@@ -4688,8 +4882,16 @@ export function App(): ReactElement {
       setContextReturnPage(activePage);
     }
 
-    if (page === 'channelProfile' && activePage !== 'channelProfile') {
-      setChannelProfileSection('news');
+    if (page === 'channelProfile') {
+      if (isGameChannelOwner()) {
+        openOwnedGameChannelProfile();
+        return;
+      }
+
+      if (activePage !== 'channelProfile') {
+        setChannelProfileSection('news');
+        setChannelProfileOwnerFocus(null);
+      }
     }
 
     if (page === 'guilds') {
@@ -4697,7 +4899,7 @@ export function App(): ReactElement {
     }
 
     setActivePage(page);
-  }, [activePage]);
+  }, [activePage, openOwnedGameChannelProfile]);
 
   function navigateHubSwap(page: 'hub' | 'gamehub'): void {
     if (page !== activePage) {
@@ -4763,6 +4965,7 @@ export function App(): ReactElement {
       return <NamiHub
           selectedChannel={selectedChannel}
           onSelect={setSelectedChannel}
+          onOpenOwnedPartnerTicket={openOwnedPartnerCarouselTicket}
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
@@ -4811,8 +5014,16 @@ export function App(): ReactElement {
     if (activePage === 'channelProfile') {
       return (
         <ChannelProfileScreen
+          key={
+            selectedChannel.id +
+            ':' +
+            channelProfileSection +
+            ':' +
+            (channelProfileOwnerFocus ?? 'none')
+          }
           channel={selectedChannel}
           initialSection={channelProfileSection}
+          {...(channelProfileOwnerFocus ? { ownerFocus: channelProfileOwnerFocus } : {})}
           onNavigate={navigateFromCurrentPage}
           onOpenChatMember={openMemberProfile}
           onOpenMember={(memberId) => {
@@ -4979,7 +5190,7 @@ if (activePage === 'userProfile') {
           }}
           tagHandlers={tagHandlers}
         />;
-  }, [activePage, channelProfileSection, contextReturnPage, entrySignedOutNotice, entryStartOnboarding, navigateFromCurrentPage, openChannelProfile, openMemberProfile, selectedChannel, selectedDeveloper, selectedEvent, selectedGuild, selectedMember, selectedSquad, selectedThreadMemberId, squadShowInviteOnOpen, studioReturnPage, tagHandlers]);
+  }, [activePage, channelProfileOwnerFocus, channelProfileSection, contextReturnPage, entrySignedOutNotice, entryStartOnboarding, navigateFromCurrentPage, openChannelProfile, openMemberProfile, openOwnedPartnerCarouselTicket, selectedChannel, selectedDeveloper, selectedEvent, selectedGuild, selectedMember, selectedSquad, selectedThreadMemberId, squadShowInviteOnOpen, studioReturnPage, tagHandlers]);
 
   async function signOutToEntry(): Promise<void> {
     clearLocalNamiSession();
@@ -5014,7 +5225,19 @@ if (activePage === 'userProfile') {
       {showSidebar ? <NamiGridSpotlight scope="app" /> : null}
       {showSidebar
         ? createPortal(
-            <SidebarProfileCard onNavigate={navigateFromCurrentPage} onSignOut={signOutToEntry} />,
+            isGameChannelOwner() ? (
+              <PinnedGameChannelProfileCard
+                onNavigate={navigateFromCurrentPage}
+                onOpenGameProfile={() => openOwnedGameChannelProfile(null)}
+                onSignOut={signOutToEntry}
+              />
+            ) : (
+              <SidebarProfileCard
+                onNavigate={navigateFromCurrentPage}
+                onOpenOwnedChannel={() => openOwnedGameChannelProfile(null)}
+                onSignOut={signOutToEntry}
+              />
+            ),
             document.body,
           )
         : null}
@@ -5026,6 +5249,7 @@ if (activePage === 'userProfile') {
             messageUnreadCount={messageUnreadCount}
             onHubSwap={navigateHubSwap}
             onNavigate={navigateFromCurrentPage}
+            onOpenOwnedChannel={() => openOwnedGameChannelProfile(null)}
           />
         </>
       ) : (
@@ -5039,6 +5263,10 @@ if (activePage === 'userProfile') {
       )}
 
       <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
+      <DemoPerspectiveBar
+        onNavigate={navigateFromCurrentPage}
+        onRestoreOwner={handleRestoreOwnerDashboard}
+      />
 
       <section className="main-stage">
         {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (
@@ -5049,14 +5277,19 @@ if (activePage === 'userProfile') {
           <MemberFeedOfficialAlertBanner onOpenSafetyCenter={() => setActivePage('safetyCenter')} />
         ) : null}
         {activePage === 'settings' ? (
-          <SettingsScreen onNavigate={navigateFromCurrentPage} onOpenMember={openMemberProfile} />
+          <SettingsScreen
+            onDemoPerspectiveApplied={handleDemoPerspectiveApplied}
+            onNavigate={navigateFromCurrentPage}
+            onOpenMember={openMemberProfile}
+          />
         ) : (
           screen
         )}
       </section>
 
       {showSidebar ? <IgniteRadioDock /> : null}
-      {showSidebar ? <MembershipUpgradeOverlay /> : null}
+      {showSidebar && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
+      {showSidebar ? <SuperBannerOverlay /> : null}
       {showSidebar ? <MembershipPaymentReturnHandler /> : null}
       {showSidebar ? <MemberSessionSync /> : null}
       {showSidebar ? <WalletAuthBridge /> : null}

@@ -1,6 +1,8 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
+import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipOnChainFulfillmentCard } from './MembershipOnChainFulfillmentCard.js';
 import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
 import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
@@ -26,6 +28,7 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 };
 
 export function MembershipPlansPanel(): ReactElement {
+  const canPurchaseMembership = canPurchaseOrClaimMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
@@ -126,6 +129,14 @@ export function MembershipPlansPanel(): ReactElement {
     planState.status === 'active' &&
     (planState.activeTier !== 'Adventurer' ||
       (planState.activeTier === 'Adventurer' && planState.adventurerSource === 'paid'));
+
+  if (!canPurchaseMembership) {
+    return (
+      <section className="membership-plans-panel">
+        <MembershipPurchaseLockedPanel />
+      </section>
+    );
+  }
 
   return (
     <section className="membership-plans-panel">

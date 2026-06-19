@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { gameHubBrowserFilters } from './gamehub-preferences.js';
+import { canEditProfileCosmetics } from './member-access.js';
 import { readMemberSession } from './member-session-store.js';
 import { type NamiMember } from './uiMockData.js';
 
@@ -73,8 +74,21 @@ export function readSelfProfileEdits(): SelfProfileEdits {
   }
 }
 
+function withoutCosmeticEdits(edits: SelfProfileEdits): SelfProfileEdits {
+  return {
+    ...edits,
+    badgeDisplay: '',
+    titleDisplay: '',
+    frameDisplay: '',
+    themeDisplay: '',
+    ringDisplay: '',
+  };
+}
+
 export function saveSelfProfileEdits(edits: SelfProfileEdits): void {
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(edits));
+  const payload = canEditProfileCosmetics() ? edits : withoutCosmeticEdits(edits);
+
+  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
   cachedProfileEdits = null;
   window.dispatchEvent(new CustomEvent('nami-self-profile-changed'));
 }
@@ -94,7 +108,7 @@ export function withMemberProfile(member: NamiMember): NamiMember {
     nextMember = { ...nextMember, name: displayName };
   }
 
-  if (edits.badgeDisplay.trim()) {
+  if (canEditProfileCosmetics(member) && edits.badgeDisplay.trim()) {
     nextMember = { ...nextMember, badge: edits.badgeDisplay.trim() };
   }
 

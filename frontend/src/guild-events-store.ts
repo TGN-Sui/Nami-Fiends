@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { canUseGuildLeadershipTools } from './guild-space-access.js';
+import { isGuildMaster } from './guild-hierarchy-store.js';
 import { getSelfMember } from './member-access.js';
 import { guildOwnerEvents, type NamiEvent } from './events-data.js';
 import { guildsForMember, namiGuilds, type NamiGuildRecord } from './nami-affiliations.js';
@@ -125,19 +127,36 @@ export function getGuildEvents(guildId: string): StoredGuildEvent[] {
   return readGuildEventsMap()[guildId] ?? [];
 }
 
-export function canEditGuildEvent(event: StoredGuildEvent, memberId = getSelfMember().id): boolean {
-  return event.createdByMemberId === memberId;
+export function canEditGuildEvent(
+  guildId: string,
+  _event: StoredGuildEvent,
+  memberId = getSelfMember().id
+): boolean {
+  const guild = namiGuilds.find((entry) => entry.id === guildId);
+  const selfMember = getSelfMember();
+
+  if (!guild) {
+    return false;
+  }
+
+  return canUseGuildLeadershipTools(selfMember) && isGuildMaster(guild, memberId);
 }
 
 export function createGuildEvent(
   guild: NamiGuildRecord,
   title: string,
   createdByMemberId = getSelfMember().id
-): StoredGuildEvent {
+): StoredGuildEvent | null {
+  const selfMember = getSelfMember();
+
+  if (!canUseGuildLeadershipTools(selfMember) || !isGuildMaster(guild, createdByMemberId)) {
+    return null;
+  }
+
   const trimmedTitle = title.trim();
 
   if (!trimmedTitle) {
-    throw new Error('Guild event title is required.');
+    return null;
   }
 
   const event: StoredGuildEvent = {
@@ -184,7 +203,7 @@ export function updateGuildEvent(
 
   const target = guildEvents[targetIndex]!;
 
-  if (!canEditGuildEvent(target, editorMemberId)) {
+  if (!canEditGuildEvent(guildId, target, editorMemberId)) {
     return null;
   }
 

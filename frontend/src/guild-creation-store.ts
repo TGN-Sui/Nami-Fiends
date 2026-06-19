@@ -7,6 +7,7 @@ import {
   updateApprovalRequestStatus,
 } from './approval-requests-store.js';
 import { initializeGuildHierarchy } from './guild-hierarchy-store.js';
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember, isMemberVerified } from './member-access.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
 import { type NamiGuildRecord } from './nami-affiliations.js';
@@ -159,8 +160,20 @@ export function useGuildCreationStore(): {
   return { proposals, createdGuilds };
 }
 
+export function channelOwnerOfficialGuildCount(memberId: string): number {
+  return getCreatedGuildRecords().filter((guild) => guild.ownerMemberId === memberId).length;
+}
+
 export function canMemberCreateGuild(member: NamiMember): boolean {
-  return isMemberVerified(member) && member.tier !== 'NPC' && member.signal !== 'Black';
+  if (!isMemberVerified(member) || member.tier === 'NPC' || member.signal === 'Black') {
+    return false;
+  }
+
+  if (isGameChannelOwner() && channelOwnerOfficialGuildCount(member.id) > 0) {
+    return false;
+  }
+
+  return true;
 }
 
 export function membersEligibleForGuildCreation(excludeMemberIds: string[] = []): NamiMember[] {
@@ -307,6 +320,13 @@ export function submitGuildCreationProposal(input: {
   const selfMember = getSelfMember();
 
   if (!canMemberCreateGuild(selfMember)) {
+    if (isGameChannelOwner() && channelOwnerOfficialGuildCount(selfMember.id) > 0) {
+      return {
+        ok: false,
+        reason: 'Game channel owners can create only one official guild.',
+      };
+    }
+
     return { ok: false, reason: 'Only verified members can start guild creation.' };
   }
 

@@ -5,6 +5,7 @@ import {
   createApprovalRequest,
   updateApprovalRequestStatus,
 } from './approval-requests-store.js';
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
 import { unlockAdventurerBenefitsForMember } from './squad-benefits-store.js';
@@ -149,6 +150,10 @@ export function squadSlotsForLeader(memberId: string): number {
 
   if (member?.tier === 'NPC') {
     return 0;
+  }
+
+  if (isGameChannelOwner() && memberId === getSelfMember().id) {
+    return 1;
   }
 
   return membershipPlanForTier(tier).squadSlots;
@@ -312,6 +317,13 @@ export function squadInviteById(inviteId: string): SquadInvite | undefined {
 }
 
 export function acceptSquadInvite(inviteId: string): SquadInviteResult {
+  if (isGameChannelOwner()) {
+    return {
+      ok: false,
+      reason: 'Game channel owners lead one squad and cannot join other squads.',
+    };
+  }
+
   const invites = readInvites();
   const index = invites.findIndex((invite) => invite.id === inviteId);
 

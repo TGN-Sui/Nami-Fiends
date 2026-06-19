@@ -5,7 +5,6 @@ import {
   publishChannelBannerAlertForOwner,
   readChannelBannerContent,
   saveChannelBannerContent,
-  simulateChannelBannerBurst,
 } from './channel-banner-notifications-store.js';
 import {
   MEDIA_UPLOAD_ACCEPTED_LABEL,
@@ -85,27 +84,6 @@ export function ChannelBannerEditorCard(props: {
     );
   }
 
-  function handleSimulateBurst(): void {
-    persistDraft();
-    const created = simulateChannelBannerBurst([props.channel.id]);
-
-    setNotice(
-      created.length > 0
-        ? 'Simulated banner burst queued for review.'
-        : 'Enable Get Banners on this channel to simulate the alert queue.',
-    );
-  }
-
-  function handleSimulateAllSubscribed(): void {
-    const created = simulateChannelBannerBurst();
-
-    setNotice(
-      created.length > 0
-        ? 'Simulated ' + created.length + ' subscribed channel banners in the slowmode queue.'
-        : 'No Get Banners subscriptions yet. Enable alerts on one or more channels first.',
-    );
-  }
-
   function openFilePicker(): void {
     fileInputRef.current?.click();
   }
@@ -143,80 +121,75 @@ export function ChannelBannerEditorCard(props: {
 
   return (
     <>
-      <article className="media-upload-prep-card channel-banner-editor-card">
-        <div className="media-upload-prep-copy">
-          <span className="media-upload-prep-eyebrow">Elite owner tools</span>
-          <strong>Focused banner alert</strong>
-          <small>
-            Edit the cover and message subscribers see, preview the alert, then send when it looks right.
-          </small>
-        </div>
-
-        <div
-          className={'channel-banner-editor-preview' + (coverUrl ? ' has-banner-cover' : '')}
-          style={coverUrl ? { backgroundImage: 'url(' + JSON.stringify(coverUrl) + ')' } : undefined}
-        >
-          <div className="channel-banner-editor-preview-overlay">
-            <strong>{headline || props.channel.name}</strong>
-            <p>{body || props.channel.tagline}</p>
+      <article className="panel channel-owner-tool-card channel-banner-editor-card channel-banner-editor-compact">
+        <div className="channel-owner-tool-card-head">
+          <div>
+            <span className="mini-badge">Focused alert</span>
+            <h3>Banner alerts panel</h3>
+            <p>Compact editor for Get Banners subscribers — preview before you publish.</p>
           </div>
         </div>
 
-        <label className="channel-banner-editor-field">
-          <span>Headline</span>
-          <input
-            onChange={(event) => setHeadline(event.target.value)}
-            type="text"
-            value={headline}
-          />
-        </label>
+        <div className="channel-banner-editor-compact-grid">
+          <div
+            className={'channel-banner-editor-preview channel-banner-editor-preview-compact' + (coverUrl ? ' has-banner-cover' : '')}
+            style={coverUrl ? { backgroundImage: 'url(' + JSON.stringify(coverUrl) + ')' } : undefined}
+          >
+            <div className="channel-banner-editor-preview-overlay">
+              <strong>{headline || props.channel.name}</strong>
+              <p>{body || props.channel.tagline}</p>
+            </div>
+          </div>
 
-        <label className="channel-banner-editor-field">
-          <span>Banner message</span>
-          <textarea onChange={(event) => setBody(event.target.value)} rows={3} value={body} />
-        </label>
+          <div className="channel-banner-editor-fields-stack">
+            <label className="channel-banner-editor-field">
+              <span>Headline</span>
+              <input
+                onChange={(event) => setHeadline(event.target.value)}
+                type="text"
+                value={headline}
+              />
+            </label>
 
-        <div className="media-upload-prep-details">
-          <span>{MEDIA_UPLOAD_ACCEPTED_LABEL}</span>
-          <span>Banner cover uses the same image rules as channel covers.</span>
+            <label className="channel-banner-editor-field">
+              <span>Banner message</span>
+              <textarea onChange={(event) => setBody(event.target.value)} rows={3} value={body} />
+            </label>
+
+            <small className="channel-owner-tool-footnote">{MEDIA_UPLOAD_ACCEPTED_LABEL}</small>
+
+            <input
+              accept="image/png,image/jpeg,image/webp"
+              className="member-avatar-upload-input"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              type="file"
+            />
+
+            <div className="channel-owner-tool-actions channel-banner-editor-actions">
+              <button
+                className="nami-surface-button"
+                disabled={isReadingFile}
+                onClick={openFilePicker}
+                type="button"
+              >
+                {isReadingFile ? 'Reading…' : 'Upload cover'}
+              </button>
+              <button className="nami-surface-button" onClick={handleSave} type="button">
+                Save draft
+              </button>
+              <button
+                className="nami-surface-button is-primary-surface-button"
+                onClick={handlePreview}
+                type="button"
+              >
+                Preview
+              </button>
+            </div>
+          </div>
         </div>
 
-        <input
-          accept="image/png,image/jpeg,image/webp"
-          className="member-avatar-upload-input"
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          type="file"
-        />
-
-        <div className="member-avatar-upload-actions">
-          <button
-            className="nami-surface-button"
-            disabled={isReadingFile}
-            onClick={openFilePicker}
-            type="button"
-          >
-            {isReadingFile ? 'Reading cover…' : 'Upload banner cover'}
-          </button>
-          <button className="nami-surface-button" onClick={handleSave} type="button">
-            Save draft
-          </button>
-          <button
-            className="nami-surface-button is-primary-surface-button"
-            onClick={handlePreview}
-            type="button"
-          >
-            Preview alert
-          </button>
-          <button className="nami-surface-button" onClick={handleSimulateBurst} type="button">
-            Simulate burst
-          </button>
-          <button className="nami-surface-button" onClick={handleSimulateAllSubscribed} type="button">
-            Simulate all subscribed
-          </button>
-        </div>
-
-        {notice ? <p className="member-avatar-upload-error">{notice}</p> : null}
+        {notice ? <p className="channel-owner-tool-notice is-success">{notice}</p> : null}
       </article>
 
       {previewDraft ? (

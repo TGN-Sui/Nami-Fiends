@@ -1,4 +1,5 @@
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { canManageTemporaryGlobalChats, getSelfMember } from './member-access.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
@@ -270,7 +271,7 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
 }
 
 export function canCreateTemporaryChat(): boolean {
-  return userProfile.tier === 'Elite' && userProfile.conductSignal === 'Green';
+  return canManageTemporaryGlobalChats(getSelfMember());
 }
 
 export type CollectedBadge = {

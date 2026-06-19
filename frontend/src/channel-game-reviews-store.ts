@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { hasChannelGameBadge, readMemberChannelBadgeLabel } from './channel-game-badge-store.js';
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { isMemberVerified } from './member-access.js';
 import { members, type NamiMember } from './uiMockData.js';
 
@@ -142,6 +143,10 @@ export function hasMemberReviewedChannel(memberId: string, channelId: string): b
 }
 
 export function canSubmitChannelGameReview(member: NamiMember, channelId: string): boolean {
+  if (isGameChannelOwner()) {
+    return false;
+  }
+
   return isMemberVerified(member) && hasChannelGameBadge(member.id, channelId) && !hasMemberReviewedChannel(member.id, channelId);
 }
 

@@ -18,6 +18,7 @@ import { BadgeBookOverlay } from './BadgeBookOverlay.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { collectedBadgesForMember, userCollectedBadges, type CollectedBadge } from './global-chats.js';
 
+import { canAccessBadgeBook } from './member-access.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { ownerAssetBadgeSlotId } from './nami-owner-assets-store.js';
 import { useNamiOwnerEditMode } from './nami-owner-edit-mode-store.js';
@@ -211,6 +212,18 @@ export function BadgeCollectorsBook(props: {
   badges?: CollectedBadge[];
   ownerLabel?: string;
 }): ReactElement {
+  if (props.member && !canAccessBadgeBook(props.member)) {
+    return (
+      <article className="panel badge-book-locked-panel">
+        <div className="profile-panel-heading">
+          <h2>Badge Book locked</h2>
+          <p>Claim your Nami Passport to unlock the collectors badge book and start earning badges.</p>
+        </div>
+        <span className="mini-badge">Passport required</span>
+      </article>
+    );
+  }
+
   const editMode = useNamiOwnerEditMode();
   const badges = resolveBadges(props.member, props.badges);
   const totalSpreads = totalSpreadsFor(badges.length);

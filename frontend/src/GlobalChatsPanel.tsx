@@ -18,6 +18,7 @@ import {
   type GenreChatDockSize,
 } from './gamehub-preferences.js';
 import {
+  canManageTemporaryGlobalChats,
   canSendChatMessages,
   canSendOfficialChatMessages,
   messageBubbleClass,
@@ -323,6 +324,7 @@ export function GenreChatRoomPanel(props: {
 }
 
 export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElement {
+  const selfMember = useSelfMember();
   const [activeChatId, setActiveChatId] = useState(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
@@ -341,7 +343,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
       id: 'temp-' + Date.now(),
       title: newChatTitle.trim(),
       kind: 'temporary',
-      createdBy: userProfile.displayName,
+      createdBy: selfMember.name,
       creatorVerified: true,
       activeMembers: 1,
       voiceEnabled: newChatVoice,
@@ -391,7 +393,9 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
                   </small>
                 </div>
                 <span>{chat.activeMembers.toLocaleString()} inside</span>
-                {chat.closesOnExit && chat.createdBy === userProfile.displayName ? (
+                {chat.closesOnExit &&
+                chat.createdBy === selfMember.name &&
+                canManageTemporaryGlobalChats(selfMember) ? (
                   <button
                     className="secondary-action global-chat-close-temp"
                     onClick={(event) => {

@@ -224,26 +224,28 @@ export function MemberProfileShowcase(props: {
               </div>
             </section>
 
-            <section className="member-showcase-section">
-              <header className="member-showcase-section-head">
-                <h2>Top Badges</h2>
-                <p>Featured badges on this passport.</p>
-              </header>
+            {showcase.topBadges.length > 0 ? (
+              <section className="member-showcase-section">
+                <header className="member-showcase-section-head">
+                  <h2>Top Badges</h2>
+                  <p>Featured badges on this passport.</p>
+                </header>
 
-              <div className="member-showcase-badge-card-grid">
-                {showcase.topBadges.map((badge) => (
-                  <div className={'member-showcase-badge-card is-rarity-' + badge.rarity} key={badge.id}>
-                    <span aria-hidden="true" className="member-showcase-badge-glyph">
-                      {badgeGlyph(badge)}
-                    </span>
-                    <div className="member-showcase-badge-copy">
-                      <strong>{badge.name}</strong>
-                      <span>{rarityLabel(badge.rarity)}</span>
+                <div className="member-showcase-badge-card-grid">
+                  {showcase.topBadges.map((badge) => (
+                    <div className={'member-showcase-badge-card is-rarity-' + badge.rarity} key={badge.id}>
+                      <span aria-hidden="true" className="member-showcase-badge-glyph">
+                        {badgeGlyph(badge)}
+                      </span>
+                      <div className="member-showcase-badge-copy">
+                        <strong>{badge.name}</strong>
+                        <span>{rarityLabel(badge.rarity)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
         ) : null}
 

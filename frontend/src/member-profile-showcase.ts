@@ -105,6 +105,10 @@ function resolveOffstreamGame(member: NamiMember): MemberOffstreamGame | null {
 }
 
 function topBadgesForMember(member: NamiMember): CollectedBadge[] {
+  if (member.tier === 'NPC') {
+    return [];
+  }
+
   return [...collectedBadgesForMember(member)]
     .sort((left, right) => RARITY_RANK[right.rarity] - RARITY_RANK[left.rarity])
     .slice(0, 4);

@@ -6,7 +6,7 @@ import {
   useChannelBoostStore,
 } from './channel-boost-store.js';
 import { getSelfMember } from './member-access.js';
-import { effectiveMemberTier } from './membership-plans-store.js';
+
 import {
   availableSquadInviteSlots,
   squadSlotsForLeader,
@@ -18,8 +18,7 @@ export function PinnedProfileCapacityStrip(): ReactElement | null {
   useSquadRosterStore();
 
   const selfMember = getSelfMember();
-  const tier = effectiveMemberTier();
-  const boostLimit = boostCycleLimit(tier);
+  const boostLimit = boostCycleLimit(selfMember.tier);
   const remainingBoosts = getRemainingBoosts(selfMember);
   const squadLimit = squadSlotsForLeader(selfMember.id);
   const remainingSquadSlots = availableSquadInviteSlots(selfMember.id);
