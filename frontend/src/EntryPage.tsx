@@ -35,7 +35,7 @@ function EntryGatePanel(props: {
   onClose: () => void;
   onEnterHub: () => void;
   onNavigateToSettings?: () => void;
-  onStartOnboarding: () => void;
+  onStartSignup: () => void;
 }): ReactElement {
   const session = useMemberSession();
   const [mode, setMode] = useState<EntryGateMode>('choose');
@@ -166,10 +166,10 @@ function EntryGatePanel(props: {
 
       <div className="nami-entry-gate-copy">
         <span className="mini-badge">Enter Nami</span>
-        <h2 id="nami-entry-gate-title">Sign in or start onboarding</h2>
+        <h2 id="nami-entry-gate-title">Sign in or sign up</h2>
         <p>
-          Returning members can sign in with their signup credentials. New players can create a
-          passport through the onboarding flow.
+          Returning members can sign in with their signup credentials. New users choose Gamer or
+          Game before starting onboarding.
         </p>
       </div>
 
@@ -181,11 +181,11 @@ function EntryGatePanel(props: {
           className="secondary-action"
           onClick={() => {
             props.onClose();
-            props.onStartOnboarding();
+            props.onStartSignup();
           }}
           type="button"
         >
-          Start onboarding
+          Sign up
         </button>
       </div>
     </article>
@@ -395,9 +395,8 @@ export function EntryPage(props: {
   onEnterPreApprovedGame?: () => void;
   onEntryGateHandled?: () => void;
   onNavigateToSettings?: () => void;
+  onRequestEntryGate?: () => void;
   showEntryGate?: boolean;
-  startOnboarding?: boolean;
-  onStartOnboardingHandled?: () => void;
   signedOutNotice?: boolean;
 }): ReactElement {
   const session = useMemberSession();
@@ -405,23 +404,16 @@ export function EntryPage(props: {
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [onboardingRole, setOnboardingRole] = useState<OnboardingRole | null>(null);
 
-  useEffect(() => {
-    if (!props.startOnboarding) {
-      return;
-    }
-
-    setShowRoleSelector(true);
-    setShowOnboarding(false);
-    setOnboardingRole(null);
-    props.onStartOnboardingHandled?.();
-  }, [props.startOnboarding, props.onStartOnboardingHandled]);
-
-  function startFreshSignup(): void {
+  function beginSignupFlow(): void {
     clearMemberSession();
     clearSignedOut();
     setShowRoleSelector(true);
     setShowOnboarding(false);
     setOnboardingRole(null);
+  }
+
+  function openEntryGate(): void {
+    props.onRequestEntryGate?.();
   }
 
   function handleRoleSelection(role: OnboardingRole): void {
@@ -450,7 +442,7 @@ export function EntryPage(props: {
       <EntryGatePanel
         onClose={closeEntryGate}
         onEnterHub={props.onEnterHub}
-        onStartOnboarding={startFreshSignup}
+        onStartSignup={beginSignupFlow}
         {...(props.onNavigateToSettings
           ? { onNavigateToSettings: props.onNavigateToSettings }
           : {})}
@@ -583,7 +575,7 @@ export function EntryPage(props: {
   return (
     <>
       <LandingOverview
-        onEnterNami={startFreshSignup}
+        onEnterNami={openEntryGate}
         {...(props.signedOutNotice ? { signedOutNotice: true } : {})}
       />
       {entryGateOverlay}

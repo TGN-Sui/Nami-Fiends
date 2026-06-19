@@ -4701,7 +4701,6 @@ export function App(): ReactElement {
   useDemoPerspective();
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');
-  const [entryStartOnboarding, setEntryStartOnboarding] = useState(false);
   const [entryShowGate, setEntryShowGate] = useState(false);
   const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
@@ -4975,7 +4974,6 @@ export function App(): ReactElement {
 
   function enterNamiHub(): void {
     setEntryShowGate(false);
-    setEntryStartOnboarding(false);
     setEntrySignedOutNotice(false);
     setActivePage('hub');
   }
@@ -4988,7 +4986,6 @@ export function App(): ReactElement {
 
   function enterPreApprovedGameChannel(): void {
     setEntryShowGate(false);
-    setEntryStartOnboarding(false);
     setEntrySignedOutNotice(false);
 
     const ownedChannel = resolveOwnedGameChannel();
@@ -5013,10 +5010,9 @@ export function App(): ReactElement {
           onEnterPreApprovedGame={enterPreApprovedGameChannel}
           onEntryGateHandled={() => setEntryShowGate(false)}
           onNavigateToSettings={() => setActivePage('settings')}
-          onStartOnboardingHandled={() => setEntryStartOnboarding(false)}
+          onRequestEntryGate={openEntryGate}
           showEntryGate={entryShowGate}
           signedOutNotice={entrySignedOutNotice}
-          startOnboarding={entryStartOnboarding}
         />
       );
     }
@@ -5250,7 +5246,7 @@ if (activePage === 'userProfile') {
           }}
           tagHandlers={tagHandlers}
         />;
-  }, [activePage, channelProfileOwnerFocus, channelProfileSection, contextReturnPage, entryShowGate, entrySignedOutNotice, entryStartOnboarding, navigateFromCurrentPage, openChannelProfile, openMemberProfile, openOwnedPartnerCarouselTicket, selectedChannel, selectedDeveloper, selectedEvent, selectedGuild, selectedMember, selectedSquad, selectedThreadMemberId, squadShowInviteOnOpen, studioReturnPage, tagHandlers]);
+  }, [activePage, channelProfileOwnerFocus, channelProfileSection, contextReturnPage, entryShowGate, entrySignedOutNotice, navigateFromCurrentPage, openChannelProfile, openMemberProfile, openOwnedPartnerCarouselTicket, selectedChannel, selectedDeveloper, selectedEvent, selectedGuild, selectedMember, selectedSquad, selectedThreadMemberId, squadShowInviteOnOpen, studioReturnPage, tagHandlers]);
 
   async function signOutToEntry(): Promise<void> {
     clearLocalNamiSession();
@@ -5262,7 +5258,6 @@ if (activePage === 'userProfile') {
     }
 
     setEntryShowGate(false);
-    setEntryStartOnboarding(false);
     setEntrySignedOutNotice(true);
     setActivePage('entry');
   }
