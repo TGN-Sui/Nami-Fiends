@@ -1,0 +1,408 @@
+/* Elite pixel interface — blocky retro shell with readable pixel fonts */
+
+[data-nami-ui='pixel'] {
+  --nami-pixel-step: 4px;
+  --nami-pixel-border: 3px;
+  --nami-pixel-shadow: 4px 4px 0 var(--nami-theme-shadow, rgba(0, 0, 0, 0.42));
+  --nami-pixel-font-body: 'VT323', 'Courier New', monospace;
+  --nami-pixel-font-heading: 'Silkscreen', 'VT323', monospace;
+  --nami-pixel-bubble-sphere: url('./assets/pixel-sphere-bubble.svg');
+  --nami-pixel-bubble-mask: url('./assets/pixel-sphere-bubble-mask.svg');
+  --nami-pixel-bubble-ring: url('./assets/pixel-sphere-bubble-ring.svg');
+  text-rendering: geometricPrecision;
+}
+
+[data-nami-theme='light'][data-nami-ui='pixel'],
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] {
+  --nami-pixel-bubble-sphere: url('./assets/pixel-sphere-bubble-light.svg');
+  --nami-bubble-title: #0f2a40;
+  --nami-bubble-detail: #264a62;
+  --nami-bubble-rank: #7a5308;
+}
+
+[data-nami-ui='pixel'] body,
+[data-nami-ui='pixel'] .nami-app {
+  font-family: var(--nami-pixel-font-body);
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+[data-nami-ui='pixel'] h1,
+[data-nami-ui='pixel'] h2,
+[data-nami-ui='pixel'] h3,
+[data-nami-ui='pixel'] .page-title h1,
+[data-nami-ui='pixel'] .profile-panel-heading h2,
+[data-nami-ui='pixel'] .settings-appearance-option-copy strong {
+  font-family: var(--nami-pixel-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+[data-nami-ui='pixel'] *,
+[data-nami-ui='pixel'] *::before,
+[data-nami-ui='pixel'] *::after {
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-nami-ui='pixel'] {
+  --nami-body-background:
+    linear-gradient(90deg, var(--nami-grid-line, rgba(255, 255, 255, 0.08)) 1px, transparent 1px),
+    linear-gradient(0deg, var(--nami-grid-line, rgba(255, 255, 255, 0.08)) 1px, transparent 1px),
+    var(--nami-theme-bg, #030a12);
+  background-size: 16px 16px, 16px 16px, auto;
+}
+
+[data-nami-ui='pixel'] body {
+  background: var(--nami-body-background);
+  background-color: var(--nami-theme-bg, #030a12);
+}
+
+[data-nami-ui='pixel'] .panel,
+[data-nami-ui='pixel'] .sidebar,
+[data-nami-ui='pixel'] .nami-pinned-profile-stack,
+[data-nami-ui='pixel'] .chat-window,
+[data-nami-ui='pixel'] .chat-shell,
+[data-nami-ui='pixel'] .settings-screen-layout,
+[data-nami-ui='pixel'] .ignite-radio-dock,
+[data-nami-ui='pixel'] .gamehub-discovery-panel,
+[data-nami-ui='pixel'] .genre-chat-pinned-dock,
+[data-nami-ui='pixel'] .chat-rail-collapsible-panel,
+[data-nami-ui='pixel'] .feature-rail,
+[data-nami-ui='pixel'] .member-rail,
+[data-nami-ui='pixel'] .channel-profile-section,
+[data-nami-ui='pixel'] .global-chats-panel,
+[data-nami-ui='pixel'] .messages-screen-layout {
+  border: var(--nami-pixel-border) solid var(--nami-theme-border-strong, rgba(117, 215, 255, 0.28));
+  background: var(--nami-theme-panel, rgba(18, 22, 34, 0.96));
+  box-shadow: var(--nami-pixel-shadow);
+}
+
+[data-nami-ui='pixel'] button:not(.crypto-community-bubble),
+[data-nami-ui='pixel'] .nami-surface-button,
+[data-nami-ui='pixel'] .profile-secondary-link,
+[data-nami-ui='pixel'] .settings-action-button,
+[data-nami-ui='pixel'] .settings-appearance-option,
+[data-nami-ui='pixel'] .sidebar-nav button,
+[data-nami-ui='pixel'] .tab-row button,
+[data-nami-ui='pixel'] .filter-row button,
+[data-nami-ui='pixel'] .message-bubble,
+[data-nami-ui='pixel'] .chat-member-card,
+[data-nami-ui='pixel'] .discovery-card,
+[data-nami-ui='pixel'] .module-card,
+[data-nami-ui='pixel'] .gamehub-discovery-channel-card,
+[data-nami-ui='pixel'] .messages-thread-row,
+[data-nami-ui='pixel'] .global-chat-list-row,
+[data-nami-ui='pixel'] .embedded-social-card,
+[data-nami-ui='pixel'] input,
+[data-nami-ui='pixel'] textarea,
+[data-nami-ui='pixel'] select {
+  border: var(--nami-pixel-border) solid var(--nami-theme-border, rgba(117, 215, 255, 0.16));
+  background: var(--nami-theme-surface-raised, rgba(255, 255, 255, 0.06));
+  box-shadow: 2px 2px 0 var(--nami-theme-shadow, rgba(0, 0, 0, 0.28));
+  font-family: var(--nami-pixel-font-body);
+  transition:
+    transform 80ms steps(2, end),
+    box-shadow 80ms steps(2, end),
+    background 80ms steps(2, end),
+    color 80ms steps(2, end);
+}
+
+[data-nami-ui='pixel'] button:not(.crypto-community-bubble):hover,
+[data-nami-ui='pixel'] .nami-surface-button:hover,
+[data-nami-ui='pixel'] .profile-secondary-link:hover,
+[data-nami-ui='pixel'] .sidebar-nav button:hover,
+[data-nami-ui='pixel'] .settings-appearance-option:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--nami-theme-shadow, rgba(0, 0, 0, 0.34));
+}
+
+[data-nami-ui='pixel'] button:not(.crypto-community-bubble):active,
+[data-nami-ui='pixel'] .nami-surface-button:active,
+[data-nami-ui='pixel'] .settings-appearance-option:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--nami-theme-shadow, rgba(0, 0, 0, 0.28));
+}
+
+[data-nami-ui='pixel'] .sidebar-nav button.is-active,
+[data-nami-ui='pixel'] .nami-surface-button.is-primary-surface-button,
+[data-nami-ui='pixel'] .nami-surface-button.is-active-filter,
+[data-nami-ui='pixel'] .tab-row button.is-active-tab,
+[data-nami-ui='pixel'] .settings-appearance-option.is-active-appearance-option {
+  border-color: var(--nami-theme-accent-border, rgba(117, 215, 255, 0.42));
+  background: var(--nami-theme-active-bg, var(--nami-theme-accent-medium, rgba(117, 215, 255, 0.16)));
+  color: var(--nami-theme-active-text, var(--nami-theme-text, var(--nami-frost-text)));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    3px 3px 0 var(--nami-theme-accent-glow, rgba(117, 215, 255, 0.14));
+}
+
+[data-nami-ui='pixel'] .uniform-member-avatar,
+[data-nami-ui='pixel'] .pinned-profile-avatar,
+[data-nami-ui='pixel'] .owner-editable-image,
+[data-nami-ui='pixel'] img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+[data-nami-ui='pixel'] .sidebar-profile-online-toggle input,
+[data-nami-ui='pixel'] input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--nami-theme-accent-solid, #75d7ff);
+  box-shadow: none;
+}
+
+[data-nami-ui='pixel'] .mini-badge,
+[data-nami-ui='pixel'] .sidebar-profile-tag-bell,
+[data-nami-ui='pixel'] .sidebar-nav-unread-pill {
+  border: 2px solid var(--nami-theme-border-strong, rgba(117, 215, 255, 0.28));
+  box-shadow: 2px 2px 0 var(--nami-theme-shadow, rgba(0, 0, 0, 0.28));
+}
+
+[data-nami-ui='pixel'] .settings-appearance-option {
+  font-family: var(--nami-pixel-font-body);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+[data-nami-ui='pixel'] .settings-appearance-option-copy strong {
+  font-family: var(--nami-pixel-font-heading);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+[data-nami-ui='pixel'] .settings-appearance-option-copy small {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+[data-nami-ui='pixel'] .settings-appearance-shell-preview-pixel {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 50%, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.12) 50%, transparent 50%),
+    var(--nami-theme-panel, #121622);
+  background-size: 8px 8px, 8px 8px, auto;
+  border: 3px solid var(--nami-theme-border-strong, rgba(117, 215, 255, 0.28));
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.34);
+}
+
+[data-nami-ui='pixel'] .sidebar-xp-track,
+[data-nami-ui='pixel'] .nami-season-progress-track {
+  border: 2px solid var(--nami-theme-border, rgba(117, 215, 255, 0.16));
+  height: 10px;
+  padding: 2px;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.28);
+}
+
+[data-nami-ui='pixel'] .sidebar-xp-track i,
+[data-nami-ui='pixel'] .nami-season-progress-track i {
+  border-radius: 0 !important;
+  box-shadow: none;
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble,
+[data-nami-ui='pixel'] .member-spotlight-float-bubble,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  contain: layout style !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: transform 80ms steps(2, end) !important;
+}
+
+[data-nami-ui='pixel'] .crypto-bubbles-board.is-cursor-active .crypto-community-bubble,
+[data-nami-ui='pixel'] .crypto-community-bubble.is-active-crypto-bubble,
+[data-nami-ui='pixel'] .crypto-community-bubble.is-nami-rainbow-foil-border,
+[data-nami-ui='pixel'] .crypto-bubbles-board.is-genre-bubble-board .crypto-community-bubble,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble.is-pop-hit,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble.is-popping {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble::before,
+[data-nami-ui='pixel'] .member-spotlight-float-bubble::before,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble::before,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--nami-pixel-bubble-sphere) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+  -webkit-mask-image: var(--nami-pixel-bubble-mask) !important;
+  mask-image: var(--nami-pixel-bubble-mask) !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-size: 100% 100% !important;
+  mask-size: 100% 100% !important;
+  -webkit-mask-composite: source-over !important;
+  mask-composite: add !important;
+  animation: none !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: filter 160ms steps(3, end);
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble.is-nami-rainbow-foil-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask-image: var(--nami-pixel-bubble-ring);
+  mask-image: var(--nami-pixel-bubble-ring);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
+}
+
+[data-nami-ui='pixel'] .crypto-bubbles-board.is-cursor-active .crypto-community-bubble::before {
+  filter: brightness(calc(0.9 + var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.18))
+    drop-shadow(
+      0 0 calc(4px + var(--bubble-highlight, var(--bubble-proximity, 0)) * 14px)
+        rgba(67, 245, 167, calc(var(--bubble-highlight, var(--bubble-proximity, 0)) * 0.28))
+    );
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble.is-active-crypto-bubble::before {
+  filter: brightness(1.12)
+    drop-shadow(0 0 12px rgba(117, 215, 255, 0.34));
+}
+
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble.is-pop-hit::before {
+  filter: brightness(1.12);
+}
+
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble.is-popping::before {
+  filter: brightness(1.28) saturate(1.15);
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble strong,
+[data-nami-ui='pixel'] .crypto-community-bubble small,
+[data-nami-ui='pixel'] .crypto-community-bubble .crypto-bubble-rank,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble strong,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble small,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble strong,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble small,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble-pop-ring {
+  position: relative;
+  z-index: 2;
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble {
+  text-shadow: none;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble strong,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble strong,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble strong {
+  font-family: var(--nami-pixel-font-body);
+  font-weight: 400;
+  font-size: clamp(0.56rem, calc(var(--bubble-size, 88px) / 128), 0.76rem);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--nami-bubble-title, #f2f9ff);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  text-wrap: balance;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42);
+}
+
+[data-nami-ui='pixel'] .crypto-bubbles-panel:has(.is-genre-bubble-board) .crypto-community-bubble strong {
+  font-size: clamp(0.54rem, calc(var(--bubble-size, 88px) / 118), 0.74rem);
+  line-height: 1.18;
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble small,
+[data-nami-ui='pixel'] .nami-landing-floating-genre-bubble small,
+[data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble small {
+  font-family: var(--nami-pixel-font-body);
+  font-weight: 400;
+  font-size: clamp(0.5rem, calc(var(--bubble-size, 88px) / 148), 0.66rem);
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  color: var(--nami-bubble-detail, rgba(214, 232, 248, 0.9));
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.36);
+}
+
+[data-nami-ui='pixel'] .crypto-community-bubble .crypto-bubble-rank {
+  font-family: var(--nami-pixel-font-body);
+  font-weight: 500;
+  font-size: clamp(0.5rem, calc(var(--bubble-size, 88px) / 136), 0.64rem);
+  letter-spacing: 0.05em;
+  color: var(--nami-bubble-rank, #ffe2a1);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-nami-theme='light'][data-nami-ui='pixel'] .crypto-community-bubble strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .crypto-community-bubble strong,
+[data-nami-theme='light'][data-nami-ui='pixel'] .nami-landing-floating-genre-bubble strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .nami-landing-floating-genre-bubble strong,
+[data-nami-theme='light'][data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble strong {
+  color: var(--nami-bubble-title);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+[data-nami-theme='light'][data-nami-ui='pixel'] .crypto-community-bubble small,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .crypto-community-bubble small,
+[data-nami-theme='light'][data-nami-ui='pixel'] .nami-landing-floating-genre-bubble small,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .nami-landing-floating-genre-bubble small,
+[data-nami-theme='light'][data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble small,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble small {
+  color: var(--nami-bubble-detail);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+[data-nami-theme='light'][data-nami-ui='pixel'] .crypto-community-bubble .crypto-bubble-rank,
+[data-nami-theme='custom'][data-nami-theme-light='true'][data-nami-ui='pixel'] .crypto-community-bubble .crypto-bubble-rank {
+  color: var(--nami-bubble-rank);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.36);
+}

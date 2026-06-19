@@ -9,8 +9,19 @@ import {
   type ReactNode,
 } from 'react';
 
+import {
+  appearanceTierForMember,
+  clampAppearanceForTier,
+  isThemeModeAllowed,
+  isUiShellAllowed,
+  requiredTierForThemeMode,
+  requiredTierForUiShell,
+} from './appearance-access.js';
+import { getSelfMember } from './member-access.js';
+import { useMembershipPlanState } from './membership-plans-store.js';
+
 export type NamiThemeMode = 'default' | 'dark' | 'light' | 'custom';
-export type NamiUiShell = 'classic' | 'glass';
+export type NamiUiShell = 'classic' | 'glass' | 'pixel';
 
 export type NamiCustomThemeColors = {
   background: string;
@@ -388,7 +399,7 @@ function readStoredUiShell(): NamiUiShell {
   try {
     const value = window.localStorage.getItem(UI_SHELL_STORAGE_KEY);
 
-    if (value === 'classic' || value === 'glass') {
+    if (value === 'classic' || value === 'glass' || value === 'pixel') {
       return value;
     }
   } catch {
@@ -452,6 +463,16 @@ function applyThemeToDocument(
   root.style.setProperty('--nami-theme-surface-raised', semantic.surfaceRaised);
   root.style.setProperty('--nami-theme-shadow', semantic.shadow);
   root.style.setProperty('--nami-theme-nav-text', semantic.navText);
+  root.style.setProperty('--nami-frost-text', lightScheme ? semantic.muted : '#b8d9ec');
+  if (lightScheme) {
+    root.style.setProperty('--nami-bubble-title', colors.text);
+    root.style.setProperty('--nami-bubble-detail', semantic.muted);
+    root.style.setProperty('--nami-bubble-rank', '#8a5c08');
+  } else {
+    root.style.removeProperty('--nami-bubble-title');
+    root.style.removeProperty('--nami-bubble-detail');
+    root.style.removeProperty('--nami-bubble-rank');
+  }
   root.style.setProperty('--nami-theme-nav-icon', colors.accent);
   root.style.setProperty('--nami-body-background', ambient.bodyBackground);
   root.style.setProperty('--nami-grid-line', ambient.gridLine);
@@ -469,16 +490,36 @@ function applyThemeToDocument(
 }
 
 export function NamiThemeProvider(props: { children: ReactNode }): ReactElement {
-  const [mode, setModeState] = useState<NamiThemeMode>(() => readStoredMode());
-  const [uiShell, setUiShellState] = useState<NamiUiShell>(() => readStoredUiShell());
+  useMembershipPlanState();
+  const appearanceTier = appearanceTierForMember(getSelfMember());
+  const [mode, setModeState] = useState<NamiThemeMode>(() => {
+    const stored = readStoredMode();
+    return clampAppearanceForTier(appearanceTierForMember(getSelfMember()), readStoredUiShell(), stored).mode;
+  });
+  const [uiShell, setUiShellState] = useState<NamiUiShell>(() => {
+    const stored = readStoredUiShell();
+    return clampAppearanceForTier(appearanceTierForMember(getSelfMember()), stored, readStoredMode()).uiShell;
+  });
   const [customColors, setCustomColors] = useState<NamiCustomThemeColors>(() => readStoredCustom());
 
   const setMode = useCallback((nextMode: NamiThemeMode) => {
+    const tier = appearanceTierForMember(getSelfMember());
+
+    if (!isThemeModeAllowed(tier, nextMode)) {
+      return;
+    }
+
     setModeState(nextMode);
     window.localStorage.setItem(STORAGE_KEY, nextMode);
   }, []);
 
   const setUiShell = useCallback((nextShell: NamiUiShell) => {
+    const tier = appearanceTierForMember(getSelfMember());
+
+    if (!isUiShellAllowed(tier, nextShell)) {
+      return;
+    }
+
     setUiShellState(nextShell);
     window.localStorage.setItem(UI_SHELL_STORAGE_KEY, nextShell);
   }, []);
@@ -495,6 +536,20 @@ export function NamiThemeProvider(props: { children: ReactNode }): ReactElement 
     setCustomColors(DEFAULT_CUSTOM);
     window.localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(DEFAULT_CUSTOM));
   }, []);
+
+  useEffect(() => {
+    const clamped = clampAppearanceForTier(appearanceTier, uiShell, mode);
+
+    if (clamped.uiShell !== uiShell) {
+      setUiShellState(clamped.uiShell);
+      window.localStorage.setItem(UI_SHELL_STORAGE_KEY, clamped.uiShell);
+    }
+
+    if (clamped.mode !== mode) {
+      setModeState(clamped.mode);
+      window.localStorage.setItem(STORAGE_KEY, clamped.mode);
+    }
+  }, [appearanceTier, mode, uiShell]);
 
   useEffect(() => {
     applyThemeToDocument(mode, customColors, uiShell);
@@ -541,8 +596,14 @@ const SHELL_OPTIONS: Array<{
   {
     id: 'glass',
     label: 'Modern Glass',
-    detail: 'Apple-style frosted glass with heavy blur, soft highlights, and readable depth.',
+    detail: 'Frosted glass with blur, soft highlights, and readable depth.',
     previewClass: 'settings-appearance-shell-preview-glass',
+  },
+  {
+    id: 'pixel',
+    label: 'Pixel Retro',
+    detail: 'Blocky retro fonts and hard pixel edges. Elite only.',
+    previewClass: 'settings-appearance-shell-preview-pixel',
   },
 ];
 
@@ -612,14 +673,19 @@ function ThemeModePreview({
 export function ThemeSettingsPanel(): ReactElement {
   const { mode, uiShell, customColors, setMode, setUiShell, setCustomColor, resetCustomColors } =
     useNamiTheme();
+  const appearanceTier = appearanceTierForMember(getSelfMember());
 
   return (
     <article className="panel settings-card settings-theme-card">
       <div className="profile-panel-heading">
         <h2>Appearance</h2>
         <p>
-          Choose how Nami looks on your device. Game channel brand colors stay controlled by
-          channel owners.
+          Interface and color options unlock with membership tier. NPC members use Classic Default
+          and Nami Default only. Adventurers add Modern Glass plus dark and light modes. Pro unlocks
+          Custom Mode. Elite adds Pixel Retro.
+        </p>
+        <p className="settings-appearance-tier-note">
+          Your tier: <strong>{appearanceTier}</strong>
         </p>
       </div>
 
@@ -632,24 +698,41 @@ export function ThemeSettingsPanel(): ReactElement {
         >
           {SHELL_OPTIONS.map((option) => {
             const active = uiShell === option.id;
+            const allowed = isUiShellAllowed(appearanceTier, option.id);
+            const requiredTier = requiredTierForUiShell(option.id);
 
             return (
               <button
                 aria-checked={active}
+                aria-disabled={!allowed}
                 className={
-                  'settings-appearance-option' + (active ? ' is-active-appearance-option' : '')
+                  'settings-appearance-option' +
+                  (active ? ' is-active-appearance-option' : '') +
+                  (!allowed ? ' is-locked-appearance-option' : '')
                 }
+                disabled={!allowed}
                 key={option.id}
-                onClick={() => setUiShell(option.id)}
+                onClick={() => {
+                  if (allowed) {
+                    setUiShell(option.id);
+                  }
+                }}
                 role="radio"
+                title={!allowed ? requiredTier + ' membership required' : undefined}
                 type="button"
               >
                 <span className={'settings-appearance-option-preview ' + option.previewClass} />
                 <span className="settings-appearance-option-copy">
                   <strong>{option.label}</strong>
-                  <small>{option.detail}</small>
+                  <small>
+                    {allowed ? option.detail : requiredTier + ' membership required'}
+                  </small>
                 </span>
-                <AppearanceOptionCheck active={active} />
+                {!allowed ? (
+                  <span className="settings-appearance-tier-lock">{requiredTier}</span>
+                ) : (
+                  <AppearanceOptionCheck active={active} />
+                )}
               </button>
             );
           })}
@@ -665,31 +748,48 @@ export function ThemeSettingsPanel(): ReactElement {
         >
           {MODE_OPTIONS.map((option) => {
             const active = mode === option.id;
+            const allowed = isThemeModeAllowed(appearanceTier, option.id);
+            const requiredTier = requiredTierForThemeMode(option.id);
 
             return (
               <button
                 aria-checked={active}
+                aria-disabled={!allowed}
                 className={
-                  'settings-appearance-option' + (active ? ' is-active-appearance-option' : '')
+                  'settings-appearance-option' +
+                  (active ? ' is-active-appearance-option' : '') +
+                  (!allowed ? ' is-locked-appearance-option' : '')
                 }
+                disabled={!allowed}
                 key={option.id}
-                onClick={() => setMode(option.id)}
+                onClick={() => {
+                  if (allowed) {
+                    setMode(option.id);
+                  }
+                }}
                 role="radio"
+                title={!allowed ? requiredTier + ' membership required' : undefined}
                 type="button"
               >
                 <ThemeModePreview customColors={customColors} option={option.id} />
                 <span className="settings-appearance-option-copy">
                   <strong>{option.label}</strong>
-                  <small>{option.detail}</small>
+                  <small>
+                    {allowed ? option.detail : requiredTier + ' membership required'}
+                  </small>
                 </span>
-                <AppearanceOptionCheck active={active} />
+                {!allowed ? (
+                  <span className="settings-appearance-tier-lock">{requiredTier}</span>
+                ) : (
+                  <AppearanceOptionCheck active={active} />
+                )}
               </button>
             );
           })}
         </div>
       </section>
 
-      {mode === 'custom' ? (
+      {mode === 'custom' && isThemeModeAllowed(appearanceTier, 'custom') ? (
         <div className="settings-theme-custom-grid">
           {(
             [
