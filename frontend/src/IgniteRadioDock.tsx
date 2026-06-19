@@ -178,7 +178,10 @@ export function IgniteRadioDock(): ReactElement | null {
           onPointerDown={(event) => event.stopPropagation()}
           type="button"
         >
-          {collapsed ? '▾' : '▴'}
+          <span className="ignite-radio-collapse-icon" aria-hidden="true">
+            {collapsed ? '▾' : '▴'}
+          </span>
+          <span>{collapsed ? 'Expand' : 'Collapse'}</span>
         </button>
       </div>
 
