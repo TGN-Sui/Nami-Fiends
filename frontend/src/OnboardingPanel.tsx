@@ -22,11 +22,13 @@ import {
   ONBOARDING_ACTS,
   type OnboardingAct,
 } from './onboarding.js';
+import { linkMemberSessionAuth } from './member-auth-link-store.js';
 import {
   completeSignupFromDraft,
   isDraftReadyForSignup,
 } from './member-session-store.js';
 import { PlayerScorePanel } from './PlayerScorePanel.js';
+import { useProtocolOwner } from './wallet.js';
 
 interface OnboardingPanelProps {
   onEnterHub?: () => void;
@@ -38,6 +40,7 @@ function isValidEmail(value: string): boolean {
 }
 
 export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
+  const { owner, source } = useProtocolOwner();
   const [act, setAct] = useState<OnboardingAct>('create');
   const [draft, setDraft] = useState<OnboardingDraft>(() => {
     return loadOnboardingDraft() ?? createEmptyDraft();
@@ -81,6 +84,13 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
       setSignupError('Could not complete signup. Check your details and try again.');
       return;
     }
+
+    linkMemberSessionAuth(session, {
+      email: session.email,
+      xHandle: draft.socialXVerified ? draft.socialXHandle : null,
+      zkLoginAddress: source === 'zklogin' ? owner : null,
+      walletAddress: source === 'wallet' ? owner : null,
+    });
 
     props.onEnterHub?.();
   }

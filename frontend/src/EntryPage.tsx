@@ -11,23 +11,21 @@ import {
   LANDING_PILLARS,
   LANDING_STEPS,
 } from './landing-content.js';
+import { EntryLoginPanel } from './EntryLoginPanel.js';
 import { clearSignedOut } from './member-auth-store.js';
+import { restoreMemberSessionByZkLoginAddress } from './member-auth-link-store.js';
 import {
-  authenticateMemberCredentials,
   clearMemberSession,
   hasActiveMemberSession,
   useMemberSession,
 } from './member-session-store.js';
+import { getZkLoginSession } from './zklogin.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { GameOnboardingPanel } from './GameOnboardingPanel.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
 import { OnboardingRoleSelector, type OnboardingRole } from './OnboardingRoleSelector.js';
 
 const GENRE_SHOWCASE_POP_HIGHLIGHT_MS = 1200;
-
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
 
 type EntryGateMode = 'choose' | 'sign-in';
 
@@ -39,9 +37,6 @@ function EntryGatePanel(props: {
 }): ReactElement {
   const session = useMemberSession();
   const [mode, setMode] = useState<EntryGateMode>('choose');
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [signInError, setSignInError] = useState<string | null>(null);
 
   if (hasActiveMemberSession() && session) {
     return (
@@ -79,12 +74,10 @@ function EntryGatePanel(props: {
   }
 
   if (mode === 'sign-in') {
-    const signInReady = isValidEmail(email) && displayName.trim().length >= 2;
-
     return (
-      <article className="nami-entry-gate-dialog panel">
+      <article className="nami-entry-gate-dialog panel nami-entry-gate-dialog-login">
         <button
-          aria-label="Close sign in"
+          aria-label="Close log in"
           className="nami-entry-gate-close"
           onClick={props.onClose}
           type="button"
@@ -92,63 +85,13 @@ function EntryGatePanel(props: {
           Close
         </button>
 
-        <div className="nami-entry-gate-copy">
-          <span className="mini-badge">Returning member</span>
-          <h2 id="nami-entry-gate-title">Sign in with your credentials</h2>
-          <p>Use the same display name and email from your Nami signup.</p>
-        </div>
-
-        <form
-          className="nami-entry-gate-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setSignInError(null);
-
-            const restored = authenticateMemberCredentials(email, displayName);
-
-            if (!restored) {
-              setSignInError('No account matched those credentials. Try again or start onboarding.');
-              return;
-            }
-
+        <EntryLoginPanel
+          onBack={() => setMode('choose')}
+          onLoginSuccess={() => {
             clearSignedOut();
             props.onClose();
           }}
-        >
-          <label className="onboarding-field">
-            <span>Display name</span>
-            <input
-              autoComplete="username"
-              maxLength={32}
-              onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="How friends see you"
-              type="text"
-              value={displayName}
-            />
-          </label>
-
-          <label className="onboarding-field">
-            <span>Email</span>
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              type="email"
-              value={email}
-            />
-          </label>
-
-          {signInError ? <p className="nami-entry-gate-error">{signInError}</p> : null}
-
-          <div className="nami-entry-gate-actions">
-            <button className="primary-action" disabled={!signInReady} type="submit">
-              Sign in
-            </button>
-            <button className="secondary-action" onClick={() => setMode('choose')} type="button">
-              Back
-            </button>
-          </div>
-        </form>
+        />
       </article>
     );
   }
@@ -166,16 +109,16 @@ function EntryGatePanel(props: {
 
       <div className="nami-entry-gate-copy">
         <span className="mini-badge">Enter Nami</span>
-        <h2 id="nami-entry-gate-title">Sign in or sign up</h2>
+        <h2 id="nami-entry-gate-title">Log in or sign up</h2>
         <p>
-          Returning members can sign in with their signup credentials. New users choose Gamer or
-          Game before starting onboarding.
+          Log in with Google, email, X, or your wallet. Sign up to choose Gamer or Game and create
+          your passport.
         </p>
       </div>
 
       <div className="nami-entry-gate-actions">
         <button className="primary-action" onClick={() => setMode('sign-in')} type="button">
-          Sign in with credentials
+          Log in
         </button>
         <button
           className="secondary-action"
@@ -415,6 +358,20 @@ export function EntryPage(props: {
   function openEntryGate(): void {
     props.onRequestEntryGate?.();
   }
+
+  useEffect(() => {
+    const zkSession = getZkLoginSession();
+
+    if (!zkSession) {
+      return;
+    }
+
+    const restored = restoreMemberSessionByZkLoginAddress(zkSession.address);
+
+    if (restored) {
+      clearSignedOut();
+    }
+  }, []);
 
   function handleRoleSelection(role: OnboardingRole): void {
     setOnboardingRole(role);
