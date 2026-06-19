@@ -9506,21 +9506,52 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 }
 
 .ignite-radio-drag-handle {
-  display: grid;
-  gap: 2px;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 10px;
   border-bottom: 1px solid rgba(117, 215, 255, 0.14);
-  cursor: grab;
   user-select: none;
 }
 
-.ignite-radio-drag-handle:active {
+.ignite-radio-dock.is-ignite-radio-collapsed .ignite-radio-drag-handle {
+  border-bottom: 0;
+}
+
+.ignite-radio-drag-surface {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  cursor: grab;
+}
+
+.ignite-radio-drag-surface:active {
   cursor: grabbing;
 }
 
-.ignite-radio-drag-handle small {
+.ignite-radio-drag-surface small {
   color: rgba(180, 205, 230, 0.72);
   font-size: 0.68rem;
+}
+
+.ignite-radio-collapse-toggle {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(5, 9, 15, 0.72);
+  color: rgba(223, 236, 250, 0.9);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ignite-radio-collapse-toggle:hover,
+.ignite-radio-collapse-toggle:focus-visible {
+  border-color: rgba(117, 215, 255, 0.42);
+  background: rgba(117, 215, 255, 0.12);
 }
 
 .ignite-radio-embed-inner {

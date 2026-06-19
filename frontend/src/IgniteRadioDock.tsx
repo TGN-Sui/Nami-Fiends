@@ -9,7 +9,9 @@ import { createPortal } from 'react-dom';
 
 import {
   readIgniteRadioPosition,
+  saveIgniteRadioCollapsed,
   saveIgniteRadioPosition,
+  useIgniteRadioCollapsed,
   useIgniteRadioEnabled,
   type IgniteRadioPosition,
 } from './ignite-radio-store.js';
@@ -17,14 +19,16 @@ import {
 const EMBED_SRC =
   'https://igniteradio.xyz/embed/?s=gmyth-radio&skin=minimal&accent=black&radius=sm&size=compact&art=0&brand=0&viz=pulse&transparent=1';
 const DOCK_WIDTH_PX = 320;
-const DOCK_HEIGHT_PX = 164;
+const DOCK_COLLAPSED_HEIGHT_PX = 44;
+const DOCK_EXPANDED_HEIGHT_PX = 164;
 const EMBED_HEIGHT_PX = 120;
 const DEFAULT_TOP_PX = 148;
 const DEFAULT_RIGHT_PX = 28;
 
-function clampDockPosition(position: IgniteRadioPosition): IgniteRadioPosition {
+function clampDockPosition(position: IgniteRadioPosition, collapsed: boolean): IgniteRadioPosition {
+  const dockHeight = collapsed ? DOCK_COLLAPSED_HEIGHT_PX : DOCK_EXPANDED_HEIGHT_PX;
   const maxX = Math.max(12, window.innerWidth - DOCK_WIDTH_PX - 12);
-  const maxY = Math.max(12, window.innerHeight - DOCK_HEIGHT_PX - 12);
+  const maxY = Math.max(12, window.innerHeight - dockHeight - 12);
 
   return {
     x: Math.min(Math.max(12, position.x), maxX),
@@ -32,17 +36,21 @@ function clampDockPosition(position: IgniteRadioPosition): IgniteRadioPosition {
   };
 }
 
-function defaultDockPosition(): IgniteRadioPosition {
-  return clampDockPosition({
-    x: window.innerWidth - DOCK_WIDTH_PX - DEFAULT_RIGHT_PX,
-    y: DEFAULT_TOP_PX,
-  });
+function defaultDockPosition(collapsed: boolean): IgniteRadioPosition {
+  return clampDockPosition(
+    {
+      x: window.innerWidth - DOCK_WIDTH_PX - DEFAULT_RIGHT_PX,
+      y: DEFAULT_TOP_PX,
+    },
+    collapsed,
+  );
 }
 
 export function IgniteRadioDock(): ReactElement | null {
   const enabled = useIgniteRadioEnabled();
+  const collapsed = useIgniteRadioCollapsed();
   const [position, setPosition] = useState<IgniteRadioPosition>(() => {
-    return readIgniteRadioPosition() ?? defaultDockPosition();
+    return readIgniteRadioPosition() ?? defaultDockPosition(collapsed);
   });
   const dragRef = useRef<{
     pointerId: number;
@@ -58,13 +66,13 @@ export function IgniteRadioDock(): ReactElement | null {
     }
 
     function handleResize(): void {
-      setPosition((current) => clampDockPosition(current));
+      setPosition((current) => clampDockPosition(current, collapsed));
     }
 
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [enabled]);
+  }, [collapsed, enabled]);
 
   useEffect(() => {
     if (!enabled) {
@@ -72,8 +80,8 @@ export function IgniteRadioDock(): ReactElement | null {
     }
 
     const stored = readIgniteRadioPosition();
-    setPosition(stored ?? defaultDockPosition());
-  }, [enabled]);
+    setPosition((current) => clampDockPosition(stored ?? current, collapsed));
+  }, [collapsed, enabled]);
 
   if (!enabled) {
     return null;
@@ -103,10 +111,13 @@ export function IgniteRadioDock(): ReactElement | null {
     const deltaY = event.clientY - dragRef.current.startY;
 
     setPosition(
-      clampDockPosition({
-        x: dragRef.current.originX + deltaX,
-        y: dragRef.current.originY + deltaY,
-      })
+      clampDockPosition(
+        {
+          x: dragRef.current.originX + deltaX,
+          y: dragRef.current.originY + deltaY,
+        },
+        collapsed,
+      ),
     );
   }
 
@@ -121,10 +132,13 @@ export function IgniteRadioDock(): ReactElement | null {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    const nextPosition = clampDockPosition({
-      x: dragState.originX + (event.clientX - dragState.startX),
-      y: dragState.originY + (event.clientY - dragState.startY),
-    });
+    const nextPosition = clampDockPosition(
+      {
+        x: dragState.originX + (event.clientX - dragState.startX),
+        y: dragState.originY + (event.clientY - dragState.startY),
+      },
+      collapsed,
+    );
 
     dragRef.current = null;
     setPosition(nextPosition);
@@ -133,7 +147,7 @@ export function IgniteRadioDock(): ReactElement | null {
 
   return createPortal(
     <div
-      className="ignite-radio-dock"
+      className={'ignite-radio-dock' + (collapsed ? ' is-ignite-radio-collapsed' : '')}
       id="ignite-radio-embed-dock"
       style={{
         left: position.x + 'px',
@@ -141,31 +155,46 @@ export function IgniteRadioDock(): ReactElement | null {
         width: DOCK_WIDTH_PX + 'px',
       }}
     >
-      <div
-        aria-label="Drag Ignite Radio player"
-        className="ignite-radio-drag-handle"
-        onPointerCancel={endDrag}
-        onPointerDown={startDrag}
-        onPointerMove={moveDrag}
-        onPointerUp={endDrag}
-        role="button"
-        tabIndex={0}
-      >
-        <span className="mini-badge">Ignite Radio</span>
-        <small>Drag to reposition</small>
+      <div className="ignite-radio-drag-handle">
+        <div
+          aria-label="Drag Ignite Radio player"
+          className="ignite-radio-drag-surface"
+          onPointerCancel={endDrag}
+          onPointerDown={startDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={endDrag}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="mini-badge">Ignite Radio</span>
+          <small>{collapsed ? 'Collapsed — expand to listen' : 'Drag to reposition'}</small>
+        </div>
+
+        <button
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Expand Ignite Radio player' : 'Collapse Ignite Radio player'}
+          className="ignite-radio-collapse-toggle"
+          onClick={() => saveIgniteRadioCollapsed(!collapsed)}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {collapsed ? '▾' : '▴'}
+        </button>
       </div>
 
-      <div className="ignite-radio-embed-inner">
-        <iframe
-          allow="autoplay"
-          className="ignite-radio-embed-frame"
-          height={EMBED_HEIGHT_PX}
-          loading="lazy"
-          src={EMBED_SRC}
-          title="Ignite Radio Player"
-          width="100%"
-        />
-      </div>
+      {collapsed ? null : (
+        <div className="ignite-radio-embed-inner">
+          <iframe
+            allow="autoplay"
+            className="ignite-radio-embed-frame"
+            height={EMBED_HEIGHT_PX}
+            loading="lazy"
+            src={EMBED_SRC}
+            title="Ignite Radio Player"
+            width="100%"
+          />
+        </div>
+      )}
     </div>,
     document.body
   );

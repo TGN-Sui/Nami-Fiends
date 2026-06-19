@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'nami.ignite-radio.enabled';
 const POSITION_KEY = 'nami.ignite-radio.position';
+const COLLAPSED_KEY = 'nami.ignite-radio.collapsed';
 
 export type IgniteRadioPosition = {
   x: number;
@@ -53,6 +54,27 @@ export function saveIgniteRadioPosition(position: IgniteRadioPosition): void {
 export function clearIgniteRadioPosition(): void {
   window.localStorage.removeItem(POSITION_KEY);
   window.dispatchEvent(new CustomEvent('nami-ignite-radio-changed'));
+}
+
+function readCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(COLLAPSED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function readIgniteRadioCollapsed(): boolean {
+  return readCollapsed();
+}
+
+export function saveIgniteRadioCollapsed(collapsed: boolean): void {
+  window.localStorage.setItem(COLLAPSED_KEY, collapsed ? 'true' : 'false');
+  window.dispatchEvent(new CustomEvent('nami-ignite-radio-changed'));
+}
+
+export function useIgniteRadioCollapsed(): boolean {
+  return useSyncExternalStore(subscribeIgniteRadio, readCollapsed, () => false);
 }
 
 function subscribeIgniteRadio(onStoreChange: () => void): () => void {
