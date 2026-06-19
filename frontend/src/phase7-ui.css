@@ -10059,7 +10059,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 
 .is-nami-rainbow-foil-border:not(.uniform-member-avatar):not(button.uniform-member-avatar):not(
     .pinned-profile-avatar
-  ):not(.crypto-community-bubble)::before {
+  ):not(.crypto-community-bubble):not(.is-nami-official-galaxy-spotlight)::before {
   content: '';
   position: absolute;
   inset: -3px;
@@ -10106,21 +10106,30 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
 }
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border {
-  overflow: hidden !important;
+  overflow: visible !important;
   border: 3px solid transparent !important;
+  background: transparent !important;
 }
 
-.member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border.is-pro-spotlight-member::before,
-.member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border.is-elite-spotlight-member::before {
+.member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border::before,
+.member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border::after {
   display: none !important;
+  content: none !important;
+}
+
+.member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border
+  > .member-spotlight-rainbow-border {
+  display: block !important;
+  border-radius: inherit;
 }
 
 .member-spotlight-rainbow-border {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
+  position: absolute !important;
+  inset: -3px !important;
+  z-index: 6 !important;
   border-radius: inherit;
   padding: 3px;
+  box-sizing: border-box;
   pointer-events: none;
   background: conic-gradient(
     from var(--nami-rainbow-angle),
@@ -10156,6 +10165,7 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
     animation: none !important;
     will-change: auto;
   }
+
 }
 
 .member-spotlight-bubble-lane,
@@ -10285,6 +10295,15 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-avatar-frame {
   background: rgba(4, 8, 18, 0.9);
+}
+
+.member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-bubble-lane,
+.member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-glitter-lane,
+.member-spotlight-card.is-nami-official-galaxy-spotlight > .member-spotlight-foil,
+.member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-float-bubble,
+.member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-avatar.is-pro-surface::after,
+.member-spotlight-card.is-nami-official-galaxy-spotlight .member-spotlight-avatar.is-elite-surface::after {
+  display: none !important;
 }
 
 .member-spotlight-copy {
@@ -10429,11 +10448,12 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
 }
 
 .member-spotlight-avatar-rainbow-border {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  border-radius: 14px;
+  position: absolute !important;
+  inset: -3px !important;
+  z-index: 4 !important;
+  border-radius: inherit;
   padding: 3px;
+  box-sizing: border-box;
   pointer-events: none;
   background: conic-gradient(
     from var(--nami-rainbow-angle),
@@ -10453,7 +10473,11 @@ button.member-spotlight-avatar.uniform-member-avatar.is-nami-rainbow-foil-border
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  animation: none;
+}
+
+.member-spotlight-avatar-frame:has(.member-spotlight-avatar-rainbow-border) {
+  overflow: visible;
 }
 
 .member-spotlight-avatar-frame:has(.member-spotlight-avatar-rainbow-border) .member-spotlight-avatar.is-nami-rainbow-foil-border {
@@ -10618,7 +10642,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     170% 170%,
     150% 150%,
     100% 100%;
-  animation: nami-official-galaxy-drift 20s ease-in-out infinite alternate;
+  animation: nami-official-galaxy-drift 9s ease-in-out infinite alternate;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05) inset,
     0 18px 46px rgba(0, 0, 0, 0.42),
@@ -10671,7 +10695,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     radial-gradient(1px 1px at 64% 88%, rgba(255, 255, 255, 0.68), transparent 70%),
     radial-gradient(1.2px 1.2px at 78% 76%, rgba(255, 255, 255, 0.74), transparent 70%),
     radial-gradient(1px 1px at 90% 62%, rgba(255, 255, 255, 0.6), transparent 70%);
-  animation: nami-official-galaxy-twinkle-a 5.2s ease-in-out infinite alternate;
+  animation: nami-official-galaxy-twinkle-a 2.6s ease-in-out infinite alternate;
 }
 
 .tcg-foil-passport-shell.is-nami-official-galaxy-passport .nami-official-galaxy-sky::after,
@@ -10686,8 +10710,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     radial-gradient(1px 1px at 22% 58%, rgba(255, 255, 255, 0.5), transparent 70%),
     radial-gradient(1.2px 1.2px at 56% 14%, rgba(200, 230, 255, 0.46), transparent 70%),
     radial-gradient(1px 1px at 70% 66%, rgba(255, 255, 255, 0.44), transparent 70%);
-  animation: nami-official-galaxy-twinkle-b 7.4s ease-in-out infinite alternate;
-  animation-delay: -2.6s;
+  animation: nami-official-galaxy-twinkle-b 3.6s ease-in-out infinite alternate;
+  animation-delay: -1.3s;
 }
 
 .tcg-foil-passport-shell.is-nami-official-galaxy-passport .nami-official-galaxy-shooting-star,
@@ -10711,13 +10735,13 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     0 0 16px rgba(117, 215, 255, 0.22);
   opacity: 0;
   transform: rotate(-32deg) translate3d(0, 0, 0);
-  animation: nami-official-galaxy-shooting-star 14s ease-in-out infinite;
+  animation: nami-official-galaxy-shooting-star 7s ease-in-out infinite;
 }
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight {
   position: relative;
   isolation: isolate;
-  overflow: hidden !important;
+  overflow: visible !important;
   background: transparent !important;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05) inset,
@@ -10732,6 +10756,22 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   -webkit-backdrop-filter: none !important;
 }
 
+[data-nami-ui='glass'] .member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border,
+[data-nami-ui='pixel'] .member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border {
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+[data-nami-ui='pixel']
+  .member-spotlight-card.is-nami-official-galaxy-spotlight.is-nami-rainbow-foil-border
+  > .member-spotlight-rainbow-border {
+  border-radius: inherit !important;
+}
+
+[data-nami-ui='pixel'] .member-spotlight-card.is-nami-official-galaxy-spotlight > .nami-official-galaxy-sky {
+  border-radius: 0 !important;
+}
+
 .member-spotlight-card.is-nami-official-galaxy-spotlight > .nami-official-galaxy-sky {
   position: absolute !important;
   inset: 0 !important;
@@ -10739,7 +10779,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   height: 100% !important;
   z-index: 0 !important;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 13px;
   pointer-events: none;
   background:
     radial-gradient(circle at 18% 24%, rgba(155, 93, 229, 0.5), transparent 24%),
@@ -10795,7 +10835,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     radial-gradient(2.6px 2.6px at 56% 14%, rgba(220, 240, 255, 0.76), transparent 52%),
     radial-gradient(2px 2px at 70% 66%, rgba(255, 255, 255, 0.72), transparent 50%);
   animation: none;
-  animation-delay: -1.8s;
+  animation-delay: -0.9s;
 }
 
 .member-spotlight-card.is-nami-official-galaxy-spotlight .nami-official-galaxy-shooting-star {
@@ -10990,7 +11030,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   }
 }
 
-.is-nami-rainbow-foil-border > *:not(.member-spotlight-content) {
+.is-nami-rainbow-foil-border
+  > *:not(.member-spotlight-content):not(.member-spotlight-rainbow-border):not(.nami-official-galaxy-sky):not(
+    .member-spotlight-foil
+  ):not(.member-spotlight-bubble-lane):not(.member-spotlight-glitter-lane) {
   position: relative;
   z-index: 1;
 }
@@ -12043,29 +12086,31 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   }
 
   .member-spotlight-card:hover .member-spotlight-rainbow-border,
-  .member-spotlight-card:focus-visible .member-spotlight-rainbow-border {
+  .member-spotlight-card:focus-visible .member-spotlight-rainbow-border,
+  .member-spotlight-card:hover .member-spotlight-avatar-rainbow-border,
+  .member-spotlight-card:focus-visible .member-spotlight-avatar-rainbow-border {
     animation: namiRainbowFoilBorder 4.8s linear infinite;
   }
 
   .member-spotlight-card.is-nami-official-galaxy-spotlight:hover > .nami-official-galaxy-sky,
   .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible > .nami-official-galaxy-sky {
-    animation: nami-official-galaxy-spotlight-drift 14s ease-in-out infinite alternate;
+    animation: nami-official-galaxy-spotlight-drift 5s ease-in-out infinite alternate;
   }
 
   .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-sky::before,
   .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-sky::before {
-    animation: nami-official-galaxy-spotlight-twinkle-a 3.6s ease-in-out infinite alternate;
+    animation: nami-official-galaxy-spotlight-twinkle-a 1.2s ease-in-out infinite alternate;
   }
 
   .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-sky::after,
   .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-sky::after {
-    animation: nami-official-galaxy-spotlight-twinkle-b 5s ease-in-out infinite alternate;
-    animation-delay: -1.8s;
+    animation: nami-official-galaxy-spotlight-twinkle-b 1.6s ease-in-out infinite alternate;
+    animation-delay: -0.6s;
   }
 
   .member-spotlight-card.is-nami-official-galaxy-spotlight:hover .nami-official-galaxy-shooting-star,
   .member-spotlight-card.is-nami-official-galaxy-spotlight:focus-visible .nami-official-galaxy-shooting-star {
-    animation: nami-official-galaxy-spotlight-shooting-star 10s ease-in-out infinite;
+    animation: nami-official-galaxy-spotlight-shooting-star 3.5s ease-in-out infinite;
   }
 
   .member-spotlight-card:hover .member-spotlight-avatar.is-elite-surface::after,

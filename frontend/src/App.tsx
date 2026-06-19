@@ -1213,14 +1213,15 @@ function NamiHub(props: {
           <div className="member-spotlight-grid">
             {spotlightMembers.map(({ member, slotId }) => {
               const progression = getNamiProgression(member);
+              const isOfficialNamiSpotlight = isNamiTeamMember(member);
 
               return (
                 <button
                   className={
                       'member-spotlight-card ' +
-                      (member.tier === 'Elite'
+                      (!isOfficialNamiSpotlight && member.tier === 'Elite'
                         ? 'is-elite-spotlight-member is-elite-surface '
-                        : member.tier === 'Pro'
+                        : !isOfficialNamiSpotlight && member.tier === 'Pro'
                           ? 'is-pro-spotlight-member is-pro-surface '
                           : '') +
                       (member.tier === 'NPC' || member.signal === 'Black' ? 'is-npc-member ' : '') +
@@ -1228,23 +1229,22 @@ function NamiHub(props: {
                         ? 'is-verified-spotlight-member'
                         : '') +
                       memberRainbowBorderClass(member) +
-                      (isNamiTeamMember(member) ? ' is-nami-official-galaxy-spotlight' : '')
+                      (isOfficialNamiSpotlight ? ' is-nami-official-galaxy-spotlight' : '')
                     }
                   key={slotId}
                   onClick={() => props.onOpenMember(member)}
                   type="button"
                 >
-                  {isNamiTeamMember(member) ? (
-                    <div aria-hidden="true" className="nami-official-galaxy-sky">
-                      <span className="nami-official-galaxy-shooting-star" />
-                    </div>
+                  {isOfficialNamiSpotlight ? (
+                    <>
+                      <div aria-hidden="true" className="nami-official-galaxy-sky">
+                        <span className="nami-official-galaxy-shooting-star" />
+                      </div>
+                      <span aria-hidden="true" className="member-spotlight-rainbow-border" />
+                    </>
                   ) : null}
 
-                  {isNamiTeamMember(member) ? (
-                    <span aria-hidden="true" className="member-spotlight-rainbow-border" />
-                  ) : null}
-
-                  {member.tier === 'Pro' ? (
+                  {!isOfficialNamiSpotlight && member.tier === 'Pro' ? (
                     <span
                       aria-hidden="true"
                       className="member-spotlight-bubble-lane"
@@ -1281,7 +1281,7 @@ function NamiHub(props: {
                     </span>
                   ) : null}
 
-                  {member.tier === 'Elite' ? (
+                  {!isOfficialNamiSpotlight && member.tier === 'Elite' ? (
                     <span
                       aria-hidden="true"
                       className="member-spotlight-glitter-lane"
@@ -1324,12 +1324,14 @@ function NamiHub(props: {
                     </span>
                   ) : null}
 
-                  <span className="member-spotlight-foil" aria-hidden="true" />
+                  {!isOfficialNamiSpotlight ? (
+                    <span className="member-spotlight-foil" aria-hidden="true" />
+                  ) : null}
 
                   <div className="member-spotlight-content">
                     <div className="member-spotlight-avatar-wrap">
                       <div className="member-spotlight-avatar-frame">
-                        {isNamiTeamMember(member) ? (
+                        {isOfficialNamiSpotlight ? (
                           <span aria-hidden="true" className="member-spotlight-avatar-rainbow-border" />
                         ) : null}
                         <UniformMemberAvatar className="member-spotlight-avatar" member={member} />
