@@ -238,12 +238,7 @@ import {
   subscribeVisibilityPause,
 } from './perf-utils.js';
 import { IgniteRadioDock } from './IgniteRadioDock.js';
-import {
-  saveIgniteRadioCollapsed,
-  saveIgniteRadioEnabled,
-  useIgniteRadioCollapsed,
-  useIgniteRadioEnabled,
-} from './ignite-radio-store.js';
+import { saveIgniteRadioEnabled, useIgniteRadioEnabled } from './ignite-radio-store.js';
 import {
   readMemberPreference,
   saveMemberPreference,
@@ -698,7 +693,6 @@ function Sidebar(props: {
   onHubSwap: (page: 'hub' | 'gamehub') => void;
 }): ReactElement {
   const igniteRadioEnabled = useIgniteRadioEnabled();
-  const igniteRadioCollapsed = useIgniteRadioCollapsed();
   const [hubSwapIdleHint, setHubSwapIdleHint] = useState(false);
   const isOnGameHub = props.activePage === 'gamehub';
   const isOnNamiHub = props.activePage === 'hub';
@@ -892,26 +886,6 @@ function Sidebar(props: {
             />
             <span className="sidebar-nav-label">{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
           </button>
-
-          {igniteRadioEnabled ? (
-            <button
-              aria-expanded={!igniteRadioCollapsed}
-              aria-label={igniteRadioCollapsed ? 'Expand radio player' : 'Collapse radio player'}
-              className={
-                'sidebar-radio-collapse-toggle' +
-                (igniteRadioCollapsed ? ' is-radio-player-collapsed' : '')
-              }
-              onClick={() => saveIgniteRadioCollapsed(!igniteRadioCollapsed)}
-              type="button"
-            >
-              <span className="sidebar-radio-collapse-icon" aria-hidden="true">
-                {igniteRadioCollapsed ? '▾' : '▴'}
-              </span>
-              <span className="sidebar-nav-label">
-                {igniteRadioCollapsed ? 'Show player' : 'Collapse player'}
-              </span>
-            </button>
-          ) : null}
         </div>
       </div>
     </aside>
