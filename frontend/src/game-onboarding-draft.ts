@@ -1,3 +1,5 @@
+import { contactFieldBlocksContinue } from './contact-code-verification-store.js';
+
 const STORAGE_KEY = 'nami.game.onboarding.draft';
 
 export type GameOfficialSocialPlatform = 'x' | 'twitch';
@@ -9,7 +11,9 @@ export interface GameOnboardingDraft {
   studioName: string;
   contactName: string;
   email: string;
+  emailVerified: boolean;
   phone: string;
+  phoneVerified: boolean;
   websiteUrl: string;
   storePageUrl: string;
   trailerUrl: string;
@@ -32,7 +36,9 @@ export function createEmptyGameOnboardingDraft(): GameOnboardingDraft {
     studioName: '',
     contactName: '',
     email: '',
+    emailVerified: false,
     phone: '',
+    phoneVerified: false,
     websiteUrl: '',
     storePageUrl: '',
     trailerUrl: '',
@@ -67,7 +73,9 @@ export function loadGameOnboardingDraft(): GameOnboardingDraft | null {
       studioName: typeof parsed.studioName === 'string' ? parsed.studioName : '',
       contactName: typeof parsed.contactName === 'string' ? parsed.contactName : '',
       email: typeof parsed.email === 'string' ? parsed.email : '',
+      emailVerified: parsed.emailVerified === true,
       phone: typeof parsed.phone === 'string' ? parsed.phone : '',
+      phoneVerified: parsed.phoneVerified === true,
       websiteUrl: typeof parsed.websiteUrl === 'string' ? parsed.websiteUrl : '',
       storePageUrl: typeof parsed.storePageUrl === 'string' ? parsed.storePageUrl : '',
       trailerUrl: typeof parsed.trailerUrl === 'string' ? parsed.trailerUrl : '',
@@ -126,13 +134,32 @@ function isValidPhone(value: string): boolean {
 }
 
 export function isGameIdentityStepReady(draft: GameOnboardingDraft): boolean {
-  return (
+  const baseReady =
     draft.gameTitle.trim().length >= 2 &&
     draft.studioName.trim().length >= 2 &&
-    draft.contactName.trim().length >= 2 &&
-    isValidEmail(draft.email) &&
-    isValidPhone(draft.phone)
-  );
+    draft.contactName.trim().length >= 2;
+
+  if (!baseReady) {
+    return false;
+  }
+
+  if (contactFieldBlocksContinue(draft.email, draft.emailVerified)) {
+    return false;
+  }
+
+  if (contactFieldBlocksContinue(draft.phone, draft.phoneVerified)) {
+    return false;
+  }
+
+  if (draft.email.trim() !== '' && draft.emailVerified && !isValidEmail(draft.email)) {
+    return false;
+  }
+
+  if (draft.phone.trim() !== '' && draft.phoneVerified && !isValidPhone(draft.phone)) {
+    return false;
+  }
+
+  return true;
 }
 
 export function isGameOfficialsStepReady(draft: GameOnboardingDraft): boolean {

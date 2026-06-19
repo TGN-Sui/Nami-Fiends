@@ -1989,6 +1989,53 @@
   gap: 10px;
 }
 
+.contact-code-verification-field {
+  display: grid;
+  gap: 10px;
+}
+
+.contact-code-verification-block {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(4, 10, 18, 0.72);
+}
+
+.contact-code-verification-head {
+  display: grid;
+  gap: 6px;
+}
+
+.contact-code-verification-head h4 {
+  margin: 0;
+}
+
+.contact-code-verification-status {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(8, 14, 24, 0.65);
+}
+
+.contact-code-verification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.contact-code-verification-code-field {
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
+.contact-code-verification-blocker {
+  margin: 0;
+}
+
 .onboarding-role-selector {
   display: grid;
   gap: 18px;

@@ -17,7 +17,9 @@ import {
   type GameSubmissionTicket,
 } from './game-submission-ticket-store.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
+import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
 import { GameOfficialSocialAuthControl } from './GameOfficialSocialAuthControl.js';
+import { isContactVerified } from './contact-code-verification-store.js';
 import {
   clearGameOfficialSocialAuth,
   readGameOfficialSocialAuthState,
@@ -92,7 +94,9 @@ export function GameOnboardingPanel(props: {
     studioName: draft.studioName,
     contactName: draft.contactName,
     email: draft.email,
+    emailVerified: draft.emailVerified,
     phone: draft.phone,
+    phoneVerified: draft.phoneVerified,
     websiteUrl: draft.websiteUrl,
     storePageUrl: draft.storePageUrl,
     trailerUrl: draft.trailerUrl,
@@ -110,6 +114,24 @@ export function GameOnboardingPanel(props: {
       walletAddress,
     });
   }, [draft, walletAddress, walletLinked]);
+
+  useEffect(() => {
+    const emailVerified = isContactVerified('email', draft.email);
+    const phoneVerified = isContactVerified('phone', draft.phone);
+
+    if (
+      emailVerified === draft.emailVerified &&
+      phoneVerified === draft.phoneVerified
+    ) {
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      emailVerified,
+      phoneVerified,
+    }));
+  }, [draft.email, draft.phone, draft.emailVerified, draft.phoneVerified]);
 
   useEffect(() => {
     if (!draft.officialSocialPlatform) {
@@ -315,26 +337,30 @@ export function GameOnboardingPanel(props: {
                 value={draft.contactName}
               />
             </label>
-            <label className="onboarding-field">
-              <span>Business email</span>
-              <input
-                autoComplete="email"
-                onChange={(event) => updateDraft({ email: event.target.value })}
-                placeholder="studio@example.com"
-                type="email"
-                value={draft.email}
-              />
-            </label>
-            <label className="onboarding-field">
-              <span>Phone number</span>
-              <input
-                autoComplete="tel"
-                onChange={(event) => updateDraft({ phone: event.target.value })}
-                placeholder="+1 555 0100"
-                type="tel"
-                value={draft.phone}
-              />
-            </label>
+            <ContactCodeVerificationControl
+              autoComplete="email"
+              channel="email"
+              inputType="email"
+              label="Business email (optional)"
+              onChange={(email) => updateDraft({ email })}
+              onVerifiedChange={(emailVerified) => updateDraft({ emailVerified })}
+              optionalHint="Leave blank to skip email Trust Score. If you enter an address, verify it with a code before continuing."
+              placeholder="studio@example.com"
+              value={draft.email}
+              verified={draft.emailVerified}
+            />
+            <ContactCodeVerificationControl
+              autoComplete="tel"
+              channel="phone"
+              inputType="tel"
+              label="Phone number (optional)"
+              onChange={(phone) => updateDraft({ phone })}
+              onVerifiedChange={(phoneVerified) => updateDraft({ phoneVerified })}
+              optionalHint="Leave blank to skip phone Trust Score. If you enter a number, verify it with a code before continuing."
+              placeholder="+1 555 0100"
+              value={draft.phone}
+              verified={draft.phoneVerified}
+            />
             <button
               className="onboarding-primary-btn"
               disabled={!isGameIdentityStepReady(draft)}

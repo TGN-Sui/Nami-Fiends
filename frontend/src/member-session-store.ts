@@ -220,6 +220,7 @@ export function isDraftReadyForSignup(draft: OnboardingDraft): boolean {
   return (
     draft.displayName.trim().length >= 2 &&
     isValidEmail(draft.email) &&
+    draft.emailVerified &&
     isQuizComplete(draft.quizAnswers)
   );
 }

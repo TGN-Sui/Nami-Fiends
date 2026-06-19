@@ -29,7 +29,9 @@ export type GameTrustScoreInput = {
   studioName: string;
   contactName: string;
   email: string;
+  emailVerified: boolean;
   phone: string;
+  phoneVerified: boolean;
   websiteUrl: string;
   storePageUrl: string;
   trailerUrl: string;
@@ -121,19 +123,21 @@ export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScor
     });
   }
 
-  if (EMAIL_PATTERN.test(input.email.trim())) {
+  if (EMAIL_PATTERN.test(input.email.trim()) && input.emailVerified) {
     identity += 8;
     boosters.push({
       id: 'business-email',
-      label: 'Business email on file',
+      label: 'Verified business email on file',
       points: 8,
       category: 'identity',
     });
+  } else if (input.email.trim() !== '') {
+    suggestions.push('Verify your business email for up to +8 Trust Score.');
   } else {
-    suggestions.push('Add a valid business email for up to +8 Trust Score.');
+    suggestions.push('Add and verify a business email for up to +8 Trust Score.');
   }
 
-  if (PHONE_PATTERN.test(input.phone.trim())) {
+  if (PHONE_PATTERN.test(input.phone.trim()) && input.phoneVerified) {
     identity += 6;
     boosters.push({
       id: 'phone',
@@ -141,8 +145,10 @@ export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScor
       points: 6,
       category: 'identity',
     });
+  } else if (input.phone.trim() !== '') {
+    suggestions.push('Verify your phone number for recovery and +6 Trust Score.');
   } else {
-    suggestions.push('Add a phone number for recovery and +6 Trust Score.');
+    suggestions.push('Add and verify a phone number for recovery and +6 Trust Score.');
   }
 
   if (isValidUrl(input.websiteUrl)) {
@@ -254,7 +260,9 @@ export function computeGameTrustScoreFromDraft(input: {
   studioName: string;
   contactName: string;
   email: string;
+  emailVerified: boolean;
   phone: string;
+  phoneVerified: boolean;
   websiteUrl: string;
   storePageUrl: string;
   trailerUrl: string;

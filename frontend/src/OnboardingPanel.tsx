@@ -22,6 +22,8 @@ import {
   ONBOARDING_ACTS,
   type OnboardingAct,
 } from './onboarding.js';
+import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
+import { isContactVerified } from './contact-code-verification-store.js';
 import { linkMemberSessionAuth } from './member-auth-link-store.js';
 import {
   completeSignupFromDraft,
@@ -50,12 +52,28 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
   const actIndex = getOnboardingActIndex(act);
   const quizComplete = isQuizComplete(draft.quizAnswers);
   const createReady =
-    draft.displayName.trim().length >= 2 && isValidEmail(draft.email) && quizComplete;
+    draft.displayName.trim().length >= 2 &&
+    isValidEmail(draft.email) &&
+    draft.emailVerified &&
+    quizComplete;
   const signupReady = isDraftReadyForSignup(draft);
 
   useEffect(() => {
     saveOnboardingDraft(draft);
   }, [draft]);
+
+  useEffect(() => {
+    const emailVerified = isContactVerified('email', draft.email);
+
+    if (emailVerified === draft.emailVerified) {
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      emailVerified,
+    }));
+  }, [draft.email, draft.emailVerified]);
 
   const updateDraft = useCallback((patch: Partial<OnboardingDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
@@ -140,21 +158,18 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
               />
             </label>
 
-            <label className="onboarding-field">
-              <span>Email</span>
-              <input
-                autoComplete="email"
-                onChange={(event) => updateDraft({ email: event.target.value })}
-                placeholder="you@example.com"
-                type="email"
-                value={draft.email}
-              />
-              {draft.email.trim() !== '' && !isValidEmail(draft.email) ? (
-                <small className="onboarding-field-error">Enter a valid email address.</small>
-              ) : (
-                <small className="protocol-hint">Used for claim review and account recovery notices.</small>
-              )}
-            </label>
+            <ContactCodeVerificationControl
+              autoComplete="email"
+              channel="email"
+              inputType="email"
+              label="Email"
+              onChange={(email) => updateDraft({ email })}
+              onVerifiedChange={(emailVerified) => updateDraft({ emailVerified })}
+              optionalHint="Used for claim review and account recovery notices. Verify with the code we send before continuing."
+              placeholder="you@example.com"
+              value={draft.email}
+              verified={draft.emailVerified}
+            />
 
             <div className="onboarding-quiz-block">
               <h3>Gamer quiz</h3>
