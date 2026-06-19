@@ -5,6 +5,7 @@ import { DEFAULT_MEMBER_AVATAR_PLACEHOLDER_URL } from './default-member-avatar-p
 import { MemberStreamingLiveDot, signalClass } from './member-avatar.js';
 import { resolveMemberAvatarImageUrl, useSelfMember } from './member-avatar-store.js';
 import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
+import { useNamiOwnerAssets } from './nami-owner-assets-store.js';
 import { useMemberStreamingOnline } from './member-online-store.js';
 
 type PinnedProfileAvatarProps = {
@@ -29,9 +30,10 @@ function pinnedAvatarStyle(avatarImageUrl: string | null): CSSProperties {
 
 export function PinnedProfileAvatar(props: PinnedProfileAvatarProps): ReactElement {
   const member = useSelfMember();
+  const persistedAssets = useNamiOwnerAssets();
   const avatarImageUrl =
     resolveMemberAvatarImageUrl(member) ??
-    resolveOwnerAssetUrl('default-member-avatar') ??
+    resolveOwnerAssetUrl('default-member-avatar', persistedAssets) ??
     DEFAULT_MEMBER_AVATAR_PLACEHOLDER_URL;
   const isStreamingOnline = useMemberStreamingOnline(member.id);
 

@@ -1,8 +1,20 @@
 import { useSyncExternalStore } from 'react';
 
 import { isOfficialOwner } from './nami-capabilities.js';
+import {
+  ensureOwnerAssetsHydrated as hydrateOwnerAssetsPersistence,
+  persistOwnerAssets,
+  readPersistedOwnerAssets,
+  resetOwnerAssetsPersistenceForTests,
+} from './owner-assets-persistence.js';
 
-const OWNER_ASSETS_KEY = 'nami.owner.platform-assets';
+export { prepareOwnerAssetImage, readImageFileAsDataUrl } from './owner-asset-image.js';
+
+export async function ensureOwnerAssetsHydrated(): Promise<void> {
+  await hydrateOwnerAssetsPersistence();
+  emit();
+}
+
 const MAX_LOGO_BYTES = 1024 * 1024;
 const MAX_ICON_BYTES = 512 * 1024;
 
@@ -16,6 +28,12 @@ export type OwnerAssetSlot = {
 };
 
 export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
+  {
+    id: 'sidebar-official-logo',
+    label: 'Official Nami logo',
+    category: 'brand',
+    hint: 'Official mark on the landing page (top center) and sidebar rail (top left).',
+  },
   {
     id: 'hub-sidebar-logo',
     label: 'Hub sidebar logo',
@@ -178,35 +196,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 function readAssets(): OwnerAssetMap {
-  try {
-    const stored = window.localStorage.getItem(OWNER_ASSETS_KEY);
-
-    if (!stored) {
-      return {};
-    }
-
-    const parsed = JSON.parse(stored) as unknown;
-
-    if (!parsed || typeof parsed !== 'object') {
-      return {};
-    }
-
-    return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry): entry is [string, string] =>
-          typeof entry[0] === 'string' &&
-          typeof entry[1] === 'string' &&
-          entry[1].startsWith('data:image/')
-      )
-    );
-  } catch {
-    return {};
-  }
-}
-
-function writeAssets(assets: OwnerAssetMap): void {
-  window.localStorage.setItem(OWNER_ASSETS_KEY, JSON.stringify(assets));
-  emit();
+  return readPersistedOwnerAssets();
 }
 
 function getSnapshot(): OwnerAssetMap {
@@ -268,45 +258,64 @@ export function validateOwnerAssetFile(
   return null;
 }
 
-export function readImageFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+export type OwnerAssetSaveError = 'unauthorized' | 'quota' | 'storage';
 
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error('Could not read that image.'));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read that image.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-export function saveOwnerAssets(
-  assets: OwnerAssetMap,
-  actorOwner: string | null
-): boolean {
-  if (!isOfficialOwner(actorOwner)) {
-    return false;
+function classifyPersistenceError(error: unknown): OwnerAssetSaveError {
+  if (
+    error instanceof DOMException &&
+    (error.name === 'QuotaExceededError' || error.code === 22)
+  ) {
+    return 'quota';
   }
 
-  writeAssets(assets);
-  return true;
+  return 'storage';
 }
 
-export function clearOwnerAsset(slotId: string, actorOwner: string | null): boolean {
+export function ownerAssetSaveErrorMessage(error: OwnerAssetSaveError): string {
+  if (error === 'unauthorized') {
+    return 'Only the Nami Official owner can save platform artwork.';
+  }
+
+  if (error === 'quota') {
+    return 'Artwork storage is full. Remove unused slots in Visual Assets, or upload a smaller image.';
+  }
+
+  return 'Could not save artwork. Try again in a moment.';
+}
+
+export async function saveOwnerAssets(
+  assets: OwnerAssetMap,
+  actorOwner: string | null
+): Promise<OwnerAssetSaveError | null> {
   if (!isOfficialOwner(actorOwner)) {
-    return false;
+    return 'unauthorized';
+  }
+
+  try {
+    await persistOwnerAssets(assets);
+    emit();
+    return null;
+  } catch (error) {
+    return classifyPersistenceError(error);
+  }
+}
+
+export async function clearOwnerAsset(
+  slotId: string,
+  actorOwner: string | null
+): Promise<OwnerAssetSaveError | null> {
+  if (!isOfficialOwner(actorOwner)) {
+    return 'unauthorized';
   }
 
   const next = { ...readAssets() };
   delete next[slotId];
-  writeAssets(next);
-  return true;
+  return saveOwnerAssets(next, actorOwner);
 }
 
 export const OWNER_ASSET_ACCEPTED_FORMATS = 'PNG, JPG, WebP, GIF';
+
+export function resetOwnerAssetsForTests(): void {
+  resetOwnerAssetsPersistenceForTests();
+  cachedSnapshot = null;
+}

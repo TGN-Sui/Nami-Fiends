@@ -4,13 +4,20 @@ import { isOfficialOwner } from './nami-capabilities.js';
 import {
   OWNER_ASSET_ACCEPTED_FORMATS,
   OWNER_ASSET_SLOTS,
+  clearOwnerAsset,
+  ownerAssetSaveErrorMessage,
+  prepareOwnerAssetImage,
   readAllOwnerAssets,
-  readImageFileAsDataUrl,
-  readOwnerAsset,
   saveOwnerAssets,
+  useNamiOwnerAssets,
   validateOwnerAssetFile,
 } from './nami-owner-assets-store.js';
-import { enterNamiOwnerEditMode, setOwnerAssetDraft, useNamiOwnerEditMode } from './nami-owner-edit-mode-store.js';
+import {
+  enterNamiOwnerEditMode,
+  resolveOwnerAssetUrl,
+  setOwnerAssetDraft,
+  useNamiOwnerEditMode,
+} from './nami-owner-edit-mode-store.js';
 import { useProtocolOwner } from './wallet.js';
 
 export function NamiOwnerAssetEditPanel(props: {
@@ -19,6 +26,7 @@ export function NamiOwnerAssetEditPanel(props: {
 }): ReactElement | null {
   const { owner } = useProtocolOwner();
   const editMode = useNamiOwnerEditMode();
+  const persistedAssets = useNamiOwnerAssets();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingSlotRef = useRef<string | null>(null);
 
@@ -50,20 +58,24 @@ export function NamiOwnerAssetEditPanel(props: {
     }
 
     try {
-      const dataUrl = await readImageFileAsDataUrl(file);
+      const dataUrl = await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
 
       if (editMode.active) {
         setOwnerAssetDraft(slotId, dataUrl);
         return;
       }
 
-      saveOwnerAssets(
+      const saveError = await saveOwnerAssets(
         {
           ...readAllOwnerAssets(),
           [slotId]: dataUrl,
         },
         owner
       );
+
+      if (saveError) {
+        window.alert(ownerAssetSaveErrorMessage(saveError));
+      }
     } catch {
       window.alert('Could not read that image.');
     }
@@ -101,13 +113,14 @@ export function NamiOwnerAssetEditPanel(props: {
           Enter Edit Mode
         </button>
         <p className="protocol-hint">
-          Accepted formats: {OWNER_ASSET_ACCEPTED_FORMATS}. Save before returning to Owner Dashboard.
+          Accepted formats: {OWNER_ASSET_ACCEPTED_FORMATS}. Images are optimized automatically on
+          upload. Save before returning to Owner Dashboard.
         </p>
       </div>
 
       <div className="nami-owner-asset-catalog nami-owner-advanced-scroll-region">
         {OWNER_ASSET_SLOTS.map((slot) => {
-          const imageUrl = readOwnerAsset(slot.id);
+          const imageUrl = resolveOwnerAssetUrl(slot.id, persistedAssets);
 
           return (
             <article className="nami-owner-asset-card" key={slot.id}>
@@ -127,6 +140,28 @@ export function NamiOwnerAssetEditPanel(props: {
               <div className="nami-owner-asset-card-copy">
                 <strong>{slot.label}</strong>
                 <small>{slot.hint}</small>
+                {imageUrl ? (
+                  <button
+                    className="profile-secondary-link"
+                    onClick={() => {
+                      void (async () => {
+                        if (editMode.active) {
+                          setOwnerAssetDraft(slot.id, null);
+                          return;
+                        }
+
+                        const saveError = await clearOwnerAsset(slot.id, owner);
+
+                        if (saveError) {
+                          window.alert(ownerAssetSaveErrorMessage(saveError));
+                        }
+                      })();
+                    }}
+                    type="button"
+                  >
+                    Remove artwork
+                  </button>
+                ) : null}
               </div>
             </article>
           );

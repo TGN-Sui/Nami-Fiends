@@ -17,6 +17,7 @@ import {
   hasActiveMemberSession,
   useMemberSession,
 } from './member-session-store.js';
+import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
 
 const GENRE_SHOWCASE_POP_HIGHLIGHT_MS = 1200;
@@ -56,6 +57,16 @@ function LandingOverview(props: {
       <LandingGenreBubbleField onGenrePop={handleGenreBubblePop} />
 
       <div className="nami-landing-foreground">
+      <header className="nami-landing-official-logo-bar">
+        <OwnerEditableImage
+          className="nami-landing-official-logo"
+          fallback={<span aria-hidden="true">Nami</span>}
+          label="Official Nami logo"
+          nested
+          slotId="sidebar-official-logo"
+        />
+      </header>
+
       {props.signedOutNotice ? (
         <p className="nami-landing-signed-out-note">
           Your session ended. Sign up again to enter Nami.

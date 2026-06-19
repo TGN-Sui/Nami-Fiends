@@ -6,6 +6,8 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     env: {
       VITE_NAMI_DEV_FIXTURES: 'true',
+      VITE_NAMI_OFFICIAL_OWNER:
+        '0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca',
     },
   },
 });

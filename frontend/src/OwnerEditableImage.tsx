@@ -2,8 +2,9 @@ import { useRef, type ChangeEvent, type CSSProperties, type ReactElement, type R
 
 import {
   OWNER_ASSET_ACCEPTED_FORMATS,
-  readImageFileAsDataUrl,
+  prepareOwnerAssetImage,
   readOwnerAssetSlot,
+  useNamiOwnerAssets,
   validateOwnerAssetFile,
 } from './nami-owner-assets-store.js';
 import {
@@ -21,9 +22,10 @@ export function OwnerEditableImage(props: {
   fallback: ReactNode;
 }): ReactElement {
   const editMode = useNamiOwnerEditMode();
+  const persistedAssets = useNamiOwnerAssets();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const slot = readOwnerAssetSlot(props.slotId);
-  const imageUrl = resolveOwnerAssetUrl(props.slotId);
+  const imageUrl = resolveOwnerAssetUrl(props.slotId, persistedAssets);
   const editable = editMode.active;
 
   function openPicker(event?: { stopPropagation?: () => void; preventDefault?: () => void }): void {
@@ -52,7 +54,7 @@ export function OwnerEditableImage(props: {
     }
 
     try {
-      const dataUrl = await readImageFileAsDataUrl(file);
+      const dataUrl = await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
       setOwnerAssetDraft(props.slotId, dataUrl);
     } catch {
       window.alert('Could not read that image.');

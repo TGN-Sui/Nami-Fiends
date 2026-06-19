@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type ReactElement
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   channels,
@@ -116,7 +117,7 @@ import { membershipPlanForTier, useMembershipPlanState } from './membership-plan
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
-import { ownerAssetNavSlotId } from './nami-owner-assets-store.js';
+import { ensureOwnerAssetsHydrated, ownerAssetNavSlotId } from './nami-owner-assets-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { requestSettingsSection, SettingsScreen } from './SettingsScreen.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
@@ -630,12 +631,10 @@ function SidebarProfileCard(props: {
 
 function Sidebar(props: {
   activePage: NamiPage;
-  collapsed: boolean;
   guildEventUnreadCount: number;
   messageUnreadCount: number;
   onNavigate: (page: NamiPage) => void;
   onHubSwap: (page: 'hub' | 'gamehub') => void;
-  onToggle: () => void;
 }): ReactElement {
   const igniteRadioEnabled = useIgniteRadioEnabled();
   const [hubSwapIdleHint, setHubSwapIdleHint] = useState(false);
@@ -683,132 +682,141 @@ function Sidebar(props: {
   }, [isOnGameHub, isOnNamiHub]);
 
   return (
-    <aside className={'sidebar ' + (props.collapsed ? 'is-collapsed' : '')}>
-      {isOnGameHub || isOnNamiHub ? (
-        <button
-          aria-label={'Switch to ' + hubSwapLabel}
-          className={
-            'sidebar-brand sidebar-hub-swap is-active-sidebar-brand' +
-            (hubSwapIdleHint ? ' is-hub-swap-idle-hint' : '')
-          }
-          onClick={() => props.onHubSwap(hubSwapTarget)}
-          type="button"
-        >
-          <div aria-hidden="true" className="sidebar-hub-swap-mark-stack">
-            <OwnerEditableImage
-              className={
-                'diamond-mark sidebar-hub-swap-mark is-nami-hub-mark' +
-                (isOnGameHub ? ' is-alt-hub-mark' : ' is-current-hub-mark')
-              }
-              fallback={<span aria-hidden="true">N</span>}
-              label="Hub sidebar logo"
-              nested
-              slotId="hub-sidebar-logo"
-            />
-            <OwnerEditableImage
-              className={
-                'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
-                (isOnGameHub ? ' is-current-hub-mark' : ' is-alt-hub-mark')
-              }
-              fallback={<span aria-hidden="true">G</span>}
-              label="Game hub sidebar icon"
-              nested
-              slotId="sidebar-nav-gamehub"
-            />
-          </div>
-          {!props.collapsed ? (
-            <span className="sidebar-hub-swap-copy">
-              <span className="sidebar-hub-swap-label">{hubSwapLabel}</span>
-              <span className="sidebar-hub-swap-hint">Switch hub</span>
-            </span>
-          ) : null}
-        </button>
-      ) : (
-        <button
-          className="sidebar-brand sidebar-brand-home"
-          onClick={() => props.onNavigate('hub')}
-          type="button"
-        >
-          <div aria-hidden="true" className="sidebar-brand-mark-stack">
-            <OwnerEditableImage
-              className="diamond-mark sidebar-brand-mark"
-              fallback={<span aria-hidden="true">N</span>}
-              label="Hub sidebar logo"
-              nested
-              slotId="hub-sidebar-logo"
-            />
-          </div>
-          {!props.collapsed ? (
-            <OwnerEditableImage
-              className="sidebar-brand-wordmark"
-              fallback={<span>Nami Hub</span>}
-              label="Hub wordmark"
-              nested
-              slotId="hub-sidebar-wordmark"
-            />
-          ) : null}
-        </button>
-      )}
+    <aside
+      className={
+        'sidebar is-icon-rail is-collapsed' + (isOnGameHub || isOnNamiHub ? ' is-on-hub-surface' : '')
+      }
+    >
+      <div aria-hidden="true" className="sidebar-official-logo-slot">
+        <OwnerEditableImage
+          className="sidebar-official-logo"
+          fallback={<span aria-hidden="true">Nami</span>}
+          label="Official Nami logo"
+          nested
+          slotId="sidebar-official-logo"
+        />
+      </div>
 
-      <button className="sidebar-toggle" onClick={props.onToggle} type="button">
-        {props.collapsed ? '→' : '←'}
-      </button>
-
+      <div className="sidebar-icon-rail-controls">
         <nav className="sidebar-nav">
-        {navItems.filter((item) => item.page !== 'hub').map((item) => (
+          {isOnGameHub || isOnNamiHub ? (
+            <button
+              aria-label={'Switch to ' + hubSwapLabel}
+              className={
+                'sidebar-hub-rail-button sidebar-hub-swap is-active-sidebar-brand' +
+                (hubSwapIdleHint ? ' is-hub-swap-idle-hint' : '')
+              }
+              onClick={() => props.onHubSwap(hubSwapTarget)}
+              type="button"
+            >
+              <span aria-hidden="true" className="sidebar-hub-rail-mark-stack nav-icon">
+                <OwnerEditableImage
+                  className={
+                    'diamond-mark sidebar-hub-swap-mark is-nami-hub-mark' +
+                    (isOnGameHub ? ' is-alt-hub-mark' : ' is-current-hub-mark')
+                  }
+                  fallback={<span aria-hidden="true">N</span>}
+                  label="Nami hub mark"
+                  nested
+                  slotId="hub-sidebar-logo"
+                />
+                <OwnerEditableImage
+                  className={
+                    'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
+                    (isOnGameHub ? ' is-current-hub-mark' : ' is-alt-hub-mark')
+                  }
+                  fallback={<span aria-hidden="true">G</span>}
+                  label="Game hub sidebar icon"
+                  nested
+                  slotId="sidebar-nav-gamehub"
+                />
+              </span>
+              <span className="sidebar-hub-swap-copy sidebar-nav-label">
+                <span className="sidebar-hub-swap-label">{hubSwapLabel}</span>
+                <span className="sidebar-hub-swap-hint">Switch hub</span>
+              </span>
+            </button>
+          ) : (
+            <button
+              aria-label="Open Nami Hub"
+              className="sidebar-hub-rail-button sidebar-brand-home"
+              onClick={() => props.onNavigate('hub')}
+              type="button"
+            >
+              <span aria-hidden="true" className="sidebar-hub-rail-mark-stack nav-icon">
+                <OwnerEditableImage
+                  className="diamond-mark sidebar-hub-swap-mark is-nami-hub-mark is-current-hub-mark"
+                  fallback={<span aria-hidden="true">N</span>}
+                  label="Nami hub mark"
+                  nested
+                  slotId="hub-sidebar-logo"
+                />
+              </span>
+              <OwnerEditableImage
+                className="sidebar-brand-wordmark sidebar-nav-label"
+                fallback={<span>Nami Hub</span>}
+                label="Hub wordmark"
+                nested
+                slotId="hub-sidebar-wordmark"
+              />
+            </button>
+          )}
+
+          {navItems.filter((item) => item.page !== 'hub').map((item) => (
+            <button
+              key={item.page}
+              aria-label={item.shortLabel}
+              className={
+                (item.page === 'guilds' ? isGuildNavPage(props.activePage) : props.activePage === item.page)
+                  ? 'is-active'
+                  : ''
+              }
+              onClick={() => props.onNavigate(item.page)}
+              type="button"
+            >
+              <OwnerEditableImage
+                className="nav-icon"
+                fallback={<span aria-hidden="true">{item.shortLabel.slice(0, 1)}</span>}
+                label={item.shortLabel + ' nav icon'}
+                nested
+                slotId={ownerAssetNavSlotId(item.page)}
+              />
+              <span className="sidebar-nav-label">{item.shortLabel}</span>
+              {item.page === 'guilds' && props.guildEventUnreadCount > 0 ? (
+                <span
+                  aria-label={props.guildEventUnreadCount + ' new guild events'}
+                  className="sidebar-nav-unread-pill"
+                >
+                  {props.guildEventUnreadCount}
+                </span>
+              ) : null}
+              {item.page === 'messages' && props.messageUnreadCount > 0 ? (
+                <span aria-label={props.messageUnreadCount + ' unread messages'} className="sidebar-nav-unread-pill">
+                  {props.messageUnreadCount}
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-radio-block">
           <button
-            key={item.page}
-            className={
-              (item.page === 'guilds' ? isGuildNavPage(props.activePage) : props.activePage === item.page)
-                ? 'is-active'
-                : ''
-            }
-            onClick={() => props.onNavigate(item.page)}
+            aria-label={igniteRadioEnabled ? 'Radio on' : 'Ignite Radio'}
+            aria-pressed={igniteRadioEnabled}
+            className={'sidebar-radio-toggle' + (igniteRadioEnabled ? ' is-active-sidebar-radio' : '')}
+            onClick={() => saveIgniteRadioEnabled(!igniteRadioEnabled)}
             type="button"
           >
             <OwnerEditableImage
               className="nav-icon"
-              fallback={<span aria-hidden="true">{item.shortLabel.slice(0, 1)}</span>}
-              label={item.shortLabel + ' nav icon'}
+              fallback={<span aria-hidden="true">♫</span>}
+              label="Ignite Radio nav icon"
               nested
-              slotId={ownerAssetNavSlotId(item.page)}
+              slotId="sidebar-nav-radio"
             />
-            {!props.collapsed && <span>{item.shortLabel}</span>}
-            {item.page === 'guilds' && props.guildEventUnreadCount > 0 ? (
-              <span
-                aria-label={props.guildEventUnreadCount + ' new guild events'}
-                className="sidebar-nav-unread-pill"
-              >
-                {props.guildEventUnreadCount}
-              </span>
-            ) : null}
-            {item.page === 'messages' && props.messageUnreadCount > 0 ? (
-              <span aria-label={props.messageUnreadCount + ' unread messages'} className="sidebar-nav-unread-pill">
-                {props.messageUnreadCount}
-              </span>
-            ) : null}
+            <span className="sidebar-nav-label">{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
           </button>
-        ))}
-      </nav>
-
-      <div className="sidebar-radio-block">
-        <button
-          aria-pressed={igniteRadioEnabled}
-          className={'sidebar-radio-toggle' + (igniteRadioEnabled ? ' is-active-sidebar-radio' : '')}
-          onClick={() => saveIgniteRadioEnabled(!igniteRadioEnabled)}
-          type="button"
-        >
-          <OwnerEditableImage
-            className="nav-icon"
-            fallback={<span aria-hidden="true">♫</span>}
-            label="Ignite Radio nav icon"
-            nested
-            slotId="sidebar-nav-radio"
-          />
-          {!props.collapsed ? (
-            <span>{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
-          ) : null}
-        </button>
+        </div>
       </div>
     </aside>
   );
@@ -4548,8 +4556,6 @@ export function App(): ReactElement {
 
     return defaultChannel;
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
   const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() => channelDeveloper(channels[0]!));
   const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
@@ -4560,6 +4566,10 @@ export function App(): ReactElement {
   const [selectedGuild, setSelectedGuild] = useState<NamiGuildRecord>(namiGuilds[0]!);
   const [selectedSquad, setSelectedSquad] = useState<NamiSquadRecord>(namiSquads[0]!);
   const [squadShowInviteOnOpen, setSquadShowInviteOnOpen] = useState(false);
+
+  useEffect(() => {
+    void ensureOwnerAssetsHydrated();
+  }, []);
 
   function profileReturnLabel(page: NamiPage): string {
     if (page === 'hub') return 'Back to Nami Hub';
@@ -4979,17 +4989,20 @@ if (activePage === 'userProfile') {
       data-grid-pulse-key={gridPulseKey}
     >
       {showSidebar ? <NamiGridSpotlight scope="app" /> : null}
+      {showSidebar
+        ? createPortal(
+            <SidebarProfileCard onNavigate={navigateFromCurrentPage} onSignOut={signOutToEntry} />,
+            document.body,
+          )
+        : null}
       {showSidebar ? (
         <>
-          <SidebarProfileCard onNavigate={navigateFromCurrentPage} onSignOut={signOutToEntry} />
           <Sidebar
             activePage={activePage}
-            collapsed={sidebarCollapsed}
             guildEventUnreadCount={guildEventsStore.unreadCount}
             messageUnreadCount={messageUnreadCount}
             onHubSwap={navigateHubSwap}
             onNavigate={navigateFromCurrentPage}
-            onToggle={() => setSidebarCollapsed((value) => !value)}
           />
         </>
       ) : (

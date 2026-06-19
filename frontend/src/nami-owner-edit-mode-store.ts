@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 import { isOfficialOwner } from './nami-capabilities.js';
 import {
+  ownerAssetSaveErrorMessage,
   readAllOwnerAssets,
-  readOwnerAsset,
   saveOwnerAssets,
   type OwnerAssetMap,
 } from './nami-owner-assets-store.js';
@@ -45,14 +45,15 @@ export function useNamiOwnerEditMode(): NamiOwnerEditModeSnapshot {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-export function resolveOwnerAssetUrl(slotId: string): string | null {
-  if (snapshot.active) {
-    if (slotId in snapshot.drafts) {
-      return snapshot.drafts[slotId] ?? null;
-    }
+export function resolveOwnerAssetUrl(
+  slotId: string,
+  persistedAssets: OwnerAssetMap = readAllOwnerAssets()
+): string | null {
+  if (snapshot.active && slotId in snapshot.drafts) {
+    return snapshot.drafts[slotId] ?? null;
   }
 
-  return readOwnerAsset(slotId);
+  return persistedAssets[slotId] ?? null;
 }
 
 export function prepareOwnerDashboardReturn(): void {
@@ -123,17 +124,17 @@ export function setOwnerAssetDraft(slotId: string, imageUrl: string | null): voi
   emit();
 }
 
-export function saveOwnerAssetDrafts(actorOwner: string | null): boolean {
+export async function saveOwnerAssetDrafts(actorOwner: string | null): Promise<boolean> {
   if (!isOfficialOwner(actorOwner) || !snapshot.active) {
     return false;
   }
 
-  const saved = saveOwnerAssets(snapshot.drafts, actorOwner);
+  const saveError = await saveOwnerAssets(snapshot.drafts, actorOwner);
 
-  if (!saved) {
+  if (saveError) {
     snapshot = {
       ...snapshot,
-      error: 'Only the Nami Official owner can save platform artwork.',
+      error: ownerAssetSaveErrorMessage(saveError),
     };
     emit();
     return false;
@@ -142,6 +143,7 @@ export function saveOwnerAssetDrafts(actorOwner: string | null): boolean {
   snapshot = {
     ...snapshot,
     dirty: false,
+    drafts: readAllOwnerAssets(),
     notice: 'Platform artwork saved.',
     error: null,
   };

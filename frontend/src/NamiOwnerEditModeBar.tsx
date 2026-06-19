@@ -34,7 +34,7 @@ export function NamiOwnerEditModeBar(props: {
   }
 
   function handleSave(): void {
-    saveOwnerAssetDrafts(owner);
+    void saveOwnerAssetDrafts(owner);
   }
 
   return (

@@ -98,9 +98,11 @@
 
 [data-nami-theme='light'] .nami-pinned-profile-card {
   background: var(--nami-theme-panel);
-  border-color: var(--nami-theme-border-strong);
+  border: 1px solid var(--nami-theme-border-strong);
+  border-radius: 18px;
   box-shadow: 0 12px 28px var(--nami-theme-shadow);
   color: var(--nami-theme-text);
+  overflow: visible;
 }
 
 [data-nami-theme='light'] .panel,
