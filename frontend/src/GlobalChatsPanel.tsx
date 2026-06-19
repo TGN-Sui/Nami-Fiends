@@ -541,7 +541,11 @@ export function PinnedGenreChatDock(props: {
     <aside
       aria-label="Pinned genre chats"
       className="genre-chat-pinned-dock"
-      style={{ width: dockSize.width, height: dockSize.height }}
+      style={{
+        width: dockSize.width,
+        height: dockSize.height,
+        maxHeight: 'calc(100vh - 40px)',
+      }}
     >
       <header className="genre-chat-pinned-dock-head genre-chat-pinned-dock-head-compact">
         <strong className="genre-chat-pinned-active-title">{activeChat.title}</strong>

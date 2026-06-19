@@ -97,7 +97,7 @@ button {
     border-color 160ms ease;
 }
 
-.sidebar-brand:not(.sidebar-hub-swap):hover,
+.sidebar-brand:not(.sidebar-hub-swap):not(.sidebar-brand-home):hover,
 .sidebar-nav button:hover,
 .sidebar-toggle:hover,
 .module-card:hover,
@@ -2940,18 +2940,26 @@ button:disabled {
 
 /* UI-A7 refinement: collapsed sidebar GameHub diamond scaling */
 .sidebar.is-collapsed .sidebar-brand:not(.sidebar-hub-swap) {
-  width: 48px;
-  min-width: 48px;
-  height: 48px;
-  min-height: 48px;
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  min-height: 54px;
   margin-inline: auto;
   padding: 0;
   justify-content: center;
-  transform-origin: center;
+  transform: none;
 }
 
-.sidebar.is-collapsed .sidebar-brand:not(.sidebar-hub-swap):hover {
-  transform: scale(1.08);
+.sidebar.is-collapsed .sidebar-brand-home .sidebar-brand-mark-stack {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  flex: 0 0 40px;
+}
+
+.sidebar.is-collapsed .sidebar-brand:not(.sidebar-hub-swap):hover,
+.sidebar.is-collapsed .sidebar-brand-home:hover {
+  transform: none;
 }
 
 .sidebar.is-collapsed .sidebar-brand span:not(:first-child),

@@ -717,14 +717,20 @@ function Sidebar(props: {
           ) : null}
         </button>
       ) : (
-        <button className="sidebar-brand" onClick={() => props.onNavigate('hub')} type="button">
-          <OwnerEditableImage
-            className="diamond-mark"
-            fallback={<span aria-hidden="true">N</span>}
-            label="Hub sidebar logo"
-            nested
-            slotId="hub-sidebar-logo"
-          />
+        <button
+          className="sidebar-brand sidebar-brand-home"
+          onClick={() => props.onNavigate('hub')}
+          type="button"
+        >
+          <div aria-hidden="true" className="sidebar-brand-mark-stack">
+            <OwnerEditableImage
+              className="diamond-mark sidebar-brand-mark"
+              fallback={<span aria-hidden="true">N</span>}
+              label="Hub sidebar logo"
+              nested
+              slotId="hub-sidebar-logo"
+            />
+          </div>
           {!props.collapsed ? (
             <OwnerEditableImage
               className="sidebar-brand-wordmark"

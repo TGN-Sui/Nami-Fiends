@@ -6813,7 +6813,25 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .sidebar.is-collapsed .sidebar-hub-swap:hover .sidebar-hub-swap-mark-stack {
-  transform: scale(1.06);
+  transform: none;
+}
+
+.sidebar.is-collapsed .sidebar-brand-home {
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  min-height: 54px;
+  margin-top: 4px !important;
+  margin-bottom: 12px !important;
+  margin-inline: auto;
+  padding: 5px 4px !important;
+  overflow: visible;
+  justify-content: center;
+  transform: none;
+}
+
+.sidebar.is-collapsed .sidebar-brand-home:hover {
+  transform: none;
 }
 
 .nami-surface-button {
@@ -6924,7 +6942,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .genre-chat-pinned-root {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
   z-index: 120;
   pointer-events: none;
 }
@@ -6969,7 +6987,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 96px);
+  max-height: calc(100vh - 40px);
   border-radius: 18px;
   border: 1px solid rgba(90, 220, 170, 0.35);
   background:
@@ -6977,6 +6995,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
     rgba(8, 15, 27, 0.96);
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42);
   overflow: hidden;
+  box-sizing: border-box;
+  padding-bottom: 10px;
 }
 
 .genre-chat-pinned-dock-head {
@@ -7086,12 +7106,12 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat {
   min-height: 0;
   height: 100%;
+  overflow: hidden;
   grid-template-rows: minmax(0, 1fr);
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-presence-rail {
-  padding: 10px 12px;
-  gap: 8px;
+  display: none;
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-member-strip {
@@ -7101,30 +7121,35 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window-expand-host {
   min-height: 0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  overflow: hidden;
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window {
   min-height: 0;
   height: 100%;
-  flex: 1 1 auto;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   align-content: stretch;
   gap: 8px;
-  padding: 10px 10px 12px;
+  padding: 10px 12px 8px;
+  box-sizing: border-box;
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window-buildout {
   min-height: 0 !important;
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   align-content: stretch;
+  overflow: hidden;
 }
 
 .genre-chat-pinned-dock .global-message-stack {
   min-height: 0;
-  height: auto;
+  height: 100%;
   max-height: none;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -7134,7 +7159,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .genre-chat-pinned-dock .chat-composer-with-emojis {
-  padding: 0 0 6px;
+  padding: 0;
 }
 
 .genre-chat-pinned-collapse {
@@ -7985,12 +8010,61 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   min-height: 72px;
 }
 
-.sidebar-brand .owner-editable-image.diamond-mark,
 .sidebar-hub-swap-mark.owner-editable-image {
   position: absolute;
   display: grid;
   width: 100%;
   height: 100%;
+}
+
+.sidebar-brand-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
+  transform: none;
+}
+
+.sidebar-brand-home:hover,
+[data-nami-ui='glass'] .sidebar-brand-home,
+[data-nami-ui='glass'] .sidebar-brand-home:hover,
+[data-nami-ui='classic'] .sidebar-brand-home,
+[data-nami-ui='classic'] .sidebar-brand-home:hover {
+  transform: none;
+}
+
+.sidebar-brand-mark-stack {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 8px;
+  flex: 0 0 54px;
+  isolation: isolate;
+}
+
+.sidebar-brand-mark.owner-editable-image,
+.sidebar-brand-mark.diamond-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  transform: rotate(45deg);
+}
+
+.sidebar-brand-home:hover .sidebar-brand-mark.owner-editable-image,
+.sidebar-brand-home:hover .sidebar-brand-mark.diamond-mark {
+  transform: rotate(45deg);
+}
+
+[data-nami-ui='glass'] .sidebar-brand-home .sidebar-brand-mark-stack,
+[data-nami-ui='glass'] .sidebar-brand-home .sidebar-brand-mark,
+[data-nami-ui='classic'] .sidebar-brand-home .sidebar-brand-mark-stack,
+[data-nami-ui='classic'] .sidebar-brand-home .sidebar-brand-mark {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .sidebar-hub-swap-mark.owner-editable-image.is-current-hub-mark {
@@ -9488,8 +9562,9 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 
 .genre-chat-pinned-resize-handle {
   position: absolute;
-  right: 0;
-  bottom: 0;
+  right: 2px;
+  bottom: 2px;
+  z-index: 2;
   width: 18px;
   height: 18px;
   padding: 0;
