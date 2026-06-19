@@ -13,6 +13,7 @@ import {
 } from './landing-content.js';
 import { clearSignedOut } from './member-auth-store.js';
 import {
+  authenticateMemberCredentials,
   clearMemberSession,
   hasActiveMemberSession,
   useMemberSession,
@@ -21,6 +22,173 @@ import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
 
 const GENRE_SHOWCASE_POP_HIGHLIGHT_MS = 1200;
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+type EntryGateMode = 'choose' | 'sign-in';
+
+function EntryGatePanel(props: {
+  onClose: () => void;
+  onEnterHub: () => void;
+  onNavigateToSettings?: () => void;
+  onStartOnboarding: () => void;
+}): ReactElement {
+  const session = useMemberSession();
+  const [mode, setMode] = useState<EntryGateMode>('choose');
+  const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [signInError, setSignInError] = useState<string | null>(null);
+
+  if (hasActiveMemberSession() && session) {
+    return (
+      <article className="nami-entry-gate-dialog panel">
+        <button
+          aria-label="Close entry prompt"
+          className="nami-entry-gate-close"
+          onClick={props.onClose}
+          type="button"
+        >
+          Close
+        </button>
+
+        <div className="nami-entry-gate-copy">
+          <span className="mini-badge">Welcome back</span>
+          <h2 id="nami-entry-gate-title">Hi, {session.displayName}</h2>
+          <p>
+            You are signed in as {session.email}. Enter the hub or open Settings to manage your
+            passport and linked platforms.
+          </p>
+        </div>
+
+        <div className="nami-entry-gate-actions">
+          <button className="primary-action" onClick={props.onEnterHub} type="button">
+            Enter Nami Hub
+          </button>
+          {props.onNavigateToSettings ? (
+            <button className="secondary-action" onClick={props.onNavigateToSettings} type="button">
+              Open Settings
+            </button>
+          ) : null}
+        </div>
+      </article>
+    );
+  }
+
+  if (mode === 'sign-in') {
+    const signInReady = isValidEmail(email) && displayName.trim().length >= 2;
+
+    return (
+      <article className="nami-entry-gate-dialog panel">
+        <button
+          aria-label="Close sign in"
+          className="nami-entry-gate-close"
+          onClick={props.onClose}
+          type="button"
+        >
+          Close
+        </button>
+
+        <div className="nami-entry-gate-copy">
+          <span className="mini-badge">Returning member</span>
+          <h2 id="nami-entry-gate-title">Sign in with your credentials</h2>
+          <p>Use the same display name and email from your Nami signup.</p>
+        </div>
+
+        <form
+          className="nami-entry-gate-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSignInError(null);
+
+            const restored = authenticateMemberCredentials(email, displayName);
+
+            if (!restored) {
+              setSignInError('No account matched those credentials. Try again or start onboarding.');
+              return;
+            }
+
+            clearSignedOut();
+            props.onClose();
+          }}
+        >
+          <label className="onboarding-field">
+            <span>Display name</span>
+            <input
+              autoComplete="username"
+              maxLength={32}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder="How friends see you"
+              type="text"
+              value={displayName}
+            />
+          </label>
+
+          <label className="onboarding-field">
+            <span>Email</span>
+            <input
+              autoComplete="email"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              type="email"
+              value={email}
+            />
+          </label>
+
+          {signInError ? <p className="nami-entry-gate-error">{signInError}</p> : null}
+
+          <div className="nami-entry-gate-actions">
+            <button className="primary-action" disabled={!signInReady} type="submit">
+              Sign in
+            </button>
+            <button className="secondary-action" onClick={() => setMode('choose')} type="button">
+              Back
+            </button>
+          </div>
+        </form>
+      </article>
+    );
+  }
+
+  return (
+    <article className="nami-entry-gate-dialog panel">
+      <button
+        aria-label="Close entry prompt"
+        className="nami-entry-gate-close"
+        onClick={props.onClose}
+        type="button"
+      >
+        Close
+      </button>
+
+      <div className="nami-entry-gate-copy">
+        <span className="mini-badge">Enter Nami</span>
+        <h2 id="nami-entry-gate-title">Sign in or start onboarding</h2>
+        <p>
+          Returning members can sign in with their signup credentials. New players can create a
+          passport through the onboarding flow.
+        </p>
+      </div>
+
+      <div className="nami-entry-gate-actions">
+        <button className="primary-action" onClick={() => setMode('sign-in')} type="button">
+          Sign in with credentials
+        </button>
+        <button
+          className="secondary-action"
+          onClick={() => {
+            props.onClose();
+            props.onStartOnboarding();
+          }}
+          type="button"
+        >
+          Start onboarding
+        </button>
+      </div>
+    </article>
+  );
+}
 
 function LandingOverview(props: {
   onEnterNami: () => void;
@@ -222,7 +390,9 @@ function LandingOverview(props: {
 
 export function EntryPage(props: {
   onEnterHub: () => void;
+  onEntryGateHandled?: () => void;
   onNavigateToSettings?: () => void;
+  showEntryGate?: boolean;
   startOnboarding?: boolean;
   onStartOnboardingHandled?: () => void;
   signedOutNotice?: boolean;
@@ -245,61 +415,96 @@ export function EntryPage(props: {
     setShowOnboarding(true);
   }
 
+  function closeEntryGate(): void {
+    props.onEntryGateHandled?.();
+  }
+
+  const entryGateOverlay = props.showEntryGate ? (
+    <div
+      aria-labelledby="nami-entry-gate-title"
+      aria-modal="true"
+      className="nami-entry-gate-overlay"
+      role="dialog"
+    >
+      <EntryGatePanel
+        onClose={closeEntryGate}
+        onEnterHub={props.onEnterHub}
+        onStartOnboarding={startFreshSignup}
+        {...(props.onNavigateToSettings
+          ? { onNavigateToSettings: props.onNavigateToSettings }
+          : {})}
+      />
+    </div>
+  ) : null;
+
   if (showOnboarding) {
     return (
-      <div className="nami-entry-onboarding-shell">
-        <header className="page-title nami-entry-onboarding-title">
-          <p>Welcome to Nami</p>
-          <h1>Enter Nami</h1>
-        </header>
+      <>
+        <div className="nami-entry-onboarding-shell">
+          <header className="page-title nami-entry-onboarding-title">
+            <p>Welcome to Nami</p>
+            <h1>Enter Nami</h1>
+          </header>
 
-        <OnboardingPanel
-          onEnterHub={() => {
-            clearSignedOut();
-            props.onEnterHub();
-          }}
-          {...(props.onNavigateToSettings
-            ? { onNavigateToSettings: props.onNavigateToSettings }
-            : {})}
-        />
+          <OnboardingPanel
+            onEnterHub={() => {
+              clearSignedOut();
+              props.onEnterHub();
+            }}
+            {...(props.onNavigateToSettings
+              ? { onNavigateToSettings: props.onNavigateToSettings }
+              : {})}
+          />
 
-        <button className="secondary-action entry-back-button" onClick={() => setShowOnboarding(false)} type="button">
-          Back to overview
-        </button>
-      </div>
+          <button
+            className="secondary-action entry-back-button"
+            onClick={() => setShowOnboarding(false)}
+            type="button"
+          >
+            Back to overview
+          </button>
+        </div>
+        {entryGateOverlay}
+      </>
     );
   }
 
   if (hasActiveMemberSession() && session) {
     return (
-      <section className="nami-entry-page panel nami-entry-returning">
-        <div className="nami-entry-hero">
-          <span className="mini-badge">Welcome back</span>
-          <h1>Hi, {session.displayName}</h1>
-          <p>
-            You are signed up as {session.email}. Claim your passport nodename and link platforms
-            anytime from Settings.
-          </p>
-        </div>
+      <>
+        <section className="nami-entry-page panel nami-entry-returning">
+          <div className="nami-entry-hero">
+            <span className="mini-badge">Welcome back</span>
+            <h1>Hi, {session.displayName}</h1>
+            <p>
+              You are signed up as {session.email}. Claim your passport nodename and link platforms
+              anytime from Settings.
+            </p>
+          </div>
 
-        <div className="nami-entry-actions">
-          <button className="primary-action" onClick={props.onEnterHub} type="button">
-            Enter Nami Hub
-          </button>
-          {props.onNavigateToSettings ? (
-            <button className="secondary-action" onClick={props.onNavigateToSettings} type="button">
-              Open Settings
+          <div className="nami-entry-actions">
+            <button className="primary-action" onClick={props.onEnterHub} type="button">
+              Enter Nami Hub
             </button>
-          ) : null}
-        </div>
-      </section>
+            {props.onNavigateToSettings ? (
+              <button className="secondary-action" onClick={props.onNavigateToSettings} type="button">
+                Open Settings
+              </button>
+            ) : null}
+          </div>
+        </section>
+        {entryGateOverlay}
+      </>
     );
   }
 
   return (
-    <LandingOverview
-      onEnterNami={startFreshSignup}
-      {...(props.signedOutNotice ? { signedOutNotice: true } : {})}
-    />
+    <>
+      <LandingOverview
+        onEnterNami={startFreshSignup}
+        {...(props.signedOutNotice ? { signedOutNotice: true } : {})}
+      />
+      {entryGateOverlay}
+    </>
   );
 }
