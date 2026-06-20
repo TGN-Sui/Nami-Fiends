@@ -165,7 +165,7 @@ export const LANDING_STEPS = [
   {
     step: '2',
     title: 'Claim your passport',
-    detail: 'Choose a nodename, link platforms from Settings, and build your badge book.',
+    detail: 'Claim your @fiend nodename, link platforms from Settings, and build your badge book.',
   },
   {
     step: '3',

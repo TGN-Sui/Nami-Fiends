@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
+import { isDemoSimulationEnabled } from './app-config.js';
 import {
   isValidNodename,
   nodenameValidationMessage,
@@ -7,7 +8,7 @@ import {
 } from './onboarding-draft.js';
 import {
   buildClaimNodename,
-  NAMI_CLAIM_HANDLE_PREFIX,
+  FIEND_CLAIM_HANDLE_PREFIX,
   nodenameSuffixFromFull,
 } from './member-public-chat.js';
 import { getOnboardingMethodLabel, type OnboardingMethod } from './onboarding.js';
@@ -34,6 +35,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
 
   const nodenameError = nodenameValidationMessage(claimNodename);
+  const demoClaimEnabled = isDemoSimulationEnabled();
   const claimPending = userClaimStatus.status === 'pending';
   const claimApproved = userClaimStatus.status === 'approved';
   const claimRejected = userClaimStatus.status === 'rejected';
@@ -45,14 +47,20 @@ export function PassportClaimSettingsPanel(): ReactElement {
   }, [userClaimStatus.nodename]);
 
   useEffect(() => {
+    if (!demoClaimEnabled && method === 'demo') {
+      setMethod('zklogin');
+    }
+  }, [demoClaimEnabled, method]);
+
+  useEffect(() => {
     if (source === 'wallet') {
       setMethod('wallet');
     } else if (source === 'zklogin') {
       setMethod('zklogin');
-    } else if (source === 'demo') {
+    } else if (source === 'demo' && demoClaimEnabled) {
       setMethod('demo');
     }
-  }, [source]);
+  }, [demoClaimEnabled, source]);
 
   function resolveClaimMethod(): ClaimMethod {
     if (method === 'zklogin') {
@@ -105,8 +113,8 @@ export function PassportClaimSettingsPanel(): ReactElement {
       <div className="profile-panel-heading">
         <h2>Passport Claim</h2>
         <p>
-          Choose your permanent @nodename and submit for Nami Official approval. zkLogin is the
-          default identity path — wallet signing follows once enter_nami is deployed.
+          Choose your permanent @fiend nodename and submit for Nami Official approval. zkLogin is
+          the default identity path — wallet signing follows once enter_nami is deployed.
         </p>
       </div>
 
@@ -131,13 +139,15 @@ export function PassportClaimSettingsPanel(): ReactElement {
         >
           Wallet
         </button>
-        <button
-          className={method === 'demo' ? 'active' : ''}
-          onClick={() => setMethod('demo')}
-          type="button"
-        >
-          Demo
-        </button>
+        {demoClaimEnabled ? (
+          <button
+            className={method === 'demo' ? 'active' : ''}
+            onClick={() => setMethod('demo')}
+            type="button"
+          >
+            Demo
+          </button>
+        ) : null}
       </div>
 
       <div className="passport-claim-status-strip">
@@ -176,12 +186,12 @@ export function PassportClaimSettingsPanel(): ReactElement {
         <span>Nodename</span>
         <div className="passport-claim-handle-input-row">
           <span aria-hidden="true" className="passport-claim-handle-prefix">
-            @{NAMI_CLAIM_HANDLE_PREFIX}
+            @{FIEND_CLAIM_HANDLE_PREFIX}
           </span>
           <input
-            aria-label="Nodename suffix after @nami"
+            aria-label="Nodename suffix after @fiend"
             disabled={claimPending || claimApproved}
-            maxLength={20}
+            maxLength={19}
             onChange={(event) => setNodenameSuffix(event.target.value)}
             placeholder="your_handle"
             type="text"
@@ -192,7 +202,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
           <small className="onboarding-field-error">{nodenameError}</small>
         ) : (
           <small className="protocol-hint">
-            @{NAMI_CLAIM_HANDLE_PREFIX} is reserved for every claim. Add your unique suffix after it.
+            @{FIEND_CLAIM_HANDLE_PREFIX} is reserved for every claim. Add your unique suffix after it.
           </small>
         )}
       </label>

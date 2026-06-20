@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isDemoSimulationEnabled,
   isMockMembershipCheckoutEnabled,
   shouldAutoSeedLocalData,
+  shouldUseDemoOwnerFallback,
+  shouldUseDevFixtures,
   shouldUseFixtureCatalogFallback,
   type AppConfig,
 } from './app-config.js';
@@ -69,5 +72,25 @@ describe('app-config mock checkout policy', () => {
 
   it('blocks mock checkout during test launch', () => {
     expect(isMockMembershipCheckoutEnabled(createConfig({ testLaunch: true }))).toBe(false);
+  });
+});
+
+describe('app-config test launch policy', () => {
+  it('disables fixture catalogs when test launch is enabled', () => {
+    expect(shouldUseDevFixtures(createConfig({ testLaunch: true, devFixtures: true }))).toBe(false);
+  });
+
+  it('disables demo simulation surfaces during test launch', () => {
+    expect(isDemoSimulationEnabled(createConfig({ testLaunch: true, devFixtures: true }))).toBe(
+      false
+    );
+  });
+
+  it('blocks demo owner fallback during test launch', () => {
+    expect(
+      shouldUseDemoOwnerFallback(
+        createConfig({ testLaunch: true, devFixtures: true, demoOwner: '0xabc' })
+      )
+    ).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { isDemoSimulationEnabled } from './app-config.js';
 import {
   pendingApprovalsInThread,
   useApprovalRequests,
@@ -113,13 +114,15 @@ export function ApprovalRequestActions(props: ApprovalRequestActionsProps): Reac
             request.approverMemberId === props.counterpartyMemberId ? (
             <div className="guild-hierarchy-actions">
               <p className="protocol-hint">Waiting for {request.approverName} to open this message and approve.</p>
-              <button
-                className="secondary-action"
-                onClick={() => simulateDecision(request, 'approved')}
-                type="button"
-              >
-                Simulate {request.approverName} approves (demo)
-              </button>
+              {isDemoSimulationEnabled() ? (
+                <button
+                  className="secondary-action"
+                  onClick={() => simulateDecision(request, 'approved')}
+                  type="button"
+                >
+                  Simulate {request.approverName} approves (demo)
+                </button>
+              ) : null}
             </div>
           ) : (
             <p className="protocol-hint">Waiting for {request.approverName} to respond.</p>

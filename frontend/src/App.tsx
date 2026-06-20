@@ -9,7 +9,14 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { isDemoSimulationEnabled, isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
 import { channels as seedChannels } from './fixtures/seed-data.js';
+import {
+  createShellChannel,
+  createShellDeveloper,
+  createShellGuild,
+  createShellSquad,
+} from './fixtures/shell-catalog.js';
 import {
   channels,
   developers,
@@ -271,7 +278,11 @@ function signalClass(signal: ConductSignal): string {
 }
 
 function channelDeveloper(channel: NamiChannel): (typeof developers)[number] {
-  return developers.find((developer) => developer.id === channel.developerId) ?? developers[0]!;
+  return (
+    developers.find((developer) => developer.id === channel.developerId) ??
+    developers[0] ??
+    createShellDeveloper()
+  );
 }
 
 function developerGameChannels(developer: (typeof developers)[number]): NamiChannel[] {
@@ -1863,7 +1874,11 @@ function GameHub(props: {
 
         {filteredBrowserEntries.length === 0 ? (
           <GameHubDirectoryEmpty
-            copy="Try a different filter or check back after the next discovery cycle. Preview channels stay visible while dev fixtures are enabled."
+            copy={
+              isTestLaunchMode()
+                ? 'Try a different filter or check back after the next discovery cycle.'
+                : 'Try a different filter or check back after the next discovery cycle. Preview channels stay visible while dev fixtures are enabled.'
+            }
             title="No channels match this filter"
           />
         ) : null}
@@ -4712,28 +4727,36 @@ export function App(): ReactElement {
   const disconnectWallet = useWalletDisconnect();
   useDemoPerspective();
 
+  useEffect(() => {
+    if (!isDemoSimulationEnabled()) {
+      restoreOwnerDemoPerspective();
+    }
+  }, []);
+
   const [activePage, setActivePage] = useState<NamiPage>('entry');
   const [entryShowGate, setEntryShowGate] = useState(false);
   const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
-    const defaultChannel = channels[0] ?? seedChannels[0];
-    if (!defaultChannel) {
-      throw new Error('Nami mock channels must include at least one channel.');
-    }
-
-    return defaultChannel;
+    const defaultChannel = channels[0] ?? (shouldUseDevFixtures() ? seedChannels[0] : undefined);
+    return defaultChannel ?? createShellChannel();
   });
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
-  const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() => channelDeveloper(channels[0]!));
+  const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() =>
+    channelDeveloper(channels[0] ?? createShellChannel())
+  );
   const [studioReturnPage, setStudioReturnPage] = useState<NamiPage>('hub');
   const [contextReturnPage, setContextReturnPage] = useState<NamiPage>('hub');
   const [channelProfileSection, setChannelProfileSection] = useState<ChannelProfileSection>('news');
   const [channelProfileOwnerFocus, setChannelProfileOwnerFocus] = useState<ChannelProfileOwnerFocus>(null);
   const [selectedThreadMemberId, setSelectedThreadMemberId] = useState<string>(members[1]?.id ?? 'm2');
   const [selectedEvent, setSelectedEvent] = useState<StoredEvent | null>(null);
-  const [selectedGuild, setSelectedGuild] = useState<NamiGuildRecord>(namiGuilds[0]!);
-  const [selectedSquad, setSelectedSquad] = useState<NamiSquadRecord>(namiSquads[0]!);
+  const [selectedGuild, setSelectedGuild] = useState<NamiGuildRecord>(
+    () => namiGuilds[0] ?? createShellGuild()
+  );
+  const [selectedSquad, setSelectedSquad] = useState<NamiSquadRecord>(
+    () => namiSquads[0] ?? createShellSquad()
+  );
   const [squadShowInviteOnOpen, setSquadShowInviteOnOpen] = useState(false);
 
   useEffect(() => {

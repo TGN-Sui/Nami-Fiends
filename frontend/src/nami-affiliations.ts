@@ -1,3 +1,4 @@
+import { shouldUseDevFixtures } from './app-config.js';
 import type { GuildCardView, SquadCardView } from './protocol.js';
 import { getSelfMember } from './member-access.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -39,7 +40,7 @@ export const NAMI_SQUAD_NAMES = [
   'Lore Team',
 ] as const;
 
-export const namiGuilds: NamiGuildRecord[] = [
+const SEED_GUILDS: NamiGuildRecord[] = [
   {
     id: 'guild-wave-raiders',
     name: 'Wave Raiders',
@@ -77,12 +78,17 @@ export const namiGuilds: NamiGuildRecord[] = [
   },
 ];
 
-export const namiSquads: NamiSquadRecord[] = [
+const SEED_SQUADS: NamiSquadRecord[] = [
   { id: 'squad-alpha', name: 'Alpha Squad', memberIds: ['m1', 'm2'], maxSlots: 8 },
   { id: 'squad-mint-watch', name: 'Mint Watch', memberIds: ['m1'], maxSlots: 8 },
   { id: 'squad-raid-team', name: 'Raid Team', memberIds: ['m2', 'm3'], maxSlots: 8 },
   { id: 'squad-patch-crew', name: 'Patch Crew', memberIds: ['m3'], maxSlots: 8 },
 ];
+
+const fixturesEnabled = shouldUseDevFixtures();
+
+export const namiGuilds: NamiGuildRecord[] = fixturesEnabled ? SEED_GUILDS : [];
+export const namiSquads: NamiSquadRecord[] = fixturesEnabled ? SEED_SQUADS : [];
 
 export function guildMemberLimitForTier(tier: NamiMember['tier']): number {
   if (tier === 'Elite') {

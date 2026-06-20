@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { shouldUseDemoOwnerFallback } from './app-config.js';
 import { getConfiguredNetwork } from './nami.js';
 import { resolveProtocolConnectionState } from './protocol-availability.js';
 import { readDemoOwner } from './protocol-env.js';
@@ -162,7 +163,7 @@ export function useProtocolOwner(): {
   const account = useCurrentAccount();
   const zkSession = useZkLoginSessionState();
   const context = useMemo(() => getProtocolContext(), []);
-  const demoOwner = readDemoOwner();
+  const demoOwner = shouldUseDemoOwnerFallback() ? readDemoOwner() : null;
   const walletOwner = account?.address ?? null;
   const zkOwner = zkSession?.address ?? null;
   const owner = walletOwner ?? zkOwner ?? demoOwner;

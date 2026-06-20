@@ -642,6 +642,300 @@ Support/recovery process
 Scenario test results
 ```
 
+Official testnet policy (no demo surfaces):
+
+```text
+VITE_NAMI_TEST_LAUNCH=true on all testnet builds
+VITE_NAMI_DEV_FIXTURES=false — no fixture catalogs on directory or chat surfaces
+Remove or gate demo wallet, demo claim method, mock checkout, mock provider buttons, and local auto-seed
+Nodename claims use @fiend prefix (see docs/sui-layer.md)
+Live indexer + receiving server required; empty states preferred over simulated data
+```
+
+---
+
+## Phase 8.1 — Testnet Launch Mode (In progress)
+
+Status:
+
+```text
+In progress — test-launch policy wired in frontend; deployment ops pending
+```
+
+Shipped:
+
+```text
+VITE_NAMI_TEST_LAUNCH=true forces fixture catalogs off (even if DEV_FIXTURES=true)
+isDemoSimulationEnabled() gates dashboard perspectives, event sim buttons, approval sims, demo claim method
+shouldUseDemoOwnerFallback() removes demo wallet owner on test launch
+Shell catalog placeholders (self member + routing shells) when fixtures are disabled
+frontend/.env.testnet.example template for official builds
+Guild/squad seed catalogs gated behind shouldUseDevFixtures()
+Channel banner simulation disabled without fixtures
+```
+
+Remaining before testnet go-live:
+
+```text
+Publish Move package to testnet + record package ID
+Deploy receiving server with live indexer projections
+Fill .env.testnet.example values and run npm run build
+zkLogin redirect URIs for testnet origin
+Security review + AdminCap custody
+Backend persistence for officials queues (still localStorage today)
+```
+
+---
+
+# Phase 9 — Sui Stack Integrations (Planned)
+
+Status:
+
+```text
+Not started — documented for future exploration; no implementation yet
+```
+
+Goal:
+
+Extend Nami onto Sui-native hosting, privacy, and agent memory primitives without blocking Phase 8 launch.
+
+Out of Phase 9 scope (deferred):
+
+```text
+Standalone mobile genre chat experiment — see Phase 10; starts only after this Nami project is complete
+```
+
+Prerequisite:
+
+```text
+Phase 8 launch ops stable
+Backend receiving server live (hybrid architecture)
+zkLogin redirect URIs registered for production portal domains
+```
+
+---
+
+## Phase 9.1 — Walrus Sites Frontend Hosting
+
+Status:
+
+```text
+Planned
+```
+
+Scope:
+
+```text
+Deploy frontend/dist via site-builder (Walrus Sites + Sui site object)
+Add ws-resources.json SPA fallback and sites-config.yaml
+Optional SuiNS name on the site object
+Build-time env for VITE_NAMI_INDEXER_URL, package ID, zkLogin client/redirect
+Epoch renewal ops for Walrus blob storage
+```
+
+Out of scope:
+
+```text
+Hosting the receiving server, webhooks, or writable media APIs on Walrus Sites
+Replacing backend persistence for officials queues (still needs server or on-chain flow)
+```
+
+Architecture:
+
+```text
+Walrus Sites → static React SPA
+Receiving server → payments, preferences, uploads, projections (separate host)
+Sui RPC + Move package → wallet, zkLogin, on-chain reads/writes from browser
+```
+
+Reference:
+
+```text
+docs/sui-layer.md (Walrus media references — later phase)
+Walrus Sites docs: site-builder deploy, ws-resources.json routes, wal.app portal
+```
+
+---
+
+## Phase 9.2 — Privacy Proofs Layer (Seal, ZK, Sui Spheres)
+
+Status:
+
+```text
+Planned — evaluate as Sui privacy primitives mature
+```
+
+Goal:
+
+Verify eligibility and store sensitive evidence without exposing unnecessary data publicly.
+
+Nami-aligned use cases:
+
+```text
+Private appeal evidence (officials + jury access only)
+Private moderation evidence packets
+Linked-account verification proofs without public PII
+Recovery-sensitive attachments
+Encrypted guild or channel owner records
+Prove verification / conduct eligibility without revealing underlying credentials
+```
+
+Stack (today):
+
+```text
+Seal — programmable encryption and role-based decryption (available; messaging SDK and MemWal already use it)
+Sui Groth16 zk proofs — prove facts on-chain without revealing underlying data
+Nautilus — verifiable offchain computation with on-chain attestations (oracle / compliance patterns)
+```
+
+Sui Spheres:
+
+```text
+Emerging Sui privacy umbrella (selective disclosure, contextual visibility, composable privacy workflows)
+Treat as roadmap signal — design Nami proof flows against Seal + zk proofs now; adopt Spheres patterns when APIs stabilize
+```
+
+Privacy principle (unchanged):
+
+```text
+On-chain anchors trust; off-chain or encrypted stores hold sensitive payloads
+Officials and jury surfaces decrypt only within policy — never public-by-default
+```
+
+Depends on:
+
+```text
+Phase 2 indexer for proof verification views
+Appeals / moderation backend persistence (localStorage is insufficient for encrypted evidence)
+```
+
+---
+
+## Phase 9.3 — MemWal (Walrus Memory)
+
+Status:
+
+```text
+Planned — scoped experimentation only
+```
+
+What MemWal is:
+
+```text
+Portable, Seal-encrypted, Walrus-backed memory for AI agents (beta)
+Relayer handles embed, encrypt, upload, recall — not a human chat log store
+```
+
+Realistic Nami uses:
+
+```text
+Nami Officials assistant context across review sessions
+Moderation triage memory (policy-grounded, namespace-scoped)
+Genre lounge or support copilot memory for a signed-in member
+Cross-session agent workflows (onboarding help, recovery guidance)
+```
+
+Not a substitute for:
+
+```text
+Genre chat message history (use Messaging SDK or off-chain chat store)
+Passport / badge / reputation state (stay on-chain)
+Public lounge transcripts at scale
+```
+
+Depends on:
+
+```text
+MemWal relayer availability and namespace policy design
+Clear separation: agent memory vs user messaging vs on-chain proofs
+```
+
+---
+
+# Phase 10 — Post-MVP Experiments (Deferred)
+
+Status:
+
+```text
+Deferred — do not start until the Nami project is complete (Phase 8 exit criteria met)
+```
+
+Gate:
+
+```text
+Presentable MVP shipped and stable on testnet/mainnet path
+Phases 2–5 delivery complete (indexer, frontend wiring, SDK, zkLogin production flow)
+No open launch blockers from Phase 8 checklist
+```
+
+---
+
+## Phase 10.1 — Messaging SDK + Standalone Mobile Genre Chat
+
+Status:
+
+```text
+Deferred — exploratory; not part of core Nami delivery
+```
+
+Goal:
+
+Prototype a wallet-linked, E2E-encrypted mobile chat focused on Nami's 23 official IGDB genre lounges.
+
+Current UI anchor (web — already shipped):
+
+```text
+frontend/src/global-chats.ts — genreOfficialChats (23 rooms from LANDING_GENRE_LOUNGES)
+Game Hub genre bubble browser + pinned dock (Phase 7 / UI-B21.4)
+Today: localStorage-backed messages-store; no realtime transport
+```
+
+Messaging SDK fit:
+
+```text
+Wallet-linked identity (aligns with Nami passport / zkLogin)
+Group channels with programmable membership (map to verification + conduct gates)
+Seal E2E encryption + Walrus attachments
+Recoverable conversations across devices
+Reference app: chatty.wal.app
+```
+
+Constraints (read before building):
+
+```text
+SDK is alpha; active development in sui-stack-messaging repo (successor to sui-stack-messaging-sdk)
+Testnet only today — not production-ready for public launch
+Messages default to on-chain Sui objects — high-volume public genre lounges need careful architecture
+Nami docs already position primary chat as off-chain; SDK is better for DMs, small groups, officials channels, and emergency fallback
+No unauthenticated messaging — all participants need verifiable Sui identity
+```
+
+Proposed experiment scope:
+
+```text
+Standalone mobile shell (React Native or PWA) — genre lounge picker + single-room chat
+One genre channel on testnet end-to-end (e.g. Shooter or MOBA)
+Map Nami canSendChatMessages / verification rules to SDK channel membership policy
+Does not replace or block the shipped web app
+```
+
+Stretch (post-experiment):
+
+```text
+Officials announcement channels via SDK fallback (see docs/resilience.md)
+Cross-device sync for DMs and squad threads
+Integrate genre broadcasts and @member tags once message schema is stable
+```
+
+Depends on:
+
+```text
+Nami project complete (Phase 10 gate above)
+Phase 5 zkLogin / wallet onboarding production flow
+Genre room registry contract or config shared between web and mobile
+Phase 9.1 optional — mobile can target testnet without Walrus Sites
+```
+
 ---
 
 # Long-Term Vision

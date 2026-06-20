@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 
+import { isDemoSimulationEnabled } from './app-config.js';
 import {
   applyDemoPerspective,
   consumeDemoPerspectiveFocus,
@@ -15,18 +16,23 @@ import type { NamiPage } from './uiMockData.js';
 export function DemoPerspectivePanel(props: {
   onNavigate?: ((page: NamiPage) => void) | undefined;
   onPerspectiveApplied?: ((page: NamiPage, channelId?: string) => void) | undefined;
-}): ReactElement {
+}): ReactElement | null {
+  const demoEnabled = isDemoSimulationEnabled();
   const panelRef = useRef<HTMLElement | null>(null);
   const { activePerspective, isActive } = useDemoPerspective();
   const activeId = readActiveDemoPerspectiveId();
 
   useEffect(() => {
-    if (!consumeDemoPerspectiveFocus()) {
+    if (!demoEnabled || !consumeDemoPerspectiveFocus()) {
       return;
     }
 
     panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+  }, [demoEnabled]);
+
+  if (!demoEnabled) {
+    return null;
+  }
 
   function handleApply(perspectiveId: DemoPerspectiveId): void {
     const preset = applyDemoPerspective(perspectiveId);

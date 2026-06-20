@@ -3,7 +3,11 @@ import type { GlobalChatRoom, SocialEmbed } from './global-chats.js';
 import { isMemberVerified } from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
-export const NAMI_CLAIM_HANDLE_PREFIX = 'nami';
+/** Reserved nodename prefix for passport claims (displayed as @fiend). */
+export const FIEND_CLAIM_HANDLE_PREFIX = 'fiend';
+
+/** @deprecated Pre-testnet prefix; still parsed when loading existing claims. */
+export const LEGACY_NAMI_CLAIM_HANDLE_PREFIX = 'nami';
 
 const COLLAPSED_KEY = 'nami.member-public-chat.collapsed';
 
@@ -45,8 +49,12 @@ export function nodenameSuffixFromFull(value: string): string {
     return '';
   }
 
-  if (normalized.startsWith(NAMI_CLAIM_HANDLE_PREFIX)) {
-    return normalized.slice(NAMI_CLAIM_HANDLE_PREFIX.length);
+  if (normalized.startsWith(FIEND_CLAIM_HANDLE_PREFIX)) {
+    return normalized.slice(FIEND_CLAIM_HANDLE_PREFIX.length);
+  }
+
+  if (normalized.startsWith(LEGACY_NAMI_CLAIM_HANDLE_PREFIX)) {
+    return normalized.slice(LEGACY_NAMI_CLAIM_HANDLE_PREFIX.length);
   }
 
   return normalized;
@@ -55,7 +63,7 @@ export function nodenameSuffixFromFull(value: string): string {
 export function buildClaimNodename(suffix: string): string {
   const normalizedSuffix = suffix.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 
-  return NAMI_CLAIM_HANDLE_PREFIX + normalizedSuffix;
+  return FIEND_CLAIM_HANDLE_PREFIX + normalizedSuffix;
 }
 
 function readCollapsedMap(): Record<string, boolean> {

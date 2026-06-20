@@ -38,6 +38,8 @@ export function readAppConfig(): AppConfig {
 
   const packageId = getConfiguredPackageId();
   const indexerUrl = readIndexerUrl();
+  const testLaunch = readBooleanEnv('VITE_NAMI_TEST_LAUNCH');
+  const devFixturesRequested = readBooleanEnv('VITE_NAMI_DEV_FIXTURES', true);
 
   cachedConfig = {
     network: getConfiguredNetwork(),
@@ -47,8 +49,8 @@ export function readAppConfig(): AppConfig {
     demoOwner: readDemoOwner(),
     adminCapId: readAdminCapId(),
     requireWalletAuth: readWalletAuthRequired(),
-    testLaunch: readBooleanEnv('VITE_NAMI_TEST_LAUNCH'),
-    devFixtures: readBooleanEnv('VITE_NAMI_DEV_FIXTURES', true),
+    testLaunch,
+    devFixtures: testLaunch ? false : devFixturesRequested,
   };
 
   return cachedConfig;
@@ -70,7 +72,17 @@ export function isChainConfigured(config: AppConfig = readAppConfig()): boolean 
  * providers take over in Slice 7 once the receiving server is connected.
  */
 export function shouldUseDevFixtures(config: AppConfig = readAppConfig()): boolean {
-  return config.devFixtures;
+  return config.devFixtures && !config.testLaunch;
+}
+
+/** Demo perspectives, simulate buttons, and mock provider affordances (never on official testnet). */
+export function isDemoSimulationEnabled(config: AppConfig = readAppConfig()): boolean {
+  return shouldUseDevFixtures(config);
+}
+
+/** Fallback protocol owner when no wallet/zkLogin is connected (dev only). */
+export function shouldUseDemoOwnerFallback(config: AppConfig = readAppConfig()): boolean {
+  return shouldUseDevFixtures(config) && config.demoOwner !== null;
 }
 
 export function isTestLaunchMode(config: AppConfig = readAppConfig()): boolean {

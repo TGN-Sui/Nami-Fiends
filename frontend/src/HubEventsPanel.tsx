@@ -1,5 +1,7 @@
 import { useState, type ReactElement } from 'react';
 
+import { isDemoSimulationEnabled } from './app-config.js';
+
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { officialNamiHubEvents } from './events-data.js';
 import {
@@ -201,6 +203,7 @@ export function HubEventsPanel(props: {
         <p className="protocol-hint">Official Nami events can only be created or edited by Nami officials.</p>
       ) : null}
 
+      {isDemoSimulationEnabled() ? (
       <div className="event-demo-sim-actions">
         <button
           className="nami-surface-button"
@@ -237,6 +240,7 @@ export function HubEventsPanel(props: {
           Simulate starting-soon reminder (demo)
         </button>
       </div>
+      ) : null}
     </article>
   );
 }

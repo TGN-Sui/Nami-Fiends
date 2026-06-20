@@ -99,6 +99,7 @@ Until `enter_nami` exists, frontend may fall back to separate txs (dev only); pr
 
 - User-chosen at claim; rules in [sui-layer.md](./sui-layer.md).
 - Distinct from display name (display can change; nodename is stable identity handle).
+- **@fiend prefix:** every claim reserves `@fiend`; the user submits a unique suffix (e.g. `@fiendgamer`).
 
 ### After claim
 

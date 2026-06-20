@@ -265,7 +265,11 @@ Charset: lowercase letters, digits, underscore; no leading digit
 Unique globally within Nami registry
 Immutable after claim (display name may still change)
 Reserved list for official / system names
+Claim prefix: @fiend — every passport nodename starts with fiend; the user chooses a unique suffix
+  Example: suffix gamer → stored nodename fiendgamer, shown as @fiendgamer
 ```
+
+Pre-testnet drafts used the legacy @nami prefix; the claim UI still parses those for migration.
 
 ### On-chain target
 

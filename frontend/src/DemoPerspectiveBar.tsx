@@ -1,5 +1,6 @@
 import { useEffect, type ReactElement } from 'react';
 
+import { isDemoSimulationEnabled } from './app-config.js';
 import { requestDemoPerspectiveFocus, useDemoPerspective } from './demo-perspective-store.js';
 import { requestSettingsSection } from './settings-navigation.js';
 import type { NamiPage } from './uiMockData.js';
@@ -8,17 +9,23 @@ export function DemoPerspectiveBar(props: {
   onNavigate: (page: NamiPage) => void;
   onRestoreOwner: () => void;
 }): ReactElement | null {
+  const demoEnabled = isDemoSimulationEnabled();
   const { activePerspective, isActive } = useDemoPerspective();
 
   useEffect(() => {
+    if (!demoEnabled) {
+      document.body.classList.remove('is-nami-demo-perspective');
+      return;
+    }
+
     document.body.classList.toggle('is-nami-demo-perspective', isActive);
 
     return () => {
       document.body.classList.remove('is-nami-demo-perspective');
     };
-  }, [isActive]);
+  }, [demoEnabled, isActive]);
 
-  if (!isActive || !activePerspective) {
+  if (!demoEnabled || !isActive || !activePerspective) {
     return null;
   }
 

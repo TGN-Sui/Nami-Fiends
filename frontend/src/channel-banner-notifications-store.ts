@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldUseDevFixtures } from './app-config.js';
 import { canSubscribeToChannelBanners, getSelfMember } from './member-access.js';
 import {
   preApprovedOwnerCapabilityAllowed,
@@ -432,6 +433,10 @@ export function scheduleWelcomeBannerNotification(channelId: string, delayMs = 2
 let simulationTimer: number | null = null;
 
 export function startChannelBannerSimulation(intervalMs = 55_000): () => void {
+  if (!shouldUseDevFixtures()) {
+    return () => undefined;
+  }
+
   if (simulationTimer !== null) {
     window.clearInterval(simulationTimer);
   }
