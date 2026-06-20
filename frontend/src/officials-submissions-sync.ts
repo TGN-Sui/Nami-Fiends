@@ -50,7 +50,7 @@ export function queueOfficialsSubmissionsSync(input: SyncOfficialsSubmissionsInp
   }
 
   void syncOfficialsSubmissions(input).catch(() => {
-    // Best-effort until officials auth hardening lands.
+    // Best-effort — unsigned sessions skip server sync until wallet/zkLogin connects.
   });
 }
 

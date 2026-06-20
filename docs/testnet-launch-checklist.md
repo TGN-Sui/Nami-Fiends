@@ -15,22 +15,37 @@ Current testnet artifact: `deployments/testnet/latest.json`
 }
 ```
 
+**Contract health (2026-06-19):** `sui move test` — 80 passing. No republish required unless Move sources changed since `latest.json`.
+
 Republish when contracts change:
 
 ```bash
-cd contracts/nami
-sui client publish --gas-budget 500000000
-# Copy output into deployments/testnet/latest.json
+./scripts/publish-testnet.sh
+# Or manually: node scripts/extract-testnet-latest.mjs deployments/testnet/publish-*.json
 ```
 
 ---
 
-## 2. Backend receiving server
+## 2. Sync environment files
 
 ```bash
-cp backend/.env.example backend/.env
-# Set NAMI_PACKAGE_ID + NAMI_ADMIN_CAP_ID from latest.json
-# Testnet: NAMI_PAYMENT_ALLOW_MOCK=false
+node scripts/sync-testnet-env.mjs \
+  --indexer-url http://127.0.0.1:8787 \
+  --official-owner 0xYOUR_OFFICIAL_OWNER \
+  --zklogin-origin http://localhost:5173/
+```
+
+Writes `backend/.env` and `frontend/.env.local` with test-launch flags and package IDs from `latest.json`.
+
+Templates: `backend/.env.testnet.example`, `frontend/.env.testnet.example`
+
+zkLogin OAuth setup: [testnet-zklogin.md](./testnet-zklogin.md)
+
+---
+
+## 3. Backend receiving server
+
+```bash
 npm --prefix backend install
 npm --prefix backend run dev
 ```
@@ -44,13 +59,15 @@ curl http://127.0.0.1:8787/api/officials/submissions
 
 Officials queue projection: `backend/data/projections/officials-submissions.json`
 
----
-
-## 3. Frontend testnet build
+Verify readiness:
 
 ```bash
-cp frontend/.env.testnet.example frontend/.env.local
+node scripts/verify-testnet-ready.mjs
 ```
+
+---
+
+## 4. Frontend testnet build
 
 Required values:
 
@@ -74,7 +91,7 @@ npm --prefix frontend run build
 
 ---
 
-## 4. Smoke checks (test launch)
+## 5. Smoke checks (test launch)
 
 | Check | Expected |
 |-------|----------|
@@ -88,13 +105,14 @@ npm --prefix frontend run build
 
 ---
 
-## 5. Security before public URL
+## 6. Security before public URL
 
-- AdminCap custody documented
+- AdminCap custody: hold `AdminCap` in a dedicated wallet (`NAMI_OFFICIAL_OWNER`); never commit private keys; document backup holder
 - `VITE_NAMI_DEMO_OWNER` unset on testnet builds
 - `NAMI_PAYMENT_ALLOW_MOCK=false` on backend
 - zkLogin redirect URIs locked to production/testnet origin only
-- Officials submissions API auth hardening (planned — currently best-effort sync)
+- Officials `POST /api/officials/submissions/sync` requires wallet signature on test launch; official owner may merge all queues; members merge only their own entries
+- Optional `NAMI_OFFICIALS_SYNC_SECRET` for server-side ops (header `X-Nami-Officials-Sync`) — never expose in frontend env
 
 ---
 

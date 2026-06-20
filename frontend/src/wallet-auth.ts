@@ -123,6 +123,10 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
   return signPromise;
 }
 
+export function readWalletAuthOwner(): string | null {
+  return authContext.owner;
+}
+
 export function resetWalletAuthStateForTests(): void {
   walletAuthSigner = null;
   authContext = {

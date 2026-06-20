@@ -55,7 +55,9 @@ export const paymentConfig = {
 
   defaultSuccessUrl: readString('NAMI_PAYMENT_SUCCESS_URL', 'http://localhost:5173/?payment=success'),
   defaultCancelUrl: readString('NAMI_PAYMENT_CANCEL_URL', 'http://localhost:5173/?payment=cancel'),
-  allowMockProviders: readBoolean('NAMI_PAYMENT_ALLOW_MOCK', true),
+  allowMockProviders: baseConfig.testLaunch
+    ? false
+    : readBoolean('NAMI_PAYMENT_ALLOW_MOCK', true),
 
   httpPort: baseConfig.httpPort,
 } as const;

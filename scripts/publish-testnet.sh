@@ -22,10 +22,17 @@ sui client publish \
   --json \
   > "$OUT_DIR/publish-$TIMESTAMP.json"
 
+PUBLISH_JSON="$OUT_DIR/publish-$TIMESTAMP.json"
+
 echo "Publish output saved:"
-echo "$OUT_DIR/publish-$TIMESTAMP.json"
+echo "$PUBLISH_JSON"
+echo ""
+echo "Extracting deployment summary..."
+node "$ROOT_DIR/scripts/extract-testnet-latest.mjs" "$PUBLISH_JSON"
+echo ""
+echo "Syncing env files (edit placeholders after)..."
+node "$ROOT_DIR/scripts/sync-testnet-env.mjs"
 echo ""
 echo "Next:"
-echo "1. Extract packageId and AdminCap ID from the JSON."
-echo "2. Save deployment summary to deployments/testnet/latest.json."
-echo "3. Update backend/.env and frontend/.env."
+echo "1. Set official owner, treasury, and zkLogin client ID in backend/.env and frontend/.env.local"
+echo "2. node scripts/verify-testnet-ready.mjs"

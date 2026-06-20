@@ -21,6 +21,16 @@ function readNetwork(): NamiNetwork {
   );
 }
 
+function readBoolean(name: string, fallback = false): boolean {
+  const value = process.env[name];
+
+  if (value === undefined || value.trim() === '') {
+    return fallback;
+  }
+
+  return value.toLowerCase() === 'true' || value === '1';
+}
+
 function readNumber(name: string, fallback: number): number {
   const value = process.env[name];
 
@@ -40,6 +50,9 @@ function readNumber(name: string, fallback: number): number {
 export const config = {
   network: readNetwork(),
   packageId: process.env.NAMI_PACKAGE_ID ?? '',
+  adminCapId: process.env.NAMI_ADMIN_CAP_ID ?? '',
+  officialOwner: process.env.NAMI_OFFICIAL_OWNER ?? '',
+  testLaunch: readBoolean('NAMI_TEST_LAUNCH'),
   fullnodeUrl: process.env.SUI_FULLNODE_URL ?? 'http://127.0.0.1:9000',
 
   pollIntervalMs: readNumber('NAMI_POLL_INTERVAL_MS', 5000),

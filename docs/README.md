@@ -14,6 +14,7 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [protocol.md](./protocol.md) | Protocol overview |
 | [roadmap.md](./roadmap.md) | Delivery phases and status |
 | [testnet-launch-checklist.md](./testnet-launch-checklist.md) | Official testnet build and deploy steps |
+| [testnet-zklogin.md](./testnet-zklogin.md) | Google OAuth + zkLogin for testnet origin |
 
 ---
 

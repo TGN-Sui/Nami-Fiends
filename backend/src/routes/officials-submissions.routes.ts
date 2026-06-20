@@ -1,6 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
+  filterOfficialsSyncInput,
+  resolveOfficialsSyncScope,
+} from '../services/officials-auth.service.js';
+import {
   getOfficialsSubmissions,
   syncOfficialsSubmissions,
 } from '../services/officials-submissions.service.js';
@@ -15,7 +19,7 @@ function sendJson(response: ServerResponse, status: number, body: unknown): void
     'content-length': Buffer.byteLength(payload),
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, OPTIONS',
-    'access-control-allow-headers': 'Content-Type',
+    'access-control-allow-headers': 'Content-Type, X-Nami-Officials-Sync',
   });
   response.end(payload);
 }
@@ -57,7 +61,9 @@ export async function handleOfficialsSubmissionsSync(
 ): Promise<void> {
   try {
     const body = await readJsonBody(request);
-    const input: {
+    const { scope, owner } = await resolveOfficialsSyncScope(request, body);
+    const syncEmail = typeof body.syncEmail === 'string' ? body.syncEmail : '';
+    const rawInput: {
       suggestions?: unknown[];
       gameTickets?: unknown[];
       partnerBanners?: unknown[];
@@ -65,28 +71,39 @@ export async function handleOfficialsSubmissionsSync(
     } = {};
 
     if (Array.isArray(body.suggestions)) {
-      input.suggestions = body.suggestions;
+      rawInput.suggestions = body.suggestions;
     }
 
     if (Array.isArray(body.gameTickets)) {
-      input.gameTickets = body.gameTickets;
+      rawInput.gameTickets = body.gameTickets;
     }
 
     if (Array.isArray(body.partnerBanners)) {
-      input.partnerBanners = body.partnerBanners;
+      rawInput.partnerBanners = body.partnerBanners;
     }
 
     if (Array.isArray(body.nodenameClaims)) {
-      input.nodenameClaims = body.nodenameClaims;
+      rawInput.nodenameClaims = body.nodenameClaims;
     }
 
+    const input = filterOfficialsSyncInput(rawInput, scope, owner, syncEmail);
     const projection = await syncOfficialsSubmissions(input);
 
     sendJson(response, 200, { submissions: projection });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not sync officials submissions.';
+
+    if (
+      message === 'officials_sync_auth_required' ||
+      message === 'officials_sync_auth_invalid'
+    ) {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
     sendJson(response, 400, {
       error: 'invalid_request',
-      message: error instanceof Error ? error.message : 'Could not sync officials submissions.',
+      message,
     });
   }
 }

@@ -1,5 +1,7 @@
 import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js';
+import { readMemberSession } from './member-session-store.js';
 import { readIndexerUrl } from './protocol-env.js';
+import { createWalletAuthPayload, readWalletAuthOwner } from './wallet-auth.js';
 
 export type OfficialsSubmissionsProjection = {
   suggestions: unknown[];
@@ -68,11 +70,25 @@ export type SyncOfficialsSubmissionsInput = {
 export async function syncOfficialsSubmissions(
   input: SyncOfficialsSubmissionsInput
 ): Promise<OfficialsSubmissionsProjection> {
+  const owner = readWalletAuthOwner();
+
+  if (!owner?.startsWith('0x')) {
+    throw new Error('Officials submissions sync requires a connected wallet or zkLogin session.');
+  }
+
+  const auth = await createWalletAuthPayload(owner);
+  const session = readMemberSession();
+
   const payload = await fetchJson<{ submissions: OfficialsSubmissionsProjection }>(
     '/api/officials/submissions/sync',
     {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        ...input,
+        owner,
+        auth,
+        syncEmail: session?.email ?? '',
+      }),
     }
   );
 

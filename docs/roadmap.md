@@ -622,7 +622,18 @@ Provider interfaces (affiliation, channel directory, member directory) are the p
 Status:
 
 ```text
-Unblocked — Phase 7 complete; begin launch ops when ready
+In progress — Phase 8 overall ~78% complete
+```
+
+```text
+Phase 8 progress
+
+[███████████████░░░░░] ~78%
+
+8.1 Testnet launch mode      █████████████████░░░  ~85%
+8.2 Deploy + public URL      ████░░░░░░░░░░░░░░░░  ~20%
+8.3 zkLogin production       ██████░░░░░░░░░░░░░░  ~30%
+8.4 Security + custody       ████░░░░░░░░░░░░░░░░  ~20%
 ```
 
 Launch requirements:
@@ -659,7 +670,7 @@ Live indexer + receiving server required; empty states preferred over simulated 
 Status:
 
 ```text
-In progress — test-launch policy wired in frontend; deployment ops pending
+~85% — policy + officials API + env tooling + sync auth shipped; deploy secrets + public URL pending
 ```
 
 Shipped:
@@ -669,23 +680,86 @@ VITE_NAMI_TEST_LAUNCH=true forces fixture catalogs off (even if DEV_FIXTURES=tru
 isDemoSimulationEnabled() gates dashboard perspectives, event sim buttons, approval sims, demo claim method
 shouldUseDemoOwnerFallback() removes demo wallet owner on test launch
 Shell catalog placeholders (self member + routing shells) when fixtures are disabled
-frontend/.env.testnet.example template for official builds
+frontend/.env.testnet.example + backend/.env.testnet.example (pinned to latest.json IDs)
 Guild/squad seed catalogs gated behind shouldUseDevFixtures()
 Channel banner simulation disabled without fixtures
 @fiend nodename prefix for passport claims
 Receiving server officials queue: GET/POST /api/officials/submissions (+ sync)
 Test launch hydrates + dual-writes suggestions, game tickets, partner banners, nodename claims
-docs/testnet-launch-checklist.md
+Officials sync auth on test launch: wallet signature; official owner full merge; member-scoped merge
+Optional NAMI_OFFICIALS_SYNC_SECRET for server-side ops (never in frontend env)
+NAMI_TEST_LAUNCH on backend disables mock payment providers
+docs/testnet-launch-checklist.md + docs/testnet-zklogin.md
+scripts/sync-testnet-env.mjs, verify-testnet-ready.mjs, extract-testnet-latest.mjs
+Move package verified: 80 tests passing (no republish required 2026-06-19)
 ```
 
 Remaining before testnet go-live:
 
 ```text
-Republish Move package if contracts drifted since deployments/testnet/latest.json
+Set official owner, treasury, Stripe/PayPal, and zkLogin client ID (human secrets)
 Deploy receiving server to a public URL + set VITE_NAMI_INDEXER_URL
-Fill .env.testnet.example values and run npm run build
-zkLogin redirect URIs for testnet origin
-Security review + AdminCap custody + officials API auth hardening
+node scripts/verify-testnet-ready.mjs — all checks green
+npm --prefix frontend run build against .env.local
+AdminCap custody plan finalized + privacy/community guideline drafts
+```
+
+---
+
+## Phase 8.2 — Public Deploy URL (Not started)
+
+Status:
+
+```text
+Blocked on hosting choice — Walrus Sites (Phase 9.1) or traditional static host + public receiving server
+```
+
+Deliverables:
+
+```text
+Public VITE_NAMI_INDEXER_URL
+Public frontend origin with zkLogin redirect registered
+Health + officials API reachable from browser CORS
+```
+
+---
+
+## Phase 8.3 — zkLogin Production (In progress)
+
+Status:
+
+```text
+~30% — client wiring shipped; OAuth registration per deploy origin pending
+```
+
+See [testnet-zklogin.md](./testnet-zklogin.md).
+
+---
+
+## Phase 8.4 — Security & Custody (In progress)
+
+Status:
+
+```text
+~20% — officials sync auth shipped; custody + privacy docs pending
+```
+
+Shipped:
+
+```text
+Officials POST /sync wallet auth on NAMI_TEST_LAUNCH=true
+Official owner full merge; member-scoped merge for tickets, claims, suggestions
+Optional NAMI_OFFICIALS_SYNC_SECRET for ops-only server sync
+NAMI_PAYMENT_ALLOW_MOCK=false enforced when NAMI_TEST_LAUNCH=true
+AdminCap custody notes in testnet-launch-checklist.md
+```
+
+Remaining:
+
+```text
+Finalize AdminCap backup holder + key management runbook
+Privacy + community guidelines drafts
+Full security review before public URL
 ```
 
 ---
