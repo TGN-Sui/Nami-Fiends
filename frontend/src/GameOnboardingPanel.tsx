@@ -12,10 +12,15 @@ import {
 } from './game-onboarding-draft.js';
 import { syncGameOwnerSessionFromTicket } from './game-owner-session-store.js';
 import {
+  buildOfficialGameSubmissionTicket,
   createProvisionalChannelId,
   upsertGameSubmissionTicket,
   type GameSubmissionTicket,
 } from './game-submission-ticket-store.js';
+import {
+  GAME_STUDIO_QUESTIONNAIRE_QUESTIONS,
+  isGameStudioQuestionnaireComplete,
+} from './game-studio-questionnaire.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
 import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
 import { GameOfficialSocialAuthControl } from './GameOfficialSocialAuthControl.js';
@@ -36,36 +41,6 @@ const GAME_ONBOARDING_ACTS: Array<{ act: GameOnboardingAct; label: string }> = [
   { act: 'proof', label: 'Game proof' },
   { act: 'review', label: 'Submit ticket' },
   { act: 'questionnaire', label: 'Questionnaire' },
-];
-
-const QUESTIONNAIRE_QUESTIONS = [
-  {
-    id: 'release_status',
-    prompt: 'Current release status',
-    options: [
-      { id: 'dev', label: 'In development' },
-      { id: 'beta', label: 'Beta' },
-      { id: 'released', label: 'Released / live' },
-    ],
-  },
-  {
-    id: 'team_size',
-    prompt: 'Team size',
-    options: [
-      { id: 'solo', label: 'Solo' },
-      { id: 'small', label: '2-5' },
-      { id: 'studio', label: '6+' },
-    ],
-  },
-  {
-    id: 'integration',
-    prompt: 'Sui / wallet integration readiness',
-    options: [
-      { id: 'ready', label: 'Ready now' },
-      { id: 'planning', label: 'Planning' },
-      { id: 'later', label: 'Later' },
-    ],
-  },
 ];
 
 function getActIndex(act: GameOnboardingAct): number {
@@ -211,13 +186,12 @@ export function GameOnboardingPanel(props: {
     const provisionalChannelId = createProvisionalChannelId(draft.gameTitle);
     const status = trustBreakdown.preapprovalEligible ? 'preapproved' : 'submitted';
 
-    const ticket: GameSubmissionTicket = {
+    const ticket = buildOfficialGameSubmissionTicket({
       id: ticketId,
       gameTitle: draft.gameTitle.trim(),
       studioName: draft.studioName.trim(),
       contactName: draft.contactName.trim(),
       email: draft.email.trim().toLowerCase(),
-      phone: draft.phone.trim(),
       websiteUrl: draft.websiteUrl.trim(),
       storePageUrl: draft.storePageUrl.trim(),
       trailerUrl: draft.trailerUrl.trim(),
@@ -232,7 +206,7 @@ export function GameOnboardingPanel(props: {
       questionnaireEligible: trustBreakdown.preapprovalEligible,
       questionnaireStarted: false,
       submittedAtMs: Date.now(),
-    };
+    });
 
     upsertGameSubmissionTicket(ticket);
     syncGameOwnerSessionFromTicket(ticket.id);
@@ -272,9 +246,7 @@ export function GameOnboardingPanel(props: {
     });
   }
 
-  const questionnaireComplete = QUESTIONNAIRE_QUESTIONS.every(
-    (question) => draft.questionnaireAnswers[question.id],
-  );
+  const questionnaireComplete = isGameStudioQuestionnaireComplete(draft.questionnaireAnswers);
 
   return (
     <section className="game-onboarding-panel">
@@ -482,8 +454,12 @@ export function GameOnboardingPanel(props: {
               <p>{draft.studioName.trim() || 'Studio pending'}</p>
               <div className="onboarding-preview-meta">
                 <span>{draft.email.trim().toLowerCase() || 'email@pending'}</span>
-                <span>{draft.phone.trim() || 'phone pending'}</span>
+                <span>{draft.contactName.trim() || 'contact pending'}</span>
               </div>
+              <p className="protocol-hint">
+                Phone numbers stay on your device for Trust Score only and are not sent to Nami
+                Officials.
+              </p>
               <p className="protocol-hint">
                 Trust Score {trustBreakdown.total}% ·{' '}
                 {trustBreakdown.preapprovalEligible
@@ -541,7 +517,7 @@ export function GameOnboardingPanel(props: {
               editing your hidden game channel.
             </p>
 
-            {QUESTIONNAIRE_QUESTIONS.map((question) => (
+            {GAME_STUDIO_QUESTIONNAIRE_QUESTIONS.map((question) => (
               <fieldset className="onboarding-quiz-question" key={question.id}>
                 <legend>{question.prompt}</legend>
                 <div className="onboarding-quiz-options">

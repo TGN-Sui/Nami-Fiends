@@ -127,6 +127,42 @@ export function upsertGameSubmissionTicket(ticket: GameSubmissionTicket): void {
   writeTickets(tickets);
 }
 
+/** Officials tickets never include the studio phone — it stays local for Trust Score only. */
+export function buildOfficialGameSubmissionTicket(
+  input: Omit<GameSubmissionTicket, 'phone'>,
+): GameSubmissionTicket {
+  return {
+    ...input,
+    phone: '',
+  };
+}
+
+export function markGameSubmissionQuestionnaireComplete(
+  ticketId: string,
+  questionnaireAnswers: Record<string, string>,
+): GameSubmissionTicket | null {
+  const tickets = readTickets();
+  const index = tickets.findIndex((entry) => entry.id === ticketId);
+
+  if (index < 0) {
+    return null;
+  }
+
+  const current = tickets[index]!;
+  const next: GameSubmissionTicket = {
+    ...current,
+    questionnaireStarted: true,
+    reviewedAtMs: current.reviewedAtMs ?? Date.now(),
+  };
+
+  tickets[index] = next;
+  writeTickets(tickets);
+
+  void questionnaireAnswers;
+
+  return next;
+}
+
 export function updateGameSubmissionTicketStatus(
   ticketId: string,
   status: GameSubmissionTicketStatus,

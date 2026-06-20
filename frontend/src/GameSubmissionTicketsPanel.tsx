@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { sendGameApprovalEmail } from './game-approval-email-store.js';
+import { queueGameApprovalWelcome } from './game-approval-welcome-store.js';
 import { releaseHiddenChannelEventsForChannel } from './events-store.js';
 import { syncGameOwnerSessionFromTicket } from './game-owner-session-store.js';
 import {
@@ -30,10 +32,13 @@ export function GameSubmissionTicketsPanel(): ReactElement {
 
     if (status === 'approved') {
       const released = releaseHiddenChannelEventsForChannel(updated.provisionalChannelId);
+      const emailResult = sendGameApprovalEmail(updated);
+      queueGameApprovalWelcome(updated.id);
       setNotice(
         'Ticket ' +
           updated.gameTitle +
-          ' marked approved.' +
+          ' marked approved. ' +
+          (emailResult.ok ? emailResult.message : emailResult.reason) +
           (released > 0 ? ' ' + released + ' hidden event draft(s) are now visible.' : ''),
       );
       return;
@@ -64,9 +69,7 @@ export function GameSubmissionTicketsPanel(): ReactElement {
               <div className="game-submission-ticket-copy">
                 <strong>{ticket.gameTitle}</strong>
                 <span>{ticket.studioName}</span>
-                <span>
-                  {ticket.email} · {ticket.phone}
-                </span>
+                <span>{ticket.email || 'no email on file'}</span>
                 <span>
                   Official {ticket.officialSocialPlatform}: {ticket.officialSocialHandle}
                 </span>

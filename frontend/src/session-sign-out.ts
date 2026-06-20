@@ -1,4 +1,5 @@
 import { clearSignedOut } from './member-auth-store.js';
+import { clearGameApprovalWelcomeState } from './game-approval-welcome-store.js';
 import { clearGameOnboardingDraft } from './game-onboarding-draft.js';
 import { clearContactCodeVerification } from './contact-code-verification-store.js';
 import { clearAllOfficialSocialAuth } from './official-social-auth-store.js';
@@ -14,6 +15,7 @@ export function clearLocalNamiSession(): void {
   clearGameOwnerSession();
   clearOnboardingDraft();
   clearGameOnboardingDraft();
+  clearGameApprovalWelcomeState();
   clearAllOfficialSocialAuth();
   clearContactCodeVerification();
   clearZkLoginSession();

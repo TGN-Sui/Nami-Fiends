@@ -29,6 +29,7 @@ import { ProtocolConductPanel } from './ProtocolConductPanel.js';
 
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { EventLivePopup } from './EventLivePopup.js';
+import { GameApprovalWelcomeOverlay } from './GameApprovalWelcomeOverlay.js';
 import { ChannelProfileScreen } from './ChannelProfileScreen.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
 import type { ChannelProfileOwnerFocus } from './channel-profile-navigation.js';
@@ -5393,6 +5394,7 @@ if (activePage === 'userProfile') {
           }}
         />
       ) : null}
+      <GameApprovalWelcomeOverlay />
     </main>
   );
 }

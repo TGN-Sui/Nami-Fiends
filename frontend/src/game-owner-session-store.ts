@@ -132,7 +132,7 @@ export function syncGameOwnerSessionFromTicket(ticketId: string): GameOwnerSessi
     studioName: ticket.studioName,
     contactName: ticket.contactName,
     email: ticket.email,
-    phone: ticket.phone,
+    phone: '',
     tagline: existing?.tagline ?? 'Pre-approved game channel — hidden until full approval.',
     genre: existing?.genre ?? 'Indie',
     officialSocialPlatform: ticket.officialSocialPlatform,
@@ -170,6 +170,20 @@ export function isFullyApprovedGameOwner(): boolean {
   const session = readGameOwnerSession();
 
   return session?.approvalStatus === 'approved';
+}
+
+export function markGameOwnerQuestionnaireComplete(): void {
+  const session = readGameOwnerSession();
+
+  if (!session) {
+    return;
+  }
+
+  saveGameOwnerSession({
+    ...session,
+    questionnaireStarted: true,
+    questionnaireComplete: true,
+  });
 }
 
 export function canEnterNamiAsGameOwner(): boolean {
