@@ -164,7 +164,7 @@ export function isPreApprovedGameOwner(): boolean {
     return false;
   }
 
-  return session.approvalStatus === 'preapproved' || session.approvalStatus === 'submitted';
+  return session.approvalStatus === 'preapproved';
 }
 
 export function isFullyApprovedGameOwner(): boolean {

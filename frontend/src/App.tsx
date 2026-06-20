@@ -4881,19 +4881,6 @@ export function App(): ReactElement {
   }), [openMemberProfile, openChannelProfile, openStudioProfile]);
 
   const navigateFromCurrentPage = useCallback((page: NamiPage): void => {
-    if (isPreApprovedGameOwner() && !isFullyApprovedGameOwner()) {
-      if (page === 'channelProfile') {
-        openOwnedGameChannelProfile(null);
-        return;
-      }
-
-      if (page === 'settings') {
-        return;
-      }
-
-      return;
-    }
-
     if (page === 'userProfile' && isGameChannelOwner()) {
       openOwnedGameChannelProfile();
       return;
@@ -5282,26 +5269,17 @@ if (activePage === 'userProfile') {
     saveIgniteRadioEnabled(false);
   }, [activePage]);
 
-  const isPreApprovedGameOwnerOnly = isPreApprovedGameOwner() && !isFullyApprovedGameOwner();
-  const showSidebar = activePage !== 'entry' && !isPreApprovedGameOwnerOnly;
-  const showProfileDropdown = showSidebar && !isPreApprovedGameOwnerOnly;
-
-  useEffect(() => {
-    if (!isPreApprovedGameOwnerOnly) {
-      return;
-    }
-
-    if (activePage === 'settings') {
-      enterPreApprovedGameChannel();
-    }
-  }, [activePage, isPreApprovedGameOwnerOnly]);
+  const isPreApprovedGameOwnerWorkspace =
+    isPreApprovedGameOwner() && !isFullyApprovedGameOwner();
+  const showSidebar = activePage !== 'entry';
+  const showProfileDropdown = showSidebar;
 
   return (
     <main
       className="nami-app"
       data-active-page={activePage}
       data-grid-pulse-key={gridPulseKey}
-      {...(isPreApprovedGameOwnerOnly ? { 'data-preapproved-game-owner': 'true' } : {})}
+      {...(isPreApprovedGameOwnerWorkspace ? { 'data-preapproved-game-owner': 'true' } : {})}
     >
       {showSidebar ? <NamiGridSpotlight scope="app" /> : null}
       {showProfileDropdown
@@ -5343,10 +5321,10 @@ if (activePage === 'userProfile') {
         </button>
       )}
 
-      {!isPreApprovedGameOwnerOnly ? (
+      {!isPreApprovedGameOwnerWorkspace ? (
         <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
       ) : null}
-      {!isPreApprovedGameOwnerOnly ? (
+      {!isPreApprovedGameOwnerWorkspace ? (
         <DemoPerspectiveBar
           onNavigate={navigateFromCurrentPage}
           onRestoreOwner={handleRestoreOwnerDashboard}
