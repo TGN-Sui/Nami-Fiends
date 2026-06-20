@@ -52,6 +52,7 @@ export const config = {
   packageId: process.env.NAMI_PACKAGE_ID ?? '',
   adminCapId: process.env.NAMI_ADMIN_CAP_ID ?? '',
   officialOwner: process.env.NAMI_OFFICIAL_OWNER ?? '',
+  officialOwnerEmail: (process.env.NAMI_OFFICIAL_OWNER_EMAIL ?? '').trim().toLowerCase(),
   testLaunch: readBoolean('NAMI_TEST_LAUNCH'),
   fullnodeUrl: process.env.SUI_FULLNODE_URL ?? 'http://127.0.0.1:9000',
 

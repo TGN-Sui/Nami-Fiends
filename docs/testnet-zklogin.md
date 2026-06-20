@@ -6,6 +6,8 @@ Nami test launch uses Google zkLogin as the default identity path. You must regi
 
 ## 1. Google Cloud OAuth client
 
+Use the **official owner Google account** (`VITE_NAMI_OFFICIAL_OWNER_EMAIL`, e.g. `robbier640@gmail.com`) when creating the OAuth client and when signing in through zkLogin.
+
 1. Open [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials.
 2. Create **OAuth client ID** → Application type: **Web application**.
 3. Add **Authorized JavaScript origins**:
@@ -42,6 +44,7 @@ After `deployments/testnet/latest.json` is current:
 node scripts/sync-testnet-env.mjs \
   --indexer-url https://api.your-testnet.example \
   --official-owner 0xYOUR_OFFICIAL_OWNER \
+  --official-owner-email owner@gmail.com \
   --zklogin-origin https://your-testnet-origin/
 ```
 

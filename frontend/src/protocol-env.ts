@@ -1,5 +1,15 @@
 /** Shared protocol environment readers — single source for wallet + indexer wiring. */
 
+export function readOfficialOwnerEmail(): string | null {
+  const value = import.meta.env.VITE_NAMI_OFFICIAL_OWNER_EMAIL;
+
+  if (typeof value !== 'string' || value.trim() === '' || !value.includes('@')) {
+    return null;
+  }
+
+  return value.trim().toLowerCase();
+}
+
 export function readOfficialOwner(): string | null {
   const official = import.meta.env.VITE_NAMI_OFFICIAL_OWNER;
   const demo = import.meta.env.VITE_NAMI_DEMO_OWNER;

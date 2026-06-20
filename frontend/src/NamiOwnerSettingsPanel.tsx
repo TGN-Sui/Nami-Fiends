@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import { readOfficialOwner } from './protocol-env.js';
+import { readOfficialOwner, readOfficialOwnerEmail } from './protocol-env.js';
 import {
   OWNER_CAPABILITY_LABELS,
   canManageModerators,
@@ -42,6 +42,7 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
   const [actionError, setActionError] = useState<string | null>(null);
 
   const officialOwner = readOfficialOwner();
+  const officialOwnerEmail = readOfficialOwnerEmail();
   const canReview = canReviewNodenameClaims(owner);
   const canManageMods = canManageModerators(owner);
   const ownerCapabilities = (Object.keys(OWNER_CAPABILITY_LABELS) as NamiOwnerCapability[]).filter(
@@ -226,6 +227,12 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
       {officialOwner ? (
         <p className="protocol-hint nami-owner-official-wallet">
           Official owner wallet: <code>{shortenAddress(officialOwner)}</code>
+          {officialOwnerEmail ? (
+            <>
+              {' '}
+              · Google account: <code>{officialOwnerEmail}</code>
+            </>
+          ) : null}
         </p>
       ) : null}
 
