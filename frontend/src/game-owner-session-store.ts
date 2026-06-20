@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
+import { formatGameGenresForDisplay } from './game-genres.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
 import {
   gameSubmissionTicketById,
@@ -134,7 +135,7 @@ export function syncGameOwnerSessionFromTicket(ticketId: string): GameOwnerSessi
     email: ticket.email,
     phone: '',
     tagline: existing?.tagline ?? 'Pre-approved game channel — hidden until full approval.',
-    genre: existing?.genre ?? 'Indie',
+    genre: formatGameGenresForDisplay(ticket.genres) || existing?.genre || 'Indie',
     officialSocialPlatform: ticket.officialSocialPlatform,
     officialSocialHandle: ticket.officialSocialHandle,
     officialSocialVerified: ticket.officialSocialVerified,

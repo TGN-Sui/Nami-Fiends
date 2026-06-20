@@ -1,3 +1,6 @@
+import type { GameStoreUrls } from './game-genres.js';
+import { GAME_STORE_LINK_FIELDS } from './game-genres.js';
+
 export type GameTrustScoreTier = 'basic' | 'verified' | 'premium';
 
 export type GameTrustScoreCategory = {
@@ -33,7 +36,12 @@ export type GameTrustScoreInput = {
   phone: string;
   phoneVerified: boolean;
   websiteUrl: string;
-  storePageUrl: string;
+  genres: string[];
+  steamStoreUrl: string;
+  epicStoreUrl: string;
+  xboxStoreUrl: string;
+  playstationStoreUrl: string;
+  otherStoreUrl: string;
   trailerUrl: string;
   officialSocialPlatform: 'x' | 'twitch' | null;
   officialSocialHandle: string;
@@ -46,6 +54,16 @@ export const GAME_PREAPPROVAL_THRESHOLD = 60;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^\+?[\d\s().-]{7,}$/;
+
+const STORE_TRUST_POINTS: Record<keyof GameStoreUrls, number> = {
+  steamStoreUrl: 4,
+  epicStoreUrl: 4,
+  xboxStoreUrl: 4,
+  playstationStoreUrl: 4,
+  otherStoreUrl: 3,
+};
+
+const STORE_TRUST_CAP = 15;
 
 function clampScore(value: number, max: number): number {
   return Math.max(0, Math.min(max, value));
@@ -82,6 +100,45 @@ function isValidUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function countSelectedGenres(genres: string[]): number {
+  return genres.map((genre) => genre.trim()).filter((genre) => genre.length > 0).length;
+}
+
+function scoreStoreLinks(input: GameTrustScoreInput): {
+  points: number;
+  boosters: GameTrustScoreBooster[];
+} {
+  const boosters: GameTrustScoreBooster[] = [];
+  let points = 0;
+
+  for (const storeField of GAME_STORE_LINK_FIELDS) {
+    const url = input[storeField.key];
+
+    if (!isValidUrl(url)) {
+      continue;
+    }
+
+    const storePoints = Math.min(
+      STORE_TRUST_POINTS[storeField.key],
+      STORE_TRUST_CAP - points,
+    );
+
+    if (storePoints <= 0) {
+      break;
+    }
+
+    points += storePoints;
+    boosters.push({
+      id: storeField.key,
+      label: storeField.label + ' linked',
+      points: storePoints,
+      category: 'gameProof',
+    });
+  }
+
+  return { points, boosters };
 }
 
 export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScoreBreakdown {
@@ -163,16 +220,26 @@ export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScor
 
   identity = clampScore(identity, 40);
 
-  if (isValidUrl(input.storePageUrl)) {
-    gameProof += 15;
+  if (countSelectedGenres(input.genres) > 0) {
+    gameProof += 5;
     boosters.push({
-      id: 'store-page',
-      label: 'Store page linked',
-      points: 15,
+      id: 'genres',
+      label: 'Game genre(s) selected',
+      points: 5,
       category: 'gameProof',
     });
   } else {
-    suggestions.push('Link a Steam, itch.io, or Epic store page for up to +15 Trust Score.');
+    suggestions.push('Select at least one game genre for up to +5 Trust Score.');
+  }
+
+  const storeScore = scoreStoreLinks(input);
+  gameProof += storeScore.points;
+  boosters.push(...storeScore.boosters);
+
+  if (storeScore.points === 0) {
+    suggestions.push(
+      'Link Steam, Epic, Xbox, PlayStation, or another store page for up to +15 Trust Score.',
+    );
   }
 
   if (isValidUrl(input.trailerUrl)) {
@@ -264,7 +331,12 @@ export function computeGameTrustScoreFromDraft(input: {
   phone: string;
   phoneVerified: boolean;
   websiteUrl: string;
-  storePageUrl: string;
+  genres: string[];
+  steamStoreUrl: string;
+  epicStoreUrl: string;
+  xboxStoreUrl: string;
+  playstationStoreUrl: string;
+  otherStoreUrl: string;
   trailerUrl: string;
   officialSocialPlatform: 'x' | 'twitch' | null;
   officialSocialHandle: string;

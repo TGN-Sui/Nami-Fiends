@@ -1,4 +1,5 @@
 import { contactFieldBlocksContinue } from './contact-code-verification-store.js';
+import { createEmptyGameStoreUrls } from './game-genres.js';
 
 const STORAGE_KEY = 'nami.game.onboarding.draft';
 
@@ -15,7 +16,12 @@ export interface GameOnboardingDraft {
   phone: string;
   phoneVerified: boolean;
   websiteUrl: string;
-  storePageUrl: string;
+  genres: string[];
+  steamStoreUrl: string;
+  epicStoreUrl: string;
+  xboxStoreUrl: string;
+  playstationStoreUrl: string;
+  otherStoreUrl: string;
   trailerUrl: string;
   officialSocialPlatform: GameOfficialSocialPlatform | null;
   officialSocialHandle: string;
@@ -30,6 +36,7 @@ export interface GameOnboardingDraft {
 
 export function createEmptyGameOnboardingDraft(): GameOnboardingDraft {
   const now = Date.now();
+  const emptyStoreUrls = createEmptyGameStoreUrls();
 
   return {
     gameTitle: '',
@@ -40,7 +47,8 @@ export function createEmptyGameOnboardingDraft(): GameOnboardingDraft {
     phone: '',
     phoneVerified: false,
     websiteUrl: '',
-    storePageUrl: '',
+    genres: [],
+    ...emptyStoreUrls,
     trailerUrl: '',
     officialSocialPlatform: null,
     officialSocialHandle: '',
@@ -52,6 +60,46 @@ export function createEmptyGameOnboardingDraft(): GameOnboardingDraft {
     createdAtMs: now,
     updatedAtMs: now,
   };
+}
+
+function migrateLegacyStorePageUrl(parsed: Partial<GameOnboardingDraft & { storePageUrl?: string }>): {
+  steamStoreUrl: string;
+  epicStoreUrl: string;
+  xboxStoreUrl: string;
+  playstationStoreUrl: string;
+  otherStoreUrl: string;
+} {
+  const emptyStoreUrls = createEmptyGameStoreUrls();
+
+  if (typeof parsed.steamStoreUrl === 'string') {
+    emptyStoreUrls.steamStoreUrl = parsed.steamStoreUrl;
+  }
+
+  if (typeof parsed.epicStoreUrl === 'string') {
+    emptyStoreUrls.epicStoreUrl = parsed.epicStoreUrl;
+  }
+
+  if (typeof parsed.xboxStoreUrl === 'string') {
+    emptyStoreUrls.xboxStoreUrl = parsed.xboxStoreUrl;
+  }
+
+  if (typeof parsed.playstationStoreUrl === 'string') {
+    emptyStoreUrls.playstationStoreUrl = parsed.playstationStoreUrl;
+  }
+
+  if (typeof parsed.otherStoreUrl === 'string') {
+    emptyStoreUrls.otherStoreUrl = parsed.otherStoreUrl;
+  }
+
+  if (
+    emptyStoreUrls.steamStoreUrl === '' &&
+    typeof parsed.storePageUrl === 'string' &&
+    parsed.storePageUrl.trim() !== ''
+  ) {
+    emptyStoreUrls.steamStoreUrl = parsed.storePageUrl;
+  }
+
+  return emptyStoreUrls;
 }
 
 export function loadGameOnboardingDraft(): GameOnboardingDraft | null {
@@ -66,7 +114,8 @@ export function loadGameOnboardingDraft(): GameOnboardingDraft | null {
       return null;
     }
 
-    const parsed = JSON.parse(stored) as Partial<GameOnboardingDraft>;
+    const parsed = JSON.parse(stored) as Partial<GameOnboardingDraft & { storePageUrl?: string }>;
+    const storeUrls = migrateLegacyStorePageUrl(parsed);
 
     return {
       gameTitle: typeof parsed.gameTitle === 'string' ? parsed.gameTitle : '',
@@ -77,7 +126,10 @@ export function loadGameOnboardingDraft(): GameOnboardingDraft | null {
       phone: typeof parsed.phone === 'string' ? parsed.phone : '',
       phoneVerified: parsed.phoneVerified === true,
       websiteUrl: typeof parsed.websiteUrl === 'string' ? parsed.websiteUrl : '',
-      storePageUrl: typeof parsed.storePageUrl === 'string' ? parsed.storePageUrl : '',
+      genres: Array.isArray(parsed.genres)
+        ? parsed.genres.filter((genre): genre is string => typeof genre === 'string')
+        : [],
+      ...storeUrls,
       trailerUrl: typeof parsed.trailerUrl === 'string' ? parsed.trailerUrl : '',
       officialSocialPlatform:
         parsed.officialSocialPlatform === 'x' || parsed.officialSocialPlatform === 'twitch'

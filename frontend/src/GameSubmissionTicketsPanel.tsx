@@ -9,6 +9,7 @@ import {
   updateGameSubmissionTicketStatus,
   useGameSubmissionTickets,
 } from './game-submission-ticket-store.js';
+import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { gameTrustScoreTierLabel } from './game-trust-score.js';
 
 export function GameSubmissionTicketsPanel(): ReactElement {
@@ -68,11 +69,38 @@ export function GameSubmissionTicketsPanel(): ReactElement {
               <div className="game-submission-ticket-rank">#{index + 1}</div>
               <div className="game-submission-ticket-copy">
                 <strong>{ticket.gameTitle}</strong>
-                <span>{ticket.studioName}</span>
-                <span>{ticket.email || 'no email on file'}</span>
-                <span>
-                  Official {ticket.officialSocialPlatform}: {ticket.officialSocialHandle}
-                </span>
+                <dl className="onboarding-preview-details game-submission-ticket-details">
+                  {buildGameTicketPreviewFields({
+                    gameTitle: ticket.gameTitle,
+                    studioName: ticket.studioName,
+                    contactName: ticket.contactName,
+                    email: ticket.email,
+                    genres: ticket.genres,
+                    websiteUrl: ticket.websiteUrl,
+                    trailerUrl: ticket.trailerUrl,
+                    steamStoreUrl: ticket.steamStoreUrl,
+                    epicStoreUrl: ticket.epicStoreUrl,
+                    xboxStoreUrl: ticket.xboxStoreUrl,
+                    playstationStoreUrl: ticket.playstationStoreUrl,
+                    otherStoreUrl: ticket.otherStoreUrl,
+                    officialSocialPlatform: ticket.officialSocialPlatform,
+                    officialSocialHandle: ticket.officialSocialHandle,
+                    officialSocialVerified: ticket.officialSocialVerified,
+                  }).map((field) => (
+                    <div className="onboarding-preview-detail-row" key={ticket.id + '-' + field.id}>
+                      <dt>{field.label}</dt>
+                      <dd>
+                        {field.href ? (
+                          <a href={field.href} rel="noreferrer" target="_blank">
+                            {field.value}
+                          </a>
+                        ) : (
+                          field.value
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
               <div className="game-submission-ticket-score">
                 <strong>{ticket.trustScore}%</strong>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import {
   createEmptyGameOnboardingDraft,
@@ -21,6 +21,8 @@ import {
   GAME_STUDIO_QUESTIONNAIRE_QUESTIONS,
   isGameStudioQuestionnaireComplete,
 } from './game-studio-questionnaire.js';
+import { GAME_ONBOARDING_GENRES, GAME_STORE_LINK_FIELDS } from './game-genres.js';
+import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
 import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
 import { GameOfficialSocialAuthControl } from './GameOfficialSocialAuthControl.js';
@@ -73,7 +75,12 @@ export function GameOnboardingPanel(props: {
     phone: draft.phone,
     phoneVerified: draft.phoneVerified,
     websiteUrl: draft.websiteUrl,
-    storePageUrl: draft.storePageUrl,
+    genres: draft.genres,
+    steamStoreUrl: draft.steamStoreUrl,
+    epicStoreUrl: draft.epicStoreUrl,
+    xboxStoreUrl: draft.xboxStoreUrl,
+    playstationStoreUrl: draft.playstationStoreUrl,
+    otherStoreUrl: draft.otherStoreUrl,
     trailerUrl: draft.trailerUrl,
     officialSocialPlatform: draft.officialSocialPlatform,
     officialSocialHandle: draft.officialSocialHandle,
@@ -81,6 +88,28 @@ export function GameOnboardingPanel(props: {
     walletLinked,
     walletSource: walletLinked ? (source ?? 'demo') : null,
   });
+
+  const ticketPreviewFields = useMemo(
+    () =>
+      buildGameTicketPreviewFields({
+        gameTitle: draft.gameTitle,
+        studioName: draft.studioName,
+        contactName: draft.contactName,
+        email: draft.email,
+        genres: draft.genres,
+        websiteUrl: draft.websiteUrl,
+        trailerUrl: draft.trailerUrl,
+        steamStoreUrl: draft.steamStoreUrl,
+        epicStoreUrl: draft.epicStoreUrl,
+        xboxStoreUrl: draft.xboxStoreUrl,
+        playstationStoreUrl: draft.playstationStoreUrl,
+        otherStoreUrl: draft.otherStoreUrl,
+        officialSocialPlatform: draft.officialSocialPlatform,
+        officialSocialHandle: draft.officialSocialHandle,
+        officialSocialVerified: draft.officialSocialVerified,
+      }),
+    [draft],
+  );
 
   useEffect(() => {
     saveGameOnboardingDraft({
@@ -155,6 +184,19 @@ export function GameOnboardingPanel(props: {
     setDraft((current) => ({ ...current, ...patch }));
   }, []);
 
+  function toggleGenre(genre: string): void {
+    setDraft((current) => {
+      const selected = current.genres.includes(genre);
+
+      return {
+        ...current,
+        genres: selected
+          ? current.genres.filter((entry) => entry !== genre)
+          : [...current.genres, genre],
+      };
+    });
+  }
+
   function handleOfficialPlatformChange(platform: 'x' | 'twitch'): void {
     const currentAuth = readGameOfficialSocialAuthState();
 
@@ -192,8 +234,13 @@ export function GameOnboardingPanel(props: {
       studioName: draft.studioName.trim(),
       contactName: draft.contactName.trim(),
       email: draft.email.trim().toLowerCase(),
+      genres: draft.genres,
       websiteUrl: draft.websiteUrl.trim(),
-      storePageUrl: draft.storePageUrl.trim(),
+      steamStoreUrl: draft.steamStoreUrl.trim(),
+      epicStoreUrl: draft.epicStoreUrl.trim(),
+      xboxStoreUrl: draft.xboxStoreUrl.trim(),
+      playstationStoreUrl: draft.playstationStoreUrl.trim(),
+      otherStoreUrl: draft.otherStoreUrl.trim(),
       trailerUrl: draft.trailerUrl.trim(),
       officialSocialPlatform: draft.officialSocialPlatform,
       officialSocialHandle: draft.officialSocialHandle.trim(),
@@ -407,6 +454,26 @@ export function GameOnboardingPanel(props: {
 
         {act === 'proof' ? (
           <div className="onboarding-step-body">
+            <fieldset className="onboarding-quiz-question">
+              <legend>Game genre(s)</legend>
+              <p className="protocol-hint">
+                Select every genre that fits your game. At least one genre adds Trust Score proof.
+              </p>
+              <div className="onboarding-quiz-options onboarding-genre-options">
+                {GAME_ONBOARDING_GENRES.map((genre) => (
+                  <label className="onboarding-quiz-option" key={genre}>
+                    <input
+                      checked={draft.genres.includes(genre)}
+                      name={'genre-' + genre}
+                      onChange={() => toggleGenre(genre)}
+                      type="checkbox"
+                    />
+                    <span>{genre}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <label className="onboarding-field">
               <span>Official website (optional)</span>
               <input
@@ -416,15 +483,29 @@ export function GameOnboardingPanel(props: {
                 value={draft.websiteUrl}
               />
             </label>
-            <label className="onboarding-field">
-              <span>Store page (optional)</span>
-              <input
-                onChange={(event) => updateDraft({ storePageUrl: event.target.value })}
-                placeholder="https://store.steampowered.com/app/..."
-                type="url"
-                value={draft.storePageUrl}
-              />
-            </label>
+
+            {GAME_STORE_LINK_FIELDS.map((storeField) => (
+              <label className="onboarding-field" key={storeField.key}>
+                <span>{storeField.label} (optional)</span>
+                <input
+                  onChange={(event) => updateDraft({ [storeField.key]: event.target.value })}
+                  placeholder={
+                    storeField.key === 'steamStoreUrl'
+                      ? 'https://store.steampowered.com/app/...'
+                      : storeField.key === 'epicStoreUrl'
+                        ? 'https://store.epicgames.com/...'
+                        : storeField.key === 'xboxStoreUrl'
+                          ? 'https://www.xbox.com/games/store/...'
+                          : storeField.key === 'playstationStoreUrl'
+                            ? 'https://store.playstation.com/...'
+                            : 'https://...'
+                  }
+                  type="url"
+                  value={draft[storeField.key]}
+                />
+              </label>
+            ))}
+
             <label className="onboarding-field">
               <span>Trailer URL (optional)</span>
               <input
@@ -449,13 +530,28 @@ export function GameOnboardingPanel(props: {
         {act === 'review' ? (
           <div className="onboarding-step-body">
             <article className="onboarding-preview-card">
-              <p className="onboarding-preview-status">Ticket ready</p>
+              <p className="onboarding-preview-status">Ticket preview</p>
               <h3>{draft.gameTitle.trim() || 'Untitled game'}</h3>
-              <p>{draft.studioName.trim() || 'Studio pending'}</p>
-              <div className="onboarding-preview-meta">
-                <span>{draft.email.trim().toLowerCase() || 'email@pending'}</span>
-                <span>{draft.contactName.trim() || 'contact pending'}</span>
-              </div>
+              {ticketPreviewFields.length > 0 ? (
+                <dl className="onboarding-preview-details">
+                  {ticketPreviewFields.map((field) => (
+                    <div className="onboarding-preview-detail-row" key={field.id}>
+                      <dt>{field.label}</dt>
+                      <dd>
+                        {field.href ? (
+                          <a href={field.href} rel="noreferrer" target="_blank">
+                            {field.value}
+                          </a>
+                        ) : (
+                          field.value
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="protocol-hint">Add contact details, social links, and store pages to preview them here.</p>
+              )}
               <p className="protocol-hint">
                 Phone numbers stay on your device for Trust Score only and are not sent to Nami
                 Officials.

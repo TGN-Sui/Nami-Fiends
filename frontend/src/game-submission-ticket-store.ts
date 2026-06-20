@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
+import { createEmptyGameStoreUrls } from './game-genres.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
 
 const TICKETS_KEY = 'nami.game.submission.tickets';
@@ -14,8 +15,13 @@ export type GameSubmissionTicket = {
   contactName: string;
   email: string;
   phone: string;
+  genres: string[];
   websiteUrl: string;
-  storePageUrl: string;
+  steamStoreUrl: string;
+  epicStoreUrl: string;
+  xboxStoreUrl: string;
+  playstationStoreUrl: string;
+  otherStoreUrl: string;
   trailerUrl: string;
   officialSocialPlatform: GameOfficialSocialPlatform;
   officialSocialHandle: string;
@@ -32,6 +38,8 @@ export type GameSubmissionTicket = {
   reviewedBy?: string;
 };
 
+type LegacyGameSubmissionTicket = GameSubmissionTicket & { storePageUrl?: string };
+
 let cachedTickets: GameSubmissionTicket[] | undefined;
 
 function invalidateCache(): void {
@@ -41,6 +49,66 @@ function invalidateCache(): void {
 function emitChange(): void {
   invalidateCache();
   window.dispatchEvent(new CustomEvent('nami-game-submission-tickets-changed'));
+}
+
+function normalizeTicket(entry: LegacyGameSubmissionTicket): GameSubmissionTicket {
+  const emptyStoreUrls = createEmptyGameStoreUrls();
+
+  if (typeof entry.steamStoreUrl === 'string') {
+    emptyStoreUrls.steamStoreUrl = entry.steamStoreUrl;
+  }
+
+  if (typeof entry.epicStoreUrl === 'string') {
+    emptyStoreUrls.epicStoreUrl = entry.epicStoreUrl;
+  }
+
+  if (typeof entry.xboxStoreUrl === 'string') {
+    emptyStoreUrls.xboxStoreUrl = entry.xboxStoreUrl;
+  }
+
+  if (typeof entry.playstationStoreUrl === 'string') {
+    emptyStoreUrls.playstationStoreUrl = entry.playstationStoreUrl;
+  }
+
+  if (typeof entry.otherStoreUrl === 'string') {
+    emptyStoreUrls.otherStoreUrl = entry.otherStoreUrl;
+  }
+
+  if (
+    emptyStoreUrls.steamStoreUrl === '' &&
+    typeof entry.storePageUrl === 'string' &&
+    entry.storePageUrl.trim() !== ''
+  ) {
+    emptyStoreUrls.steamStoreUrl = entry.storePageUrl;
+  }
+
+  return {
+    id: entry.id,
+    gameTitle: entry.gameTitle,
+    studioName: entry.studioName,
+    contactName: entry.contactName,
+    email: entry.email,
+    phone: entry.phone,
+    genres: Array.isArray(entry.genres)
+      ? entry.genres.filter((genre): genre is string => typeof genre === 'string')
+      : [],
+    websiteUrl: typeof entry.websiteUrl === 'string' ? entry.websiteUrl : '',
+    ...emptyStoreUrls,
+    trailerUrl: typeof entry.trailerUrl === 'string' ? entry.trailerUrl : '',
+    officialSocialPlatform: entry.officialSocialPlatform,
+    officialSocialHandle: entry.officialSocialHandle,
+    officialSocialVerified: entry.officialSocialVerified === true,
+    walletAddress: entry.walletAddress,
+    provisionalChannelId: entry.provisionalChannelId,
+    trustScore: entry.trustScore,
+    trustScoreTier: entry.trustScoreTier,
+    status: entry.status,
+    questionnaireEligible: entry.questionnaireEligible === true,
+    questionnaireStarted: entry.questionnaireStarted === true,
+    submittedAtMs: entry.submittedAtMs,
+    ...(typeof entry.reviewedAtMs === 'number' ? { reviewedAtMs: entry.reviewedAtMs } : {}),
+    ...(typeof entry.reviewedBy === 'string' ? { reviewedBy: entry.reviewedBy } : {}),
+  };
 }
 
 function readTickets(): GameSubmissionTicket[] {
@@ -56,8 +124,8 @@ function readTickets(): GameSubmissionTicket[] {
       return cachedTickets;
     }
 
-    const parsed = JSON.parse(stored) as GameSubmissionTicket[];
-    cachedTickets = Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(stored) as LegacyGameSubmissionTicket[];
+    cachedTickets = Array.isArray(parsed) ? parsed.map(normalizeTicket) : [];
     return cachedTickets;
   } catch {
     cachedTickets = [];

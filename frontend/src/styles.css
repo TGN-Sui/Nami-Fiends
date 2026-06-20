@@ -15139,6 +15139,46 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   font-size: 0.82rem;
 }
 
+.onboarding-preview-details {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+}
+
+.onboarding-preview-detail-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.onboarding-preview-detail-row dt {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(180, 210, 255, 0.72);
+}
+
+.onboarding-preview-detail-row dd {
+  margin: 0;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.onboarding-preview-detail-row dd a {
+  color: rgba(140, 210, 255, 0.95);
+}
+
+.onboarding-genre-options {
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.game-submission-ticket-details {
+  margin-top: 0.35rem;
+}
+
 .onboarding-step-actions {
   display: flex;
   flex-wrap: wrap;
