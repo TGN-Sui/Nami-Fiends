@@ -1,0 +1,294 @@
+import { useMemo, useState, type ReactElement } from 'react';
+
+import { PROMOTION_DURATION_LABELS } from './channel-owner-promotions-store.js';
+import { canReviewNodenameClaims } from './nami-capabilities.js';
+import {
+  approvePendingClaims,
+  readOpenPendingClaims,
+  rejectPendingClaims,
+  useNamiAdminStore,
+} from './nami-admin-store.js';
+import {
+  updatePartnerBannerSubmissionStatus,
+  usePartnerBannerSubmissions,
+} from './partner-banner-submission-store.js';
+import { useProtocolOwner } from './wallet.js';
+
+type ReviewTicket = {
+  id: string;
+  kind: 'partner-carousel' | 'nodename-claim';
+  title: string;
+  description: string;
+  detail: string | null;
+};
+
+function ticketKindLabel(kind: ReviewTicket['kind']): string {
+  if (kind === 'partner-carousel') {
+    return 'Partner Carousel';
+  }
+
+  return 'Nodename Claim';
+}
+
+export function OwnerTicketReviewPanel(): ReactElement | null {
+  const { owner } = useProtocolOwner();
+  const { openPendingCount } = useNamiAdminStore();
+  const partnerSubmissions = usePartnerBannerSubmissions();
+  const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const canReview = canReviewNodenameClaims(owner);
+
+  const openTickets = useMemo((): ReviewTicket[] => {
+    const partnerTickets = partnerSubmissions
+      .filter((entry) => entry.status === 'submitted')
+      .map((entry) => ({
+        id: entry.id,
+        kind: 'partner-carousel' as const,
+        title: entry.title || entry.channelTitle,
+        description: entry.description,
+        detail: PROMOTION_DURATION_LABELS[entry.duration],
+      }));
+
+    const claimTickets = readOpenPendingClaims().map((claim) => ({
+      id: claim.id,
+      kind: 'nodename-claim' as const,
+      title: '@' + claim.nodename,
+      description: claim.displayName + ' · ' + claim.email,
+      detail: claim.archetypeLabel + ' · ' + claim.method,
+    }));
+
+    return [...partnerTickets, ...claimTickets];
+  }, [partnerSubmissions, openPendingCount]);
+
+  const openSubmittedCount = openTickets.length;
+
+  if (!canReview) {
+    return null;
+  }
+
+  function clearMessages(): void {
+    setActionNotice(null);
+    setActionError(null);
+  }
+
+  function toggleTicketSelection(ticketId: string): void {
+    setSelectedTicketIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(ticketId)) {
+        next.delete(ticketId);
+      } else {
+        next.add(ticketId);
+      }
+
+      return next;
+    });
+  }
+
+  function selectAllTickets(): void {
+    setSelectedTicketIds(new Set(openTickets.map((ticket) => ticket.id)));
+  }
+
+  function reviewTicket(ticket: ReviewTicket, status: 'approved' | 'rejected'): boolean {
+    if (ticket.kind === 'partner-carousel') {
+      const updated = updatePartnerBannerSubmissionStatus(
+        ticket.id,
+        status,
+        owner ?? 'official-owner'
+      );
+
+      return updated !== null;
+    }
+
+    if (status === 'approved') {
+      return approvePendingClaims([ticket.id], owner) > 0;
+    }
+
+    return rejectPendingClaims([ticket.id], owner) > 0;
+  }
+
+  function handleApproveTicket(ticketId: string): void {
+    clearMessages();
+
+    const ticket = openTickets.find((entry) => entry.id === ticketId);
+
+    if (!ticket) {
+      setActionError('Ticket not found.');
+      return;
+    }
+
+    if (!reviewTicket(ticket, 'approved')) {
+      setActionError('Could not approve ticket.');
+      return;
+    }
+
+    setActionNotice(ticketKindLabel(ticket.kind) + ' approved.');
+    setSelectedTicketIds((current) => {
+      const next = new Set(current);
+      next.delete(ticketId);
+      return next;
+    });
+  }
+
+  function handleDenyTicket(ticketId: string): void {
+    clearMessages();
+
+    const ticket = openTickets.find((entry) => entry.id === ticketId);
+
+    if (!ticket) {
+      setActionError('Ticket not found.');
+      return;
+    }
+
+    if (!reviewTicket(ticket, 'rejected')) {
+      setActionError('Could not deny ticket.');
+      return;
+    }
+
+    setActionNotice(ticketKindLabel(ticket.kind) + ' denied.');
+    setSelectedTicketIds((current) => {
+      const next = new Set(current);
+      next.delete(ticketId);
+      return next;
+    });
+  }
+
+  function handleApproveSelected(): void {
+    clearMessages();
+
+    if (selectedTicketIds.size === 0) {
+      setActionError('Select at least one submitted ticket.');
+      return;
+    }
+
+    let approvedCount = 0;
+
+    for (const ticketId of selectedTicketIds) {
+      const ticket = openTickets.find((entry) => entry.id === ticketId);
+
+      if (ticket && reviewTicket(ticket, 'approved')) {
+        approvedCount += 1;
+      }
+    }
+
+    if (approvedCount === 0) {
+      setActionError('No tickets were approved.');
+      return;
+    }
+
+    setActionNotice(approvedCount + ' ticket(s) approved.');
+    setSelectedTicketIds(new Set());
+  }
+
+  function handleDenySelected(): void {
+    clearMessages();
+
+    if (selectedTicketIds.size === 0) {
+      setActionError('Select at least one submitted ticket.');
+      return;
+    }
+
+    let deniedCount = 0;
+
+    for (const ticketId of selectedTicketIds) {
+      const ticket = openTickets.find((entry) => entry.id === ticketId);
+
+      if (ticket && reviewTicket(ticket, 'rejected')) {
+        deniedCount += 1;
+      }
+    }
+
+    if (deniedCount === 0) {
+      setActionError('No tickets were denied.');
+      return;
+    }
+
+    setActionNotice(deniedCount + ' ticket(s) denied.');
+    setSelectedTicketIds(new Set());
+  }
+
+  return (
+    <article className="panel settings-card settings-compact-card settings-section-wide nami-owner-ticket-review">
+      <div className="profile-panel-heading">
+        <span className="mini-badge">Owner Account</span>
+        <h2>Submitted Tickets</h2>
+        <p>Approve or deny partner carousel banners and nodename claims from your owner account.</p>
+      </div>
+
+      {openSubmittedCount > 0 ? (
+        <span className="nami-owner-pending-badge" aria-label={'Open tickets: ' + openSubmittedCount}>
+          {openSubmittedCount} awaiting review
+        </span>
+      ) : null}
+
+      {openTickets.length === 0 ? (
+        <p className="protocol-hint">No submitted tickets right now.</p>
+      ) : (
+        <>
+          <div className="nami-owner-claim-toolbar">
+            <button className="profile-secondary-link" onClick={selectAllTickets} type="button">
+              Select all
+            </button>
+            <button
+              className="profile-secondary-link"
+              disabled={selectedTicketIds.size === 0}
+              onClick={handleApproveSelected}
+              type="button"
+            >
+              Approve selected ({selectedTicketIds.size})
+            </button>
+            <button
+              className="profile-secondary-link"
+              disabled={selectedTicketIds.size === 0}
+              onClick={handleDenySelected}
+              type="button"
+            >
+              Deny selected ({selectedTicketIds.size})
+            </button>
+          </div>
+
+          <ul className="nami-owner-claim-list">
+            {openTickets.map((ticket) => (
+              <li className="nami-owner-claim-row" key={ticket.id}>
+                <label className="nami-owner-claim-checkbox">
+                  <input
+                    checked={selectedTicketIds.has(ticket.id)}
+                    onChange={() => toggleTicketSelection(ticket.id)}
+                    type="checkbox"
+                  />
+                  <span className="nami-owner-claim-summary">
+                    <strong>{ticket.title}</strong>
+                    <span>{ticketKindLabel(ticket.kind)}</span>
+                    <span>{ticket.description}</span>
+                    {ticket.detail ? <span>{ticket.detail}</span> : null}
+                  </span>
+                </label>
+                <div className="nami-owner-ticket-row-actions">
+                  <button
+                    className="onboarding-primary-btn"
+                    onClick={() => handleApproveTicket(ticket.id)}
+                    type="button"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    className="profile-secondary-link"
+                    onClick={() => handleDenyTicket(ticket.id)}
+                    type="button"
+                  >
+                    Deny
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {actionError ? <p className="onboarding-field-error">{actionError}</p> : null}
+      {actionNotice ? <p className="protocol-hint nami-owner-action-notice">{actionNotice}</p> : null}
+    </article>
+  );
+}

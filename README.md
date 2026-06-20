@@ -81,6 +81,9 @@ verification.move
 Nami currently includes:
 
 * Identity ownership
+* Owner dashboard (official owner account)
+* Owner passport labels (independent of player progression)
+* Submitted ticket review (approve / deny)
 * Passport progression
 * Verification from NPC to Adventurer
 * Membership tiers
@@ -100,6 +103,46 @@ Nami currently includes:
 * Earned Titles
 * Cosmetic unlocks and loadouts
 * Recovery requests
+
+---
+
+## Owner Dashboard
+
+The Nami Official owner account uses Settings as its own **Owner Dashboard**.
+
+When the connected wallet matches `VITE_NAMI_OFFICIAL_OWNER`, the owner sees:
+
+* **Owner Dashboard** header instead of generic Settings
+* Overview cards for passport labels, submitted tickets, and the advanced platform console
+* The same account, membership, feeds, safety, and appearance controls as before
+
+### Owner Passport Labels
+
+The official owner passport does **not** use player scores, reputation ranks, or membership tiers for display.
+
+Instead, the owner passport uses editable **Nami Passport Labels**:
+
+```text
+Primary label   = Nami CEO
+Secondary label = Nami Fiend
+```
+
+These labels are stored locally in the owner account settings and shown on the owner passport card.
+They are cosmetic owner titles only and do not replace on-chain Passport state for other users.
+
+### Submitted Ticket Review
+
+Submitted tickets can be approved or denied from the owner **Account** settings section.
+
+Current ticket types:
+
+```text
+Partner Carousel promotion tickets
+Nodename / passport claim tickets
+```
+
+Partner carousel submissions always enter review after checkout.
+The owner can approve or deny them from Account settings or the Security console.
 
 ---
 

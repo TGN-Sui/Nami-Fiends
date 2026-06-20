@@ -8,7 +8,7 @@ Nami is not a chat application.
 
 Nami is not a social media platform.
 
-Nami is infrastructure that allows games, communities, studios, creators, and players to connect through a shared identity and communication layer.
+Nami is infrastructure that allows games, communities, studios, creators, and players to connect through a shared identity and communication Platform.
 
 Nami is designed to integrate into any game, website, launcher, platform, or application regardless of blockchain or ecosystem.
 
@@ -26,7 +26,7 @@ To create the world's most trusted communication and identity layer for gaming.
 
 Identity is the foundation of Nami.
 
-Every interaction, achievement, reputation signal, and progression path originates from Identity.
+Every interaction, achievement, reputation signal, Review, earned badge, guild, and progression path originates from Identity.
 
 ---
 

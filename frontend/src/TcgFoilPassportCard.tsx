@@ -8,7 +8,12 @@ import {
 } from './channel-surface.js';
 import { isMemberVerified } from './member-access.js';
 import { getNamiProgression } from './member-progression.js';
+import {
+  isOwnerPassportMember,
+  resolveOwnerPassportLabels,
+} from './owner-passport-display.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
+import { useProtocolOwner } from './wallet.js';
 import {
   ConductSignalDot,
   memberTierSurfaceClass,
@@ -70,10 +75,23 @@ type TcgFoilPassportCardProps = {
 };
 
 export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactElement {
+  const { owner } = useProtocolOwner();
   const reviewedSignal = props.signal ?? props.member.signal;
+  const ownerPassport = isOwnerPassportMember(props.member, owner);
+  const ownerLabels = resolveOwnerPassportLabels(owner);
   const progression = memberProgression(props.member);
   const layout = props.layout ?? 'vertical';
-  const passportInteractive = isPassportInteractive(props.member, reviewedSignal);
+  const passportInteractive = ownerPassport || isPassportInteractive(props.member, reviewedSignal);
+  const displayTier = ownerPassport
+    ? (ownerLabels?.primaryLabel ?? 'Nami CEO')
+    : memberDisplayRankLabel(props.member);
+  const displayBadge = ownerLabels?.secondaryLabel ?? props.member.badge;
+  const displayLevel = ownerPassport ? 'Official' : String(progression.level);
+  const displayXp = ownerPassport ? '—' : String(progression.currentXp);
+  const displayStatus = ownerPassport ? 'Nami Official' : reviewedSignal === 'Green' ? 'Verified' : 'Review';
+  const displaySubtitle = ownerPassport
+    ? displayBadge + ' · Nami Official'
+    : displayBadge + ' · ' + (reviewedSignal === 'Green' ? 'Verified member' : 'Under review');
   const tierFoilClass = passportTierFoilClass(props.member);
   const tierSurfaceClass = memberTierSurfaceClass(props.member);
   const isClickable = Boolean(props.onOpenPassport);
@@ -303,7 +321,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           />
           <OwnerEditableImage
             className="passport-tier-chip-editable"
-            fallback={<strong>{memberDisplayRankLabel(props.member)}</strong>}
+            fallback={<strong>{displayTier}</strong>}
             imageClassName="passport-tier-chip-image"
             label="Passport tier chip"
             nested
@@ -318,7 +336,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
               <h2>{props.member.name}</h2>
-              <p>{props.member.badge} · {reviewedSignal === 'Green' ? 'Verified member' : 'Under review'}</p>
+              <p>{displaySubtitle}</p>
             </div>
           </div>
         ) : (
@@ -328,7 +346,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
               <h2>{props.member.name}</h2>
-              <p>{props.member.badge} · {reviewedSignal === 'Green' ? 'Verified member' : 'Under review'}</p>
+              <p>{displaySubtitle}</p>
             </div>
           </>
         )}
@@ -336,15 +354,15 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         <div className="nami-profile-card-stats">
           <div>
             <span>Level</span>
-            <strong>{progression.level}</strong>
+            <strong>{displayLevel}</strong>
           </div>
           <div>
             <span>XP</span>
-            <strong>{progression.currentXp}</strong>
+            <strong>{displayXp}</strong>
           </div>
           <div>
             <span>Status</span>
-            <strong>{reviewedSignal === 'Green' ? 'Verified' : 'Review'}</strong>
+            <strong>{displayStatus}</strong>
           </div>
         </div>
 
@@ -368,7 +386,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             </div>
             <div>
               <span>Specialty</span>
-              <strong>{props.member.badge}</strong>
+              <strong>{displayBadge}</strong>
             </div>
             <div>
               <span>Collectors #</span>
@@ -377,16 +395,20 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div>
               <span>Verification</span>
               <strong>
-                {isMemberVerified(props.member)
-                  ? 'Identity verified'
-                  : props.member.tier === 'NPC'
-                    ? 'Claim passport to verify'
-                    : 'Signal review active'}
+                {ownerPassport
+                  ? 'Nami Official owner'
+                  : isMemberVerified(props.member)
+                    ? 'Identity verified'
+                    : props.member.tier === 'NPC'
+                      ? 'Claim passport to verify'
+                      : 'Signal review active'}
               </strong>
             </div>
             <div>
               <span>Passport</span>
-              <strong>Earned through play, not payment</strong>
+              <strong>
+                {ownerPassport ? 'Owner labels, not player progression' : 'Earned through play, not payment'}
+              </strong>
             </div>
           </div>
         ) : null}

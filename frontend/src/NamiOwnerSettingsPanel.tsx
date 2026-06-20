@@ -12,6 +12,7 @@ import {
   addOfficialModerator,
   approveAllPendingClaims,
   approvePendingClaims,
+  rejectPendingClaims,
   banMemberTarget,
   readOpenPendingClaims,
   removeOfficialModerator,
@@ -106,6 +107,20 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
     }
 
     setActionNotice('Approved all ' + approved + ' pending claim(s).');
+    setSelectedClaimIds(new Set());
+  }
+
+  function handleDenySelected(): void {
+    clearActionMessages();
+
+    const denied = rejectPendingClaims([...selectedClaimIds], owner);
+
+    if (denied === 0) {
+      setActionError('Select at least one pending claim to deny.');
+      return;
+    }
+
+    setActionNotice(denied + ' claim(s) denied.');
     setSelectedClaimIds(new Set());
   }
 
@@ -266,6 +281,14 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
               </button>
               <button className="onboarding-primary-btn" onClick={handleApproveAll} type="button">
                 Approve all
+              </button>
+              <button
+                className="profile-secondary-link"
+                disabled={selectedClaimIds.size === 0}
+                onClick={handleDenySelected}
+                type="button"
+              >
+                Deny selected ({selectedClaimIds.size})
               </button>
             </div>
 

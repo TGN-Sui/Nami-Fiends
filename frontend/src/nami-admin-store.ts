@@ -9,6 +9,11 @@ import {
   writeOfficialModerators,
   type NamiAdminRole,
 } from './nami-capabilities.js';
+import {
+  approveSubmittedTicket,
+  enqueueSubmittedTicket,
+  rejectSubmittedTicket,
+} from './owner-submitted-tickets-store.js';
 import { readOfficialOwner } from './protocol-env.js';
 
 export type { NamiAdminRole };
@@ -241,6 +246,20 @@ export function submitNodenameClaim(input: {
   const claims = readPendingNodenameClaims();
   savePendingClaims([claim, ...claims]);
 
+  enqueueSubmittedTicket({
+    id: claim.id,
+    kind: 'nodename-claim',
+    title: '@' + claim.nodename,
+    description: claim.displayName + ' · ' + claim.email,
+    channelId: null,
+    coverUrl: null,
+    duration: null,
+    submitterLabel: claim.displayName,
+    submitterDetail: claim.archetypeLabel + ' · ' + claim.method,
+    referenceId: claim.id,
+    submittedAtMs: claim.submittedAtMs,
+  });
+
   saveUserClaimStatus({
     claimId: claim.id,
     status: 'pending',
@@ -280,6 +299,12 @@ export function approvePendingClaims(
 
   savePendingClaims(claims);
 
+  claimIds.forEach((claimId) => {
+    if (idSet.has(claimId)) {
+      approveSubmittedTicket(claimId, reviewerOwner);
+    }
+  });
+
   const userStatus = readUserClaimStatus();
 
   if (userStatus.claimId && idSet.has(userStatus.claimId)) {
@@ -297,6 +322,60 @@ export function approveAllPendingClaims(reviewerOwner: string | null): number {
   const pendingIds = readOpenPendingClaims().map((claim) => claim.id);
 
   return approvePendingClaims(pendingIds, reviewerOwner);
+}
+
+export function rejectPendingClaims(
+  claimIds: string[],
+  reviewerOwner: string | null
+): number {
+  if (!canReviewNodenameClaims(reviewerOwner) || claimIds.length === 0) {
+    return 0;
+  }
+
+  const idSet = new Set(claimIds);
+  const now = Date.now();
+  let rejectedCount = 0;
+
+  const claims = readPendingNodenameClaims().map((claim) => {
+    if (!idSet.has(claim.id) || claim.status !== 'pending') {
+      return claim;
+    }
+
+    rejectedCount += 1;
+
+    return {
+      ...claim,
+      status: 'rejected' as const,
+      reviewedAtMs: now,
+      reviewedBy: reviewerOwner ?? 'official-owner',
+    };
+  });
+
+  savePendingClaims(claims);
+
+  claimIds.forEach((claimId) => {
+    if (idSet.has(claimId)) {
+      rejectSubmittedTicket(claimId, reviewerOwner);
+    }
+  });
+
+  const userStatus = readUserClaimStatus();
+
+  if (userStatus.claimId && idSet.has(userStatus.claimId)) {
+    saveUserClaimStatus({
+      ...userStatus,
+      status: 'rejected',
+      updatedAtMs: now,
+    });
+  }
+
+  return rejectedCount;
+}
+
+export function rejectAllPendingClaims(reviewerOwner: string | null): number {
+  const pendingIds = readOpenPendingClaims().map((claim) => claim.id);
+
+  return rejectPendingClaims(pendingIds, reviewerOwner);
 }
 
 export function readBanList(): BannedMemberEntry[] {

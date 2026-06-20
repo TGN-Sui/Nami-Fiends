@@ -550,16 +550,11 @@ export function confirmPromotionPurchase(
     return { ok: false, reason: 'Create your partner banner draft before checkout.' };
   }
 
-  const approvedForMock =
-    isMockMembershipCheckoutEnabled() &&
-    ticket.title.trim().length > 0 &&
-    ticket.description.trim().length > 0;
-
   const submittedTicket: PartnerCarouselTicket = {
     ...ticket,
-    status: approvedForMock ? 'approved' : 'submitted',
+    status: 'submitted',
     submittedAtMs: Date.now(),
-    expiresAtMs: approvedForMock ? Date.now() + durationToMs(ticket.duration) : null,
+    expiresAtMs: null,
     updatedAtMs: Date.now(),
   };
 
@@ -583,9 +578,7 @@ export function confirmPromotionPurchase(
 
   return {
     ok: true,
-    message: approvedForMock
-      ? 'Partner carousel approved for ' + PROMOTION_DURATION_LABELS[ticket.duration] + ' (mock).'
-      : 'Partner carousel ticket submitted for Nami Official review.',
+    message: 'Partner carousel ticket submitted for Nami Official review.',
   };
 }
 

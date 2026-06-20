@@ -169,16 +169,16 @@ export const LANDING_STEPS = [
   },
   {
     step: '3',
-    title: 'Join the world',
+    title: 'Join the world of Nami gamers',
     detail:
-      'Enter Game Hub, follow channels, jump into official genre lounges, and show up to live events.',
+      'Enter Game Hub, follow games, jump into official genre lounges, and never miss another event or update again.',
   },
 ];
 
 export const GAME_HUB_INTRO = {
   eyebrow: 'Discover game communities',
-  headline: 'Find your next main game and the room that fits how you play.',
+  headline: 'Find your next game and the chats that fits how you play.',
   subhead:
-    'Partner channels, trending games, cover art browser, and genre lounges, all ranked by real activity, not paid trust.',
+    'Partner channels, trending games, cover art browser, and genre lounges, all ranked by real activity, not payments.',
   previewNote: 'Preview catalog active while discovery cycles populate.',
 };

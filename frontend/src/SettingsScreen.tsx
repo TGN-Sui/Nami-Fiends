@@ -7,6 +7,8 @@ import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
 import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
+import { OwnerPassportLabelsPanel } from './OwnerPassportLabelsPanel.js';
+import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
@@ -35,6 +37,8 @@ import {
 import { DemoPerspectivePanel } from './DemoPerspectivePanel.js';
 import { UserSuggestionsSettingsPanel } from './UserSuggestionsSettingsPanel.js';
 import { useDemoPerspective } from './demo-perspective-store.js';
+import { useNamiAdminStore } from './nami-admin-store.js';
+import { countPendingPartnerBannerSubmissions } from './partner-banner-submission-store.js';
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
 import { members, type NamiMember, type NamiPage } from './uiMockData.js';
@@ -225,7 +229,10 @@ export function SettingsScreen(props: {
 } = {}): ReactElement {
   const { owner } = useProtocolOwner();
   useDemoPerspective();
-  const showIndexedDataPanel = isOfficialOwner(owner);
+  const isOwnerDashboard = isOfficialOwner(owner);
+  const showIndexedDataPanel = isOwnerDashboard;
+  const { openPendingCount } = useNamiAdminStore();
+  const openSubmittedCount = countPendingPartnerBannerSubmissions() + openPendingCount;
   const [activeSection, setActiveSection] = useState<SettingsSection>(
     () => consumeSettingsSectionFocus() ?? 'overview'
   );
@@ -282,8 +289,8 @@ export function SettingsScreen(props: {
   return (
     <div className="settings-screen-layout settings-screen-redesign" data-settings-screen="true">
       <header className="page-title settings-page-title">
-        <p>Preferences</p>
-        <h1>Settings</h1>
+        <p>{isOwnerDashboard ? 'Your account' : 'Preferences'}</p>
+        <h1>{isOwnerDashboard ? 'Owner Dashboard' : 'Settings'}</h1>
       </header>
 
       <nav aria-label="Settings sections" className="settings-section-nav">
@@ -305,6 +312,49 @@ export function SettingsScreen(props: {
       <section className="settings-page settings-page-redesign">
         {activeSection === 'overview' ? (
           <div className="settings-overview-grid">
+            {isOwnerDashboard ? (
+              <article className="panel settings-overview-card">
+                <h2>Owner passport</h2>
+                <p>Editable Nami CEO and Nami Fiend labels. Independent of scores, ranks, and memberships.</p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('account')}
+                  type="button"
+                >
+                  Edit passport labels
+                </button>
+              </article>
+            ) : null}
+            {isOwnerDashboard ? (
+              <article className="panel settings-overview-card">
+                <h2>Submitted tickets</h2>
+                <p>
+                  {openSubmittedCount > 0
+                    ? openSubmittedCount + ' ticket(s) waiting for your review.'
+                    : 'No tickets waiting for review.'}
+                </p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('account')}
+                  type="button"
+                >
+                  Review tickets
+                </button>
+              </article>
+            ) : null}
+            {isOwnerDashboard ? (
+              <article className="panel settings-overview-card">
+                <h2>Platform console</h2>
+                <p>Visual assets, emojis, security enforcement, and indexed protocol data.</p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('advanced')}
+                  type="button"
+                >
+                  Open advanced console
+                </button>
+              </article>
+            ) : null}
             <article className="panel settings-overview-card">
               <h2>Safety snapshot</h2>
               <p>{mutedCount} muted · {blockedCount} blocked · {reportCount} reports</p>
@@ -363,7 +413,11 @@ export function SettingsScreen(props: {
             </article>
             <article className="panel settings-overview-card">
               <h2>Dashboard perspectives</h2>
-              <p>Preview NPC, Elite, channel owner, guild owner, and official owner dashboards.</p>
+              <p>
+                {isOwnerDashboard
+                  ? 'Preview what other tiers and roles see, then restore your owner dashboard.'
+                  : 'Preview NPC, Elite, channel owner, guild owner, and official owner dashboards.'}
+              </p>
               <button
                 className="profile-secondary-link"
                 onClick={() => setActiveSection('membership')}
@@ -388,6 +442,8 @@ export function SettingsScreen(props: {
 
         {activeSection === 'account' ? (
           <div className="settings-section-stack">
+            {isOwnerDashboard ? <OwnerPassportLabelsPanel /> : null}
+            {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
             {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
             {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
             <article className="panel settings-card settings-compact-card">

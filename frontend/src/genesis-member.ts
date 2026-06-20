@@ -34,15 +34,20 @@ export function applyGenesisSelfOverrides(member: NamiMember): NamiMember {
   const owner = readConnectedOwner();
   const isBoss = resolveNamiAdminRole(owner) === 'official-owner';
 
-  return {
+  const next: NamiMember = {
     ...member,
     tier: 'NPC',
     signal: 'Green',
     name: session?.displayName?.trim() || member.name,
     badge: session?.flavorBadgeId?.trim() || member.badge,
-    isNamiBoss: isBoss ? true : undefined,
-    isNamiTeam: isBoss ? undefined : member.isNamiTeam,
   };
+
+  if (isBoss) {
+    next.isNamiBoss = true;
+    delete next.isNamiTeam;
+  }
+
+  return next;
 }
 
 /** One-time purge of dev-seeded chat logs when entering official test launch. */
