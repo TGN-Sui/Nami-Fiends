@@ -134,8 +134,12 @@ function readTickets(): GameSubmissionTicket[] {
 }
 
 function writeTickets(tickets: GameSubmissionTicket[]): void {
-  window.localStorage.setItem(TICKETS_KEY, JSON.stringify(tickets.slice(0, 200)));
+  const next = tickets.slice(0, 200);
+  window.localStorage.setItem(TICKETS_KEY, JSON.stringify(next));
   emitChange();
+  void import('./officials-submissions-sync.js').then(({ syncGameTicketsToServer }) => {
+    syncGameTicketsToServer(next);
+  });
 }
 
 function subscribe(onStoreChange: () => void): () => void {

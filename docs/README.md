@@ -13,6 +13,7 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [systems.md](./systems.md) | On-chain system map |
 | [protocol.md](./protocol.md) | Protocol overview |
 | [roadmap.md](./roadmap.md) | Delivery phases and status |
+| [testnet-launch-checklist.md](./testnet-launch-checklist.md) | Official testnet build and deploy steps |
 
 ---
 

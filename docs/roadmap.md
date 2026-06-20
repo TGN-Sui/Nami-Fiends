@@ -672,17 +672,20 @@ Shell catalog placeholders (self member + routing shells) when fixtures are disa
 frontend/.env.testnet.example template for official builds
 Guild/squad seed catalogs gated behind shouldUseDevFixtures()
 Channel banner simulation disabled without fixtures
+@fiend nodename prefix for passport claims
+Receiving server officials queue: GET/POST /api/officials/submissions (+ sync)
+Test launch hydrates + dual-writes suggestions, game tickets, partner banners, nodename claims
+docs/testnet-launch-checklist.md
 ```
 
 Remaining before testnet go-live:
 
 ```text
-Publish Move package to testnet + record package ID
-Deploy receiving server with live indexer projections
+Republish Move package if contracts drifted since deployments/testnet/latest.json
+Deploy receiving server to a public URL + set VITE_NAMI_INDEXER_URL
 Fill .env.testnet.example values and run npm run build
 zkLogin redirect URIs for testnet origin
-Security review + AdminCap custody
-Backend persistence for officials queues (still localStorage today)
+Security review + AdminCap custody + officials API auth hardening
 ```
 
 ---

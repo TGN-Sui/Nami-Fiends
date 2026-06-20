@@ -58,8 +58,12 @@ function readSuggestions(): NamiUserSuggestion[] {
 }
 
 function writeSuggestions(suggestions: NamiUserSuggestion[]): void {
-  window.localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggestions.slice(0, 500)));
+  const next = suggestions.slice(0, 500);
+  window.localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(next));
   emitChange();
+  void import('./officials-submissions-sync.js').then(({ syncSuggestionsToServer }) => {
+    syncSuggestionsToServer(next);
+  });
 }
 
 function subscribe(onStoreChange: () => void): () => void {

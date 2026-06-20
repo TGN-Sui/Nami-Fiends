@@ -1,0 +1,108 @@
+import { readJsonFile, writeJsonFile } from '../storage.js';
+
+export type OfficialsSubmissionsProjection = {
+  suggestions: unknown[];
+  gameTickets: unknown[];
+  partnerBanners: unknown[];
+  nodenameClaims: unknown[];
+  updatedAtMs: number;
+};
+
+const PROJECTION_PATH = 'data/projections/officials-submissions.json';
+
+function emptyProjection(): OfficialsSubmissionsProjection {
+  return {
+    suggestions: [],
+    gameTickets: [],
+    partnerBanners: [],
+    nodenameClaims: [],
+    updatedAtMs: Date.now(),
+  };
+}
+
+async function readProjection(): Promise<OfficialsSubmissionsProjection> {
+  const stored = await readJsonFile<OfficialsSubmissionsProjection>(PROJECTION_PATH, emptyProjection());
+
+  return {
+    suggestions: Array.isArray(stored.suggestions) ? stored.suggestions : [],
+    gameTickets: Array.isArray(stored.gameTickets) ? stored.gameTickets : [],
+    partnerBanners: Array.isArray(stored.partnerBanners) ? stored.partnerBanners : [],
+    nodenameClaims: Array.isArray(stored.nodenameClaims) ? stored.nodenameClaims : [],
+    updatedAtMs: typeof stored.updatedAtMs === 'number' ? stored.updatedAtMs : Date.now(),
+  };
+}
+
+async function writeProjection(projection: OfficialsSubmissionsProjection): Promise<void> {
+  await writeJsonFile(PROJECTION_PATH, {
+    ...projection,
+    updatedAtMs: Date.now(),
+  });
+}
+
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const map = new Map(existing.map((entry) => [entry.id, entry]));
+
+  for (const entry of incoming) {
+    map.set(entry.id, entry);
+  }
+
+  return [...map.values()].sort((left, right) => {
+    const leftMs = (left as { submittedAtMs?: number }).submittedAtMs ?? 0;
+    const rightMs = (right as { submittedAtMs?: number }).submittedAtMs ?? 0;
+    return rightMs - leftMs;
+  });
+}
+
+function asIdRecords(value: unknown): Array<{ id: string }> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((entry) => {
+    if (entry !== null && typeof entry === 'object' && typeof (entry as { id?: unknown }).id === 'string') {
+      return [entry as { id: string }];
+    }
+
+    return [];
+  });
+}
+
+export async function getOfficialsSubmissions(): Promise<OfficialsSubmissionsProjection> {
+  return readProjection();
+}
+
+export type SyncOfficialsSubmissionsInput = {
+  suggestions?: unknown[];
+  gameTickets?: unknown[];
+  partnerBanners?: unknown[];
+  nodenameClaims?: unknown[];
+};
+
+export async function syncOfficialsSubmissions(
+  input: SyncOfficialsSubmissionsInput
+): Promise<OfficialsSubmissionsProjection> {
+  const current = await readProjection();
+
+  const next: OfficialsSubmissionsProjection = {
+    suggestions:
+      input.suggestions === undefined
+        ? current.suggestions
+        : mergeById(asIdRecords(current.suggestions), asIdRecords(input.suggestions)),
+    gameTickets:
+      input.gameTickets === undefined
+        ? current.gameTickets
+        : mergeById(asIdRecords(current.gameTickets), asIdRecords(input.gameTickets)),
+    partnerBanners:
+      input.partnerBanners === undefined
+        ? current.partnerBanners
+        : mergeById(asIdRecords(current.partnerBanners), asIdRecords(input.partnerBanners)),
+    nodenameClaims:
+      input.nodenameClaims === undefined
+        ? current.nodenameClaims
+        : mergeById(asIdRecords(current.nodenameClaims), asIdRecords(input.nodenameClaims)),
+    updatedAtMs: Date.now(),
+  };
+
+  await writeProjection(next);
+  return next;
+}

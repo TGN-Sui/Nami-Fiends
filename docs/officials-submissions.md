@@ -20,7 +20,19 @@ Pending counts appear on each tab label. Storage keys:
 nami.user.suggestions
 nami.game.submission.tickets
 nami.partner.banner.submissions
+nami.admin.pendingClaims
 ```
+
+### Test launch persistence
+
+When `VITE_NAMI_TEST_LAUNCH=true` and `VITE_NAMI_INDEXER_URL` is set, the frontend hydrates from the receiving server on load and dual-writes after each store mutation:
+
+```text
+GET  /api/officials/submissions
+POST /api/officials/submissions/sync
+```
+
+Projection file: `backend/data/projections/officials-submissions.json`. See [testnet-launch-checklist.md](./testnet-launch-checklist.md).
 
 ---
 

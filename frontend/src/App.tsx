@@ -10,6 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 
 import { isDemoSimulationEnabled, isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
+import { hydrateOfficialsSubmissionsFromServer } from './officials-submissions-sync.js';
 import { channels as seedChannels } from './fixtures/seed-data.js';
 import {
   createShellChannel,
@@ -4731,6 +4732,10 @@ export function App(): ReactElement {
     if (!isDemoSimulationEnabled()) {
       restoreOwnerDemoPerspective();
     }
+  }, []);
+
+  useEffect(() => {
+    void hydrateOfficialsSubmissionsFromServer();
   }, []);
 
   const [activePage, setActivePage] = useState<NamiPage>('entry');

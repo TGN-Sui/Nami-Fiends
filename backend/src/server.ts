@@ -39,6 +39,11 @@ import {
   handleMembershipFulfillmentOwnerGet,
   handleMembershipFulfillmentPendingGet,
 } from './routes/membership-fulfillment.routes.js';
+import {
+  handleOfficialsSubmissionsGet,
+  handleOfficialsSubmissionsOptions,
+  handleOfficialsSubmissionsSync,
+} from './routes/officials-submissions.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -957,6 +962,24 @@ const routes: Route[] = [
     paramNames: ['fulfillmentId'],
     handler: (_registry, request, response, params) =>
       handleMembershipFulfillmentComplete(request, response, params.fulfillmentId ?? ''),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/officials\/submissions$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleOfficialsSubmissionsOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/officials\/submissions$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleOfficialsSubmissionsGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/officials\/submissions\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleOfficialsSubmissionsSync(request, response),
   },
 ];
 

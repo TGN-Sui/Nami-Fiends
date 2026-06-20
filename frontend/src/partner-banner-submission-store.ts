@@ -77,8 +77,12 @@ function readSubmissions(): PartnerBannerSubmission[] {
 }
 
 function writeSubmissions(submissions: PartnerBannerSubmission[]): void {
-  window.localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions.slice(0, 200)));
+  const next = submissions.slice(0, 200);
+  window.localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(next));
   emitChange();
+  void import('./officials-submissions-sync.js').then(({ syncPartnerBannersToServer }) => {
+    syncPartnerBannersToServer(next);
+  });
 }
 
 function subscribe(onStoreChange: () => void): () => void {

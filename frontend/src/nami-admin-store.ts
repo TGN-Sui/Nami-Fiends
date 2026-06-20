@@ -165,8 +165,12 @@ export function readOpenPendingClaims(): PendingNodenameClaim[] {
 }
 
 function savePendingClaims(claims: PendingNodenameClaim[]): void {
-  writeJsonArray(PENDING_CLAIMS_KEY, claims);
+  const next = claims.slice(0, 200);
+  writeJsonArray(PENDING_CLAIMS_KEY, next);
   dispatchAdminChange();
+  void import('./officials-submissions-sync.js').then(({ syncNodenameClaimsToServer }) => {
+    syncNodenameClaimsToServer(next);
+  });
 }
 
 export function readUserClaimStatus(): UserClaimStatus {
