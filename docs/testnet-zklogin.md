@@ -20,9 +20,11 @@ Use the **official owner Google account** (`VITE_NAMI_OFFICIAL_OWNER_EMAIL`, e.g
 Copy the client ID into:
 
 ```text
-VITE_ZKLOGIN_CLIENT_ID=....apps.googleusercontent.com
-VITE_ZKLOGIN_REDIRECT_URL=https://your-testnet-origin/
+VITE_ZKLOGIN_CLIENT_ID=885352607900-cnbkebbo23ejlbabgvooshre535204qs.apps.googleusercontent.com
+VITE_ZKLOGIN_REDIRECT_URL=http://localhost:5173/
 ```
+
+For public testnet deploys, add a second redirect URI for your production origin and rebuild with that `VITE_ZKLOGIN_REDIRECT_URL`.
 
 ---
 
