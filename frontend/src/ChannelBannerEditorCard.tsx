@@ -11,7 +11,12 @@ import {
   readFileAsDataUrl,
   validateMediaFile,
 } from './media-upload-service.js';
+import {
+  isPreApprovedGameOwnerWorkspace,
+  preApprovedOwnerRestrictionMessage,
+} from './game-owner-approval-guards.js';
 import { ownerMediaDimensionNote } from './owner-media-specs.js';
+import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPanel.js';
 import { type NamiChannel } from './uiMockData.js';
 
 type BannerPreviewDraft = {
@@ -32,6 +37,7 @@ export function ChannelBannerEditorCard(props: {
   const [notice, setNotice] = useState('');
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [previewDraft, setPreviewDraft] = useState<BannerPreviewDraft | null>(null);
+  const sendLocked = isPreApprovedGameOwnerWorkspace(props.channel.id);
 
   if (!props.isEliteOwner) {
     return (
@@ -74,6 +80,11 @@ export function ChannelBannerEditorCard(props: {
   }
 
   function handleSendFromPreview(): void {
+    if (sendLocked) {
+      setNotice(preApprovedOwnerRestrictionMessage('Sending banner alerts'));
+      return;
+    }
+
     persistDraft();
     const published = publishChannelBannerAlertForOwner(props.channel.id);
 
@@ -131,8 +142,17 @@ export function ChannelBannerEditorCard(props: {
               Compact editor for Get Banners subscribers — preview before you publish.{' '}
               {ownerMediaDimensionNote('focused-banner-cover')}
             </p>
+            {sendLocked ? (
+              <p className="protocol-hint">
+                Upload covers and save drafts now. Sending to subscribers unlocks after full approval.
+              </p>
+            ) : null}
           </div>
         </div>
+
+        {sendLocked ? (
+          <PreApprovedGameOwnerLockedPanel compact feature="Sending banner alerts" />
+        ) : null}
 
         <div className="channel-banner-editor-compact-grid">
           <div
@@ -204,6 +224,10 @@ export function ChannelBannerEditorCard(props: {
           headline={previewDraft.headline}
           onClose={() => setPreviewDraft(null)}
           onSend={handleSendFromPreview}
+          sendLocked={sendLocked}
+          {...(sendLocked
+            ? { sendLockedReason: preApprovedOwnerRestrictionMessage('Sending banner alerts') }
+            : {})}
         />
       ) : null}
     </>

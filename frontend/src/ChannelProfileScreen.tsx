@@ -121,7 +121,9 @@ export function ChannelProfileScreen(props: {
   const trailerUrl = readChannelTrailerOverride(props.channel.id)?.trim() ?? '';
   const ownerLayout = useChannelOwnerLayout(props.channel.id);
   const profileEditMode = useChannelOwnerEditMode(props.channel.id) && chrome.isChannelOwner;
-  const gameEvents = getChannelEvents(props.channel);
+  const gameEvents = getChannelEvents(props.channel, {
+    includeHiddenDrafts: preApprovedOwnerView,
+  });
   const reviewCount = getChannelGameReviews(props.channel.id).length;
 
   const defaultSection: ChannelProfileSection = preApprovedOwnerView
@@ -336,7 +338,11 @@ export function ChannelProfileScreen(props: {
         <div className="channel-profile-section-head">
           <div>
             <h2>Upcoming events</h2>
-            <p>Official schedules and live moments from {props.channel.name}.</p>
+            <p>
+              {preApprovedOwnerView
+                ? 'Draft events stay hidden from players until Nami Officials approve your channel.'
+                : 'Official schedules and live moments from ' + props.channel.name + '.'}
+            </p>
           </div>
           {chrome.isChannelOwner ? (
             <button
@@ -372,6 +378,9 @@ export function ChannelProfileScreen(props: {
               >
                 <div className="channel-profile-event-copy">
                   <span className="mini-badge">{event.status}</span>
+                  {event.hiddenUntilChannelApproval ? (
+                    <span className="mini-badge is-hidden-event-draft">Hidden draft</span>
+                  ) : null}
                   <strong>{event.title}</strong>
                   <p>{formatEventTimeInTimezone(event.startsAtUtc)}</p>
                 </div>
@@ -566,8 +575,9 @@ export function ChannelProfileScreen(props: {
         <div className="preapproved-game-owner-banner" role="status">
           <strong>Pre-approved workspace</strong>
           <p>
-            Your game channel is hidden from other users until Nami Officials approve it. You can edit
-            About, Owner, and Events only. Sidebar navigation unlocks after approval.
+            Your game channel is hidden from other users until Nami Officials approve it. Prepare hidden
+            events, upload banner covers, and save promotion drafts now. Purchases, partner banner
+            tickets, emoji uploads, and banner sends unlock after approval.
           </p>
         </div>
       ) : null}

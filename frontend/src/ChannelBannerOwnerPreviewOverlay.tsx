@@ -9,6 +9,8 @@ export function ChannelBannerOwnerPreviewOverlay(props: {
   body: string;
   onClose: () => void;
   onSend: () => void;
+  sendLocked?: boolean;
+  sendLockedReason?: string;
 }): ReactElement {
   function handleDismissSurfaceClick(event: { target: EventTarget }): void {
     const target = event.target;
@@ -73,12 +75,17 @@ export function ChannelBannerOwnerPreviewOverlay(props: {
           </button>
           <button
             className="nami-surface-button is-primary-surface-button"
+            disabled={props.sendLocked}
             onClick={props.onSend}
+            title={props.sendLocked ? props.sendLockedReason : undefined}
             type="button"
           >
-            Send to subscribers
+            {props.sendLocked ? 'Send locked until approval' : 'Send to subscribers'}
           </button>
         </div>
+        {props.sendLocked && props.sendLockedReason ? (
+          <p className="protocol-hint channel-banner-owner-preview-lock-note">{props.sendLockedReason}</p>
+        ) : null}
       </article>
     </div>
   );

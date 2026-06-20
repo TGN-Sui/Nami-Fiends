@@ -11,6 +11,8 @@ import {
   useChannelCustomEmojis,
   validateEmojiUploadFile,
 } from './channel-custom-emojis-store.js';
+import { isPreApprovedGameOwnerWorkspace } from './game-owner-approval-guards.js';
+import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPanel.js';
 import type { NamiChannel } from './uiMockData.js';
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -56,6 +58,7 @@ export function ChannelOwnerEmojiPanel(props: { channel: NamiChannel }): ReactEl
   const [isReadingFile, setIsReadingFile] = useState(false);
 
   const libraryFull = emojis.length >= CHANNEL_EMOJI_MAX_COUNT;
+  const uploadsLocked = isPreApprovedGameOwnerWorkspace(props.channel.id);
 
   function clearMessages(): void {
     setNotice(null);
@@ -140,6 +143,24 @@ export function ChannelOwnerEmojiPanel(props: { channel: NamiChannel }): ReactEl
     if (combinedErrors.length > 0) {
       setError(combinedErrors.slice(0, 3).join(' '));
     }
+  }
+
+  if (uploadsLocked) {
+    return (
+      <article className="panel channel-owner-tool-card channel-owner-emoji-panel is-preapproved-locked">
+        <div className="channel-owner-tool-card-head">
+          <div>
+            <span className="mini-badge">Channel chat</span>
+            <h3>Channel emojis</h3>
+            <p>
+              Upload emojis for {props.channel.name} chat and genre lounges tagged with{' '}
+              {props.channel.genre}. They do not appear in other game channels.
+            </p>
+          </div>
+        </div>
+        <PreApprovedGameOwnerLockedPanel feature="Channel emoji uploads" />
+      </article>
+    );
   }
 
   return (

@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from 'react';
 
 import { canSubscribeToChannelBanners, getSelfMember } from './member-access.js';
+import {
+  preApprovedOwnerCapabilityAllowed,
+  preApprovedOwnerRestrictionMessage,
+} from './game-owner-approval-guards.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { channels, type NamiChannel } from './uiMockData.js';
 
@@ -302,6 +306,10 @@ function deliverChannelBannerNotification(channelId: string): ChannelBannerNotif
 export function publishChannelBannerAlertForOwner(
   channelId: string,
 ): ChannelBannerNotification | null {
+  if (!preApprovedOwnerCapabilityAllowed('send-banners', channelId)) {
+    return null;
+  }
+
   return deliverChannelBannerNotification(channelId);
 }
 

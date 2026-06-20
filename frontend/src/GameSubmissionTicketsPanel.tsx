@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { releaseHiddenChannelEventsForChannel } from './events-store.js';
+import { syncGameOwnerSessionFromTicket } from './game-owner-session-store.js';
 import {
   listGameSubmissionTicketsSorted,
   updateGameSubmissionTicketStatus,
@@ -21,6 +23,19 @@ export function GameSubmissionTicketsPanel(): ReactElement {
 
     if (!updated) {
       setNotice('Could not update ticket.');
+      return;
+    }
+
+    syncGameOwnerSessionFromTicket(ticketId);
+
+    if (status === 'approved') {
+      const released = releaseHiddenChannelEventsForChannel(updated.provisionalChannelId);
+      setNotice(
+        'Ticket ' +
+          updated.gameTitle +
+          ' marked approved.' +
+          (released > 0 ? ' ' + released + ' hidden event draft(s) are now visible.' : ''),
+      );
       return;
     }
 

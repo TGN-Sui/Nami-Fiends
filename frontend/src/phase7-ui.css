@@ -2181,6 +2181,26 @@
   color: #ff9f9f;
 }
 
+.preapproved-owner-locked {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 196, 87, 0.28);
+  background: rgba(28, 18, 4, 0.55);
+}
+
+.preapproved-owner-locked-note,
+.channel-banner-owner-preview-lock-note {
+  margin: 0;
+  color: #f6d28b;
+}
+
+.mini-badge.is-hidden-event-draft {
+  border-color: rgba(255, 196, 87, 0.45);
+  color: #f6d28b;
+}
+
 .preapproved-game-owner-banner {
   display: grid;
   gap: 6px;

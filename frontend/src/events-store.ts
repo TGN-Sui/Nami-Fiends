@@ -2,6 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
 import { ownsGameChannel } from './channel-owner-access.js';
+import {
+  canViewHiddenChannelEventDrafts,
+  isPreApprovedGameOwnerWorkspace,
+} from './game-owner-approval-guards.js';
 import { isNamiTeamMember } from './channel-surface.js';
 import { getSelfMember } from './member-access.js';
 import {
@@ -21,6 +25,7 @@ export type StoredEvent = NamiEvent & {
   createdAt: string;
   createdByMemberId: string;
   updatedAt?: string;
+  hiddenUntilChannelApproval?: boolean;
 };
 
 export type EventNotification = {
@@ -203,19 +208,66 @@ function readCatalogEventsMap(): Record<string, StoredEvent> {
 }
 
 export function getAllCatalogEvents(): StoredEvent[] {
-  return Object.values(readCatalogEventsMap()).sort((left, right) => {
-    return new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime();
-  });
+  return Object.values(readCatalogEventsMap())
+    .filter((event) => !event.hiddenUntilChannelApproval)
+    .sort((left, right) => {
+      return new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime();
+    });
 }
 
 export function getEventById(eventId: string): StoredEvent | undefined {
   return readCatalogEventsMap()[eventId];
 }
 
-export function getChannelEvents(channel: NamiChannel): StoredEvent[] {
+export function getChannelEvents(
+  channel: NamiChannel,
+  options?: { includeHiddenDrafts?: boolean },
+): StoredEvent[] {
   const map = readCatalogEventsMap();
+  const includeHidden =
+    options?.includeHiddenDrafts === true && canViewHiddenChannelEventDrafts(channel.id);
 
-  return Object.values(map).filter((event) => event.channelId === channel.id);
+  return Object.values(map)
+    .filter((event) => {
+      if (event.channelId !== channel.id) {
+        return false;
+      }
+
+      if (!event.hiddenUntilChannelApproval) {
+        return true;
+      }
+
+      return includeHidden;
+    })
+    .sort(
+      (left, right) =>
+        new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime(),
+    );
+}
+
+export function releaseHiddenChannelEventsForChannel(channelId: string): number {
+  const map = readCatalogEventsMap();
+  let released = 0;
+
+  for (const [eventId, event] of Object.entries(map)) {
+    if (event.channelId !== channelId || !event.hiddenUntilChannelApproval) {
+      continue;
+    }
+
+    map[eventId] = {
+      ...event,
+      hiddenUntilChannelApproval: false,
+      status: event.status === 'Hidden until approval' ? 'Scheduled' : event.status,
+      updatedAt: new Date().toISOString(),
+    };
+    released += 1;
+  }
+
+  if (released > 0) {
+    writeStoredEventsMap(map);
+  }
+
+  return released;
 }
 
 export function formatEventTimeInTimezone(
@@ -448,13 +500,15 @@ export function createChannelEvent(
     throw new Error('Only the game channel owner can publish events for this channel.');
   }
 
+  const hiddenUntilChannelApproval = isPreApprovedGameOwnerWorkspace(channel.id);
+
   const event: StoredEvent = {
     id: channel.id + '-event-' + Date.now(),
     title: input.title.trim(),
     description: input.description.trim(),
     body: input.body.trim(),
     dateLabel: formatEventTimeInTimezone(input.startsAtUtc),
-    status: 'Scheduled',
+    status: hiddenUntilChannelApproval ? 'Hidden until approval' : 'Scheduled',
     seats: '0 interested',
     source: 'channel',
     channelId: channel.id,
@@ -463,13 +517,16 @@ export function createChannelEvent(
     durationMinutes: input.durationMinutes ?? 120,
     createdAt: new Date().toISOString(),
     createdByMemberId,
+    ...(hiddenUntilChannelApproval ? { hiddenUntilChannelApproval: true } : {}),
   };
 
   const map = readCatalogEventsMap();
   map[event.id] = event;
   writeStoredEventsMap(map);
 
-  notifySubscribedMembersOfEvent(event);
+  if (!hiddenUntilChannelApproval) {
+    notifySubscribedMembersOfEvent(event);
+  }
 
   return event;
 }

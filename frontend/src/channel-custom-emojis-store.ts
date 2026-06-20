@@ -2,6 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 import { ownsGameChannel } from './channel-owner-access.js';
 import {
+  preApprovedOwnerCapabilityAllowed,
+  preApprovedOwnerRestrictionMessage,
+} from './game-owner-approval-guards.js';
+import {
   emojiShortcodeToken,
   normalizeEmojiShortcode,
   suggestEmojiShortcodeFromLabel,
@@ -132,6 +136,13 @@ export function addChannelCustomEmoji(input: {
 }): ChannelCustomEmojiResult {
   if (!ownsGameChannel(input.channelId)) {
     return { ok: false, reason: 'Only the game channel owner can upload channel emojis.' };
+  }
+
+  if (!preApprovedOwnerCapabilityAllowed('upload-channel-emojis', input.channelId)) {
+    return {
+      ok: false,
+      reason: preApprovedOwnerRestrictionMessage('Channel emoji uploads'),
+    };
   }
 
   const emojis = readChannelCustomEmojis(input.channelId);

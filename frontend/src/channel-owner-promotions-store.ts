@@ -2,6 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import { readOwnedGameChannelId } from './channel-owner-access.js';
+import {
+  preApprovedOwnerCapabilityAllowed,
+  preApprovedOwnerRestrictionMessage,
+} from './game-owner-approval-guards.js';
 import type {
   MembershipBillingCycle,
   MembershipCheckoutRail,
@@ -384,6 +388,18 @@ export function requestPromotionPurchase(
   checkoutRail: MembershipCheckoutRail = 'card',
   cryptoAsset: MembershipCryptoAsset | null = null
 ): PromotionActionResult {
+  const purchaseCapability =
+    product === 'partner-carousel' ? 'submit-partner-ticket' : 'purchase-promotions';
+
+  if (!preApprovedOwnerCapabilityAllowed(purchaseCapability, channelId)) {
+    return {
+      ok: false,
+      reason: preApprovedOwnerRestrictionMessage(
+        product === 'partner-carousel' ? 'Partner banner ticket submission' : 'Promotion purchases',
+      ),
+    };
+  }
+
   const state = readChannelOwnerPromotionsState();
 
   if (checkoutRail === 'other' && !cryptoAsset) {
@@ -459,6 +475,19 @@ export function confirmPromotionPurchase(
   product: PromotionProduct,
   paymentId: string
 ): PromotionActionResult {
+  const channelId = readOwnedGameChannelId();
+  const purchaseCapability =
+    product === 'partner-carousel' ? 'submit-partner-ticket' : 'purchase-promotions';
+
+  if (channelId && !preApprovedOwnerCapabilityAllowed(purchaseCapability, channelId)) {
+    return {
+      ok: false,
+      reason: preApprovedOwnerRestrictionMessage(
+        product === 'partner-carousel' ? 'Partner banner ticket submission' : 'Promotion purchases',
+      ),
+    };
+  }
+
   const state = readChannelOwnerPromotionsState();
 
   if (!isMockMembershipCheckoutEnabled()) {
@@ -592,6 +621,13 @@ export function canSendSuperBanner(): { ok: boolean; remaining: number; reason?:
 }
 
 export function sendSuperBanner(channelId: string): PromotionActionResult {
+  if (!preApprovedOwnerCapabilityAllowed('send-banners', channelId)) {
+    return {
+      ok: false,
+      reason: preApprovedOwnerRestrictionMessage('Sending Super Banners'),
+    };
+  }
+
   const state = normalizeSuperBannerWindow(readChannelOwnerPromotionsState());
   const gate = canSendSuperBanner();
 

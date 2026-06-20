@@ -15,7 +15,12 @@ import {
   type PromotionDuration,
   type PromotionProduct,
 } from './channel-owner-promotions-store.js';
+import {
+  isPreApprovedGameOwnerWorkspace,
+  preApprovedOwnerCapabilityAllowed,
+} from './game-owner-approval-guards.js';
 import { OwnerMediaUploadField } from './OwnerMediaUploadField.js';
+import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPanel.js';
 import { PartnerCarouselPreviewOverlay } from './PartnerCarouselPreviewOverlay.js';
 import type { MembershipCheckoutRail, MembershipCryptoAsset } from './membership-plans-store.js';
 import type { NamiChannel } from './uiMockData.js';
@@ -73,6 +78,16 @@ export function ChannelOwnerPromotionsPanel(props: {
 
   const superGate = canSendSuperBanner();
   const ticket = promotions.partnerCarousel.ticket;
+  const preApprovedWorkspace = isPreApprovedGameOwnerWorkspace(props.channel.id);
+  const purchasesLocked = !preApprovedOwnerCapabilityAllowed(
+    'purchase-promotions',
+    props.channel.id,
+  );
+  const partnerSubmitLocked = !preApprovedOwnerCapabilityAllowed(
+    'submit-partner-ticket',
+    props.channel.id,
+  );
+  const sendLocked = !preApprovedOwnerCapabilityAllowed('send-banners', props.channel.id);
 
   useEffect(() => {
     setSuperHeadline(promotions.superBanner.draft.headline);
@@ -125,6 +140,13 @@ export function ChannelOwnerPromotionsPanel(props: {
 
   return (
     <section className="channel-owner-promotions-stack">
+      {preApprovedWorkspace ? (
+        <PreApprovedGameOwnerLockedPanel
+          feature="Promotion purchases and partner ticket submission"
+          title="Purchases locked until approval"
+        />
+      ) : null}
+
       <ChannelOwnerPromotionsStatusCard compact />
 
       <article
@@ -198,6 +220,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           {promotions.superBanner.status !== 'active' ? (
             <button
               className="nami-surface-button is-primary-surface-button"
+              disabled={purchasesLocked}
               onClick={() => purchase('super-banner', superDuration)}
               type="button"
             >
@@ -206,7 +229,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           ) : (
             <button
               className="nami-surface-button is-primary-surface-button"
-              disabled={!superGate.ok}
+              disabled={!superGate.ok || sendLocked}
               onClick={() => {
                 persistSuperDraft(superHeadline, superBody);
                 const result = sendSuperBanner(props.channel.id);
@@ -260,6 +283,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           {promotions.hubFeatured.status !== 'active' ? (
             <button
               className="nami-surface-button is-primary-surface-button"
+              disabled={purchasesLocked}
               onClick={() => purchase('hub-featured', hubDuration)}
               type="button"
             >
@@ -389,6 +413,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           </button>
           <button
             className="nami-surface-button is-primary-surface-button"
+            disabled={partnerSubmitLocked}
             onClick={() => {
               persistPartnerDraft(partnerTitle, partnerDescription);
               purchase('partner-carousel', partnerDuration);

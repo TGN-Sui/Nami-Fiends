@@ -4448,8 +4448,11 @@ function ChannelEventsScreen(props: {
     });
   }, [channelBrandTheme, props.channel.id]);
 
-  const gameEvents = getChannelEvents(props.channel);
   const isChannelOwner = ownsGameChannel(props.channel.id);
+  const preApprovedWorkspace = isPreApprovedGameOwner() && !isFullyApprovedGameOwner() && isChannelOwner;
+  const gameEvents = getChannelEvents(props.channel, {
+    includeHiddenDrafts: preApprovedWorkspace,
+  });
 
   function publishChannelEvent(): void {
     if (!isChannelOwner) {
@@ -4470,7 +4473,11 @@ function ChannelEventsScreen(props: {
       startsAtUtc: new Date(startsAtLocal).toISOString(),
     });
 
-    setNotice('Event published. Subscribed members were notified.');
+    setNotice(
+      created.hiddenUntilChannelApproval
+        ? 'Event saved as a hidden draft. It will publish after Nami Officials approve your channel.'
+        : 'Event published. Subscribed members were notified.',
+    );
     setTitle('');
     setDescription('');
     setStartsAtLocal('');
@@ -4519,8 +4526,12 @@ function ChannelEventsScreen(props: {
 
         {isChannelOwner ? (
           <article className="panel event-creator-form">
-            <h2>Publish channel event</h2>
-            <p>Subscribed members receive a notification when you submit a new event.</p>
+            <h2>{preApprovedWorkspace ? 'Prepare channel event' : 'Publish channel event'}</h2>
+            <p>
+              {preApprovedWorkspace
+                ? 'Save events now to get launch-ready. Hidden drafts stay invisible until your channel is fully approved.'
+                : 'Subscribed members receive a notification when you submit a new event.'}
+            </p>
             <label>
               <span>Title</span>
               <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
@@ -4542,7 +4553,7 @@ function ChannelEventsScreen(props: {
               />
             </label>
             <button className="primary-action" onClick={publishChannelEvent} type="button">
-              Submit event
+              {preApprovedWorkspace ? 'Save hidden event draft' : 'Submit event'}
             </button>
             {notice ? <p className="event-creator-notice">{notice}</p> : null}
           </article>
