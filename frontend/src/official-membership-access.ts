@@ -1,4 +1,4 @@
-import { isNamiTeamMember } from './channel-surface.js';
+import { isNamiTeamMember, OFFICIAL_OWNER_RANK_LABEL } from './channel-surface.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
 import { readDemoOwner } from './protocol-env.js';
 import { members } from './uiMockData.js';
@@ -40,7 +40,7 @@ export function complimentaryMembershipStatusLabel(
   const adminRole = resolveNamiAdminRole(owner);
 
   if (adminRole === 'official-owner') {
-    return 'Official Nami Boss';
+    return OFFICIAL_OWNER_RANK_LABEL;
   }
 
   if (adminRole === 'official-moderator') {

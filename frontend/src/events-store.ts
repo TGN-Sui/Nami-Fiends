@@ -6,7 +6,7 @@ import {
   canViewHiddenChannelEventDrafts,
   isPreApprovedGameOwnerWorkspace,
 } from './game-owner-approval-guards.js';
-import { isOfficialNamiGalaxyMember } from './channel-surface.js';
+import { isNamiBossMember, isNamiTeamMember } from './channel-surface.js';
 import { getSelfMember } from './member-access.js';
 import {
   channelOwnerEvents,
@@ -475,7 +475,7 @@ export function toggleEventInterest(eventId: string, memberId = getSelfMember().
 }
 
 export function canEditOfficialEvent(member = getSelfMember()): boolean {
-  return isOfficialNamiGalaxyMember(member);
+  return isNamiBossMember(member) || isNamiTeamMember(member);
 }
 
 export function canEditChannelEvent(

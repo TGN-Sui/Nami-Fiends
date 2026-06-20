@@ -1,5 +1,8 @@
 import type { NamiChannel, NamiMember } from './uiMockData.js';
 
+/** Exclusive owner rank label — not NPC, membership tier, or earned titles. */
+export const OFFICIAL_OWNER_RANK_LABEL = 'FIEND';
+
 export function isOfficialNamiChannel(channel: NamiChannel): boolean {
   return channel.officialNami === true || channel.partner === true;
 }
@@ -16,25 +19,46 @@ export function isNamiBossMember(member: NamiMember): boolean {
   return member.isNamiBoss === true;
 }
 
+export function isFiendMember(member: NamiMember): boolean {
+  return isNamiBossMember(member);
+}
+
+/** Galaxy foil + rainbow borders are reserved for the official owner (FIEND). */
 export function isOfficialNamiGalaxyMember(member: NamiMember): boolean {
-  return isNamiBossMember(member) || isNamiTeamMember(member);
+  return isFiendMember(member);
+}
+
+export function memberDisplayRankLabel(member: NamiMember): string {
+  if (isFiendMember(member)) {
+    return OFFICIAL_OWNER_RANK_LABEL;
+  }
+
+  return member.tier;
 }
 
 export function officialNamiGalaxyBadgeLabel(member: NamiMember): string | null {
-  if (isNamiBossMember(member)) {
-    return 'Official Nami Boss';
+  if (isFiendMember(member)) {
+    return OFFICIAL_OWNER_RANK_LABEL;
   }
 
-  if (isNamiTeamMember(member)) {
+  return null;
+}
+
+export function officialNamiTeamBadgeLabel(member: NamiMember): string | null {
+  if (isNamiTeamMember(member) && !isFiendMember(member)) {
     return 'Official Nami Team';
   }
 
   return null;
 }
 
+export function memberProfileExclusiveBadgeLabel(member: NamiMember): string | null {
+  return officialNamiGalaxyBadgeLabel(member) ?? officialNamiTeamBadgeLabel(member);
+}
+
 export function officialNamiPassportMarkLabel(member: NamiMember): string {
-  if (isNamiBossMember(member)) {
-    return 'Official Nami Boss Passport';
+  if (isFiendMember(member)) {
+    return OFFICIAL_OWNER_RANK_LABEL + ' Passport';
   }
 
   if (isNamiTeamMember(member)) {

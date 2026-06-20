@@ -133,9 +133,11 @@ import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
 import { useStudioLogoVersion, withStudioLogo } from './studio-logo-store.js';
 import {
   channelRainbowBorderClass,
+  isFiendMember,
   isOfficialNamiGalaxyMember,
+  memberDisplayRankLabel,
+  memberProfileExclusiveBadgeLabel,
   memberRainbowBorderClass,
-  officialNamiGalaxyBadgeLabel,
 } from './channel-surface.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
@@ -3473,7 +3475,9 @@ function Subscriptions(props: {
             <span>Current Plan</span>
             <strong>{activeMembershipPlan.label}</strong>
             <p>
-              {subscribedChannels.length}/{slotLimit} followed channels · {selfMember.tier} tier
+              {subscribedChannels.length}/{slotLimit} followed channels ·{' '}
+              {memberDisplayRankLabel(selfMember)}
+              {isFiendMember(selfMember) ? '' : ' tier'}
             </p>
           </div>
         </article>
@@ -3964,9 +3968,14 @@ function UserProfileScreen(props: {
           <p>Passport, activity showcase, and profile surfaces</p>
           <h1>
             My Profile
-            {officialNamiGalaxyBadgeLabel(profileMember) ? (
-              <span className="nami-team-badge is-nami-rainbow-foil-border">
-                {officialNamiGalaxyBadgeLabel(profileMember)}
+            {memberProfileExclusiveBadgeLabel(profileMember) ? (
+              <span
+                className={
+                  'nami-team-badge' +
+                  (isFiendMember(profileMember) ? ' is-nami-rainbow-foil-border' : '')
+                }
+              >
+                {memberProfileExclusiveBadgeLabel(profileMember)}
               </span>
             ) : null}
           </h1>

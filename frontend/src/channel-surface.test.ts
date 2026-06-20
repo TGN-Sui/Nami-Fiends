@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  isNamiBossMember,
+  isFiendMember,
   isOfficialNamiGalaxyMember,
+  memberDisplayRankLabel,
   memberRainbowBorderClass,
+  OFFICIAL_OWNER_RANK_LABEL,
   officialNamiGalaxyBadgeLabel,
   officialNamiPassportMarkLabel,
+  officialNamiTeamBadgeLabel,
 } from './channel-surface.js';
 import type { NamiMember } from './uiMockData.js';
 
@@ -22,30 +25,32 @@ function createMember(overrides: Partial<NamiMember> = {}): NamiMember {
   };
 }
 
-describe('channel-surface official galaxy identity', () => {
-  it('treats official boss members as galaxy passport holders', () => {
-    const boss = createMember({ isNamiBoss: true });
-
-    expect(isNamiBossMember(boss)).toBe(true);
-    expect(isOfficialNamiGalaxyMember(boss)).toBe(true);
-    expect(memberRainbowBorderClass(boss)).toBe(' is-nami-rainbow-foil-border');
-    expect(officialNamiGalaxyBadgeLabel(boss)).toBe('Official Nami Boss');
-    expect(officialNamiPassportMarkLabel(boss)).toBe('Official Nami Boss Passport');
-  });
-
-  it('keeps team labels separate from boss labels', () => {
+describe('channel-surface FIEND owner identity', () => {
+  it('reserves galaxy styling for the official owner only', () => {
+    const owner = createMember({ isNamiBoss: true });
     const team = createMember({ isNamiTeam: true });
 
-    expect(isOfficialNamiGalaxyMember(team)).toBe(true);
-    expect(officialNamiGalaxyBadgeLabel(team)).toBe('Official Nami Team');
-    expect(officialNamiPassportMarkLabel(team)).toBe('Official Nami Team Passport');
+    expect(isFiendMember(owner)).toBe(true);
+    expect(isOfficialNamiGalaxyMember(owner)).toBe(true);
+    expect(memberRainbowBorderClass(owner)).toBe(' is-nami-rainbow-foil-border');
+    expect(officialNamiGalaxyBadgeLabel(owner)).toBe(OFFICIAL_OWNER_RANK_LABEL);
+    expect(officialNamiPassportMarkLabel(owner)).toBe('FIEND Passport');
+    expect(memberDisplayRankLabel(owner)).toBe(OFFICIAL_OWNER_RANK_LABEL);
+
+    expect(isOfficialNamiGalaxyMember(team)).toBe(false);
+    expect(memberRainbowBorderClass(team)).toBe('');
+    expect(officialNamiGalaxyBadgeLabel(team)).toBeNull();
+    expect(officialNamiTeamBadgeLabel(team)).toBe('Official Nami Team');
+    expect(memberDisplayRankLabel(team)).toBe('NPC');
   });
 
-  it('does not apply galaxy styling to regular members', () => {
+  it('does not apply FIEND styling to regular members', () => {
     const member = createMember();
 
+    expect(isFiendMember(member)).toBe(false);
     expect(isOfficialNamiGalaxyMember(member)).toBe(false);
     expect(memberRainbowBorderClass(member)).toBe('');
     expect(officialNamiGalaxyBadgeLabel(member)).toBeNull();
+    expect(memberDisplayRankLabel(member)).toBe('NPC');
   });
 });

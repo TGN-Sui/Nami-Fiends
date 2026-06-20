@@ -107,9 +107,9 @@ describe('official-membership-access', () => {
     expect(canPurchasePaidMembership()).toBe(false);
   });
 
-  it('labels the official owner as Official Nami Boss', async () => {
+  it('labels the official owner as FIEND', async () => {
     const { complimentaryMembershipStatusLabel } = await import('./official-membership-access.js');
 
-    expect(complimentaryMembershipStatusLabel(OFFICIAL_OWNER)).toBe('Official Nami Boss');
+    expect(complimentaryMembershipStatusLabel(OFFICIAL_OWNER)).toBe('FIEND');
   });
 });

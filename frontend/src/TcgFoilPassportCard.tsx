@@ -2,6 +2,7 @@ import { useRef, type ReactElement, type ReactNode } from 'react';
 
 import {
   isOfficialNamiGalaxyMember,
+  memberDisplayRankLabel,
   memberRainbowBorderClass,
   officialNamiPassportMarkLabel,
 } from './channel-surface.js';
@@ -302,7 +303,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           />
           <OwnerEditableImage
             className="passport-tier-chip-editable"
-            fallback={<strong>{props.member.tier}</strong>}
+            fallback={<strong>{memberDisplayRankLabel(props.member)}</strong>}
             imageClassName="passport-tier-chip-image"
             label="Passport tier chip"
             nested
