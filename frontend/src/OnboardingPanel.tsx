@@ -29,6 +29,8 @@ import {
   completeSignupFromDraft,
   isDraftReadyForSignup,
 } from './member-session-store.js';
+import { OfficialSocialAuthControl } from './OfficialSocialAuthControl.js';
+import { useGamerScopedOfficialSocialAuthState } from './official-social-auth-store.js';
 import { PlayerScorePanel } from './PlayerScorePanel.js';
 import { useProtocolOwner } from './wallet.js';
 
@@ -43,6 +45,7 @@ function isValidEmail(value: string): boolean {
 
 export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
   const { owner, source } = useProtocolOwner();
+  const gamerSocialAuth = useGamerScopedOfficialSocialAuthState();
   const [act, setAct] = useState<OnboardingAct>('create');
   const [draft, setDraft] = useState<OnboardingDraft>(() => {
     return loadOnboardingDraft() ?? createEmptyDraft();
@@ -74,6 +77,39 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
       emailVerified,
     }));
   }, [draft.email, draft.emailVerified]);
+
+  useEffect(() => {
+    const socialXHandle = gamerSocialAuth.x.handle ?? '';
+    const socialTwitchHandle = gamerSocialAuth.twitch.handle ?? '';
+    const socialXVerified = gamerSocialAuth.x.verified;
+    const socialTwitchVerified = gamerSocialAuth.twitch.verified;
+
+    if (
+      socialXHandle === draft.socialXHandle &&
+      socialTwitchHandle === draft.socialTwitchHandle &&
+      socialXVerified === draft.socialXVerified &&
+      socialTwitchVerified === draft.socialTwitchVerified
+    ) {
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      socialXHandle,
+      socialXVerified,
+      socialTwitchHandle,
+      socialTwitchVerified,
+    }));
+  }, [
+    draft.socialXHandle,
+    draft.socialTwitchHandle,
+    draft.socialXVerified,
+    draft.socialTwitchVerified,
+    gamerSocialAuth.twitch.handle,
+    gamerSocialAuth.twitch.verified,
+    gamerSocialAuth.x.handle,
+    gamerSocialAuth.x.verified,
+  ]);
 
   const updateDraft = useCallback((patch: Partial<OnboardingDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
@@ -211,55 +247,21 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
           <div className="onboarding-step-body">
             <h3>Optional social verification</h3>
             <p className="protocol-hint">
-              Verify an X or Twitch handle now to boost your starting Player Score. You can skip and
-              link platforms later from Settings.
+              Sign in with X or Twitch through the official authorizer to boost your starting Player
+              Score. Manual handle entry is not accepted. Skip either platform and link later from
+              Settings.
             </p>
 
-            <label className="onboarding-field">
-              <span>X handle (optional)</span>
-              <input
-                onChange={(event) =>
-                  updateDraft({
-                    socialXHandle: event.target.value,
-                    socialXVerified: false,
-                  })
-                }
-                placeholder="@yourhandle"
-                type="text"
-                value={draft.socialXHandle}
-              />
-            </label>
-            <button
-              className="onboarding-secondary-btn"
-              disabled={draft.socialXHandle.trim().length < 2}
-              onClick={() => updateDraft({ socialXVerified: true })}
-              type="button"
-            >
-              {draft.socialXVerified ? 'X verified' : 'Verify X account'}
-            </button>
-
-            <label className="onboarding-field">
-              <span>Twitch handle (optional)</span>
-              <input
-                onChange={(event) =>
-                  updateDraft({
-                    socialTwitchHandle: event.target.value,
-                    socialTwitchVerified: false,
-                  })
-                }
-                placeholder="channelname"
-                type="text"
-                value={draft.socialTwitchHandle}
-              />
-            </label>
-            <button
-              className="onboarding-secondary-btn"
-              disabled={draft.socialTwitchHandle.trim().length < 2}
-              onClick={() => updateDraft({ socialTwitchVerified: true })}
-              type="button"
-            >
-              {draft.socialTwitchVerified ? 'Twitch verified' : 'Verify Twitch account'}
-            </button>
+            <OfficialSocialAuthControl
+              mockHandleSeed={draft.displayName}
+              platform="x"
+              scope="gamer"
+            />
+            <OfficialSocialAuthControl
+              mockHandleSeed={draft.displayName}
+              platform="twitch"
+              scope="gamer"
+            />
 
             <div className="onboarding-step-actions">
               <button className="onboarding-secondary-btn" onClick={() => setAct('create')} type="button">
