@@ -102,6 +102,7 @@ export type NamiMember = {
   tier: 'NPC' | 'Adventurer' | 'Pro' | 'Elite';
   badge: string;
   isNamiTeam?: boolean;
+  isNamiBoss?: boolean;
 };
 
 export type ChatMessage = {

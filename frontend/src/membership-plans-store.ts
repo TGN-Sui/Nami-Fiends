@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
+import { shouldUseGenesisSelfMember } from './genesis-member.js';
 import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
 import {
   COMPLIMENTARY_MEMBERSHIP_REASON,
@@ -372,6 +373,10 @@ export function effectiveMemberTier(state: MembershipPlanState = readMembershipP
 
 export function applyMembershipTierToMember(member: NamiMember): NamiMember {
   if (member.id !== 'm1') {
+    return member;
+  }
+
+  if (shouldUseGenesisSelfMember()) {
     return member;
   }
 

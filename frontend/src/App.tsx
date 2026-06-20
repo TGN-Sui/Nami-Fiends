@@ -133,8 +133,9 @@ import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
 import { useStudioLogoVersion, withStudioLogo } from './studio-logo-store.js';
 import {
   channelRainbowBorderClass,
-  isNamiTeamMember,
+  isOfficialNamiGalaxyMember,
   memberRainbowBorderClass,
+  officialNamiGalaxyBadgeLabel,
 } from './channel-surface.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
@@ -1343,7 +1344,7 @@ function NamiHub(props: {
           <div className="member-spotlight-grid">
             {spotlightMembers.map(({ member, slotId }) => {
               const progression = getNamiProgression(member);
-              const isOfficialNamiSpotlight = isNamiTeamMember(member);
+              const isOfficialNamiSpotlight = isOfficialNamiGalaxyMember(member);
 
               return (
                 <button
@@ -3963,8 +3964,10 @@ function UserProfileScreen(props: {
           <p>Passport, activity showcase, and profile surfaces</p>
           <h1>
             My Profile
-            {isNamiTeamMember(profileMember) ? (
-              <span className="nami-team-badge is-nami-rainbow-foil-border">Official Nami Team</span>
+            {officialNamiGalaxyBadgeLabel(profileMember) ? (
+              <span className="nami-team-badge is-nami-rainbow-foil-border">
+                {officialNamiGalaxyBadgeLabel(profileMember)}
+              </span>
             ) : null}
           </h1>
         </div>
@@ -4695,7 +4698,7 @@ function MemberFeedOfficialAlertBanner(props: {
   const selfMember = useSelfMember();
   const feedAbuseAlerts = useOfficialFeedAbuseAlerts();
 
-  if (!isNamiTeamMember(selfMember) || feedAbuseAlerts.length === 0) {
+  if (!isOfficialNamiGalaxyMember(selfMember) || feedAbuseAlerts.length === 0) {
     return null;
   }
 

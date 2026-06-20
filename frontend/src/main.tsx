@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { App } from './App.js';
+import { ensureGenesisLocalDataOnTestLaunch } from './genesis-member.js';
 import './partner-banner-submission-store.js';
 import { initNamiSoundscape } from './nami-sfx.js';
 import { NamiThemeProvider } from './theme.js';
@@ -13,6 +14,7 @@ import './nami-dark-theme.css';
 import './nami-custom-theme.css';
 import './nami-pixel-ui.css';
 
+ensureGenesisLocalDataOnTestLaunch();
 initNamiSoundscape();
 
 const rootElement = document.getElementById('root');

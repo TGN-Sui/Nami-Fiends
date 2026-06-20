@@ -1,5 +1,7 @@
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { shouldUseGenesisSelfMember } from './genesis-member.js';
 import { canManageTemporaryGlobalChats, getSelfMember } from './member-access.js';
+import { readMemberSession } from './member-session-store.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
@@ -319,10 +321,18 @@ function mapBadgeNames(names: string[], idPrefix: string): CollectedBadge[] {
   }));
 }
 
-export const userCollectedBadges: CollectedBadge[] = mapBadgeNames(
-  [...userProfile.ownedBadges, ...EXTRA_BADGE_NAMES],
-  'self'
-);
+export function getUserCollectedBadges(): CollectedBadge[] {
+  if (shouldUseGenesisSelfMember()) {
+    const onboardingBadge = readMemberSession()?.flavorBadgeId?.trim() || 'Hearth Basic';
+
+    return mapBadgeNames([onboardingBadge], 'self');
+  }
+
+  return mapBadgeNames([...userProfile.ownedBadges, ...EXTRA_BADGE_NAMES], 'self');
+}
+
+/** @deprecated Prefer getUserCollectedBadges() for genesis-aware self badge lists. */
+export const userCollectedBadges: CollectedBadge[] = getUserCollectedBadges();
 
 export type CollectedTitle = {
   id: string;
@@ -375,7 +385,7 @@ export const userCollectedCosmetics: CollectedCosmetic[] = mapCollectedCosmetics
 
 export function collectedTitlesForMember(member: NamiMember): CollectedTitle[] {
   if (isSelfMember(member.id)) {
-    return userCollectedTitles;
+    return shouldUseGenesisSelfMember() ? [] : userCollectedTitles;
   }
 
   const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));
@@ -388,7 +398,7 @@ export function collectedTitlesForMember(member: NamiMember): CollectedTitle[] {
 
 export function collectedCosmeticsForMember(member: NamiMember): CollectedCosmetic[] {
   if (isSelfMember(member.id)) {
-    return userCollectedCosmetics;
+    return shouldUseGenesisSelfMember() ? [] : userCollectedCosmetics;
   }
 
   const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));
@@ -408,7 +418,7 @@ export function cosmeticsForKind(
 
 export function collectedBadgesForMember(member: NamiMember): CollectedBadge[] {
   if (isSelfMember(member.id)) {
-    return userCollectedBadges;
+    return getUserCollectedBadges();
   }
 
   const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));

@@ -16,7 +16,7 @@ import {
 } from './badge-book-lift.js';
 import { BadgeBookOverlay } from './BadgeBookOverlay.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
-import { collectedBadgesForMember, userCollectedBadges, type CollectedBadge } from './global-chats.js';
+import { collectedBadgesForMember, getUserCollectedBadges, type CollectedBadge } from './global-chats.js';
 
 import { canAccessBadgeBook } from './member-access.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
@@ -69,7 +69,7 @@ function resolveBadges(member?: NamiMember, badges?: CollectedBadge[]): Collecte
     return collectedBadgesForMember(member);
   }
 
-  return userCollectedBadges;
+  return getUserCollectedBadges();
 }
 
 function easeInOutCubic(value: number): number {

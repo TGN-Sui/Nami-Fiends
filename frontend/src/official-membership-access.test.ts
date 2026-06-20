@@ -33,6 +33,12 @@ vi.mock('./protocol-env.js', () => ({
   readDemoOwner: () => null,
 }));
 
+vi.mock('./genesis-member.js', () => ({
+  shouldUseGenesisSelfMember: () => false,
+  applyGenesisSelfOverrides: (member: { id: string }) => member,
+  ensureGenesisLocalDataOnTestLaunch: () => undefined,
+}));
+
 vi.mock('./zklogin.js', () => ({
   getZkLoginSession: () => null,
 }));
@@ -99,5 +105,11 @@ describe('official-membership-access', () => {
     const { canPurchasePaidMembership } = await import('./membership-plans-store.js');
 
     expect(canPurchasePaidMembership()).toBe(false);
+  });
+
+  it('labels the official owner as Official Nami Boss', async () => {
+    const { complimentaryMembershipStatusLabel } = await import('./official-membership-access.js');
+
+    expect(complimentaryMembershipStatusLabel(OFFICIAL_OWNER)).toBe('Official Nami Boss');
   });
 });

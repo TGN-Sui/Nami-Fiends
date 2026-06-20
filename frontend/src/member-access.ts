@@ -1,10 +1,12 @@
-import { isNamiTeamMember } from './channel-surface.js';
+import { isOfficialNamiGalaxyMember } from './channel-surface.js';
+import { applyGenesisSelfOverrides, shouldUseGenesisSelfMember } from './genesis-member.js';
 import {
   applyDemoMemberOverrides,
   readDemoSafetyModerationRole,
 } from './demo-perspective-store.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
+import { hasComplimentaryMembershipAccess } from './official-membership-access.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 import { readDemoOwner } from './protocol-env.js';
 import { getZkLoginSession } from './zklogin.js';
@@ -20,10 +22,21 @@ export const LEGACY_SELF_MEMBER_NAMES = ['Nozomi', 'NPC Gamer'] as const;
 
 export function getSelfMember(): NamiMember {
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
+  let member = withMemberProfile(withMemberAvatar(baseMember));
 
-  return applyDemoMemberOverrides(
-    applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)))
-  );
+  if (shouldUseGenesisSelfMember()) {
+    member = applyGenesisSelfOverrides(member);
+  }
+
+  return applyDemoMemberOverrides(applyMembershipTierToMember(member));
+}
+
+export function memberHasEliteAccess(member: NamiMember): boolean {
+  if (member.id === SELF_MEMBER_ID && hasComplimentaryMembershipAccess(readSignedInOwner())) {
+    return true;
+  }
+
+  return member.tier === 'Elite';
 }
 
 export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember = getSelfMember()): boolean {
@@ -88,7 +101,7 @@ export function canManageTemporaryGlobalChats(member: NamiMember = getSelfMember
     return false;
   }
 
-  return member.tier === 'Elite' && isMemberVerified(member);
+  return memberHasEliteAccess(member) && isMemberVerified(member);
 }
 
 export function canEditProfileCosmetics(member: NamiMember = getSelfMember()): boolean {
@@ -148,6 +161,10 @@ export function canSendOfficialChatMessages(): boolean {
 }
 
 export function isProOrHigherTier(member: NamiMember): boolean {
+  if (member.id === SELF_MEMBER_ID && hasComplimentaryMembershipAccess(readSignedInOwner())) {
+    return true;
+  }
+
   return member.tier === 'Pro' || member.tier === 'Elite';
 }
 
@@ -189,7 +206,7 @@ export function messageBubbleClass(
   member: NamiMember | undefined,
   authorName: string
 ): string {
-  if (member && isNamiTeamMember(member)) {
+  if (member && isOfficialNamiGalaxyMember(member)) {
     return ' is-nami-team-chat-bubble is-nami-rainbow-foil-border';
   }
 

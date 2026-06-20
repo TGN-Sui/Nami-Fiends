@@ -1,7 +1,12 @@
 import { useRef, type ReactElement, type ReactNode } from 'react';
 
-import { isNamiTeamMember, memberRainbowBorderClass } from './channel-surface.js';
+import {
+  isOfficialNamiGalaxyMember,
+  memberRainbowBorderClass,
+  officialNamiPassportMarkLabel,
+} from './channel-surface.js';
 import { isMemberVerified } from './member-access.js';
+import { getNamiProgression } from './member-progression.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import {
   ConductSignalDot,
@@ -34,30 +39,15 @@ function memberProgression(member: NamiMember): {
   seasonXp: number;
   collectorNumber: number;
 } {
+  const snapshot = getNamiProgression(member);
   const memberIndex = Math.max(0, members.findIndex((entry) => entry.id === member.id));
-  const level = Math.min(100, 18 + memberIndex * 9 + (member.name.length % 8));
-  const currentXp = Math.min(999, 420 + memberIndex * 73);
-  const guildSets = [
-    ['Wave Raiders', 'Creator Circle'],
-    ['Night Market PvP', 'Retro Arena'],
-    ['Builder League', 'Sui Creators'],
-    ['Ocean Mint Crew', 'Signal Watch'],
-  ];
-  const squadSets = [
-    ['Alpha Squad', 'Mint Watch'],
-    ['Raid Team', 'Patch Crew'],
-    ['Builder Squad', 'Event Ops'],
-    ['Support Squad', 'Lore Team'],
-  ];
-  const guilds = guildSets[memberIndex % guildSets.length] ?? guildSets[0]!;
-  const squads = squadSets[memberIndex % squadSets.length] ?? squadSets[0]!;
 
   return {
-    level,
-    currentXp,
-    guild: guilds[0]!,
-    squad: squads[0]!,
-    seasonXp: level * 1000 + currentXp,
+    level: snapshot.level,
+    currentXp: snapshot.currentXp,
+    guild: snapshot.guilds[0] ?? '—',
+    squad: snapshot.squads[0] ?? '—',
+    seasonXp: snapshot.seasonXp,
     collectorNumber: memberIndex + 1,
   };
 }
@@ -230,7 +220,8 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
     props.onOpenPassport?.();
   }
 
-  const isOfficialTeam = isNamiTeamMember(props.member);
+  const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
+  const passportMarkLabel = officialNamiPassportMarkLabel(props.member);
 
   function passportNameplateIcons(): ReactElement {
     return (
@@ -259,7 +250,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           : 'nami-profile-card-shell-vertical is-uniform-vertical-passport') +
         (passportInteractive ? ' is-tcg-foil-eligible' : '') +
         (isClickable ? ' is-clickable-passport' : '') +
-        (isNamiTeamMember(props.member) ? ' is-nami-official-galaxy-passport' : '') +
+        (isOfficialGalaxy ? ' is-nami-official-galaxy-passport' : '') +
         (tierFoilClass ? ' ' + tierFoilClass : '') +
         (tierSurfaceClass ? ' ' + tierSurfaceClass : '')
       }
@@ -290,7 +281,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         }
         ref={profileCardFrameRef}
       >
-        {isNamiTeamMember(props.member) ? (
+        {isOfficialGalaxy ? (
           <div aria-hidden="true" className="nami-official-galaxy-sky">
             <span className="nami-official-galaxy-shooting-star" />
           </div>
@@ -301,13 +292,13 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             className="passport-header-mark-editable"
             fallback={
               <span className="mini-badge">
-                {isOfficialTeam ? 'Official Nami Team Passport' : 'Nami Passport'}
+                {passportMarkLabel}
               </span>
             }
             imageClassName="passport-header-mark-image"
-            label={isOfficialTeam ? 'Official team passport mark' : 'Passport header mark'}
+            label={isOfficialGalaxy ? 'Official galaxy passport mark' : 'Passport header mark'}
             nested
-            slotId={isOfficialTeam ? 'passport-official-team-mark' : 'passport-header-mark'}
+            slotId={isOfficialGalaxy ? 'passport-official-team-mark' : 'passport-header-mark'}
           />
           <OwnerEditableImage
             className="passport-tier-chip-editable"

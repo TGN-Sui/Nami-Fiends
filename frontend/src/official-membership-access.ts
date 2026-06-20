@@ -40,7 +40,7 @@ export function complimentaryMembershipStatusLabel(
   const adminRole = resolveNamiAdminRole(owner);
 
   if (adminRole === 'official-owner') {
-    return 'Official owner access';
+    return 'Official Nami Boss';
   }
 
   if (adminRole === 'official-moderator') {

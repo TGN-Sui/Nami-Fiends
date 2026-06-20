@@ -1,3 +1,5 @@
+import { shouldUseGenesisSelfMember } from './genesis-member.js';
+import { SELF_MEMBER_ID } from './member-access.js';
 import { members, type NamiMember } from './uiMockData.js';
 
 export type NamiProgressionSnapshot = {
@@ -18,7 +20,21 @@ function percentForNamiLevel(level: number, currentXp = 0, nextLevelXp = 1000): 
   return Math.min(100, Math.max(0, (preciseLevel / 99) * 100));
 }
 
+export const GENESIS_PROGRESSION: NamiProgressionSnapshot = {
+  level: 1,
+  levelPercent: 0,
+  currentXp: 0,
+  nextLevelXp: 1000,
+  seasonXp: 0,
+  guilds: [],
+  squads: [],
+};
+
 export function getNamiProgression(member: NamiMember, tick = Date.now()): NamiProgressionSnapshot {
+  if (shouldUseGenesisSelfMember() && member.id === SELF_MEMBER_ID) {
+    return GENESIS_PROGRESSION;
+  }
+
   const memberIndex = Math.max(0, members.findIndex((currentMember) => currentMember.id === member.id));
   const baseLevel = Math.min(100, 18 + memberIndex * 9 + (member.name.length % 8));
   const nextLevelXp = 1000;
