@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
-import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
+import { getSelfMember } from './member-access.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
 import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
 import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
 import {
   MEMBERSHIP_PLANS,
+  canPurchasePaidMembership,
+  effectiveMemberTier,
   formatMembershipPrice,
   membershipPlanForTier,
   requestMembershipCancel,
@@ -21,9 +23,15 @@ import {
   type PaidMembershipTier,
 } from './membership-plans-store.js';
 import {
+  COMPLIMENTARY_MEMBERSHIP_REASON,
+  complimentaryMembershipStatusLabel,
+  hasComplimentaryMembershipAccess,
+} from './official-membership-access.js';
+import {
   closeMembershipUpgradeOverlay,
   useMembershipUpgradeOverlayOpen,
 } from './membership-upgrade-store.js';
+import { useProtocolOwner } from './wallet.js';
 
 const TIER_RANK: Record<PaidMembershipTier, number> = {
   Adventurer: 1,
@@ -33,7 +41,9 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 
 export function MembershipUpgradeOverlay(): ReactElement | null {
   const open = useMembershipUpgradeOverlayOpen();
-  const canPurchaseMembership = canPurchaseOrClaimMembership(getSelfMember());
+  const { owner } = useProtocolOwner();
+  const complimentaryAccess = hasComplimentaryMembershipAccess(owner);
+  const canPurchaseMembership = canPurchasePaidMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
@@ -47,7 +57,7 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
   const [animatingTier, setAnimatingTier] = useState<PaidMembershipTier | null>(null);
   const [confirmingUpgrade, setConfirmingUpgrade] = useState(false);
 
-  const activePlan = membershipPlanForTier(planState.activeTier);
+  const activePlan = membershipPlanForTier(effectiveMemberTier(planState));
 
   const statusLabel = useMemo(() => {
     if (planState.status === 'pending-upgrade') {
@@ -204,7 +214,17 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
           <p>{statusLabel}</p>
         </div>
 
-        {!canPurchaseMembership ? (
+        {complimentaryAccess ? (
+          <article className="panel membership-plans-hero">
+            <div className="membership-plans-hero-copy">
+              <h3>{complimentaryMembershipStatusLabel(owner)}</h3>
+              <p>{COMPLIMENTARY_MEMBERSHIP_REASON}</p>
+              <p>
+                Your account already includes <strong>{activePlan.label}</strong> features.
+              </p>
+            </div>
+          </article>
+        ) : !canPurchaseMembership ? (
           <MembershipPurchaseLockedPanel />
         ) : (
           <>

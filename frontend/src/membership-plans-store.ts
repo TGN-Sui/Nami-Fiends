@@ -3,6 +3,11 @@ import { useSyncExternalStore } from 'react';
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
 import {
+  COMPLIMENTARY_MEMBERSHIP_REASON,
+  COMPLIMENTARY_MEMBERSHIP_TIER,
+  hasComplimentaryMembershipAccess,
+} from './official-membership-access.js';
+import {
   isMembershipSubscriptionApiAvailable,
   syncMembershipSubscriptionToBackend,
 } from './membership-subscriptions-api.js';
@@ -350,6 +355,10 @@ export function membershipCheckoutSelectionLabel(
 }
 
 export function effectiveMemberTier(state: MembershipPlanState = readMembershipPlanState()): PaidMembershipTier {
+  if (hasComplimentaryMembershipAccess()) {
+    return COMPLIMENTARY_MEMBERSHIP_TIER;
+  }
+
   if (state.status === 'pending-upgrade' && state.pendingTier) {
     return state.pendingTier;
   }
@@ -379,11 +388,23 @@ export const MEMBERSHIP_VERIFIED_ONLY_REASON =
   'Claim and verify your Nami Passport before purchasing or claiming membership.';
 
 function membershipPurchaseGuard(): MembershipActionResult | null {
+  if (hasComplimentaryMembershipAccess()) {
+    return { ok: false, reason: COMPLIMENTARY_MEMBERSHIP_REASON };
+  }
+
   if (!canPurchaseOrClaimMembership(getSelfMember())) {
     return { ok: false, reason: MEMBERSHIP_VERIFIED_ONLY_REASON };
   }
 
   return null;
+}
+
+export function canPurchasePaidMembership(member = getSelfMember()): boolean {
+  if (hasComplimentaryMembershipAccess()) {
+    return false;
+  }
+
+  return canPurchaseOrClaimMembership(member);
 }
 
 export function requestMembershipUpgrade(

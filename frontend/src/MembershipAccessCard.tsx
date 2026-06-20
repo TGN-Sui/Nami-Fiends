@@ -4,10 +4,19 @@ import {
   fetchPendingFulfillmentForOwner,
   isMembershipFulfillmentApiAvailable,
 } from './membership-fulfillment-api.js';
-import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
+import { getSelfMember } from './member-access.js';
 import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { openMembershipUpgradeOverlay } from './membership-upgrade-store.js';
-import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
+import {
+  canPurchasePaidMembership,
+  effectiveMemberTier,
+  membershipPlanForTier,
+  useMembershipPlanState,
+} from './membership-plans-store.js';
+import {
+  complimentaryMembershipStatusLabel,
+  hasComplimentaryMembershipAccess,
+} from './official-membership-access.js';
 import { useProtocolOwner } from './wallet.js';
 
 type MembershipAccessCardProps = {
@@ -18,11 +27,12 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
   const planState = useMembershipPlanState();
   const { owner } = useProtocolOwner();
   const selfMember = getSelfMember();
-  const canPurchaseMembership = canPurchaseOrClaimMembership(selfMember);
-  const activePlan = membershipPlanForTier(planState.activeTier);
+  const complimentaryAccess = hasComplimentaryMembershipAccess(owner);
+  const canPurchaseMembership = canPurchasePaidMembership(selfMember);
+  const effectiveTier = effectiveMemberTier(planState);
+  const activePlan = membershipPlanForTier(effectiveTier);
   const [onChainPending, setOnChainPending] = useState(false);
-  const ctaLabel =
-    planState.activeTier === 'Elite' ? 'Change membership' : 'Upgrade membership';
+  const ctaLabel = effectiveTier === 'Elite' ? 'Change membership' : 'Upgrade membership';
 
   useEffect(() => {
     if (!owner?.startsWith('0x') || !isMembershipFulfillmentApiAvailable()) {
@@ -41,10 +51,14 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
         <div className="membership-access-copy">
           <span className="mini-badge">Membership</span>
           <strong>{activePlan.label}</strong>
-          <p>Expand boosts, squads, followed channels, and cosmetics.</p>
+          <p>
+            {complimentaryAccess
+              ? complimentaryMembershipStatusLabel(owner) + ' — Elite features included.'
+              : 'Expand boosts, squads, followed channels, and cosmetics.'}
+          </p>
         </div>
 
-        {canPurchaseMembership ? (
+        {complimentaryAccess ? null : canPurchaseMembership ? (
           <button
             className="primary-action membership-access-upgrade-btn"
             onClick={() => openMembershipUpgradeOverlay()}
@@ -64,22 +78,31 @@ export function MembershipAccessCard(props: MembershipAccessCardProps = {}): Rea
       <div className="profile-panel-heading">
         <h2>Membership</h2>
         <p>
-          You are on <strong>{activePlan.label}</strong>. Adventurer is $3 USDC/mo or free with
-          verified X.com. All tiers accept card, PayPal, SUI, or USDC on Sui.
+          {complimentaryAccess ? (
+            <>
+              You have <strong>{complimentaryMembershipStatusLabel(owner)}</strong> with full{' '}
+              <strong>{activePlan.label}</strong> features — no payment required.
+            </>
+          ) : (
+            <>
+              You are on <strong>{activePlan.label}</strong>. Adventurer is $3 USDC/mo or free with
+              verified X.com. All tiers accept card, PayPal, SUI, or USDC on Sui.
+            </>
+          )}
         </p>
       </div>
 
       <div className="membership-access-meta">
-        <span>{activePlan.tagline}</span>
+        <span>{complimentaryAccess ? activePlan.highlights.join(' · ') : activePlan.tagline}</span>
         <span>{activePlan.highlights.length} benefits included</span>
-        {onChainPending ? (
+        {onChainPending && !complimentaryAccess ? (
           <span className="membership-onchain-pending-badge">
             Paid tier active in app. On-chain passport upgrade is queued.
           </span>
         ) : null}
       </div>
 
-      {canPurchaseMembership ? (
+      {complimentaryAccess ? null : canPurchaseMembership ? (
         <button
           className="primary-action membership-access-upgrade-btn"
           onClick={() => openMembershipUpgradeOverlay()}

@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import { canPurchaseOrClaimMembership, getSelfMember } from './member-access.js';
+import { getSelfMember } from './member-access.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
 import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipOnChainFulfillmentCard } from './MembershipOnChainFulfillmentCard.js';
@@ -8,6 +8,8 @@ import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
 import { MembershipPaymentMethods } from './MembershipPaymentMethods.js';
 import {
   MEMBERSHIP_PLANS,
+  canPurchasePaidMembership,
+  effectiveMemberTier,
   formatMembershipPrice,
   membershipPlanForTier,
   requestMembershipCancel,
@@ -20,6 +22,12 @@ import {
   type MembershipCryptoAsset,
   type PaidMembershipTier,
 } from './membership-plans-store.js';
+import {
+  COMPLIMENTARY_MEMBERSHIP_REASON,
+  complimentaryMembershipStatusLabel,
+  hasComplimentaryMembershipAccess,
+} from './official-membership-access.js';
+import { useProtocolOwner } from './wallet.js';
 
 const TIER_RANK: Record<PaidMembershipTier, number> = {
   Adventurer: 1,
@@ -28,7 +36,9 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 };
 
 export function MembershipPlansPanel(): ReactElement {
-  const canPurchaseMembership = canPurchaseOrClaimMembership(getSelfMember());
+  const { owner } = useProtocolOwner();
+  const complimentaryAccess = hasComplimentaryMembershipAccess(owner);
+  const canPurchaseMembership = canPurchasePaidMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
@@ -42,7 +52,7 @@ export function MembershipPlansPanel(): ReactElement {
   const [animatingTier, setAnimatingTier] = useState<PaidMembershipTier | null>(null);
   const [confirmingUpgrade, setConfirmingUpgrade] = useState(false);
 
-  const activePlan = membershipPlanForTier(planState.activeTier);
+  const activePlan = membershipPlanForTier(effectiveMemberTier(planState));
   const pendingPlan = planState.pendingTier ? membershipPlanForTier(planState.pendingTier) : null;
 
   const statusLabel = useMemo(() => {
@@ -129,6 +139,24 @@ export function MembershipPlansPanel(): ReactElement {
     planState.status === 'active' &&
     (planState.activeTier !== 'Adventurer' ||
       (planState.activeTier === 'Adventurer' && planState.adventurerSource === 'paid'));
+
+  if (complimentaryAccess) {
+    return (
+      <section className="membership-plans-panel">
+        <article className="panel membership-plans-hero">
+          <div className="membership-plans-hero-copy">
+            <span className="mini-badge">Membership Plans</span>
+            <h2>{complimentaryMembershipStatusLabel(owner)}</h2>
+            <p>{COMPLIMENTARY_MEMBERSHIP_REASON}</p>
+            <p>
+              Your account includes <strong>{activePlan.label}</strong> boosts, squads, jury
+              eligibility, cosmetics, and temporary global chat rooms.
+            </p>
+          </div>
+        </article>
+      </section>
+    );
+  }
 
   if (!canPurchaseMembership) {
     return (

@@ -146,7 +146,11 @@ import { PlayerScorePanel } from './PlayerScorePanel.js';
 import { WalletAuthBridge } from './WalletAuthBridge.js';
 import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
 
-import { membershipPlanForTier, useMembershipPlanState } from './membership-plans-store.js';
+import {
+  effectiveMemberTier,
+  membershipPlanForTier,
+  useMembershipPlanState,
+} from './membership-plans-store.js';
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { DemoPerspectiveBar } from './DemoPerspectiveBar.js';
@@ -3442,7 +3446,7 @@ function Subscriptions(props: {
   const subscribedChannels = useSubscribedChannels();
   const selfMember = getSelfMember();
   const membershipState = useMembershipPlanState();
-  const activeMembershipPlan = membershipPlanForTier(membershipState.activeTier);
+  const activeMembershipPlan = membershipPlanForTier(effectiveMemberTier(membershipState));
   const slotLimit = subscriptionSlotLimit(selfMember.tier);
   const recommendedChannels = channels.filter((channel) => !isChannelSubscribed(channel.id));
 
