@@ -82,6 +82,63 @@ NPC is the default starting point.
 
 ---
 
+## Test Launch Genesis State
+
+Official testnet builds (`VITE_NAMI_TEST_LAUNCH=true`) start every real signed-in user at a **genesis passport** — no fixture progression, badges, or chat history.
+
+Genesis snapshot (frontend):
+
+```text
+Level: 1
+XP: 0
+Membership display tier: NPC
+Guilds / squads: none
+Badges: onboarding flavor badge only (from member session quiz)
+Chat logs: empty (one-time purge of dev-seeded localStorage on first test-launch boot)
+```
+
+Implementation:
+
+```text
+frontend/src/genesis-member.ts       — shouldUseGenesisSelfMember(), applyGenesisSelfOverrides()
+frontend/src/member-progression.ts   — GENESIS_PROGRESSION for self member (m1)
+frontend/src/global-chats.ts         — getUserCollectedBadges() returns onboarding badge only
+```
+
+Fixture catalogs (`VITE_NAMI_DEV_FIXTURES=true`) remain available for local polish only; test launch forces them off.
+
+---
+
+## FIEND Owner Display Identity
+
+The official Nami owner (`VITE_NAMI_OFFICIAL_OWNER` wallet, matched via zkLogin or linked wallet) receives an exclusive display rank label:
+
+```text
+FIEND
+```
+
+FIEND is **not** the reputation rank `Fiend` (earned progression). It is a sole-owner identity label shown instead of NPC or paid membership tier chips on passport surfaces.
+
+Owner styling (frontend):
+
+```text
+Galaxy passport foil (is-nami-official-galaxy-passport)
+Rainbow avatar and chat bubble borders (is-nami-rainbow-foil-border)
+Profile badge and passport header: FIEND / FIEND Passport
+```
+
+Implementation:
+
+```text
+frontend/src/channel-surface.ts      — OFFICIAL_OWNER_RANK_LABEL, isFiendMember(), memberDisplayRankLabel()
+frontend/src/genesis-member.ts       — sets isNamiBoss on self member when resolveNamiAdminRole === official-owner
+frontend/src/official-membership-access.ts — complimentary Elite features without payment
+```
+
+Official Nami Team members keep a separate **Official Nami Team** label. Galaxy and rainbow styling are reserved for the FIEND owner only.
+
+---
+
 ## Membership Tier
 
 Passport stores the current membership/access tier.

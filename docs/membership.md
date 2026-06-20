@@ -191,6 +191,37 @@ Elite does not override moderation.
 
 ---
 
+## Complimentary Elite (Officials)
+
+The official owner, official moderators, and `isNamiTeam` members receive **Elite-tier feature access without payment**. Checkout is blocked with `COMPLIMENTARY_MEMBERSHIP_REASON`.
+
+| Role | Display label | Galaxy / rainbow styling |
+|------|---------------|--------------------------|
+| Official owner (`VITE_NAMI_OFFICIAL_OWNER`) | **FIEND** | Yes (owner only) |
+| Official moderator (local list) | Official moderator access | No |
+| Nami team member (`isNamiTeam`) | Official Nami member access | No |
+
+On test launch, genesis users keep **NPC** on passport display tier while complimentary roles use `effectiveMemberTier()` for feature gates (boosts, squads, temporary global chats, etc.).
+
+Implementation:
+
+```text
+frontend/src/official-membership-access.ts — hasComplimentaryMembershipAccess(), complimentaryMembershipStatusLabel()
+frontend/src/membership-plans-store.ts     — effectiveMemberTier(); applyMembershipTierToMember skips tier override in genesis mode
+frontend/src/member-access.ts              — memberHasEliteAccess() for complimentary owner features
+```
+
+Env:
+
+```text
+VITE_NAMI_OFFICIAL_OWNER        — Sui address (must match connected zkLogin / linked wallet)
+VITE_NAMI_OFFICIAL_OWNER_EMAIL  — Google account for zkLogin OAuth (see docs/testnet-zklogin.md)
+NAMI_OFFICIAL_OWNER             — backend mirror for officials sync auth
+NAMI_OFFICIAL_OWNER_EMAIL       — backend mirror (optional)
+```
+
+---
+
 # Effective Tier
 
 Nami uses effective tier checks instead of relying only on raw Passport tier.

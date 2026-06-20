@@ -15,10 +15,10 @@ The goal is to build a portable gamer identity and trust layer.
 ```text
 Move build: passing
 Move tests: 80 passing
-Frontend tests: 133 passing (vitest)
+Frontend tests: 153 passing (vitest)
 Warnings: 0
-Documentation: synced (Phase 8 entry + game onboarding + officials queue)
-MVP progress: ~82% (on-chain complete; frontend onboarding surfaces shipped)
+Documentation: synced (Phase 8 test launch, FIEND owner, genesis passport)
+MVP progress: ~82% (on-chain complete; test-launch identity surfaces shipped)
 ```
 
 Current Move package:

@@ -75,7 +75,8 @@ Required values:
 |----------|--------|
 | `VITE_NAMI_PACKAGE_ID` | `deployments/testnet/latest.json` |
 | `VITE_NAMI_ADMIN_CAP_ID` | same |
-| `VITE_NAMI_OFFICIAL_OWNER` | AdminCap holder wallet |
+| `VITE_NAMI_OFFICIAL_OWNER` | AdminCap holder wallet (FIEND galaxy styling when connected) |
+| `VITE_NAMI_OFFICIAL_OWNER_EMAIL` | Owner Google account for zkLogin |
 | `VITE_NAMI_INDEXER_URL` | receiving server public URL |
 | `VITE_NAMI_TEST_LAUNCH` | `true` |
 | `VITE_NAMI_DEV_FIXTURES` | `false` (auto-forced when test launch is true) |
@@ -102,6 +103,9 @@ npm --prefix frontend run build
 | Submit user suggestion | Synced to `/api/officials/submissions` |
 | Nodename claim | `@fiend` prefix enforced |
 | Mock membership checkout | Disabled |
+| New user passport | Level 1, 0 XP, NPC tier, onboarding badge only |
+| Official owner signed in | **FIEND** label, galaxy passport, rainbow avatars; Elite features without payment |
+| Dev fixture progression (lvl 18+) | Absent on test launch |
 
 ---
 

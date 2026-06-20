@@ -84,6 +84,12 @@ VITE_NAMI_DEMO_OWNER fallback must not ship to production with owner privileges
 Indexer/backend maintenance controls are not wired yet (Phase 2+)
 ```
 
+### FIEND owner display (test launch)
+
+The connected official owner wallet is the only account that may show the **FIEND** rank label and galaxy/rainbow passport styling. This is enforced in `channel-surface.ts` via `isFiendMember()` (`member.isNamiBoss` set in `genesis-member.ts` when `resolveNamiAdminRole` matches `VITE_NAMI_OFFICIAL_OWNER`).
+
+Complimentary Elite features use `hasComplimentaryMembershipAccess()` — display tier stays NPC at genesis; capability checks use `memberHasEliteAccess()`.
+
 ### Manual exploit checklist
 
 1. Connect a non-owner wallet → Owner Settings panel must not render.

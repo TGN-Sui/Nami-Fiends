@@ -55,6 +55,24 @@ Profile media, long bios, and avatar configuration should live off-chain.
 
 ---
 
+## FIEND Owner Passport Styling
+
+The official Nami owner (`VITE_NAMI_OFFICIAL_OWNER`) displays the exclusive rank label **FIEND** on passport and profile surfaces. This is separate from earned reputation rank, membership tier chips, and NPC genesis state.
+
+Visual treatment (frontend only, test launch + live):
+
+```text
+Galaxy sky + shooting star on TCG foil passport (is-nami-official-galaxy-passport)
+Animated rainbow foil borders on passport frame and uniform avatars (is-nami-rainbow-foil-border)
+FIEND badge on My Profile title row
+```
+
+Only the owner wallet receives galaxy/rainbow styling. Official Nami Team members use their own team label without owner cosmetics.
+
+See `docs/passport.md` (FIEND Owner Display Identity) and `frontend/src/channel-surface.ts`.
+
+---
+
 ## Profile Rules
 
 NPC users may create Profiles.

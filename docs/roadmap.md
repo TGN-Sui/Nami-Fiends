@@ -622,15 +622,15 @@ Provider interfaces (affiliation, channel directory, member directory) are the p
 Status:
 
 ```text
-In progress — Phase 8 overall ~78% complete
+In progress — Phase 8 overall ~80% complete
 ```
 
 ```text
 Phase 8 progress
 
-[███████████████░░░░░] ~78%
+[████████████████░░░░] ~80%
 
-8.1 Testnet launch mode      █████████████████░░░  ~85%
+8.1 Testnet launch mode      █████████████████░░░  ~88%
 8.2 Deploy + public URL      ████░░░░░░░░░░░░░░░░  ~20%
 8.3 zkLogin production       ██████░░░░░░░░░░░░░░  ~30%
 8.4 Security + custody       ████░░░░░░░░░░░░░░░░  ~20%
@@ -670,12 +670,15 @@ Live indexer + receiving server required; empty states preferred over simulated 
 Status:
 
 ```text
-~85% — policy + officials API + env tooling + sync auth shipped; deploy secrets + public URL pending
+~88% — policy + officials API + env tooling + genesis passport + FIEND owner identity shipped; deploy secrets + public URL pending
 ```
 
 Shipped:
 
 ```text
+Genesis passport for test-launch users (lvl 1, 0 XP, NPC, onboarding badge only; demo chat purge)
+FIEND owner display label + galaxy passport + rainbow borders (official owner wallet only)
+Complimentary Elite for official owner, moderators, and Nami team (no payment)
 VITE_NAMI_TEST_LAUNCH=true forces fixture catalogs off (even if DEV_FIXTURES=true)
 isDemoSimulationEnabled() gates dashboard perspectives, event sim buttons, approval sims, demo claim method
 shouldUseDemoOwnerFallback() removes demo wallet owner on test launch
