@@ -1,6 +1,25 @@
 # Onboarding
 
-Three-act flow: **Create** (off-chain draft) → **Claim** (one wallet transaction) → **Verify** (platform links). See [verification.md](./verification.md) for Act 3 and [badge-system.md](./badge-system.md) for what badges can be earned when.
+Nami has two entry paths from **Enter Nami**:
+
+| Path | Audience | Doc |
+|------|----------|-----|
+| **Gamer** | Members / players | This document (Acts 1–3) |
+| **Game** | Studios submitting a title | [game-onboarding.md](./game-onboarding.md) |
+
+Gamer flow: **Create** (off-chain draft) → **Claim** (one wallet transaction) → **Verify** (platform links). See [verification.md](./verification.md) for Act 3 and [badge-system.md](./badge-system.md) for what badges can be earned when.
+
+---
+
+## Enter Nami gate
+
+All primary CTAs route through the shared entry gate (`EntryPage.tsx`):
+
+- **Log in or sign up** — zkLogin, email, X, wallet (`EntryLoginPanel.tsx`)
+- **Gamer** — `OnboardingPanel.tsx` (Player Score, quiz, passport preview)
+- **Game** — `GameOnboardingPanel.tsx` (Trust Score, ticket submit)
+
+Settings → **Feedback** accepts suggestions to Nami Officials (`UserSuggestionsSettingsPanel.tsx`). See [officials-submissions.md](./officials-submissions.md).
 
 ---
 
@@ -105,11 +124,13 @@ Full rules: [verification.md](./verification.md).
 
 | Surface | Behavior |
 |---------|----------|
-| Hub (logged out / no passport) | Full onboarding wizard (`OnboardingPanel`) |
+| Landing / Hub CTAs | Enter Nami gate → Gamer or Game role |
+| Hub (logged out / no passport) | Enter Nami → Gamer wizard (`OnboardingPanel`) |
 | Hub (has passport, unverified) | Banner + link to Verify step |
-| Settings → Identity | Platform link/unlink (Act 3) |
+| Settings → Account | Platform links (`PlatformLinkSettingsPanel`) |
+| Settings → Feedback | Suggestions to Nami Officials |
 
-Protocol panels remain separate; onboarding is the **first-run** path only.
+Protocol panels remain separate; onboarding is the **first-run** path for members. Game studios use the parallel game wizard documented in [game-onboarding.md](./game-onboarding.md).
 
 ---
 
@@ -131,9 +152,14 @@ When indexer tracks onboarding:
 | Piece | Status |
 |-------|--------|
 | `docs/onboarding.md` | This doc |
-| `frontend/src/onboarding-quiz.ts` | Placeholder quiz config |
+| `frontend/src/onboarding-quiz.ts` | Quiz config |
 | `frontend/src/onboarding-draft.ts` | Local draft persistence |
-| `frontend/src/OnboardingPanel.tsx` | Multi-step wizard (functional wiring) |
+| `frontend/src/OnboardingPanel.tsx` | Gamer multi-step wizard |
+| `frontend/src/EntryPage.tsx` | Enter Nami gate + role selection |
+| `frontend/src/EntryLoginPanel.tsx` | Login flows |
+| `frontend/src/player-score.ts` | Gamer Player Score (parallel to game Trust Score) |
+| `frontend/src/contact-code-verification-store.ts` | Email/phone code verification |
+| `frontend/src/gamer-official-social-auth-store.ts` | Gamer X/Twitch OAuth |
 | `nami::onboarding::enter_nami` | Not in contracts yet |
 | SDK `enterNamiMoveTarget` / `validateEnterNamiParams` | Ready; frontend builds PTB via `onboarding-tx.ts` |
 
@@ -141,7 +167,10 @@ When indexer tracks onboarding:
 
 ## Related
 
+- [game-onboarding.md](./game-onboarding.md) — studio wizard, Trust Score, tickets
+- [officials-submissions.md](./officials-submissions.md) — officials review queues
 - [verification.md](./verification.md) — platform linking, sybil, timestamps
+- [Trust-Score_rules.md](./Trust-Score_rules.md) — game Trust Score (studios)
 - [channel-badge-programs.md](./channel-badge-programs.md) — game channel badge questionnaires
 - [badge-system.md](./badge-system.md) — badge types and XP
 - [roadmap.md](./roadmap.md) — delivery phases

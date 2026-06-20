@@ -1,4 +1,12 @@
-Core Flow Summary (Aligned with Existing Onboarding)
+# Social Linking
+
+**Implemented today:** Official X/Twitch OAuth for game studio onboarding (`GameOfficialSocialAuthControl.tsx`) and gamer onboarding (`gamer-official-social-auth-store.ts`). Platform links for members live in Settings → Account (`PlatformLinkSettingsPanel.tsx`).
+
+See [game-onboarding.md](./game-onboarding.md), [onboarding.md](./onboarding.md), and [verification.md](./verification.md).
+
+---
+
+## Core Flow Summary (Aligned with Existing Onboarding)
 For Members (Gamers):
 
 In profile/settings → "Link Game Accounts".

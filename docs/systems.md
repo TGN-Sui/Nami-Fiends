@@ -654,16 +654,34 @@ Recovery
 
 ---
 
+# Frontend Submission Systems (Local MVP)
+
+These run in the browser today (localStorage + custom events). Officials review in Settings → Advanced → Submissions.
+
+```text
+Game submission tickets     game-submission-ticket-store.ts
+Game Trust Score            game-trust-score.ts
+User suggestions            nami-user-suggestions-store.ts
+Partner banner submissions  partner-banner-submission-store.ts
+Game owner session          game-owner-session-store.ts
+Pre-approval guards         game-owner-approval-guards.ts
+```
+
+See [game-onboarding.md](./game-onboarding.md) and [officials-submissions.md](./officials-submissions.md).
+
+---
+
 # Future Systems
 
 Planned or likely future systems:
 
 ```text
+Backend persistence for officials submission queues
 Backend event indexer
-Frontend Passport/Profile UI
+Full protocol wiring for Passport/Profile UI
 SDK helpers
 zkLogin production flow
-Developer identity
+Developer identity on-chain
 Membership records
 Guild roles
 Discovery anchors

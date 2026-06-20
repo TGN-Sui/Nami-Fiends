@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 7 complete** — UI-A20.5, UI-B21.1–UI-B21.22, and test-launch polish slices 1–10 landed (`347511f`).
+Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`).
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -146,7 +146,26 @@ npm --prefix frontend run build
 npm --prefix frontend test
 ```
 
-All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22).
+All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22; **133** after Phase 8 onboarding + officials stores).
+
+## Phase 8 — Enter Nami + Game Onboarding (UI-C23)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| UI-C23.1 | Complete | Enter Nami gate; all Hub/landing CTAs route through entry (`EntryPage.tsx`). |
+| UI-C23.2 | Complete | Dual Gamer/Game onboarding; role selector + login (zkLogin, email, X, wallet). |
+| UI-C23.3 | Complete | Game Trust Score, contact code verification, official X/Twitch OAuth for studios. |
+| UI-C23.4 | Complete | Game ticket preview (genres, per-store URLs, social links); officials queue. |
+| UI-C23.5 | Complete | Pre-approval workspace guards; hidden events; approval welcome overlay. |
+| UI-C23.6 | Complete | Settings → Feedback suggestions box → officials queue. |
+| UI-C23.7 | Complete | Settings → Advanced → Submissions (suggestions, game tickets, partner banners). |
+| UI-C23.8 | Complete | Sidebar/profile chrome restored for pre-approved game owners. |
+
+Key files: `GameOnboardingPanel.tsx`, `game-trust-score.ts`, `game-submission-ticket-store.ts`, `nami-user-suggestions-store.ts`, `partner-banner-submission-store.ts`, `NamiOfficialsSubmissionsPanel.tsx`, `UserSuggestionsSettingsPanel.tsx`, `GameApprovalWelcomeOverlay.tsx`.
+
+Docs: [game-onboarding.md](./game-onboarding.md), [officials-submissions.md](./officials-submissions.md), [Trust-Score_rules.md](./Trust-Score_rules.md).
+
+Latest commits: `0b364a3` (ticket preview + genres), `6c93b7c` (officials submissions), `dd96c12` (sidebar fix).
 
 ## Product Rules Preserved
 
@@ -167,11 +186,14 @@ All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22).
 
 ## UI Build Outcome
 
-Phase 7 is complete. Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
+Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped with 133 frontend unit tests passing.
 
-**Phase 8 is unblocked.** Recommended next lane:
+Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
 
-1. Testnet deployment and launch ops (security review, moderation dashboards, analytics).
-2. Extend Walrus-backed media references when storage proofs ship.
-3. Continue avoiding any wording that implies payment equals trust.
+**Recommended next lane:**
+
+1. Backend persistence for submissions (replace localStorage queues for multi-device officials review).
+2. Testnet deployment and launch ops (security review, moderation dashboards, analytics).
+3. Extend Walrus-backed media references when storage proofs ship.
+4. Continue avoiding any wording that implies payment equals trust.
 

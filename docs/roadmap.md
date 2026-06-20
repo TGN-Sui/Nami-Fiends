@@ -199,13 +199,18 @@ architecture.md
 systems.md
 ```
 
-Recently synced:
+Recently synced (Phase 8):
 
 ```text
-admin.md
-membership.md (pricing + billing rules)
-security-audit.md (owner capability matrix)
-theme.tsx / Appearance selection cards
+docs/README.md              Documentation index
+docs/game-onboarding.md     Game studio wizard + pre-approval
+docs/officials-submissions.md Officials review queues
+docs/Trust-Score_rules.md   Live Trust Score (code-synced)
+docs/Studio-portal-UI-flow.md Shipped studio UI
+docs/onboarding.md          Enter Nami dual paths
+docs/admin.md               Submissions tab
+docs/ui-build-checkpoint.md Phase 8 slice log
+frontend/README.md          Frontend module map
 ```
 
 Remaining mini-sync targets:
@@ -213,6 +218,7 @@ Remaining mini-sync targets:
 ```text
 moderation.md
 conduct-system.md
+questionnaire.md (long-form bank vs live wizard — cross-linked)
 ```
 
 ---
@@ -255,7 +261,7 @@ Current breakdown:
 On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
 Documentation architecture:                 Mini-sync in progress
 Backend/indexer:                            0% done (Phase 2)
-Frontend/profile UI (real wiring):          UI polish done; protocol wiring pending (Phase 3)
+Frontend/profile UI:                        Phase 7 + Phase 8 onboarding shipped; protocol wiring pending (Phase 3)
 SDK integration:                            Thin client exists; rich helpers pending (Phase 4)
 zkLogin production flow:                    0% done (Phase 5)
 ```

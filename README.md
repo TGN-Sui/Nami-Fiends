@@ -15,9 +15,10 @@ The goal is to build a portable gamer identity and trust layer.
 ```text
 Move build: passing
 Move tests: 80 passing
+Frontend tests: 133 passing (vitest)
 Warnings: 0
-Documentation: synced/in-progress mini-sync
-MVP progress: ~80% (on-chain + full protocol hardening complete)
+Documentation: synced (Phase 8 entry + game onboarding + officials queue)
+MVP progress: ~82% (on-chain complete; frontend onboarding surfaces shipped)
 ```
 
 Current Move package:
@@ -240,37 +241,28 @@ Expected current result:
 
 ## Documentation
 
-Core docs:
+Full index: **[docs/README.md](docs/README.md)**
+
+Recent additions (Phase 8):
+
+```text
+docs/game-onboarding.md       Game studio wizard, tickets, pre-approval
+docs/officials-submissions.md Suggestions, game tickets, partner banners
+docs/Trust-Score_rules.md     Live game Trust Score (synced to code)
+docs/Studio-portal-UI-flow.md Shipped studio UI flow
+```
+
+Core protocol docs:
 
 ```text
 docs/roadmap.md
 docs/architecture.md
 docs/systems.md
-docs/onchain.md
-docs/events.md
-docs/access-control.md
-docs/passport.md
-docs/passport-object.md
-docs/identity.md
-docs/identity-object.md
-docs/verification.md
-docs/membership.md
-docs/reputation.md
-docs/badge-system.md
-docs/boost-system.md
-docs/conduct-system.md
-docs/moderation.md
+docs/onboarding.md
+docs/ui-build-checkpoint.md
 docs/admin.md
-docs/appeals.md
-docs/jury.md
-docs/squads.md
-docs/guilds.md
-docs/customization.md
-docs/recovery.md
-docs/resilience.md
-docs/sui-layer.md
-docs/trust-system.md
-docs/vision.md
+docs/verification.md
+docs/badge-system.md
 docs/landing-page.md
 ```
 
@@ -281,18 +273,18 @@ docs/landing-page.md
 ```text
 Nami Presentable MVP Progress
 
-[██████████████░░░░░░] 71%
+[████████████████░░░░] ~82%
 ```
 
 Current breakdown:
 
 ```text
-On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 / Break-the-System complete)
-Documentation architecture:                 Mini-sync in progress
-Backend/indexer:                            0% done (Phase 2)
-Frontend/profile UI:                        UI polish checkpoint complete; protocol wiring pending (Phase 3)
+On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
+Documentation architecture:                 Synced (docs/README.md index + Phase 8 flows)
+Backend/indexer:                            Partial (read-only HTTP); full indexer pending (Phase 2)
+Frontend/profile UI:                        Phase 7 + Phase 8 entry/game onboarding shipped
 SDK integration:                            Thin client exists; rich helpers pending (Phase 4)
-zkLogin production flow:                    0% done (Phase 5)
+zkLogin production flow:                    Dev placeholder; production path pending (Phase 5)
 ```
 
 ---
@@ -349,18 +341,13 @@ Sui anchors proof.
 
 Nami should feel like a world gamers enter, not a form they fill out.
 
-<!-- UI-A20.5-CHECKPOINT:START -->
 ## UI Build Checkpoint
 
 The current frontend UI build checkpoint is documented in [docs/ui-build-checkpoint.md](docs/ui-build-checkpoint.md).
 
-Completed through UI-A20.4:
-- UI-A19 Member Spotlight + Sidebar Avatar Polish
-- UI-A20.1 Ownership Mode Clarity
-- UI-A20.2 Channel Palette Member Flow
-- UI-A20.3 Owner Tool Action States
-- UI-A20.4 Final responsive/accessibility polish
+**Phase 7** (UI-B21 / UI-B22): Hub, Game Hub, channel profiles, membership checkout — complete.
 
-TypeScript and production frontend build passed at the UI-A20.5 checkpoint.
-<!-- UI-A20.5-CHECKPOINT:END -->
+**Phase 8** (entry + game onboarding): Enter Nami gate, dual Gamer/Game paths, Trust Score, officials submissions queue, pre-approval workspace — shipped. See [docs/game-onboarding.md](docs/game-onboarding.md).
+
+Frontend verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` (133 tests).
 

@@ -28,7 +28,19 @@ Current protocol status:
 Phase 1 + Phase 1.8 (Break-the-System hardening): complete
 ```
 
-Frontend owner console (`NamiOwnerSettingsPanel`) enforces sole-owner capabilities via `nami-capabilities.ts`. See `docs/security-audit.md`.
+Frontend owner console enforces sole-owner capabilities via `nami-capabilities.ts`. See `docs/security-audit.md`.
+
+**Officials submissions queue** (Settings → Advanced → Submissions):
+
+```text
+User suggestions      → nami-user-suggestions-store.ts
+Game tickets          → game-submission-ticket-store.ts (Trust Score sorted)
+Partner banner tickets → partner-banner-submission-store.ts
+```
+
+Panel: `NamiOfficialsSubmissionsPanel.tsx`. Full flow: [officials-submissions.md](./officials-submissions.md).
+
+**Security tab** (`NamiOwnerSettingsPanel`): nodename claims, moderators, bans — no longer hosts the game ticket list (moved to Submissions tab).
 
 Phase 2 indexer surfaces (read-only HTTP) expose admin-adjacent projections:
 
@@ -432,6 +444,9 @@ AdminCap is acceptable for MVP, but not the final trust model.
 # Related Docs
 
 ```text
+docs/officials-submissions.md
+docs/game-onboarding.md
+docs/Trust-Score_rules.md
 docs/security-audit.md
 docs/access-control.md
 docs/moderation.md
