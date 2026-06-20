@@ -555,17 +555,19 @@ export function confirmPromotionPurchase(
     ticket.title.trim().length > 0 &&
     ticket.description.trim().length > 0;
 
+  const submittedTicket: PartnerCarouselTicket = {
+    ...ticket,
+    status: approvedForMock ? 'approved' : 'submitted',
+    submittedAtMs: Date.now(),
+    expiresAtMs: approvedForMock ? Date.now() + durationToMs(ticket.duration) : null,
+    updatedAtMs: Date.now(),
+  };
+
   saveChannelOwnerPromotionsState({
     ...state,
     partnerCarousel: {
       ...state.partnerCarousel,
-      ticket: {
-        ...ticket,
-        status: approvedForMock ? 'approved' : 'submitted',
-        submittedAtMs: Date.now(),
-        expiresAtMs: approvedForMock ? Date.now() + durationToMs(ticket.duration) : null,
-        updatedAtMs: Date.now(),
-      },
+      ticket: submittedTicket,
       pendingPaymentId: null,
       pendingCheckoutRail: null,
       pendingCryptoAsset: null,
@@ -573,12 +575,47 @@ export function confirmPromotionPurchase(
     },
   });
 
+  window.dispatchEvent(
+    new CustomEvent('nami-partner-banner-ticket-updated', {
+      detail: submittedTicket,
+    }),
+  );
+
   return {
     ok: true,
     message: approvedForMock
       ? 'Partner carousel approved for ' + PROMOTION_DURATION_LABELS[ticket.duration] + ' (mock).'
       : 'Partner carousel ticket submitted for Nami Official review.',
   };
+}
+
+export function applyPartnerBannerOfficialReview(
+  ticketId: string,
+  status: 'approved' | 'rejected',
+  expiresAtMs: number | null,
+): boolean {
+  const state = readChannelOwnerPromotionsState();
+  const ticket = state.partnerCarousel.ticket;
+
+  if (!ticket || ticket.id !== ticketId) {
+    return false;
+  }
+
+  saveChannelOwnerPromotionsState({
+    ...state,
+    partnerCarousel: {
+      ...state.partnerCarousel,
+      ticket: {
+        ...ticket,
+        status,
+        expiresAtMs: status === 'approved' ? expiresAtMs : null,
+        updatedAtMs: Date.now(),
+      },
+      updatedAtMs: Date.now(),
+    },
+  });
+
+  return true;
 }
 
 export function saveSuperBannerDraft(channelId: string, draft: SuperBannerDraft): void {

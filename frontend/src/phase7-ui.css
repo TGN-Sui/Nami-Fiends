@@ -2181,6 +2181,74 @@
   color: #ff9f9f;
 }
 
+.game-submission-ticket-status.is-submitted {
+  color: #ffd28a;
+}
+
+.game-submission-ticket-status.is-reviewed {
+  color: #8eb6ff;
+}
+
+.game-submission-ticket-status.is-archived {
+  color: #9aa8b8;
+}
+
+.nami-officials-submissions-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.nami-officials-submissions-tab-row {
+  margin-top: 4px;
+}
+
+.nami-officials-submission-tab-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.user-suggestions-history {
+  margin-top: 1rem;
+}
+
+.user-suggestions-history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-suggestions-history-card {
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 188, 224, 0.18);
+  background: rgba(4, 8, 14, 0.45);
+}
+
+.user-suggestions-history-card p {
+  margin: 0 0 0.35rem;
+}
+
+.user-suggestions-history-card span {
+  font-size: 0.82rem;
+  color: rgba(180, 210, 255, 0.72);
+}
+
+.user-suggestions-officials-body {
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
+}
+
+.partner-banner-submission-cover-preview {
+  margin-top: 0.5rem;
+  min-height: 72px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(117, 188, 224, 0.22);
+}
+
 .preapproved-owner-locked {
   display: grid;
   gap: 8px;

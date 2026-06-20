@@ -12,7 +12,7 @@ import {
 import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { gameTrustScoreTierLabel } from './game-trust-score.js';
 
-export function GameSubmissionTicketsPanel(): ReactElement {
+export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): ReactElement {
   const tickets = useGameSubmissionTickets();
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -48,15 +48,17 @@ export function GameSubmissionTicketsPanel(): ReactElement {
     setNotice('Ticket ' + updated.gameTitle + ' marked ' + status + '.');
   }
 
-  return (
-    <article className="panel settings-card game-submission-tickets-panel">
-      <div className="profile-panel-heading">
-        <h2>Submitted game tickets</h2>
-        <p>
-          Nami Officials review queue sorted by Trust Score. Higher scores appear first for faster
-          approval.
-        </p>
-      </div>
+  const content = (
+    <>
+      {!props.embedded ? (
+        <div className="profile-panel-heading">
+          <h2>Submitted game tickets</h2>
+          <p>
+            Nami Officials review queue sorted by Trust Score. Higher scores appear first for faster
+            approval.
+          </p>
+        </div>
+      ) : null}
 
       {notice ? <p className="protocol-hint">{notice}</p> : null}
 
@@ -141,6 +143,12 @@ export function GameSubmissionTicketsPanel(): ReactElement {
           ))}
         </ol>
       )}
-    </article>
+    </>
   );
+
+  if (props.embedded) {
+    return <div className="nami-officials-submission-tab-panel game-submission-tickets-panel">{content}</div>;
+  }
+
+  return <article className="panel settings-card game-submission-tickets-panel">{content}</article>;
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { App } from './App.js';
+import './partner-banner-submission-store.js';
 import { initNamiSoundscape } from './nami-sfx.js';
 import { NamiThemeProvider } from './theme.js';
 import { NamiWalletProvider } from './wallet.js';

@@ -3,6 +3,7 @@ export type SettingsSection =
   | 'account'
   | 'membership'
   | 'feeds'
+  | 'feedback'
   | 'safety'
   | 'appearance'
   | 'advanced';
@@ -14,6 +15,7 @@ const SECTION_IDS: ReadonlySet<string> = new Set([
   'account',
   'membership',
   'feeds',
+  'feedback',
   'safety',
   'appearance',
   'advanced',

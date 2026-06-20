@@ -18,7 +18,6 @@ import {
   unbanMemberTarget,
   useNamiAdminStore,
 } from './nami-admin-store.js';
-import { GameSubmissionTicketsPanel } from './GameSubmissionTicketsPanel.js';
 import { useProtocolOwner } from './wallet.js';
 
 function shortenAddress(value: string): string {
@@ -410,8 +409,6 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
           </ul>
         )}
       </article>
-
-      <GameSubmissionTicketsPanel />
 
       {actionError ? <p className="onboarding-field-error">{actionError}</p> : null}
       {actionNotice ? <p className="protocol-hint nami-owner-action-notice">{actionNotice}</p> : null}

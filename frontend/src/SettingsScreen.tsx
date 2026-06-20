@@ -33,6 +33,7 @@ import {
   type UserSurfaceRole,
 } from './surface-preferences.js';
 import { DemoPerspectivePanel } from './DemoPerspectivePanel.js';
+import { UserSuggestionsSettingsPanel } from './UserSuggestionsSettingsPanel.js';
 import { useDemoPerspective } from './demo-perspective-store.js';
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
@@ -52,6 +53,7 @@ const SECTION_LABELS: Record<SettingsSection, string> = {
   account: 'Account',
   membership: 'Membership',
   feeds: 'Feeds',
+  feedback: 'Feedback',
   safety: 'Safety',
   appearance: 'Look & Feel',
   advanced: 'Advanced',
@@ -265,6 +267,7 @@ export function SettingsScreen(props: {
     'account',
     'membership',
     'feeds',
+    'feedback',
     'safety',
     'appearance',
     ...(showIndexedDataPanel ? (['advanced'] as const) : []),
@@ -369,6 +372,17 @@ export function SettingsScreen(props: {
                 Open perspective switcher
               </button>
             </article>
+            <article className="panel settings-overview-card">
+              <h2>Suggestions</h2>
+              <p>Send product ideas and feedback directly to Nami Officials.</p>
+              <button
+                className="profile-secondary-link"
+                onClick={() => setActiveSection('feedback')}
+                type="button"
+              >
+                Open suggestions box
+              </button>
+            </article>
           </div>
         ) : null}
 
@@ -436,6 +450,12 @@ export function SettingsScreen(props: {
         {activeSection === 'feeds' ? (
           <div className="settings-section-stack">
             <EmbeddedFeedSettingsPanel />
+          </div>
+        ) : null}
+
+        {activeSection === 'feedback' ? (
+          <div className="settings-section-stack">
+            <UserSuggestionsSettingsPanel />
           </div>
         ) : null}
 

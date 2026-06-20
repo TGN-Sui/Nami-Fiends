@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
+import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { useProtocolOwner } from './wallet.js';
@@ -17,6 +18,11 @@ const ADVANCED_TABS = [
     id: 'emojis',
     label: 'Chat Emojis',
     hint: 'Upload custom emojis for every member chat picker.',
+  },
+  {
+    id: 'submissions',
+    label: 'Submissions',
+    hint: 'User suggestions, new game tickets, and partner banner requests.',
   },
   {
     id: 'security',
@@ -81,6 +87,7 @@ export function NamiOwnerAdvancedPanel(props: {
           <NamiOwnerAssetEditPanel embedded onEnterEditMode={props.onEnterEditMode} />
         ) : null}
         {activeTab === 'emojis' ? <NamiOwnerEmojiPanel embedded /> : null}
+        {activeTab === 'submissions' ? <NamiOfficialsSubmissionsPanel embedded /> : null}
         {activeTab === 'security' ? <NamiOwnerSettingsPanel embedded /> : null}
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
       </div>
