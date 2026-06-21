@@ -21,6 +21,7 @@ import {
   canManageTemporaryGlobalChats,
   canSendChatMessages,
   canSendOfficialChatMessages,
+  getChatPresenceMembers,
   messageBubbleClass,
   resolveMessageAuthorMember,
 } from './member-access.js';
@@ -54,7 +55,7 @@ import { tagSuggestionHint } from './nami-tag-registry.js';
 import { useChannelEmojiLibraryVersion } from './channel-custom-emojis-store.js';
 import { readChannelEmojisForGenreLounge } from './channel-genre-emoji-scope.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
-import { members, userProfile, type NamiMember } from './uiMockData.js';
+import { members, type NamiMember } from './uiMockData.js';
 
 type GlobalChatsPanelProps = {
   onOpenMember: (member: NamiMember) => void;
@@ -125,7 +126,7 @@ export function GlobalChatRoomView(props: {
     [props.chat.id]
   );
   const messages = useFrozenChatMessages(paused, resumeCount, storeSignal, computeMessages);
-  const isOwner = props.chat.createdBy === userProfile.displayName;
+  const isOwner = props.chat.createdBy === selfMember.name;
   const [draft, setDraft] = useState('');
   const canSend = props.chat.isOfficial ? canSendOfficialChatMessages() : canSendChatMessages();
 
@@ -134,7 +135,7 @@ export function GlobalChatRoomView(props: {
     resumeCount,
     messageCount: messages.length,
   });
-  const visibleMembers = members.filter((member) => member.signal !== 'Black').slice(0, 6);
+  const visibleMembers = getChatPresenceMembers(selfMember, members);
 
   function sendMessage(): void {
     if (!canSend || !draft.trim()) {

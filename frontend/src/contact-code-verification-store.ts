@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { shouldUseDevFixtures } from './app-config.js';
+import { isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
 
 const STORAGE_KEY = 'nami.contact-code-verification';
 const DEV_VERIFICATION_CODE = '123456';
@@ -129,7 +129,7 @@ export function isContactVerificationMockEnabled(): boolean {
 }
 
 export function isContactVerificationAvailable(): boolean {
-  return isContactVerificationMockEnabled();
+  return isContactVerificationMockEnabled() || isTestLaunchMode();
 }
 
 export function contactVerificationStatusMessage(channel: ContactVerificationChannel): string {

@@ -36,9 +36,11 @@ export function AccountConnectSection(): ReactElement {
           <p className="settings-account-source">
             {source === 'zklogin'
               ? 'Signed in with your connected account.'
-              : source === 'demo'
-                ? 'Preview session active.'
-                : 'Account linked and ready.'}
+              : source === 'linked'
+                ? 'Owner wallet linked to your email session.'
+                : source === 'demo'
+                  ? 'Preview session active.'
+                  : 'Account linked and ready.'}
           </p>
           <button
             className="profile-secondary-link"

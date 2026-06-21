@@ -1,5 +1,10 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
+import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
+import {
+  isContactVerified,
+  isContactVerificationAvailable,
+} from './contact-code-verification-store.js';
 import { clearSignedOut } from './member-auth-store.js';
 import {
   linkMemberSessionAuth,
@@ -30,9 +35,11 @@ export function EntryLoginPanel(props: {
   const { owner, source } = useProtocolOwner();
   const xVerification = useXVerificationState();
   const [email, setEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
   const [xHandle, setXHandle] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [emailPending, setEmailPending] = useState(false);
+  const emailVerificationRequired = isContactVerificationAvailable();
 
   useEffect(() => {
     if (!owner || (source !== 'wallet' && source !== 'zklogin')) {
@@ -64,6 +71,11 @@ export function EntryLoginPanel(props: {
 
     if (!isValidEmail(email)) {
       setLoginError('Enter the email you used during signup.');
+      return;
+    }
+
+    if (emailVerificationRequired && !isContactVerified('email', email)) {
+      setLoginError('Verify your email with the one-time code before signing in.');
       return;
     }
 
@@ -136,19 +148,24 @@ export function EntryLoginPanel(props: {
 
         <section className="nami-entry-login-block">
           <span className="nami-entry-login-label">Email</span>
-          <label className="onboarding-field">
-            <span>Signup email</span>
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              type="email"
-              value={email}
-            />
-          </label>
+          <ContactCodeVerificationControl
+            autoComplete="email"
+            channel="email"
+            inputType="email"
+            label="Signup email"
+            onChange={setEmail}
+            onVerifiedChange={setEmailVerified}
+            placeholder="you@example.com"
+            value={email}
+            verified={emailVerified}
+          />
           <button
             className="secondary-action"
-            disabled={emailPending || !isValidEmail(email)}
+            disabled={
+              emailPending ||
+              !isValidEmail(email) ||
+              (emailVerificationRequired && !emailVerified)
+            }
             onClick={handleEmailSignIn}
             type="button"
           >

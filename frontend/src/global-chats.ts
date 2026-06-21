@@ -61,7 +61,7 @@ export const hubGlobalChats: GlobalChatRoom[] = [
     id: 'global-lfg-arena',
     title: 'Looking For Group',
     kind: 'temporary',
-    createdBy: 'Robbos',
+    createdBy: 'HarborMint',
     creatorVerified: true,
     activeMembers: 186,
     voiceEnabled: true,
@@ -136,7 +136,7 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
     {
       id: 'og1',
       time: '14:02',
-      author: 'Robbos',
+      author: 'HarborMint',
       signal: 'Green',
       body: 'Welcome to the official global lounge — say hi!',
     },
@@ -145,7 +145,7 @@ const mockMessagesByChat: Record<string, GlobalChatMessage[]> = {
       time: '14:03',
       author: 'DeadlySin',
       signal: 'Orange',
-      body: 'LFG for ranked runs tonight @Robbos — voice room is open.',
+      body: 'LFG for ranked runs tonight @HarborMint — voice room is open.',
     },
     {
       id: 'og3',

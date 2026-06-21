@@ -53,7 +53,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
   }, [demoClaimEnabled, method]);
 
   useEffect(() => {
-    if (source === 'wallet') {
+    if (source === 'wallet' || source === 'linked') {
       setMethod('wallet');
     } else if (source === 'zklogin') {
       setMethod('zklogin');

@@ -1,4 +1,5 @@
 import { clearSignedOut } from './member-auth-store.js';
+import { clearSelfStreamingOnSignOut } from './member-online-store.js';
 import { clearGameApprovalWelcomeState } from './game-approval-welcome-store.js';
 import { clearGameOnboardingDraft } from './game-onboarding-draft.js';
 import { clearContactCodeVerification } from './contact-code-verification-store.js';
@@ -11,6 +12,7 @@ import { clearZkLoginSession } from './zklogin.js';
 
 /** Clears local signup/session state so the landing page treats the user as logged out. */
 export function clearLocalNamiSession(): void {
+  clearSelfStreamingOnSignOut();
   clearMemberSession();
   clearGameOwnerSession();
   clearOnboardingDraft();

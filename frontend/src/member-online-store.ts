@@ -101,6 +101,13 @@ export function setSelfStreamingOnline(enabled: boolean): void {
   pushStreamingPreferenceToBackend(enabled);
 }
 
+/** Clears streaming on sign-out even when membership gates would block toggling. */
+export function clearSelfStreamingOnSignOut(): void {
+  const next = { ...readStatusMap(), [SELF_MEMBER_ID]: false };
+  writeStatusMap(next);
+  pushStreamingPreferenceToBackend(false);
+}
+
 export function useMemberStreamingOnline(memberId: string): boolean {
   return useSyncExternalStore(
     subscribe,

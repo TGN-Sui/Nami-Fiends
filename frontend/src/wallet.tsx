@@ -17,12 +17,15 @@ import {
   type ReactNode,
 } from 'react';
 
-import { shouldUseDemoOwnerFallback } from './app-config.js';
 import { setLastWalletOwner } from './protocol-owner-snapshot.js';
 import { getConfiguredNetwork } from './nami.js';
 import { resolveProtocolConnectionState } from './protocol-availability.js';
-import { readDemoOwner } from './protocol-env.js';
+import {
+  resolveProtocolOwnerState,
+  type ResolvedProtocolOwnerSource,
+} from './protocol-owner-resolve.js';
 import { getProtocolContext, type ProtocolContext, type ProtocolDataMode } from './protocol.js';
+import { useMemberSession } from './member-session-store.js';
 import {
   clearZkLoginSession,
   completeZkLoginFromRedirect,
@@ -34,7 +37,7 @@ import {
 
 import '@mysten/dapp-kit/dist/index.css';
 
-export type ProtocolOwnerSource = 'wallet' | 'zklogin' | 'demo' | null;
+export type ProtocolOwnerSource = ResolvedProtocolOwnerSource;
 
 const { networkConfig } = createNetworkConfig({
   localnet: {
@@ -163,22 +166,20 @@ export function useProtocolOwner(): {
 } {
   const account = useCurrentAccount();
   const zkSession = useZkLoginSessionState();
+  const memberSession = useMemberSession();
   const context = useMemo(() => getProtocolContext(), []);
-  const demoOwner = shouldUseDemoOwnerFallback() ? readDemoOwner() : null;
   const walletOwner = account?.address ?? null;
 
   useEffect(() => {
     setLastWalletOwner(walletOwner);
   }, [walletOwner]);
-  const zkOwner = zkSession?.address ?? null;
-  const owner = walletOwner ?? zkOwner ?? demoOwner;
-  const source: ProtocolOwnerSource = walletOwner
-    ? 'wallet'
-    : zkOwner
-      ? 'zklogin'
-      : demoOwner
-        ? 'demo'
-        : null;
+
+  const resolved = useMemo(
+    () => resolveProtocolOwnerState(),
+    [walletOwner, zkSession?.address, memberSession?.email],
+  );
+  const owner = resolved.owner;
+  const source = resolved.source;
 
   const mode: ProtocolDataMode =
     context.chain !== null && owner !== null && owner.startsWith('0x') ? 'live' : 'mock';
@@ -204,6 +205,7 @@ export function useWalletDisconnect(): () => Promise<void> {
 
   return async () => {
     clearZkLoginSession();
+    setLastWalletOwner(null);
     await disconnect();
   };
 }

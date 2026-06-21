@@ -209,19 +209,24 @@ export function resolveMessageAuthorMember(
 
   const eligible = roster.filter((member) => member.signal !== 'Black');
   const memberByNameMap = new Map(eligible.map((member) => [member.name, member]));
-  memberByNameMap.set(selfMember.name, selfMember);
-
   const directMatch = memberByNameMap.get(message.author);
 
   if (directMatch) {
     return directMatch;
   }
 
-  if (isSelfMessageAuthor(message.author, selfMember)) {
-    return selfMember;
-  }
-
   return undefined;
+}
+
+/** Presence strip for chat rooms — always shows the live self passport, not shell placeholders. */
+export function getChatPresenceMembers(
+  selfMember: NamiMember,
+  roster: NamiMember[] = members,
+  limit = 6
+): NamiMember[] {
+  const eligible = roster.filter((member) => member.signal !== 'Black' && member.id !== SELF_MEMBER_ID);
+
+  return [selfMember, ...eligible].slice(0, limit);
 }
 
 export function isEliteAuthor(authorName: string): boolean {
