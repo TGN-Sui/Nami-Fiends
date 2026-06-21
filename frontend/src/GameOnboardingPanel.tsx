@@ -86,7 +86,7 @@ export function GameOnboardingPanel(props: {
     officialSocialHandle: draft.officialSocialHandle,
     officialSocialVerified: draft.officialSocialVerified,
     walletLinked,
-    walletSource: walletLinked ? (source ?? 'demo') : null,
+    walletSource: (walletLinked ? (source ?? 'demo') : null) as any,
   });
 
   const ticketPreviewFields = useMemo(

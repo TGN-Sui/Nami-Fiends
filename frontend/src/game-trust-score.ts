@@ -47,7 +47,7 @@ export type GameTrustScoreInput = {
   officialSocialHandle: string;
   officialSocialVerified: boolean;
   walletLinked: boolean;
-  walletSource: 'wallet' | 'zklogin' | 'demo' | null;
+  walletSource: 'wallet' | 'zklogin' | 'demo' | 'linked' | null;
 };
 
 export const GAME_PREAPPROVAL_THRESHOLD = 60;
@@ -342,7 +342,7 @@ export function computeGameTrustScoreFromDraft(input: {
   officialSocialHandle: string;
   officialSocialVerified: boolean;
   walletLinked: boolean;
-  walletSource: 'wallet' | 'zklogin' | 'demo' | null;
+  walletSource: 'wallet' | 'zklogin' | 'demo' | 'linked' | null;
 }): GameTrustScoreBreakdown {
   return computeGameTrustScore(input);
 }

@@ -47,10 +47,13 @@ export function resolveOwnedGameChannel(): NamiChannel | undefined {
     const seeded = findChannelById(gameOwnerSession.provisionalChannelId);
 
     if (seeded) {
+      saveOwnedGameChannelId(seeded.id);
       return seeded;
     }
 
-    return buildProvisionalGameChannel(gameOwnerSession);
+    const provisional = buildProvisionalGameChannel(gameOwnerSession);
+    saveOwnedGameChannelId(provisional.id);
+    return provisional;
   }
 
   const channelId = readOwnedGameChannelId();
@@ -59,7 +62,13 @@ export function resolveOwnedGameChannel(): NamiChannel | undefined {
     return undefined;
   }
 
-  return findChannelById(channelId) ?? findChannelById(DEFAULT_OWNED_CHANNEL_ID);
+  const owned = findChannelById(channelId);
+
+  if (owned) {
+    return owned;
+  }
+
+  return findChannelById(DEFAULT_OWNED_CHANNEL_ID);
 }
 
 export function ownsGameChannel(channelId: string): boolean {

@@ -30,7 +30,7 @@ export function usePlayerScoreSnapshot(options?: {
       linkedPlatforms,
       xVerified: xVerification.verified,
       walletLinked: owner !== null,
-      walletSource: source,
+      walletSource: (source ?? null) as any,
       claimApproved: userClaimStatus.status === 'approved',
       hasOnChainPassport: passportView?.passport != null,
       moderationClear: true,

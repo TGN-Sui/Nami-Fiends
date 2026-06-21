@@ -292,13 +292,15 @@ export function applyDemoMemberOverrides(member: NamiMember): NamiMember {
     return member;
   }
 
+  const isOwner = active.adminRole === 'official-owner';
+
   return {
     ...member,
     tier: active.tier,
     signal: active.signal,
-    isNamiTeam: active.adminRole === 'official-owner' ? undefined : active.isNamiTeam,
-    isNamiBoss: active.adminRole === 'official-owner' ? true : undefined,
-  };
+    isNamiTeam: isOwner ? true : active.isNamiTeam,
+    isNamiBoss: isOwner ? true : active.isNamiTeam, // or false if you prefer
+  } as NamiMember;
 }
 
 export function applyDemoPerspective(perspectiveId: DemoPerspectiveId): DemoPerspectivePreset {

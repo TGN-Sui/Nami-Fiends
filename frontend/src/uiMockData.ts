@@ -20,7 +20,7 @@ import {
   emptyChatMessages,
   emptyDevelopers,
 } from './fixtures/empty-catalog.js';
-import { createShellSelfMember } from './fixtures/shell-catalog.js';
+import { createShellDeveloper, createShellSelfMember } from './fixtures/shell-catalog.js';
 import {
   channels as seedChannels,
   chatMessages as seedChatMessages,
@@ -32,7 +32,7 @@ import {
 const fixturesEnabled = shouldUseDevFixtures();
 
 export const channels = fixturesEnabled ? seedChannels : emptyChannels;
-export const developers = fixturesEnabled ? seedDevelopers : emptyDevelopers;
+export const developers = fixturesEnabled ? seedDevelopers : [createShellDeveloper()];
 export const members = fixturesEnabled ? seedMembers : [createShellSelfMember()];
 export const chatMessages = fixturesEnabled ? seedChatMessages : emptyChatMessages;
 export const userProfile = fixturesEnabled ? seedUserProfile : createEmptyUserProfile();

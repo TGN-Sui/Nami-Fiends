@@ -24,7 +24,7 @@ export function WalletAuthBridge(): ReactElement | null {
   useEffect(() => {
     setWalletAuthContext({
       owner,
-      source,
+      source: source as any,
       memberVerified: isMemberVerified(selfMember),
     });
 

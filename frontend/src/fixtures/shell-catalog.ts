@@ -32,10 +32,12 @@ export function createShellSelfMember(): NamiMember {
   };
 }
 
+export const SHELL_CHANNEL_ID = 'shell-channel';
+
 /** Routing placeholder — not shown in discovery when live catalogs are empty. */
 export function createShellChannel(): NamiChannel {
   return {
-    id: 'shell-channel',
+    id: SHELL_CHANNEL_ID,
     surfaceType: 'game',
     name: 'Channel',
     handle: '@channel',
