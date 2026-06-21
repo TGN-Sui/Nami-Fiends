@@ -1,15 +1,10 @@
 import { readAppConfig, shouldUseDevFixtures, isTestLaunchMode } from './app-config.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
 import { readMemberSession } from './member-session-store.js';
-import { readDemoOwner } from './protocol-env.js';
-import { getZkLoginSession } from './zklogin.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import type { NamiMember } from './uiMockData.js';
 
 const SELF_MEMBER_ID = 'm1';
-
-function readConnectedOwner(): string | null {
-  return getZkLoginSession()?.address ?? readDemoOwner();
-}
 
 const GENESIS_DATA_PURGE_KEY = 'nami.test-launch.genesis-data-v1';
 
@@ -31,7 +26,7 @@ export function applyGenesisSelfOverrides(member: NamiMember): NamiMember {
   }
 
   const session = readMemberSession();
-  const owner = readConnectedOwner();
+  const owner = readResolvedProtocolOwner();
   const isBoss = resolveNamiAdminRole(owner) === 'official-owner';
 
   const next: NamiMember = {

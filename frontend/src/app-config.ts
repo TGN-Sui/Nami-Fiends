@@ -115,3 +115,21 @@ export function shouldUseFixtureCatalogFallback(
 export function isMockMembershipCheckoutEnabled(config: AppConfig = readAppConfig()): boolean {
   return shouldUseDevFixtures(config) && !isTestLaunchMode(config);
 }
+
+/** Official owner can preview dashboard perspectives during test launch. */
+export function canUseDashboardPerspectives(
+  connectedOwner: string | null,
+  config: AppConfig = readAppConfig()
+): boolean {
+  if (isDemoSimulationEnabled(config)) {
+    return true;
+  }
+
+  const officialOwner = config.officialOwner;
+
+  if (!connectedOwner || !officialOwner) {
+    return false;
+  }
+
+  return connectedOwner.toLowerCase() === officialOwner.toLowerCase();
+}

@@ -9,7 +9,13 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { isDemoSimulationEnabled, isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
+import {
+  canUseDashboardPerspectives,
+  isDemoSimulationEnabled,
+  isTestLaunchMode,
+  shouldUseDevFixtures,
+} from './app-config.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { hydrateOfficialsSubmissionsFromServer } from './officials-submissions-sync.js';
 import { channels as seedChannels } from './fixtures/seed-data.js';
 import {
@@ -4745,9 +4751,11 @@ export function App(): ReactElement {
   useDemoPerspective();
 
   useEffect(() => {
-    if (!isDemoSimulationEnabled()) {
-      restoreOwnerDemoPerspective();
+    if (isDemoSimulationEnabled() || canUseDashboardPerspectives(readResolvedProtocolOwner())) {
+      return;
     }
+
+    restoreOwnerDemoPerspective();
   }, []);
 
   useEffect(() => {

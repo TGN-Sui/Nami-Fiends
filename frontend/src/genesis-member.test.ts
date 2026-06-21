@@ -27,12 +27,17 @@ function createLocalStorageMock(): Storage {
   };
 }
 
+vi.mock('./protocol-owner-resolve.js', () => ({
+  readResolvedProtocolOwner: () => OFFICIAL_OWNER,
+}));
+
 vi.mock('./app-config.js', () => ({
   readAppConfig: () => ({
     testLaunch: true,
     devFixtures: false,
   }),
   shouldUseDevFixtures: () => false,
+  shouldUseDemoOwnerFallback: () => false,
   isTestLaunchMode: () => true,
 }));
 

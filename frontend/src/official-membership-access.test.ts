@@ -33,6 +33,10 @@ vi.mock('./protocol-env.js', () => ({
   readDemoOwner: () => null,
 }));
 
+vi.mock('./protocol-owner-resolve.js', () => ({
+  readResolvedProtocolOwner: () => OFFICIAL_OWNER,
+}));
+
 vi.mock('./genesis-member.js', () => ({
   shouldUseGenesisSelfMember: () => false,
   applyGenesisSelfOverrides: (member: { id: string }) => member,

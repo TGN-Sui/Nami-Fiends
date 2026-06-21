@@ -1,6 +1,7 @@
 import { useEffect, type ReactElement } from 'react';
 
-import { isDemoSimulationEnabled } from './app-config.js';
+import { canUseDashboardPerspectives, isDemoSimulationEnabled } from './app-config.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { requestDemoPerspectiveFocus, useDemoPerspective } from './demo-perspective-store.js';
 import { requestSettingsSection } from './settings-navigation.js';
 import type { NamiPage } from './uiMockData.js';
@@ -9,7 +10,9 @@ export function DemoPerspectiveBar(props: {
   onNavigate: (page: NamiPage) => void;
   onRestoreOwner: () => void;
 }): ReactElement | null {
-  const demoEnabled = isDemoSimulationEnabled();
+  const connectedOwner = readResolvedProtocolOwner();
+  const demoEnabled =
+    isDemoSimulationEnabled() || canUseDashboardPerspectives(connectedOwner);
   const { activePerspective, isActive } = useDemoPerspective();
 
   useEffect(() => {

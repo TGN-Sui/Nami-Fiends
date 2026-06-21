@@ -1,4 +1,9 @@
-import { getSelfMember, isMemberVerified, SELF_MEMBER_ID } from './member-access.js';
+import {
+  getSelfMember,
+  isMemberVerified,
+  memberHasEliteAccess,
+  SELF_MEMBER_ID,
+} from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
 export type EmbeddedFeedSurface = 'member' | 'studio' | 'game' | 'guild';
@@ -127,7 +132,7 @@ export function getConfigurableEmbeddedFeedSurfaces(
     return ['guild'];
   }
 
-  if ((member.tier === 'Pro' || member.tier === 'Elite') && isMemberVerified(member)) {
+  if (memberHasEliteAccess(member) && isMemberVerified(member)) {
     return ['member'];
   }
 

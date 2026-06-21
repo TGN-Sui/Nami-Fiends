@@ -4,12 +4,11 @@ import {
   applyDemoMemberOverrides,
   readDemoSafetyModerationRole,
 } from './demo-perspective-store.js';
-import { resolveNamiAdminRole } from './nami-capabilities.js';
-import { applyMembershipTierToMember } from './membership-plans-store.js';
+import { isOfficialOwner, resolveNamiAdminRole } from './nami-capabilities.js';
+import { applyMembershipTierToMember, effectiveMemberTier } from './membership-plans-store.js';
 import { hasComplimentaryMembershipAccess } from './official-membership-access.js';
 import { hasActiveMemberSession } from './member-session-store.js';
-import { readDemoOwner } from './protocol-env.js';
-import { getZkLoginSession } from './zklogin.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { withMemberAvatar } from './member-avatar-store.js';
 import { withMemberProfile } from './member-profile-store.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -31,12 +30,29 @@ export function getSelfMember(): NamiMember {
   return applyDemoMemberOverrides(applyMembershipTierToMember(member));
 }
 
+/** Tier used for feature gates (appearance, feeds, boosts) — not passport display labels. */
+export function memberFeatureTier(member: NamiMember): NamiMember['tier'] {
+  if (member.id !== SELF_MEMBER_ID) {
+    return member.tier;
+  }
+
+  if (hasComplimentaryMembershipAccess(readSignedInOwner())) {
+    return effectiveMemberTier();
+  }
+
+  return member.tier;
+}
+
+export function isOfficialOwnerSelfMember(member: NamiMember = getSelfMember()): boolean {
+  return member.id === SELF_MEMBER_ID && isOfficialOwner(readSignedInOwner());
+}
+
 export function memberHasEliteAccess(member: NamiMember): boolean {
   if (member.id === SELF_MEMBER_ID && hasComplimentaryMembershipAccess(readSignedInOwner())) {
     return true;
   }
 
-  return member.tier === 'Elite';
+  return memberFeatureTier(member) === 'Elite';
 }
 
 export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember = getSelfMember()): boolean {
@@ -55,7 +71,19 @@ export function isSelfMessageAuthor(authorName: string, selfMember: NamiMember =
 }
 
 export function isMemberVerified(member: NamiMember): boolean {
-  return member.signal === 'Green' && member.tier !== 'NPC';
+  if (member.signal !== 'Green') {
+    return false;
+  }
+
+  if (member.id === SELF_MEMBER_ID) {
+    const owner = readSignedInOwner();
+
+    if (isOfficialOwner(owner) || hasComplimentaryMembershipAccess(owner)) {
+      return true;
+    }
+  }
+
+  return member.tier !== 'NPC';
 }
 
 export function isNpcMember(member: NamiMember): boolean {
@@ -71,6 +99,10 @@ export function canMessageOtherMembers(sender: NamiMember = getSelfMember()): bo
 }
 
 export function canAccessBadgeBook(member: NamiMember): boolean {
+  if (member.id === SELF_MEMBER_ID && isMemberVerified(member)) {
+    return true;
+  }
+
   return !isNpcMember(member);
 }
 
@@ -127,13 +159,7 @@ export function canAccessModerationQueues(
 }
 
 export function readSignedInOwner(): string | null {
-  const zkOwner = getZkLoginSession()?.address ?? null;
-
-  if (zkOwner) {
-    return zkOwner;
-  }
-
-  return readDemoOwner();
+  return readResolvedProtocolOwner();
 }
 
 export function isSignedInMember(): boolean {

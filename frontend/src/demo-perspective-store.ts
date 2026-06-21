@@ -296,7 +296,8 @@ export function applyDemoMemberOverrides(member: NamiMember): NamiMember {
     ...member,
     tier: active.tier,
     signal: active.signal,
-    isNamiTeam: active.isNamiTeam,
+    isNamiTeam: active.adminRole === 'official-owner' ? undefined : active.isNamiTeam,
+    isNamiBoss: active.adminRole === 'official-owner' ? true : undefined,
   };
 }
 

@@ -172,6 +172,19 @@ export function restoreMemberSessionByWalletAddress(address: string): MemberSess
   return restoreByRegistryKey(index.byWalletAddress[normalizeAddress(address)]);
 }
 
+export function readLinkedWalletAddressForEmail(email: string): string | null {
+  const registryEmail = normalizeEmail(email);
+  const index = readAuthLinkIndex();
+
+  for (const [walletAddress, mappedEmail] of Object.entries(index.byWalletAddress)) {
+    if (normalizeEmail(mappedEmail) === registryEmail && walletAddress.startsWith('0x')) {
+      return walletAddress;
+    }
+  }
+
+  return null;
+}
+
 export function restoreMemberSessionByLinkedOwner(
   owner: string,
   source: 'wallet' | 'zklogin',

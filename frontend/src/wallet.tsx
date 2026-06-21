@@ -18,6 +18,7 @@ import {
 } from 'react';
 
 import { shouldUseDemoOwnerFallback } from './app-config.js';
+import { setLastWalletOwner } from './protocol-owner-snapshot.js';
 import { getConfiguredNetwork } from './nami.js';
 import { resolveProtocolConnectionState } from './protocol-availability.js';
 import { readDemoOwner } from './protocol-env.js';
@@ -165,6 +166,10 @@ export function useProtocolOwner(): {
   const context = useMemo(() => getProtocolContext(), []);
   const demoOwner = shouldUseDemoOwnerFallback() ? readDemoOwner() : null;
   const walletOwner = account?.address ?? null;
+
+  useEffect(() => {
+    setLastWalletOwner(walletOwner);
+  }, [walletOwner]);
   const zkOwner = zkSession?.address ?? null;
   const owner = walletOwner ?? zkOwner ?? demoOwner;
   const source: ProtocolOwnerSource = walletOwner

@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 
-import { isDemoSimulationEnabled } from './app-config.js';
+import { canUseDashboardPerspectives, isDemoSimulationEnabled } from './app-config.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import {
   applyDemoPerspective,
   consumeDemoPerspectiveFocus,
@@ -17,7 +18,9 @@ export function DemoPerspectivePanel(props: {
   onNavigate?: ((page: NamiPage) => void) | undefined;
   onPerspectiveApplied?: ((page: NamiPage, channelId?: string) => void) | undefined;
 }): ReactElement | null {
-  const demoEnabled = isDemoSimulationEnabled();
+  const connectedOwner = readResolvedProtocolOwner();
+  const demoEnabled =
+    isDemoSimulationEnabled() || canUseDashboardPerspectives(connectedOwner);
   const panelRef = useRef<HTMLElement | null>(null);
   const { activePerspective, isActive } = useDemoPerspective();
   const activeId = readActiveDemoPerspectiveId();

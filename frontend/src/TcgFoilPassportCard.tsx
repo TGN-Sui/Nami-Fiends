@@ -13,7 +13,7 @@ import {
   resolveOwnerPassportLabels,
 } from './owner-passport-display.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
-import { useProtocolOwner } from './wallet.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import {
   ConductSignalDot,
   memberTierSurfaceClass,
@@ -75,10 +75,10 @@ type TcgFoilPassportCardProps = {
 };
 
 export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactElement {
-  const { owner } = useProtocolOwner();
+  const connectedOwner = readResolvedProtocolOwner();
   const reviewedSignal = props.signal ?? props.member.signal;
-  const ownerPassport = isOwnerPassportMember(props.member, owner);
-  const ownerLabels = resolveOwnerPassportLabels(owner);
+  const ownerPassport = isOwnerPassportMember(props.member, connectedOwner);
+  const ownerLabels = resolveOwnerPassportLabels(connectedOwner);
   const progression = memberProgression(props.member);
   const layout = props.layout ?? 'vertical';
   const passportInteractive = ownerPassport || isPassportInteractive(props.member, reviewedSignal);
@@ -250,7 +250,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         </span>
         <OwnerEditableImage
           className="profile-badge-icon profile-badge-icon-custom passport-tier-badge-editable"
-          fallback={<span aria-hidden="true">{props.member.tier.slice(0, 1)}</span>}
+          fallback={<span aria-hidden="true">{displayTier.slice(0, 1)}</span>}
           label="Passport tier badge"
           nested
           slotId="passport-tier-badge"
@@ -269,7 +269,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           : 'nami-profile-card-shell-vertical is-uniform-vertical-passport') +
         (passportInteractive ? ' is-tcg-foil-eligible' : '') +
         (isClickable ? ' is-clickable-passport' : '') +
-        (isOfficialGalaxy ? ' is-nami-official-galaxy-passport' : '') +
+        ((isOfficialGalaxy || ownerPassport) ? ' is-nami-official-galaxy-passport has-rainbow-foil' : '') +
         (tierFoilClass ? ' ' + tierFoilClass : '') +
         (tierSurfaceClass ? ' ' + tierSurfaceClass : '')
       }
@@ -300,11 +300,29 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
         }
         ref={profileCardFrameRef}
       >
-        {isOfficialGalaxy ? (
-          <div aria-hidden="true" className="nami-official-galaxy-sky">
-            <span className="nami-official-galaxy-shooting-star" />
-          </div>
-        ) : null}
+        {(isOfficialGalaxy || ownerPassport) && (
+  <div 
+    aria-hidden="true" 
+    className={`nami-official-galaxy-sky ${isOfficialGalaxy ? 'is-fiend-galaxy' : 'is-owner-galaxy'}`}
+  >
+    {/* Deep space nebula layer */}
+    <div className="galaxy-nebula" />
+    
+    {/* Multiple animated stars */}
+    <div className="galaxy-stars">
+      <span className="star star-1" />
+      <span className="star star-2" />
+      <span className="star star-3" />
+      <span className="star star-4" />
+    </div>
+
+    {/* Main shooting star */}
+    <span className="nami-official-galaxy-shooting-star" />
+
+    {/* Subtle cosmic glow overlay */}
+    <div className="galaxy-glow" />
+  </div>
+)}
 
         <div className="nami-profile-card-header">
           <OwnerEditableImage

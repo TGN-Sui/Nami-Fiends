@@ -1,8 +1,7 @@
 import { isNamiTeamMember, OFFICIAL_OWNER_RANK_LABEL } from './channel-surface.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
-import { readDemoOwner } from './protocol-env.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { members } from './uiMockData.js';
-import { getZkLoginSession } from './zklogin.js';
 
 const SELF_MEMBER_ID = 'm1';
 
@@ -12,7 +11,7 @@ export const COMPLIMENTARY_MEMBERSHIP_REASON =
   'Official Nami owner and team members receive Elite-tier access without payment.';
 
 function readConnectedOwner(): string | null {
-  return getZkLoginSession()?.address ?? readDemoOwner();
+  return readResolvedProtocolOwner();
 }
 
 function readBaseSelfMemberIsNamiTeam(): boolean {

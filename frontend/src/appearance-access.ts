@@ -1,10 +1,11 @@
+import { memberFeatureTier } from './member-access.js';
 import type { NamiThemeMode, NamiUiShell } from './theme.js';
 import type { NamiMember } from './uiMockData.js';
 
 export type AppearanceTier = NamiMember['tier'];
 
 export function appearanceTierForMember(member: NamiMember): AppearanceTier {
-  return member.tier;
+  return memberFeatureTier(member);
 }
 
 export function allowedUiShells(tier: AppearanceTier): NamiUiShell[] {
