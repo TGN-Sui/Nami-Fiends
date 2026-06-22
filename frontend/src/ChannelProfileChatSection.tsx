@@ -17,8 +17,12 @@ import {
   UniformMemberAvatarButton,
 } from './member-avatar.js';
 import { memberPassportTierLabel } from './owner-passport-display.js';
+import {
+  channelChatPresenceTarget,
+  resolveChannelChatLiveStats,
+} from './chat-live-stats.js';
 import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
-import { useMemberChatTimeTracker } from './member-chat-time-store.js';
+import { useMemberChatTimeTracker, useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
 import {
@@ -92,18 +96,18 @@ export function ChannelProfileChatSection(props: {
   const preferencesVersion = useMemberPreferencesVersion();
   const selfChatMember = getSelfMember();
   const channelChatTimeTarget = useMemo(
-    () => ({
-      chatId: props.channel.id + '-game-chat',
-      chatTitle: props.channel.name + ' Game Chat',
-      surfaceLabel: 'Game Channel',
-      channelId: props.channel.id,
-    }),
-    [props.channel.id, props.channel.name]
+    () => channelChatPresenceTarget(props.channel.id, props.channel.name),
+    [props.channel.id, props.channel.name],
   );
   useMemberChatTimeTracker(selfChatMember.id, channelChatTimeTarget);
+  useMemberChatTimeVersion();
   const connectedOwner = readSignedInOwner();
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
+  const channelLiveStats = useMemo(
+    () => resolveChannelChatLiveStats(props.channel.id, getChannelChatMessages(props.channel.id)),
+    [props.channel.id, preferencesVersion, storeSignal],
+  );
   const chatEligibleMembers = useMemo(
     () => members.filter((member) => member.signal !== 'Black'),
     [],
@@ -182,7 +186,11 @@ export function ChannelProfileChatSection(props: {
         <div className="chat-presence-channel">
           <span className="mini-badge">Live room</span>
           <h2>Main chat</h2>
-          <p>{visibleChatMembers.length} members visible in this room</p>
+          <p>
+            {channelLiveStats.membersInside.toLocaleString()} in chat ·{' '}
+            {channelLiveStats.activeNow.toLocaleString()} active now ·{' '}
+            {channelLiveStats.weeklyActive.toLocaleString()} active this week
+          </p>
         </div>
 
         <div className="chat-member-strip">

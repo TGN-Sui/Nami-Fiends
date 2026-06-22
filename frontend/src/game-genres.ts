@@ -45,3 +45,32 @@ export function primaryGameGenre(genres: string[]): string {
 
   return trimmed[0] ?? 'Indie';
 }
+
+const GAME_GENRE_LOOKUP = new Set<string>(GAME_ONBOARDING_GENRES);
+
+export function parseGameGenresFromDisplay(display: string): string[] {
+  return display
+    .split('/')
+    .map((genre) => genre.trim())
+    .filter((genre) => genre.length > 0);
+}
+
+export function normalizeGameGenres(genres: string[] | undefined | null): string[] {
+  const normalized: string[] = [];
+
+  for (const genre of genres ?? []) {
+    const trimmed = genre.trim();
+
+    if (!GAME_GENRE_LOOKUP.has(trimmed) || normalized.includes(trimmed)) {
+      continue;
+    }
+
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+}
+
+export function gameOnboardingGenreOptions(): readonly (typeof GAME_ONBOARDING_GENRES)[number][] {
+  return GAME_ONBOARDING_GENRES;
+}

@@ -25,6 +25,7 @@ export type ChannelOwnerSettingsContextValue = {
   saveNotice: string | null;
   saveError: string | null;
   updatePlatforms: (platforms: string[]) => void;
+  updateGenres: (genres: string[]) => void;
   updateBrandColor: (index: number, color: string) => void;
   resetBrandPalette: () => void;
   updateSuperBanner: (patch: Partial<ChannelOwnerSettingsDraft['superBanner']>) => void;
@@ -64,6 +65,10 @@ export function ChannelOwnerSettingsProvider(props: {
       updatePlatforms: (platforms) => {
         clearMessages();
         updateOwnerSettingsDraft(props.channel.id, { platforms });
+      },
+      updateGenres: (genres) => {
+        clearMessages();
+        updateOwnerSettingsDraft(props.channel.id, { genres });
       },
       updateBrandColor: (index, color) => {
         clearMessages();

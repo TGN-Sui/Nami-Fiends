@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import { resolveChannelById } from './channel-owner-access.js';
+import { communityGrowthChannelKey } from './hub-community-growth.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 
 const STORAGE_KEY = 'nami.owner.hubCuration';
@@ -21,15 +23,35 @@ const EMPTY_STATE: OwnerHubCurationState = {
 
 let cachedState: OwnerHubCurationState | null = null;
 
+function dedupeCommunityGrowthIds(channelIds: string[]): string[] {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+
+  for (const channelId of channelIds) {
+    const key = communityGrowthChannelKey(channelId, resolveChannelById);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    deduped.push(channelId);
+  }
+
+  return deduped;
+}
+
 function normalizeState(value: Partial<OwnerHubCurationState> | null): OwnerHubCurationState {
   if (!value) {
     return { ...EMPTY_STATE };
   }
 
+  const communityGrowthChannelIds = Array.isArray(value.communityGrowthChannelIds)
+    ? value.communityGrowthChannelIds.filter((entry): entry is string => typeof entry === 'string')
+    : [];
+
   return {
-    communityGrowthChannelIds: Array.isArray(value.communityGrowthChannelIds)
-      ? value.communityGrowthChannelIds.filter((entry): entry is string => typeof entry === 'string')
-      : [],
+    communityGrowthChannelIds: dedupeCommunityGrowthIds(communityGrowthChannelIds),
     memberSpotlightMemberIds: Array.isArray(value.memberSpotlightMemberIds)
       ? value.memberSpotlightMemberIds.filter((entry): entry is string => typeof entry === 'string')
       : [],
@@ -125,7 +147,13 @@ export function addCommunityGrowthChannel(
 
   const current = readOwnerHubCuration();
 
-  if (current.communityGrowthChannelIds.includes(normalizedId)) {
+  const nextKey = communityGrowthChannelKey(normalizedId, resolveChannelById);
+
+  if (
+    current.communityGrowthChannelIds.some(
+      (entry) => communityGrowthChannelKey(entry, resolveChannelById) === nextKey,
+    )
+  ) {
     return current;
   }
 

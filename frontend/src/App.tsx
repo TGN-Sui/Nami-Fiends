@@ -94,6 +94,7 @@ import {
   type BubbleLeaderboardSize,
   type StoredEvent,
   useBubbleLeaderboardSize,
+  formatLiveEventInterestedLabel,
   useEventsStore,
   eventImportanceClass,
 } from './events-store.js';
@@ -214,6 +215,10 @@ import {
   genreOfficialChats,
 } from './global-chats.js';
 import { useGenreChatActivityVersion } from './genre-chat-activity-store.js';
+import { ArcadeScreen } from './ArcadeScreen.js';
+import { ArcadeStageBackground } from './ArcadeStageBackground.js';
+import { hubDestinationItems } from './domain/hub-destinations.js';
+import { resolveCommunityGrowthLineup } from './hub-community-growth.js';
 import { dedupeChannelsByIdentity } from './local-channel-directory.js';
 import {
   channelMatchesGameHubFilter,
@@ -546,6 +551,7 @@ function NamiSeasonProgressBar(props: {
 function namiReturnLabelForPage(page: NamiPage): string {
   if (page === 'hub') return 'Back to Nami Hub';
   if (page === 'gamehub') return 'Back to Game Hub';
+  if (page === 'arcade') return 'Back to Arcade';
   if (page === 'chat') return 'Back to Chat';
   if (page === 'settings') return 'Back to Settings';
   if (page === 'userProfile') return 'Back to My Profile';
@@ -763,59 +769,12 @@ function Sidebar(props: {
   messageUnreadCount: number;
   onNavigate: (page: NamiPage) => void;
   onOpenOwnedChannel?: () => void;
-  onHubSwap: (page: 'hub' | 'gamehub') => void;
+  onNavigateHubDestination: (page: 'hub' | 'gamehub' | 'arcade') => void;
 }): ReactElement {
   const igniteRadioEnabled = useIgniteRadioEnabled();
-  const [hubSwapIdleHint, setHubSwapIdleHint] = useState(false);
-  const isOnGameHub = props.activePage === 'gamehub';
-  const isOnNamiHub = props.activePage === 'hub';
-  const hubSwapTarget: NamiPage = isOnGameHub ? 'hub' : isOnNamiHub ? 'gamehub' : 'hub';
-  const hubSwapLabel = isOnGameHub ? 'Nami Hub' : 'Game Hub';
-
-  useEffect(() => {
-    if (!isOnGameHub && !isOnNamiHub) {
-      setHubSwapIdleHint(false);
-      return;
-    }
-
-    let idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
-    let resetFrameId = 0;
-
-    function resetIdleTimer(): void {
-      if (resetFrameId !== 0) {
-        return;
-      }
-
-      resetFrameId = window.requestAnimationFrame(() => {
-        resetFrameId = 0;
-        setHubSwapIdleHint(false);
-        window.clearTimeout(idleTimer);
-        idleTimer = window.setTimeout(() => setHubSwapIdleHint(true), 8000);
-      });
-    }
-
-    window.addEventListener('pointermove', resetIdleTimer, { passive: true });
-    window.addEventListener('keydown', resetIdleTimer);
-    window.addEventListener('scroll', resetIdleTimer, { capture: true, passive: true });
-
-    return () => {
-      if (resetFrameId !== 0) {
-        window.cancelAnimationFrame(resetFrameId);
-      }
-
-      window.clearTimeout(idleTimer);
-      window.removeEventListener('pointermove', resetIdleTimer);
-      window.removeEventListener('keydown', resetIdleTimer);
-      window.removeEventListener('scroll', resetIdleTimer, true);
-    };
-  }, [isOnGameHub, isOnNamiHub]);
 
   return (
-    <aside
-      className={
-        'sidebar is-icon-rail is-collapsed' + (isOnGameHub || isOnNamiHub ? ' is-on-hub-surface' : '')
-      }
-    >
+    <aside className="sidebar is-icon-rail is-collapsed">
       <div aria-hidden="true" className="sidebar-official-logo-slot">
         <OwnerEditableImage
           className="sidebar-official-logo"
@@ -828,68 +787,29 @@ function Sidebar(props: {
 
       <div className="sidebar-icon-rail-controls">
         <nav className="sidebar-nav">
-          {isOnGameHub || isOnNamiHub ? (
-            <button
-              aria-label={'Switch to ' + hubSwapLabel}
-              className={
-                'sidebar-hub-rail-button sidebar-hub-swap is-active-sidebar-brand' +
-                (hubSwapIdleHint ? ' is-hub-swap-idle-hint' : '')
-              }
-              onClick={() => props.onHubSwap(hubSwapTarget)}
-              type="button"
-            >
-              <span aria-hidden="true" className="sidebar-hub-rail-mark-stack nav-icon">
+          <div aria-label="Hub destinations" className="sidebar-hub-destinations" role="group">
+            {hubDestinationItems.map((destination) => (
+              <button
+                key={destination.page}
+                aria-label={destination.label}
+                aria-current={props.activePage === destination.page ? 'page' : undefined}
+                className={props.activePage === destination.page ? 'is-active' : ''}
+                onClick={() => props.onNavigateHubDestination(destination.page)}
+                type="button"
+              >
                 <OwnerEditableImage
-                  className={
-                    'diamond-mark sidebar-hub-swap-mark is-nami-hub-mark' +
-                    (isOnGameHub ? ' is-alt-hub-mark' : ' is-current-hub-mark')
-                  }
-                  fallback={<span aria-hidden="true">N</span>}
-                  label="Nami hub mark"
+                  className="nav-icon"
+                  fallback={<span aria-hidden="true">{destination.fallbackGlyph}</span>}
+                  label={destination.label + ' nav icon'}
                   nested
-                  slotId="hub-sidebar-logo"
+                  slotId={destination.assetSlotId}
                 />
-                <OwnerEditableImage
-                  className={
-                    'tcg-mark sidebar-hub-swap-mark is-game-hub-mark' +
-                    (isOnGameHub ? ' is-current-hub-mark' : ' is-alt-hub-mark')
-                  }
-                  fallback={<span aria-hidden="true">G</span>}
-                  label="Game hub sidebar icon"
-                  nested
-                  slotId="sidebar-nav-gamehub"
-                />
-              </span>
-              <span className="sidebar-hub-swap-copy sidebar-nav-label">
-                <span className="sidebar-hub-swap-label">{hubSwapLabel}</span>
-                <span className="sidebar-hub-swap-hint">Switch hub</span>
-              </span>
-            </button>
-          ) : (
-            <button
-              aria-label="Open Nami Hub"
-              className="sidebar-hub-rail-button sidebar-brand-home"
-              onClick={() => props.onNavigate('hub')}
-              type="button"
-            >
-              <span aria-hidden="true" className="sidebar-hub-rail-mark-stack nav-icon">
-                <OwnerEditableImage
-                  className="diamond-mark sidebar-hub-swap-mark is-nami-hub-mark is-current-hub-mark"
-                  fallback={<span aria-hidden="true">N</span>}
-                  label="Nami hub mark"
-                  nested
-                  slotId="hub-sidebar-logo"
-                />
-              </span>
-              <OwnerEditableImage
-                className="sidebar-brand-wordmark sidebar-nav-label"
-                fallback={<span>Nami Hub</span>}
-                label="Hub wordmark"
-                nested
-                slotId="hub-sidebar-wordmark"
-              />
-            </button>
-          )}
+                <span className="sidebar-nav-label">{destination.shortLabel}</span>
+              </button>
+            ))}
+          </div>
+
+          <div aria-hidden="true" className="sidebar-nav-divider" />
 
           {navItems.filter((item) => item.page !== 'hub').map((item) => {
             const isProfileNavActive =
@@ -1230,23 +1150,15 @@ function NamiHub(props: {
     return right.subscribers - left.subscribers;
   });
 
-  const defaultGrowthChannels =
-    sortedGrowthChannels.length > 0
-      ? Array.from({ length: COMMUNITY_GROWTH_DISPLAY_LIMIT }, (_, index) => {
-          return sortedGrowthChannels[index % sortedGrowthChannels.length]!;
-        })
-      : [props.selectedChannel];
-
-  const curatedGrowthChannels = hubCuration.communityGrowthChannelIds
-    .map((channelId) => resolveDirectoryChannel(channelId))
-    .filter((channel): channel is NamiChannel => channel !== undefined)
-    .slice(0, COMMUNITY_GROWTH_DISPLAY_LIMIT);
-
-  const usingCustomGrowth = hubCuration.communityGrowthChannelIds.length > 0;
-  const growthChannels =
-    usingCustomGrowth && curatedGrowthChannels.length > 0
-      ? curatedGrowthChannels
-      : defaultGrowthChannels;
+  const growthLineup = resolveCommunityGrowthLineup({
+    sortedUniqueChannels: sortedGrowthChannels,
+    curatedChannelIds: hubCuration.communityGrowthChannelIds,
+    resolveChannel: resolveDirectoryChannel,
+    fallbackChannel: props.selectedChannel,
+    limit: COMMUNITY_GROWTH_DISPLAY_LIMIT,
+  });
+  const growthChannels = growthLineup.channels;
+  const usingCustomGrowth = growthLineup.usingCustom;
 
   const maxCommunitySubscribers = Math.max(
     1,
@@ -4712,7 +4624,7 @@ function EventDetailScreen(props: {
         <div className="event-detail-body">{props.event.body}</div>
         <div className="channel-event-meta-row">
           <span>{localSchedule}</span>
-          <strong>{props.event.seats}</strong>
+          <strong>{formatLiveEventInterestedLabel(props.event.id, props.event.seats)}</strong>
         </div>
         <p className="event-timezone-note">Shown in your timezone ({readViewerTimezone()}).</p>
         <EventInterestedButton eventId={props.event.id} />
@@ -4962,7 +4874,7 @@ function ChannelEventsScreen(props: {
 
               <div className="channel-event-meta-row">
                 <span>{event.status}</span>
-                <strong>{event.seats}</strong>
+                <strong>{formatLiveEventInterestedLabel(event.id, event.seats)}</strong>
               </div>
 
               <div className="channel-event-card-footer">
@@ -5342,18 +5254,36 @@ export function App(): ReactElement {
     setActivePage(page);
   }, [activePage, openOwnedGameChannelProfile]);
 
-  function navigateHubSwap(page: 'hub' | 'gamehub'): void {
+  function navigateHubDestination(page: 'hub' | 'gamehub' | 'arcade'): void {
     if (page !== activePage) {
-      triggerHubSpotlightBurst(page === 'hub' ? 'nami' : 'game');
+      triggerHubSpotlightBurst(
+        page === 'hub' ? 'nami' : page === 'gamehub' ? 'game' : 'arcade',
+      );
     }
 
     navigateFromCurrentPage(page);
   }
 
   useEffect(() => {
+    if (activePage === 'arcade') {
+      document.documentElement.classList.add('is-nami-arcade-surface');
+    } else {
+      document.documentElement.classList.remove('is-nami-arcade-surface');
+    }
+
+    return () => {
+      document.documentElement.classList.remove('is-nami-arcade-surface');
+    };
+  }, [activePage]);
+
+  useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+
+    if (activePage === 'arcade') {
+      return;
+    }
 
     document.body.classList.add('is-grid-nav-pulse');
     setGridPulseKey((value) => value + 1);
@@ -5452,6 +5382,21 @@ export function App(): ReactElement {
           onOpenMember={openMemberProfile}
           onOpenProfile={openChannelProfile}
           tagHandlers={tagHandlers}
+        />
+      );
+    }
+
+    if (activePage === 'arcade') {
+      return (
+        <ArcadeScreen
+          onExitToHub={(page) => navigateFromCurrentPage(page)}
+          onOpenChannel={(channelId) => {
+            const channel = resolveChannelById(channelId);
+
+            if (channel) {
+              openChannelProfile(channel);
+            }
+          }}
         />
       );
     }
@@ -5686,8 +5631,10 @@ if (activePage === 'userProfile') {
 
   const isPreApprovedGameOwnerWorkspace =
     isPreApprovedGameOwner() && !isFullyApprovedGameOwner();
-  const showSidebar = activePage !== 'entry';
-  const showProfileDropdown = showSidebar;
+  const isArcadeSurface = activePage === 'arcade';
+  const showPlatformShell = activePage !== 'entry' && !isArcadeSurface;
+  const showSidebar = showPlatformShell;
+  const showProfileDropdown = showPlatformShell;
 
   return (
     <main
@@ -5721,12 +5668,12 @@ if (activePage === 'userProfile') {
             activePage={activePage}
             guildEventUnreadCount={guildEventsStore.unreadCount}
             messageUnreadCount={messageUnreadCount}
-            onHubSwap={navigateHubSwap}
+            onNavigateHubDestination={navigateHubDestination}
             onNavigate={navigateFromCurrentPage}
             onOpenOwnedChannel={() => openOwnedGameChannelProfile(null)}
           />
         </>
-      ) : (
+      ) : activePage === 'entry' ? (
         <button
           className="sidebar-enter-nami-button"
           onClick={openEntryGate}
@@ -5734,12 +5681,14 @@ if (activePage === 'userProfile') {
         >
           Enter Nami
         </button>
-      )}
+      ) : null}
 
-      {!isPreApprovedGameOwnerWorkspace ? (
+      {isArcadeSurface ? <ArcadeStageBackground /> : null}
+
+      {!isPreApprovedGameOwnerWorkspace && (showPlatformShell || isArcadeSurface) ? (
         <NamiOwnerEditModeBar onReturnToDashboard={() => setActivePage('settings')} />
       ) : null}
-      {!isPreApprovedGameOwnerWorkspace ? (
+      {!isPreApprovedGameOwnerWorkspace && showPlatformShell ? (
         <DemoPerspectiveBar
           onNavigate={navigateFromCurrentPage}
           onRestoreOwner={handleRestoreOwnerDashboard}
@@ -5747,11 +5696,11 @@ if (activePage === 'userProfile') {
       ) : null}
 
       <section className="main-stage">
-        {showSidebar && (activePage === 'hub' || activePage === 'gamehub') ? (
+        {showPlatformShell && (activePage === 'hub' || activePage === 'gamehub') ? (
           <NamiSeasonProgressBar member={selfMember} />
         ) : null}
-        {showSidebar ? <ChannelBannerReminderBar /> : null}
-        {showSidebar ? (
+        {showPlatformShell ? <ChannelBannerReminderBar /> : null}
+        {showPlatformShell ? (
           <MemberFeedOfficialAlertBanner onOpenSafetyCenter={() => setActivePage('safetyCenter')} />
         ) : null}
         {activePage === 'settings' ? (
@@ -5766,13 +5715,13 @@ if (activePage === 'userProfile') {
         )}
       </section>
 
-      {showSidebar ? <IgniteRadioDock /> : null}
-      {showSidebar && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
-      {showSidebar ? <SuperBannerOverlay /> : null}
-      {showSidebar ? <MembershipPaymentReturnHandler /> : null}
-      {showSidebar ? <MemberSessionSync /> : null}
-      {showSidebar ? <WalletAuthBridge /> : null}
-      {showSidebar ? (
+      {showPlatformShell ? <IgniteRadioDock /> : null}
+      {showPlatformShell && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
+      {showPlatformShell ? <SuperBannerOverlay /> : null}
+      {showPlatformShell ? <MembershipPaymentReturnHandler /> : null}
+      {activePage !== 'entry' ? <MemberSessionSync /> : null}
+      {activePage !== 'entry' ? <WalletAuthBridge /> : null}
+      {showPlatformShell ? (
         <EventLivePopup
           onOpenEvent={(event) => {
             setSelectedEvent(event);
@@ -5780,7 +5729,7 @@ if (activePage === 'userProfile') {
           }}
         />
       ) : null}
-      {showSidebar ? (
+      {showPlatformShell ? (
         <ChannelBannerNotificationOverlay
           onOpenChannel={(channel) => {
             setSelectedChannel(channel);
@@ -5788,7 +5737,7 @@ if (activePage === 'userProfile') {
           }}
         />
       ) : null}
-      <GameApprovalWelcomeOverlay />
+      {showPlatformShell ? <GameApprovalWelcomeOverlay /> : null}
     </main>
   );
 }

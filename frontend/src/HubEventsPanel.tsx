@@ -14,6 +14,7 @@ import {
   simulateLiveInterestedEventPopup,
   simulateStartingSoonInterestedEvent,
   updateStoredEvent,
+  formatLiveEventInterestedLabel,
   useEventsStore,
   type StoredEvent,
 } from './events-store.js';
@@ -215,7 +216,7 @@ export function HubEventsPanel(props: {
 
               <div className="official-event-meta-row">
                 <span>Cross-community</span>
-                <strong>{event.seats}</strong>
+                <strong>{formatLiveEventInterestedLabel(event.id, event.seats)}</strong>
               </div>
 
               <EventCardActionBar

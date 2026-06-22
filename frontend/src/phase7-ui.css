@@ -10468,6 +10468,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
   --hub-rest-y: 18%;
 }
 
+body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
+  --hub-burst-x: 22%;
+  --hub-burst-y: 18%;
+  --hub-burst-dx: 0%;
+  --hub-burst-dy: 0%;
+  --hub-rest-x: 22%;
+  --hub-rest-y: 18%;
+  filter: hue-rotate(285deg) saturate(1.2);
+}
+
 @keyframes namiHubSpotlightBurst {
   0% {
     opacity: 0.34;
@@ -16284,20 +16294,24 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   padding: 0 0 0 var(--sidebar-icon-rail-inset);
 }
 
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):hover .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):focus-visible .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
 .sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible .nav-icon {
   transform: scale(var(--sidebar-glyph-hover-scale));
   transform-origin: left center;
 }
 
 /* Active page: keep hover scale, expand right into content. */
-.sidebar.is-icon-rail:not(.is-on-hub-surface) .sidebar-nav > button.is-active {
+.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active,
+.sidebar.is-icon-rail .sidebar-nav > button.is-active {
   z-index: 12;
 }
 
-.sidebar.is-icon-rail:not(.is-on-hub-surface) .sidebar-nav > button.is-active .nav-icon {
+.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button.is-active .nav-icon {
   color: #ffffff;
   filter: none;
   transform: scale(var(--sidebar-glyph-hover-scale));
@@ -16305,28 +16319,20 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 /* Adjacent icons echo 15% of the hover/selected scale, expanding right. */
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail:not(.is-on-hub-surface) .sidebar-nav > button:not(.sidebar-hub-rail-button).is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-hub-rail-button):has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail:not(.is-on-hub-surface) .sidebar-nav > button:not(.sidebar-hub-rail-button):has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
   transform: scale(var(--sidebar-glyph-neighbor-scale));
   transform-origin: left center;
-}
-
-.sidebar.is-icon-rail.is-on-hub-surface .sidebar-nav > button.is-active .nav-icon {
-  color: inherit;
-  filter: none;
-  transform: scale(1);
-}
-
-.sidebar.is-icon-rail.is-on-hub-surface .sidebar-nav > button.sidebar-hub-rail-button .nav-icon,
-.sidebar.is-icon-rail.is-on-hub-surface .sidebar-nav > button.sidebar-hub-rail-button .sidebar-hub-rail-mark-stack {
-  color: #ffffff;
-  filter: none;
-  transform: scale(var(--sidebar-hub-fixed-scale));
-  transform-origin: center center;
 }
 
 .sidebar.is-icon-rail .sidebar-radio-toggle.is-active-sidebar-radio .nav-icon {
@@ -16392,6 +16398,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   color: rgba(159, 233, 255, 0.78);
 }
 
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-nav > button:hover .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-radio-toggle:hover .sidebar-nav-label,
@@ -18246,5 +18254,663 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 
 .has-group-display-photo-card {
   gap: 12px;
+}
+
+/* =========================================================
+   Sidebar hub destinations — uniform rail cluster
+   ========================================================= */
+
+.sidebar.is-icon-rail .sidebar-hub-destinations {
+  display: grid;
+  gap: calc(var(--sidebar-rail-icon-gap) * 0.72);
+  width: 100%;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-destinations > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--sidebar-rail-item-slot);
+  height: var(--sidebar-rail-item-slot);
+  margin: 0;
+  padding: 0 0 0 var(--sidebar-icon-rail-inset);
+  overflow: visible;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--nami-theme-nav-icon, #9fdcff);
+}
+
+.sidebar.is-icon-rail .sidebar-nav-divider {
+  width: calc(var(--sidebar-glyph-size) * 0.76);
+  height: 2px;
+  justify-self: start;
+  margin: calc(var(--sidebar-rail-icon-gap) * 0.35) 0 calc(var(--sidebar-rail-icon-gap) * 0.15);
+  margin-left: var(--sidebar-rail-center);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--nami-theme-border, rgba(117, 215, 255, 0.34)),
+    transparent
+  );
+  opacity: 0.62;
+}
+
+html.is-nami-arcade-surface,
+html.is-nami-arcade-surface body {
+  background: #03060c !important;
+  background-image: none !important;
+}
+
+html.is-nami-arcade-surface body::before,
+html.is-nami-arcade-surface body::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  animation: none !important;
+}
+
+html.is-nami-arcade-surface .nami-landing-grid-spotlight {
+  display: none !important;
+}
+
+.arcade-stage-background-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #03060c;
+}
+
+.arcade-stage-background-shell.is-owner-edit-target-shell {
+  pointer-events: auto;
+}
+
+.arcade-stage-background-media.owner-editable-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: #03060c;
+}
+
+.arcade-stage-background-media.owner-editable-image.is-edit-target {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.arcade-stage-background-placeholder,
+.arcade-stage-background-media .owner-editable-image-asset,
+.arcade-stage-background-media .arcade-stage-background-image,
+.arcade-stage-background-media .arcade-stage-background-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.arcade-stage-background-media.has-arcade-stage-background-video {
+  background: #03060c;
+}
+
+.nami-app[data-active-page='arcade'] {
+  position: relative;
+  z-index: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px !important;
+  background: transparent !important;
+  gap: 0 !important;
+}
+
+.nami-app[data-active-page='arcade'] > .main-stage {
+  position: relative !important;
+  z-index: 2;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  flex: 1 1 auto !important;
+  width: min(1120px, 100%) !important;
+  max-width: 1120px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.nami-app[data-active-page='arcade'] .nami-owner-edit-mode-bar {
+  z-index: 30;
+}
+
+.nami-app[data-active-page='arcade'] .arcade-screen,
+.nami-app[data-active-page='arcade'] .arcade-screen * ,
+.nami-app[data-active-page='arcade'] .arcade-screen *::before,
+.nami-app[data-active-page='arcade'] .arcade-screen *::after,
+.nami-app[data-active-page='arcade'] .arcade-stage-background-shell,
+.nami-app[data-active-page='arcade'] .arcade-stage-background-shell * ,
+.nami-app[data-active-page='arcade'] .arcade-stage-background-shell *::before,
+.nami-app[data-active-page='arcade'] .arcade-stage-background-shell *::after {
+  border-radius: 0 !important;
+}
+
+.nami-app[data-active-page='arcade'] .owner-editable-image-hint {
+  border-radius: 0 !important;
+  box-shadow: var(--arcade-pixel-shadow, 4px 4px 0 rgba(0, 0, 0, 0.55));
+}
+
+.nami-app[data-active-page='arcade'] .sidebar-nav-label {
+  border-radius: 0 !important;
+}
+
+/* =========================================================
+   Nami Arcade — boxed retro alley menu
+   ========================================================= */
+
+.arcade-screen {
+  --arcade-font-body: 'VT323', 'Courier New', monospace;
+  --arcade-font-title: 'Silkscreen', 'VT323', monospace;
+  --arcade-phosphor: #8dffb2;
+  --arcade-phosphor-dim: rgba(141, 255, 178, 0.72);
+  --arcade-panel: rgba(8, 12, 18, 0.9);
+  --arcade-border: rgba(141, 255, 178, 0.34);
+  --arcade-pixel-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  --arcade-pixel-step: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: min(88vh, 820px);
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: var(--arcade-font-body);
+}
+
+.nami-arcade-box {
+  position: relative;
+  width: min(1080px, 100%);
+  max-height: min(86vh, 780px);
+  aspect-ratio: 16 / 10;
+}
+
+.nami-arcade-box-bezel {
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  border-radius: 0;
+  border: 4px solid rgba(72, 58, 96, 0.96);
+  background:
+    linear-gradient(180deg, rgba(34, 28, 46, 0.98), rgba(12, 10, 18, 0.98)),
+    linear-gradient(90deg, rgba(255, 45, 149, 0.08), transparent 42%, rgba(0, 229, 255, 0.06));
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.05) inset,
+    var(--arcade-pixel-shadow);
+}
+
+.nami-arcade-box-bezel::before,
+.nami-arcade-box-bezel::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: rgba(214, 228, 244, 0.42);
+  border: 2px solid rgba(72, 58, 96, 0.96);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.nami-arcade-box-bezel::before {
+  top: 10px;
+  left: 10px;
+}
+
+.nami-arcade-box-bezel::after {
+  top: 10px;
+  right: 10px;
+}
+
+.nami-arcade-box-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0;
+  border: 3px solid rgba(141, 255, 178, 0.24);
+  background: #050308;
+  isolation: isolate;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.65);
+}
+
+.arcade-screen-background-media.owner-editable-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: #050308;
+}
+
+.arcade-screen-background-media.owner-editable-image.is-owner-asset-placeholder {
+  border: none;
+  background: #050308;
+}
+
+.arcade-screen-background-media.owner-editable-image.is-edit-target {
+  cursor: pointer;
+}
+
+.arcade-screen-background-placeholder,
+.arcade-screen-background-media .owner-editable-image-asset,
+.arcade-screen-background-media .arcade-screen-background-image,
+.arcade-screen-background-media .arcade-screen-background-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.arcade-screen-background-media.has-arcade-background-video {
+  background: #050308;
+}
+
+.arcade-screen-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.arcade-screen-rain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  background-image: repeating-linear-gradient(
+    112deg,
+    transparent 0 14px,
+    rgba(159, 233, 255, 0.14) 14px 15px
+  );
+  animation: arcadeRainDrift 9s linear infinite;
+}
+
+.arcade-screen-fog {
+  position: absolute;
+  inset: auto 0 0;
+  height: 48%;
+  background: linear-gradient(180deg, transparent, rgba(12, 8, 22, 0.72) 55%, rgba(5, 3, 8, 0.96));
+}
+
+.arcade-screen-scanlines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.28) 0 2px,
+    transparent 2px 4px
+  );
+  pointer-events: none;
+}
+
+.arcade-screen-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 18%, transparent 72%, rgba(0, 0, 0, 0.58)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.42));
+  pointer-events: none;
+}
+
+.arcade-screen-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(240px, 0.85fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: stretch;
+  height: 100%;
+  padding: 14px 16px 12px;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 520ms ease,
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arcade-screen-shell.is-menu-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arcade-screen-marquee {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
+  padding: 2px 8px 0;
+}
+
+.arcade-screen-marquee-kicker {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(159, 233, 255, 0.78);
+}
+
+.arcade-screen-marquee-title {
+  margin: 0;
+  font-family: var(--arcade-font-title);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  letter-spacing: 0.14em;
+  color: #f6fbff;
+  text-shadow:
+    0 0 12px rgba(141, 255, 178, 0.42),
+    0 0 28px rgba(255, 45, 149, 0.28);
+}
+
+.arcade-screen-marquee-subtitle {
+  margin: 0;
+  font-size: 1.05rem;
+  color: rgba(214, 228, 244, 0.78);
+}
+
+.arcade-screen-menu {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 !important;
+  border: 3px solid var(--arcade-border) !important;
+  border-radius: 0 !important;
+  background: var(--arcade-panel) !important;
+  box-shadow:
+    0 0 0 1px rgba(141, 255, 178, 0.12) inset,
+    var(--arcade-pixel-shadow) !important;
+  overflow: hidden;
+}
+
+.arcade-screen-menu-head,
+.arcade-screen-menu-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(141, 255, 178, 0.18);
+  color: var(--arcade-phosphor);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-screen-menu-foot {
+  border-bottom: none;
+  border-top: 1px solid rgba(141, 255, 178, 0.18);
+  color: var(--arcade-phosphor-dim);
+  font-size: 0.92rem;
+}
+
+.arcade-screen-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.arcade-screen-menu-item {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: rgba(214, 244, 224, 0.82);
+  font-family: inherit;
+  font-size: 1.08rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.arcade-screen-menu-item:hover,
+.arcade-screen-menu-item.is-selected {
+  background: rgba(141, 255, 178, 0.1);
+  color: var(--arcade-phosphor);
+}
+
+.arcade-screen-menu-item.is-offline {
+  opacity: 0.62;
+}
+
+.arcade-screen-menu-cursor {
+  color: var(--arcade-phosphor);
+  font-weight: 700;
+}
+
+.arcade-screen-menu-title {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.arcade-screen-menu-genre,
+.arcade-screen-menu-status {
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(159, 233, 255, 0.72);
+}
+
+.arcade-screen-cabinet-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 0;
+  border: 3px solid color-mix(in srgb, var(--arcade-cabinet-accent) 48%, transparent);
+  background:
+    linear-gradient(180deg, rgba(10, 14, 22, 0.94), rgba(4, 6, 12, 0.98)),
+    linear-gradient(180deg, var(--arcade-cabinet-glow), transparent 42%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    var(--arcade-pixel-shadow);
+}
+
+.arcade-screen-cabinet-top {
+  display: grid;
+  gap: 6px;
+}
+
+.arcade-screen-cabinet-badge {
+  width: fit-content;
+  padding: 4px 8px;
+  border: 1px solid rgba(141, 255, 178, 0.28);
+  color: var(--arcade-phosphor);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-screen-cabinet-top strong {
+  font-family: var(--arcade-font-title);
+  font-size: 1.45rem;
+  letter-spacing: 0.06em;
+  color: #f4fbff;
+}
+
+.arcade-screen-cabinet-top p {
+  margin: 0;
+  color: rgba(214, 228, 244, 0.82);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.arcade-screen-cabinet-screen {
+  display: grid;
+  gap: 4px;
+  min-height: 120px;
+  padding: 14px;
+  border-radius: 0;
+  border: 2px solid rgba(141, 255, 178, 0.22);
+  background:
+    linear-gradient(180deg, rgba(141, 255, 178, 0.12), transparent 48%),
+    rgba(0, 0, 0, 0.42);
+  color: var(--arcade-phosphor);
+  text-align: center;
+}
+
+.arcade-screen-cabinet-screen-label {
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--arcade-phosphor-dim);
+}
+
+.arcade-screen-cabinet-screen strong {
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+}
+
+.arcade-screen-cabinet-screen small {
+  color: rgba(159, 233, 255, 0.72);
+  font-size: 0.92rem;
+}
+
+.arcade-screen-play-button {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 0;
+  border: 3px solid color-mix(in srgb, var(--arcade-cabinet-accent) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--arcade-cabinet-accent) 24%, transparent),
+    rgba(0, 0, 0, 0.42)
+  );
+  color: #f8fdff;
+  font-family: var(--arcade-font-title);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.arcade-screen-play-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.arcade-screen-exit-menu {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 10px 2px;
+  border-top: 1px solid rgba(141, 255, 178, 0.16);
+}
+
+.arcade-screen-exit-label {
+  color: var(--arcade-phosphor-dim);
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.arcade-screen-exit-button {
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: 0;
+  border: 3px solid rgba(141, 255, 178, 0.34);
+  background: rgba(8, 12, 18, 0.82);
+  color: var(--arcade-phosphor);
+  font-family: var(--arcade-font-title);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.arcade-screen-exit-button:hover,
+.arcade-screen-exit-button:focus-visible {
+  border-color: rgba(141, 255, 178, 0.62);
+  background: rgba(141, 255, 178, 0.12);
+  color: #f4fff8;
+}
+
+@keyframes arcadeRainDrift {
+  from {
+    transform: translate3d(-4%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .nami-arcade-box {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: min(88vh, 760px);
+  }
+
+  .arcade-screen-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    overflow: auto;
+  }
+
+  .arcade-screen-menu-item {
+    grid-template-columns: 1.2rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .arcade-screen-menu-genre,
+  .arcade-screen-menu-status {
+    grid-column: 2;
+  }
+
+  .arcade-screen-menu-status {
+    justify-self: start;
+  }
 }
 

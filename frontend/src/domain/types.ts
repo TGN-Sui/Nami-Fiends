@@ -4,6 +4,7 @@ export type NamiPage =
   | 'entry'
   | 'hub'
   | 'gamehub'
+  | 'arcade'
   | 'subscriptions'
   | 'userProfile'
   | 'passport'

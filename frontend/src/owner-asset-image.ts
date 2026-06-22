@@ -23,6 +23,7 @@ const OUTPUT_LIMITS: Record<OwnerAssetCategory, { maxEdge: number; maxBytes: num
   profile: { maxEdge: 512, maxBytes: 280_000 },
   badge: { maxEdge: 256, maxBytes: 140_000 },
   button: { maxEdge: 256, maxBytes: 140_000 },
+  scene: { maxEdge: 1920, maxBytes: 900_000 },
 };
 
 function estimateDataUrlBytes(dataUrl: string): number {

@@ -76,6 +76,7 @@ describe('channel-owner-settings-draft', () => {
 
     updateOwnerSettingsDraft(channel.id, {
       platforms: ['PC', 'Mobile'],
+      genres: ['Shooter', 'Indie'],
       brandPalette: ['#111111', '#222222', '#333333', '#444444'],
       superBanner: { headline: 'Launch week', body: 'Play now' },
       partnerCarousel: { title: 'Partner title', description: 'Partner copy' },
@@ -87,6 +88,7 @@ describe('channel-owner-settings-draft', () => {
     expect(result.ok).toBe(true);
     expect(isOwnerSettingsDirty(channel.id)).toBe(false);
     expect(readChannelOwnerProfileEdits(channel.id)?.platforms).toEqual(['PC', 'Mobile']);
+    expect(readChannelOwnerProfileEdits(channel.id)?.genres).toEqual(['Shooter', 'Indie']);
     expect(readOwnerBrandPalette()).toEqual(['#111111', '#222222', '#333333', '#444444']);
     expect(readChannelBannerContent(channel.id, channel).headline).toBe('Alert headline');
     expect(ensureOwnerSettingsDraft(channel).superBanner.headline).toBe('Launch week');
@@ -116,6 +118,28 @@ describe('channel-owner-settings-draft', () => {
     const result = commitOwnerSettings(channel);
 
     expect(result.ok).toBe(false);
+    expect(isOwnerSettingsDirty(channel.id)).toBe(true);
+  });
+
+  it('requires at least one genre on commit', () => {
+    ensureOwnerSettingsDraft(channel);
+    updateOwnerSettingsDraft(channel.id, { genres: [] });
+
+    const result = commitOwnerSettings(channel);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('genre');
+    expect(isOwnerSettingsDirty(channel.id)).toBe(true);
+  });
+
+  it('tracks dirty state for genre edits', () => {
+    ensureOwnerSettingsDraft(channel);
+    expect(isOwnerSettingsDirty(channel.id)).toBe(false);
+
+    updateOwnerSettingsDraft(channel.id, {
+      genres: ['RPG', 'Adventure'],
+    });
+
     expect(isOwnerSettingsDirty(channel.id)).toBe(true);
   });
 });

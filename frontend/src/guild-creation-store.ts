@@ -7,7 +7,7 @@ import {
   updateApprovalRequestStatus,
 } from './approval-requests-store.js';
 import { initializeGuildHierarchy } from './guild-hierarchy-store.js';
-import { isGameChannelOwner } from './channel-owner-access.js';
+import { isGameChannelOwner, qualifiesForOwnerSoloGuild } from './channel-owner-access.js';
 import { getSelfMember, isMemberVerified, memberFeatureTier, SELF_MEMBER_ID } from './member-access.js';
 import { discoverableGuildSpaceMembers } from './guild-space-members.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
@@ -29,8 +29,8 @@ export type GuildCreationProposal = {
   isPublic: boolean;
   creatorMemberId: string;
   creatorName: string;
-  cofounderMemberIds: [string, string];
-  cofounderNames: [string, string];
+  cofounderMemberIds: string[];
+  cofounderNames: string[];
   approvals: Record<string, GuildCofounderApproval>;
   status: 'pending' | 'approved' | 'declined' | 'finalized';
   createdAt: string;
@@ -171,12 +171,20 @@ function memberHasGuildCreationTier(member: NamiMember): boolean {
   return tier !== 'NPC';
 }
 
+export function gameChannelOwnerCreatesSoloGuild(): boolean {
+  return qualifiesForOwnerSoloGuild();
+}
+
 export function canMemberCreateGuild(member: NamiMember): boolean {
-  if (!isMemberVerified(member) || !memberHasGuildCreationTier(member) || member.signal === 'Black') {
+  if (member.signal === 'Black') {
     return false;
   }
 
-  if (isGameChannelOwner() && channelOwnerOfficialGuildCount(member.id) > 0) {
+  if (qualifiesForOwnerSoloGuild()) {
+    return channelOwnerOfficialGuildCount(member.id) === 0;
+  }
+
+  if (!isMemberVerified(member) || !memberHasGuildCreationTier(member)) {
     return false;
   }
 
@@ -319,6 +327,55 @@ function notifyCreatorOfDecline(proposal: GuildCreationProposal, declinedByMembe
   });
 }
 
+function submitOwnerOfficialGuild(input: {
+  proposedName: string;
+  isPublic: boolean;
+}): GuildCreationResult {
+  const selfMember = getSelfMember();
+
+  if (!qualifiesForOwnerSoloGuild()) {
+    return { ok: false, reason: 'Only game channel owners can create a solo official guild.' };
+  }
+
+  if (!canMemberCreateGuild(selfMember)) {
+    return {
+      ok: false,
+      reason: 'Game channel owners can create only one official guild.',
+    };
+  }
+
+  const proposal: GuildCreationProposal = {
+    id: 'guild-create-' + Date.now(),
+    proposedName: input.proposedName.trim() || 'Untitled Guild',
+    isPublic: input.isPublic,
+    creatorMemberId: selfMember.id,
+    creatorName: selfMember.name,
+    cofounderMemberIds: [],
+    cofounderNames: [],
+    approvals: {
+      [selfMember.id]: 'approved',
+    },
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    declinedAt: null,
+    finalizedGuildId: null,
+  };
+
+  const finalized = finalizeProposal(proposal);
+  writeProposals([finalized, ...readProposals()]);
+
+  deliverIncomingPrivateMessage({
+    memberId: selfMember.id,
+    memberName: selfMember.name,
+    body: finalized.proposedName + ' is live as your official game guild.',
+    authorName: selfMember.name,
+    signal: selfMember.signal,
+    markUnread: false,
+  });
+
+  return { ok: true, proposal: finalized };
+}
+
 export function submitGuildCreationProposal(input: {
   proposedName: string;
   isPublic: boolean;
@@ -326,14 +383,16 @@ export function submitGuildCreationProposal(input: {
 }): GuildCreationResult {
   const selfMember = getSelfMember();
 
-  if (!canMemberCreateGuild(selfMember)) {
-    if (isGameChannelOwner() && channelOwnerOfficialGuildCount(selfMember.id) > 0) {
-      return {
-        ok: false,
-        reason: 'Game channel owners can create only one official guild.',
-      };
-    }
+  if (qualifiesForOwnerSoloGuild()) {
+    dismissStaleGuildProposalsForOwner(selfMember.id);
 
+    return submitOwnerOfficialGuild({
+      proposedName: input.proposedName,
+      isPublic: input.isPublic,
+    });
+  }
+
+  if (!canMemberCreateGuild(selfMember)) {
     return { ok: false, reason: 'Only verified members can start guild creation.' };
   }
 
@@ -521,6 +580,76 @@ export function respondToGuildCreationProposal(
   writeProposals(nextProposals);
 
   return { ok: true, proposal: nextProposal };
+}
+
+export function dismissStaleGuildProposalsForOwner(memberId: string): number {
+  if (!qualifiesForOwnerSoloGuild()) {
+    return 0;
+  }
+
+  const proposals = readProposals();
+  let dismissed = 0;
+
+  const next = proposals.map((proposal) => {
+    if (
+      proposal.status !== 'pending' ||
+      proposal.creatorMemberId !== memberId ||
+      proposal.cofounderMemberIds.length === 0
+    ) {
+      return proposal;
+    }
+
+    dismissed += 1;
+    resolveApprovalRequestsForReference(proposal.id, 'declined');
+
+    return {
+      ...proposal,
+      status: 'declined' as const,
+      declinedAt: new Date().toISOString(),
+    };
+  });
+
+  if (dismissed > 0) {
+    writeProposals(next);
+  }
+
+  return dismissed;
+}
+
+export function cancelGuildCreationProposal(
+  proposalId: string,
+  memberId: string,
+): GuildCreationResult {
+  const proposals = readProposals();
+  const index = proposals.findIndex((proposal) => proposal.id === proposalId);
+
+  if (index < 0) {
+    return { ok: false, reason: 'Guild creation proposal not found.' };
+  }
+
+  const current = proposals[index]!;
+
+  if (current.creatorMemberId !== memberId) {
+    return { ok: false, reason: 'Only the guild creator can cancel this proposal.' };
+  }
+
+  if (current.status !== 'pending') {
+    return { ok: false, reason: 'That guild creation proposal is no longer pending.' };
+  }
+
+  resolveApprovalRequestsForReference(current.id, 'declined');
+
+  const cancelled: GuildCreationProposal = {
+    ...current,
+    status: 'declined',
+    declinedAt: new Date().toISOString(),
+  };
+
+  const next = [...proposals];
+  next[index] = cancelled;
+  writeProposals(next);
+
+  return { ok: true, proposal: cancelled };
 }
 
 export function creatorPendingGuildProposals(memberId: string): GuildCreationProposal[] {

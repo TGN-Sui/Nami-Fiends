@@ -1,3 +1,5 @@
+import { qualifiesForOwnerSoloGuild } from './channel-owner-access.js';
+import { channelOwnerOfficialGuildCount } from './guild-creation-store.js';
 import { isMemberVerified, memberFeatureTier, SELF_MEMBER_ID } from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
@@ -12,6 +14,14 @@ export function canUseGuildLeadershipTools(member: NamiMember): boolean {
 }
 
 export function canFoundNewGuild(member: NamiMember): boolean {
+  if (member.signal === 'Black') {
+    return false;
+  }
+
+  if (qualifiesForOwnerSoloGuild() && member.id === SELF_MEMBER_ID) {
+    return channelOwnerOfficialGuildCount(member.id) === 0;
+  }
+
   return canUseGuildLeadershipTools(member);
 }
 

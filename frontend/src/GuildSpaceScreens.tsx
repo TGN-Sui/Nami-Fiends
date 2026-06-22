@@ -36,10 +36,15 @@ import {
 import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
 import { GroupDisplayPhotoUploadCard } from './GroupDisplayPhotoUploadCard.js';
 import { MemberPassportCarousel } from './MemberPassportCarousel.js';
+import { isGameChannelOwner, qualifiesForOwnerSoloGuild } from './channel-owner-access.js';
 import {
+  cancelGuildCreationProposal,
+  channelOwnerOfficialGuildCount,
   cofounderPendingGuildApprovals,
   creatorPendingGuildProposals,
+  dismissStaleGuildProposalsForOwner,
   formatGuildCreationCooldownRemaining,
+  gameChannelOwnerCreatesSoloGuild,
   getCreatedGuildRecords,
   getGuildCreationCooldown,
   membersEligibleForGuildCreation,
@@ -797,13 +802,40 @@ export function GuildCreationPanel(props: {
     () => cofounderPendingGuildApprovals(selfMember.id),
     [proposals, selfMember.id]
   );
+  const ownerSoloGuild = gameChannelOwnerCreatesSoloGuild();
   const cooldown = useMemo(() => getGuildCreationCooldown(selfMember.id), [proposals, selfMember.id]);
-  const creationLocked = cooldown.blocked || creatorPending.length > 0;
-  const hasApprovalQueue = cofounderPending.length > 0 || creatorPending.length > 0;
+  const creationLocked = ownerSoloGuild
+    ? false
+    : cooldown.blocked || creatorPending.length > 0;
+  const hasApprovalQueue =
+    !ownerSoloGuild && (cofounderPending.length > 0 || creatorPending.length > 0);
   const [formExpanded, setFormExpanded] = useState(hasApprovalQueue);
-  const showCofounderPicker = searchQuery.trim().length > 0 || selectedCofounders.length > 0;
+  const showCofounderPicker =
+    !ownerSoloGuild && (searchQuery.trim().length > 0 || selectedCofounders.length > 0);
 
   useEffect(() => {
+    if (!ownerSoloGuild) {
+      return;
+    }
+
+    const dismissed = dismissStaleGuildProposalsForOwner(selfMember.id);
+
+    if (dismissed > 0) {
+      setNotice(
+        'Cleared ' +
+          dismissed +
+          ' stale co-founder guild proposal' +
+          (dismissed === 1 ? '' : 's') +
+          '. Create your official guild below.',
+      );
+    }
+  }, [ownerSoloGuild, selfMember.id]);
+
+  useEffect(() => {
+    if (ownerSoloGuild) {
+      return;
+    }
+
     if (creatorPending.length > 0) {
       setTrackedCreatorProposalId(creatorPending[0]!.id);
       return;
@@ -836,14 +868,17 @@ export function GuildCreationPanel(props: {
     }
 
     setTrackedCreatorProposalId(null);
-  }, [creatorPending, proposals, trackedCreatorProposalId]);
+  }, [creatorPending, ownerSoloGuild, proposals, trackedCreatorProposalId]);
 
   if (!canFoundNewGuild(selfMember)) {
     return (
       <article className="panel">
         <p className="protocol-hint">
-          Guild founding requires a verified membership tier. Upgrade your passport or complete verification
-          to start a guild with two co-founders.
+          {qualifiesForOwnerSoloGuild() && channelOwnerOfficialGuildCount(selfMember.id) > 0
+            ? 'You already created your official game guild. Invite members from the guild page to grow your roster.'
+            : qualifiesForOwnerSoloGuild()
+              ? 'Create your official game guild below — no co-founder approvals required.'
+              : 'Guild founding requires a verified membership tier. Upgrade your passport or complete verification to start a guild with two co-founders.'}
         </p>
       </article>
     );
@@ -877,6 +912,12 @@ export function GuildCreationPanel(props: {
 
     if (!result.ok) {
       setNotice(result.reason);
+      return;
+    }
+
+    if (ownerSoloGuild && result.proposal.status === 'finalized') {
+      setNotice(result.proposal.proposedName + ' is live as your official game guild.');
+      setProposedName('');
       return;
     }
 
@@ -923,7 +964,15 @@ export function GuildCreationPanel(props: {
         </p>
       ) : null}
 
-      {cofounderPending.map((proposal) => (
+      {ownerSoloGuild ? (
+        <p className="protocol-hint">
+          As a game channel owner you can found one official guild instantly — no co-founder approvals
+          required.
+        </p>
+      ) : null}
+
+      {!ownerSoloGuild
+        ? cofounderPending.map((proposal) => (
         <article className="guild-creation-pending-card is-actionable is-compact" key={proposal.id}>
           <div className="guild-creation-pending-copy">
             <strong>{proposal.creatorName}</strong>
@@ -957,9 +1006,11 @@ export function GuildCreationPanel(props: {
             ) : null}
           </div>
         </article>
-      ))}
+      ))
+        : null}
 
-      {creatorPending.map((proposal) => (
+      {!ownerSoloGuild
+        ? creatorPending.map((proposal) => (
         <article className="guild-creation-pending-card is-compact" key={proposal.id}>
           <div className="guild-creation-pending-copy">
             <strong>{proposal.proposedName}</strong>
@@ -967,22 +1018,39 @@ export function GuildCreationPanel(props: {
               Awaiting co-founder approval · {proposal.isPublic ? 'public' : 'private'}
             </span>
           </div>
-          {props.onOpenMessage ? (
-            <div className="guild-creation-pending-actions">
-              {pendingCofounderApprovalsForProposal(proposal).map((cofounder) => (
-                <button
-                  className="secondary-action guild-creation-pending-link"
-                  key={cofounder.memberId}
-                  onClick={() => props.onOpenMessage?.(cofounder.memberId)}
-                  type="button"
-                >
-                  Message {cofounder.memberName}
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <div className="guild-hierarchy-actions">
+            <button
+              className="secondary-action"
+              onClick={() => {
+                const result = cancelGuildCreationProposal(proposal.id, selfMember.id);
+
+                if (!result.ok) {
+                  setNotice(result.reason);
+                  return;
+                }
+
+                setNotice('Guild proposal cancelled. You can start a new one below.');
+              }}
+              type="button"
+            >
+              Cancel proposal
+            </button>
+            {props.onOpenMessage
+              ? pendingCofounderApprovalsForProposal(proposal).map((cofounder) => (
+                  <button
+                    className="secondary-action guild-creation-pending-link"
+                    key={cofounder.memberId}
+                    onClick={() => props.onOpenMessage?.(cofounder.memberId)}
+                    type="button"
+                  >
+                    Message {cofounder.memberName}
+                  </button>
+                ))
+              : null}
+          </div>
         </article>
-      ))}
+      ))
+        : null}
 
       <details
         className="guild-creation-form-details"
@@ -1020,79 +1088,87 @@ export function GuildCreationPanel(props: {
           </div>
         </div>
 
-        <div className="guild-creation-cofounder-row">
-          <div className="guild-creation-selected-chips">
-            {selectedCofounders.map((memberId) => {
-              const member = findDiscoverableGuildSpaceMember(memberId);
-
-              if (!member) {
-                return null;
-              }
-
-              return (
-                <button
-                  className="guild-cofounder-chip"
-                  disabled={creationLocked}
-                  key={member.id}
-                  onClick={() => toggleCofounder(member.id)}
-                  type="button"
-                >
-                  {member.name} ×
-                </button>
-              );
-            })}
-            {selectedCofounders.length < 2 ? (
-              <span className="protocol-hint">Pick {2 - selectedCofounders.length} co-founder(s)</span>
-            ) : null}
-          </div>
-
-          <input
-            aria-label="Search co-founders"
-            className="guild-creation-search-input"
-            disabled={creationLocked || selectedCofounders.length >= 2}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search co-founders…"
-            value={searchQuery}
-          />
-        </div>
-
-        {showCofounderPicker ? (
+        {!ownerSoloGuild ? (
           <>
-            <MemberSearchPredictions
-              candidates={eligiblePool}
-              onSelect={(member) => toggleCofounder(member.id)}
-              query={searchQuery}
-              selectedMemberIds={selectedCofounders}
-            />
-            {searchQuery.trim().length > 0 ? (
-              <div className="guild-member-search-results is-compact">
-                {searchPredictions.map((member) => (
-                  <button
-                    className={
-                      'guild-member-search-card is-compact' +
-                      (selectedCofounders.includes(member.id) ? ' is-selected' : '')
-                    }
-                    disabled={creationLocked}
-                    key={member.id}
-                    onClick={() => toggleCofounder(member.id)}
-                    type="button"
-                  >
-                    <UniformMemberAvatar member={member} />
-                    <span>{member.name}</span>
-                  </button>
-                ))}
+            <div className="guild-creation-cofounder-row">
+              <div className="guild-creation-selected-chips">
+                {selectedCofounders.map((memberId) => {
+                  const member = findDiscoverableGuildSpaceMember(memberId);
+
+                  if (!member) {
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      className="guild-cofounder-chip"
+                      disabled={creationLocked}
+                      key={member.id}
+                      onClick={() => toggleCofounder(member.id)}
+                      type="button"
+                    >
+                      {member.name} ×
+                    </button>
+                  );
+                })}
+                {selectedCofounders.length < 2 ? (
+                  <span className="protocol-hint">Pick {2 - selectedCofounders.length} co-founder(s)</span>
+                ) : null}
               </div>
+
+              <input
+                aria-label="Search co-founders"
+                className="guild-creation-search-input"
+                disabled={creationLocked || selectedCofounders.length >= 2}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search co-founders…"
+                value={searchQuery}
+              />
+            </div>
+
+            {showCofounderPicker ? (
+              <>
+                <MemberSearchPredictions
+                  candidates={eligiblePool}
+                  onSelect={(member) => toggleCofounder(member.id)}
+                  query={searchQuery}
+                  selectedMemberIds={selectedCofounders}
+                />
+                {searchQuery.trim().length > 0 ? (
+                  <div className="guild-member-search-results is-compact">
+                    {searchPredictions.map((member) => (
+                      <button
+                        className={
+                          'guild-member-search-card is-compact' +
+                          (selectedCofounders.includes(member.id) ? ' is-selected' : '')
+                        }
+                        disabled={creationLocked}
+                        key={member.id}
+                        onClick={() => toggleCofounder(member.id)}
+                        type="button"
+                      >
+                        <UniformMemberAvatar member={member} />
+                        <span>{member.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : null}
 
         <button
           className="primary-action"
-          disabled={creationLocked || selectedCofounders.length !== 2 || !proposedName.trim()}
+          disabled={
+            creationLocked ||
+            !proposedName.trim() ||
+            (!ownerSoloGuild && selectedCofounders.length !== 2)
+          }
           onClick={submitProposal}
           type="button"
         >
-          Send approvals
+          {ownerSoloGuild ? 'Create official guild' : 'Send approvals'}
         </button>
       </details>
 
@@ -1586,7 +1662,11 @@ export function MyGuildHomeScreen(props: {
         {guildCount === 0 ? (
           <p className="protocol-hint">
             You are not in a guild yet.
-            {canCreateGuild ? ' Use New guild below to found one with two verified co-founders.' : ''}
+            {canCreateGuild
+              ? qualifiesForOwnerSoloGuild()
+                ? ' Use New guild below to found your official game guild.'
+                : ' Use New guild below to found one with two verified co-founders.'
+              : ''}
           </p>
         ) : viewMode === 'cards' ? (
           renderGuildCards(guildAffiliations)
@@ -1633,8 +1713,11 @@ export function MyGuildHomeScreen(props: {
           <GuildCreationPanel {...(props.onOpenMessage ? { onOpenMessage: props.onOpenMessage } : {})} />
         ) : (
           <p className="protocol-hint">
-            Guild founding unlocks with a verified membership tier. You will need two verified co-founders to
-            launch.
+            {qualifiesForOwnerSoloGuild() && channelOwnerOfficialGuildCount(selfMember.id) > 0
+              ? 'You already created your official game guild.'
+              : qualifiesForOwnerSoloGuild()
+                ? 'Found your official game guild below — no co-founder approvals required.'
+                : 'Guild founding unlocks with a verified membership tier. You will need two verified co-founders to launch.'}
           </p>
         )}
       </section>

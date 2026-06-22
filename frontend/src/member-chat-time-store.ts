@@ -139,6 +139,41 @@ export function recordMemberChatTime(
   writeRegistry(registry);
 }
 
+export function countMembersActiveInChat(chatId: string, now = Date.now()): number {
+  const seen = new Set<string>();
+
+  if (activeChatSession?.chatId === chatId) {
+    seen.add(activeChatSession.memberId);
+  }
+
+  for (const [memberId, entries] of Object.entries(readRegistry())) {
+    const entry = entries.find((record) => record.chatId === chatId);
+
+    if (!entry) {
+      continue;
+    }
+
+    if (now - entry.lastSeenAtMs <= ACTIVE_CHAT_WINDOW_MS) {
+      seen.add(memberId);
+    }
+  }
+
+  return seen.size;
+}
+
+export function countWeeklyParticipantsInChat(chatId: string, now = Date.now()): number {
+  const weekKey = currentWeekKey(now);
+  const participants = new Set<string>();
+
+  for (const [memberId, entries] of Object.entries(readRegistry())) {
+    if (entries.some((entry) => entry.chatId === chatId && entry.weekKey === weekKey && entry.weekMs > 0)) {
+      participants.add(memberId);
+    }
+  }
+
+  return participants.size;
+}
+
 export function memberChatPresenceForMember(
   memberId: string,
   now = Date.now()

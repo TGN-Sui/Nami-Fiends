@@ -13,6 +13,10 @@ function isIndexedDbAvailable(): boolean {
   return typeof indexedDB !== 'undefined';
 }
 
+function isPersistedOwnerAssetValue(value: string): boolean {
+  return value.startsWith('data:image/') || value.startsWith('channel-media://');
+}
+
 function sanitizeAssetMap(value: unknown): OwnerAssetMap {
   if (!value || typeof value !== 'object') {
     return {};
@@ -23,7 +27,7 @@ function sanitizeAssetMap(value: unknown): OwnerAssetMap {
       (entry): entry is [string, string] =>
         typeof entry[0] === 'string' &&
         typeof entry[1] === 'string' &&
-        entry[1].startsWith('data:image/')
+        isPersistedOwnerAssetValue(entry[1])
     )
   );
 }
@@ -104,7 +108,7 @@ async function readIndexedDbAssets(): Promise<OwnerAssetMap> {
         valueRequest.onsuccess = () => {
           const value = valueRequest.result;
 
-          if (typeof value === 'string' && value.startsWith('data:image/')) {
+          if (typeof value === 'string' && isPersistedOwnerAssetValue(value)) {
             assets[key] = value;
           }
 

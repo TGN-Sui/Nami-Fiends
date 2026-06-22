@@ -27,8 +27,13 @@ import {
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
-import { recordGenreWeeklyChatter } from './genre-chat-activity-store.js';
-import { useMemberChatTimeTracker } from './member-chat-time-store.js';
+import {
+  formatGlobalChatPresenceMeta,
+  resolveGlobalChatLiveStats,
+  useGlobalChatLiveStats,
+} from './chat-live-stats.js';
+import { recordGenreWeeklyChatter, useGenreChatActivityVersion } from './genre-chat-activity-store.js';
+import { useMemberChatTimeTracker, useMemberChatTimeVersion } from './member-chat-time-store.js';
 import {
   canOfficialOwnerModerateGlobalChat,
   filterModeratedGlobalChats,
@@ -57,7 +62,6 @@ import {
   getGlobalChatMessages,
   globalChatListCreatorLine,
   globalChatPresenceKindLabel,
-  globalChatPresenceMeta,
   globalChatSurfaceLabel,
   hubGlobalChats,
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
@@ -90,7 +94,7 @@ function genreChatExpandProps(
     <div className="chat-window-expanded-heading-copy is-centered-hub-chat-heading">
       <h2>{chat.title}</h2>
       <p>
-        Genre lounge · {chat.activeMembers.toLocaleString()} active
+        Genre lounge · {resolveGlobalChatLiveStats(chat).weeklyActive.toLocaleString()} active this week
         {options?.compact === true ? ' in lounge' : ''}
       </p>
     </div>
@@ -150,7 +154,8 @@ export function GlobalChatRoomView(props: {
   }, [props.chat.id, props.chat.kind, selfMember.id]);
   const canOwnerModerateChat = canOfficialOwnerModerateGlobalChat(props.chat, connectedOwner);
   const presenceKindLabel = globalChatPresenceKindLabel(props.chat);
-  const presenceMeta = globalChatPresenceMeta(props.chat);
+  const liveStats = useGlobalChatLiveStats(props.chat);
+  const presenceMeta = formatGlobalChatPresenceMeta(props.chat);
   useChannelEmojiLibraryVersion();
   const genreEmojis =
     props.chat.kind === 'genre' && props.chat.genre
@@ -282,7 +287,7 @@ export function GlobalChatRoomView(props: {
             <div className="global-chat-compact-title-row">
               <strong>{props.chat.title}</strong>
               <span className="global-chat-compact-meta">
-                {props.chat.activeMembers.toLocaleString()} inside
+                {liveStats.membersInside.toLocaleString()} inside
               </span>
             </div>
             {props.onClose ? (
@@ -387,6 +392,8 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
   const connectedOwner = readSignedInOwner();
   const isOwner = isOfficialOwner(connectedOwner);
   useGlobalChatModerationStore();
+  useMemberChatTimeVersion();
+  useGenreChatActivityVersion();
   const [activeChatId, setActiveChatId] = useState(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
@@ -472,7 +479,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
                     <small>{globalChatListCreatorLine(chat)}</small>
                   ) : null}
                 </div>
-                <span>{chat.activeMembers.toLocaleString()} inside</span>
+                <span>{resolveGlobalChatLiveStats(chat).membersInside.toLocaleString()} inside</span>
                 {chat.closesOnExit &&
                 chat.createdBy === selfMember.name &&
                 canManageTemporaryGlobalChats(selfMember) ? (
@@ -564,6 +571,7 @@ export function PinnedGenreChatDock(props: {
 }): ReactElement | null {
   const activeChat =
     genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
+  const dockLiveStats = useGlobalChatLiveStats(activeChat);
 
   const [dockSize, setDockSize] = useState<GenreChatDockSize>(() => readGenreChatDockSize());
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
@@ -642,7 +650,7 @@ export function PinnedGenreChatDock(props: {
     >
       <span className="genre-chat-pinned-tab-label">Genre Chats</span>
       <strong>{activeChat.title}</strong>
-      <em>{activeChat.activeMembers.toLocaleString()} inside</em>
+      <em>{dockLiveStats.membersInside.toLocaleString()} inside</em>
     </button>
   ) : (
     <aside

@@ -656,6 +656,23 @@ export function readInterestedCount(eventId: string): number {
   return (readInterestedMap()[eventId] ?? []).length;
 }
 
+export function formatLiveEventInterestedLabel(
+  eventId: string,
+  fallback = '0 interested',
+): string {
+  const count = readInterestedCount(eventId);
+
+  if (count <= 0) {
+    return fallback;
+  }
+
+  return count.toLocaleString() + ' interested';
+}
+
+export function useEventsStoreRevision(): number {
+  return useSyncExternalStore(subscribe, getRevision, getRevision);
+}
+
 function pushEventNotification(input: Omit<EventNotification, 'id' | 'createdAt' | 'read'>): void {
   const existing = readEventNotifications(input.memberId);
   const duplicate = existing.some(

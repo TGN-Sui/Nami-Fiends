@@ -4,6 +4,7 @@ import { useChannelDirectory } from './channel-directory-provider.js';
 import { useMemberDirectory } from './member-directory-provider.js';
 import { OwnerHubItemControls } from './OwnerHubItemControls.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import { dedupeChannelsByIdentity } from './local-channel-directory.js';
 import {
   addCommunityGrowthChannel,
   addMemberSpotlightMember,
@@ -59,9 +60,11 @@ export function OwnerHubCurationPanel(): ReactElement | null {
 
   const curatedGrowthChannels = useMemo(
     () =>
-      curation.communityGrowthChannelIds
-        .map((channelId) => channelLookup.get(channelId))
-        .filter((channel): channel is NonNullable<typeof channel> => channel !== undefined),
+      dedupeChannelsByIdentity(
+        curation.communityGrowthChannelIds
+          .map((channelId) => channelLookup.get(channelId))
+          .filter((channel): channel is NonNullable<typeof channel> => channel !== undefined),
+      ),
     [curation.communityGrowthChannelIds, channelLookup]
   );
 
@@ -74,13 +77,18 @@ export function OwnerHubCurationPanel(): ReactElement | null {
   );
 
   const availableGrowthChannels = useMemo(() => {
-    const curatedIds = new Set(curation.communityGrowthChannelIds);
+    const curatedKeys = new Set(
+      curation.communityGrowthChannelIds
+        .map((channelId) => channelLookup.get(channelId))
+        .filter((channel): channel is NonNullable<typeof channel> => channel !== undefined)
+        .map((channel) => channel.handle.replace(/^@+/, '').toLowerCase()),
+    );
 
-    return [...directoryChannels, ...seedChannels].filter((channel, index, list) => {
-      const firstIndex = list.findIndex((entry) => entry.id === channel.id);
-      return firstIndex === index && !curatedIds.has(channel.id);
+    return dedupeChannelsByIdentity([...directoryChannels, ...seedChannels]).filter((channel) => {
+      const handleKey = channel.handle.replace(/^@+/, '').toLowerCase();
+      return !curatedKeys.has(handleKey);
     });
-  }, [curation.communityGrowthChannelIds, directoryChannels]);
+  }, [channelLookup, curation.communityGrowthChannelIds, directoryChannels]);
 
   const availableSpotlightMembers = useMemo(() => {
     const curatedIds = new Set(curation.memberSpotlightMemberIds);

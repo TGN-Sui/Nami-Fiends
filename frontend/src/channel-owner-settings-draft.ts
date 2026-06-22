@@ -6,7 +6,12 @@ import {
   readOwnerBrandPalette,
   saveOwnerBrandPalette,
 } from './channel-owner-brand-palette.js';
-import { readChannelOwnerProfileEdits, saveChannelOwnerPlatforms } from './channel-owner-profile-store.js';
+import {
+  defaultChannelOwnerGenres,
+  readChannelOwnerProfileEdits,
+  saveChannelOwnerProfileEdits,
+} from './channel-owner-profile-store.js';
+import { normalizeGameGenres } from './game-genres.js';
 import {
   readChannelOwnerPromotionsState,
   savePartnerCarouselTicket,
@@ -17,6 +22,7 @@ import type { NamiChannel } from './uiMockData.js';
 
 export type ChannelOwnerSettingsDraft = {
   platforms: string[];
+  genres: string[];
   brandPalette: string[];
   superBanner: {
     headline: string;
@@ -61,6 +67,7 @@ function readDraftVersion(): number {
 function cloneDraft(draft: ChannelOwnerSettingsDraft): ChannelOwnerSettingsDraft {
   return {
     platforms: [...draft.platforms],
+    genres: [...draft.genres],
     brandPalette: [...draft.brandPalette],
     superBanner: { ...draft.superBanner },
     partnerCarousel: { ...draft.partnerCarousel },
@@ -80,6 +87,11 @@ export function buildPersistedOwnerSettingsDraft(channel: NamiChannel): ChannelO
   return {
     platforms: normalizeSupportedPlatforms(
       profileEdits?.platforms ?? channel.platforms,
+    ),
+    genres: normalizeGameGenres(
+      profileEdits?.genres && profileEdits.genres.length > 0
+        ? profileEdits.genres
+        : defaultChannelOwnerGenres(channel),
     ),
     brandPalette: readOwnerBrandPalette(),
     superBanner: {
@@ -119,6 +131,7 @@ export function readOwnerSettingsDraft(channelId: string): ChannelOwnerSettingsD
 
 type OwnerSettingsDraftPatch = {
   platforms?: string[];
+  genres?: string[];
   brandPalette?: string[];
   superBanner?: Partial<ChannelOwnerSettingsDraft['superBanner']>;
   partnerCarousel?: Partial<ChannelOwnerSettingsDraft['partnerCarousel']>;
@@ -134,6 +147,7 @@ export function updateOwnerSettingsDraft(channelId: string, patch: OwnerSettings
 
   const next: ChannelOwnerSettingsDraft = {
     platforms: patch.platforms ? normalizeSupportedPlatforms(patch.platforms) : current.platforms,
+    genres: patch.genres ? normalizeGameGenres(patch.genres) : current.genres,
     brandPalette: patch.brandPalette ? patch.brandPalette.slice(0, 4) : current.brandPalette,
     superBanner: {
       headline: patch.superBanner?.headline ?? current.superBanner.headline,
@@ -176,6 +190,7 @@ export function discardOwnerSettingsDraft(channel: NamiChannel): void {
 export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitResult {
   const draft = ensureOwnerSettingsDraft(channel);
   const normalizedPlatforms = normalizeSupportedPlatforms(draft.platforms);
+  const normalizedGenres = normalizeGameGenres(draft.genres);
 
   if (normalizedPlatforms.length === 0) {
     return {
@@ -184,7 +199,17 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
     };
   }
 
-  saveChannelOwnerPlatforms(channel.id, normalizedPlatforms);
+  if (normalizedGenres.length === 0) {
+    return {
+      ok: false,
+      message: 'Select at least one game genre before saving.',
+    };
+  }
+
+  saveChannelOwnerProfileEdits(channel.id, {
+    platforms: normalizedPlatforms,
+    genres: normalizedGenres,
+  });
   saveOwnerBrandPalette(draft.brandPalette);
 
   const promotions = readChannelOwnerPromotionsState();
@@ -210,6 +235,7 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
   const committed = cloneDraft({
     ...draft,
     platforms: normalizedPlatforms,
+    genres: normalizedGenres,
   });
 
   draftsByChannel.set(channel.id, committed);

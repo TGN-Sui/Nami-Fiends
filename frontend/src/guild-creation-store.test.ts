@@ -26,14 +26,22 @@ function createLocalStorageMock(): Storage {
     },
   };
 }
+import { qualifiesForOwnerSoloGuild } from './channel-owner-access.js';
 import {
   cofounderPendingGuildApprovals,
   creatorPendingGuildProposals,
+  dismissStaleGuildProposalsForOwner,
+  getCreatedGuildRecords,
   getGuildCreationCooldown,
   resetGuildCreationStateForTests,
   respondToGuildCreationProposal,
   submitGuildCreationProposal,
 } from './guild-creation-store.js';
+
+vi.mock('./channel-owner-access.js', () => ({
+  isGameChannelOwner: vi.fn(() => false),
+  qualifiesForOwnerSoloGuild: vi.fn(() => false),
+}));
 
 vi.mock('./member-access.js', () => ({
   getSelfMember: vi.fn(() => ({
@@ -58,6 +66,7 @@ vi.mock('./messages-store.js', () => ({
 describe('guild-creation-store', () => {
   beforeEach(() => {
     vi.stubGlobal('window', { localStorage: createLocalStorageMock() });
+    vi.mocked(qualifiesForOwnerSoloGuild).mockReturnValue(false);
     resetGuildCreationStateForTests();
     resetApprovalRequestsForTests();
   });
@@ -66,6 +75,60 @@ describe('guild-creation-store', () => {
     resetGuildCreationStateForTests();
     resetApprovalRequestsForTests();
     vi.clearAllMocks();
+  });
+
+  it('lets game channel owners create an official guild without co-founders', () => {
+    vi.mocked(qualifiesForOwnerSoloGuild).mockReturnValue(true);
+
+    const created = submitGuildCreationProposal({
+      proposedName: 'Official Studio Guild',
+      isPublic: true,
+      cofounderMemberIds: [],
+    });
+
+    expect(created.ok).toBe(true);
+
+    if (created.ok) {
+      expect(created.proposal.status).toBe('finalized');
+      expect(created.proposal.cofounderMemberIds).toEqual([]);
+      expect(created.proposal.finalizedGuildId).toBeTruthy();
+    }
+
+    expect(getCreatedGuildRecords()).toHaveLength(1);
+    expect(getCreatedGuildRecords()[0]?.name).toBe('Official Studio Guild');
+
+    const blocked = submitGuildCreationProposal({
+      proposedName: 'Second Guild',
+      isPublic: true,
+      cofounderMemberIds: [],
+    });
+
+    expect(blocked.ok).toBe(false);
+    if (!blocked.ok) {
+      expect(blocked.reason).toContain('one official guild');
+    }
+
+    vi.mocked(qualifiesForOwnerSoloGuild).mockReturnValue(false);
+  });
+
+  it('dismisses stale co-founder proposals for game channel owners', () => {
+    vi.mocked(qualifiesForOwnerSoloGuild).mockReturnValue(false);
+
+    const created = submitGuildCreationProposal({
+      proposedName: 'Stale Guild',
+      isPublic: true,
+      cofounderMemberIds: ['m6', 'm8'],
+    });
+
+    expect(created.ok).toBe(true);
+    expect(creatorPendingGuildProposals('m1')).toHaveLength(1);
+
+    vi.mocked(qualifiesForOwnerSoloGuild).mockReturnValue(true);
+
+    const dismissed = dismissStaleGuildProposalsForOwner('m1');
+
+    expect(dismissed).toBe(1);
+    expect(creatorPendingGuildProposals('m1')).toHaveLength(0);
   });
 
   it('scopes pending visibility to creator and invited cofounders only', () => {

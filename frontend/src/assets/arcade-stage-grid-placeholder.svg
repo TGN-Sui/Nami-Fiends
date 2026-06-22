@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="Arcade stage grid placeholder">
+  <defs>
+    <pattern id="pixel-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#050308"/>
+      <path d="M32 0H0V1H32ZM0 32V31H32V32Z" fill="#1a2a3a" opacity="0.55"/>
+      <path d="M0 0H1V32H0ZM31 0H32V32H31Z" fill="#243648" opacity="0.35"/>
+    </pattern>
+    <pattern id="pixel-grid-bright" width="128" height="128" patternUnits="userSpaceOnUse">
+      <rect width="128" height="128" fill="transparent"/>
+      <rect x="0" y="0" width="128" height="1" fill="#75d7ff" opacity="0.12"/>
+      <rect x="0" y="0" width="1" height="128" fill="#75d7ff" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#03060c"/>
+  <rect width="1920" height="1080" fill="url(#pixel-grid)"/>
+  <rect width="1920" height="1080" fill="url(#pixel-grid-bright)"/>
+
+  <rect x="0" y="880" width="1920" height="200" fill="#07040f" opacity="0.88"/>
+  <rect x="0" y="878" width="1920" height="4" fill="#ff2d95" opacity="0.28"/>
+
+  <g opacity="0.42">
+    <rect x="140" y="620" width="120" height="260" fill="#120a1e"/>
+    <rect x="156" y="640" width="88" height="72" fill="#ff2d95" opacity="0.22"/>
+    <rect x="420" y="580" width="132" height="300" fill="#120a1e"/>
+    <rect x="438" y="602" width="96" height="78" fill="#00e5ff" opacity="0.2"/>
+    <rect x="1320" y="600" width="118" height="280" fill="#120a1e"/>
+    <rect x="1336" y="620" width="86" height="70" fill="#ffb347" opacity="0.22"/>
+    <rect x="1580" y="640" width="124" height="240" fill="#120a1e"/>
+    <rect x="1598" y="658" width="88" height="68" fill="#43f5a7" opacity="0.2"/>
+  </g>
+
+  <rect x="760" y="48" width="400" height="56" fill="#050308" stroke="#8dffb2" stroke-width="2"/>
+  <text x="960" y="84" text-anchor="middle" fill="#8dffb2" font-family="monospace" font-size="22" letter-spacing="3">STAGE BACKGROUND PLACEHOLDER</text>
+  <text x="960" y="1036" text-anchor="middle" fill="#75d7ff" fill-opacity="0.5" font-family="monospace" font-size="18" letter-spacing="2">1920 x 1080 · OUTER ARCADE STAGE · REPLACE IN OWNER EDIT MODE</text>
+</svg>

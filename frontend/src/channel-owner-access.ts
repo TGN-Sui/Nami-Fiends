@@ -30,6 +30,65 @@ export function isGameChannelOwner(): boolean {
   return readViewingAsChannelOwner();
 }
 
+function readPersistedOwnedGameChannelId(): string | null {
+  try {
+    const stored = window.localStorage.getItem(OWNED_CHANNEL_KEY);
+
+    return stored && stored.trim().length > 0 ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasApprovedGameOwnerSession(): boolean {
+  const session = readGameOwnerSession();
+
+  return Boolean(
+    session &&
+      (session.approvalStatus === 'approved' || session.approvalStatus === 'preapproved'),
+  );
+}
+
+/** True when the signed-in user owns a game channel, even outside channel-owner surface mode. */
+export function qualifiesForOwnerSoloGuild(): boolean {
+  if (readViewingAsChannelOwner()) {
+    return true;
+  }
+
+  if (hasApprovedGameOwnerSession()) {
+    return true;
+  }
+
+  const owner = readSignedInOwner();
+
+  if (owner && isOfficialOwner(owner)) {
+    const hasEditableProvisionedChannel = listOwnerProvisionedChannelsSorted().some(
+      (entry) =>
+        entry.status !== 'claimed' && entry.createdByOwner.toLowerCase() === owner.toLowerCase(),
+    );
+
+    if (hasEditableProvisionedChannel) {
+      return true;
+    }
+  }
+
+  const persistedChannelId = readPersistedOwnedGameChannelId();
+
+  if (persistedChannelId) {
+    const ticket = gameSubmissionTicketByChannelId(persistedChannelId);
+
+    if (ticket?.status === 'approved') {
+      return true;
+    }
+
+    if (ownerProvisionedChannelById(persistedChannelId)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function saveOwnedGameChannelId(channelId: string): void {
   window.localStorage.setItem(OWNED_CHANNEL_KEY, channelId);
 }

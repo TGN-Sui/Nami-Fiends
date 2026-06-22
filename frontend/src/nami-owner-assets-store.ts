@@ -17,8 +17,9 @@ export async function ensureOwnerAssetsHydrated(): Promise<void> {
 
 const MAX_LOGO_BYTES = 1024 * 1024;
 const MAX_ICON_BYTES = 512 * 1024;
+const MAX_SCENE_BYTES = 2 * 1024 * 1024;
 
-export type OwnerAssetCategory = 'brand' | 'profile' | 'badge' | 'button';
+export type OwnerAssetCategory = 'brand' | 'profile' | 'badge' | 'button' | 'scene';
 
 export type OwnerAssetSlot = {
   id: string;
@@ -50,7 +51,27 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     id: 'sidebar-nav-gamehub',
     label: 'Game hub sidebar icon',
     category: 'button',
-    hint: 'Icon for the game hub in the hub switcher.',
+    hint: 'Icon for the game hub in the sidebar rail.',
+  },
+  {
+    id: 'sidebar-nav-arcade',
+    label: 'Arcade nav icon',
+    category: 'button',
+    hint: 'Sidebar icon for the Nami Arcade destination.',
+  },
+  {
+    id: 'arcade-background',
+    label: 'Arcade background',
+    category: 'scene',
+    hint:
+      'Full background inside the Nami Arcade cabinet viewport. Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
+  },
+  {
+    id: 'arcade-stage-background',
+    label: 'Arcade stage background',
+    category: 'scene',
+    hint:
+      'Full-page backdrop behind the arcade cabinet on the Arcade route (where the platform grid used to be). Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
   },
   {
     id: 'sidebar-nav-userProfile',
@@ -247,9 +268,18 @@ export function validateOwnerAssetFile(
     return 'Use a PNG, JPG, WebP, or GIF image.';
   }
 
-  const maxBytes = category === 'brand' || category === 'profile' ? MAX_LOGO_BYTES : MAX_ICON_BYTES;
+  const maxBytes =
+    category === 'scene'
+      ? MAX_SCENE_BYTES
+      : category === 'brand' || category === 'profile'
+        ? MAX_LOGO_BYTES
+        : MAX_ICON_BYTES;
 
   if (file.size > maxBytes) {
+    if (category === 'scene') {
+      return 'Image must be 2 MB or smaller.';
+    }
+
     return category === 'brand' || category === 'profile'
       ? 'Image must be 1 MB or smaller.'
       : 'Image must be 512 KB or smaller.';
