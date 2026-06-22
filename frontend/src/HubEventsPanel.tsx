@@ -1,29 +1,40 @@
-import { useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 
 import { isDemoSimulationEnabled } from './app-config.js';
-
-import { EventInterestedButton } from './EventInterestedButton.js';
-import { officialNamiHubEvents } from './events-data.js';
+import { EventCardActionBar } from './EventCardActionBar.js';
 import {
   canEditOfficialEvent,
   createOfficialEvent,
   formatEventTimeInTimezone,
-  getEventById,
+  getOfficialHubEvents,
+  isEventLive,
+  isEventStartingSoon,
   readViewerTimezone,
   saveViewerTimezone,
   simulateLiveInterestedEventPopup,
   simulateStartingSoonInterestedEvent,
   updateStoredEvent,
   useEventsStore,
-  eventImportanceClass,
   type StoredEvent,
 } from './events-store.js';
 import { useSelfMember } from './member-avatar-store.js';
 
+function officialEventStatusLabel(event: StoredEvent): string {
+  if (isEventLive(event)) {
+    return 'Live now';
+  }
+
+  if (isEventStartingSoon(event)) {
+    return 'Starting soon';
+  }
+
+  return event.status;
+}
+
 export function HubEventsPanel(props: {
   onViewEvent: (event: StoredEvent) => void;
 }): ReactElement {
-  useEventsStore();
+  const { revision: eventsRevision } = useEventsStore();
   const selfMember = useSelfMember();
   const canManageOfficial = canEditOfficialEvent(selfMember);
   const [showCreate, setShowCreate] = useState(false);
@@ -34,9 +45,7 @@ export function HubEventsPanel(props: {
   const [startsAtLocal, setStartsAtLocal] = useState('');
   const [notice, setNotice] = useState('');
 
-  const officialEvents = officialNamiHubEvents
-    .map((event) => getEventById(event.id))
-    .filter((event): event is StoredEvent => event !== undefined);
+  const officialEvents = useMemo(() => getOfficialHubEvents(), [eventsRevision]);
 
   function resetForm(): void {
     setTitle('');
@@ -99,10 +108,18 @@ export function HubEventsPanel(props: {
     resetForm();
   }
 
+  function handleDelete(eventId: string): void {
+    if (editingEventId === eventId) {
+      resetForm();
+    }
+
+    setNotice('Official event deleted.');
+  }
+
   return (
     <article className="panel nami-hub-events-panel">
-      <div className="profile-panel-heading">
-        <div>
+      <div className="profile-panel-heading is-hub-panel-heading nami-hub-events-panel-heading">
+        <div className="is-hub-panel-heading-copy">
           <h2>Official Nami Events</h2>
           <p>Cross-community events hosted by Nami. Times display in your timezone.</p>
           <small className="event-timezone-note">Your timezone: {readViewerTimezone()}</small>
@@ -118,9 +135,7 @@ export function HubEventsPanel(props: {
           >
             {showCreate ? 'Close editor' : 'Create official event'}
           </button>
-        ) : (
-          <span className="mini-badge">Official events · Nami team only</span>
-        )}
+        ) : null}
       </div>
 
       <label className="event-timezone-field">
@@ -134,7 +149,7 @@ export function HubEventsPanel(props: {
       </label>
 
       {showCreate && canManageOfficial ? (
-        <div className="event-creator-form panel">
+        <div className="event-creator-form panel official-event-creator-form">
           <h3>{editingEventId ? 'Edit official event' : 'New official event'}</h3>
           <label>
             <span>Title</span>
@@ -168,78 +183,96 @@ export function HubEventsPanel(props: {
 
       {notice ? <p className="event-creator-notice">{notice}</p> : null}
 
-      <div className="channel-event-grid">
-        {officialEvents.map((event) => (
-          <article
-            className={'channel-event-card panel' + eventImportanceClass(event)}
-            key={event.id}
-          >
-            <div>
-              <span className="mini-badge">{event.status}</span>
-              <h2>{event.title}</h2>
-              <p>{formatEventTimeInTimezone(event.startsAtUtc)}</p>
-            </div>
-            <p>{event.description}</p>
-            <div className="channel-event-meta-row">
-              <span>Official</span>
-              <strong>{event.seats}</strong>
-            </div>
-            <EventInterestedButton eventId={event.id} />
-            <div className="event-card-actions">
-              <button className="primary-action" onClick={() => props.onViewEvent(event)} type="button">
-                View Event
-              </button>
-              {canManageOfficial ? (
-                <button className="profile-secondary-link" onClick={() => loadForEdit(event)} type="button">
-                  Edit
-                </button>
-              ) : null}
-            </div>
-          </article>
-        ))}
-      </div>
+      {officialEvents.length === 0 ? (
+        <article className="panel official-events-empty-state">
+          <strong>No official events scheduled</strong>
+          <p>Cross-community Nami events will appear here when published.</p>
+        </article>
+      ) : (
+        <div className="official-events-list">
+          {officialEvents.map((event, eventIndex) => (
+            <article
+              className={
+                'official-event-card panel' +
+                (isEventLive(event)
+                  ? ' is-event-live-importance'
+                  : isEventStartingSoon(event)
+                    ? ' is-event-soon-importance'
+                    : '')
+              }
+              key={event.id}
+            >
+              <div className="official-event-card-top">
+                <span className="mini-badge">Official Nami</span>
+                <span className="official-event-status-pill">{officialEventStatusLabel(event)}</span>
+              </div>
+
+              <div className="official-event-card-copy">
+                <h3>{event.title}</h3>
+                <time dateTime={event.startsAtUtc}>{formatEventTimeInTimezone(event.startsAtUtc)}</time>
+                <p>{event.description}</p>
+              </div>
+
+              <div className="official-event-meta-row">
+                <span>Cross-community</span>
+                <strong>{event.seats}</strong>
+              </div>
+
+              <EventCardActionBar
+                canManageOfficial={canManageOfficial}
+                event={event}
+                eventCount={officialEvents.length}
+                eventIndex={eventIndex}
+                onDelete={handleDelete}
+                onEdit={loadForEdit}
+                onView={() => props.onViewEvent(event)}
+              />
+            </article>
+          ))}
+        </div>
+      )}
 
       {!canManageOfficial ? (
         <p className="protocol-hint">Official Nami events can only be created or edited by Nami officials.</p>
       ) : null}
 
       {isDemoSimulationEnabled() ? (
-      <div className="event-demo-sim-actions">
-        <button
-          className="nami-surface-button"
-          onClick={() => {
-            const simulated = simulateLiveInterestedEventPopup();
+        <div className="event-demo-sim-actions">
+          <button
+            className="nami-surface-button"
+            onClick={() => {
+              const simulated = simulateLiveInterestedEventPopup();
 
-            setNotice(
-              simulated.length > 0
-                ? 'Live event popup simulated for ' +
-                  simulated.map((event) => event.title).join(' and ') +
-                  '.'
-                : 'Could not simulate the live event popup.'
-            );
-          }}
-          type="button"
-        >
-          Simulate live event popup (demo)
-        </button>
-        <button
-          className="profile-secondary-link"
-          onClick={() => {
-            const simulated = simulateStartingSoonInterestedEvent();
+              setNotice(
+                simulated.length > 0
+                  ? 'Live event popup simulated for ' +
+                    simulated.map((event) => event.title).join(' and ') +
+                    '.'
+                  : 'Could not simulate the live event popup.'
+              );
+            }}
+            type="button"
+          >
+            Simulate live event popup (demo)
+          </button>
+          <button
+            className="profile-secondary-link"
+            onClick={() => {
+              const simulated = simulateStartingSoonInterestedEvent();
 
-            setNotice(
-              simulated
-                ? '"' +
-                  simulated.title +
-                  '" is starting soon — check event notifications in 30s sync.'
-                : 'Could not simulate the starting-soon reminder.'
-            );
-          }}
-          type="button"
-        >
-          Simulate starting-soon reminder (demo)
-        </button>
-      </div>
+              setNotice(
+                simulated
+                  ? '"' +
+                    simulated.title +
+                    '" is starting soon — check event notifications in 30s sync.'
+                  : 'Could not simulate the starting-soon reminder.'
+              );
+            }}
+            type="button"
+          >
+            Simulate starting-soon reminder (demo)
+          </button>
+        </div>
       ) : null}
     </article>
   );

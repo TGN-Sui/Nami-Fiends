@@ -9,6 +9,7 @@ import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
 import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
 import { OwnerAccessPrompt } from './OwnerAccessPrompt.js';
 import { OwnerPassportLabelsPanel } from './OwnerPassportLabelsPanel.js';
+import { OwnerHubCurationPanel } from './OwnerHubCurationPanel.js';
 import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
@@ -39,6 +40,7 @@ import { DemoPerspectivePanel } from './DemoPerspectivePanel.js';
 import { UserSuggestionsSettingsPanel } from './UserSuggestionsSettingsPanel.js';
 import { useDemoPerspective } from './demo-perspective-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
+import { countPendingGameSubmissionTickets } from './nami-officials-submission-counts.js';
 import { countPendingPartnerBannerSubmissions } from './partner-banner-submission-store.js';
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
@@ -233,7 +235,8 @@ export function SettingsScreen(props: {
   const isOwnerDashboard = isOfficialOwner(owner);
   const showIndexedDataPanel = isOwnerDashboard;
   const { openPendingCount } = useNamiAdminStore();
-  const openSubmittedCount = countPendingPartnerBannerSubmissions() + openPendingCount;
+  const openSubmittedCount =
+    countPendingPartnerBannerSubmissions() + openPendingCount + countPendingGameSubmissionTickets();
   const [activeSection, setActiveSection] = useState<SettingsSection>(
     () => consumeSettingsSectionFocus() ?? 'overview'
   );
@@ -323,6 +326,19 @@ export function SettingsScreen(props: {
                   type="button"
                 >
                   Edit passport labels
+                </button>
+              </article>
+            ) : null}
+            {isOwnerDashboard ? (
+              <article className="panel settings-overview-card">
+                <h2>Hub spotlight</h2>
+                <p>Curate Community Growth channels and Member Spotlight accounts.</p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('account')}
+                  type="button"
+                >
+                  Curate hub sections
                 </button>
               </article>
             ) : null}
@@ -445,6 +461,7 @@ export function SettingsScreen(props: {
           <div className="settings-section-stack">
             <OwnerAccessPrompt />
             {isOwnerDashboard ? <OwnerPassportLabelsPanel /> : null}
+            {isOwnerDashboard ? <OwnerHubCurationPanel /> : null}
             {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
             {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
             {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}

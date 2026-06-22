@@ -2,10 +2,12 @@ import { useSyncExternalStore } from 'react';
 
 import {
   applyPartnerBannerOfficialReview,
+  PROMOTION_DURATION_LABELS,
   type PartnerCarouselTicket,
   type PromotionDuration,
 } from './channel-owner-promotions-store.js';
 import { readGameOwnerSession } from './game-owner-session-store.js';
+import { enqueueSubmittedTicket } from './owner-submitted-tickets-store.js';
 import { channels } from './uiMockData.js';
 
 const SUBMISSIONS_KEY = 'nami.partner.banner.submissions';
@@ -156,6 +158,22 @@ export function upsertPartnerBannerSubmission(ticket: PartnerCarouselTicket): Pa
 
   writeSubmissions(submissions);
 
+  if (next.status === 'submitted') {
+    enqueueSubmittedTicket({
+      id: next.id,
+      kind: 'partner-carousel',
+      title: next.title || next.channelTitle,
+      description: next.description,
+      channelId: next.channelId,
+      coverUrl: next.coverUrl,
+      duration: next.duration,
+      submitterLabel: next.channelTitle,
+      submitterDetail: PROMOTION_DURATION_LABELS[next.duration],
+      referenceId: next.id,
+      submittedAtMs: next.submittedAtMs,
+    });
+  }
+
   return next;
 }
 
@@ -200,6 +218,17 @@ export function updatePartnerBannerSubmissionStatus(
 
   if (status === 'approved' || status === 'rejected') {
     applyPartnerBannerOfficialReview(submissionId, status, expiresAtMs);
+
+    void import('./owner-submitted-tickets-store.js').then(
+      ({ approveSubmittedTicket, rejectSubmittedTicket }) => {
+        if (status === 'approved') {
+          approveSubmittedTicket(submissionId, reviewedBy ?? null);
+          return;
+        }
+
+        rejectSubmittedTicket(submissionId, reviewedBy ?? null);
+      }
+    );
   }
 
   return next;

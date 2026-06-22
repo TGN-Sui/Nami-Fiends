@@ -67,7 +67,10 @@ import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
 
+import { EventCardActionBar } from './EventCardActionBar.js';
+import { OwnerHubItemControls } from './OwnerHubItemControls.js';
 import {
+  canManageChannelEvents,
   createChannelEvent,
   formatEventTimeInTimezone,
   getChannelEvents,
@@ -75,6 +78,7 @@ import {
   readViewerTimezone,
   saveViewerTimezone,
   saveBubbleLeaderboardSize,
+  updateStoredEvent,
   type BubbleLeaderboardSize,
   type StoredEvent,
   useBubbleLeaderboardSize,
@@ -145,6 +149,17 @@ import {
   memberProfileExclusiveBadgeLabel,
   memberRainbowBorderClass,
 } from './channel-surface.js';
+import { isOfficialOwner } from './nami-capabilities.js';
+import {
+  COMMUNITY_GROWTH_DISPLAY_LIMIT,
+  moveCommunityGrowthChannel,
+  moveMemberSpotlightMember,
+  MEMBER_SPOTLIGHT_DISPLAY_LIMIT,
+  removeCommunityGrowthChannel,
+  removeMemberSpotlightMember,
+  useOwnerHubCuration,
+} from './owner-hub-curation-store.js';
+import { memberPassportTierLabel } from './owner-passport-display.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipPlansPanel } from './MembershipPlansPanel.js';
 import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler.js';
@@ -210,7 +225,7 @@ import {
 import { markGuildEventsSeen, useGuildEventsStore } from './guild-events-store.js';
 import { resolveMemberGuildAffiliations } from './affiliation-provider.js';
 import { useChannelDirectory } from './channel-directory-provider.js';
-import { GAME_HUB_INTRO } from './landing-content.js';
+
 import { useMemberDirectory } from './member-directory-provider.js';
 import {
   namiGuilds,
@@ -1124,6 +1139,9 @@ function NamiHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const bubbleLeaderboardSize = useBubbleLeaderboardSize();
+  const { owner } = useProtocolOwner();
+  const hubCuration = useOwnerHubCuration();
+  const canCurateHub = isOfficialOwner(owner);
   const promotions = readChannelOwnerPromotionsState();
   const { channels: directoryChannels } = useChannelDirectory(50);
   const { members: directoryMembers } = useMemberDirectory();
@@ -1171,12 +1189,23 @@ function NamiHub(props: {
     return right.subscribers - left.subscribers;
   });
 
-  const growthChannels =
+  const defaultGrowthChannels =
     sortedGrowthChannels.length > 0
-      ? Array.from({ length: 14 }, (_, index) => {
+      ? Array.from({ length: COMMUNITY_GROWTH_DISPLAY_LIMIT }, (_, index) => {
           return sortedGrowthChannels[index % sortedGrowthChannels.length]!;
         })
       : [props.selectedChannel];
+
+  const curatedGrowthChannels = hubCuration.communityGrowthChannelIds
+    .map((channelId) => resolveDirectoryChannel(channelId))
+    .filter((channel): channel is NamiChannel => channel !== undefined)
+    .slice(0, COMMUNITY_GROWTH_DISPLAY_LIMIT);
+
+  const usingCustomGrowth = hubCuration.communityGrowthChannelIds.length > 0;
+  const growthChannels =
+    usingCustomGrowth && curatedGrowthChannels.length > 0
+      ? curatedGrowthChannels
+      : defaultGrowthChannels;
 
   const maxCommunitySubscribers = Math.max(
     1,
@@ -1240,7 +1269,25 @@ function NamiHub(props: {
         )
       : [];
 
-  const spotlightMembers = [...eliteSpotlightSlots, ...rotatingSpotlightSlots].slice(0, spotlightMemberLimit);
+  const defaultSpotlightMembers = [...eliteSpotlightSlots, ...rotatingSpotlightSlots].slice(
+    0,
+    spotlightMemberLimit
+  );
+
+  const curatedSpotlightMembers = hubCuration.memberSpotlightMemberIds
+    .map((memberId) => directoryMembers.find((member) => member.id === memberId))
+    .filter((member): member is (typeof directoryMembers)[number] => member !== undefined)
+    .slice(0, MEMBER_SPOTLIGHT_DISPLAY_LIMIT)
+    .map((member, index) => ({
+      member,
+      slotId: member.id + '-curated-spotlight-' + index,
+    }));
+
+  const usingCustomSpotlight = hubCuration.memberSpotlightMemberIds.length > 0;
+  const spotlightMembers =
+    usingCustomSpotlight && curatedSpotlightMembers.length > 0
+      ? curatedSpotlightMembers
+      : defaultSpotlightMembers;
 
   useEffect(() => {
     if (hoveredShowcaseChannelId !== null || featuredShowcaseChannels.length === 0) {
@@ -1265,8 +1312,7 @@ function NamiHub(props: {
 
   return (
     <>
-      <header className="page-title">
-        <p>Signed-in dashboard</p>
+      <header className="page-title is-hub-page-title">
         <h1>Nami Hub</h1>
       </header>
 
@@ -1306,9 +1352,25 @@ function NamiHub(props: {
 
       <section className="nami-hub-lower-grid">
         <article className="panel community-growth-panel">
-          <div className="profile-panel-heading">
+          <div className="profile-panel-heading is-hub-panel-heading">
             <h2>Community Growth</h2>
-            <p>Clickable channel growth rows with subscriber momentum.</p>
+            <p>
+              {usingCustomGrowth
+                ? 'Owner-curated channel growth lineup.'
+                : 'Clickable channel growth rows with subscriber momentum.'}
+            </p>
+            {canCurateHub ? (
+              <button
+                className="profile-secondary-link owner-hub-curate-link"
+                onClick={() => {
+                  requestSettingsSection('account');
+                  props.onNavigateToSettings?.();
+                }}
+                type="button"
+              >
+                Manage lineup
+              </button>
+            ) : null}
           </div>
 
           <div className="community-growth-list">
@@ -1319,42 +1381,80 @@ function NamiHub(props: {
               );
 
               return (
-                <button
-                  className="community-growth-row"
+                <div
+                  className={
+                    'owner-hub-growth-slot' + (canCurateHub && usingCustomGrowth ? ' is-owner-curated' : '')
+                  }
                   key={channel.id + '-growth-' + index}
-                  onClick={() => openFeaturedChannel(channel)}
-                  type="button"
                 >
-                  <span className="community-growth-handle">{channelHandle(channel)}</span>
+                  <button
+                    className="community-growth-row"
+                    onClick={() => openFeaturedChannel(channel)}
+                    type="button"
+                  >
+                    <span className="community-growth-handle">{channelHandle(channel)}</span>
 
-                  <div className="community-growth-bar-shell">
-                    <div
-                      className="community-growth-bar"
-                      style={{ width: growthPercent + '%' }}
+                    <div className="community-growth-bar-shell">
+                      <div
+                        className="community-growth-bar"
+                        style={{ width: growthPercent + '%' }}
+                      />
+                    </div>
+
+                    <strong className="community-growth-value">
+                      {channel.subscribers.toLocaleString()}
+                    </strong>
+                  </button>
+                  {canCurateHub && usingCustomGrowth ? (
+                    <OwnerHubItemControls
+                      canMoveDown={index < growthChannels.length - 1}
+                      canMoveUp={index > 0}
+                      onMoveDown={() => moveCommunityGrowthChannel(channel.id, 'down', owner)}
+                      onMoveUp={() => moveCommunityGrowthChannel(channel.id, 'up', owner)}
+                      onRemove={() => removeCommunityGrowthChannel(channel.id, owner)}
                     />
-                  </div>
-
-                  <strong className="community-growth-value">
-                    {channel.subscribers.toLocaleString()}
-                  </strong>
-                </button>
+                  ) : null}
+                </div>
               );
             })}
           </div>
         </article>
 
         <article className="panel member-spotlight-panel">
-          <div className="profile-panel-heading member-spotlight-header">
+          <div className="profile-panel-heading member-spotlight-header is-hub-panel-heading">
             <h2>Member Spotlight</h2>
-            <p>18 verified members featured in a scrollable daily rotation with highlight badges and levels.</p>
+            <p>
+              {usingCustomSpotlight
+                ? 'Owner-curated verified members in spotlight order.'
+                : '18 verified members featured in a scrollable daily rotation with highlight badges and levels.'}
+            </p>
+            {canCurateHub ? (
+              <button
+                className="profile-secondary-link owner-hub-curate-link"
+                onClick={() => {
+                  requestSettingsSection('account');
+                  props.onNavigateToSettings?.();
+                }}
+                type="button"
+              >
+                Manage lineup
+              </button>
+            ) : null}
           </div>
 
           <div className="member-spotlight-grid">
-            {spotlightMembers.map(({ member, slotId }) => {
+            {spotlightMembers.map(({ member, slotId }, index) => {
               const progression = getNamiProgression(member);
               const isOfficialNamiSpotlight = isOfficialNamiGalaxyMember(member);
 
               return (
+                <div
+                  className={
+                    'owner-hub-spotlight-slot' +
+                    (canCurateHub && usingCustomSpotlight ? ' is-owner-curated' : '')
+                  }
+                  key={slotId}
+                >
                 <button
                   className={
                       'member-spotlight-card ' +
@@ -1370,7 +1470,6 @@ function NamiHub(props: {
                       memberRainbowBorderClass(member) +
                       (isOfficialNamiSpotlight ? ' is-nami-official-galaxy-spotlight' : '')
                     }
-                  key={slotId}
                   onClick={() => props.onOpenMember(member)}
                   type="button"
                 >
@@ -1490,7 +1589,7 @@ function NamiHub(props: {
                                 : '')
                           }
                         >
-                          {member.tier}
+                          {memberPassportTierLabel(member)}
                         </span>
                         <span className="member-spotlight-level-label">
                           Lv {progression.level}
@@ -1511,6 +1610,16 @@ function NamiHub(props: {
                     )}
                   </div>
                 </button>
+                {canCurateHub && usingCustomSpotlight ? (
+                  <OwnerHubItemControls
+                    canMoveDown={index < spotlightMembers.length - 1}
+                    canMoveUp={index > 0}
+                    onMoveDown={() => moveMemberSpotlightMember(member.id, 'down', owner)}
+                    onMoveUp={() => moveMemberSpotlightMember(member.id, 'up', owner)}
+                    onRemove={() => removeMemberSpotlightMember(member.id, owner)}
+                  />
+                ) : null}
+                </div>
               );
             })}
           </div>
@@ -1730,15 +1839,13 @@ function GameHub(props: {
 
   return (
     <>
-      <header className="page-title gamehub-page-title">
-        <p>{GAME_HUB_INTRO.eyebrow}</p>
+      <header className="page-title gamehub-page-title is-hub-page-title">
         <h1>Game Hub</h1>
       </header>
 
       <section className="gamehub-top-panel gamehub-discovery-panels">
         <article className="gamehub-discovery-panel is-partner-panel" id="gamehub-partners">
-          <header className="gamehub-discovery-panel-head">
-            <span className="gamehub-discovery-eyebrow">Partner Channels</span>
+          <header className="gamehub-discovery-panel-head is-hub-panel-heading">
             <h2>Official partner spaces</h2>
             <p>Verified studios and channels with Nami partner status.</p>
           </header>
@@ -1770,8 +1877,7 @@ function GameHub(props: {
         </article>
 
         <article className="gamehub-discovery-panel is-top-panel" id="gamehub-trending">
-          <header className="gamehub-discovery-panel-head">
-            <span className="gamehub-discovery-eyebrow">Top Channels</span>
+          <header className="gamehub-discovery-panel-head is-hub-panel-heading">
             <h2>Trending right now</h2>
             <p>Ranked by live subscriber momentum across Game Hub.</p>
           </header>
@@ -1811,8 +1917,7 @@ function GameHub(props: {
         </article>
 
         <article className="gamehub-discovery-panel is-placement-panel">
-          <header className="gamehub-discovery-panel-head">
-            <span className="gamehub-discovery-eyebrow">Featured Placement</span>
+          <header className="gamehub-discovery-panel-head is-hub-panel-heading">
             <h2>Boost your discovery slot</h2>
             <p>Paid placement increases visibility — not trust or verification.</p>
           </header>
@@ -4472,6 +4577,7 @@ function ChannelEventsScreen(props: {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startsAtLocal, setStartsAtLocal] = useState('');
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
   const channelBrandTheme = useMemo(() => {
     return getStoredChannelBrandTheme(props.channel.id);
@@ -4487,11 +4593,52 @@ function ChannelEventsScreen(props: {
     });
   }, [channelBrandTheme, props.channel.id]);
 
-  const isChannelOwner = ownsGameChannel(props.channel.id);
+  const isChannelOwner = canManageChannelEvents(props.channel.id);
   const preApprovedWorkspace = isPreApprovedGameOwner() && !isFullyApprovedGameOwner() && isChannelOwner;
   const gameEvents = getChannelEvents(props.channel, {
     includeHiddenDrafts: preApprovedWorkspace,
   });
+
+  function resetEventForm(): void {
+    setTitle('');
+    setDescription('');
+    setStartsAtLocal('');
+    setEditingEventId(null);
+  }
+
+  function loadEventForEdit(event: StoredEvent): void {
+    setEditingEventId(event.id);
+    setTitle(event.title);
+    setDescription(event.description);
+    const local = new Date(event.startsAtUtc);
+    const offset = local.getTimezoneOffset() * 60_000;
+    setStartsAtLocal(new Date(local.getTime() - offset).toISOString().slice(0, 16));
+  }
+
+  useEffect(() => {
+    if (!isChannelOwner) {
+      return;
+    }
+
+    try {
+      const focusedEventId = window.sessionStorage.getItem('nami.channel.event-edit-focus');
+
+      if (!focusedEventId) {
+        return;
+      }
+
+      window.sessionStorage.removeItem('nami.channel.event-edit-focus');
+      const focusedEvent = getChannelEvents(props.channel, {
+        includeHiddenDrafts: preApprovedWorkspace,
+      }).find((event) => event.id === focusedEventId);
+
+      if (focusedEvent) {
+        loadEventForEdit(focusedEvent);
+      }
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }, [isChannelOwner, preApprovedWorkspace, props.channel.id]);
 
   function publishChannelEvent(): void {
     if (!isChannelOwner) {
@@ -4501,6 +4648,19 @@ function ChannelEventsScreen(props: {
 
     if (!title.trim() || !startsAtLocal) {
       setNotice('Add a title and start time before publishing.');
+      return;
+    }
+
+    if (editingEventId) {
+      const updated = updateStoredEvent(editingEventId, {
+        title,
+        description: description.trim() || 'Updated channel event from ' + props.channel.name + '.',
+        startsAtUtc: new Date(startsAtLocal).toISOString(),
+        status: preApprovedWorkspace ? 'Hidden until approval' : 'Scheduled',
+      });
+
+      setNotice(updated ? 'Channel event updated.' : 'Could not update this channel event.');
+      resetEventForm();
       return;
     }
 
@@ -4517,9 +4677,7 @@ function ChannelEventsScreen(props: {
         ? 'Event saved as a hidden draft. It will publish after Nami Officials approve your channel.'
         : 'Event published. Subscribed members were notified.',
     );
-    setTitle('');
-    setDescription('');
-    setStartsAtLocal('');
+    resetEventForm();
     props.onViewEvent(created);
   }
 
@@ -4565,12 +4723,29 @@ function ChannelEventsScreen(props: {
 
         {isChannelOwner ? (
           <article className="panel event-creator-form">
-            <h2>{preApprovedWorkspace ? 'Prepare channel event' : 'Publish channel event'}</h2>
-            <p>
-              {preApprovedWorkspace
-                ? 'Save events now to get launch-ready. Hidden drafts stay invisible until your channel is fully approved.'
-                : 'Subscribed members receive a notification when you submit a new event.'}
-            </p>
+            <div className="event-creator-form-head">
+              <div>
+                <h2>
+                  {editingEventId
+                    ? 'Edit channel event'
+                    : preApprovedWorkspace
+                      ? 'Prepare channel event'
+                      : 'Publish channel event'}
+                </h2>
+                <p>
+                  {editingEventId
+                    ? 'Update copy and schedule, then save. Use the move arrows on each card to reposition how events appear on your profile.'
+                    : preApprovedWorkspace
+                      ? 'Save events now to get launch-ready. Hidden drafts stay invisible until your channel is fully approved.'
+                      : 'Subscribed members receive a notification when you submit a new event.'}
+                </p>
+              </div>
+              {editingEventId ? (
+                <button className="secondary-action" onClick={resetEventForm} type="button">
+                  Cancel edit
+                </button>
+              ) : null}
+            </div>
             <label>
               <span>Title</span>
               <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
@@ -4592,7 +4767,11 @@ function ChannelEventsScreen(props: {
               />
             </label>
             <button className="primary-action" onClick={publishChannelEvent} type="button">
-              {preApprovedWorkspace ? 'Save hidden event draft' : 'Submit event'}
+              {editingEventId
+                ? 'Save event changes'
+                : preApprovedWorkspace
+                  ? 'Save hidden event draft'
+                  : 'Submit event'}
             </button>
             {notice ? <p className="event-creator-notice">{notice}</p> : null}
           </article>
@@ -4604,15 +4783,16 @@ function ChannelEventsScreen(props: {
         )}
 
         <section className="channel-event-grid">
-          {gameEvents.map((event) => (
+          {gameEvents.map((event, eventIndex) => (
             <article
               className={'channel-event-card panel' + eventImportanceClass(event)}
               key={event.id}
             >
-              <div>
+              <div className="channel-event-card-copy">
                 <span className="mini-badge">{event.status}</span>
                 <h2>{event.title}</h2>
                 <p>{formatEventTimeInTimezone(event.startsAtUtc)}</p>
+                <p className="channel-event-card-description">{event.description}</p>
               </div>
 
               <div className="channel-event-meta-row">
@@ -4620,10 +4800,22 @@ function ChannelEventsScreen(props: {
                 <strong>{event.seats}</strong>
               </div>
 
-              <EventInterestedButton eventId={event.id} />
-              <button onClick={() => props.onViewEvent(event)} type="button">
-                View Event
-              </button>
+              <div className="channel-event-card-footer">
+                <EventCardActionBar
+                  event={event}
+                  eventCount={gameEvents.length}
+                  eventIndex={eventIndex}
+                  onDelete={(eventId) => {
+                    if (editingEventId === eventId) {
+                      resetEventForm();
+                    }
+
+                    setNotice('Event deleted.');
+                  }}
+                  onEdit={loadEventForEdit}
+                  onView={() => props.onViewEvent(event)}
+                />
+              </div>
             </article>
           ))}
         </section>

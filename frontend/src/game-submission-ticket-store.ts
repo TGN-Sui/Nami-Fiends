@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
+import { gameTrustScoreTierLabel } from './game-trust-score.js';
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
+import { enqueueSubmittedTicket } from './owner-submitted-tickets-store.js';
 import { createEmptyGameStoreUrls } from './game-genres.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
 
@@ -197,6 +199,23 @@ export function upsertGameSubmissionTicket(ticket: GameSubmissionTicket): void {
   }
 
   writeTickets(tickets);
+
+  if (ticket.status === 'submitted' || ticket.status === 'preapproved') {
+    enqueueSubmittedTicket({
+      id: ticket.id,
+      kind: 'game-ticket',
+      title: ticket.gameTitle,
+      description: ticket.studioName + ' · ' + ticket.email,
+      channelId: ticket.provisionalChannelId,
+      coverUrl: null,
+      duration: null,
+      submitterLabel: ticket.contactName,
+      submitterDetail:
+        ticket.trustScore + '% · ' + gameTrustScoreTierLabel(ticket.trustScoreTier),
+      referenceId: ticket.id,
+      submittedAtMs: ticket.submittedAtMs,
+    });
+  }
 }
 
 /** Officials tickets never include the studio phone — it stays local for Trust Score only. */

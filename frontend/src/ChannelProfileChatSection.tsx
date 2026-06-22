@@ -6,6 +6,7 @@ import type { ChannelBrandTheme } from './channel-profile-brand.js';
 import {
   canSendChatMessages,
   getSelfMember,
+  readSignedInOwner,
   messageBubbleClass,
   resolveMessageAuthorMember,
 } from './member-access.js';
@@ -15,6 +16,7 @@ import {
   UniformMemberAvatar,
   UniformMemberAvatarButton,
 } from './member-avatar.js';
+import { memberPassportTierLabel } from './owner-passport-display.js';
 import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
@@ -88,6 +90,7 @@ export function ChannelProfileChatSection(props: {
 
   const preferencesVersion = useMemberPreferencesVersion();
   const selfChatMember = getSelfMember();
+  const connectedOwner = readSignedInOwner();
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
   const chatEligibleMembers = useMemo(
@@ -188,7 +191,9 @@ export function ChannelProfileChatSection(props: {
               >
                 <UniformMemberAvatar member={member} />
                 <strong>{member.name}</strong>
-                <span>{preference.muted ? 'Muted' : member.tier}</span>
+                <span>
+                  {preference.muted ? 'Muted' : memberPassportTierLabel(member, connectedOwner)}
+                </span>
               </button>
             );
           })}

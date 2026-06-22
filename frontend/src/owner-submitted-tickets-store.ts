@@ -5,7 +5,7 @@ import type { PromotionDuration } from './channel-owner-promotions-store.js';
 
 const STORAGE_KEY = 'nami.admin.submittedTickets';
 
-export type SubmittedTicketKind = 'partner-carousel' | 'nodename-claim';
+export type SubmittedTicketKind = 'partner-carousel' | 'nodename-claim' | 'game-ticket';
 
 export type SubmittedTicketStatus = 'submitted' | 'approved' | 'rejected';
 

@@ -26,7 +26,16 @@ import {
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
-import { appendGlobalChatMessage } from './messages-store.js';
+import {
+  canOfficialOwnerModerateGlobalChat,
+  filterModeratedGlobalChats,
+  moderateDeleteGlobalChat,
+  useGlobalChatModerationStore,
+} from './global-chat-moderation-store.js';
+import { isOfficialOwner } from './nami-capabilities.js';
+import { memberPassportTierLabel } from './owner-passport-display.js';
+import { readSignedInOwner } from './member-access.js';
+import { appendGlobalChatMessage, removeGlobalChatMessages } from './messages-store.js';
 import {
   useChatAutoScroll,
   useChatViewportPause,
@@ -43,6 +52,9 @@ import {
   canCreateTemporaryChat,
   genreOfficialChats,
   getGlobalChatMessages,
+  globalChatListCreatorLine,
+  globalChatPresenceKindLabel,
+  globalChatPresenceMeta,
   hubGlobalChats,
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
   type GlobalChatRoom,
@@ -71,11 +83,10 @@ function genreChatExpandProps(
   expandedChatHeading?: ReactElement;
 } {
   const expandedHeading = (
-    <div className="chat-window-expanded-heading-copy">
-      <span className="mini-badge">Genre Lounge</span>
+    <div className="chat-window-expanded-heading-copy is-centered-hub-chat-heading">
       <h2>{chat.title}</h2>
       <p>
-        {chat.activeMembers.toLocaleString()} active
+        Genre lounge · {chat.activeMembers.toLocaleString()} active
         {options?.compact === true ? ' in lounge' : ''}
       </p>
     </div>
@@ -112,8 +123,13 @@ export function GlobalChatRoomView(props: {
   expandedChatHeading?: ReactNode;
   onChatExpandedChange?: (expanded: boolean) => void;
   onChatEscape?: () => boolean | void;
+  onModerationDelete?: () => void;
 }): ReactElement {
   const selfMember = useSelfMember();
+  const connectedOwner = readSignedInOwner();
+  const canOwnerModerateChat = canOfficialOwnerModerateGlobalChat(props.chat, connectedOwner);
+  const presenceKindLabel = globalChatPresenceKindLabel(props.chat);
+  const presenceMeta = globalChatPresenceMeta(props.chat);
   useChannelEmojiLibraryVersion();
   const genreEmojis =
     props.chat.kind === 'genre' && props.chat.genre
@@ -242,7 +258,6 @@ export function GlobalChatRoomView(props: {
         props.showCompactHead !== false ? (
           <div className="global-chat-compact-head">
             <div className="global-chat-compact-title-row">
-              <span className="global-chat-compact-mark">{props.chat.title.slice(0, 2).toUpperCase()}</span>
               <strong>{props.chat.title}</strong>
               <span className="global-chat-compact-meta">
                 {props.chat.activeMembers.toLocaleString()} inside
@@ -256,33 +271,40 @@ export function GlobalChatRoomView(props: {
           </div>
         ) : null
       ) : (
-        <div className="chat-presence-rail">
-          <div className="chat-presence-channel">
-            <div className="global-chat-presence-mark">{props.chat.title.slice(0, 2).toUpperCase()}</div>
-            <div className="global-chat-presence-copy">
-              <span className="mini-badge">
-                {props.chat.kind === 'genre'
-                  ? 'Genre Lounge'
-                  : props.chat.isOfficial
-                    ? 'Official Global'
-                    : props.chat.closesOnExit
-                      ? 'Temporary'
-                      : 'Community'}
-              </span>
+        <div className="chat-presence-rail is-hub-chat-presence-rail">
+          <div className="chat-presence-channel is-hub-chat-presence-channel">
+            <div className="global-chat-presence-copy is-centered-hub-chat-heading">
+              {presenceKindLabel ? <span className="mini-badge">{presenceKindLabel}</span> : null}
               <h2>{props.chat.title}</h2>
-              <p>
-                by {props.chat.createdBy}
-                {props.chat.creatorVerified ? ' · Verified' : ''} ·{' '}
-                {props.chat.activeMembers.toLocaleString()} active
-              </p>
+              <p>{presenceMeta}</p>
             </div>
           </div>
 
-          {props.onClose ? (
-            <button className="secondary-action" onClick={props.onClose} type="button">
-              Close
-            </button>
-          ) : null}
+          <div className="global-chat-presence-actions">
+            {props.onClose ? (
+              <button className="secondary-action" onClick={props.onClose} type="button">
+                Close
+              </button>
+            ) : null}
+            {canOwnerModerateChat ? (
+              <button
+                className="danger-action global-chat-owner-delete"
+                onClick={() => {
+                  const result = moderateDeleteGlobalChat(props.chat.id, connectedOwner);
+
+                  if (result.ok) {
+                    removeGlobalChatMessages(props.chat.id);
+                    props.onModerationDelete?.();
+                    props.onClose?.();
+                  }
+                }}
+                title="Official owner moderation — permanently remove this community chat"
+                type="button"
+              >
+                Delete chat
+              </button>
+            ) : null}
+          </div>
 
           <div className="chat-member-strip">
             {visibleMembers.map((member) => (
@@ -294,7 +316,7 @@ export function GlobalChatRoomView(props: {
               >
                 <UniformMemberAvatar member={member} />
                 <strong>{member.name}</strong>
-                <span>{member.tier}</span>
+                <span>{memberPassportTierLabel(member, connectedOwner)}</span>
               </button>
             ))}
           </div>
@@ -340,13 +362,19 @@ export function GenreChatRoomPanel(props: {
 
 export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElement {
   const selfMember = useSelfMember();
+  const connectedOwner = readSignedInOwner();
+  const isOwner = isOfficialOwner(connectedOwner);
+  useGlobalChatModerationStore();
   const [activeChatId, setActiveChatId] = useState(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
   const [newChatVoice, setNewChatVoice] = useState(false);
   const [extraChats, setExtraChats] = useState<GlobalChatRoom[]>([]);
 
-  const allChats = useMemo(() => [...hubGlobalChats, ...extraChats], [extraChats]);
+  const allChats = useMemo(
+    () => filterModeratedGlobalChats([...hubGlobalChats, ...extraChats]),
+    [extraChats]
+  );
   const activeChat = allChats.find((chat) => chat.id === activeChatId) ?? hubGlobalChats[0]!;
 
   function createTemporaryChat(): void {
@@ -375,17 +403,33 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
 
   function closeTemporaryChat(chatId: string): void {
     setExtraChats((current) => current.filter((chat) => chat.id !== chatId));
+    removeGlobalChatMessages(chatId);
 
     if (activeChatId === chatId) {
       setActiveChatId(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
     }
   }
 
+  function ownerDeleteChat(chat: GlobalChatRoom): void {
+    const result = moderateDeleteGlobalChat(chat.id, connectedOwner);
+
+    if (!result.ok) {
+      return;
+    }
+
+    setExtraChats((current) => current.filter((entry) => entry.id !== chat.id));
+    removeGlobalChatMessages(chat.id);
+
+    if (activeChatId === chat.id) {
+      setActiveChatId(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
+    }
+  }
+
   return (
     <article className="panel global-chats-unified-panel">
-      <div className="profile-panel-heading">
+      <div className="profile-panel-heading is-hub-panel-heading">
         <h2>Global Chats</h2>
-        <p>Official Nami Global Chat opens by default. Pick a room and chat in the same panel.</p>
+        <p>Pick a room and chat in the same panel.</p>
       </div>
 
       <div className="global-chats-unified-layout">
@@ -402,10 +446,9 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
               >
                 <div>
                   <strong>{chat.title}</strong>
-                  <small>
-                    by {chat.createdBy}
-                    {chat.creatorVerified ? ' ✓' : ''}
-                  </small>
+                  {globalChatListCreatorLine(chat) ? (
+                    <small>{globalChatListCreatorLine(chat)}</small>
+                  ) : null}
                 </div>
                 <span>{chat.activeMembers.toLocaleString()} inside</span>
                 {chat.closesOnExit &&
@@ -420,6 +463,19 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
                     type="button"
                   >
                     End
+                  </button>
+                ) : null}
+                {isOwner && canOfficialOwnerModerateGlobalChat(chat, connectedOwner) ? (
+                  <button
+                    className="danger-action global-chat-owner-delete"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      ownerDeleteChat(chat);
+                    }}
+                    title="Official owner moderation — delete this chat"
+                    type="button"
+                  >
+                    Delete
                   </button>
                 ) : null}
               </button>
@@ -465,6 +521,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
         <GlobalChatRoomView
           chat={activeChat}
           key={activeChat.id}
+          onModerationDelete={() => ownerDeleteChat(activeChat)}
           onOpenMember={props.onOpenMember}
           {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
         />

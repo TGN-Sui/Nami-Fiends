@@ -20,7 +20,8 @@ import {
   useChannelOwnerEditMode,
   useChannelOwnerLayout,
 } from './channel-owner-layout-store.js';
-import { EventInterestedButton } from './EventInterestedButton.js';
+import { EventCardActionBar } from './EventCardActionBar.js';
+
 import { useChannelBannerNotificationsStore } from './channel-banner-notifications-store.js';
 import { getChannelBrandThemeForTile } from './channel-profile-brand.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
@@ -226,8 +227,21 @@ export function ChannelProfileScreen(props: {
 
     if (props.initialSection) {
       setActiveSection(props.initialSection);
+      return;
     }
-  }, [chrome.isChannelOwner, props.channel.id, props.initialSection]);
+
+    setActiveSection((current) => {
+      if (current === 'owner' && !chrome.isChannelOwner) {
+        return 'news';
+      }
+
+      if (preApprovedOwnerView) {
+        return 'about';
+      }
+
+      return chrome.isChannelOwner ? 'owner' : 'news';
+    });
+  }, [chrome.isChannelOwner, preApprovedOwnerView, props.channel.id, props.initialSection]);
 
   useEffect(() => {
     if (!chrome.isChannelOwner || activeSection !== 'owner' || !props.ownerFocus) {
@@ -371,7 +385,7 @@ export function ChannelProfileScreen(props: {
           </div>
         ) : (
           <div className="channel-profile-event-list">
-            {gameEvents.map((event) => (
+            {gameEvents.map((event, eventIndex) => (
               <article
                 className={'channel-profile-event-row' + eventImportanceClass(event)}
                 key={event.id}
@@ -384,16 +398,24 @@ export function ChannelProfileScreen(props: {
                   <strong>{event.title}</strong>
                   <p>{formatEventTimeInTimezone(event.startsAtUtc)}</p>
                 </div>
-                <div className="channel-profile-event-actions">
-                  <EventInterestedButton eventId={event.id} />
-                  <button
-                    className="nami-surface-button"
-                    onClick={() => props.onViewEvent(event)}
-                    type="button"
-                  >
-                    View
-                  </button>
-                </div>
+                <EventCardActionBar
+                  event={event}
+                  eventCount={gameEvents.length}
+                  eventIndex={eventIndex}
+                  onEdit={(selectedEvent) => {
+                    try {
+                      window.sessionStorage.setItem(
+                        'nami.channel.event-edit-focus',
+                        selectedEvent.id
+                      );
+                    } catch {
+                      // Ignore storage failures in restricted environments.
+                    }
+
+                    props.onNavigate('channelEvents');
+                  }}
+                  onView={() => props.onViewEvent(event)}
+                />
               </article>
             ))}
           </div>

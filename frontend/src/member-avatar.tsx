@@ -1,6 +1,6 @@
 import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
-import { memberRainbowBorderClass } from './channel-surface.js';
+import { isOfficialNamiGalaxyMember, memberRainbowBorderClass } from './channel-surface.js';
 import { resolveMemberAvatarImageUrl, withMemberAvatar } from './member-avatar-store.js';
 import { DEFAULT_MEMBER_AVATAR_PLACEHOLDER_URL } from './default-member-avatar-placeholder.js';
 import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
@@ -130,7 +130,8 @@ function memberAvatarClass(
     (resolveDisplayedAvatarImageUrl(member) ? ' has-member-avatar-image' : '') +
     (chatTierFoil ? ' ' + memberTierSurfaceClass(member) : '') +
     (foilSweepEligible ? ' is-uniform-foil-frame' : ' is-uniform-standard-frame') +
-    memberRainbowBorderClass(member)
+    memberRainbowBorderClass(member) +
+    (isOfficialNamiGalaxyMember(member) ? ' is-fiend-rainbow' : '')
   );
 }
 

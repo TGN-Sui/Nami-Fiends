@@ -14,6 +14,10 @@ import {
 } from './member-avatar-store.js';
 import { canEditProfileCosmetics } from './member-access.js';
 import {
+  checkDisplayNameAvailability,
+  saveMemberDisplayName,
+} from './member-display-name-store.js';
+import {
   profileGenreOptions,
   profilePlatformOptions,
   saveSelfProfileEdits,
@@ -38,6 +42,8 @@ export function ProfileEditPanel(): ReactElement {
   const [expanded, setExpanded] = useState(() => consumeProfileEditFocus());
   const [draft, setDraft] = useState<SelfProfileEdits>(savedProfile);
   const [savedNotice, setSavedNotice] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const displayNameAvailability = checkDisplayNameAvailability(draft.displayName || member.name, member.id);
 
   useEffect(() => {
     setDraft(savedProfile);
@@ -61,10 +67,24 @@ export function ProfileEditPanel(): ReactElement {
   function updateDraft(patch: Partial<SelfProfileEdits>): void {
     setDraft((current) => ({ ...current, ...patch }));
     setSavedNotice(false);
+    setDisplayNameError(null);
   }
 
   function handleSave(): void {
+    const trimmedName = draft.displayName.trim();
+
+    if (trimmedName) {
+      const nameResult = saveMemberDisplayName(trimmedName, member.id);
+
+      if (!nameResult.ok) {
+        setDisplayNameError(nameResult.message);
+        setSavedNotice(false);
+        return;
+      }
+    }
+
     saveSelfProfileEdits(draft);
+    setDisplayNameError(null);
     setSavedNotice(true);
   }
 
@@ -102,6 +122,20 @@ export function ProfileEditPanel(): ReactElement {
             type="text"
             value={draft.displayName}
           />
+          {draft.displayName.trim() ? (
+            <small
+              className={
+                displayNameAvailability.available
+                  ? 'profile-edit-field-hint is-available-name'
+                  : 'profile-edit-field-hint is-unavailable-name'
+              }
+            >
+              {displayNameAvailability.available
+                ? 'Name is available.'
+                : displayNameAvailability.reason}
+            </small>
+          ) : null}
+          {displayNameError ? <small className="profile-edit-field-hint is-unavailable-name">{displayNameError}</small> : null}
         </label>
 
         <label className="profile-edit-field">

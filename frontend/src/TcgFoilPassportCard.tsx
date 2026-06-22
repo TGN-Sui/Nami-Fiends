@@ -20,6 +20,11 @@ import {
   UniformMemberAvatar,
   isMemberFoilEligible,
 } from './member-avatar.js';
+import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
+import {
+  PassportDisplayNameEditor,
+  PassportNameHistoryButton,
+} from './PassportDisplayNameControls.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
 
 function isPassportInteractive(member: NamiMember, signal: ConductSignal): boolean {
@@ -94,6 +99,8 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
     : displayBadge + ' · ' + (reviewedSignal === 'Green' ? 'Verified member' : 'Under review');
   const tierFoilClass = passportTierFoilClass(props.member);
   const tierSurfaceClass = memberTierSurfaceClass(props.member);
+  const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
+  const hasGalaxyRainbowShell = isOfficialGalaxy || ownerPassport;
   const isClickable = Boolean(props.onOpenPassport);
   const profileCardFrameRef = useRef<HTMLDivElement | null>(null);
   const foilFrameRef = useRef<number | null>(null);
@@ -239,7 +246,6 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
     props.onOpenPassport?.();
   }
 
-  const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
   const passportMarkLabel = officialNamiPassportMarkLabel(props.member);
 
   function passportNameplateIcons(): ReactElement {
@@ -269,7 +275,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           : 'nami-profile-card-shell-vertical is-uniform-vertical-passport') +
         (passportInteractive ? ' is-tcg-foil-eligible' : '') +
         (isClickable ? ' is-clickable-passport' : '') +
-        ((isOfficialGalaxy || ownerPassport) ? ' is-nami-official-galaxy-passport has-rainbow-foil' : '') +
+        (hasGalaxyRainbowShell ? ' is-nami-official-galaxy-passport has-rainbow-foil' : '') +
         (tierFoilClass ? ' ' + tierFoilClass : '') +
         (tierSurfaceClass ? ' ' + tierSurfaceClass : '')
       }
@@ -296,7 +302,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             ? 'nami-profile-card-frame-horizontal tcg-foil-passport-frame-horizontal'
             : 'nami-profile-card-frame-vertical tcg-foil-passport-frame-vertical') +
           (tierFoilClass ? ' ' + tierFoilClass : '') +
-          memberRainbowBorderClass(props.member)
+          (hasGalaxyRainbowShell ? '' : memberRainbowBorderClass(props.member))
         }
         ref={profileCardFrameRef}
       >
@@ -353,7 +359,8 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
 
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
-              <h2>{props.member.name}</h2>
+              <PassportDisplayNameEditor fallbackName={props.member.name} member={props.member} />
+              <PassportNameHistoryButton fallbackName={props.member.name} member={props.member} />
               <p>{displaySubtitle}</p>
             </div>
           </div>
@@ -428,6 +435,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
                 {ownerPassport ? 'Owner labels, not player progression' : 'Earned through play, not payment'}
               </strong>
             </div>
+            <MemberPreferenceStrip member={props.member} variant="passport-horizontal" />
           </div>
         ) : null}
       </div>

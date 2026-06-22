@@ -2,6 +2,9 @@ import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
 import { ownsGameChannel } from './channel-owner-access.js';
+import { isOfficialOwner } from './nami-capabilities.js';
+import { readGameOwnerSession } from './game-owner-session-store.js';
+import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import {
   canViewHiddenChannelEventDrafts,
   isPreApprovedGameOwnerWorkspace,
@@ -40,6 +43,8 @@ export type EventNotification = {
 
 const INTERESTED_KEY = 'nami.user.event-interested';
 const STORED_EVENTS_KEY = 'nami.user.stored-events';
+const DELETED_EVENTS_KEY = 'nami.deleted-event-ids';
+const CHANNEL_EVENT_ORDER_PREFIX = 'nami.channel.event-order.';
 const EVENT_NOTIFICATIONS_KEY = 'nami.user.event-notifications';
 const POPUP_SESSION_KEY = 'nami.user.event-live-popup-session';
 const TIMEZONE_KEY = 'nami.user.timezone';
@@ -174,14 +179,23 @@ function writeStoredEventsMap(map: Record<string, StoredEvent>, notify = true): 
 }
 
 function seedCatalogEvents(): Record<string, StoredEvent> {
+  const deletedEventIds = readDeletedEventIds();
   const seeded: Record<string, StoredEvent> = {};
 
   for (const event of [...officialNamiHubEvents, ...subscribedUserEvents]) {
+    if (deletedEventIds.has(event.id)) {
+      continue;
+    }
+
     seeded[event.id] = enrichEvent(event);
   }
 
   for (const channel of channels.slice(0, 6)) {
     for (const event of channelOwnerEvents(channel)) {
+      if (deletedEventIds.has(event.id)) {
+        continue;
+      }
+
       seeded[event.id] = enrichEvent(event);
     }
   }
@@ -191,16 +205,58 @@ function seedCatalogEvents(): Record<string, StoredEvent> {
   return seeded;
 }
 
+function readDeletedEventIds(): Set<string> {
+  try {
+    const stored = window.localStorage.getItem(DELETED_EVENTS_KEY);
+
+    if (!stored) {
+      return new Set();
+    }
+
+    const parsed = JSON.parse(stored);
+
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+
+    return new Set(parsed.filter((entry): entry is string => typeof entry === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+function markEventDeleted(eventId: string): void {
+  const deleted = readDeletedEventIds();
+  deleted.add(eventId);
+  window.localStorage.setItem(DELETED_EVENTS_KEY, JSON.stringify([...deleted]));
+  emit();
+}
+
 function readCatalogEventsMap(): Record<string, StoredEvent> {
   const stored = readStoredEventsMap();
+  const deletedEventIds = readDeletedEventIds();
 
   if (Object.keys(stored).length === 0) {
-    return shouldAutoSeedLocalData() ? seedCatalogEvents() : {};
+    const seeded = shouldAutoSeedLocalData() ? seedCatalogEvents() : {};
+
+    for (const eventId of deletedEventIds) {
+      delete seeded[eventId];
+    }
+
+    return seeded;
   }
 
   const merged: Record<string, StoredEvent> = { ...stored };
 
+  for (const eventId of deletedEventIds) {
+    delete merged[eventId];
+  }
+
   for (const event of [...officialNamiHubEvents, ...subscribedUserEvents]) {
+    if (deletedEventIds.has(event.id)) {
+      continue;
+    }
+
     merged[event.id] = enrichEvent(event, stored[event.id]);
   }
 
@@ -215,8 +271,227 @@ export function getAllCatalogEvents(): StoredEvent[] {
     });
 }
 
+export function getOfficialHubEvents(): StoredEvent[] {
+  return Object.values(readCatalogEventsMap())
+    .filter((event) => event.source === 'official' && !event.hiddenUntilChannelApproval)
+    .sort((left, right) => {
+      return new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime();
+    });
+}
+
 export function getEventById(eventId: string): StoredEvent | undefined {
   return readCatalogEventsMap()[eventId];
+}
+
+function channelEventOrderKey(channelId: string): string {
+  return CHANNEL_EVENT_ORDER_PREFIX + channelId;
+}
+
+function readChannelEventOrder(channelId: string): string[] {
+  try {
+    const stored = window.localStorage.getItem(channelEventOrderKey(channelId));
+
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((entry): entry is string => typeof entry === 'string');
+  } catch {
+    return [];
+  }
+}
+
+function writeChannelEventOrder(channelId: string, eventIds: string[]): void {
+  window.localStorage.setItem(channelEventOrderKey(channelId), JSON.stringify(eventIds));
+  emit();
+}
+
+function normalizeChannelEventOrder(eventIds: string[]): string[] {
+  const seen = new Set<string>();
+  const ordered: string[] = [];
+
+  for (const eventId of eventIds) {
+    if (seen.has(eventId)) {
+      continue;
+    }
+
+    seen.add(eventId);
+    ordered.push(eventId);
+  }
+
+  return ordered;
+}
+
+function sortChannelEventsByOwnerOrder(events: StoredEvent[], channelId: string): StoredEvent[] {
+  const savedOrder = readChannelEventOrder(channelId);
+  const orderMap = new Map(savedOrder.map((eventId, index) => [eventId, index]));
+
+  return [...events].sort((left, right) => {
+    const leftOrder = orderMap.get(left.id);
+    const rightOrder = orderMap.get(right.id);
+
+    if (leftOrder !== undefined && rightOrder !== undefined) {
+      return leftOrder - rightOrder;
+    }
+
+    if (leftOrder !== undefined) {
+      return -1;
+    }
+
+    if (rightOrder !== undefined) {
+      return 1;
+    }
+
+    return new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime();
+  });
+}
+
+function readPersistedOwnedGameChannelId(): string | null {
+  const session = readGameOwnerSession();
+
+  if (session?.provisionalChannelId) {
+    return session.provisionalChannelId;
+  }
+
+  try {
+    const stored = window.localStorage.getItem('nami.owned-game-channel-id');
+
+    if (stored) {
+      return stored;
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+
+  return null;
+}
+
+export function canManageChannelEvents(channelId: string): boolean {
+  if (ownsGameChannel(channelId)) {
+    return true;
+  }
+
+  const owner = readResolvedProtocolOwner();
+
+  if (!isOfficialOwner(owner)) {
+    return false;
+  }
+
+  return readPersistedOwnedGameChannelId() === channelId;
+}
+
+function clearEventInterest(eventId: string): void {
+  const interestedMap = readInterestedMap();
+
+  if (!interestedMap[eventId]) {
+    return;
+  }
+
+  delete interestedMap[eventId];
+  writeInterestedMap(interestedMap);
+}
+
+export function deleteChannelEvent(channelId: string, eventId: string): boolean {
+  if (!canManageChannelEvents(channelId)) {
+    return false;
+  }
+
+  const map = readCatalogEventsMap();
+  const current = map[eventId];
+
+  if (!current || current.channelId !== channelId || current.source === 'official') {
+    return false;
+  }
+
+  delete map[eventId];
+  writeStoredEventsMap(map);
+  markEventDeleted(eventId);
+
+  const nextOrder = readChannelEventOrder(channelId).filter((id) => id !== eventId);
+  writeChannelEventOrder(channelId, nextOrder);
+  clearEventInterest(eventId);
+
+  return true;
+}
+
+export function deleteOfficialEvent(eventId: string): boolean {
+  if (!canEditOfficialEvent()) {
+    return false;
+  }
+
+  const map = readCatalogEventsMap();
+  const current = map[eventId];
+
+  if (!current || current.source !== 'official') {
+    return false;
+  }
+
+  delete map[eventId];
+  writeStoredEventsMap(map);
+  markEventDeleted(eventId);
+  clearEventInterest(eventId);
+
+  return true;
+}
+
+export function moveChannelEvent(
+  channelId: string,
+  eventId: string,
+  direction: 'up' | 'down'
+): boolean {
+  if (!canManageChannelEvents(channelId)) {
+    return false;
+  }
+
+  const channel = channels.find((entry) => entry.id === channelId);
+
+  if (!channel) {
+    return false;
+  }
+
+  const events = getChannelEvents(channel, { includeHiddenDrafts: true });
+  const savedOrder = readChannelEventOrder(channelId);
+  const currentOrder = normalizeChannelEventOrder(
+    savedOrder.length > 0 ? savedOrder : events.map((event) => event.id)
+  );
+  const fromIndex = currentOrder.indexOf(eventId);
+
+  if (fromIndex < 0) {
+    return false;
+  }
+
+  const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+
+  if (toIndex < 0 || toIndex >= currentOrder.length) {
+    return false;
+  }
+
+  const nextOrder = [...currentOrder];
+  const [moved] = nextOrder.splice(fromIndex, 1);
+
+  if (!moved) {
+    return false;
+  }
+
+  nextOrder.splice(toIndex, 0, moved);
+  writeChannelEventOrder(channelId, nextOrder);
+  return true;
+}
+
+export function appendChannelEventToOrder(channelId: string, eventId: string): void {
+  const currentOrder = readChannelEventOrder(channelId);
+
+  if (currentOrder.includes(eventId)) {
+    return;
+  }
+
+  writeChannelEventOrder(channelId, [...currentOrder, eventId]);
 }
 
 export function getChannelEvents(
@@ -227,22 +502,19 @@ export function getChannelEvents(
   const includeHidden =
     options?.includeHiddenDrafts === true && canViewHiddenChannelEventDrafts(channel.id);
 
-  return Object.values(map)
-    .filter((event) => {
-      if (event.channelId !== channel.id) {
-        return false;
-      }
+  const events = Object.values(map).filter((event) => {
+    if (event.channelId !== channel.id) {
+      return false;
+    }
 
-      if (!event.hiddenUntilChannelApproval) {
-        return true;
-      }
+    if (!event.hiddenUntilChannelApproval) {
+      return true;
+    }
 
-      return includeHidden;
-    })
-    .sort(
-      (left, right) =>
-        new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime(),
-    );
+    return includeHidden;
+  });
+
+  return sortChannelEventsByOwnerOrder(events, channel.id);
 }
 
 export function releaseHiddenChannelEventsForChannel(channelId: string): number {
@@ -478,11 +750,12 @@ export function canEditOfficialEvent(member = getSelfMember()): boolean {
   return isNamiBossMember(member) || isNamiTeamMember(member);
 }
 
-export function canEditChannelEvent(
-  event: StoredEvent,
-  memberId = getSelfMember().id
-): boolean {
-  return event.createdByMemberId === memberId || event.source !== 'official';
+export function canEditChannelEvent(event: StoredEvent): boolean {
+  if (event.source === 'official' || !event.channelId) {
+    return false;
+  }
+
+  return canManageChannelEvents(event.channelId);
 }
 
 export function createChannelEvent(
@@ -496,7 +769,7 @@ export function createChannelEvent(
   },
   createdByMemberId = getSelfMember().id
 ): StoredEvent {
-  if (!ownsGameChannel(channel.id)) {
+  if (!canManageChannelEvents(channel.id)) {
     throw new Error('Only the game channel owner can publish events for this channel.');
   }
 
@@ -523,6 +796,7 @@ export function createChannelEvent(
   const map = readCatalogEventsMap();
   map[event.id] = event;
   writeStoredEventsMap(map);
+  appendChannelEventToOrder(channel.id, event.id);
 
   if (!hiddenUntilChannelApproval) {
     notifySubscribedMembersOfEvent(event);
@@ -552,8 +826,12 @@ export function updateStoredEvent(
     return null;
   }
 
-  if (current.source !== 'official' && current.createdByMemberId !== editorMemberId) {
-    return null;
+  if (current.source !== 'official') {
+    if (!current.channelId || !canManageChannelEvents(current.channelId)) {
+      if (current.createdByMemberId !== editorMemberId) {
+        return null;
+      }
+    }
   }
 
   const updated: StoredEvent = {

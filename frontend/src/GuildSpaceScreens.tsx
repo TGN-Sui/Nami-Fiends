@@ -6,8 +6,10 @@ import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import {
   canSendChatMessages,
   messageBubbleClass,
+  readSignedInOwner,
   resolveMessageAuthorMember,
 } from './member-access.js';
+import { memberPassportTierLabel } from './owner-passport-display.js';
 import { useSelfMember } from './member-avatar-store.js';
 import {
   chatMemberCardTierClass,
@@ -171,6 +173,7 @@ function GuildChatPanel(props: {
   tagHandlers?: TagNavigationHandlers;
 }): ReactElement {
   const selfMember = useSelfMember();
+  const connectedOwner = readSignedInOwner();
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
   const guildMembers = useMemo(() => guildRosterMembers(props.guild), [props.guild]);
@@ -201,10 +204,8 @@ function GuildChatPanel(props: {
   return (
     <section className="guild-space-chat-section" ref={viewportRef}>
       <div className="chat-presence-rail">
-        <div className="chat-presence-channel">
-          <div className="global-chat-presence-mark">{props.guild.name.slice(0, 2).toUpperCase()}</div>
-          <div className="global-chat-presence-copy">
-            <span className="mini-badge">Guild Chat</span>
+        <div className="chat-presence-channel is-hub-chat-presence-channel">
+          <div className="global-chat-presence-copy is-centered-hub-chat-heading">
             <h2>{props.guild.name}</h2>
             <p>
               {props.guild.isPublic ? 'Public guild room' : 'Private guild room'} ·{' '}
@@ -223,7 +224,7 @@ function GuildChatPanel(props: {
             >
               <UniformMemberAvatar member={member} />
               <strong>{member.name}</strong>
-              <span>{member.tier}</span>
+              <span>{memberPassportTierLabel(member, connectedOwner)}</span>
             </button>
           ))}
         </div>

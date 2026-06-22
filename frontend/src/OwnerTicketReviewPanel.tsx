@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
 import { PROMOTION_DURATION_LABELS } from './channel-owner-promotions-store.js';
+import { applyGameTicketOfficialReview } from './game-ticket-official-review.js';
 import { canReviewNodenameClaims } from './nami-capabilities.js';
 import {
   approvePendingClaims,
@@ -12,11 +13,16 @@ import {
   updatePartnerBannerSubmissionStatus,
   usePartnerBannerSubmissions,
 } from './partner-banner-submission-store.js';
+import {
+  listGameSubmissionTicketsSorted,
+  useGameSubmissionTickets,
+} from './game-submission-ticket-store.js';
+import { useSubmittedTickets } from './owner-submitted-tickets-store.js';
 import { useProtocolOwner } from './wallet.js';
 
 type ReviewTicket = {
   id: string;
-  kind: 'partner-carousel' | 'nodename-claim';
+  kind: 'partner-carousel' | 'nodename-claim' | 'game-ticket';
   title: string;
   description: string;
   detail: string | null;
@@ -27,13 +33,19 @@ function ticketKindLabel(kind: ReviewTicket['kind']): string {
     return 'Partner Carousel';
   }
 
+  if (kind === 'game-ticket') {
+    return 'Game Ticket';
+  }
+
   return 'Nodename Claim';
 }
 
 export function OwnerTicketReviewPanel(): ReactElement | null {
   const { owner } = useProtocolOwner();
   const { openPendingCount } = useNamiAdminStore();
+  const { openSubmittedCount: storedOpenCount } = useSubmittedTickets();
   const partnerSubmissions = usePartnerBannerSubmissions();
+  const gameTickets = useGameSubmissionTickets();
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -59,10 +71,24 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       detail: claim.archetypeLabel + ' · ' + claim.method,
     }));
 
-    return [...partnerTickets, ...claimTickets];
-  }, [partnerSubmissions, openPendingCount]);
+    const pendingGameTickets = listGameSubmissionTicketsSorted()
+      .filter((ticket) => ticket.status === 'submitted' || ticket.status === 'preapproved')
+      .map((ticket) => ({
+        id: ticket.id,
+        kind: 'game-ticket' as const,
+        title: ticket.gameTitle,
+        description: ticket.studioName + ' · ' + ticket.email,
+        detail:
+          ticket.trustScore +
+          '% trust · ' +
+          ticket.status +
+          (ticket.genres.length > 0 ? ' · ' + ticket.genres.join(', ') : ''),
+      }));
 
-  const openSubmittedCount = openTickets.length;
+    return [...partnerTickets, ...claimTickets, ...pendingGameTickets];
+  }, [partnerSubmissions, openPendingCount, gameTickets]);
+
+  const openSubmittedCount = Math.max(openTickets.length, storedOpenCount);
 
   if (!canReview) {
     return null;
@@ -102,6 +128,11 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return updated !== null;
     }
 
+    if (ticket.kind === 'game-ticket') {
+      const result = applyGameTicketOfficialReview(ticket.id, status, owner);
+      return result.ok;
+    }
+
     if (status === 'approved') {
       return approvePendingClaims([ticket.id], owner) > 0;
     }
@@ -116,6 +147,23 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
 
     if (!ticket) {
       setActionError('Ticket not found.');
+      return;
+    }
+
+    if (ticket.kind === 'game-ticket') {
+      const result = applyGameTicketOfficialReview(ticket.id, 'approved', owner);
+
+      if (!result.ok) {
+        setActionError(result.message);
+        return;
+      }
+
+      setActionNotice(result.message);
+      setSelectedTicketIds((current) => {
+        const next = new Set(current);
+        next.delete(ticketId);
+        return next;
+      });
       return;
     }
 
@@ -142,6 +190,23 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return;
     }
 
+    if (ticket.kind === 'game-ticket') {
+      const result = applyGameTicketOfficialReview(ticket.id, 'rejected', owner);
+
+      if (!result.ok) {
+        setActionError(result.message);
+        return;
+      }
+
+      setActionNotice(result.message);
+      setSelectedTicketIds((current) => {
+        const next = new Set(current);
+        next.delete(ticketId);
+        return next;
+      });
+      return;
+    }
+
     if (!reviewTicket(ticket, 'rejected')) {
       setActionError('Could not deny ticket.');
       return;
@@ -164,11 +229,27 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
     }
 
     let approvedCount = 0;
+    const notices: string[] = [];
 
     for (const ticketId of selectedTicketIds) {
       const ticket = openTickets.find((entry) => entry.id === ticketId);
 
-      if (ticket && reviewTicket(ticket, 'approved')) {
+      if (!ticket) {
+        continue;
+      }
+
+      if (ticket.kind === 'game-ticket') {
+        const result = applyGameTicketOfficialReview(ticket.id, 'approved', owner);
+
+        if (result.ok) {
+          approvedCount += 1;
+          notices.push(result.message);
+        }
+
+        continue;
+      }
+
+      if (reviewTicket(ticket, 'approved')) {
         approvedCount += 1;
       }
     }
@@ -178,7 +259,9 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return;
     }
 
-    setActionNotice(approvedCount + ' ticket(s) approved.');
+    setActionNotice(
+      approvedCount + ' ticket(s) approved.' + (notices.length > 0 ? ' ' + notices[0] : '')
+    );
     setSelectedTicketIds(new Set());
   }
 
@@ -195,7 +278,21 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
     for (const ticketId of selectedTicketIds) {
       const ticket = openTickets.find((entry) => entry.id === ticketId);
 
-      if (ticket && reviewTicket(ticket, 'rejected')) {
+      if (!ticket) {
+        continue;
+      }
+
+      if (ticket.kind === 'game-ticket') {
+        const result = applyGameTicketOfficialReview(ticket.id, 'rejected', owner);
+
+        if (result.ok) {
+          deniedCount += 1;
+        }
+
+        continue;
+      }
+
+      if (reviewTicket(ticket, 'rejected')) {
         deniedCount += 1;
       }
     }
@@ -214,7 +311,10 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       <div className="profile-panel-heading">
         <span className="mini-badge">Owner Account</span>
         <h2>Submitted Tickets</h2>
-        <p>Approve or deny partner carousel banners and nodename claims from your owner account.</p>
+        <p>
+          Approve or disapprove partner carousel banners, game onboarding tickets, and nodename
+          claims from your owner account.
+        </p>
       </div>
 
       {openSubmittedCount > 0 ? (
@@ -245,7 +345,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
               onClick={handleDenySelected}
               type="button"
             >
-              Deny selected ({selectedTicketIds.size})
+              Disapprove selected ({selectedTicketIds.size})
             </button>
           </div>
 
@@ -278,7 +378,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
                     onClick={() => handleDenyTicket(ticket.id)}
                     type="button"
                   >
-                    Deny
+                    Disapprove
                   </button>
                 </div>
               </li>

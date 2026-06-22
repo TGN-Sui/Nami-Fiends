@@ -296,6 +296,18 @@ export function appendGlobalChatMessage(
   return message;
 }
 
+export function removeGlobalChatMessages(chatId: string): void {
+  const globalMessages = readGlobalMessages();
+
+  if (!(chatId in globalMessages)) {
+    return;
+  }
+
+  const nextMessages = { ...globalMessages };
+  delete nextMessages[chatId];
+  writeGlobalMessages(nextMessages);
+}
+
 export function appendGuildChatMessage(
   guildId: string,
   guildName: string,

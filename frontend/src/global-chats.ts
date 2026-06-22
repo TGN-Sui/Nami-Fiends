@@ -493,3 +493,42 @@ export const defaultSocialEmbeds: SocialEmbed[] = [
     previewUrl: 'https://x.com/namigamer',
   },
 ];
+
+/** Only show a kind chip when it adds context beyond the room title. */
+export function globalChatPresenceKindLabel(chat: GlobalChatRoom): string | null {
+  if (chat.kind === 'genre') {
+    return 'Genre Lounge';
+  }
+
+  if (chat.closesOnExit) {
+    return 'Temporary';
+  }
+
+  return null;
+}
+
+export function globalChatPresenceMeta(chat: GlobalChatRoom): string {
+  const parts: string[] = [];
+
+  if (!chat.isOfficial && chat.createdBy !== 'Nami') {
+    parts.push('by ' + chat.createdBy);
+
+    if (chat.creatorVerified) {
+      parts.push('Verified');
+    }
+  }
+
+  parts.push(chat.activeMembers.toLocaleString() + ' active');
+
+  return parts.join(' · ');
+}
+
+export function globalChatListCreatorLine(chat: GlobalChatRoom): string | null {
+  if (chat.isOfficial && chat.createdBy === 'Nami') {
+    return null;
+  }
+
+  const creator = 'by ' + chat.createdBy + (chat.creatorVerified ? ' ✓' : '');
+
+  return creator;
+}

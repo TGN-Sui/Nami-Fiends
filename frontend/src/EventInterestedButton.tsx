@@ -7,7 +7,10 @@ import {
   useEventsStore,
 } from './events-store.js';
 
-export function EventInterestedButton(props: { eventId: string }): ReactElement {
+export function EventInterestedButton(props: {
+  eventId: string;
+  layout?: 'stacked' | 'inline';
+}): ReactElement {
   useEventsStore();
   const [notice, setNotice] = useState('');
   const interested = isEventInterested(props.eventId);
@@ -26,7 +29,12 @@ export function EventInterestedButton(props: { eventId: string }): ReactElement 
   }
 
   return (
-    <div className="event-interested-actions">
+    <div
+      className={
+        'event-interested-actions' +
+        (props.layout === 'inline' ? ' is-inline-event-interested' : '')
+      }
+    >
       <button
         aria-pressed={interested}
         className={

@@ -4,6 +4,7 @@ import {
   isMemberPreferencesApiAvailable,
   syncMemberPreferencesToBackend,
 } from './member-preferences-api.js';
+import { applyGenesisSelfOverrides, shouldUseGenesisSelfMember } from './genesis-member.js';
 import { applyDemoMemberOverrides } from './demo-perspective-store.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { withMemberProfile } from './member-profile-store.js';
@@ -100,9 +101,13 @@ function getSelfMemberSnapshot(): NamiMember {
   }
 
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
-  cachedSelfMember = applyDemoMemberOverrides(
-    applyMembershipTierToMember(withMemberProfile(withMemberAvatar(baseMember)))
-  );
+  let member = withMemberProfile(withMemberAvatar(baseMember));
+
+  if (shouldUseGenesisSelfMember()) {
+    member = applyGenesisSelfOverrides(member);
+  }
+
+  cachedSelfMember = applyDemoMemberOverrides(applyMembershipTierToMember(member));
 
   return cachedSelfMember;
 }

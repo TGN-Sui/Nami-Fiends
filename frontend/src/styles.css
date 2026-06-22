@@ -1571,6 +1571,10 @@ dd {
   align-items: center;
 }
 
+.chat-presence-channel.is-hub-chat-presence-channel {
+  justify-content: center;
+}
+
 .chat-presence-channel h2,
 .chat-presence-channel p {
   margin: 6px 0 0;
@@ -1585,13 +1589,15 @@ dd {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  overflow-y: visible;
+  padding: 4px 0 8px;
 }
 
 .chat-member-card {
   display: grid;
   min-width: 106px;
   justify-items: center;
+  overflow: visible;
   gap: 7px;
   padding: 12px;
   border: 1px solid rgba(117, 188, 224, 0.22);
@@ -1689,14 +1695,15 @@ dd {
 
 .message-stack {
   display: grid;
-  gap: 12px;
+  gap: 7px;
 }
 
 .chat-message-row {
   display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 12px;
+  grid-template-columns: 42px 1fr;
+  gap: 8px;
   align-items: start;
+  overflow: visible;
 }
 
 .message-avatar {
@@ -1711,7 +1718,7 @@ dd {
 }
 
 .message-bubble {
-  padding: 12px 14px;
+  padding: 8px 11px;
   border: 1px solid rgba(117, 188, 224, 0.14);
   border-radius: 14px;
   background: rgba(255,255,255,0.055);
@@ -1720,9 +1727,9 @@ dd {
 .message-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .message-meta span,
@@ -1735,7 +1742,7 @@ dd {
 .message-bubble p {
   margin: 0;
   color: #eef7ff;
-  line-height: 1.45;
+  line-height: 1.38;
 }
 
 .chat-input-placeholder {
@@ -2224,7 +2231,8 @@ dd {
 }
 
 .primary-action,
-.secondary-action {
+.secondary-action,
+.danger-action {
   min-height: 46px;
   border-radius: 14px;
   font-weight: 900;
@@ -2245,6 +2253,12 @@ dd {
   border: 1px solid var(--nami-theme-border, rgba(117, 188, 224, 0.32));
   background: var(--nami-theme-surface-raised, rgba(5, 9, 15, 0.62));
   color: var(--nami-theme-text, var(--nami-frost-text));
+}
+
+.danger-action {
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
 }
 
 .profile-stat-grid {
@@ -3519,18 +3533,52 @@ button:disabled {
 
 .channel-event-card {
   display: grid;
-  gap: 18px;
-  min-height: 220px;
-  align-content: space-between;
+  gap: 12px;
+  min-height: 0;
+  align-content: start;
 }
 
-.channel-event-card h2,
-.channel-event-card p {
+.channel-event-card-copy h2,
+.channel-event-card-copy p {
   margin: 8px 0 0;
 }
 
-.channel-event-card p {
+.channel-event-card-copy p,
+.channel-event-card-description {
   color: #9fb5ca;
+}
+
+.channel-event-card-footer {
+  margin-top: auto;
+}
+
+.channel-event-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.channel-event-card-actions .nami-surface-button,
+.channel-event-card-actions .secondary-action,
+.channel-event-card-actions .primary-action,
+.channel-event-card-actions .event-interested-button,
+.channel-event-owner-controls .nami-surface-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channel-event-card-actions .event-interested-actions.is-inline-event-interested {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.channel-event-card-actions .event-interested-count {
+  display: none;
 }
 
 .channel-event-meta-row {
@@ -13612,9 +13660,22 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .community-member-avatar,
 .sidebar-player-avatar.uniform-member-avatar {
   position: relative;
-  overflow: hidden;
   background-color: rgba(5, 9, 15, 0.42);
   background-image: none !important;
+}
+
+.chat-member-avatar,
+.message-avatar {
+  overflow: visible;
+}
+
+.member-dot,
+.member-spotlight-avatar,
+.spotlight-member-avatar,
+.hub-member-avatar,
+.community-member-avatar,
+.sidebar-player-avatar.uniform-member-avatar {
+  overflow: hidden;
 }
 
 .chat-member-avatar::before,

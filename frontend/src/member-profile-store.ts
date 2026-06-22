@@ -93,6 +93,47 @@ export function saveSelfProfileEdits(edits: SelfProfileEdits): void {
   window.dispatchEvent(new CustomEvent('nami-self-profile-changed'));
 }
 
+export type MemberProfilePreferences = {
+  preferredPlatforms: string[];
+  preferredGenres: string[];
+};
+
+function hashMemberSeed(memberId: string): number {
+  return memberId.split('').reduce((total, character) => total + character.charCodeAt(0), 0);
+}
+
+function seededMemberPreferences(memberId: string): MemberProfilePreferences {
+  const seed = hashMemberSeed(memberId);
+  const preferredPlatforms = profilePlatformOptions.filter(
+    (_, index) => (seed >> index) % 2 === 0
+  );
+  const preferredGenres = profileGenreOptions.filter((_, index) => (seed >> (index + 2)) % 3 !== 0);
+
+  return {
+    preferredPlatforms:
+      preferredPlatforms.length > 0
+        ? [...preferredPlatforms]
+        : [profilePlatformOptions[seed % profilePlatformOptions.length]!],
+    preferredGenres:
+      preferredGenres.length > 0
+        ? [...preferredGenres]
+        : [profileGenreOptions[seed % profileGenreOptions.length]!],
+  };
+}
+
+export function readMemberProfilePreferences(memberId: string): MemberProfilePreferences {
+  if (memberId === SELF_MEMBER_ID) {
+    const edits = readSelfProfileEdits();
+
+    return {
+      preferredPlatforms: edits.preferredPlatforms,
+      preferredGenres: edits.preferredGenres,
+    };
+  }
+
+  return seededMemberPreferences(memberId);
+}
+
 export function withMemberProfile(member: NamiMember): NamiMember {
   if (member.id !== SELF_MEMBER_ID) {
     return member;

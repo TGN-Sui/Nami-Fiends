@@ -645,12 +645,12 @@
 .global-message-stack {
   max-height: 420px;
   overflow: auto;
-  padding: 0 4px 0 8px;
+  padding: 2px 6px 2px 8px;
 }
 
 .global-message-stack .chat-message-row {
-  grid-template-columns: 50px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 8px;
   overflow: visible;
 }
 
@@ -670,16 +670,9 @@
 .global-message-stack .message-avatar,
 .global-message-stack .message-avatar-button,
 .global-message-stack button.uniform-member-avatar {
-  overflow: hidden;
+  overflow: visible;
   border-radius: 50%;
   isolation: isolate;
-}
-
-.global-chat-room-pane .uniform-member-avatar.is-nami-rainbow-foil-border,
-.global-chat-room-pane button.uniform-member-avatar.is-nami-rainbow-foil-border,
-.global-message-stack .uniform-member-avatar.is-nami-rainbow-foil-border,
-.global-message-stack button.uniform-member-avatar.is-nami-rainbow-foil-border {
-  overflow: visible;
 }
 
 .global-chat-room-pane .uniform-member-tier-foil,
@@ -6368,6 +6361,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
+  padding: 2px 6px 2px 8px;
 }
 
 .message-log-page {
@@ -9113,6 +9107,129 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   color: #9fffd2;
 }
 
+.nami-owner-ticket-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.owner-hub-curation-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.owner-hub-curation-section {
+  display: grid;
+  gap: 12px;
+}
+
+.owner-hub-curation-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.owner-hub-curation-section-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.owner-hub-curation-section-heading span {
+  font-size: 0.82rem;
+  color: rgba(190, 210, 235, 0.72);
+}
+
+.owner-hub-curation-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.owner-hub-curation-select {
+  min-width: min(100%, 280px);
+  flex: 1 1 220px;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  background: rgba(5, 9, 15, 0.55);
+  color: #e8f4ff;
+  padding: 8px 10px;
+}
+
+.owner-hub-curation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.owner-hub-curation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  background: rgba(5, 9, 15, 0.42);
+}
+
+.owner-hub-curation-row-copy {
+  display: grid;
+  gap: 2px;
+  font-size: 0.86rem;
+  color: rgba(190, 210, 235, 0.86);
+}
+
+.owner-hub-item-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.owner-hub-move-button {
+  min-width: 34px;
+  padding-inline: 8px;
+}
+
+.owner-hub-remove-button {
+  font-size: 0.78rem;
+}
+
+.owner-hub-curate-link {
+  margin-top: 6px;
+}
+
+.owner-hub-growth-slot.is-owner-curated {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.owner-hub-growth-slot.is-owner-curated .community-growth-row {
+  width: 100%;
+}
+
+.owner-hub-spotlight-slot.is-owner-curated {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+  min-height: 100%;
+}
+
+.owner-hub-spotlight-slot.is-owner-curated .owner-hub-item-controls {
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
 .nami-owner-capability-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10563,6 +10680,69 @@ body.is-hub-spotlight-burst.is-hub-spotlight-game::after {
 .gamehub-discovery-panel-head {
   display: grid;
   gap: 6px;
+}
+
+.is-hub-page-title h1 {
+  margin-top: 0;
+}
+
+.is-hub-panel-heading,
+.is-hub-panel-heading-copy {
+  text-align: center;
+}
+
+.is-hub-panel-heading {
+  justify-items: center;
+}
+
+.nami-hub-events-panel-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.is-centered-hub-chat-heading {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.is-centered-hub-chat-heading h2,
+.is-centered-hub-chat-heading p {
+  margin: 0;
+}
+
+.is-hub-chat-presence-channel {
+  justify-content: center;
+  width: 100%;
+}
+
+.is-hub-chat-presence-rail {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  gap: 12px;
+}
+
+.is-hub-chat-presence-rail .global-chat-presence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.is-hub-chat-presence-rail .chat-member-strip {
+  width: 100%;
+  justify-content: center;
+}
+
+.chat-window-expanded-heading-copy.is-centered-hub-chat-heading {
+  text-align: center;
 }
 
 .gamehub-discovery-eyebrow {
@@ -12665,6 +12845,37 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   grid-area: 1 / 1;
 }
 
+/* Keep hover scale, foil sweeps, and rainbow rings from clipping in chat */
+.member-avatar-live-shell > .uniform-member-avatar,
+.member-avatar-live-shell > .chat-member-avatar,
+.member-avatar-live-shell > .message-avatar,
+.member-avatar-live-shell > button.uniform-member-avatar,
+.member-avatar-live-shell > button.message-avatar-button,
+.chat-member-card .uniform-member-avatar,
+.chat-member-card .chat-member-avatar,
+.message-stack .message-avatar,
+.message-stack .message-avatar-button,
+.message-stack button.uniform-member-avatar,
+.guild-message-stack .message-avatar,
+.guild-message-stack .message-avatar-button,
+.guild-message-stack button.uniform-member-avatar {
+  overflow: visible !important;
+}
+
+.member-avatar-live-shell .uniform-member-avatar.is-uniform-foil-frame,
+.member-avatar-live-shell button.uniform-member-avatar.is-uniform-foil-frame,
+.member-avatar-live-shell .uniform-member-avatar.is-pro-surface,
+.member-avatar-live-shell button.uniform-member-avatar.is-pro-surface,
+.member-avatar-live-shell .uniform-member-avatar.is-elite-surface,
+.member-avatar-live-shell button.uniform-member-avatar.is-elite-surface {
+  overflow: visible !important;
+}
+
+.message-stack .chat-message-row,
+.guild-message-stack .chat-message-row {
+  overflow: visible;
+}
+
 .member-streaming-live-dot {
   grid-area: 1 / 1;
   place-self: start end;
@@ -13048,6 +13259,24 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   margin: 10px 0;
 }
 
+.event-interested-actions.is-inline-event-interested {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.event-interested-actions.is-inline-event-interested .event-interested-count {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.event-interested-actions.is-inline-event-interested .event-interested-notice {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
 .event-card .fixed-card-footer.event-card-footer {
   display: grid;
   gap: 10px;
@@ -13123,6 +13352,21 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   margin-bottom: 14px;
 }
 
+.event-creator-form-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-creator-form-head h2 {
+  margin: 0;
+}
+
+.event-creator-form-head p {
+  margin: 8px 0 0;
+}
+
 .event-creator-form label {
   display: grid;
   gap: 4px;
@@ -13143,6 +13387,158 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.official-events-list {
+  display: grid;
+  gap: 14px;
+}
+
+.official-event-card {
+  display: grid;
+  gap: 12px;
+}
+
+.official-event-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.official-event-status-pill {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(159, 255, 210, 0.92);
+}
+
+.official-event-card-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.official-event-card-copy h3 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.official-event-card-copy time {
+  font-size: 0.84rem;
+  color: rgba(159, 181, 202, 0.92);
+}
+
+.official-event-card-copy p {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.92);
+  line-height: 1.45;
+}
+
+.official-event-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(117, 215, 255, 0.12);
+  font-size: 0.84rem;
+}
+
+.official-events-empty-state {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+  padding: 18px;
+}
+
+.event-card-action-bar {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.event-card-action-bar.is-official-event-action-bar {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+}
+
+.event-card-action-bar.is-channel-event-action-bar {
+  grid-template-columns:
+    minmax(0, 1.15fr)
+    minmax(0, 1fr)
+    42px
+    42px
+    minmax(0, 0.9fr)
+    minmax(0, 0.9fr);
+}
+
+.event-card-action-slot {
+  min-height: 42px;
+  min-width: 0;
+}
+
+.event-card-action-slot.is-action-slot-spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.event-card-action-slot-interested,
+.event-card-action-slot-interested .event-interested-actions.is-inline-event-interested {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
+}
+
+.event-card-action-slot-interested .event-interested-button,
+.event-card-action-slot-view,
+.event-card-action-slot-edit,
+.event-card-action-slot-delete,
+.event-card-action-slot-move {
+  width: 100%;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-card-action-slot-delete {
+  border-color: rgba(255, 107, 129, 0.42);
+  color: #ffb8c4;
+}
+
+.event-card-action-slot-move:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.event-card-action-slot-interested .event-interested-count,
+.event-card-action-slot-interested .event-interested-notice {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.channel-profile-event-row .event-card-action-bar {
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .event-card-action-bar.is-official-event-action-bar,
+  .event-card-action-bar.is-channel-event-action-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .event-card-action-slot.is-action-slot-spacer {
+    display: none;
+  }
 }
 
 .is-event-soon-importance {
@@ -14125,10 +14521,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .channel-profile-event-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  display: grid;
+  gap: 12px;
   padding: 18px 22px;
   border: 1px solid rgba(117, 215, 255, 0.18);
   border-radius: 16px;
@@ -14146,11 +14540,97 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   font-size: 0.88rem;
 }
 
-.channel-profile-event-actions {
+.channel-profile-event-actions,
+.channel-event-card-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.channel-profile-event-actions {
   justify-content: flex-end;
+}
+
+.channel-event-card-footer .channel-event-card-actions {
+  width: 100%;
+}
+
+.channel-event-owner-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.channel-event-owner-controls.is-compact-channel-event-owner-controls {
+  flex-wrap: wrap;
+}
+
+.channel-event-move-button,
+.channel-event-delete-button {
+  min-width: 42px;
+  padding-inline: 10px;
+}
+
+.channel-event-move-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.channel-event-delete-button {
+  border-color: rgba(255, 107, 129, 0.42);
+  color: #ffb8c4;
+}
+
+.channel-profile-event-actions .nami-surface-button,
+.channel-profile-event-actions .event-interested-button,
+.channel-event-card-actions .nami-surface-button,
+.channel-event-card-actions .event-interested-button,
+.channel-event-owner-controls .nami-surface-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channel-profile-event-actions .event-interested-actions.is-inline-event-interested,
+.channel-event-card-actions .event-interested-actions.is-inline-event-interested {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.channel-profile-event-actions .event-interested-count,
+.channel-event-card-actions .event-interested-count {
+  display: none;
+}
+
+.channel-profile-event-actions .event-interested-notice,
+.channel-event-card-actions .event-interested-notice {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil .nami-profile-card-avatar.is-nami-rainbow-foil-border::after,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport .nami-profile-card-avatar.is-nami-rainbow-foil-border::after,
+.is-uniform-vertical-passport .nami-profile-card-avatar.is-nami-rainbow-foil-border::after,
+.is-horizontal-tcg-passport .nami-profile-card-avatar.is-nami-rainbow-foil-border::after {
+  display: none !important;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil .member-avatar-live-shell .nami-profile-card-avatar.is-nami-rainbow-foil-border,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport .member-avatar-live-shell .nami-profile-card-avatar.is-nami-rainbow-foil-border {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .channel-profile-about {
@@ -16590,35 +17070,336 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   animation: galaxy-pulse 7s ease-in-out infinite;
 }
 
-/* === RAINBOW BORDER ON PASSPORT (FIXED TILT) === */
-.has-rainbow-foil .tcg-foil-passport-frame {
+/* === RAINBOW BORDER ON PASSPORT === */
+.tcg-foil-passport-shell.has-rainbow-foil,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport {
+  --passport-rainbow-radius: 32px;
   position: relative;
+  border-radius: var(--passport-rainbow-radius);
   overflow: visible;
+  isolation: isolate;
+  box-sizing: border-box;
 }
 
-.has-rainbow-foil .tcg-foil-passport-frame::before {
+.is-horizontal-tcg-passport.has-rainbow-foil,
+.is-horizontal-tcg-passport.is-nami-official-galaxy-passport {
+  --passport-rainbow-radius: 28px;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil::before,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport::before {
   content: '';
   position: absolute;
-  inset: 0px;
+  inset: 0;
   border-radius: inherit;
   padding: 3px;
-  background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   mask-composite: exclude;
-  z-index: 3;
+  z-index: 8;
   pointer-events: none;
-  animation: rainbow-rotate 5s linear infinite;
-  transform: perspective(900px) rotateX(var(--card-body-tilt-x, 0deg)) rotateY(var(--card-body-tilt-y, 0deg));
-  transition: transform 0.08s ease-out;
-  will-change: transform;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
+  transform: none !important;
+  border: none;
+  box-shadow: none;
 }
 
-/* Much stronger rainbow for FIEND owner */
-.is-fiend-galaxy .tcg-foil-passport-frame::before {
+.tcg-foil-passport-shell.has-rainbow-foil .tcg-foil-passport-frame,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport .tcg-foil-passport-frame {
+  position: relative;
+  z-index: 2;
+  margin: 3px;
+  width: calc(100% - 6px);
+  box-sizing: border-box;
+  border: none !important;
+  border-radius: calc(var(--passport-rainbow-radius) - 3px);
+  overflow: hidden;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil .tcg-foil-passport-frame::before,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport .tcg-foil-passport-frame::before {
+  display: none !important;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil:has(.is-fiend-galaxy)::before,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport:has(.is-fiend-galaxy)::before {
   animation-duration: 3.2s;
   box-shadow: 0 0 24px rgba(255, 0, 200, 0.65);
   filter: saturate(1.45) brightness(1.15);
+}
+
+.member-preference-strip {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.member-preference-strip.is-passport-horizontal-preference-strip {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.member-preference-strip-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.member-preference-strip-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(159, 181, 202, 0.92);
+}
+
+.member-preference-strip-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.member-preference-chip {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  background: rgba(5, 9, 15, 0.45);
+  color: rgba(190, 210, 235, 0.78);
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.member-preference-chip.is-selected-preference-chip {
+  border-color: rgba(117, 215, 255, 0.55);
+  background: rgba(117, 215, 255, 0.16);
+  color: #eef7ff;
+  box-shadow: 0 0 14px rgba(117, 215, 255, 0.14);
+}
+
+.member-showcase-status-panel .member-preference-strip {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(117, 215, 255, 0.12);
+}
+
+.passport-display-name-editor {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.passport-display-name-heading {
+  margin: 6px 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.passport-display-name-edit-button,
+.passport-name-history-button {
+  justify-self: start;
+  min-height: 32px;
+  font-size: 0.78rem;
+}
+
+.passport-display-name-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.passport-display-name-field span {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(159, 181, 202, 0.92);
+}
+
+.passport-display-name-field input {
+  width: 100%;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.22);
+  background: rgba(5, 9, 15, 0.62);
+  color: #eef7ff;
+  padding: 8px 10px;
+}
+
+.passport-display-name-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.passport-display-name-notice,
+.passport-display-name-availability {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.passport-name-history-controls {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.passport-name-history-popout-host {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.passport-name-history-popout-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(4, 8, 14, 0.74);
+  backdrop-filter: blur(5px);
+  cursor: pointer;
+}
+
+.passport-name-history-popout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  width: min(420px, 92vw);
+  max-height: min(70vh, 520px);
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  border-radius: 16px;
+  background: rgba(8, 14, 22, 0.98);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+  animation: passportNameHistoryPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.passport-name-history-popout-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.passport-name-history-popout-close {
+  flex-shrink: 0;
+  min-height: 32px;
+  font-size: 0.78rem;
+}
+
+@keyframes passportNameHistoryPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passport-name-history-popout {
+    animation: none;
+  }
+}
+
+.passport-name-history-panel-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.passport-name-history-panel-heading strong {
+  font-size: 0.88rem;
+}
+
+.passport-name-history-panel-heading span {
+  font-size: 0.74rem;
+  color: rgba(159, 181, 202, 0.9);
+}
+
+.passport-name-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.passport-name-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(117, 215, 255, 0.1);
+  font-size: 0.8rem;
+}
+
+.passport-name-history-row:last-child {
+  border-bottom: 0;
+}
+
+.passport-name-history-value {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.passport-name-history-current {
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9fffd2;
+}
+
+.is-horizontal-tcg-passport .nami-profile-card-nameplate {
+  display: grid;
+  gap: 6px;
+}
+
+.profile-edit-field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+}
+
+.profile-edit-field-hint.is-available-name {
+  color: #9fffd2;
+}
+
+.profile-edit-field-hint.is-unavailable-name {
+  color: #ffb8c4;
 }
 
 /* === RAINBOW ON SMALL AVATARS (Chat + Top Right) === */
@@ -16634,21 +17415,34 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   position: absolute;
   inset: -3px;
   border-radius: 9999px;
-  padding: 5px;
-  background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  padding: 3px;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   mask-composite: exclude;
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
-  animation: rainbow-rotate 4.5s linear infinite;
+  animation: namiRainbowFoilBorder 4.8s linear infinite;
 }
 
 /* Stronger rainbow for FIEND on small avatars */
 .is-fiend-rainbow.uniform-member-avatar::after,
 .is-fiend-rainbow .uniform-member-avatar::after {
-  background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc);
-  animation-duration: 3s;
+  animation-duration: 3.2s;
   box-shadow: 0 0 16px rgba(255, 0, 200, 0.6);
   filter: saturate(1.35) brightness(1.1);
 }
@@ -16680,19 +17474,31 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after,
 .nami-pinned-profile-card .uniform-member-avatar.is-nami-rainbow-foil-border::after {
   content: '' !important;
   position: absolute !important;
-  inset: -2px !important;
+  inset: -3px !important;
   border-radius: 9999px !important;
-  padding: 2px !important;                    /* Thicker border */
-  background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc) !important;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0) !important;
+  padding: 3px !important;
+  background: conic-gradient(
+    from var(--nami-rainbow-angle),
+    #ff4d6d,
+    #ffb347,
+    #ffe66d,
+    #43f5a7,
+    #75d7ff,
+    #9b5de5,
+    #ff4d6d
+  ) !important;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0) !important;
   -webkit-mask-composite: xor !important;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0) !important;
   mask-composite: exclude !important;
   z-index: 30 !important;
   pointer-events: none !important;
-  animation: rainbow-rotate 2.8s linear infinite !important;
-  box-shadow: 
+  animation: namiRainbowFoilBorder 4.8s linear infinite !important;
+  box-shadow:
     0 0 20px rgba(255, 0, 200, 0.75),
     0 0 32px rgba(0, 240, 255, 0.45) !important;
 }
@@ -16702,10 +17508,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after,
 button.uniform-member-avatar.is-fiend-rainbow::after,
 .pinned-profile-avatar.is-fiend-rainbow::after,
 .nami-pinned-profile-card .uniform-member-avatar.is-fiend-rainbow::after {
-  padding: 5.5px !important;
-  background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc, #ff00cc) !important;
-  animation-duration: 2.2s !important;
-  box-shadow: 
+  padding: 4px !important;
+  animation-duration: 3.2s !important;
+  box-shadow:
     0 0 26px rgba(255, 0, 200, 0.85),
     0 0 40px rgba(0, 240, 255, 0.6) !important;
   filter: saturate(1.6) brightness(1.2) !important;
@@ -16729,24 +17534,53 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
      inset: -4px !important;
      border-radius: 9999px !important;
      padding: 4px !important;
-     background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc) !important;
-     -webkit-mask: 
-       linear-gradient(#fff 0 0) content-box, 
-       linear-gradient(#fff 0 0) !important;
+     background: conic-gradient(
+       from var(--nami-rainbow-angle),
+       #ff4d6d,
+       #ffb347,
+       #ffe66d,
+       #43f5a7,
+       #75d7ff,
+       #9b5de5,
+       #ff4d6d
+     ) !important;
+     -webkit-mask:
+       linear-gradient(#000 0 0) content-box,
+       linear-gradient(#000 0 0) !important;
      -webkit-mask-composite: xor !important;
+     mask:
+       linear-gradient(#000 0 0) content-box,
+       linear-gradient(#000 0 0) !important;
      mask-composite: exclude !important;
      z-index: 30 !important;
      pointer-events: none !important;
-     animation: rainbow-rotate 3s linear infinite !important;
+     animation: namiRainbowFoilBorder 4.8s linear infinite !important;
      box-shadow: 0 0 18px rgba(255, 0, 200, 0.6) !important;
    }
    
    /* Stronger rainbow for FIEND owner on pinned avatar */
    .pinned-profile-avatar.is-fiend-rainbow::after {
      padding: 5px !important;
-     background: linear-gradient(135deg, #ff00cc, #00f0ff, #ffeb3b, #ff00cc, #ff00cc) !important;
-     animation-duration: 2.4s !important;
+     animation-duration: 3.2s !important;
      box-shadow: 0 0 26px rgba(255, 0, 200, 0.75) !important;
      filter: saturate(1.5) brightness(1.15) !important;
    }
+
+.global-chat-presence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.global-chat-owner-delete {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.global-chat-owner-delete:hover {
+  background: rgba(185, 28, 28, 0.45);
+  color: #fff;
+}
 

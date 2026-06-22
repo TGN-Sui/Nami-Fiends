@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
+import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
 import { percentForNamiSeasonLevel } from './member-progression.js';
 import { useSelfProfileEdits } from './member-profile-store.js';
@@ -106,6 +107,8 @@ export function MemberProfileShowcase(props: {
             />
           ) : null}
         </div>
+
+        <MemberPreferenceStrip member={props.member} />
 
         <div className="member-showcase-metric-grid">
           {showcase.offstreamGame ? (
