@@ -1,14 +1,18 @@
 import { useSyncExternalStore } from 'react';
 
+import { getSelfMember, isMemberVerified } from './member-access.js';
 import {
   readSelfProfileEdits,
   saveSelfProfileEdits,
 } from './member-profile-store.js';
-import { readMemberSession, saveMemberSession } from './member-session-store.js';
-import { members } from './uiMockData.js';
+import { readMemberSession } from './member-session-store.js';
+import { members, type NamiMember } from './uiMockData.js';
 
 const HISTORY_KEY = 'nami.member.display-name-history';
 const SELF_MEMBER_ID = 'm1';
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const DISPLAY_NAME_CHANGE_COOLDOWN_MS = 30 * DAY_MS;
 
 export type DisplayNameHistoryEntry = {
   name: string;
@@ -20,7 +24,15 @@ export type DisplayNameAvailability = {
   reason: string | null;
 };
 
+export type DisplayNameChangeEligibility = {
+  allowed: boolean;
+  reason: string | null;
+  cooldownEndsAtMs: number | null;
+  daysRemaining: number | null;
+};
+
 const historySnapshotCache = new Map<string, DisplayNameHistoryEntry[]>();
+const eligibilitySnapshotCache = new Map<string, DisplayNameChangeEligibility>();
 
 function normalizeDisplayName(value: string): string {
   return value.trim().toLowerCase();
@@ -30,9 +42,39 @@ function clearHistorySnapshotCache(): void {
   historySnapshotCache.clear();
 }
 
-function dispatchHistoryChange(): void {
+function clearEligibilitySnapshotCache(): void {
+  eligibilitySnapshotCache.clear();
+}
+
+function clearDisplayNameStoreSnapshotCaches(): void {
   clearHistorySnapshotCache();
+  clearEligibilitySnapshotCache();
+}
+
+function dispatchHistoryChange(): void {
+  clearDisplayNameStoreSnapshotCaches();
   window.dispatchEvent(new CustomEvent('nami-member-display-name-history-changed'));
+}
+
+function eligibilitySnapshotCacheKey(memberId: string, member: NamiMember): string {
+  return memberId + '\0' + member.tier + '\0' + member.signal;
+}
+
+function getDisplayNameChangeEligibilitySnapshot(
+  memberId: string,
+  member: NamiMember
+): DisplayNameChangeEligibility {
+  const cacheKey = eligibilitySnapshotCacheKey(memberId, member);
+  const cachedSnapshot = eligibilitySnapshotCache.get(cacheKey);
+
+  if (cachedSnapshot) {
+    return cachedSnapshot;
+  }
+
+  const snapshot = readDisplayNameChangeEligibility(memberId, member);
+  eligibilitySnapshotCache.set(cacheKey, snapshot);
+
+  return snapshot;
 }
 
 function getMemberDisplayNameHistorySnapshot(
@@ -212,6 +254,87 @@ export function readMemberDisplayNameHistory(memberId: string, fallbackName: str
   );
 }
 
+function readLastStoredDisplayNameChangeAtMs(memberId: string): number | null {
+  const stored = readHistoryMap()[memberId];
+
+  if (!stored || stored.length === 0) {
+    return null;
+  }
+
+  return stored[0]?.changedAtMs ?? null;
+}
+
+function formatCooldownDate(timestampMs: number): string {
+  return new Date(timestampMs).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+export function readDisplayNameChangeEligibility(
+  memberId: string,
+  member: NamiMember
+): DisplayNameChangeEligibility {
+  if (memberId !== SELF_MEMBER_ID) {
+    return {
+      allowed: false,
+      reason: 'Only your own display name can be edited.',
+      cooldownEndsAtMs: null,
+      daysRemaining: null,
+    };
+  }
+
+  if (!isMemberVerified(member)) {
+    return {
+      allowed: false,
+      reason:
+        'Display name changes are a verified-member privilege. Verify your passport to unlock this cosmetic.',
+      cooldownEndsAtMs: null,
+      daysRemaining: null,
+    };
+  }
+
+  const lastChangedAtMs = readLastStoredDisplayNameChangeAtMs(memberId);
+
+  if (lastChangedAtMs === null) {
+    return {
+      allowed: true,
+      reason: null,
+      cooldownEndsAtMs: null,
+      daysRemaining: null,
+    };
+  }
+
+  const cooldownEndsAtMs = lastChangedAtMs + DISPLAY_NAME_CHANGE_COOLDOWN_MS;
+  const remainingMs = cooldownEndsAtMs - Date.now();
+
+  if (remainingMs > 0) {
+    const daysRemaining = Math.max(1, Math.ceil(remainingMs / DAY_MS));
+
+    return {
+      allowed: false,
+      reason:
+        'Qualified members can change their passport display name once every 30 days. Next change unlocks on ' +
+        formatCooldownDate(cooldownEndsAtMs) +
+        ' (' +
+        daysRemaining +
+        ' day' +
+        (daysRemaining === 1 ? '' : 's') +
+        ' remaining).',
+      cooldownEndsAtMs,
+      daysRemaining,
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: null,
+    cooldownEndsAtMs: null,
+    daysRemaining: null,
+  };
+}
+
 function appendDisplayNameHistory(memberId: string, name: string): void {
   const map = readHistoryMap();
   const current = map[memberId] ?? [];
@@ -230,27 +353,30 @@ export function saveMemberDisplayName(
     return { ok: false, message: 'Only your own display name can be edited.' };
   }
 
+  const member = getSelfMember();
+  const trimmedCandidate = nextName.trim();
+  const currentName = resolveMemberDisplayName(memberId, member.name);
+  const isUnchanged = normalizeDisplayName(currentName) === normalizeDisplayName(trimmedCandidate);
+  const eligibility = readDisplayNameChangeEligibility(memberId, member);
+
+  if (!isUnchanged && !eligibility.allowed) {
+    return { ok: false, message: eligibility.reason ?? 'Display name change is not available right now.' };
+  }
+
   const availability = checkDisplayNameAvailability(nextName, memberId);
 
   if (!availability.available) {
     return { ok: false, message: availability.reason ?? 'Display name is not available.' };
   }
 
-  const trimmed = nextName.trim();
-  const currentName = resolveMemberDisplayName(memberId, members.find((member) => member.id === memberId)?.name ?? '');
+  const trimmed = trimmedCandidate;
 
-  if (normalizeDisplayName(currentName) === normalizeDisplayName(trimmed)) {
+  if (isUnchanged) {
     return { ok: true, message: 'Display name unchanged.' };
   }
 
   const edits = readSelfProfileEdits();
   saveSelfProfileEdits({ ...edits, displayName: trimmed });
-
-  const session = readMemberSession();
-
-  if (session) {
-    saveMemberSession({ ...session, displayName: trimmed });
-  }
 
   appendDisplayNameHistory(memberId, trimmed);
 
@@ -259,7 +385,7 @@ export function saveMemberDisplayName(
 
 function subscribeHistory(listener: () => void): () => void {
   function onChange(): void {
-    clearHistorySnapshotCache();
+    clearDisplayNameStoreSnapshotCaches();
     listener();
   }
 
@@ -285,8 +411,19 @@ export function useMemberDisplayNameHistory(
   );
 }
 
+export function useDisplayNameChangeEligibility(
+  memberId: string,
+  member: NamiMember
+): DisplayNameChangeEligibility {
+  return useSyncExternalStore(
+    subscribeHistory,
+    () => getDisplayNameChangeEligibilitySnapshot(memberId, member),
+    () => getDisplayNameChangeEligibilitySnapshot(memberId, member)
+  );
+}
+
 export function resetMemberDisplayNameStoreForTests(): void {
-  clearHistorySnapshotCache();
+  clearDisplayNameStoreSnapshotCaches();
 
   try {
     window.localStorage.removeItem(HISTORY_KEY);

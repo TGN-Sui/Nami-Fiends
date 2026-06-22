@@ -1,5 +1,6 @@
 import { contactFieldBlocksContinue } from './contact-code-verification-store.js';
 import { createEmptyGameStoreUrls } from './game-genres.js';
+import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 
 const STORAGE_KEY = 'nami.game.onboarding.draft';
 
@@ -17,6 +18,7 @@ export interface GameOnboardingDraft {
   phoneVerified: boolean;
   websiteUrl: string;
   genres: string[];
+  platforms: string[];
   steamStoreUrl: string;
   epicStoreUrl: string;
   xboxStoreUrl: string;
@@ -48,6 +50,7 @@ export function createEmptyGameOnboardingDraft(): GameOnboardingDraft {
     phoneVerified: false,
     websiteUrl: '',
     genres: [],
+    platforms: [],
     ...emptyStoreUrls,
     trailerUrl: '',
     officialSocialPlatform: null,
@@ -128,6 +131,11 @@ export function loadGameOnboardingDraft(): GameOnboardingDraft | null {
       websiteUrl: typeof parsed.websiteUrl === 'string' ? parsed.websiteUrl : '',
       genres: Array.isArray(parsed.genres)
         ? parsed.genres.filter((genre): genre is string => typeof genre === 'string')
+        : [],
+      platforms: Array.isArray(parsed.platforms)
+        ? normalizeSupportedPlatforms(
+            parsed.platforms.filter((platform): platform is string => typeof platform === 'string')
+          )
         : [],
       ...storeUrls,
       trailerUrl: typeof parsed.trailerUrl === 'string' ? parsed.trailerUrl : '',

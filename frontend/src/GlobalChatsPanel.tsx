@@ -26,6 +26,7 @@ import {
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
+import { useMemberChatTimeTracker } from './member-chat-time-store.js';
 import {
   canOfficialOwnerModerateGlobalChat,
   filterModeratedGlobalChats,
@@ -55,6 +56,7 @@ import {
   globalChatListCreatorLine,
   globalChatPresenceKindLabel,
   globalChatPresenceMeta,
+  globalChatSurfaceLabel,
   hubGlobalChats,
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
   type GlobalChatRoom,
@@ -127,6 +129,16 @@ export function GlobalChatRoomView(props: {
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
+  const chatTimeTarget = useMemo(
+    () => ({
+      chatId: props.chat.id,
+      chatTitle:
+        props.chat.kind === 'genre' ? props.chat.title + ' Lounge' : props.chat.title,
+      surfaceLabel: globalChatSurfaceLabel(props.chat),
+    }),
+    [props.chat]
+  );
+  useMemberChatTimeTracker(selfMember.id, chatTimeTarget);
   const canOwnerModerateChat = canOfficialOwnerModerateGlobalChat(props.chat, connectedOwner);
   const presenceKindLabel = globalChatPresenceKindLabel(props.chat);
   const presenceMeta = globalChatPresenceMeta(props.chat);

@@ -13,6 +13,7 @@ import {
   resolveOwnerPassportLabels,
 } from './owner-passport-display.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
+import { PassportHoverDetail } from './PassportHoverDetail.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import {
   ConductSignalDot,
@@ -63,6 +64,42 @@ function memberProgression(member: NamiMember): {
   };
 }
 
+function conductSignalHoverDetail(signal: ConductSignal): string {
+  switch (signal) {
+    case 'Green':
+      return 'Verified conduct status — trusted for chat, feeds, and community tools.';
+    case 'Orange':
+      return 'Conduct review in progress — some surfaces may stay limited until cleared.';
+    case 'Red':
+      return 'Conduct restriction active — moderation or review is affecting access.';
+    case 'Black':
+      return 'Severe conduct restriction — highest-priority safety review state.';
+    default:
+      return signal + ' conduct signal shown on your passport.';
+  }
+}
+
+function passportMarkHoverDetail(
+  member: NamiMember,
+  markLabel: string,
+  isOfficialGalaxy: boolean,
+  ownerPassport: boolean
+): string {
+  if (isOfficialGalaxy) {
+    return markLabel + ' — exclusive official owner passport identity for the Nami platform.';
+  }
+
+  if (ownerPassport) {
+    return markLabel + ' — owner passport header label; cosmetic only and separate from login.';
+  }
+
+  if (markLabel.includes('Team')) {
+    return markLabel + ' — marks this passport as an Official Nami Team identity.';
+  }
+
+  return markLabel + ' — passport type label shown at the top of your Nami Passport card.';
+}
+
 function memberHandle(member: NamiMember): string {
   if (member.id === 'm1') {
     return '@npcgamer';
@@ -102,7 +139,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
   const hasGalaxyRainbowShell = isOfficialGalaxy || ownerPassport;
   const isClickable = Boolean(props.onOpenPassport);
-  const profileCardFrameRef = useRef<HTMLDivElement | null>(null);
+  const passportTiltRef = useRef<HTMLDivElement | null>(null);
   const foilFrameRef = useRef<number | null>(null);
   const foilStateRef = useRef({
     current: {
@@ -191,7 +228,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   }
 
   function updateCardFoil(event: { currentTarget: HTMLElement; clientX: number; clientY: number }): void {
-    const card = profileCardFrameRef.current;
+    const card = passportTiltRef.current;
 
     if (!card || !passportInteractive) {
       return;
@@ -220,7 +257,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   }
 
   function resetCardFoil(): void {
-    const card = profileCardFrameRef.current;
+    const card = passportTiltRef.current;
 
     if (!card) {
       return;
@@ -251,17 +288,46 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   function passportNameplateIcons(): ReactElement {
     return (
       <div className="profile-signal-badge-row">
-        <span className="profile-signal-chip is-signal-icon-only" title={reviewedSignal + ' signal'}>
-          <ConductSignalDot signal={reviewedSignal} />
-        </span>
-        <OwnerEditableImage
-          className="profile-badge-icon profile-badge-icon-custom passport-tier-badge-editable"
-          fallback={<span aria-hidden="true">{displayTier.slice(0, 1)}</span>}
+        <PassportHoverDetail
+          detail={conductSignalHoverDetail(reviewedSignal)}
+          label={reviewedSignal + ' conduct signal'}
+        >
+          <span className="profile-signal-chip is-signal-icon-only">
+            <ConductSignalDot signal={reviewedSignal} />
+          </span>
+        </PassportHoverDetail>
+        <PassportHoverDetail
+          detail={displayTier + ' tier badge icon displayed beside your conduct signal.'}
           label="Passport tier badge"
-          nested
-          slotId="passport-tier-badge"
-        />
+        >
+          <OwnerEditableImage
+            className="profile-badge-icon profile-badge-icon-custom passport-tier-badge-editable"
+            fallback={<span aria-hidden="true">{displayTier.slice(0, 1)}</span>}
+            label="Passport tier badge"
+            nested
+            slotId="passport-tier-badge"
+          />
+        </PassportHoverDetail>
       </div>
+    );
+  }
+
+  function passportAvatar(member: NamiMember): ReactElement {
+    const avatar = (
+      <UniformMemberAvatar className="nami-profile-card-avatar" member={member} signal={reviewedSignal} />
+    );
+
+    return (
+      <PassportHoverDetail
+        block
+        detail={
+          member.name +
+          "'s passport portrait. Updates from profile edits and avatar uploads."
+        }
+        label="Passport avatar"
+      >
+        {avatar}
+      </PassportHoverDetail>
     );
   }
 
@@ -297,14 +363,24 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
     >
       <div
         className={
-          'nami-profile-card-frame tcg-foil-passport-frame ' +
+          'tcg-foil-passport-tilt-root' +
+          (passportInteractive ? ' is-tcg-foil-eligible' : '') +
+          (hasGalaxyRainbowShell ? ' has-rainbow-foil' : '')
+        }
+        ref={passportTiltRef}
+      >
+        {hasGalaxyRainbowShell ? (
+          <span aria-hidden="true" className="tcg-passport-rainbow-border" />
+        ) : null}
+        <div
+          className={
+            'nami-profile-card-frame tcg-foil-passport-frame ' +
           (layout === 'horizontal'
             ? 'nami-profile-card-frame-horizontal tcg-foil-passport-frame-horizontal'
             : 'nami-profile-card-frame-vertical tcg-foil-passport-frame-vertical') +
           (tierFoilClass ? ' ' + tierFoilClass : '') +
           (hasGalaxyRainbowShell ? '' : memberRainbowBorderClass(props.member))
         }
-        ref={profileCardFrameRef}
       >
         {(isOfficialGalaxy || ownerPassport) && (
   <div 
@@ -330,32 +406,52 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   </div>
 )}
 
-        <div className="nami-profile-card-header">
-          <OwnerEditableImage
-            className="passport-header-mark-editable"
-            fallback={
-              <span className="mini-badge">
-                {passportMarkLabel}
-              </span>
-            }
-            imageClassName="passport-header-mark-image"
-            label={isOfficialGalaxy ? 'Official galaxy passport mark' : 'Passport header mark'}
-            nested
-            slotId={isOfficialGalaxy ? 'passport-official-team-mark' : 'passport-header-mark'}
-          />
-          <OwnerEditableImage
-            className="passport-tier-chip-editable"
-            fallback={<strong>{displayTier}</strong>}
-            imageClassName="passport-tier-chip-image"
-            label="Passport tier chip"
-            nested
-            slotId="passport-tier-chip"
-          />
+        <div className="nami-profile-card-header tcg-passport-card-header">
+          <div className="tcg-passport-card-header-mark-slot">
+            <PassportHoverDetail
+              detail={passportMarkHoverDetail(
+                props.member,
+                passportMarkLabel,
+                isOfficialGalaxy,
+                ownerPassport
+              )}
+              label={isOfficialGalaxy ? 'Official galaxy passport mark' : 'Passport header mark'}
+            >
+              <OwnerEditableImage
+                className="passport-header-mark-editable"
+                fallback={
+                  <span className="mini-badge">
+                    {passportMarkLabel}
+                  </span>
+                }
+                imageClassName="passport-header-mark-image"
+                label={isOfficialGalaxy ? 'Official galaxy passport mark' : 'Passport header mark'}
+                nested
+                slotId={isOfficialGalaxy ? 'passport-official-team-mark' : 'passport-header-mark'}
+              />
+            </PassportHoverDetail>
+          </div>
+          <div className="tcg-passport-card-header-tier-slot">
+            <PassportHoverDetail
+              align="end"
+              detail={displayTier + ' — rank or tier label shown on your passport header.'}
+              label="Passport tier chip"
+            >
+              <OwnerEditableImage
+                className="passport-tier-chip-editable"
+                fallback={<strong>{displayTier}</strong>}
+                imageClassName="passport-tier-chip-image"
+                label="Passport tier chip"
+                nested
+                slotId="passport-tier-chip"
+              />
+            </PassportHoverDetail>
+          </div>
         </div>
 
         {layout === 'horizontal' ? (
           <div className="tcg-passport-horizontal-identity">
-            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
+            {passportAvatar(props.member)}
 
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
@@ -366,7 +462,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           </div>
         ) : (
           <>
-            <UniformMemberAvatar className="nami-profile-card-avatar" member={props.member} signal={reviewedSignal} />
+            {passportAvatar(props.member)}
 
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
@@ -438,17 +534,18 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <MemberPreferenceStrip member={props.member} variant="passport-horizontal" />
           </div>
         ) : null}
-      </div>
-
-      {props.children ? (
-        <div
-          className="tcg-passport-card-children"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          {props.children}
         </div>
-      ) : null}
+
+        {props.children ? (
+          <div
+            className="tcg-passport-card-children"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            {props.children}
+          </div>
+        ) : null}
+      </div>
     </article>
   );
 }

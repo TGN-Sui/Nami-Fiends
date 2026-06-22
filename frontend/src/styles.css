@@ -6251,6 +6251,11 @@ button:disabled {
   transform-style: preserve-3d;
 }
 
+/* TCG passport tilt lives on the inner root so shell transform:none stays intact. */
+.tcg-foil-passport-tilt-root.is-tcg-foil-eligible > .nami-profile-card-frame {
+  transform: none !important;
+}
+
 /* The whole card is now the physical object.
    Avatar, name, stats, details, Passport panel, and button all tilt together. */
 .nami-profile-card-frame {

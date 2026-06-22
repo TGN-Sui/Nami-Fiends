@@ -4149,19 +4149,45 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 
 .member-profile-passport-hero {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   margin-bottom: 0;
 }
 
 .member-profile-passport-hero .profile-passport-carousel {
-  width: fit-content;
+  width: min(100%, 760px);
   max-width: 100%;
+  margin-inline: auto;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   backdrop-filter: none;
   box-shadow: none;
+}
+
+.member-profile-passport-hero
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-main {
+  align-items: center;
+  margin-inline: auto;
+}
+
+.member-profile-passport-hero
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.member-profile-passport-hero
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-rail {
+  margin-top: 0;
+  width: min(100%, 320px);
 }
 
 .member-profile-passport-hero .profile-passport-carousel .tcg-foil-passport-shell,
@@ -4224,13 +4250,15 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   justify-content: flex-end;
 }
 
-.user-profile-passport-hero .nami-profile-view-toolbar-stable .nami-profile-layout-switch {
+.user-profile-passport-hero .nami-profile-view-toolbar-stable .nami-profile-layout-switch,
+.member-profile-passport-hero .nami-profile-view-toolbar-stable .nami-profile-layout-switch {
   width: 100%;
   min-width: 0;
   max-width: none;
 }
 
-.user-profile-passport-hero .nami-profile-view-toolbar-stable .profile-passport-carousel-actions {
+.user-profile-passport-hero .nami-profile-view-toolbar-stable .profile-passport-carousel-actions,
+.member-profile-passport-hero .nami-profile-view-toolbar-stable .profile-passport-carousel-actions {
   display: flex;
   flex-wrap: nowrap;
   gap: 8px;
@@ -4254,7 +4282,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 @media (max-width: 720px) {
-  .user-profile-passport-hero .nami-profile-view-toolbar-stable {
+  .user-profile-passport-hero .nami-profile-view-toolbar-stable,
+  .member-profile-passport-hero .nami-profile-view-toolbar-stable {
     grid-template-columns: 1fr !important;
     justify-items: stretch !important;
   }
@@ -5036,16 +5065,17 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .member-profile-passport-hero
-  .profile-passport-carousel:has(.profile-passport-carousel-toolbar)
+  .profile-passport-carousel:not(.is-horizontal-passport-layout)
   .profile-passport-carousel-rail {
-  margin-top: 64px;
+  margin-top: 0;
 }
 
 .profile-passport-carousel.is-horizontal-passport-layout .profile-passport-carousel-layout {
   display: block;
 }
 
-.user-profile-passport-hero .profile-passport-carousel.is-horizontal-passport-layout .profile-passport-carousel-main {
+.user-profile-passport-hero .profile-passport-carousel.is-horizontal-passport-layout .profile-passport-carousel-main,
+.member-profile-passport-hero .profile-passport-carousel.is-horizontal-passport-layout .profile-passport-carousel-main {
   width: min(100%, 760px);
 }
 
@@ -5088,6 +5118,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   flex: 0 1 auto;
   width: min(100%, 360px);
   border-radius: 16px;
+  overflow: visible;
 }
 
 .profile-passport-carousel.is-horizontal-passport-layout .profile-passport-carousel-viewport {
@@ -6143,7 +6174,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   grid-template-rows: auto minmax(0, 1fr) auto !important;
   gap: 12px 16px;
   padding: 16px 18px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .is-horizontal-tcg-passport .tcg-passport-horizontal-identity {
@@ -6291,9 +6322,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .conduct-signal-dot {
   display: inline-block;
   flex: 0 0 auto;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
   border: 2px solid transparent;
   background: currentColor;
   box-shadow: 0 0 10px currentColor;
@@ -6301,6 +6332,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   font-style: normal;
   line-height: 0;
   vertical-align: middle;
+  transform: rotate(45deg);
 }
 
 .conduct-signal-dot.signal-green {
@@ -6336,8 +6368,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .conduct-signal-dot.is-conduct-signal-dot-sm {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-width: 1.5px;
   box-shadow: 0 0 8px currentColor;
 }
@@ -6347,12 +6379,13 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   min-width: 28px;
   padding: 0;
   justify-content: center;
+  align-items: center;
 }
 
 .profile-signal-chip.is-signal-icon-only i,
 .profile-signal-chip.is-signal-icon-only .conduct-signal-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 .chat-window-buildout .message-stack,
@@ -6417,7 +6450,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .profile-edit-field input,
-.profile-edit-field textarea {
+.profile-edit-field textarea,
+.profile-edit-field select {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -6425,6 +6459,17 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   background: rgba(5, 9, 15, 0.62);
   color: #eef7ff;
   resize: vertical;
+}
+
+.profile-edit-field select {
+  cursor: pointer;
+}
+
+.profile-edit-selected-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .profile-edit-chip-field {
@@ -6747,7 +6792,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .nami-profile-card-header .mini-badge {
   flex: 0 0 auto;
   width: fit-content;
-  max-width: calc(100% - 88px);
+  max-width: none;
 }
 
 .nami-profile-card-header > strong {
@@ -8957,13 +9002,55 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   max-height: 22px;
 }
 
+.tcg-passport-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.tcg-passport-card-header-mark-slot {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.tcg-passport-card-header-tier-slot {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .passport-header-mark-editable {
   display: inline-flex;
-  max-width: calc(100% - 88px);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: none;
+  overflow: visible;
+}
+
+.passport-header-mark-editable.owner-editable-image {
+  overflow: visible;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .passport-header-mark-editable .mini-badge {
   display: inline-flex;
+  width: fit-content;
+  max-width: none;
+}
+
+.passport-tier-chip-editable.owner-editable-image {
+  overflow: visible;
+  width: fit-content;
+  flex: 0 0 auto;
 }
 
 .passport-header-mark-image {
@@ -8974,8 +9061,59 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 
 .passport-tier-chip-editable {
   display: inline-flex;
-  margin-left: auto;
+  margin-left: 0;
   align-self: flex-start;
+}
+
+.tcg-foil-passport-shell .passport-hover-detail {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.tcg-foil-passport-shell .passport-hover-detail.is-block-hover-detail {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.passport-hover-detail-tooltip.is-portaled {
+  position: fixed;
+  z-index: 12000;
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(117, 215, 255, 0.14), transparent 48%),
+    rgba(8, 14, 28, 0.96);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+  color: rgba(232, 242, 255, 0.96);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: none;
+}
+
+.passport-hover-detail-tooltip.is-portaled strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(117, 215, 255, 0.92);
+}
+
+.tcg-foil-passport-frame .profile-signal-badge-row .passport-hover-detail {
+  flex: 0 0 auto;
+}
+
+.tcg-passport-card-header {
+  position: relative;
+  z-index: 4;
+  overflow: visible;
 }
 
 .passport-tier-chip-editable strong {
@@ -13530,6 +13668,16 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   max-width: 100%;
 }
 
+.gamehub-placement-boost-action {
+  display: grid;
+  width: 100%;
+}
+
+.gamehub-placement-boost-action .channel-boost-action {
+  width: 100%;
+  justify-content: center;
+}
+
 @media (max-width: 900px) {
   .event-card-action-bar.is-official-event-action-bar,
   .event-card-action-bar.is-channel-event-action-bar {
@@ -17071,24 +17219,53 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 /* === RAINBOW BORDER ON PASSPORT === */
-.tcg-foil-passport-shell.has-rainbow-foil,
-.tcg-foil-passport-shell.is-nami-official-galaxy-passport {
-  --passport-rainbow-radius: 32px;
+.tcg-foil-passport-tilt-root {
   position: relative;
-  border-radius: var(--passport-rainbow-radius);
-  overflow: visible;
-  isolation: isolate;
-  box-sizing: border-box;
+  width: 100%;
+  transform-style: preserve-3d;
+}
+
+.tcg-foil-passport-tilt-root.is-tcg-foil-eligible {
+  --card-body-tilt-x: 0deg;
+  --card-body-tilt-y: 0deg;
+  transform:
+    perspective(1100px)
+    rotateX(var(--card-body-tilt-x))
+    rotateY(var(--card-body-tilt-y));
+  transform-origin: center;
+  transform-style: preserve-3d;
+  transition: transform 220ms cubic-bezier(0.18, 0.9, 0.18, 1);
+  will-change: transform;
+}
+
+.tcg-foil-passport-tilt-root.is-tcg-foil-eligible > .tcg-foil-passport-frame {
+  transform: none !important;
+}
+
+.tcg-foil-passport-shell.has-rainbow-foil,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport,
+.tcg-foil-passport-tilt-root.has-rainbow-foil {
+  --passport-rainbow-radius: 32px;
 }
 
 .is-horizontal-tcg-passport.has-rainbow-foil,
-.is-horizontal-tcg-passport.is-nami-official-galaxy-passport {
+.is-horizontal-tcg-passport.is-nami-official-galaxy-passport,
+.is-horizontal-tcg-passport .tcg-foil-passport-tilt-root.has-rainbow-foil {
   --passport-rainbow-radius: 28px;
 }
 
-.tcg-foil-passport-shell.has-rainbow-foil::before,
-.tcg-foil-passport-shell.is-nami-official-galaxy-passport::before {
-  content: '';
+.tcg-foil-passport-shell.has-rainbow-foil,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport {
+  overflow: visible;
+}
+
+.tcg-foil-passport-tilt-root.has-rainbow-foil {
+  border-radius: var(--passport-rainbow-radius);
+  overflow: visible;
+  isolation: isolate;
+}
+
+.tcg-passport-rainbow-border {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -17114,7 +17291,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   z-index: 8;
   pointer-events: none;
   animation: namiRainbowFoilBorder 4.8s linear infinite;
-  transform: none !important;
   border: none;
   box-shadow: none;
 }
@@ -17136,8 +17312,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   display: none !important;
 }
 
-.tcg-foil-passport-shell.has-rainbow-foil:has(.is-fiend-galaxy)::before,
-.tcg-foil-passport-shell.is-nami-official-galaxy-passport:has(.is-fiend-galaxy)::before {
+.tcg-foil-passport-tilt-root.has-rainbow-foil:has(.is-fiend-galaxy) .tcg-passport-rainbow-border,
+.tcg-foil-passport-shell.is-nami-official-galaxy-passport:has(.is-fiend-galaxy) .tcg-passport-rainbow-border {
   animation-duration: 3.2s;
   box-shadow: 0 0 24px rgba(255, 0, 200, 0.65);
   filter: saturate(1.45) brightness(1.15);
@@ -17152,6 +17328,67 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .member-preference-strip.is-passport-horizontal-preference-strip {
   grid-column: 1 / -1;
   margin-top: 4px;
+}
+
+.member-preference-strip.is-passport-indicator-strip {
+  display: grid;
+  gap: 6px;
+}
+
+.member-preference-indicator-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.member-preference-indicator-label {
+  flex: 0 0 auto;
+  min-width: 52px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(159, 181, 202, 0.78);
+}
+
+.member-preference-indicator-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.member-preference-indicator-tabs .passport-hover-detail {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.member-preference-indicator-tab {
+  flex: 0 0 auto;
+  min-width: 28px;
+  min-height: 20px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  background: rgba(5, 9, 15, 0.32);
+  color: rgba(190, 210, 235, 0.42);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.member-preference-indicator-tab.is-active-preference-indicator {
+  border-color: rgba(117, 215, 255, 0.42);
+  background: rgba(117, 215, 255, 0.14);
+  color: #eef7ff;
+  box-shadow: 0 0 10px rgba(117, 215, 255, 0.12);
 }
 
 .member-preference-strip-group {

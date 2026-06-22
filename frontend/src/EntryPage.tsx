@@ -14,6 +14,7 @@ import {
 import { EntryLoginPanel } from './EntryLoginPanel.js';
 import { clearSignedOut } from './member-auth-store.js';
 import { restoreMemberSessionByZkLoginAddress } from './member-auth-link-store.js';
+import { resolveMemberDisplayName } from './member-display-name-store.js';
 import {
   clearMemberSession,
   hasActiveMemberSession,
@@ -52,7 +53,9 @@ function EntryGatePanel(props: {
 
         <div className="nami-entry-gate-copy">
           <span className="mini-badge">Welcome back</span>
-          <h2 id="nami-entry-gate-title">Hi, {session.displayName}</h2>
+          <h2 id="nami-entry-gate-title">
+            Hi, {resolveMemberDisplayName('m1', session.displayName)}
+          </h2>
           <p>
             You are signed in as {session.email}. Enter the hub or open Settings to manage your
             passport and linked platforms.
@@ -506,7 +509,7 @@ export function EntryPage(props: {
         <section className="nami-entry-page panel nami-entry-returning">
           <div className="nami-entry-hero">
             <span className="mini-badge">Welcome back</span>
-            <h1>Hi, {session.displayName}</h1>
+            <h1>Hi, {resolveMemberDisplayName('m1', session.displayName)}</h1>
             <p>
               You are signed up as {session.email}. Claim your passport nodename and link platforms
               anytime from Settings.

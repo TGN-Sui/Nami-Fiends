@@ -6,6 +6,7 @@ import {
   updateApprovalRequestStatus,
 } from './approval-requests-store.js';
 import { isGameChannelOwner } from './channel-owner-access.js';
+import { canLeadSquadInvites } from './guild-space-access.js';
 import { getSelfMember } from './member-access.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
 import { unlockAdventurerBenefitsForMember } from './squad-benefits-store.js';
@@ -205,6 +206,43 @@ export function invitableSquadsForMember(memberId: string = getSelfMember().id):
 
     return roster.length < squad.maxSlots;
   });
+}
+
+export function invitableSquadsForTarget(targetMemberId: string): NamiSquadRecord[] {
+  const selfMember = getSelfMember();
+
+  if (!canLeadSquadInvites(selfMember) || availableSquadInviteSlots(selfMember.id) <= 0) {
+    return [];
+  }
+
+  if (targetMemberId === selfMember.id) {
+    return [];
+  }
+
+  const targetMember = members.find((member) => member.id === targetMemberId);
+
+  if (!targetMember || targetMember.signal === 'Black') {
+    return [];
+  }
+
+  return invitableSquadsForMember(selfMember.id).filter((squad) => {
+    const roster = effectiveSquadMemberIds(squad);
+
+    if (roster.includes(targetMemberId)) {
+      return false;
+    }
+
+    return !readInvites().some(
+      (invite) =>
+        invite.squadId === squad.id &&
+        invite.targetMemberId === targetMemberId &&
+        invite.status === 'pending'
+    );
+  });
+}
+
+export function canInviteMemberToAnySquad(targetMember: NamiMember): boolean {
+  return invitableSquadsForTarget(targetMember.id).length > 0;
 }
 
 export function membersEligibleForSquadInvite(

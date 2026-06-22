@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-import { gameHubBrowserFilters } from './gamehub-preferences.js';
 import { canEditProfileCosmetics } from './member-access.js';
+import { PROFILE_GENRE_LOUNGE_OPTIONS, SUPPORTED_PLATFORMS } from './platform-genre-options.js';
 import { readMemberSession } from './member-session-store.js';
 import { type NamiMember } from './uiMockData.js';
 
@@ -9,13 +9,15 @@ const PROFILE_STORAGE_KEY = 'nami.self.profile';
 
 const SELF_MEMBER_ID = 'm1';
 
-export const profilePlatformOptions = ['PC', 'Console', 'Mobile'] as const;
+export const profilePlatformOptions = SUPPORTED_PLATFORMS;
 
-const platformOptionSet = new Set<string>(profilePlatformOptions);
+export const profileGenreOptions = [...PROFILE_GENRE_LOUNGE_OPTIONS];
 
-export const profileGenreOptions = gameHubBrowserFilters.filter(
-  (filter) => filter !== 'All' && filter !== 'Verified' && !platformOptionSet.has(filter)
-);
+function normalizePreferredGenres(genres: string[]): string[] {
+  const allowed = new Set<string>(profileGenreOptions);
+
+  return genres.filter((genre) => allowed.has(genre));
+}
 
 export type SelfProfileEdits = {
   displayName: string;
@@ -65,9 +67,11 @@ export function readSelfProfileEdits(): SelfProfileEdits {
       preferredPlatforms: Array.isArray(parsed.preferredPlatforms)
         ? parsed.preferredPlatforms.filter((entry): entry is string => typeof entry === 'string')
         : [],
-      preferredGenres: Array.isArray(parsed.preferredGenres)
-        ? parsed.preferredGenres.filter((entry): entry is string => typeof entry === 'string')
-        : [],
+      preferredGenres: normalizePreferredGenres(
+        Array.isArray(parsed.preferredGenres)
+          ? parsed.preferredGenres.filter((entry): entry is string => typeof entry === 'string')
+          : []
+      ),
     };
   } catch {
     return defaultProfileEdits();
@@ -88,7 +92,13 @@ function withoutCosmeticEdits(edits: SelfProfileEdits): SelfProfileEdits {
 export function saveSelfProfileEdits(edits: SelfProfileEdits): void {
   const payload = canEditProfileCosmetics() ? edits : withoutCosmeticEdits(edits);
 
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
+  window.localStorage.setItem(
+    PROFILE_STORAGE_KEY,
+    JSON.stringify({
+      ...payload,
+      preferredGenres: normalizePreferredGenres(payload.preferredGenres),
+    })
+  );
   cachedProfileEdits = null;
   window.dispatchEvent(new CustomEvent('nami-self-profile-changed'));
 }

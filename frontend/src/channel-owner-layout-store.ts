@@ -4,6 +4,7 @@ import type { ChannelProfileSection } from './channel-profile-sections.js';
 
 export type OwnerPanelId =
   | 'promotions'
+  | 'supported-platforms'
   | 'brand-palette'
   | 'cover'
   | 'hero-background'
@@ -24,6 +25,7 @@ export const DEFAULT_PROFILE_TAB_ORDER: ChannelProfileSection[] = [
 
 export const DEFAULT_OWNER_PANEL_ORDER: OwnerPanelId[] = [
   'promotions',
+  'supported-platforms',
   'brand-palette',
   'cover',
   'hero-background',
@@ -36,6 +38,7 @@ export const DEFAULT_OWNER_PANEL_ORDER: OwnerPanelId[] = [
 
 export const OWNER_PANEL_LABELS: Record<OwnerPanelId, string> = {
   promotions: 'Promotions',
+  'supported-platforms': 'Supported platforms',
   'brand-palette': 'Brand palette',
   cover: 'Cover image',
   'hero-background': 'Hero background',

@@ -41,6 +41,13 @@ import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { ProtocolConductPanel } from './ProtocolConductPanel.js';
 
+import {
+  boostChannel,
+  canShowChannelBoostAction,
+  getChannelBoostPower,
+  useChannelBoostStore,
+} from './channel-boost-store.js';
+import { ChannelBoostButton } from './ChannelBoostButton.js';
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { EventLivePopup } from './EventLivePopup.js';
 import { GameApprovalWelcomeOverlay } from './GameApprovalWelcomeOverlay.js';
@@ -1663,7 +1670,10 @@ function GameHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   useChannelCoverVersion();
+  useChannelBoostStore();
+  const selfMember = useSelfMember();
   const { channels: directoryChannels } = useChannelDirectory(50);
+  const [gameHubBoostNotice, setGameHubBoostNotice] = useState('');
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
@@ -1727,6 +1737,43 @@ function GameHub(props: {
   const filteredBrowserChannels = filteredBrowserEntries.map(({ channel }) => channel);
   const activeSwipeChannel =
     filteredBrowserChannels[swipeIndex % Math.max(1, filteredBrowserChannels.length)] ?? props.selectedChannel;
+  const showGameHubBoostAction = canShowChannelBoostAction(selfMember, props.selectedChannel.id);
+  const selectedChannelBoostPower = getChannelBoostPower(props.selectedChannel.id);
+
+  function handleGameHubBoostChannel(): void {
+    const result = boostChannel(props.selectedChannel.id, selfMember);
+
+    if (!result.ok) {
+      if (result.reason === 'cycle-limit') {
+        setGameHubBoostNotice('No boosts left this discovery cycle. Boosts reset next week.');
+        return;
+      }
+
+      if (result.reason === 'channel-limit') {
+        setGameHubBoostNotice(
+          'You already boosted ' +
+            props.selectedChannel.name +
+            ' the maximum number of times for this discovery cycle.'
+        );
+        return;
+      }
+
+      setGameHubBoostNotice('Could not apply a boost for this channel.');
+      return;
+    }
+
+    setGameHubBoostNotice(
+      'Boosted ' +
+        props.selectedChannel.name +
+        ' with +' +
+        result.entry.power +
+        ' discovery power. ' +
+        result.remainingBoosts +
+        ' boost' +
+        (result.remainingBoosts === 1 ? '' : 's') +
+        ' left this cycle.'
+    );
+  }
   const nextSwipeChannel =
     filteredBrowserChannels.length > 1
       ? filteredBrowserChannels[(swipeIndex + 1) % filteredBrowserChannels.length]!
@@ -1942,6 +1989,21 @@ function GameHub(props: {
             </span>
             <em>View channel</em>
           </button>
+
+          {showGameHubBoostAction ? (
+            <div className="gamehub-placement-boost-action">
+              <ChannelBoostButton
+                channelBoostPower={selectedChannelBoostPower}
+                channelId={props.selectedChannel.id}
+                member={selfMember}
+                onBoost={handleGameHubBoostChannel}
+              />
+            </div>
+          ) : null}
+
+          {gameHubBoostNotice ? (
+            <p className="report-pulse channel-boost-notice">{gameHubBoostNotice}</p>
+          ) : null}
         </article>
       </section>
 
@@ -2684,6 +2746,7 @@ function MemberProfileScreen(props: {
 
   const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
+  const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>('horizontal');
   const [privateDraft, setPrivateDraft] = useState('');
   const canMessage = canMessageOtherMembers() && props.member.id !== 'm1';
   const canReport = canReportMemberProfile();
@@ -2711,6 +2774,11 @@ function MemberProfileScreen(props: {
     setProfileCarouselSlide('passport');
     setRefreshKey((value) => value + 1);
   }, [preferenceStorageKey, props.member.id]);
+
+  function chooseMemberProfileCardLayout(layout: ProfileCardLayout): void {
+    setProfileCardLayout(layout);
+    saveProfileCardLayout(layout);
+  }
 
   function savePreference(nextMuted: boolean, nextBlocked: boolean): void {
     setIsMuted(nextMuted);
@@ -2759,13 +2827,28 @@ function MemberProfileScreen(props: {
 
       <section className="member-profile-page">
         <div className="member-profile-passport-hero">
-          <ProfilePassportCarousel
-            activeSlide={profileCarouselSlide}
-            badgeBookView={<BadgeCollectorsBook key={props.member.id} member={props.member} />}
-            passportView={
-              <TcgFoilPassportCard layout="vertical" member={props.member} signal={reviewedSignal} />
-            }
-            toolbar={
+          <div className="nami-profile-view-toolbar nami-profile-view-toolbar-stable">
+            <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-layout">
+              <div
+                aria-label="Passport layout"
+                className="nami-profile-layout-switch nami-profile-stable-layout-switch"
+                role="group"
+              >
+                {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+                  <button
+                    aria-pressed={profileCardLayout === layout}
+                    className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
+                    key={layout}
+                    onClick={() => chooseMemberProfileCardLayout(layout)}
+                    type="button"
+                  >
+                    {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-tabs">
               <div
                 className="profile-passport-carousel-actions"
                 role="tablist"
@@ -2796,6 +2879,21 @@ function MemberProfileScreen(props: {
                   Badge Book
                 </button>
               </div>
+            </div>
+
+            <div aria-hidden="true" className="nami-profile-toolbar-slot nami-profile-toolbar-slot-extra" />
+          </div>
+
+          <ProfilePassportCarousel
+            activeSlide={profileCarouselSlide}
+            badgeBookView={<BadgeCollectorsBook key={props.member.id} member={props.member} />}
+            passportLayout={profileCardLayout}
+            passportView={
+              <TcgFoilPassportCard
+                layout={profileCardLayout}
+                member={props.member}
+                signal={reviewedSignal}
+              />
             }
             sideRail={profileCarouselSlide === 'passport' ? (
               <div className="member-profile-actions tcg-passport-actions">

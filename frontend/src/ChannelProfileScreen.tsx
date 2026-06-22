@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactElement } from 'react';
 
 import {
   ChannelNewsDetailOverlay,
@@ -40,6 +40,10 @@ import {
 } from './events-store.js';
 import { isPreApprovedGameOwner, isFullyApprovedGameOwner } from './game-owner-session-store.js';
 import { ownsGameChannel } from './channel-owner-access.js';
+import {
+  useChannelOwnerProfileVersion,
+  withChannelOwnerProfile,
+} from './channel-owner-profile-store.js';
 import { useChannelProfileChrome } from './useChannelProfileChrome.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
@@ -112,20 +116,25 @@ export function ChannelProfileScreen(props: {
   useEventsStore();
   useChannelBannerNotificationsStore();
   useChannelGameReviewsStore();
+  const ownerProfileVersion = useChannelOwnerProfileVersion();
+  const channel = useMemo(
+    () => withChannelOwnerProfile(props.channel),
+    [props.channel, ownerProfileVersion]
+  );
 
-  const chrome = useChannelProfileChrome(props.channel);
+  const chrome = useChannelProfileChrome(channel);
   const preApprovedOwnerView =
-    isPreApprovedGameOwner() && !isFullyApprovedGameOwner() && ownsGameChannel(props.channel.id);
-  const channelCoverUrl = resolveChannelCoverUrl(props.channel)?.trim() ?? '';
-  const newsBannerUrl = readChannelNewsBannerOverride(props.channel.id)?.trim() ?? '';
-  const heroBackgroundUrl = readChannelHeroBackgroundOverride(props.channel.id)?.trim() ?? '';
-  const trailerUrl = readChannelTrailerOverride(props.channel.id)?.trim() ?? '';
-  const ownerLayout = useChannelOwnerLayout(props.channel.id);
-  const profileEditMode = useChannelOwnerEditMode(props.channel.id) && chrome.isChannelOwner;
-  const gameEvents = getChannelEvents(props.channel, {
+    isPreApprovedGameOwner() && !isFullyApprovedGameOwner() && ownsGameChannel(channel.id);
+  const channelCoverUrl = resolveChannelCoverUrl(channel)?.trim() ?? '';
+  const newsBannerUrl = readChannelNewsBannerOverride(channel.id)?.trim() ?? '';
+  const heroBackgroundUrl = readChannelHeroBackgroundOverride(channel.id)?.trim() ?? '';
+  const trailerUrl = readChannelTrailerOverride(channel.id)?.trim() ?? '';
+  const ownerLayout = useChannelOwnerLayout(channel.id);
+  const profileEditMode = useChannelOwnerEditMode(channel.id) && chrome.isChannelOwner;
+  const gameEvents = getChannelEvents(channel, {
     includeHiddenDrafts: preApprovedOwnerView,
   });
-  const reviewCount = getChannelGameReviews(props.channel.id).length;
+  const reviewCount = getChannelGameReviews(channel.id).length;
 
   const defaultSection: ChannelProfileSection = preApprovedOwnerView
     ? 'about'
@@ -134,10 +143,10 @@ export function ChannelProfileScreen(props: {
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
   const [ownerBrandPalette, setOwnerBrandPalette] = useState<string[]>(() => readOwnerBrandPalette());
   const relatedChannels = channels
-    .filter((channel) => channel.id !== props.channel.id)
+    .filter((entry) => entry.id !== channel.id)
     .sort((left, right) => {
-      const leftSameGenre = left.genre === props.channel.genre ? 1 : 0;
-      const rightSameGenre = right.genre === props.channel.genre ? 1 : 0;
+      const leftSameGenre = left.genre === channel.genre ? 1 : 0;
+      const rightSameGenre = right.genre === channel.genre ? 1 : 0;
 
       return rightSameGenre - leftSameGenre || right.subscribers - left.subscribers;
     })
@@ -163,7 +172,7 @@ export function ChannelProfileScreen(props: {
     {
       icon: 'S',
       label: 'SuiNS',
-      value: props.channel.handle + '.sui',
+      value: channel.handle + '.sui',
       status: 'Verified',
     },
     {
@@ -175,7 +184,7 @@ export function ChannelProfileScreen(props: {
     {
       icon: 'W',
       label: 'Website',
-      value: props.channel.name + ' profile hub',
+      value: channel.name + ' profile hub',
       status: 'Verified',
     },
   ];
@@ -217,7 +226,7 @@ export function ChannelProfileScreen(props: {
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  }, [props.channel.id]);
+  }, [channel.id]);
 
   useEffect(() => {
     if (props.initialSection === 'owner' && !chrome.isChannelOwner) {
@@ -241,7 +250,7 @@ export function ChannelProfileScreen(props: {
 
       return chrome.isChannelOwner ? 'owner' : 'news';
     });
-  }, [chrome.isChannelOwner, preApprovedOwnerView, props.channel.id, props.initialSection]);
+  }, [chrome.isChannelOwner, preApprovedOwnerView, channel.id, props.initialSection]);
 
   useEffect(() => {
     if (!chrome.isChannelOwner || activeSection !== 'owner' || !props.ownerFocus) {
@@ -253,7 +262,7 @@ export function ChannelProfileScreen(props: {
     }, 120);
 
     return () => window.clearTimeout(timer);
-  }, [activeSection, chrome.isChannelOwner, props.channel.id, props.ownerFocus]);
+  }, [activeSection, chrome.isChannelOwner, channel.id, props.ownerFocus]);
 
   useEffect(() => {
     if (activeSection === 'owner' && !chrome.isChannelOwner) {
@@ -355,7 +364,7 @@ export function ChannelProfileScreen(props: {
             <p>
               {preApprovedOwnerView
                 ? 'Draft events stay hidden from players until Nami Officials approve your channel.'
-                : 'Official schedules and live moments from ' + props.channel.name + '.'}
+                : 'Official schedules and live moments from ' + channel.name + '.'}
             </p>
           </div>
           {chrome.isChannelOwner ? (
@@ -426,16 +435,16 @@ export function ChannelProfileScreen(props: {
 
   function renderReviewsSection(): ReactElement {
     return props.onOpenMember ? (
-      <ChannelGameReviewsSection channel={props.channel} onOpenMember={props.onOpenMember} />
+      <ChannelGameReviewsSection channel={channel} onOpenMember={props.onOpenMember} />
     ) : (
-      <ChannelGameReviewsSection channel={props.channel} />
+      <ChannelGameReviewsSection channel={channel} />
     );
   }
 
   function renderChatSection(): ReactElement {
     return (
       <ChannelProfileChatSection
-        channel={props.channel}
+        channel={channel}
         channelBrandTheme={chrome.selectedBrandTheme}
         onNavigate={props.onNavigate}
         onOpenMember={props.onOpenChatMember ?? (() => undefined)}
@@ -448,8 +457,8 @@ export function ChannelProfileScreen(props: {
     return (
       <section className="channel-profile-section channel-profile-about">
         <div className="channel-profile-about-intro">
-          <h2>About {props.channel.name}</h2>
-          <p>{props.channel.tagline}</p>
+          <h2>About {channel.name}</h2>
+          <p>{channel.tagline}</p>
 
           {trailerUrl ? (
             <div className="channel-profile-about-trailer">
@@ -465,10 +474,10 @@ export function ChannelProfileScreen(props: {
           ) : null}
 
           <div className="channel-profile-about-meta">
-            <span>{props.channel.handle}</span>
-            <span>{props.channel.genre}</span>
-            <span>{props.channel.platforms.join(' · ')}</span>
-            <span>{props.channel.subscribers.toLocaleString()} subscribers</span>
+            <span>{channel.handle}</span>
+            <span>{channel.genre}</span>
+            <span>{channel.platforms.join(' · ')}</span>
+            <span>{channel.subscribers.toLocaleString()} subscribers</span>
           </div>
         </div>
 
@@ -476,7 +485,7 @@ export function ChannelProfileScreen(props: {
           <h3>Studio</h3>
           <div className="channel-profile-studio-row">
             <span>{chrome.developerProfile.name}</span>
-            <i className={gameVerificationClass(props.channel)}>{gameVerificationLabel(props.channel)}</i>
+            <i className={gameVerificationClass(channel)}>{gameVerificationLabel(channel)}</i>
             <button
               className="surface-studio-link"
               onClick={() => props.onOpenStudioProfile?.(chrome.developerProfile)}
@@ -550,7 +559,7 @@ export function ChannelProfileScreen(props: {
   function renderOwnerSection(): ReactElement {
     return (
       <ChannelOwnerSection
-        channel={props.channel}
+        channel={channel}
         isEliteOwner={chrome.isEliteChannelOwner}
         onChangeBrandColor={updateOwnerBrandColor}
         onResetBrandPalette={resetOwnerBrandPalette}
@@ -609,7 +618,7 @@ export function ChannelProfileScreen(props: {
         bannerAlertsEnabled={chrome.bannerAlertsEnabled}
         bannerNotice={chrome.bannerNotice}
         boostNotice={chrome.boostNotice}
-        channel={props.channel}
+        channel={channel}
         channelBoostPower={chrome.channelBoostPower}
         channelIsSubscribed={chrome.channelIsSubscribed}
         developerName={chrome.developerProfile.name}
@@ -623,7 +632,7 @@ export function ChannelProfileScreen(props: {
           ? {
               profileEditMode,
               tabOrder: ownerLayout.tabOrder,
-              onReorderTabs: (tabOrder) => reorderProfileTabs(props.channel.id, tabOrder),
+              onReorderTabs: (tabOrder) => reorderProfileTabs(channel.id, tabOrder),
             }
           : {})}
         {...(preApprovedOwnerView ? { preApprovedOwnerView: true } : {})}
@@ -646,7 +655,7 @@ export function ChannelProfileScreen(props: {
       {selectedNewsArticle ? (
         <ChannelNewsDetailOverlay
           article={selectedNewsArticle}
-          channelName={props.channel.name}
+          channelName={channel.name}
           onClose={() => setSelectedNewsId(null)}
         />
       ) : null}

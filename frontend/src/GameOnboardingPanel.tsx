@@ -22,6 +22,7 @@ import {
   isGameStudioQuestionnaireComplete,
 } from './game-studio-questionnaire.js';
 import { GAME_ONBOARDING_GENRES, GAME_STORE_LINK_FIELDS } from './game-genres.js';
+import { SUPPORTED_PLATFORMS } from './platform-genre-options.js';
 import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
 import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
@@ -97,6 +98,7 @@ export function GameOnboardingPanel(props: {
         contactName: draft.contactName,
         email: draft.email,
         genres: draft.genres,
+        platforms: draft.platforms,
         websiteUrl: draft.websiteUrl,
         trailerUrl: draft.trailerUrl,
         steamStoreUrl: draft.steamStoreUrl,
@@ -197,6 +199,19 @@ export function GameOnboardingPanel(props: {
     });
   }
 
+  function togglePlatform(platform: string): void {
+    setDraft((current) => {
+      const selected = current.platforms.includes(platform);
+
+      return {
+        ...current,
+        platforms: selected
+          ? current.platforms.filter((entry) => entry !== platform)
+          : [...current.platforms, platform],
+      };
+    });
+  }
+
   function handleOfficialPlatformChange(platform: 'x' | 'twitch'): void {
     const currentAuth = readGameOfficialSocialAuthState();
 
@@ -235,6 +250,7 @@ export function GameOnboardingPanel(props: {
       contactName: draft.contactName.trim(),
       email: draft.email.trim().toLowerCase(),
       genres: draft.genres,
+      platforms: draft.platforms,
       websiteUrl: draft.websiteUrl.trim(),
       steamStoreUrl: draft.steamStoreUrl.trim(),
       epicStoreUrl: draft.epicStoreUrl.trim(),
@@ -469,6 +485,27 @@ export function GameOnboardingPanel(props: {
                       type="checkbox"
                     />
                     <span>{genre}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="onboarding-quiz-question">
+              <legend>Supported platform(s)</legend>
+              <p className="protocol-hint">
+                Select every platform where players can access your game. Mobile is supported as both
+                a platform and a genre.
+              </p>
+              <div className="onboarding-quiz-options onboarding-genre-options">
+                {SUPPORTED_PLATFORMS.map((platform) => (
+                  <label className="onboarding-quiz-option" key={platform}>
+                    <input
+                      checked={draft.platforms.includes(platform)}
+                      name={'platform-' + platform}
+                      onChange={() => togglePlatform(platform)}
+                      type="checkbox"
+                    />
+                    <span>{platform}</span>
                   </label>
                 ))}
               </div>

@@ -6,6 +6,7 @@ import {
   hubGlobalChats,
   type CollectedBadge,
 } from './global-chats.js';
+import { memberChatPresenceForMember, type MemberChatPresence } from './member-chat-time-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { readSelfProfileEdits } from './member-profile-store.js';
 import { getNamiProgression, type NamiProgressionSnapshot } from './member-progression.js';
@@ -42,14 +43,7 @@ export type MemberOffstreamGame = {
   statusLabel: string;
 };
 
-export type MemberChatPresence = {
-  chatId: string;
-  chatTitle: string;
-  surfaceLabel: string;
-  channelId?: string;
-  isActiveNow: boolean;
-  hoursThisWeek: number;
-};
+export type { MemberChatPresence } from './member-chat-time-store.js';
 
 export type MemberBoostedChannel = {
   channelId: string;
@@ -121,6 +115,14 @@ function reviewsForMember(memberId: string): ChannelGameReview[] {
 }
 
 function chatPoolForMember(member: NamiMember) {
+  if (isSelfMember(member.id)) {
+    const trackedChats = memberChatPresenceForMember(member.id);
+
+    if (trackedChats.length > 0) {
+      return trackedChats;
+    }
+  }
+
   const index = memberIndex(member);
   const channelChats = channels.slice(0, 4).map((channel) => ({
     chatId: channel.id + '-game-chat',

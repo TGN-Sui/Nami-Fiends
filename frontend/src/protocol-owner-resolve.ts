@@ -1,7 +1,7 @@
 import { shouldUseDemoOwnerFallback } from './app-config.js';
 import { readLinkedWalletAddressForEmail } from './member-auth-link-store.js';
 import { readMemberSession } from './member-session-store.js';
-import { readDemoOwner } from './protocol-env.js';
+import { readDemoOwner, readOfficialOwner } from './protocol-env.js';
 import { readLastWalletOwner } from './protocol-owner-snapshot.js';
 import { getZkLoginSession } from './zklogin.js';
 
@@ -15,6 +15,9 @@ export type ResolvedProtocolOwner = {
 /**
  * Single owner resolution for capability gates — mirrors useProtocolOwner() order:
  * connected wallet → zkLogin → linked wallet on member session → demo fallback.
+ *
+ * When multiple identities are active, prefer whichever address matches
+ * VITE_NAMI_OFFICIAL_OWNER so a browser wallet extension cannot mask zkLogin.
  */
 export function resolveProtocolOwnerState(): ResolvedProtocolOwner {
   const walletOwner = readLastWalletOwner();
@@ -22,24 +25,36 @@ export function resolveProtocolOwnerState(): ResolvedProtocolOwner {
   const session = readMemberSession();
   const linkedWallet = session ? readLinkedWalletAddressForEmail(session.email) : null;
   const demoOwner = shouldUseDemoOwnerFallback() ? readDemoOwner() : null;
+  const officialOwner = readOfficialOwner();
+  const candidates: ResolvedProtocolOwner[] = [];
 
   if (walletOwner) {
-    return { owner: walletOwner, source: 'wallet' };
+    candidates.push({ owner: walletOwner, source: 'wallet' });
   }
 
   if (zkOwner) {
-    return { owner: zkOwner, source: 'zklogin' };
+    candidates.push({ owner: zkOwner, source: 'zklogin' });
   }
 
   if (linkedWallet) {
-    return { owner: linkedWallet, source: 'linked' };
+    candidates.push({ owner: linkedWallet, source: 'linked' });
   }
 
   if (demoOwner) {
-    return { owner: demoOwner, source: 'demo' };
+    candidates.push({ owner: demoOwner, source: 'demo' });
   }
 
-  return { owner: null, source: null };
+  if (officialOwner) {
+    const officialMatch = candidates.find(
+      (candidate) => candidate.owner?.toLowerCase() === officialOwner.toLowerCase(),
+    );
+
+    if (officialMatch) {
+      return officialMatch;
+    }
+  }
+
+  return candidates[0] ?? { owner: null, source: null };
 }
 
 export function readResolvedProtocolOwner(): string | null {

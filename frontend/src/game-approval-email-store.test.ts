@@ -43,6 +43,7 @@ const sampleTicket: GameSubmissionTicket = {
   email: 'studio@northarcade.example',
   phone: '',
   genres: ['Indie'],
+  platforms: ['PC'],
   websiteUrl: '',
   steamStoreUrl: '',
   epicStoreUrl: '',

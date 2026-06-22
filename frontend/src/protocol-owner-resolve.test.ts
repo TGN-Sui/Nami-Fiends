@@ -9,6 +9,7 @@ vi.mock('./app-config.js', () => ({
 
 vi.mock('./protocol-env.js', () => ({
   readDemoOwner: () => null,
+  readOfficialOwner: () => OFFICIAL_OWNER,
 }));
 
 vi.mock('./protocol-owner-snapshot.js', () => ({
@@ -58,6 +59,21 @@ describe('protocol-owner-resolve', () => {
     expect(resolveProtocolOwnerState()).toEqual({
       owner: LINKED_WALLET,
       source: 'linked',
+    });
+  });
+
+  it('prefers zkLogin when it matches the official owner over a different browser wallet', () => {
+    readLastWalletOwnerMock.mockReturnValue(LINKED_WALLET);
+    getZkLoginSessionMock.mockReturnValue({
+      address: OFFICIAL_OWNER,
+      maxEpoch: 1,
+      provider: 'google',
+      createdAtMs: Date.now(),
+    });
+
+    expect(resolveProtocolOwnerState()).toEqual({
+      owner: OFFICIAL_OWNER,
+      source: 'zklogin',
     });
   });
 });

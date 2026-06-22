@@ -25,6 +25,7 @@ import {
 import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
 import { isContactVerified } from './contact-code-verification-store.js';
 import { linkMemberSessionAuth } from './member-auth-link-store.js';
+import { validatePasswordSetup } from './member-credential-store.js';
 import {
   completeSignupFromDraft,
   isDraftReadyForSignup,
@@ -51,15 +52,20 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
     return loadOnboardingDraft() ?? createEmptyDraft();
   });
   const [signupError, setSignupError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const actIndex = getOnboardingActIndex(act);
   const quizComplete = isQuizComplete(draft.quizAnswers);
+  const passwordValidation = validatePasswordSetup(password, confirmPassword);
   const createReady =
     draft.displayName.trim().length >= 2 &&
     isValidEmail(draft.email) &&
     draft.emailVerified &&
-    quizComplete;
-  const signupReady = isDraftReadyForSignup(draft);
+    quizComplete &&
+    passwordValidation.ok;
+  const signupReady = isDraftReadyForSignup(draft, password, confirmPassword);
 
   useEffect(() => {
     saveOnboardingDraft(draft);
@@ -128,11 +134,11 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
     setSignupError(null);
 
     if (!signupReady) {
-      setSignupError('Complete display name, email, and quiz before entering Nami.');
+      setSignupError('Complete display name, email, password, and quiz before entering Nami.');
       return;
     }
 
-    const session = completeSignupFromDraft(draft);
+    const session = completeSignupFromDraft(draft, password, confirmPassword);
 
     if (!session) {
       setSignupError('Could not complete signup. Check your details and try again.');
@@ -206,6 +212,43 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
               value={draft.email}
               verified={draft.emailVerified}
             />
+
+            <label className="onboarding-field">
+              <span>Password</span>
+              <input
+                autoComplete="new-password"
+                minLength={8}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setPasswordError(null);
+                }}
+                placeholder="At least 8 characters"
+                type="password"
+                value={password}
+              />
+            </label>
+
+            <label className="onboarding-field">
+              <span>Confirm password</span>
+              <input
+                autoComplete="new-password"
+                minLength={8}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  setPasswordError(null);
+                }}
+                placeholder="Re-enter your password"
+                type="password"
+                value={confirmPassword}
+              />
+            </label>
+
+            {password.length > 0 || confirmPassword.length > 0 ? (
+              <p className={passwordValidation.ok ? 'protocol-hint' : 'onboarding-field-error'}>
+                {passwordValidation.ok ? 'Password ready.' : passwordValidation.message}
+              </p>
+            ) : null}
+            {passwordError ? <p className="onboarding-field-error">{passwordError}</p> : null}
 
             <div className="onboarding-quiz-block">
               <h3>Gamer quiz</h3>

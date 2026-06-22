@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
 import { formatGameGenresForDisplay } from './game-genres.js';
+import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
 import {
   gameSubmissionTicketById,
@@ -20,6 +21,7 @@ export type GameOwnerSession = {
   phone: string;
   tagline: string;
   genre: string;
+  platforms: string[];
   officialSocialPlatform: GameOfficialSocialPlatform;
   officialSocialHandle: string;
   officialSocialVerified: boolean;
@@ -73,6 +75,11 @@ export function readGameOwnerSession(): GameOwnerSession | null {
       phone: typeof parsed.phone === 'string' ? parsed.phone : '',
       tagline: typeof parsed.tagline === 'string' ? parsed.tagline : 'Pre-approved game channel — hidden until full approval.',
       genre: typeof parsed.genre === 'string' ? parsed.genre : 'Indie',
+      platforms: Array.isArray(parsed.platforms)
+        ? normalizeSupportedPlatforms(
+            parsed.platforms.filter((platform): platform is string => typeof platform === 'string')
+          )
+        : [],
       officialSocialPlatform:
         parsed.officialSocialPlatform === 'x' || parsed.officialSocialPlatform === 'twitch'
           ? parsed.officialSocialPlatform
@@ -136,6 +143,10 @@ export function syncGameOwnerSessionFromTicket(ticketId: string): GameOwnerSessi
     phone: '',
     tagline: existing?.tagline ?? 'Pre-approved game channel — hidden until full approval.',
     genre: formatGameGenresForDisplay(ticket.genres) || existing?.genre || 'Indie',
+    platforms:
+      ticket.platforms.length > 0
+        ? ticket.platforms
+        : existing?.platforms ?? [],
     officialSocialPlatform: ticket.officialSocialPlatform,
     officialSocialHandle: ticket.officialSocialHandle,
     officialSocialVerified: ticket.officialSocialVerified,

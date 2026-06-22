@@ -24,6 +24,7 @@ import {
   useSelfProfileEdits,
   type SelfProfileEdits,
 } from './member-profile-store.js';
+import { PROFILE_GENRE_LOUNGE_COUNT } from './platform-genre-options.js';
 
 function toggleChip(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
@@ -107,7 +108,10 @@ export function ProfileEditPanel(): ReactElement {
       <div className="profile-edit-panel-heading">
         <span className="mini-badge">Identity</span>
         <h2>Edit Profile</h2>
-        <p>Update how you appear across Nami. These edits do not change verification or trust status.</p>
+        <p>
+          Update how you appear across Nami. Display name is cosmetic only — it does not affect
+          login, linked accounts, or owner access.
+        </p>
       </div>
 
       <MemberAvatarUploadCard />
@@ -297,26 +301,58 @@ export function ProfileEditPanel(): ReactElement {
         </fieldset>
 
         <fieldset className="profile-edit-chip-field">
-          <legend>Preferred genres</legend>
-          <div className="profile-edit-chip-row">
-            {profileGenreOptions.map((genre) => (
-              <button
-                className={
-                  'nami-surface-button profile-edit-chip' +
-                  (draft.preferredGenres.includes(genre) ? ' is-active-view' : '')
+          <legend>Preferred genre lounges</legend>
+          <p className="protocol-hint">
+            Choose from the top {PROFILE_GENRE_LOUNGE_COUNT} Genre Lounge bubbles in Game Hub.
+          </p>
+          <label className="profile-edit-field">
+            <span>Add genre lounge</span>
+            <select
+              onChange={(event) => {
+                const genre = event.target.value;
+
+                if (!genre || draft.preferredGenres.includes(genre)) {
+                  return;
                 }
-                key={genre}
-                onClick={() =>
-                  updateDraft({
-                    preferredGenres: toggleChip(draft.preferredGenres, genre),
-                  })
-                }
-                type="button"
-              >
-                {genre}
-              </button>
-            ))}
-          </div>
+
+                updateDraft({
+                  preferredGenres: [...draft.preferredGenres, genre],
+                });
+                event.target.value = '';
+              }}
+              value=""
+            >
+              <option value="">Select a genre lounge…</option>
+              {profileGenreOptions
+                .filter((genre) => !draft.preferredGenres.includes(genre))
+                .map((genre) => (
+                  <option key={genre} value={genre}>
+                    {genre}
+                  </option>
+                ))}
+            </select>
+          </label>
+          {draft.preferredGenres.length > 0 ? (
+            <div className="profile-edit-selected-genres">
+              {draft.preferredGenres.map((genre) => (
+                <button
+                  className="nami-surface-button profile-edit-chip is-active-view"
+                  key={genre}
+                  onClick={() =>
+                    updateDraft({
+                      preferredGenres: draft.preferredGenres.filter((entry) => entry !== genre),
+                    })
+                  }
+                  type="button"
+                >
+                  {genre}
+                  <span aria-hidden="true"> ×</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="protocol-hint">No genre lounges selected yet.</p>
+          )}
         </fieldset>
       </div>
 

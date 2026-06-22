@@ -1,5 +1,6 @@
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
 import { GAME_STORE_LINK_FIELDS } from './game-genres.js';
+import { formatSupportedPlatforms } from './platform-genre-options.js';
 
 export type GameTicketPreviewField = {
   id: string;
@@ -14,6 +15,7 @@ export type GameTicketPreviewInput = {
   contactName: string;
   email: string;
   genres: string[];
+  platforms: string[];
   websiteUrl: string;
   trailerUrl: string;
   steamStoreUrl: string;
@@ -61,6 +63,16 @@ export function buildGameTicketPreviewFields(input: GameTicketPreviewInput): Gam
       id: 'genres',
       label: genres.length === 1 ? 'Genre' : 'Genres',
       value: genres.join(', '),
+    });
+  }
+
+  const platformLabel = formatSupportedPlatforms(input.platforms);
+
+  if (platformLabel) {
+    fields.push({
+      id: 'platforms',
+      label: 'Supported platforms',
+      value: platformLabel,
     });
   }
 

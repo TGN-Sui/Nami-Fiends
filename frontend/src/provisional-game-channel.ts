@@ -1,4 +1,6 @@
 import type { GameOwnerSession } from './game-owner-session-store.js';
+import { withChannelOwnerProfile } from './channel-owner-profile-store.js';
+import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 import type { NamiChannel } from './uiMockData.js';
 
 export function buildProvisionalGameChannel(session: GameOwnerSession): NamiChannel {
@@ -8,7 +10,10 @@ export function buildProvisionalGameChannel(session: GameOwnerSession): NamiChan
     .replace(/[^a-z0-9]+/g, '')
     .slice(0, 20);
 
-  return {
+  const platforms =
+    session.platforms.length > 0 ? normalizeSupportedPlatforms(session.platforms) : ['PC'];
+
+  const channel: NamiChannel = {
     id: session.provisionalChannelId,
     surfaceType: 'game',
     name: session.gameTitle.trim() || 'Pending Game',
@@ -21,7 +26,7 @@ export function buildProvisionalGameChannel(session: GameOwnerSession): NamiChan
     coverArtStyle: 'neon',
     verifiedGame: false,
     genre: session.genre || 'Indie',
-    platforms: ['PC'],
+    platforms: [...platforms],
     subscribers: 0,
     verified: false,
     partner: false,
@@ -39,4 +44,6 @@ export function buildProvisionalGameChannel(session: GameOwnerSession): NamiChan
     verifiedLinks: [],
     announcements: [],
   };
+
+  return withChannelOwnerProfile(channel);
 }

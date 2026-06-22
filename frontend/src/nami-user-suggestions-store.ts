@@ -115,7 +115,7 @@ export function submitUserSuggestion(body: string): SubmitUserSuggestionResult {
   const suggestion: NamiUserSuggestion = {
     id: 'suggestion-' + Date.now().toString(36),
     body: trimmed,
-    submitterName: session?.displayName ?? selfMember.name,
+    submitterName: selfMember.name,
     submitterEmail: session?.email ?? '',
     surfaceRole: readUserSurfaceRole(),
     status: 'submitted',

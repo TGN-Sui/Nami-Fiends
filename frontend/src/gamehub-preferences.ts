@@ -1,5 +1,7 @@
 import type { NamiChannel } from './uiMockData.js';
 
+import { MOBILE_GAMING_GENRE } from './platform-genre-options.js';
+
 export const gameHubBrowserFilters = [
   'All',
   'Games',
@@ -7,6 +9,7 @@ export const gameHubBrowserFilters = [
   'Music & DJs',
   'Creative',
   'Esports',
+  MOBILE_GAMING_GENRE,
   'Verified',
   'PC',
   'Console',
@@ -184,6 +187,9 @@ export function channelMatchesGameHubFilter(
   if (filter === 'Music & DJs') return genre.includes('music') || genre.includes('dj');
   if (filter === 'Creative') return genre.includes('creative') || genre.includes('builder');
   if (filter === 'Esports') return genre.includes('esports');
+  if (filter === MOBILE_GAMING_GENRE) {
+    return genre.includes('mobile') || platforms.includes('mobile');
+  }
   if (filter === 'Verified') return channel.verifiedGame;
   if (filter === 'PC') return platforms.includes('pc');
   if (filter === 'Console') return platforms.includes('console');

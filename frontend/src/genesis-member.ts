@@ -1,5 +1,6 @@
 import { readAppConfig, shouldUseDevFixtures, isTestLaunchMode } from './app-config.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
+import { resolveMemberDisplayName } from './member-display-name-store.js';
 import { readMemberSession } from './member-session-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import type { NamiMember } from './uiMockData.js';
@@ -33,7 +34,7 @@ export function applyGenesisSelfOverrides(member: NamiMember): NamiMember {
     ...member,
     tier: 'NPC',
     signal: 'Green',
-    name: session?.displayName?.trim() || member.name,
+    name: resolveMemberDisplayName(SELF_MEMBER_ID, member.name),
     badge: session?.flavorBadgeId?.trim() || member.badge,
   };
 

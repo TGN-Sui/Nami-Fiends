@@ -42,6 +42,7 @@ function createSession(status: GameOwnerSession['approvalStatus']): GameOwnerSes
     phone: '',
     tagline: 'Pre-approved game channel',
     genre: 'Shooter',
+    platforms: ['PC'],
     officialSocialPlatform: 'x',
     officialSocialHandle: 'vortexarena',
     officialSocialVerified: true,

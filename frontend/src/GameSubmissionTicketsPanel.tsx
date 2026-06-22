@@ -78,6 +78,7 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
                     contactName: ticket.contactName,
                     email: ticket.email,
                     genres: ticket.genres,
+                    platforms: ticket.platforms,
                     websiteUrl: ticket.websiteUrl,
                     trailerUrl: ticket.trailerUrl,
                     steamStoreUrl: ticket.steamStoreUrl,

@@ -18,6 +18,7 @@ import {
 } from './member-avatar.js';
 import { memberPassportTierLabel } from './owner-passport-display.js';
 import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
+import { useMemberChatTimeTracker } from './member-chat-time-store.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
 import {
@@ -90,6 +91,16 @@ export function ChannelProfileChatSection(props: {
 
   const preferencesVersion = useMemberPreferencesVersion();
   const selfChatMember = getSelfMember();
+  const channelChatTimeTarget = useMemo(
+    () => ({
+      chatId: props.channel.id + '-game-chat',
+      chatTitle: props.channel.name + ' Game Chat',
+      surfaceLabel: 'Game Channel',
+      channelId: props.channel.id,
+    }),
+    [props.channel.id, props.channel.name]
+  );
+  useMemberChatTimeTracker(selfChatMember.id, channelChatTimeTarget);
   const connectedOwner = readSignedInOwner();
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);

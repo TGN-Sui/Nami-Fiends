@@ -4,6 +4,7 @@ import { gameTrustScoreTierLabel } from './game-trust-score.js';
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
 import { enqueueSubmittedTicket } from './owner-submitted-tickets-store.js';
 import { createEmptyGameStoreUrls } from './game-genres.js';
+import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
 
 const TICKETS_KEY = 'nami.game.submission.tickets';
@@ -18,6 +19,7 @@ export type GameSubmissionTicket = {
   email: string;
   phone: string;
   genres: string[];
+  platforms: string[];
   websiteUrl: string;
   steamStoreUrl: string;
   epicStoreUrl: string;
@@ -93,6 +95,11 @@ function normalizeTicket(entry: LegacyGameSubmissionTicket): GameSubmissionTicke
     phone: entry.phone,
     genres: Array.isArray(entry.genres)
       ? entry.genres.filter((genre): genre is string => typeof genre === 'string')
+      : [],
+    platforms: Array.isArray(entry.platforms)
+      ? normalizeSupportedPlatforms(
+          entry.platforms.filter((platform): platform is string => typeof platform === 'string')
+        )
       : [],
     websiteUrl: typeof entry.websiteUrl === 'string' ? entry.websiteUrl : '',
     ...emptyStoreUrls,

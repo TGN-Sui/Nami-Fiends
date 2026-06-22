@@ -5,6 +5,8 @@ import {
   isContactVerified,
   isContactVerificationAvailable,
 } from './contact-code-verification-store.js';
+import { memberHasPasswordCredential } from './member-credential-store.js';
+import { authenticateMemberCredentials } from './member-session-store.js';
 import { clearSignedOut } from './member-auth-store.js';
 import {
   linkMemberSessionAuth,
@@ -36,6 +38,7 @@ export function EntryLoginPanel(props: {
   const xVerification = useXVerificationState();
   const [email, setEmail] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
+  const [password, setPassword] = useState('');
   const [xHandle, setXHandle] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [emailPending, setEmailPending] = useState(false);
@@ -79,14 +82,28 @@ export function EntryLoginPanel(props: {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const passwordRequired = memberHasPasswordCredential(normalizedEmail);
+
+    if (passwordRequired && password.trim().length === 0) {
+      setLoginError('Enter the password you created during signup.');
+      return;
+    }
+
     setEmailPending(true);
 
-    const restored = restoreMemberSessionByEmail(email);
+    const restored = passwordRequired
+      ? authenticateMemberCredentials(normalizedEmail, password)
+      : restoreMemberSessionByEmail(email);
 
     setEmailPending(false);
 
     if (!restored) {
-      setLoginError('No account found for that email. Sign up to create a Nami passport.');
+      setLoginError(
+        passwordRequired
+          ? 'Incorrect email or password.'
+          : 'No account found for that email. Sign up to create a Nami passport.'
+      );
       return;
     }
 
@@ -159,6 +176,17 @@ export function EntryLoginPanel(props: {
             value={email}
             verified={emailVerified}
           />
+          <label className="onboarding-field">
+            <span>Password</span>
+            <input
+              autoComplete="current-password"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Your signup password"
+              type="password"
+              value={password}
+            />
+          </label>
+
           <button
             className="secondary-action"
             disabled={

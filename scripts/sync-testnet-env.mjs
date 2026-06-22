@@ -33,8 +33,80 @@ const packageId = summary.packageId;
 const adminCapId = summary.adminCapId ?? '';
 const publishDigest = summary.publishDigest ?? '';
 const indexerUrl = readArg('--indexer-url') || 'http://127.0.0.1:8787';
-const officialOwner = readArg('--official-owner') || '0xYOUR_OFFICIAL_OWNER';
-const officialOwnerEmail = readArg('--official-owner-email') || '';
+function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+
+  const values = {};
+
+  for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const separator = trimmed.indexOf('=');
+
+    if (separator <= 0) {
+      continue;
+    }
+
+    values[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
+  }
+
+  return values;
+}
+
+function isPlaceholderOwner(value) {
+  return (
+    !value ||
+    value.includes('YOUR_') ||
+    value === '0xYOUR_OFFICIAL_OWNER' ||
+    value === '0xYOUR_WALLET_ADDRESS_HERE'
+  );
+}
+
+function resolveOfficialOwner(cliValue) {
+  if (cliValue && !isPlaceholderOwner(cliValue)) {
+    return cliValue;
+  }
+
+  const localEnv = parseEnvFile(path.join(rootDir, 'frontend', '.env.local'));
+  const baseEnv = parseEnvFile(path.join(rootDir, 'frontend', '.env'));
+
+  for (const candidate of [localEnv.VITE_NAMI_OFFICIAL_OWNER, baseEnv.VITE_NAMI_OFFICIAL_OWNER]) {
+    if (candidate && !isPlaceholderOwner(candidate)) {
+      return candidate;
+    }
+  }
+
+  return '0xYOUR_OFFICIAL_OWNER';
+}
+
+function resolveOfficialOwnerEmail(cliValue) {
+  if (cliValue && cliValue.includes('@')) {
+    return cliValue;
+  }
+
+  const localEnv = parseEnvFile(path.join(rootDir, 'frontend', '.env.local'));
+  const baseEnv = parseEnvFile(path.join(rootDir, 'frontend', '.env'));
+
+  for (const candidate of [
+    localEnv.VITE_NAMI_OFFICIAL_OWNER_EMAIL,
+    baseEnv.VITE_NAMI_OFFICIAL_OWNER_EMAIL,
+  ]) {
+    if (candidate && candidate.includes('@')) {
+      return candidate;
+    }
+  }
+
+  return '';
+}
+
+const officialOwner = resolveOfficialOwner(readArg('--official-owner'));
+const officialOwnerEmail = resolveOfficialOwnerEmail(readArg('--official-owner-email'));
 const zkloginOrigin = readArg('--zklogin-origin') || 'http://localhost:5173/';
 const zkloginClientId =
   readArg('--zklogin-client-id') ||

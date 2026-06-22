@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from 'react';
 
 import { ChannelBannerEditorCard } from './ChannelBannerEditorCard.js';
+import { ChannelOwnerPlatformsPanel } from './ChannelOwnerPlatformsPanel.js';
 import { ChannelOwnerBrandPaletteCard } from './ChannelOwnerBrandPaletteCard.js';
 import { ChannelOwnerEmojiPanel } from './ChannelOwnerEmojiPanel.js';
 import { ChannelOwnerPromotionsPanel } from './ChannelOwnerPromotionsPanel.js';
@@ -56,6 +57,10 @@ export function ChannelOwnerSection(props: {
   function renderPanelContent(panelId: OwnerPanelId): ReactElement | null {
     if (panelId === 'promotions') {
       return <ChannelOwnerPromotionsPanel channel={props.channel} />;
+    }
+
+    if (panelId === 'supported-platforms') {
+      return <ChannelOwnerPlatformsPanel channel={props.channel} />;
     }
 
     if (panelId === 'brand-palette') {

@@ -13,6 +13,7 @@ import {
   checkDisplayNameAvailability,
   resolveMemberDisplayName,
   saveMemberDisplayName,
+  useDisplayNameChangeEligibility,
   useMemberDisplayNameHistory,
   type DisplayNameHistoryEntry,
 } from './member-display-name-store.js';
@@ -38,6 +39,7 @@ export function PassportDisplayNameEditor(props: {
   const [error, setError] = useState<string | null>(null);
 
   const displayName = resolveMemberDisplayName(props.member.id, props.fallbackName);
+  const changeEligibility = useDisplayNameChangeEligibility(props.member.id, props.member);
 
   const availability = useMemo(() => {
     if (!editing || !draftName.trim()) {
@@ -62,6 +64,12 @@ export function PassportDisplayNameEditor(props: {
   }
 
   function beginEdit(): void {
+    if (!changeEligibility.allowed) {
+      setError(changeEligibility.reason);
+      setNotice(null);
+      return;
+    }
+
     setDraftName(displayName);
     setEditing(true);
     setNotice(null);
@@ -93,10 +101,15 @@ export function PassportDisplayNameEditor(props: {
     return (
       <div className="passport-display-name-editor" onClick={stopCardActivation} onKeyDown={stopCardActivation}>
         <h2 className="passport-display-name-heading">{displayName}</h2>
-        <button className="nami-surface-button passport-display-name-edit-button" onClick={beginEdit} type="button">
-          Edit name
-        </button>
+        {changeEligibility.allowed ? (
+          <button className="nami-surface-button passport-display-name-edit-button" onClick={beginEdit} type="button">
+            Edit name
+          </button>
+        ) : (
+          <p className="protocol-hint passport-display-name-cooldown">{changeEligibility.reason}</p>
+        )}
         {notice ? <p className="protocol-hint passport-display-name-notice">{notice}</p> : null}
+        {error && !editing ? <p className="onboarding-field-error">{error}</p> : null}
       </div>
     );
   }

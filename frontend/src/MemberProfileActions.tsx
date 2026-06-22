@@ -19,6 +19,13 @@ import {
 import { buildGoonTransferTransaction, resolveGoonCoinType } from './goon-wallet-payment.js';
 import { fetchPaymentConfig, isPaymentApiAvailable } from './membership-payments-api.js';
 import { useSelfMember } from './member-avatar-store.js';
+import {
+  canInviteMemberToAnySquad,
+  effectiveSquadMemberIds,
+  invitableSquadsForTarget,
+  sendSquadInvite,
+  useSquadRosterStore,
+} from './squad-roster-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { type NamiMember } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
@@ -38,24 +45,32 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
   const showBuy = source === 'wallet';
   const showTip = !isSelfMember(props.member.id) && source === 'wallet' && isMemberVerified(selfMember);
   const guildInvites = useGuildInvites();
+  const squadRoster = useSquadRosterStore();
   const [inviteGuildId, setInviteGuildId] = useState('');
+  const [inviteSquadId, setInviteSquadId] = useState('');
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
+  const [squadInviteStatus, setSquadInviteStatus] = useState<string | null>(null);
   const [goonAmount, setGoonAmount] = useState('25');
   const [goonStatus, setGoonStatus] = useState<string | null>(null);
   const [goonCoinType, setGoonCoinType] = useState(readConfiguredGoonCoinType());
   const [tipTreasuryAddress, setTipTreasuryAddress] = useState<string | null>(null);
   const [goonLoading, setGoonLoading] = useState(false);
-  const [activePanel, setActivePanel] = useState<'invite' | 'buy' | 'tip' | null>(null);
+  const [activePanel, setActivePanel] = useState<'invite' | 'squad-invite' | 'buy' | 'tip' | null>(null);
 
   const invitableGuilds = useMemo(
     () => invitableGuildsForTarget(props.member.id),
     [props.member.id, guildInvites]
   );
+  const invitableSquads = useMemo(
+    () => invitableSquadsForTarget(props.member.id),
+    [props.member.id, squadRoster.invites, squadRoster.rosterOverrides]
+  );
 
-  const showInvite =
+  const showGuildInvite =
     !isSelfMember(props.member.id) &&
     isMemberVerified(selfMember) &&
     canInviteMemberToAnyGuild(props.member);
+  const showSquadInvite = !isSelfMember(props.member.id) && canInviteMemberToAnySquad(props.member);
   const tipsTotal = totalTipsReceived(props.member.id);
 
   useEffect(() => {
@@ -73,8 +88,27 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
       });
   }, []);
 
-  if (!showInvite && !showBuy && !showTip) {
+  if (!showGuildInvite && !showSquadInvite && !showBuy && !showTip) {
     return null;
+  }
+
+  function sendSquadInviteToMember(): void {
+    const squad = invitableSquads.find((entry) => entry.id === inviteSquadId);
+
+    if (!squad) {
+      setSquadInviteStatus('Pick a squad to invite ' + props.member.name + ' into.');
+      return;
+    }
+
+    const result = sendSquadInvite(squad, props.member);
+
+    if (!result.ok) {
+      setSquadInviteStatus(result.reason);
+      return;
+    }
+
+    setSquadInviteStatus('Squad invite sent to ' + props.member.name + ' for ' + squad.name + '.');
+    setActivePanel(null);
   }
 
   function sendInvite(): void {
@@ -162,7 +196,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
   return (
     <div className="member-profile-social-actions">
       <div className="member-profile-social-action-row">
-        {showInvite ? (
+        {showGuildInvite ? (
           <button
             className={'nami-surface-button' + (activePanel === 'invite' ? ' is-active-surface-button' : '')}
             onClick={() => {
@@ -173,6 +207,22 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             type="button"
           >
             Invite to Guild
+          </button>
+        ) : null}
+
+        {showSquadInvite ? (
+          <button
+            className={
+              'nami-surface-button' + (activePanel === 'squad-invite' ? ' is-active-surface-button' : '')
+            }
+            onClick={() => {
+              setSquadInviteStatus(null);
+              setActivePanel(activePanel === 'squad-invite' ? null : 'squad-invite');
+              setInviteSquadId(invitableSquads[0]?.id ?? '');
+            }}
+            type="button"
+          >
+            Invite to Squad
           </button>
         ) : null}
 
@@ -210,6 +260,34 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
         <p className="member-profile-goon-total">
           {props.member.name} has received {tipsTotal.toLocaleString()} {NAMI_GOON_SYMBOL} in tips.
         </p>
+      ) : null}
+
+      {activePanel === 'squad-invite' ? (
+        <div className="member-profile-action-panel">
+          <p>Squad leaders can invite members when open squad slots remain on their membership plan.</p>
+          <label className="member-profile-action-field">
+            <span>Squad</span>
+            <select
+              onChange={(event) => setInviteSquadId(event.target.value)}
+              value={inviteSquadId || invitableSquads[0]?.id || ''}
+            >
+              {invitableSquads.map((squad) => {
+                const rosterCount = effectiveSquadMemberIds(squad).length;
+
+                return (
+                  <option key={squad.id} value={squad.id}>
+                    {squad.name} ({rosterCount}/{squad.maxSlots})
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <div className="member-profile-action-panel-actions">
+            <button className="primary-action" onClick={sendSquadInviteToMember} type="button">
+              Send squad invite
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {activePanel === 'invite' ? (
@@ -272,6 +350,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
       ) : null}
 
       {inviteStatus ? <p className="member-profile-action-status">{inviteStatus}</p> : null}
+      {squadInviteStatus ? <p className="member-profile-action-status">{squadInviteStatus}</p> : null}
       {goonStatus ? <p className="member-profile-action-status">{goonStatus}</p> : null}
     </div>
   );

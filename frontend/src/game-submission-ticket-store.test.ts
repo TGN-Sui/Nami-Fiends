@@ -11,6 +11,7 @@ describe('buildOfficialGameSubmissionTicket', () => {
       contactName: 'River Chen',
       email: 'studio@northarcade.example',
       genres: ['Indie'],
+      platforms: ['PC'],
       websiteUrl: '',
       steamStoreUrl: '',
       epicStoreUrl: '',

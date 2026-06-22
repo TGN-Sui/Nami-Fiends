@@ -494,6 +494,22 @@ export const defaultSocialEmbeds: SocialEmbed[] = [
   },
 ];
 
+export function globalChatSurfaceLabel(chat: GlobalChatRoom): string {
+  if (chat.kind === 'genre') {
+    return 'Genre Lounge';
+  }
+
+  if (chat.kind === 'official') {
+    return 'Nami Global';
+  }
+
+  if (chat.closesOnExit) {
+    return 'Open Lounge';
+  }
+
+  return 'Global Chat';
+}
+
 /** Only show a kind chip when it adds context beyond the room title. */
 export function globalChatPresenceKindLabel(chat: GlobalChatRoom): string | null {
   if (chat.kind === 'genre') {

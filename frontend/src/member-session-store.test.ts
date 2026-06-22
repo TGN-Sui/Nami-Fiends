@@ -72,7 +72,21 @@ describe('authenticateMemberCredentials', () => {
 
     expect(readMemberSession()).toBeNull();
 
-    const restored = authenticateMemberCredentials('river@example.com', 'River');
+    const restored = authenticateMemberCredentials('river@example.com');
+
+    expect(restored?.displayName).toBe('River');
+    expect(readMemberSession()?.email).toBe('river@example.com');
+  });
+
+  it('authenticates by email even when signup display name differs from passport name', () => {
+    saveMemberSession(sampleSession);
+    window.localStorage.setItem(
+      'nami.self.profile',
+      JSON.stringify({ displayName: 'Renamed Passport' }),
+    );
+    clearMemberSession();
+
+    const restored = authenticateMemberCredentials('river@example.com');
 
     expect(restored?.displayName).toBe('River');
     expect(readMemberSession()?.email).toBe('river@example.com');
@@ -82,8 +96,21 @@ describe('authenticateMemberCredentials', () => {
     saveMemberSession(sampleSession);
     clearMemberSession();
 
-    expect(authenticateMemberCredentials('river@example.com', 'Wrong Name')).toBeNull();
-    expect(authenticateMemberCredentials('other@example.com', 'River')).toBeNull();
+    expect(authenticateMemberCredentials('other@example.com')).toBeNull();
     expect(readMemberSession()).toBeNull();
+  });
+
+  it('requires the signup password when one is on file', async () => {
+    const { saveMemberPasswordCredential } = await import('./member-credential-store.js');
+
+    saveMemberSession(sampleSession);
+    saveMemberPasswordCredential(sampleSession.email, 'secure-pass');
+    clearMemberSession();
+
+    expect(authenticateMemberCredentials(sampleSession.email)).toBeNull();
+    expect(authenticateMemberCredentials(sampleSession.email, 'wrong-pass')).toBeNull();
+    expect(authenticateMemberCredentials(sampleSession.email, 'secure-pass')?.email).toBe(
+      sampleSession.email
+    );
   });
 });

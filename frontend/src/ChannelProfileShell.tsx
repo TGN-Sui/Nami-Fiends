@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type DragEvent, type ReactElement, type ReactNode } from 'react';
 
+import { canShowChannelBoostAction } from './channel-boost-store.js';
 import { canSubscribeToChannelBanners } from './member-access.js';
 import { ChannelBoostButton } from './ChannelBoostButton.js';
 import {
@@ -199,12 +200,14 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
                 >
                   {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
                 </button>
-                <ChannelBoostButton
-                  channelBoostPower={props.channelBoostPower}
-                  channelId={props.channel.id}
-                  member={props.selfMember}
-                  onBoost={props.onBoostChannel}
-                />
+                {canShowChannelBoostAction(props.selfMember, props.channel.id) ? (
+                  <ChannelBoostButton
+                    channelBoostPower={props.channelBoostPower}
+                    channelId={props.channel.id}
+                    member={props.selfMember}
+                    onBoost={props.onBoostChannel}
+                  />
+                ) : null}
               </>
             ) : null}
             {!props.preApprovedOwnerView && props.activeSection !== 'chat' ? (

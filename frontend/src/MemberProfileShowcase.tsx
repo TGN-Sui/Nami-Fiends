@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 
 
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
 import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
+import { useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
 import { percentForNamiSeasonLevel } from './member-progression.js';
 import { useSelfProfileEdits } from './member-profile-store.js';
@@ -69,13 +70,14 @@ export function MemberProfileShowcase(props: {
   safetyPanel?: ReactNode;
 }): ReactElement {
   const selfProfileEdits = useSelfProfileEdits();
+  const chatTimeVersion = useMemberChatTimeVersion();
   const [activeTab, setActiveTab] = useState<ShowcaseTab>('overview');
   const [progressTick, setProgressTick] = useState(() => Date.now());
   const isSelf = props.mode === 'self' || isSelfMember(props.member.id);
 
   const showcase = useMemo(
     () => buildMemberProfileShowcase(props.member, progressTick),
-    [props.member, progressTick, isSelf ? selfProfileEdits.dailyStatus : '']
+    [props.member, progressTick, isSelf ? selfProfileEdits.dailyStatus : '', chatTimeVersion]
   );
 
   useEffect(() => {

@@ -63,7 +63,7 @@ export function UserSuggestionsSettingsPanel(): ReactElement {
       </label>
 
       <p className="protocol-hint">
-        Submitting as {session?.displayName ?? selfMember.name}
+        Submitting as {selfMember.name}
         {submitterEmail ? ' · ' + submitterEmail : ''}.
       </p>
 

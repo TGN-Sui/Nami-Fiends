@@ -1,6 +1,7 @@
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
+import { MOBILE_GAMING_GENRE } from './platform-genre-options.js';
 
-export const GAME_ONBOARDING_GENRES = LANDING_GENRE_LOUNGES;
+export const GAME_ONBOARDING_GENRES = [...LANDING_GENRE_LOUNGES, MOBILE_GAMING_GENRE] as const;
 
 export type GameStoreLinkKey =
   | 'steamStoreUrl'

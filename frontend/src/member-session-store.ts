@@ -2,6 +2,12 @@ import { useSyncExternalStore } from 'react';
 
 import { clearOnboardingDraft, loadOnboardingDraft, type OnboardingDraft } from './onboarding-draft.js';
 import { isQuizComplete } from './onboarding-quiz.js';
+import {
+  memberHasPasswordCredential,
+  saveMemberPasswordCredential,
+  validatePasswordSetup,
+  verifyMemberPasswordCredential,
+} from './member-credential-store.js';
 import { computePlayerScoreFromDraft, type PlayerScoreTier } from './player-score.js';
 
 const SESSION_KEY = 'nami.member.session';
@@ -31,10 +37,6 @@ function isValidEmail(value: string): boolean {
 }
 
 function normalizeEmail(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function normalizeDisplayName(value: string): string {
   return value.trim().toLowerCase();
 }
 
@@ -108,32 +110,37 @@ function upsertMemberAccountRegistry(session: MemberSession): void {
   }
 }
 
+/** Signup identity name — set at registration and not updated by passport display edits. */
+export function readSignupDisplayName(session: MemberSession): string {
+  return session.displayName.trim();
+}
+
 export function authenticateMemberCredentials(
   email: string,
-  displayName: string,
+  password?: string
 ): MemberSession | null {
-  if (!isValidEmail(email) || displayName.trim().length < 2) {
+  if (!isValidEmail(email)) {
     return null;
   }
 
   const normalizedEmail = normalizeEmail(email);
-  const normalizedDisplayName = normalizeDisplayName(displayName);
+  const requiresPassword = memberHasPasswordCredential(normalizedEmail);
+
+  if (requiresPassword) {
+    if (!password || !verifyMemberPasswordCredential(normalizedEmail, password)) {
+      return null;
+    }
+  }
+
   const activeSession = readMemberSession();
 
-  if (
-    activeSession &&
-    normalizeEmail(activeSession.email) === normalizedEmail &&
-    normalizeDisplayName(activeSession.displayName) === normalizedDisplayName
-  ) {
+  if (activeSession && normalizeEmail(activeSession.email) === normalizedEmail) {
     return activeSession;
   }
 
   const registryMatch = readMemberAccountsRegistry()[normalizedEmail];
 
-  if (
-    !registryMatch ||
-    normalizeDisplayName(registryMatch.displayName) !== normalizedDisplayName
-  ) {
+  if (!registryMatch) {
     return null;
   }
 
@@ -216,17 +223,22 @@ export function clearMemberSession(): void {
   window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
 }
 
-export function isDraftReadyForSignup(draft: OnboardingDraft): boolean {
+export function isDraftReadyForSignup(draft: OnboardingDraft, password: string, confirmPassword: string): boolean {
   return (
     draft.displayName.trim().length >= 2 &&
     isValidEmail(draft.email) &&
     draft.emailVerified &&
-    isQuizComplete(draft.quizAnswers)
+    isQuizComplete(draft.quizAnswers) &&
+    validatePasswordSetup(password, confirmPassword).ok
   );
 }
 
-export function completeSignupFromDraft(draft: OnboardingDraft): MemberSession | null {
-  if (!isDraftReadyForSignup(draft)) {
+export function completeSignupFromDraft(
+  draft: OnboardingDraft,
+  password: string,
+  confirmPassword: string
+): MemberSession | null {
+  if (!isDraftReadyForSignup(draft, password, confirmPassword)) {
     return null;
   }
 
@@ -254,6 +266,7 @@ export function completeSignupFromDraft(draft: OnboardingDraft): MemberSession |
   };
 
   saveMemberSession(session);
+  saveMemberPasswordCredential(session.email, password);
   clearOnboardingDraft();
 
   return session;
@@ -266,11 +279,11 @@ export function hasActiveMemberSession(): boolean {
 export function bootstrapSessionFromDraft(): MemberSession | null {
   const draft = loadOnboardingDraft();
 
-  if (!draft || !isDraftReadyForSignup(draft)) {
+  if (!draft) {
     return readMemberSession();
   }
 
-  return completeSignupFromDraft(draft) ?? readMemberSession();
+  return readMemberSession();
 }
 
 function getSessionSnapshot(): MemberSession | null {
