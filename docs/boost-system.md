@@ -427,6 +427,18 @@ These modules may enforce:
 
 ---
 
+## Frontend — Boost Visibility (Shipped)
+
+Members with boost access see remaining boosts in **Settings → Account** and **Settings → Membership** via `BoostCycleSettingsCard`.
+
+Game channel owners see **X of Y boosts left** on the pinned game channel profile card (`PinnedGameChannelProfileCard.tsx`), even when they are not on a paid membership tier that normally grants boosts.
+
+Boost power still follows membership tier rules on-chain. Owner surfaces are read-only summaries of the local boost cycle ledger (`channel-boost-store.ts`, `boost-cycle.ts`).
+
+NPC members do not see boost actions (see `member-capacity-actions.test.ts`).
+
+---
+
 ## Future Backend Indexing
 
 The backend discovery engine should index BoostUsed events.

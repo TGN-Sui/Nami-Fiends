@@ -160,7 +160,7 @@ export const LANDING_STEPS = [
   {
     step: '1',
     title: 'Enter Nami',
-    detail: 'Quick signup and a short conduct quiz. No wallet lecture on day one.',
+    detail: 'Quick signup and a short conduct quiz. No crypto setup on day one.',
   },
   {
     step: '2',

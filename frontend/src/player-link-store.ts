@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  ensurePlatformSyncSnapshot,
+  refreshPlatformSync,
+  removePlatformSyncSnapshot,
+} from './player-platform-sync-store.js';
+
 const STORAGE_KEY = 'nami.player.platform-links';
 
 export type PlayerLinkPlatform =
@@ -80,9 +86,19 @@ export function linkPlayerPlatform(platformId: PlayerLinkPlatform): void {
     }),
   );
   emitChange();
+  ensurePlatformSyncSnapshot(platformId);
+  refreshPlatformSync(platformId);
 }
 
-export function unlinkPlayerPlatform(platformId: PlayerLinkPlatform): void {
+export function canUnlinkPlayerPlatform(platformId: PlayerLinkPlatform): boolean {
+  return platformId === 'steam';
+}
+
+export function unlinkPlayerPlatform(platformId: PlayerLinkPlatform): boolean {
+  if (!canUnlinkPlayerPlatform(platformId)) {
+    return false;
+  }
+
   const next = readLinkedPlayerPlatforms().filter((entry) => entry !== platformId);
   window.localStorage.setItem(
     STORAGE_KEY,
@@ -92,12 +108,13 @@ export function unlinkPlayerPlatform(platformId: PlayerLinkPlatform): void {
     }),
   );
   emitChange();
+  removePlatformSyncSnapshot(platformId);
+  return true;
 }
 
 export function togglePlayerPlatform(platformId: PlayerLinkPlatform): boolean {
   if (isPlayerPlatformLinked(platformId)) {
-    unlinkPlayerPlatform(platformId);
-    return false;
+    return unlinkPlayerPlatform(platformId) ? false : true;
   }
 
   linkPlayerPlatform(platformId);

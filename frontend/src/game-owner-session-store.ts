@@ -4,10 +4,13 @@ import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
 import { formatGameGenresForDisplay } from './game-genres.js';
 import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 import type { GameTrustScoreTier } from './game-trust-score.js';
+import { saveOwnedGameChannelId } from './channel-owner-access.js';
 import {
   gameSubmissionTicketById,
+  resolveGameTicketChannelId,
   type GameSubmissionTicketStatus,
 } from './game-submission-ticket-store.js';
+import { saveUserSurfaceRole } from './surface-preferences.js';
 
 const SESSION_KEY = 'nami.game.owner.session';
 
@@ -124,6 +127,50 @@ export function clearGameOwnerSession(): void {
   emitChange();
 }
 
+export function refreshGameOwnerSessionApprovalStatus(): GameOwnerSession | null {
+  const session = readGameOwnerSession();
+
+  if (!session) {
+    return null;
+  }
+
+  const ticket = gameSubmissionTicketById(session.ticketId);
+
+  if (!ticket || ticket.status === session.approvalStatus) {
+    return session;
+  }
+
+  const next: GameOwnerSession = {
+    ...session,
+    approvalStatus: ticket.status,
+  };
+
+  saveGameOwnerSession(next);
+  processGameOwnerTicketHandoverIfApproved();
+
+  return next;
+}
+
+export function processGameOwnerTicketHandoverIfApproved(): GameOwnerSession | null {
+  const session = readGameOwnerSession();
+
+  if (!session || session.approvalStatus !== 'approved') {
+    return session;
+  }
+
+  const ticket = gameSubmissionTicketById(session.ticketId);
+
+  if (!ticket || ticket.status !== 'approved') {
+    return session;
+  }
+
+  const channelId = resolveGameTicketChannelId(ticket);
+  saveOwnedGameChannelId(channelId);
+  saveUserSurfaceRole('channel-owner');
+
+  return session;
+}
+
 export function syncGameOwnerSessionFromTicket(ticketId: string): GameOwnerSession | null {
   const ticket = gameSubmissionTicketById(ticketId);
 
@@ -208,21 +255,27 @@ export function canEnterNamiAsGameOwner(): boolean {
   return session.approvalStatus === 'preapproved' || session.approvalStatus === 'approved';
 }
 
+function subscribeGameOwnerSession(onStoreChange: () => void): () => void {
+  function handleSessionChange(): void {
+    invalidateCache();
+    onStoreChange();
+  }
+
+  function handleTicketChange(): void {
+    refreshGameOwnerSessionApprovalStatus();
+    invalidateCache();
+    onStoreChange();
+  }
+
+  window.addEventListener('nami-game-owner-session-changed', handleSessionChange);
+  window.addEventListener('nami-game-submission-tickets-changed', handleTicketChange);
+
+  return () => {
+    window.removeEventListener('nami-game-owner-session-changed', handleSessionChange);
+    window.removeEventListener('nami-game-submission-tickets-changed', handleTicketChange);
+  };
+}
+
 export function useGameOwnerSession(): GameOwnerSession | null {
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      function handleChange(): void {
-        invalidateCache();
-        onStoreChange();
-      }
-
-      window.addEventListener('nami-game-owner-session-changed', handleChange);
-
-      return () => {
-        window.removeEventListener('nami-game-owner-session-changed', handleChange);
-      };
-    },
-    readGameOwnerSession,
-    readGameOwnerSession,
-  );
+  return useSyncExternalStore(subscribeGameOwnerSession, readGameOwnerSession, readGameOwnerSession);
 }

@@ -1,5 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 
+import { currentBoostWeekId } from './channel-boost-store.js';
+
 const STORAGE_KEY = 'nami.member.chat-time';
 const CHAT_TIME_TICK_MS = 30_000;
 const ACTIVE_CHAT_WINDOW_MS = 5 * 60 * 1000;
@@ -46,12 +48,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 function currentWeekKey(now = Date.now()): string {
-  const date = new Date(now);
-  const year = date.getUTCFullYear();
-  const yearStart = Date.UTC(year, 0, 1);
-  const week = Math.floor((now - yearStart) / (7 * 24 * 60 * 60 * 1000));
-
-  return year + '-w' + week;
+  return String(currentBoostWeekId(new Date(now)));
 }
 
 function readRegistry(): ChatTimeRegistry {

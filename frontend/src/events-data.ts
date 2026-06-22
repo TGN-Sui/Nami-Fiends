@@ -74,7 +74,7 @@ export const subscribedUserEvents: NamiEvent[] = [
     source: 'guild',
     guildId: 'wave-raiders',
     guildName: 'Wave Raiders',
-    channelId: 'walrus',
+    channelId: 'xociety',
     channelName: 'Walrus Raiders',
     subscribed: true,
   },

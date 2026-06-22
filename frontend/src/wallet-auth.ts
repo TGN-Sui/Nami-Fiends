@@ -5,7 +5,7 @@ export type WalletAuthPayload = {
   timestampMs: number;
 };
 
-export type WalletAuthOwnerSource = 'wallet' | 'zklogin' | 'demo' | null;
+export type WalletAuthOwnerSource = 'wallet' | 'zklogin' | 'linked' | 'demo' | null;
 
 export type WalletAuthContext = {
   owner: string | null;
@@ -69,7 +69,11 @@ export function canPromptWalletSignature(owner?: string): boolean {
     return false;
   }
 
-  if (authContext.source !== 'wallet' && authContext.source !== 'zklogin') {
+  if (
+    authContext.source !== 'wallet' &&
+    authContext.source !== 'zklogin' &&
+    authContext.source !== 'linked'
+  ) {
     return false;
   }
 

@@ -15,10 +15,10 @@ The goal is to build a portable gamer identity and trust layer.
 ```text
 Move build: passing
 Move tests: 80 passing
-Frontend tests: 153 passing (vitest)
+Frontend tests: 230 passing (vitest)
 Warnings: 0
-Documentation: synced (Phase 8 test launch, FIEND owner, genesis passport)
-MVP progress: ~82% (on-chain complete; test-launch identity surfaces shipped)
+Documentation: synced (Phase 8 test launch, game channel owner tools, media persistence)
+MVP progress: ~84% (on-chain complete; owner settings + channel media shipped)
 ```
 
 Current Move package:
@@ -392,5 +392,22 @@ The current frontend UI build checkpoint is documented in [docs/ui-build-checkpo
 
 **Phase 8** (entry + game onboarding): Enter Nami gate, dual Gamer/Game paths, Trust Score, officials submissions queue, pre-approval workspace — shipped. See [docs/game-onboarding.md](docs/game-onboarding.md).
 
-Frontend verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` (133 tests).
+Frontend verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` (230 tests).
+
+### Game channel owner tools (shipped)
+
+Game studio owners get a tabbed **Owner** section on their channel profile with grouped settings:
+
+```text
+Brand & media   Cover, hero, trailer uploads; brand palette
+Promotions      Partner carousel copy and checkout tickets
+Alerts & emojis Focused banner alerts (all game owners); chat emoji picks
+Advanced        Platforms, indexed data, security console
+```
+
+Settings use a unified draft with **Save settings** / **Discard** in a sticky footer. Media uploads persist across refresh via IndexedDB (`channel-media-persistence.ts`).
+
+### Wallet and $GOON (first exposure in Settings)
+
+Landing and Enter Nami onboarding avoid wallet copy. Sui wallet connect lives in **Settings → Account**. **Buy Goon** appears on member profiles when a wallet is connected. Live-stream and profile gifting remain on the Phase 7.1 roadmap.
 

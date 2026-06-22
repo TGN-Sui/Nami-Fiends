@@ -54,16 +54,21 @@ export function PartnerCarouselPreviewOverlay(props: {
             'banner-panel featured-banner-carousel nami-hub-rotating-banner partner-carousel-preview-banner' +
             (props.coverUrl ? ' has-partner-banner-cover' : '')
           }
-          style={
-            props.coverUrl
-              ? { backgroundImage: 'url(' + JSON.stringify(props.coverUrl) + ')' }
-              : undefined
-          }
           type="button"
         >
-          <span>Featured Partner Banner Carousel</span>
-          <strong>{bannerTitle}</strong>
-          <small>{bannerDescription}</small>
+          {props.coverUrl ? (
+            <span
+              aria-hidden="true"
+              className="nami-hub-banner-cover"
+              style={{ backgroundImage: 'url(' + JSON.stringify(props.coverUrl) + ')' }}
+            />
+          ) : null}
+          {props.coverUrl ? <span aria-hidden="true" className="nami-hub-banner-scrim" /> : null}
+          <div className="nami-hub-banner-copy">
+            <span>Featured Partner Banner Carousel</span>
+            <strong>{bannerTitle}</strong>
+            <small>{bannerDescription}</small>
+          </div>
         </button>
 
         <div className="channel-banner-owner-preview-actions">

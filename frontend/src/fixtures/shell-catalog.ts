@@ -94,6 +94,6 @@ export function createShellSquad(): ShellSquadRecord {
     id: 'shell-squad',
     name: 'Squad',
     memberIds: ['m1'],
-    maxSlots: 8,
+    maxSlots: 3,
   };
 }

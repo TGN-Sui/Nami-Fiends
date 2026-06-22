@@ -17,6 +17,10 @@ import './nami-pixel-ui.css';
 ensureGenesisLocalDataOnTestLaunch();
 initNamiSoundscape();
 
+void import('./channel-media-persistence.js').then(({ bootstrapChannelMediaPersistence }) => {
+  void bootstrapChannelMediaPersistence();
+});
+
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {

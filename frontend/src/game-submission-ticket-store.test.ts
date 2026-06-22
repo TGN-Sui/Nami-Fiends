@@ -6,6 +6,7 @@ describe('buildOfficialGameSubmissionTicket', () => {
   it('never includes phone in officials-facing tickets', () => {
     const ticket = buildOfficialGameSubmissionTicket({
       id: 'game-ticket-1',
+      ticketKind: 'new-game',
       gameTitle: 'Vortex Arena',
       studioName: 'North Arcade',
       contactName: 'River Chen',

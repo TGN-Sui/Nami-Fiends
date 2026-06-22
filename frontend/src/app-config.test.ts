@@ -7,6 +7,7 @@ import {
   shouldUseDemoOwnerFallback,
   shouldUseDevFixtures,
   shouldUseFixtureCatalogFallback,
+  shouldUseFunctionalMockCatalog,
   type AppConfig,
 } from './app-config.js';
 
@@ -54,7 +55,8 @@ describe('app-config directory fallback', () => {
     expect(shouldUseFixtureCatalogFallback(2, 'ready', createConfig({}))).toBe(false);
   });
 
-  it('skips fixture fallback when dev fixtures are disabled', () => {
+  it('disables functional mock catalog in favor of real created accounts', () => {
+    expect(shouldUseFunctionalMockCatalog(createConfig({ devFixtures: false }))).toBe(false);
     expect(shouldUseFixtureCatalogFallback(0, 'ready', createConfig({ devFixtures: false }))).toBe(
       false
     );

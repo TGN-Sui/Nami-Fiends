@@ -1,11 +1,7 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 
-import {
-  readChannelOwnerProfileEdits,
-  saveChannelOwnerPlatforms,
-  supportedPlatformOptions,
-} from './channel-owner-profile-store.js';
-import { normalizeSupportedPlatforms } from './platform-genre-options.js';
+import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
+import { supportedPlatformOptions } from './channel-owner-profile-store.js';
 import type { NamiChannel } from './uiMockData.js';
 
 function togglePlatform(platforms: string[], platform: string): string[] {
@@ -15,29 +11,8 @@ function togglePlatform(platforms: string[], platform: string): string[] {
 }
 
 export function ChannelOwnerPlatformsPanel(props: { channel: NamiChannel }): ReactElement {
-  const storedEdits = readChannelOwnerProfileEdits(props.channel.id);
-  const initialPlatforms = useMemo(() => {
-    return (
-      storedEdits?.platforms ??
-      normalizeSupportedPlatforms(props.channel.platforms)
-    );
-  }, [props.channel.id, props.channel.platforms, storedEdits?.platforms]);
-
-  const [platforms, setPlatforms] = useState<string[]>(initialPlatforms);
-  const [notice, setNotice] = useState<string | null>(null);
-
-  function handleSave(): void {
-    const normalized = normalizeSupportedPlatforms(platforms);
-
-    if (normalized.length === 0) {
-      setNotice('Select at least one supported platform.');
-      return;
-    }
-
-    saveChannelOwnerPlatforms(props.channel.id, normalized);
-    setPlatforms(normalized);
-    setNotice('Supported platforms updated on your game channel.');
-  }
+  const settings = useChannelOwnerSettings();
+  const platforms = settings.draft.platforms;
 
   return (
     <article className="panel channel-owner-layout-panel channel-owner-platforms-panel">
@@ -56,10 +31,7 @@ export function ChannelOwnerPlatformsPanel(props: { channel: NamiChannel }): Rea
                 (platforms.includes(platform) ? ' is-active-view' : '')
               }
               key={platform}
-              onClick={() => {
-                setPlatforms((current) => togglePlatform(current, platform));
-                setNotice(null);
-              }}
+              onClick={() => settings.updatePlatforms(togglePlatform(platforms, platform))}
               type="button"
             >
               {platform}
@@ -68,11 +40,9 @@ export function ChannelOwnerPlatformsPanel(props: { channel: NamiChannel }): Rea
         </div>
       </fieldset>
 
-      {notice ? <p className="protocol-hint">{notice}</p> : null}
-
-      <button className="nami-surface-button is-primary-surface-button" onClick={handleSave} type="button">
-        Save platforms
-      </button>
+      <p className="channel-owner-tool-footnote">
+        Platform changes apply when you press Save settings.
+      </p>
     </article>
   );
 }

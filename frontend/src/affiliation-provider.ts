@@ -1,4 +1,5 @@
-import { shouldUseDevFixtures } from './app-config.js';
+import { shouldUseDevFixtures, shouldUseFunctionalMockCatalog } from './app-config.js';
+import { createdSquadsForMember } from './squad-creation-store.js';
 import {
   guildsForMember,
   resolveGuildFromCard,
@@ -46,6 +47,25 @@ export function mergeGuildRecords(records: NamiGuildRecord[]): NamiGuildRecord[]
     seen.add(guild.id);
     return true;
   });
+}
+
+function mergeSquadRecords(records: NamiSquadRecord[]): NamiSquadRecord[] {
+  const seen = new Set<string>();
+
+  return records.filter((squad) => {
+    if (seen.has(squad.id)) {
+      return false;
+    }
+
+    seen.add(squad.id);
+    return true;
+  });
+}
+
+function mergeAffiliationItems<T extends { id: string }>(primary: T[], supplemental: T[]): T[] {
+  const seen = new Set(primary.map((item) => item.id));
+
+  return [...primary, ...supplemental.filter((item) => !seen.has(item.id))];
 }
 
 function mapLiveGuildCard(card: GuildCardView): GuildAffiliationItem {
@@ -118,7 +138,7 @@ function shouldUseFixtureAffiliations(
     return false;
   }
 
-  if (!shouldUseDevFixtures()) {
+  if (!shouldUseDevFixtures() && !shouldUseFunctionalMockCatalog()) {
     return false;
   }
 
@@ -137,16 +157,20 @@ export function resolveMemberGuildAffiliations(input: {
   createdGuilds: NamiGuildRecord[];
   fixtureGuilds?: NamiGuildRecord[];
 }): GuildAffiliationItem[] {
+  const localCreated = input.createdGuilds
+    .filter((guild) => guild.memberIds.includes(input.memberId))
+    .map(mapFixtureGuild);
+
   if (input.loadState === 'loading') {
-    return [];
+    return localCreated;
   }
 
   if (input.liveCards.length > 0) {
-    return input.liveCards.map(mapLiveGuildCard);
+    return mergeAffiliationItems(input.liveCards.map(mapLiveGuildCard), localCreated);
   }
 
   if (!shouldUseFixtureAffiliations(input.liveCards, input.loadState, input.liveQueryEnabled)) {
-    return [];
+    return localCreated;
   }
 
   const fixtureRecords =
@@ -162,20 +186,33 @@ export function resolveMemberSquadAffiliations(input: {
   liveQueryEnabled: boolean;
   memberId: string;
   protocolOwner: string | null;
+  createdSquads?: NamiSquadRecord[];
 }): SquadAffiliationItem[] {
+  const localCreated = (input.createdSquads ?? createdSquadsForMember(input.memberId)).map((squad) =>
+    mapFixtureSquad(squad, input.memberId)
+  );
+
   if (input.loadState === 'loading') {
-    return [];
+    return localCreated;
   }
 
   if (input.liveCards.length > 0) {
-    return input.liveCards.map((card) => mapLiveSquadCard(card, input.protocolOwner));
+    return mergeAffiliationItems(
+      input.liveCards.map((card) => mapLiveSquadCard(card, input.protocolOwner)),
+      localCreated
+    );
   }
 
   if (!shouldUseFixtureAffiliations(input.liveCards, input.loadState, input.liveQueryEnabled)) {
-    return [];
+    return localCreated;
   }
 
-  return squadsForMember(input.memberId).map((squad) => mapFixtureSquad(squad, input.memberId));
+  const fixtureRecords = mergeSquadRecords([
+    ...(input.createdSquads ?? createdSquadsForMember(input.memberId)),
+    ...squadsForMember(input.memberId),
+  ]);
+
+  return fixtureRecords.map((squad) => mapFixtureSquad(squad, input.memberId));
 }
 
 export function affiliationUsesFixtures<T extends { source: AffiliationDataSource }>(

@@ -1,6 +1,8 @@
 import { uploadChannelCoverToBackend } from './channel-preferences-api.js';
 import { uploadAvatarToBackend } from './member-preferences-api.js';
+import { readWalletAuthRequired } from './protocol-env.js';
 import { uploadStudioLogoToBackend } from './studio-preferences-api.js';
+import { canPromptWalletSignature } from './wallet-auth.js';
 
 export const MEDIA_UPLOAD_ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 export const MEDIA_UPLOAD_ACCEPTED_LABEL = 'PNG, JPG, WebP';
@@ -113,6 +115,22 @@ export async function uploadMediaImage(input: {
   return uploaded ? { url: uploaded.url } : null;
 }
 
+export function canUploadMediaToBackend(owner: string | null): boolean {
+  if (!owner?.startsWith('0x')) {
+    return false;
+  }
+
+  if (!readWalletAuthRequired()) {
+    return true;
+  }
+
+  return canPromptWalletSignature(owner);
+}
+
+export type PersistMediaImageResult = {
+  destination: 'server' | 'local';
+};
+
 export async function persistMediaImage(input: {
   kind: MediaUploadKind;
   owner: string | null;
@@ -123,23 +141,28 @@ export async function persistMediaImage(input: {
   isApiAvailable: boolean;
   onSaved: (url: string) => void;
   onLocalFallback: (dataUrl: string) => void;
-}): Promise<void> {
-  if (input.isApiAvailable && input.owner?.startsWith('0x')) {
-    const uploadInput = {
-      kind: input.kind,
-      owner: input.owner,
-      file: input.file,
-      ...(input.channelId ? { channelId: input.channelId } : {}),
-      ...(input.studioId ? { studioId: input.studioId } : {}),
-    };
+}): Promise<PersistMediaImageResult> {
+  if (input.isApiAvailable && canUploadMediaToBackend(input.owner)) {
+    try {
+      const uploadInput = {
+        kind: input.kind,
+        owner: input.owner!,
+        file: input.file,
+        ...(input.channelId ? { channelId: input.channelId } : {}),
+        ...(input.studioId ? { studioId: input.studioId } : {}),
+      };
 
-    const uploaded = await uploadMediaImage(uploadInput);
+      const uploaded = await uploadMediaImage(uploadInput);
 
-    if (uploaded?.url) {
-      input.onSaved(uploaded.url);
-      return;
+      if (uploaded?.url) {
+        input.onSaved(uploaded.url);
+        return { destination: 'server' };
+      }
+    } catch {
+      // Fall back to local IndexedDB when wallet auth or server upload is unavailable.
     }
   }
 
   input.onLocalFallback(input.dataUrl);
+  return { destination: 'local' };
 }

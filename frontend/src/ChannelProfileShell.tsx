@@ -189,26 +189,25 @@ export function ChannelProfileShell(props: ChannelProfileShellProps): ReactEleme
             >
               {props.returnLabel}
             </button>
-            {showMemberConsumerActions ? (
-              <>
-                <button
-                  className={
-                    'primary-action' + (props.channelIsSubscribed ? ' is-subscribed-channel-action' : '')
-                  }
-                  onClick={props.onSubscribe}
-                  type="button"
-                >
-                  {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
-                </button>
-                {canShowChannelBoostAction(props.selfMember, props.channel.id) ? (
-                  <ChannelBoostButton
-                    channelBoostPower={props.channelBoostPower}
-                    channelId={props.channel.id}
-                    member={props.selfMember}
-                    onBoost={props.onBoostChannel}
-                  />
-                ) : null}
-              </>
+            {showMemberConsumerActions && !props.isChannelOwner ? (
+              <button
+                className={
+                  'primary-action' + (props.channelIsSubscribed ? ' is-subscribed-channel-action' : '')
+                }
+                onClick={props.onSubscribe}
+                type="button"
+              >
+                {props.channelIsSubscribed ? 'Subscribed' : 'Subscribe'}
+              </button>
+            ) : null}
+            {showMemberConsumerActions &&
+            canShowChannelBoostAction(props.selfMember, props.channel.id) ? (
+              <ChannelBoostButton
+                channelBoostPower={props.channelBoostPower}
+                channelId={props.channel.id}
+                member={props.selfMember}
+                onBoost={props.onBoostChannel}
+              />
             ) : null}
             {!props.preApprovedOwnerView && props.activeSection !== 'chat' ? (
               <button className="secondary-action" onClick={() => props.onSelectSection('chat')} type="button">

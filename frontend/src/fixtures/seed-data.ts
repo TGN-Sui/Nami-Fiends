@@ -6,6 +6,10 @@ import type {
   NamiMember,
   UserProfile,
 } from '../domain/types.js';
+import {
+  buildDeveloperFromSuiGame,
+  buildNamiChannelFromSuiGame,
+} from './sui-game-catalog.js';
 
 function demoChannelCover(title: string, gradientStart: string, gradientMid: string, accent: string): string {
   const label = title.slice(0, 14).toUpperCase();
@@ -48,146 +52,10 @@ const defaultModules: ChannelModule[] = [
 ];
 
 export const channels: NamiChannel[] = [
-  {
-    coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff3152%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23221020%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%2375d7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%2375d7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EFIENDS%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
-    id: 'fiends',
-      surfaceType: 'game',
-    name: 'FIENDS',
-    handle: '@fiends',
-    owner: 'Goonie Labs',
-      developerId: 'goonie-labs',
-      developerName: 'Goonie Labs',
-      developerLogoSeed: 'GL',
-      coverArtSeed: 'cyber-alley',
-      coverArtStyle: 'neon',
-      verifiedGame: true,
-    genre: 'Gaming / Social',
-    platforms: ['PC', 'Sui', 'Streaming'],
-    subscribers: 128,
-    verified: true,
-    partner: true,
-    officialNami: true,
-    signal: 'Green',
-    tagline: 'Discuss, vibe, and game out with the rest of the squad.',
-    banner: 'Official cyber alley banner',
-    theme: 'crimson',
-    modules: defaultModules,
-    officialBadges: ['Verified Channel', '1 Year Channel', 'Top 10 Channel'],
-    customBadges: ['Founder Room', 'Guild Ally', 'Event Regular'],
-    verifiedLinks: [
-      { label: 'Official Website', verified: true },
-      { label: 'X / Social', verified: true },
-      { label: 'Discord Mirror', verified: true }
-    ],
-    announcements: [
-      'Official event banner is live for this weekend.',
-      'Guild recruitment window opens Friday.',
-      'New badge-gated chat areas are being prepared.'
-    ]
-  },
-  {
-    coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2343f5a7%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23146c9f%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%23dff7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%23dff7ff%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EWALRUS%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
-    id: 'walrus',
-      surfaceType: 'game',
-    name: 'Walrus Raiders',
-    handle: '@walrus',
-    owner: 'Walrus Community',
-      developerId: 'walrus-community',
-      developerName: 'Walrus Community',
-      developerLogoSeed: 'WC',
-      coverArtSeed: 'ocean-raid',
-      coverArtStyle: 'ocean',
-      verifiedGame: true,
-    genre: 'Adventure',
-    platforms: ['PC', 'Console'],
-    subscribers: 1228,
-    verified: true,
-    partner: false,
-    signal: 'Orange',
-    tagline: 'Serious co-op crews, friendly strategy, and raids.',
-    banner: 'Ocean raid banner',
-    theme: 'blue',
-    modules: defaultModules,
-    officialBadges: ['Verified Channel', 'Raid Partner'],
-    customBadges: ['Deep Diver', 'Squad Captain', 'Loot Runner'],
-    verifiedLinks: [
-      { label: 'Official Website', verified: true },
-      { label: 'Raid Calendar', verified: true }
-    ],
-    announcements: [
-      'Raid schedule updated for the next cycle.',
-      'New orange-signal strategy rooms are available.',
-      'Support tickets now route through the channel support tab.'
-    ]
-  },
-  {
-    id: 'pawtato',
-      surfaceType: 'game',
-    name: 'Pawtato',
-    handle: '@pawtato',
-    owner: 'Pawtato Community',
-      developerId: 'pawtato-community',
-      developerName: 'Pawtato Community',
-      developerLogoSeed: 'PC',
-      coverArtSeed: 'cozy-forest',
-      coverArtStyle: 'cozy',
-      verifiedGame: false,
-    genre: 'Casual / Cozy',
-    platforms: ['Mobile', 'PC'],
-    subscribers: 2668,
-    verified: false,
-    partner: false,
-    signal: 'Green',
-    tagline: 'Casual community for cozy players and collectors.',
-    banner: 'Cozy forest banner',
-    theme: 'green',
-    modules: defaultModules,
-    officialBadges: ['Community Favorite'],
-    customBadges: ['Collector', 'Cozy Crew', 'Garden Friend'],
-    verifiedLinks: [
-      { label: 'Community Page', verified: false },
-      { label: 'Event Board', verified: false }
-    ],
-    announcements: [
-      'Cozy night starts Saturday.',
-      'Collector badge submissions are open.',
-      'New player welcome thread is pinned.'
-    ]
-  },
-  {
-    id: 'retro',
-      surfaceType: 'game',
-    name: 'Retro Arena',
-    handle: '@retro',
-    owner: 'Retro Arcade',
-      developerId: 'retro-arcade',
-      developerName: 'Retro Arcade',
-      developerLogoSeed: 'RA',
-      coverArtSeed: 'neon-arcade',
-      coverArtStyle: 'arcade',
-      verifiedGame: false,
-    genre: 'Arcade / PvP',
-    platforms: ['PC', 'Console'],
-    subscribers: 877,
-    verified: false,
-    partner: false,
-    signal: 'Red',
-    tagline: 'High-intensity retro PvP and arcade events.',
-    banner: 'Neon arcade banner',
-    theme: 'violet',
-    modules: defaultModules,
-    officialBadges: ['PvP Arena'],
-    customBadges: ['Combo Master', 'Arena Regular', 'Boss Rush'],
-    verifiedLinks: [
-      { label: 'Tournament Board', verified: false },
-      { label: 'Match Rules', verified: false }
-    ],
-    announcements: [
-      'PvP bracket opens tonight.',
-      'Red-signal rooms are high intensity by default.',
-      'Arena badge rewards rotate weekly.'
-    ]
-  },
+  buildNamiChannelFromSuiGame('fiends'),
+  buildNamiChannelFromSuiGame('xociety'),
+  buildNamiChannelFromSuiGame('pawtato'),
+  buildNamiChannelFromSuiGame('panzerdogs'),
   {
     coverImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20900%201200%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2375d7ff%22%2F%3E%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%230c7f65%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2305070d%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22900%22%20height%3D%221200%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22700%22%20cy%3D%22230%22%20r%3D%22180%22%20fill%3D%22%2343f5a7%22%20opacity%3D%22.28%22%2F%3E%20%3Cpath%20d%3D%22M80%20900%20C250%20720%20420%201020%20820%20780%20L820%201200%20L80%201200%20Z%22%20fill%3D%22%2343f5a7%22%20opacity%3D%22.28%22%2F%3E%20%3Crect%20x%3D%2296%22%20y%3D%2296%22%20width%3D%22708%22%20height%3D%221008%22%20rx%3D%2258%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%2210%22%2F%3E%20%3Ctext%20x%3D%2292%22%20y%3D%22610%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EPEBBLE%3C%2Ftext%3E%20%3Ctext%20x%3D%22104%22%20y%3D%22700%22%20font-family%3D%22Arial%22%20font-size%3D%2242%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.72%22%3ENAMI%20DEMO%20MEDIA%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'pebble',
@@ -453,51 +321,10 @@ export const channels: NamiChannel[] = [
 ];
 
 export const developers: NamiDeveloperProfile[] = [
-  {
-    logoImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff3152%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23190711%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2296%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22310%22%20cy%3D%2288%22%20r%3D%2256%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.14%22%2F%3E%20%3Ctext%20x%3D%2270%22%20y%3D%22245%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EGL%3C%2Ftext%3E%20%3C%2Fsvg%3E',
-    id: 'goonie-labs',
-    surfaceType: 'developer',
-    name: 'Goonie Labs',
-    handle: '@goonie-labs',
-    logoSeed: 'GL',
-    proofStatus: 'Verified Studio',
-    approved: true,
-    gameIds: ['fiends'],
-    studioSignal: 'Green'
-  },
-  {
-    id: 'walrus-community',
-    surfaceType: 'developer',
-    name: 'Walrus Community',
-    handle: '@walrus-dev',
-    logoSeed: 'WC',
-    proofStatus: 'Verified Studio',
-    approved: true,
-    gameIds: ['walrus'],
-    studioSignal: 'Orange'
-  },
-  {
-    id: 'pawtato-community',
-    surfaceType: 'developer',
-    name: 'Pawtato Community',
-    handle: '@pawtato-dev',
-    logoSeed: 'PC',
-    proofStatus: 'Community Maintainer',
-    approved: false,
-    gameIds: ['pawtato'],
-    studioSignal: 'Green'
-  },
-  {
-    id: 'retro-arcade',
-    surfaceType: 'developer',
-    name: 'Retro Arcade',
-    handle: '@retro-arcade-dev',
-    logoSeed: 'RA',
-    proofStatus: 'Community Maintainer',
-    approved: false,
-    gameIds: ['retro'],
-    studioSignal: 'Red'
-  },
+  buildDeveloperFromSuiGame('fiends'),
+  buildDeveloperFromSuiGame('xociety'),
+  buildDeveloperFromSuiGame('pawtato'),
+  buildDeveloperFromSuiGame('panzerdogs'),
   {
     logoImageUrl: 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20400%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2375d7ff%22%2F%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230c7f65%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2296%22%20fill%3D%22url(%23g)%22%2F%3E%20%3Ccircle%20cx%3D%22310%22%20cy%3D%2288%22%20r%3D%2256%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.14%22%2F%3E%20%3Ctext%20x%3D%2270%22%20y%3D%22245%22%20font-family%3D%22Arial%20Black%2C%20Arial%22%20font-size%3D%22126%22%20fill%3D%22%23ffffff%22%3EPL%3C%2Ftext%3E%20%3C%2Fsvg%3E',
     id: 'pebble-labs',

@@ -63,7 +63,10 @@ export function AccountConnectSection(): ReactElement {
         </div>
 
         <div className="settings-account-connect-block">
-          <span className="settings-account-connect-label">Advanced account link</span>
+          <span className="settings-account-connect-label">Sui wallet</span>
+          <p className="protocol-hint">
+            Connect a Sui wallet for on-chain purchases, tips, and passport ownership.
+          </p>
           <WalletConnectControl />
         </div>
       </div>

@@ -17,7 +17,7 @@ export const PINNED_PROFILE_MODULE = 'Official Announcements';
 
 export const SELF_MEMBER_ID = 'm1';
 
-export const LEGACY_SELF_MEMBER_NAMES = ['Nozomi', 'NPC Gamer'] as const;
+export const LEGACY_SELF_MEMBER_NAMES = ['Nozomi', 'NPC Gamer', 'Robbos'] as const;
 
 export function getSelfMember(): NamiMember {
   const baseMember = members.find((member) => member.id === SELF_MEMBER_ID) ?? members[0]!;
@@ -203,7 +203,15 @@ export function resolveMessageAuthorMember(
   selfMember: NamiMember,
   roster: NamiMember[] = members
 ): NamiMember | undefined {
-  if (message.id.startsWith('user-cm-') || message.id.startsWith('user-gc-')) {
+  if (
+    message.id.startsWith('user-cm-') ||
+    message.id.startsWith('user-gc-') ||
+    message.id.startsWith('user-guild-')
+  ) {
+    return selfMember;
+  }
+
+  if (isSelfMessageAuthor(message.author, selfMember)) {
     return selfMember;
   }
 
@@ -216,6 +224,24 @@ export function resolveMessageAuthorMember(
   }
 
   return undefined;
+}
+
+export function resolveChatMessageAuthorLabel(
+  message: { id: string; author: string },
+  selfMember: NamiMember,
+  resolvedMember?: NamiMember
+): string {
+  if (
+    message.id.startsWith('user-cm-') ||
+    message.id.startsWith('user-gc-') ||
+    message.id.startsWith('user-guild-') ||
+    isSelfMessageAuthor(message.author, selfMember) ||
+    resolvedMember?.id === selfMember.id
+  ) {
+    return selfMember.name;
+  }
+
+  return message.author;
 }
 
 /** Presence strip for chat rooms — always shows the live self passport, not shell placeholders. */

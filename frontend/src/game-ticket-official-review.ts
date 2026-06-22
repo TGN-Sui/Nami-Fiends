@@ -1,11 +1,17 @@
 import { sendGameApprovalEmail } from './game-approval-email-store.js';
 import { queueGameApprovalWelcome } from './game-approval-welcome-store.js';
 import { releaseHiddenChannelEventsForChannel } from './events-store.js';
-import { syncGameOwnerSessionFromTicket } from './game-owner-session-store.js';
 import {
   gameSubmissionTicketById,
+  isChannelClaimTicket,
+  resolveGameTicketChannelId,
   updateGameSubmissionTicketStatus,
 } from './game-submission-ticket-store.js';
+import { canReviewNodenameClaims } from './nami-capabilities.js';
+import {
+  markOwnerProvisionedChannelClaimed,
+  markOwnerProvisionedChannelClaimRejected,
+} from './owner-provisioned-channels-store.js';
 import {
   approveSubmittedTicket,
   rejectSubmittedTicket,
@@ -21,6 +27,10 @@ export function applyGameTicketOfficialReview(
   status: 'approved' | 'rejected',
   reviewerOwner: string | null
 ): GameTicketOfficialReviewResult {
+  if (!canReviewNodenameClaims(reviewerOwner)) {
+    return { ok: false, message: 'Only the Nami official owner can review game tickets.' };
+  }
+
   const ticket = gameSubmissionTicketById(ticketId);
 
   if (!ticket) {
@@ -30,6 +40,9 @@ export function applyGameTicketOfficialReview(
   if (ticket.status !== 'submitted' && ticket.status !== 'preapproved') {
     return { ok: false, message: 'Game ticket is no longer awaiting review.' };
   }
+
+  const channelId = resolveGameTicketChannelId(ticket);
+  const isClaim = isChannelClaimTicket(ticket);
 
   const updated = updateGameSubmissionTicketStatus(
     ticketId,
@@ -41,10 +54,16 @@ export function applyGameTicketOfficialReview(
     return { ok: false, message: 'Could not update game ticket.' };
   }
 
-  syncGameOwnerSessionFromTicket(ticketId);
+  if (status === 'rejected' && isClaim) {
+    markOwnerProvisionedChannelClaimRejected(channelId);
+  }
+
+  if (status === 'approved' && isClaim) {
+    markOwnerProvisionedChannelClaimed(channelId, ticketId);
+  }
 
   if (status === 'approved') {
-    const released = releaseHiddenChannelEventsForChannel(updated.provisionalChannelId);
+    const released = releaseHiddenChannelEventsForChannel(channelId);
     const emailResult = sendGameApprovalEmail(updated);
     queueGameApprovalWelcome(updated.id);
 
@@ -52,13 +71,17 @@ export function applyGameTicketOfficialReview(
       approveSubmittedTicket(ticketId, reviewerOwner);
     }
 
+    const claimSuffix = isClaim ? ' Channel keys will hand over after the claimant syncs.' : '';
+
     return {
       ok: true,
       message:
         updated.gameTitle +
+        (isClaim ? ' claim' : '') +
         ' approved. ' +
         (emailResult.ok ? emailResult.message : emailResult.reason) +
-        (released > 0 ? ' ' + released + ' hidden event draft(s) are now visible.' : ''),
+        (released > 0 ? ' ' + released + ' hidden event draft(s) are now visible.' : '') +
+        claimSuffix,
     };
   }
 
@@ -68,6 +91,6 @@ export function applyGameTicketOfficialReview(
 
   return {
     ok: true,
-    message: updated.gameTitle + ' rejected.',
+    message: updated.gameTitle + (isClaim ? ' claim' : '') + ' rejected.',
   };
 }

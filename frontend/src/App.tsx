@@ -58,6 +58,7 @@ import { PinnedGameChannelProfileCard } from './PinnedGameChannelProfileCard.js'
 import {
   isGameChannelOwner,
   ownsGameChannel,
+  resolveChannelById,
   resolveOwnedGameChannel,
 } from './channel-owner-access.js';
 import {
@@ -68,8 +69,12 @@ import { isChannelHiddenFromPublic } from './game-submission-ticket-store.js';
 import {
   readActiveHubFeaturedChannelId,
   readApprovedPartnerCarouselChannelIds,
-  readChannelOwnerPromotionsState,
+  partnerCarouselCoverHydrationKey,
+  resolvePartnerCarouselCoverUrl,
+  useChannelOwnerPromotionsState,
 } from './channel-owner-promotions-store.js';
+import { ensureChannelMediaHydratedForKey } from './channel-media-persistence.js';
+import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
@@ -141,7 +146,12 @@ import {
   type GuildCardView,
   type SquadCardView,
 } from './protocol.js';
-import { useGuildCardsQuery, useOwnerHistoryQuery, usePassportQuery, useSquadCardsQuery } from './protocol-query.js';
+import {
+  useGuildCardsQuery,
+  useOwnerHistoryQuery,
+  usePassportQuery,
+  useSquadCardsQuery,
+} from './protocol-query.js';
 
 import { clearLocalNamiSession } from './session-sign-out.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
@@ -198,10 +208,13 @@ import {
   useMemberFeedAbuseReports,
   useOfficialFeedAbuseAlerts,
 } from './member-feed-abuse-store.js';
+import { buildGameBubbleDiscoveryEntries } from './bubble-discovery-entries.js';
 import {
   buildGenreBubbleEntries,
   genreOfficialChats,
 } from './global-chats.js';
+import { useGenreChatActivityVersion } from './genre-chat-activity-store.js';
+import { dedupeChannelsByIdentity } from './local-channel-directory.js';
 import {
   channelMatchesGameHubFilter,
   channelsForModuleFilters,
@@ -224,13 +237,18 @@ import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
 import { GameHubChannelTile } from './GameHubChannelTile.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import { pendingApprovalsForMember } from './approval-requests-store.js';
+import { getCreatedGuildRecords } from './guild-creation-store.js';
 import {
   GuildDetailScreen,
   MyGuildHomeScreen,
   SquadDetailScreen,
 } from './GuildSpaceScreens.js';
+import { getCreatedSquadRecords } from './squad-creation-store.js';
 import { markGuildEventsSeen, useGuildEventsStore } from './guild-events-store.js';
-import { resolveMemberGuildAffiliations } from './affiliation-provider.js';
+import {
+  resolveMemberGuildAffiliations,
+  resolveMemberSquadAffiliations,
+} from './affiliation-provider.js';
 import { useChannelDirectory } from './channel-directory-provider.js';
 
 import { useMemberDirectory } from './member-directory-provider.js';
@@ -1146,11 +1164,17 @@ function NamiHub(props: {
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
   const bubbleLeaderboardSize = useBubbleLeaderboardSize();
+  useChannelBoostStore();
   const { owner } = useProtocolOwner();
   const hubCuration = useOwnerHubCuration();
   const canCurateHub = isOfficialOwner(owner);
-  const promotions = readChannelOwnerPromotionsState();
+  const mediaVersion = useChannelOwnerMediaVersion();
+  const promotions = useChannelOwnerPromotionsState();
   const { channels: directoryChannels } = useChannelDirectory(50);
+  const uniqueDirectoryChannels = useMemo(
+    () => dedupeChannelsByIdentity(directoryChannels),
+    [directoryChannels],
+  );
   const { members: directoryMembers } = useMemberDirectory();
   const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
   const partnerTicket = promotions.partnerCarousel.ticket;
@@ -1190,9 +1214,19 @@ function NamiHub(props: {
       : featuredShowcaseChannels[activeShowcaseIndex]) ?? props.selectedChannel;
   const partnerBannerTitle = partnerTicket?.title?.trim() || activeFeaturedChannel.name;
   const partnerBannerDescription = partnerTicket?.description?.trim() || activeFeaturedChannel.genre;
-  const partnerBannerCover = partnerTicket?.coverUrl?.trim() ?? '';
+  const partnerCoverHydrationKey = partnerCarouselCoverHydrationKey(partnerTicket);
 
-  const sortedGrowthChannels = [...directoryChannels].sort((left, right) => {
+  useEffect(() => {
+    if (!partnerCoverHydrationKey) {
+      return;
+    }
+
+    void ensureChannelMediaHydratedForKey(partnerCoverHydrationKey);
+  }, [partnerCoverHydrationKey, mediaVersion]);
+
+  const partnerBannerCover = resolvePartnerCarouselCoverUrl(partnerTicket);
+
+  const sortedGrowthChannels = [...uniqueDirectoryChannels].sort((left, right) => {
     return right.subscribers - left.subscribers;
   });
 
@@ -1221,20 +1255,8 @@ function NamiHub(props: {
 
   const topCommunityBubbles =
     sortedGrowthChannels.length > 0
-      ? Array.from({ length: 50 }, (_, index) => {
-          const channel = sortedGrowthChannels[index % sortedGrowthChannels.length]!;
-
-          return {
-            channel,
-            slotId: channel.id + '-top-community-' + index,
-          };
-        })
-      : Array.from({ length: 50 }, (_, index) => {
-          return {
-            channel: props.selectedChannel,
-            slotId: props.selectedChannel.id + '-top-community-' + index,
-          };
-        });
+      ? buildGameBubbleDiscoveryEntries(sortedGrowthChannels, bubbleLeaderboardSize)
+      : buildGameBubbleDiscoveryEntries([props.selectedChannel], 1);
 
   const spotlightEligibleMembers = directoryMembers.filter((member) => {
     return member.tier !== 'NPC' && member.signal !== 'Black';
@@ -1339,22 +1361,27 @@ function NamiHub(props: {
         }}
         onMouseEnter={() => setHoveredShowcaseChannelId(activeFeaturedChannel.id)}
         onMouseLeave={() => setHoveredShowcaseChannelId(null)}
-        style={
-          partnerBannerCover
-            ? { backgroundImage: 'url(' + JSON.stringify(partnerBannerCover) + ')' }
-            : undefined
-        }
         type="button"
       >
-        <span>
-          {partnerCarouselChannel
-            ? 'Featured Partner Banner Carousel'
-            : hubFeaturedChannel
-              ? 'Hub Featured Game'
-              : 'Featured Partner Banner Carousel'}
-        </span>
-        <strong>{partnerBannerTitle}</strong>
-        <small>{partnerBannerDescription}</small>
+        {partnerBannerCover ? (
+          <span
+            aria-hidden="true"
+            className="nami-hub-banner-cover"
+            style={{ backgroundImage: 'url(' + JSON.stringify(partnerBannerCover) + ')' }}
+          />
+        ) : null}
+        {partnerBannerCover ? <span aria-hidden="true" className="nami-hub-banner-scrim" /> : null}
+        <div className="nami-hub-banner-copy">
+          <span>
+            {partnerCarouselChannel
+              ? 'Featured Partner Banner Carousel'
+              : hubFeaturedChannel
+                ? 'Hub Featured Game'
+                : 'Featured Partner Banner Carousel'}
+          </span>
+          <strong>{partnerBannerTitle}</strong>
+          <small>{partnerBannerDescription}</small>
+        </div>
       </button>
 
       <section className="nami-hub-lower-grid">
@@ -1671,8 +1698,13 @@ function GameHub(props: {
 }): ReactElement {
   useChannelCoverVersion();
   useChannelBoostStore();
+  const genreChatActivityVersion = useGenreChatActivityVersion();
   const selfMember = useSelfMember();
   const { channels: directoryChannels } = useChannelDirectory(50);
+  const uniqueDirectoryChannels = useMemo(
+    () => dedupeChannelsByIdentity(directoryChannels),
+    [directoryChannels],
+  );
   const [gameHubBoostNotice, setGameHubBoostNotice] = useState('');
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
@@ -1691,22 +1723,24 @@ function GameHub(props: {
   const [nextModuleKind, setNextModuleKind] = useState<'genre' | 'game' | 'game-genre'>('genre');
   const [nextModuleFilter, setNextModuleFilter] = useState<GameHubBrowserFilter>('Games');
   const [draggedInterestModuleId, setDraggedInterestModuleId] = useState<string | null>(null);
-  const genreBubbleEntries = useMemo(() => buildGenreBubbleEntries(), []);
-  const partnerChannels = directoryChannels.filter((channel) => channel.partner);
-  const topChannels = [...directoryChannels]
+  const genreBubbleEntries = useMemo(
+    () => buildGenreBubbleEntries(),
+    [genreChatActivityVersion],
+  );
+  const partnerChannels = uniqueDirectoryChannels.filter((channel) => channel.partner);
+  const topChannels = [...uniqueDirectoryChannels]
     .sort((left, right) => right.subscribers - left.subscribers)
     .slice(0, 4);
 
   const randomizedBrowserEntries = useMemo(() => {
-    return directoryChannels
-      .concat(directoryChannels, directoryChannels)
-      .map((channel, copyIndex) => ({
+    return uniqueDirectoryChannels
+      .map((channel) => ({
         channel,
-        copyIndex,
-        sortKey: Math.random()
+        copyIndex: 0,
+        sortKey: Math.random(),
       }))
       .sort((left, right) => left.sortKey - right.sortKey);
-  }, [directoryChannels]);
+  }, [uniqueDirectoryChannels]);
 
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
@@ -2219,7 +2253,7 @@ function GameHub(props: {
             onOpenChannel={openGenreBubbleChannel}
             subheading={
               genreDockPinned
-                ? '23 official IGDB genre lounges under Channel Browser. Bubble size reflects active members.'
+                ? '23 official IGDB genre lounges under Channel Browser. Bubble size reflects weekly active chatters.'
                 : 'Unpinned panel view. Pick from 23 official genre lounges below or pin the floating dock again.'
             }
           />
@@ -2727,10 +2761,51 @@ function saveChannelAdultLanguageMode(channelId: string, mode: AdultLanguageMode
   window.localStorage.setItem('nami-channel-adult-language-mode-' + channelId, mode);
 }
 
+function useProfileGroupAffiliations(memberId: string): {
+  guildAffiliations: ReturnType<typeof resolveMemberGuildAffiliations>;
+  squadAffiliations: ReturnType<typeof resolveMemberSquadAffiliations>;
+} {
+  const { owner: protocolOwner, context } = useProtocolOwner();
+  const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
+  const { data: squadCards, loadState: squadLoadState } = useSquadCardsQuery();
+  const guildLiveQueryEnabled = context.indexer !== null && protocolOwner !== null;
+  const squadLiveQueryEnabled = context.chain !== null && protocolOwner !== null;
+
+  const guildAffiliations = useMemo(
+    () =>
+      resolveMemberGuildAffiliations({
+        liveCards: guildCards ?? [],
+        loadState: guildLoadState,
+        liveQueryEnabled: guildLiveQueryEnabled,
+        memberId,
+        createdGuilds: getCreatedGuildRecords(),
+        fixtureGuilds: namiGuilds,
+      }),
+    [guildCards, guildLoadState, guildLiveQueryEnabled, memberId]
+  );
+
+  const squadAffiliations = useMemo(
+    () =>
+      resolveMemberSquadAffiliations({
+        liveCards: squadCards ?? [],
+        loadState: squadLoadState,
+        liveQueryEnabled: squadLiveQueryEnabled,
+        memberId,
+        protocolOwner,
+        createdSquads: getCreatedSquadRecords(),
+      }),
+    [memberId, protocolOwner, squadCards, squadLoadState, squadLiveQueryEnabled]
+  );
+
+  return { guildAffiliations, squadAffiliations };
+}
+
 function MemberProfileScreen(props: {
   member: (typeof members)[number];
   onNavigate: (page: NamiPage) => void;
   onOpenMember: (member: (typeof members)[number]) => void;
+  onOpenGuild: (guild: NamiGuildRecord) => void;
+  onOpenSquad: (squad: NamiSquadRecord) => void;
   onOpenProfile: (channel: NamiChannel) => void;
   onOpenThread: (memberId: string) => void;
   onNavigateGuilds: () => void;
@@ -2751,6 +2826,7 @@ function MemberProfileScreen(props: {
   const canMessage = canMessageOtherMembers() && props.member.id !== 'm1';
   const canReport = canReportMemberProfile();
   const isStreamingOnline = useMemberStreamingOnline(props.member.id);
+  const { guildAffiliations, squadAffiliations } = useProfileGroupAffiliations(props.member.id);
   const memberReports = useMemo(() => {
     return readSafetyReports().filter((report) => report.targetId === props.member.id);
   }, [props.member.id, refreshKey]);
@@ -2958,10 +3034,13 @@ function MemberProfileScreen(props: {
         </div>
 
         <MemberProfileShowcase
+          guildAffiliations={guildAffiliations}
           isStreamingOnline={isStreamingOnline}
           member={props.member}
           mode="visitor"
           onOpenChannel={props.onOpenProfile}
+          onOpenGuild={props.onOpenGuild}
+          onOpenSquad={props.onOpenSquad}
           onNavigate={props.onNavigate}
           belowShowcase={
             <>
@@ -4131,6 +4210,7 @@ function saveSelectedChannelBrandColor(color: string): void {
 
 function UserProfileScreen(props: {
   onOpenGuild?: (guild: NamiGuildRecord) => void;
+  onOpenSquad?: (squad: NamiSquadRecord) => void;
   onOpenMember?: (member: (typeof members)[number]) => void;
   onOpenProfile?: (channel: NamiChannel) => void;
   onNavigate?: (page: NamiPage) => void;
@@ -4147,23 +4227,8 @@ function UserProfileScreen(props: {
   const memberFeedEnabled = readEmbeddedFeedEnabled('member', profileMember.id);
 
   const mySubscriptions = useSubscribedChannels();
-  const { owner: protocolOwner, context } = useProtocolOwner();
-  const { data: guildCards, loadState: guildLoadState } = useGuildCardsQuery();
-  const guildLiveQueryEnabled = context.indexer !== null && protocolOwner !== null;
-  const profileGuildAffiliations = useMemo(
-    () =>
-      resolveMemberGuildAffiliations({
-        liveCards: guildCards ?? [],
-        loadState: guildLoadState,
-        liveQueryEnabled: guildLiveQueryEnabled,
-        memberId: profileMember.id,
-        createdGuilds: [],
-        fixtureGuilds: namiGuilds,
-      }),
-    [guildCards, guildLoadState, guildLiveQueryEnabled, profileMember.id]
-  );
-
-
+  const { guildAffiliations: profileGuildAffiliations, squadAffiliations: profileSquadAffiliations } =
+    useProfileGroupAffiliations(profileMember.id);
 
   function chooseProfileCardLayout(layout: ProfileCardLayout): void {
     setProfileCardLayout(layout);
@@ -4339,6 +4404,7 @@ function UserProfileScreen(props: {
             isStreamingOnline={selfStreamingOnline}
             member={profileMember}
             mode="self"
+            squadAffiliations={profileSquadAffiliations}
             subscriptions={mySubscriptions}
             onOpenStatusSettings={() => {
               requestSettingsSection('account');
@@ -4347,6 +4413,7 @@ function UserProfileScreen(props: {
             {...(props.onNavigate ? { onNavigate: props.onNavigate } : {})}
             {...(props.onOpenProfile ? { onOpenChannel: props.onOpenProfile } : {})}
             {...(props.onOpenGuild ? { onOpenGuild: props.onOpenGuild } : {})}
+            {...(props.onOpenSquad ? { onOpenSquad: props.onOpenSquad } : {})}
             belowShowcase={
               <>
                 <details className="panel member-profile-collapsible-panel" open={selfStreamingOnline}>
@@ -5203,7 +5270,10 @@ export function App(): ReactElement {
       }
     },
     onOpenChannel: (channelId) => {
-      const channel = channels.find((entry) => entry.id === channelId);
+      const channel =
+        channels.find((entry) => entry.id === channelId) ??
+        seedChannels.find((entry) => entry.id === channelId) ??
+        resolveChannelById(channelId);
 
       if (channel) {
         openChannelProfile(channel);
@@ -5465,6 +5535,8 @@ export function App(): ReactElement {
         member={selectedMember}
         onNavigate={navigateFromCurrentPage}
         onNavigateGuilds={() => setActivePage('guilds')}
+        onOpenGuild={openGuild}
+        onOpenSquad={openSquad}
         onOpenProfile={openChannelProfile}
         onOpenMember={openMemberProfile}
         onOpenThread={(memberId) => {
@@ -5492,6 +5564,7 @@ export function App(): ReactElement {
 if (activePage === 'userProfile') {
       return <UserProfileScreen
           onOpenGuild={openGuild}
+          onOpenSquad={openSquad}
           onOpenMember={openMemberProfile}
           onOpenProfile={openChannelProfile}
           onNavigate={navigateFromCurrentPage}
@@ -5685,6 +5758,7 @@ if (activePage === 'userProfile') {
           <SettingsScreen
             onDemoPerspectiveApplied={handleDemoPerspectiveApplied}
             onNavigate={navigateFromCurrentPage}
+            onOpenChannel={(channel) => openChannelProfile(channel, 'owner', null)}
             onOpenMember={openMemberProfile}
           />
         ) : (

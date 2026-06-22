@@ -10,6 +10,10 @@ import { ChannelHeroBackgroundUploadCard } from './ChannelHeroBackgroundUploadCa
 import { ChannelNewsBannerUploadCard } from './ChannelNewsBannerUploadCard.js';
 import { ChannelTrailerUploadCard } from './ChannelTrailerUploadCard.js';
 import {
+  ChannelOwnerSettingsProvider,
+  useChannelOwnerSettings,
+} from './channel-owner-settings-context.js';
+import {
   isOwnerPanelCollapsed,
   moveItem,
   OWNER_PANEL_LABELS,
@@ -20,21 +24,78 @@ import {
   useChannelOwnerLayout,
   type OwnerPanelId,
 } from './channel-owner-layout-store.js';
+import {
+  OWNER_SETTINGS_GROUPS,
+  readOwnerSettingsGroup,
+  saveOwnerSettingsGroup,
+  type OwnerSettingsGroup,
+} from './channel-owner-settings-groups.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import type { NamiChannel } from './uiMockData.js';
 
-export function ChannelOwnerSection(props: {
-  channel: NamiChannel;
-  isEliteOwner: boolean;
-  ownerBrandPalette: string[];
-  onChangeBrandColor: (index: number, color: string) => void;
-  onResetBrandPalette: () => void;
-}): ReactElement {
+function ChannelOwnerSettingsFooter(): ReactElement {
+  const settings = useChannelOwnerSettings();
+
+  return (
+    <footer className="channel-owner-settings-footer">
+      <div className="channel-owner-settings-footer-copy">
+        {settings.isDirty ? (
+          <span className="channel-owner-settings-dirty-pill">Unsaved changes</span>
+        ) : (
+          <span className="channel-owner-settings-saved-pill">All changes saved</span>
+        )}
+        {settings.saveNotice ? (
+          <p className="channel-owner-settings-footer-notice is-success">{settings.saveNotice}</p>
+        ) : null}
+        {settings.saveError ? (
+          <p className="channel-owner-settings-footer-notice is-error">{settings.saveError}</p>
+        ) : null}
+      </div>
+
+      <div className="channel-owner-settings-footer-actions">
+        <button
+          className="nami-surface-button"
+          disabled={!settings.isDirty}
+          onClick={settings.discardSettings}
+          type="button"
+        >
+          Discard
+        </button>
+        <button
+          className="nami-surface-button is-primary-surface-button"
+          disabled={!settings.isDirty}
+          onClick={settings.saveSettings}
+          type="button"
+        >
+          Save settings
+        </button>
+      </div>
+    </footer>
+  );
+}
+
+function ChannelOwnerSectionBody(props: { channel: NamiChannel }): ReactElement {
   const layout = useChannelOwnerLayout(props.channel.id);
   const editMode = useChannelOwnerEditMode(props.channel.id);
+  const settings = useChannelOwnerSettings();
+  const [activeGroup, setActiveGroup] = useState<OwnerSettingsGroup>(() =>
+    readOwnerSettingsGroup(props.channel.id),
+  );
   const [draggedPanelId, setDraggedPanelId] = useState<OwnerPanelId | null>(null);
   const [showChannelData, setShowChannelData] = useState(false);
+
+  const activeGroupDefinition =
+    OWNER_SETTINGS_GROUPS.find((group) => group.id === activeGroup) ?? OWNER_SETTINGS_GROUPS[0]!;
+  const visiblePanelIds = layout.ownerPanelOrder.filter((panelId) =>
+    activeGroupDefinition.panels.includes(panelId),
+  );
+
+  function handleGroupChange(group: OwnerSettingsGroup): void {
+    setActiveGroup(group);
+    saveOwnerSettingsGroup(props.channel.id, group);
+    settings.clearMessages();
+  }
 
   function handlePanelDrop(targetPanelId: OwnerPanelId): void {
     if (!draggedPanelId || draggedPanelId === targetPanelId) {
@@ -66,9 +127,9 @@ export function ChannelOwnerSection(props: {
     if (panelId === 'brand-palette') {
       return (
         <ChannelOwnerBrandPaletteCard
-          onChangeColor={props.onChangeBrandColor}
-          onReset={props.onResetBrandPalette}
-          palette={props.ownerBrandPalette}
+          onChangeColor={settings.updateBrandColor}
+          onReset={settings.resetBrandPalette}
+          palette={settings.draft.brandPalette}
         />
       );
     }
@@ -94,7 +155,7 @@ export function ChannelOwnerSection(props: {
     }
 
     if (panelId === 'banner-editor') {
-      return <ChannelBannerEditorCard channel={props.channel} isEliteOwner={props.isEliteOwner} />;
+      return <ChannelBannerEditorCard channel={props.channel} />;
     }
 
     if (panelId === 'channel-data') {
@@ -130,11 +191,7 @@ export function ChannelOwnerSection(props: {
     }
 
     if (!editMode) {
-      if (panelId === 'channel-data') {
-        return <div key={panelId}>{content}</div>;
-      }
-
-      return <div key={panelId}>{content}</div>;
+      return <div className="channel-owner-settings-panel" key={panelId}>{content}</div>;
     }
 
     const isDragging = draggedPanelId === panelId;
@@ -189,8 +246,8 @@ export function ChannelOwnerSection(props: {
         <div>
           <h2>Owner tools</h2>
           <p>
-            Personalize {props.channel.name} — upload media, reorder tabs and panels, and manage channel
-            emojis.
+            Manage {props.channel.name} in focused sections. Uploads save immediately — text and toggles
+            use Save settings below.
           </p>
         </div>
 
@@ -200,20 +257,51 @@ export function ChannelOwnerSection(props: {
           onClick={() => setChannelOwnerEditMode(props.channel.id, !editMode)}
           type="button"
         >
-          {editMode ? 'Done editing' : 'Edit mode'}
+          {editMode ? 'Done editing' : 'Edit layout'}
         </button>
       </div>
 
+      <nav aria-label="Owner settings sections" className="channel-owner-settings-nav">
+        {OWNER_SETTINGS_GROUPS.map((group) => (
+          <button
+            aria-current={activeGroup === group.id ? 'page' : undefined}
+            className={
+              'channel-owner-settings-nav-tab' + (activeGroup === group.id ? ' is-active' : '')
+            }
+            key={group.id}
+            onClick={() => handleGroupChange(group.id)}
+            type="button"
+          >
+            <strong>{group.label}</strong>
+            <span>{group.description}</span>
+          </button>
+        ))}
+      </nav>
+
       {editMode ? (
         <p className="channel-owner-edit-mode-hint">
-          Drag panel handles to reorder owner tools. Collapse panels you use less often. Switch to other
-          tabs to drag them into your preferred order.
+          Edit layout mode: drag panel handles to reorder tools in this section. Switch sections to
+          arrange each group.
         </p>
       ) : null}
 
-      <div className="channel-owner-layout-panel-stack">
-        {layout.ownerPanelOrder.map((panelId) => renderOwnerPanel(panelId))}
+      <div className="channel-owner-settings-panel-stack">
+        {visiblePanelIds.length > 0 ? (
+          visiblePanelIds.map((panelId) => renderOwnerPanel(panelId))
+        ) : (
+          <p className="channel-owner-settings-empty">No tools in this section yet.</p>
+        )}
       </div>
+
+      <ChannelOwnerSettingsFooter />
     </section>
+  );
+}
+
+export function ChannelOwnerSection(props: { channel: NamiChannel }): ReactElement {
+  return (
+    <ChannelOwnerSettingsProvider channel={props.channel}>
+      <ChannelOwnerSectionBody channel={props.channel} />
+    </ChannelOwnerSettingsProvider>
   );
 }

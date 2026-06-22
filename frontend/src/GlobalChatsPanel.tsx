@@ -23,9 +23,11 @@ import {
   canSendOfficialChatMessages,
   getChatPresenceMembers,
   messageBubbleClass,
+  resolveChatMessageAuthorLabel,
   resolveMessageAuthorMember,
 } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
+import { recordGenreWeeklyChatter } from './genre-chat-activity-store.js';
 import { useMemberChatTimeTracker } from './member-chat-time-store.js';
 import {
   canOfficialOwnerModerateGlobalChat,
@@ -139,6 +141,13 @@ export function GlobalChatRoomView(props: {
     [props.chat]
   );
   useMemberChatTimeTracker(selfMember.id, chatTimeTarget);
+  useEffect(() => {
+    if (props.chat.kind !== 'genre') {
+      return;
+    }
+
+    recordGenreWeeklyChatter(props.chat.id, selfMember.id);
+  }, [props.chat.id, props.chat.kind, selfMember.id]);
   const canOwnerModerateChat = canOfficialOwnerModerateGlobalChat(props.chat, connectedOwner);
   const presenceKindLabel = globalChatPresenceKindLabel(props.chat);
   const presenceMeta = globalChatPresenceMeta(props.chat);
@@ -188,6 +197,7 @@ export function GlobalChatRoomView(props: {
       <div className="message-stack global-message-stack" ref={messageStackRef}>
         {messages.map((message) => {
           const member = resolveMessageAuthorMember(message, selfMember);
+          const authorLabel = resolveChatMessageAuthorLabel(message, selfMember, member);
 
           return (
             <div className="chat-message-row" key={message.id}>
@@ -201,14 +211,14 @@ export function GlobalChatRoomView(props: {
                 <span className="message-avatar">??</span>
               )}
 
-              <div className={'message-bubble' + messageBubbleClass(member, message.author)}>
+              <div className={'message-bubble' + messageBubbleClass(member, authorLabel)}>
                 <div className="message-meta">
                   <button
                     className={'message-author-button signal-text-' + message.signal.toLowerCase()}
                     onClick={() => member && props.onOpenMember(member)}
                     type="button"
                   >
-                    {message.author}
+                    {authorLabel}
                   </button>
                   <span>{message.time}</span>
                   <ConductSignalDot signal={message.signal} size="sm" />

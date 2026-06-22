@@ -128,10 +128,10 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     annualUsd: 89,
     channelSlots: 5,
     boostCount: 6,
-    squadSlots: 3,
+    squadSlots: 2,
     juryEligible: true,
     claimableViaVerifiedX: false,
-    highlights: ['6 boosts', '3 squad slots', 'Jury eligibility', 'Profile cosmetics tier I'],
+    highlights: ['6 boosts', '2 squad slots', 'Jury eligibility', 'Profile cosmetics tier I'],
   },
   {
     id: 'elite',
@@ -142,10 +142,10 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     annualUsd: 179,
     channelSlots: 8,
     boostCount: 8,
-    squadSlots: 8,
+    squadSlots: 3,
     juryEligible: true,
     claimableViaVerifiedX: false,
-    highlights: ['8 boosts', '8 squad slots', 'Banner slots', 'Premium reactions & filters'],
+    highlights: ['8 boosts', '3 squad slots', 'Banner slots', 'Premium reactions & filters'],
   },
 ];
 

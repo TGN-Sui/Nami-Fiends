@@ -5,6 +5,7 @@ export type OfficialsSubmissionsProjection = {
   gameTickets: unknown[];
   partnerBanners: unknown[];
   nodenameClaims: unknown[];
+  ownerProvisionedChannels: unknown[];
   updatedAtMs: number;
 };
 
@@ -16,6 +17,7 @@ function emptyProjection(): OfficialsSubmissionsProjection {
     gameTickets: [],
     partnerBanners: [],
     nodenameClaims: [],
+    ownerProvisionedChannels: [],
     updatedAtMs: Date.now(),
   };
 }
@@ -28,6 +30,9 @@ async function readProjection(): Promise<OfficialsSubmissionsProjection> {
     gameTickets: Array.isArray(stored.gameTickets) ? stored.gameTickets : [],
     partnerBanners: Array.isArray(stored.partnerBanners) ? stored.partnerBanners : [],
     nodenameClaims: Array.isArray(stored.nodenameClaims) ? stored.nodenameClaims : [],
+    ownerProvisionedChannels: Array.isArray(stored.ownerProvisionedChannels)
+      ? stored.ownerProvisionedChannels
+      : [],
     updatedAtMs: typeof stored.updatedAtMs === 'number' ? stored.updatedAtMs : Date.now(),
   };
 }
@@ -76,6 +81,7 @@ export type SyncOfficialsSubmissionsInput = {
   gameTickets?: unknown[];
   partnerBanners?: unknown[];
   nodenameClaims?: unknown[];
+  ownerProvisionedChannels?: unknown[];
 };
 
 export async function syncOfficialsSubmissions(
@@ -100,6 +106,13 @@ export async function syncOfficialsSubmissions(
       input.nodenameClaims === undefined
         ? current.nodenameClaims
         : mergeById(asIdRecords(current.nodenameClaims), asIdRecords(input.nodenameClaims)),
+    ownerProvisionedChannels:
+      input.ownerProvisionedChannels === undefined
+        ? current.ownerProvisionedChannels
+        : mergeById(
+            asIdRecords(current.ownerProvisionedChannels),
+            asIdRecords(input.ownerProvisionedChannels)
+          ),
     updatedAtMs: Date.now(),
   };
 

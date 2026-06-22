@@ -315,6 +315,25 @@ Implementation: `nami-custom-emojis-store.ts`, `NamiOwnerEmojiPanel.tsx`, `ChatE
 
 ---
 
+# Frontend — Game Channel Media
+
+Game channel owners customize brand surfaces from the channel profile **Owner** tab (grouped under **Brand & media**):
+
+| Asset | Panel | Store |
+| --- | --- | --- |
+| Cover photo | `ChannelCoverUploadCard` | `channel-cover-store.ts` |
+| Hero / banner | `ChannelBannerEditorCard` | `channel-owner-media-store.ts` |
+| Trailer | `ChannelTrailerUploadCard` | `channel-owner-media-store.ts` |
+| Brand palette | Owner brand palette controls | `channel-owner-brand-palette.ts` |
+
+Uploads route through `media-upload-service.ts` when the receiving server is configured. On auth failure, a local fallback keeps the preview available for the session.
+
+**Persistence:** Large media blobs are stored in IndexedDB via `channel-media-persistence.ts`, with a lightweight manifest in `localStorage` (`nami.channel-media.manifest`). `bootstrapChannelMediaPersistence()` runs on app startup (`main.tsx`) so cover, hero, and trailer survive page refresh. Stores subscribe to `CHANNEL_MEDIA_HYDRATED_EVENT` to re-render after async hydration.
+
+Palette and promotion copy use the unified owner settings draft (`channel-owner-settings-draft.ts`) and commit through **Save settings**.
+
+---
+
 # Related Docs
 
 ```text

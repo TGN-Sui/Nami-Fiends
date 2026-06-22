@@ -35,7 +35,7 @@ describe('affiliation-provider', () => {
       loadState: 'ready',
       liveQueryEnabled: true,
       memberId: 'm1',
-      createdGuilds: [createdGuild],
+      createdGuilds: [],
       fixtureGuilds: [fixtureGuild],
     });
 
@@ -72,7 +72,7 @@ describe('affiliation-provider', () => {
     expect(items.every((item) => item.source === 'fixture')).toBe(true);
   });
 
-  it('returns no guilds when live query succeeds with an empty membership set', () => {
+  it('returns locally created guilds when live query succeeds with an empty membership set', () => {
     const items = resolveMemberGuildAffiliations({
       liveCards: [],
       loadState: 'ready',
@@ -82,7 +82,22 @@ describe('affiliation-provider', () => {
       fixtureGuilds: [fixtureGuild],
     });
 
-    expect(items).toHaveLength(0);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.id).toBe('guild-created');
+  });
+
+  it('shows locally created guilds while live discovery is still loading', () => {
+    const items = resolveMemberGuildAffiliations({
+      liveCards: [],
+      loadState: 'loading',
+      liveQueryEnabled: true,
+      memberId: 'm1',
+      createdGuilds: [createdGuild],
+      fixtureGuilds: [fixtureGuild],
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.id).toBe('guild-created');
   });
 
   it('falls back to fixtures after a live guild load error', () => {

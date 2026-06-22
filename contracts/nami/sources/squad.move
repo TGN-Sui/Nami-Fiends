@@ -18,8 +18,8 @@ module nami::squad {
     // =========================================================
     // SQUAD LIMITS
     // =========================================================
-    const PRO_SQUAD_SLOTS: u64 = 3;
-    const ELITE_SQUAD_SLOTS: u64 = 8;
+    const PRO_SQUAD_SLOTS: u64 = 2;
+    const ELITE_SQUAD_SLOTS: u64 = 3;
 
     // =========================================================
     // SQUAD OBJECT

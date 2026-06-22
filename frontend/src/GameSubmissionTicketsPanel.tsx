@@ -1,51 +1,36 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import { sendGameApprovalEmail } from './game-approval-email-store.js';
-import { queueGameApprovalWelcome } from './game-approval-welcome-store.js';
-import { releaseHiddenChannelEventsForChannel } from './events-store.js';
-import { syncGameOwnerSessionFromTicket } from './game-owner-session-store.js';
+import { applyGameTicketOfficialReview } from './game-ticket-official-review.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 import {
   listGameSubmissionTicketsSorted,
-  updateGameSubmissionTicketStatus,
   useGameSubmissionTickets,
 } from './game-submission-ticket-store.js';
 import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { gameTrustScoreTierLabel } from './game-trust-score.js';
+import { useProtocolOwner } from './wallet.js';
 
-export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): ReactElement {
+export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): ReactElement | null {
+  const { owner } = useProtocolOwner();
   const tickets = useGameSubmissionTickets();
   const [notice, setNotice] = useState<string | null>(null);
 
+  const canReview = isOfficialOwner(owner);
   const sortedTickets = useMemo(() => listGameSubmissionTicketsSorted(), [tickets]);
 
-  function handleStatusChange(
-    ticketId: string,
-    status: 'preapproved' | 'approved' | 'rejected',
-  ): void {
-    const updated = updateGameSubmissionTicketStatus(ticketId, status, 'nami-official');
+  if (!canReview) {
+    return null;
+  }
 
-    if (!updated) {
-      setNotice('Could not update ticket.');
+  function handleOfficialReview(ticketId: string, status: 'approved' | 'rejected'): void {
+    const result = applyGameTicketOfficialReview(ticketId, status, owner);
+
+    if (!result.ok) {
+      setNotice(result.message);
       return;
     }
 
-    syncGameOwnerSessionFromTicket(ticketId);
-
-    if (status === 'approved') {
-      const released = releaseHiddenChannelEventsForChannel(updated.provisionalChannelId);
-      const emailResult = sendGameApprovalEmail(updated);
-      queueGameApprovalWelcome(updated.id);
-      setNotice(
-        'Ticket ' +
-          updated.gameTitle +
-          ' marked approved. ' +
-          (emailResult.ok ? emailResult.message : emailResult.reason) +
-          (released > 0 ? ' ' + released + ' hidden event draft(s) are now visible.' : ''),
-      );
-      return;
-    }
-
-    setNotice('Ticket ' + updated.gameTitle + ' marked ' + status + '.');
+    setNotice(result.message);
   }
 
   const content = (
@@ -54,8 +39,8 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
         <div className="profile-panel-heading">
           <h2>Submitted game tickets</h2>
           <p>
-            Nami Officials review queue sorted by Trust Score. Higher scores appear first for faster
-            approval.
+            Official owner review queue sorted by Trust Score. Channel claims and new game tickets
+            both require your approval before keys hand over.
           </p>
         </div>
       ) : null}
@@ -70,7 +55,13 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
             <li className="game-submission-ticket-card" key={ticket.id}>
               <div className="game-submission-ticket-rank">#{index + 1}</div>
               <div className="game-submission-ticket-copy">
-                <strong>{ticket.gameTitle}</strong>
+                <strong>
+                  {ticket.ticketKind === 'channel-claim' ? 'Claim: ' : ''}
+                  {ticket.gameTitle}
+                </strong>
+                {ticket.ticketKind === 'channel-claim' ? (
+                  <span className="mini-badge">Channel claim</span>
+                ) : null}
                 <dl className="onboarding-preview-details game-submission-ticket-details">
                   {buildGameTicketPreviewFields({
                     gameTitle: ticket.gameTitle,
@@ -103,6 +94,12 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
                       </dd>
                     </div>
                   ))}
+                  {ticket.claimProofNotes ? (
+                    <div className="onboarding-preview-detail-row">
+                      <dt>Ownership proof</dt>
+                      <dd>{ticket.claimProofNotes}</dd>
+                    </div>
+                  ) : null}
                 </dl>
               </div>
               <div className="game-submission-ticket-score">
@@ -111,20 +108,10 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
                 <span className={'game-submission-ticket-status is-' + ticket.status}>{ticket.status}</span>
               </div>
               <div className="game-submission-ticket-actions">
-                {ticket.status !== 'preapproved' ? (
-                  <button
-                    className="secondary-action"
-                    disabled={ticket.trustScore < 60}
-                    onClick={() => handleStatusChange(ticket.id, 'preapproved')}
-                    type="button"
-                  >
-                    Pre-approve
-                  </button>
-                ) : null}
                 {ticket.status !== 'approved' ? (
                   <button
                     className="primary-action"
-                    onClick={() => handleStatusChange(ticket.id, 'approved')}
+                    onClick={() => handleOfficialReview(ticket.id, 'approved')}
                     type="button"
                   >
                     Approve
@@ -133,10 +120,10 @@ export function GameSubmissionTicketsPanel(props: { embedded?: boolean } = {}): 
                 {ticket.status !== 'rejected' ? (
                   <button
                     className="secondary-action"
-                    onClick={() => handleStatusChange(ticket.id, 'rejected')}
+                    onClick={() => handleOfficialReview(ticket.id, 'rejected')}
                     type="button"
                   >
-                    Reject
+                    Disapprove
                   </button>
                 ) : null}
               </div>

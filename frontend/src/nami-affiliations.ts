@@ -1,4 +1,7 @@
 import { shouldUseDevFixtures } from './app-config.js';
+import { canGuildMember } from './guild-hierarchy-store.js';
+import { effectiveGuildMemberIds } from './guild-join-requests-store.js';
+import { findDiscoverableGuildSpaceMember } from './guild-space-members.js';
 import type { GuildCardView, SquadCardView } from './protocol.js';
 import { getSelfMember } from './member-access.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -79,10 +82,10 @@ const SEED_GUILDS: NamiGuildRecord[] = [
 ];
 
 const SEED_SQUADS: NamiSquadRecord[] = [
-  { id: 'squad-alpha', name: 'Alpha Squad', memberIds: ['m1', 'm2'], maxSlots: 8 },
-  { id: 'squad-mint-watch', name: 'Mint Watch', memberIds: ['m1'], maxSlots: 8 },
-  { id: 'squad-raid-team', name: 'Raid Team', memberIds: ['m2', 'm3'], maxSlots: 8 },
-  { id: 'squad-patch-crew', name: 'Patch Crew', memberIds: ['m3'], maxSlots: 8 },
+  { id: 'squad-panzerdogs-raid', name: 'PanzerDogs Raid Team', memberIds: ['m1', 'm2'], maxSlots: 3 },
+  { id: 'squad-pawtato-land', name: 'Pawtato Land Crew', memberIds: ['m1', 'm3'], maxSlots: 3 },
+  { id: 'squad-alpha', name: 'Alpha Squad', memberIds: ['m1', 'm2'], maxSlots: 3 },
+  { id: 'squad-mint-watch', name: 'Mint Watch', memberIds: ['m1'], maxSlots: 3 },
 ];
 
 const fixturesEnabled = shouldUseDevFixtures();
@@ -143,7 +146,11 @@ export function guildMaxMembers(guild: NamiGuildRecord): number {
 }
 
 export function canMemberInviteToGuild(memberId: string, guild: NamiGuildRecord): boolean {
-  return guild.ownerMemberId === memberId || guild.memberIds.includes(memberId);
+  if (!effectiveGuildMemberIds(guild).includes(memberId)) {
+    return false;
+  }
+
+  return canGuildMember(guild, memberId, 'inviteMembers');
 }
 
 export function selfInvitableGuilds(): NamiGuildRecord[] {
@@ -226,7 +233,7 @@ export function resolveSquadFromCard(card: SquadCardView): NamiSquadRecord {
 
 export function membersForGuild(guild: NamiGuildRecord): NamiMember[] {
   const resolved = guild.memberIds
-    .map((memberId) => members.find((member) => member.id === memberId))
+    .map((memberId) => findDiscoverableGuildSpaceMember(memberId))
     .filter((member): member is NamiMember => Boolean(member));
 
   if (resolved.length > 0) {
@@ -238,7 +245,7 @@ export function membersForGuild(guild: NamiGuildRecord): NamiMember[] {
 
 export function membersForSquad(squad: NamiSquadRecord): NamiMember[] {
   const resolved = squad.memberIds
-    .map((memberId) => members.find((member) => member.id === memberId))
+    .map((memberId) => findDiscoverableGuildSpaceMember(memberId))
     .filter((member): member is NamiMember => Boolean(member));
 
   if (resolved.length > 0) {

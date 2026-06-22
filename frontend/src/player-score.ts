@@ -132,7 +132,7 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
       category: 'identity',
     });
   } else {
-    suggestions.push('Connect a wallet or zkLogin for up to +12 Player Score.');
+    suggestions.push('Link a Sui account from Settings for up to +12 Player Score.');
   }
 
   if (input.xVerified) {

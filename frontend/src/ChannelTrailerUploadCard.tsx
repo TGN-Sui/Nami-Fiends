@@ -10,24 +10,6 @@ import {
 } from './channel-owner-media-store.js';
 import type { NamiChannel } from './uiMockData.js';
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error('Could not read video.'));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read video.'));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function ChannelTrailerUploadCard(props: { channel: NamiChannel }): ReactElement {
   useChannelOwnerMediaVersion();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -60,13 +42,16 @@ export function ChannelTrailerUploadCard(props: { channel: NamiChannel }): React
     setErrorMessage(null);
     setIsReadingFile(true);
 
-    void readFileAsDataUrl(file)
-      .then((dataUrl) => {
-        saveChannelTrailerOverride(props.channel.id, dataUrl);
+    void saveChannelTrailerOverride(props.channel.id, file)
+      .then(() => {
         setNotice('Game trailer updated.');
       })
       .catch((readError: unknown) => {
-        setErrorMessage(readError instanceof Error ? readError.message : 'Could not read video.');
+        setErrorMessage(
+          readError instanceof Error
+            ? readError.message
+            : 'Could not save trailer. Try a smaller MP4 or WebM file.',
+        );
       })
       .finally(() => {
         setIsReadingFile(false);

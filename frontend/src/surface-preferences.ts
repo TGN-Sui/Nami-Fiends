@@ -124,19 +124,19 @@ export function getConfigurableEmbeddedFeedSurfaces(
   role: UserSurfaceRole = readUserSurfaceRole(),
   member: NamiMember = getSelfMember()
 ): EmbeddedFeedSurface[] {
-  if (role === 'channel-owner') {
-    return ['game'];
-  }
-
-  if (role === 'guild-owner') {
-    return ['guild'];
-  }
+  const surfaces: EmbeddedFeedSurface[] = [];
 
   if (memberHasEliteAccess(member) && isMemberVerified(member)) {
-    return ['member'];
+    surfaces.push('member');
   }
 
-  return [];
+  if (role === 'channel-owner') {
+    surfaces.push('game');
+  } else if (role === 'guild-owner') {
+    surfaces.push('guild');
+  }
+
+  return surfaces;
 }
 
 export function canConfigureEmbeddedFeedSurface(
@@ -150,9 +150,15 @@ export function canConfigureEmbeddedFeedSurface(
 export function canShowEmbeddedFeedSurface(
   surface: EmbeddedFeedSurface,
   role: UserSurfaceRole = readUserSurfaceRole(),
-  member: NamiMember = getSelfMember()
+  member: NamiMember = getSelfMember(),
+  feedOwnerMemberId?: string
 ): boolean {
-  return readEmbeddedFeedEnabled(surface) || canConfigureEmbeddedFeedSurface(surface, role, member);
+  const enabled =
+    surface === 'member'
+      ? readEmbeddedFeedEnabled(surface, feedOwnerMemberId ?? member.id)
+      : readEmbeddedFeedEnabled(surface);
+
+  return enabled || canConfigureEmbeddedFeedSurface(surface, role, member);
 }
 
 export function readViewingAsChannelOwner(): boolean {

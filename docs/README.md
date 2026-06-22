@@ -64,8 +64,9 @@ Index of product and protocol documentation for the Nami Chat repository.
 |-----|-------|
 | [ui-build-checkpoint.md](./ui-build-checkpoint.md) | UI phase completion log |
 | [landing-page.md](./landing-page.md) | Landing copy map |
-| [customization.md](./customization.md) | Cosmetics and themes |
+| [customization.md](./customization.md) | Cosmetics, themes, game channel media |
 | [membership.md](./membership.md) | Membership tiers and billing |
+| [boost-system.md](./boost-system.md) | Boost cycles and owner visibility |
 
 ---
 

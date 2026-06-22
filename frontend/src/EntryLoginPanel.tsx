@@ -20,11 +20,7 @@ import {
   isXVerificationMockEnabled,
   useXVerificationState,
 } from './x-verification-store.js';
-import {
-  useProtocolOwner,
-  WalletConnectControl,
-  ZkLoginConnectControl,
-} from './wallet.js';
+import { useProtocolOwner, ZkLoginConnectControl } from './wallet.js';
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -45,7 +41,7 @@ export function EntryLoginPanel(props: {
   const emailVerificationRequired = isContactVerificationAvailable();
 
   useEffect(() => {
-    if (!owner || (source !== 'wallet' && source !== 'zklogin')) {
+    if (!owner || source !== 'zklogin') {
       return;
     }
 
@@ -53,17 +49,14 @@ export function EntryLoginPanel(props: {
 
     if (!restored) {
       setLoginError(
-        'No Nami account is linked to this ' +
-          (source === 'zklogin' ? 'Google / zkLogin' : 'wallet') +
-          ' sign-in yet. Sign up first, then link methods in Settings.',
+        'No Nami account is linked to this Google / zkLogin sign-in yet. Sign up first, then link methods in Settings.',
       );
       return;
     }
 
     linkMemberSessionAuth(restored, {
       email: restored.email,
-      zkLoginAddress: source === 'zklogin' ? owner : null,
-      walletAddress: source === 'wallet' ? owner : null,
+      zkLoginAddress: owner,
     });
     clearSignedOut();
     props.onLoginSuccess();
@@ -152,8 +145,8 @@ export function EntryLoginPanel(props: {
         <span className="mini-badge">Log in</span>
         <h2 id="nami-entry-gate-title">Sign in with your linked account</h2>
         <p>
-          Use Google (zkLogin), email, X, or your wallet. Every method links to the same Nami wallet
-          identity — connect with any method you used during signup.
+          Use Google (zkLogin), email, or X. Every method links to the same Nami account — sign in with
+          any method you used during signup.
         </p>
       </div>
 
@@ -217,17 +210,9 @@ export function EntryLoginPanel(props: {
           </button>
           {!isXVerificationMockEnabled() ? (
             <small className="protocol-hint">
-              Live X OAuth ships soon. Use Google, email, or wallet until then.
+              Live X OAuth ships soon. Use Google or email until then.
             </small>
           ) : null}
-        </section>
-
-        <section className="nami-entry-login-block">
-          <span className="nami-entry-login-label">Wallet</span>
-          <p className="protocol-hint">
-            Connect the wallet you linked during signup to recover your account.
-          </p>
-          <WalletConnectControl />
         </section>
       </div>
 

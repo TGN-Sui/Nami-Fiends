@@ -1,8 +1,22 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  CHANNEL_MEDIA_HYDRATED_EVENT,
+  clearChannelMediaValue,
+  ensureChannelMediaHydratedForKey,
+  migrateLegacyLocalStorageMedia,
+  readChannelMediaPersistenceVersion,
+  readChannelMediaUrl,
+  saveChannelMediaValue,
+} from './channel-media-persistence.js';
+
 const NEWS_BANNER_PREFIX = 'nami.channel.news-banner.';
 const HERO_BACKGROUND_PREFIX = 'nami.channel.hero-background.';
 const TRAILER_PREFIX = 'nami.channel.trailer.';
+export const PARTNER_CAROUSEL_COVER_PREFIX = 'nami.channel.partner-carousel-cover.';
+export const SUPER_BANNER_COVER_PREFIX = 'nami.channel.super-banner-cover.';
+
+export const CHANNEL_MEDIA_REF_PREFIX = 'channel-media://';
 
 export const CHANNEL_TRAILER_ACCEPTED_TYPES = new Set(['video/mp4', 'video/webm']);
 export const CHANNEL_TRAILER_ACCEPTED_LABEL = 'MP4 or WebM';
@@ -20,27 +34,72 @@ function dispatchMediaChange(): void {
 }
 
 function readOverride(prefix: string, channelId: string): string | null {
-  try {
-    const stored = window.localStorage.getItem(storageKey(prefix, channelId));
+  const key = storageKey(prefix, channelId);
+  void ensureChannelMediaHydratedForKey(key);
+  return readChannelMediaUrl(key);
+}
 
-    if (!stored || stored.trim() === '') {
-      return null;
-    }
+async function saveOverride(prefix: string, channelId: string, value: string | Blob): Promise<void> {
+  const key = storageKey(prefix, channelId);
+  await migrateLegacyLocalStorageMedia(key);
+  await saveChannelMediaValue(key, value);
+  dispatchMediaChange();
+}
 
-    return stored;
-  } catch {
-    return null;
+async function clearOverride(prefix: string, channelId: string): Promise<void> {
+  const key = storageKey(prefix, channelId);
+  await clearChannelMediaValue(key);
+  dispatchMediaChange();
+}
+
+export function partnerCarouselCoverStorageKey(channelId: string): string {
+  return storageKey(PARTNER_CAROUSEL_COVER_PREFIX, channelId);
+}
+
+export function superBannerCoverStorageKey(channelId: string): string {
+  return storageKey(SUPER_BANNER_COVER_PREFIX, channelId);
+}
+
+export function toChannelMediaRef(storageKeyValue: string): string {
+  return CHANNEL_MEDIA_REF_PREFIX + storageKeyValue;
+}
+
+export function resolveChannelMediaRef(storedUrl: string): string {
+  if (!storedUrl.startsWith(CHANNEL_MEDIA_REF_PREFIX)) {
+    return storedUrl;
   }
+
+  const key = storedUrl.slice(CHANNEL_MEDIA_REF_PREFIX.length);
+  void ensureChannelMediaHydratedForKey(key);
+  return readChannelMediaUrl(key) ?? '';
 }
 
-function saveOverride(prefix: string, channelId: string, dataUrl: string): void {
-  window.localStorage.setItem(storageKey(prefix, channelId), dataUrl);
-  dispatchMediaChange();
+export async function externalizePromotionCoverUrl(
+  channelId: string,
+  coverUrl: string,
+  slotPrefix: string,
+): Promise<string> {
+  const trimmed = coverUrl.trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith(CHANNEL_MEDIA_REF_PREFIX)
+  ) {
+    return trimmed;
+  }
+
+  const key = storageKey(slotPrefix, channelId);
+  await saveChannelMediaValue(key, trimmed);
+  return toChannelMediaRef(key);
 }
 
-function clearOverride(prefix: string, channelId: string): void {
-  window.localStorage.removeItem(storageKey(prefix, channelId));
-  dispatchMediaChange();
+export function readPartnerCarouselCoverUrl(channelId: string): string | null {
+  return readOverride(PARTNER_CAROUSEL_COVER_PREFIX, channelId);
 }
 
 export function readChannelNewsBannerOverride(channelId: string): string | null {
@@ -48,11 +107,13 @@ export function readChannelNewsBannerOverride(channelId: string): string | null 
 }
 
 export function saveChannelNewsBannerOverride(channelId: string, dataUrl: string): void {
-  saveOverride(NEWS_BANNER_PREFIX, channelId, dataUrl);
+  void saveOverride(NEWS_BANNER_PREFIX, channelId, dataUrl).catch(() => {
+    dispatchMediaChange();
+  });
 }
 
 export function clearChannelNewsBannerOverride(channelId: string): void {
-  clearOverride(NEWS_BANNER_PREFIX, channelId);
+  void clearOverride(NEWS_BANNER_PREFIX, channelId);
 }
 
 export function readChannelHeroBackgroundOverride(channelId: string): string | null {
@@ -60,11 +121,13 @@ export function readChannelHeroBackgroundOverride(channelId: string): string | n
 }
 
 export function saveChannelHeroBackgroundOverride(channelId: string, dataUrl: string): void {
-  saveOverride(HERO_BACKGROUND_PREFIX, channelId, dataUrl);
+  void saveOverride(HERO_BACKGROUND_PREFIX, channelId, dataUrl).catch(() => {
+    dispatchMediaChange();
+  });
 }
 
 export function clearChannelHeroBackgroundOverride(channelId: string): void {
-  clearOverride(HERO_BACKGROUND_PREFIX, channelId);
+  void clearOverride(HERO_BACKGROUND_PREFIX, channelId);
 }
 
 export function validateChannelTrailerFile(file: File): string | null {
@@ -83,12 +146,12 @@ export function readChannelTrailerOverride(channelId: string): string | null {
   return readOverride(TRAILER_PREFIX, channelId);
 }
 
-export function saveChannelTrailerOverride(channelId: string, dataUrl: string): void {
-  saveOverride(TRAILER_PREFIX, channelId, dataUrl);
+export function saveChannelTrailerOverride(channelId: string, file: File): Promise<void> {
+  return saveOverride(TRAILER_PREFIX, channelId, file);
 }
 
 export function clearChannelTrailerOverride(channelId: string): void {
-  clearOverride(TRAILER_PREFIX, channelId);
+  void clearOverride(TRAILER_PREFIX, channelId);
 }
 
 function subscribeOwnerMedia(listener: () => void): () => void {
@@ -97,14 +160,16 @@ function subscribeOwnerMedia(listener: () => void): () => void {
   }
 
   window.addEventListener('nami-channel-owner-media-changed', onChange);
+  window.addEventListener(CHANNEL_MEDIA_HYDRATED_EVENT, onChange);
 
   return () => {
     window.removeEventListener('nami-channel-owner-media-changed', onChange);
+    window.removeEventListener(CHANNEL_MEDIA_HYDRATED_EVENT, onChange);
   };
 }
 
 function readOwnerMediaVersion(): number {
-  return mediaVersion;
+  return mediaVersion + readChannelMediaPersistenceVersion();
 }
 
 export function useChannelOwnerMediaVersion(): number {

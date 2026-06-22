@@ -22,8 +22,9 @@ const defaultBadgeGrants: MemberChannelBadgeGrant[] = [
   { memberId: 'm8', channelId: 'fiends', badgeLabel: 'Event Regular' },
   { memberId: 'm10', channelId: 'fiends', badgeLabel: 'Founder Room' },
   { memberId: 'm12', channelId: 'fiends', badgeLabel: 'Guild Ally' },
-  { memberId: 'm1', channelId: 'walrus', badgeLabel: 'Deep Diver' },
-  { memberId: 'm8', channelId: 'walrus', badgeLabel: 'Squad Captain' },
+  { memberId: 'm1', channelId: 'xociety', badgeLabel: 'Extraction Lead' },
+  { memberId: 'm8', channelId: 'xociety', badgeLabel: 'POP Squad' },
+  { memberId: 'm1', channelId: 'panzerdogs', badgeLabel: 'Tank Captain' },
 ];
 
 function isValidGrant(entry: unknown): entry is MemberChannelBadgeGrant {

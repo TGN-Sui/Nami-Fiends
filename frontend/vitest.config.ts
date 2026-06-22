@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     env: {
       VITE_NAMI_TEST_LAUNCH: 'false',
       VITE_NAMI_DEV_FIXTURES: 'true',

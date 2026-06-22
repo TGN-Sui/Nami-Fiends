@@ -1,13 +1,17 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
+import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
+import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import {
   canSendSuperBanner,
   confirmPromotionPurchase,
   formatPromotionPrice,
   PROMOTION_DURATION_LABELS,
   requestPromotionPurchase,
+  resolvePartnerCarouselCoverUrl,
+  resolveSuperBannerCoverUrl,
   savePartnerCarouselTicket,
   saveSuperBannerDraft,
   sendSuperBanner,
@@ -60,6 +64,8 @@ function PromotionCheckoutActions(props: {
 export function ChannelOwnerPromotionsPanel(props: {
   channel: NamiChannel;
 }): ReactElement {
+  useChannelOwnerMediaVersion();
+  const settings = useChannelOwnerSettings();
   const promotions = useChannelOwnerPromotionsState();
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -69,15 +75,15 @@ export function ChannelOwnerPromotionsPanel(props: {
   const [partnerDuration, setPartnerDuration] = useState<PromotionDuration>('weekly');
   const [showPartnerPreview, setShowPartnerPreview] = useState(false);
 
-  const [superHeadline, setSuperHeadline] = useState(promotions.superBanner.draft.headline);
-  const [superBody, setSuperBody] = useState(promotions.superBanner.draft.body);
-  const [partnerTitle, setPartnerTitle] = useState(promotions.partnerCarousel.ticket?.title ?? '');
-  const [partnerDescription, setPartnerDescription] = useState(
-    promotions.partnerCarousel.ticket?.description ?? '',
-  );
+  const superHeadline = settings.draft.superBanner.headline;
+  const superBody = settings.draft.superBanner.body;
+  const partnerTitle = settings.draft.partnerCarousel.title;
+  const partnerDescription = settings.draft.partnerCarousel.description;
 
   const superGate = canSendSuperBanner();
   const ticket = promotions.partnerCarousel.ticket;
+  const superBannerCoverUrl = resolveSuperBannerCoverUrl(promotions.superBanner.draft.coverUrl);
+  const partnerBannerCoverUrl = resolvePartnerCarouselCoverUrl(ticket);
   const preApprovedWorkspace = isPreApprovedGameOwnerWorkspace(props.channel.id);
   const purchasesLocked = !preApprovedOwnerCapabilityAllowed(
     'purchase-promotions',
@@ -88,16 +94,6 @@ export function ChannelOwnerPromotionsPanel(props: {
     props.channel.id,
   );
   const sendLocked = !preApprovedOwnerCapabilityAllowed('send-banners', props.channel.id);
-
-  useEffect(() => {
-    setSuperHeadline(promotions.superBanner.draft.headline);
-    setSuperBody(promotions.superBanner.draft.body);
-  }, [promotions.superBanner.draft.headline, promotions.superBanner.draft.body]);
-
-  useEffect(() => {
-    setPartnerTitle(ticket?.title ?? '');
-    setPartnerDescription(ticket?.description ?? '');
-  }, [ticket?.title, ticket?.description, ticket?.id]);
 
   function clearMessages(): void {
     setNotice('');
@@ -115,23 +111,19 @@ export function ChannelOwnerPromotionsPanel(props: {
     }
   }
 
-  function persistSuperDraft(headline: string, body: string, coverUrl = promotions.superBanner.draft.coverUrl): void {
+  function persistSuperCover(coverUrl: string): void {
     saveSuperBannerDraft(props.channel.id, {
       coverUrl,
-      headline,
-      body,
+      headline: superHeadline,
+      body: superBody,
     });
   }
 
-  function persistPartnerDraft(
-    title: string,
-    description: string,
-    coverUrl = ticket?.coverUrl ?? '',
-  ): void {
+  function persistPartnerCover(coverUrl: string): void {
     savePartnerCarouselTicket(props.channel.id, {
-      title,
-      description,
-      ...(coverUrl ? { coverUrl } : {}),
+      title: partnerTitle,
+      description: partnerDescription,
+      coverUrl,
     });
   }
 
@@ -171,11 +163,11 @@ export function ChannelOwnerPromotionsPanel(props: {
         <div
           className={
             'channel-owner-super-banner-preview' +
-            (promotions.superBanner.draft.coverUrl ? ' has-cover' : '')
+            (superBannerCoverUrl ? ' has-cover' : '')
           }
           style={
-            promotions.superBanner.draft.coverUrl
-              ? { backgroundImage: 'url(' + JSON.stringify(promotions.superBanner.draft.coverUrl) + ')' }
+            superBannerCoverUrl
+              ? { backgroundImage: 'url(' + JSON.stringify(superBannerCoverUrl) + ')' }
               : undefined
           }
         >
@@ -189,8 +181,9 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Headline</span>
             <input
-              onBlur={() => persistSuperDraft(superHeadline, superBody)}
-              onChange={(event) => setSuperHeadline(event.target.value)}
+              onChange={(event) =>
+                settings.updateSuperBanner({ headline: event.target.value })
+              }
               type="text"
               value={superHeadline}
             />
@@ -198,8 +191,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Message</span>
             <textarea
-              onBlur={() => persistSuperDraft(superHeadline, superBody)}
-              onChange={(event) => setSuperBody(event.target.value)}
+              onChange={(event) => settings.updateSuperBanner({ body: event.target.value })}
               rows={3}
               value={superBody}
             />
@@ -208,10 +200,10 @@ export function ChannelOwnerPromotionsPanel(props: {
 
         <OwnerMediaUploadField
           onUpload={(dataUrl, _file) => {
-            persistSuperDraft(superHeadline, superBody, dataUrl);
+            persistSuperCover(dataUrl);
             setNotice('Super Banner cover updated.');
           }}
-          previewUrl={promotions.superBanner.draft.coverUrl || null}
+          previewUrl={superBannerCoverUrl || null}
           slot="super-banner-cover"
           uploadLabel="Upload Super Banner cover"
         />
@@ -231,7 +223,7 @@ export function ChannelOwnerPromotionsPanel(props: {
               className="nami-surface-button is-primary-surface-button"
               disabled={!superGate.ok || sendLocked}
               onClick={() => {
-                persistSuperDraft(superHeadline, superBody);
+                settings.saveSettings();
                 const result = sendSuperBanner(props.channel.id);
 
                 if (result.ok) {
@@ -343,8 +335,9 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Banner title</span>
             <input
-              onBlur={() => persistPartnerDraft(partnerTitle, partnerDescription)}
-              onChange={(event) => setPartnerTitle(event.target.value)}
+              onChange={(event) =>
+                settings.updatePartnerCarousel({ title: event.target.value })
+              }
               type="text"
               value={partnerTitle}
             />
@@ -352,8 +345,9 @@ export function ChannelOwnerPromotionsPanel(props: {
           <label className="channel-owner-tool-field">
             <span>Description</span>
             <textarea
-              onBlur={() => persistPartnerDraft(partnerTitle, partnerDescription)}
-              onChange={(event) => setPartnerDescription(event.target.value)}
+              onChange={(event) =>
+                settings.updatePartnerCarousel({ description: event.target.value })
+              }
               rows={3}
               value={partnerDescription}
             />
@@ -363,25 +357,30 @@ export function ChannelOwnerPromotionsPanel(props: {
         <div
           className={
             'banner-panel featured-banner-carousel nami-hub-rotating-banner partner-carousel-inline-preview' +
-            (ticket?.coverUrl ? ' has-partner-banner-cover' : '')
-          }
-          style={
-            ticket?.coverUrl
-              ? { backgroundImage: 'url(' + JSON.stringify(ticket.coverUrl) + ')' }
-              : undefined
+            (partnerBannerCoverUrl ? ' has-partner-banner-cover' : '')
           }
         >
-          <span>Featured Partner Banner Carousel</span>
-          <strong>{partnerPreviewTitle}</strong>
-          <small>{partnerPreviewDescription}</small>
+          {partnerBannerCoverUrl ? (
+            <span
+              aria-hidden="true"
+              className="nami-hub-banner-cover"
+              style={{ backgroundImage: 'url(' + JSON.stringify(partnerBannerCoverUrl) + ')' }}
+            />
+          ) : null}
+          {partnerBannerCoverUrl ? <span aria-hidden="true" className="nami-hub-banner-scrim" /> : null}
+          <div className="nami-hub-banner-copy">
+            <span>Featured Partner Banner Carousel</span>
+            <strong>{partnerPreviewTitle}</strong>
+            <small>{partnerPreviewDescription}</small>
+          </div>
         </div>
 
         <OwnerMediaUploadField
           onUpload={(dataUrl, _file) => {
-            persistPartnerDraft(partnerTitle, partnerDescription, dataUrl);
+            persistPartnerCover(dataUrl);
             setNotice('Partner banner cover updated.');
           }}
-          previewUrl={ticket?.coverUrl || null}
+          previewUrl={partnerBannerCoverUrl || null}
           slot="partner-carousel-banner"
           uploadLabel="Upload partner banner cover"
         />
@@ -390,7 +389,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           <button
             className="nami-surface-button"
             onClick={() => {
-              persistPartnerDraft(partnerTitle, partnerDescription);
+              settings.saveSettings();
               setShowPartnerPreview(true);
             }}
             type="button"
@@ -400,7 +399,7 @@ export function ChannelOwnerPromotionsPanel(props: {
           <button
             className="nami-surface-button"
             onClick={() => {
-              persistPartnerDraft(partnerTitle, partnerDescription);
+              settings.saveSettings();
               const result = savePartnerCarouselTicket(props.channel.id, { duration: partnerDuration });
 
               if (result.ok) {
@@ -409,13 +408,13 @@ export function ChannelOwnerPromotionsPanel(props: {
             }}
             type="button"
           >
-            Save draft
+            Save ticket draft
           </button>
           <button
             className="nami-surface-button is-primary-surface-button"
             disabled={partnerSubmitLocked}
             onClick={() => {
-              persistPartnerDraft(partnerTitle, partnerDescription);
+              settings.saveSettings();
               purchase('partner-carousel', partnerDuration);
             }}
             type="button"
@@ -452,7 +451,7 @@ export function ChannelOwnerPromotionsPanel(props: {
       {showPartnerPreview ? (
         <PartnerCarouselPreviewOverlay
           channel={props.channel}
-          coverUrl={ticket?.coverUrl ?? ''}
+          coverUrl={partnerBannerCoverUrl}
           description={partnerDescription}
           onClose={() => setShowPartnerPreview(false)}
           title={partnerTitle}

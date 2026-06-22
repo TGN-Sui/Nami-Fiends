@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { gameTrustScoreTierLabel } from './game-trust-score.js';
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
+import { isOwnerProvisionedChannelHidden } from './owner-provisioned-channels-store.js';
 import { enqueueSubmittedTicket } from './owner-submitted-tickets-store.js';
 import { createEmptyGameStoreUrls } from './game-genres.js';
 import { normalizeSupportedPlatforms } from './platform-genre-options.js';
@@ -11,8 +12,11 @@ const TICKETS_KEY = 'nami.game.submission.tickets';
 
 export type GameSubmissionTicketStatus = 'submitted' | 'preapproved' | 'approved' | 'rejected';
 
+export type GameSubmissionTicketKind = 'new-game' | 'channel-claim';
+
 export type GameSubmissionTicket = {
   id: string;
+  ticketKind: GameSubmissionTicketKind;
   gameTitle: string;
   studioName: string;
   contactName: string;
@@ -32,6 +36,8 @@ export type GameSubmissionTicket = {
   officialSocialVerified: boolean;
   walletAddress: string | null;
   provisionalChannelId: string;
+  targetChannelId?: string;
+  claimProofNotes?: string;
   trustScore: number;
   trustScoreTier: GameTrustScoreTier;
   status: GameSubmissionTicketStatus;
@@ -86,8 +92,12 @@ function normalizeTicket(entry: LegacyGameSubmissionTicket): GameSubmissionTicke
     emptyStoreUrls.steamStoreUrl = entry.storePageUrl;
   }
 
+  const ticketKind: GameSubmissionTicketKind =
+    entry.ticketKind === 'channel-claim' ? 'channel-claim' : 'new-game';
+
   return {
     id: entry.id,
+    ticketKind,
     gameTitle: entry.gameTitle,
     studioName: entry.studioName,
     contactName: entry.contactName,
@@ -109,6 +119,10 @@ function normalizeTicket(entry: LegacyGameSubmissionTicket): GameSubmissionTicke
     officialSocialVerified: entry.officialSocialVerified === true,
     walletAddress: entry.walletAddress,
     provisionalChannelId: entry.provisionalChannelId,
+    ...(typeof entry.targetChannelId === 'string' ? { targetChannelId: entry.targetChannelId } : {}),
+    ...(typeof entry.claimProofNotes === 'string' && entry.claimProofNotes.trim() !== ''
+      ? { claimProofNotes: entry.claimProofNotes.trim() }
+      : {}),
     trustScore: entry.trustScore,
     trustScoreTier: entry.trustScoreTier,
     status: entry.status,
@@ -182,17 +196,33 @@ export function gameSubmissionTicketById(ticketId: string): GameSubmissionTicket
 }
 
 export function gameSubmissionTicketByChannelId(channelId: string): GameSubmissionTicket | undefined {
-  return readTickets().find((ticket) => ticket.provisionalChannelId === channelId);
+  return readTickets().find(
+    (ticket) =>
+      ticket.provisionalChannelId === channelId ||
+      ticket.targetChannelId === channelId
+  );
+}
+
+export function isChannelClaimTicket(ticket: GameSubmissionTicket): boolean {
+  return ticket.ticketKind === 'channel-claim';
+}
+
+export function resolveGameTicketChannelId(ticket: GameSubmissionTicket): string {
+  return ticket.targetChannelId ?? ticket.provisionalChannelId;
 }
 
 export function isChannelHiddenFromPublic(channelId: string): boolean {
   const ticket = gameSubmissionTicketByChannelId(channelId);
 
-  if (!ticket) {
-    return false;
+  if (ticket) {
+    if (ticket.ticketKind === 'channel-claim') {
+      return ticket.status !== 'approved';
+    }
+
+    return ticket.status !== 'approved';
   }
 
-  return ticket.status !== 'approved';
+  return isOwnerProvisionedChannelHidden(channelId);
 }
 
 export function upsertGameSubmissionTicket(ticket: GameSubmissionTicket): void {
@@ -208,17 +238,27 @@ export function upsertGameSubmissionTicket(ticket: GameSubmissionTicket): void {
   writeTickets(tickets);
 
   if (ticket.status === 'submitted' || ticket.status === 'preapproved') {
+    const channelId = resolveGameTicketChannelId(ticket);
+    const isClaim = ticket.ticketKind === 'channel-claim';
+
     enqueueSubmittedTicket({
       id: ticket.id,
-      kind: 'game-ticket',
-      title: ticket.gameTitle,
-      description: ticket.studioName + ' · ' + ticket.email,
-      channelId: ticket.provisionalChannelId,
+      kind: isClaim ? 'channel-claim' : 'game-ticket',
+      title: isClaim ? 'Claim: ' + ticket.gameTitle : ticket.gameTitle,
+      description:
+        ticket.studioName +
+        ' · ' +
+        ticket.email +
+        (isClaim && ticket.claimProofNotes ? ' · Proof on file' : ''),
+      channelId,
       coverUrl: null,
       duration: null,
       submitterLabel: ticket.contactName,
       submitterDetail:
-        ticket.trustScore + '% · ' + gameTrustScoreTierLabel(ticket.trustScoreTier),
+        ticket.trustScore +
+        '% · ' +
+        gameTrustScoreTierLabel(ticket.trustScoreTier) +
+        (isClaim ? ' · channel claim' : ''),
       referenceId: ticket.id,
       submittedAtMs: ticket.submittedAtMs,
     });

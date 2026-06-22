@@ -175,7 +175,12 @@ export function EmbeddedSocialPanel(props: {
     isMemberSurface
       ? isOwnMemberFeed && canConfigureEmbeddedFeedSurface(props.surface, role, selfMember)
       : canConfigureEmbeddedFeedSurface(props.surface, role, selfMember);
-  const canShowPanel = canShowEmbeddedFeedSurface(props.surface, role, selfMember);
+  const canShowPanel = canShowEmbeddedFeedSurface(
+    props.surface,
+    role,
+    selfMember,
+    feedOwnerMemberId
+  );
   const viewer =
     props.viewerAccess === 'guest'
       ? { ...selfMember, signal: 'Orange' as const, tier: 'Adventurer' as const }
@@ -235,6 +240,10 @@ export function EmbeddedSocialPanel(props: {
           </div>
         </article>
       );
+    }
+
+    if (!isOwnMemberFeed && !feedEnabled) {
+      return <></>;
     }
 
     if (isMemberFeedSuspended(feedOwner.id)) {
@@ -342,7 +351,7 @@ export function EmbeddedSocialPanel(props: {
 
             <div className="embedded-social-card-actions">
               <a
-                className="profile-secondary-link embedded-social-open-external"
+                className="nami-surface-button embedded-social-open-external"
                 href={resolved.externalUrl}
                 rel="noreferrer"
                 target="_blank"

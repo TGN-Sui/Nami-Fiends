@@ -13,6 +13,7 @@ export type {
 
 export { navItems } from './domain/navigation.js';
 
+import type { NamiChannel, NamiDeveloperProfile, NamiMember } from './domain/types.js';
 import { shouldUseDevFixtures } from './app-config.js';
 import {
   createEmptyUserProfile,
@@ -31,8 +32,32 @@ import {
 
 const fixturesEnabled = shouldUseDevFixtures();
 
-export const channels = fixturesEnabled ? seedChannels : emptyChannels;
-export const developers = fixturesEnabled ? seedDevelopers : [createShellDeveloper()];
-export const members = fixturesEnabled ? seedMembers : [createShellSelfMember()];
+function resolveChannels(): NamiChannel[] {
+  if (fixturesEnabled) {
+    return seedChannels;
+  }
+
+  return emptyChannels;
+}
+
+function resolveDevelopers(): NamiDeveloperProfile[] {
+  if (fixturesEnabled) {
+    return seedDevelopers;
+  }
+
+  return [createShellDeveloper()];
+}
+
+function resolveMembers(): NamiMember[] {
+  if (fixturesEnabled) {
+    return seedMembers;
+  }
+
+  return [createShellSelfMember()];
+}
+
+export const channels = resolveChannels();
+export const developers = resolveDevelopers();
+export const members = resolveMembers();
 export const chatMessages = fixturesEnabled ? seedChatMessages : emptyChatMessages;
 export const userProfile = fixturesEnabled ? seedUserProfile : createEmptyUserProfile();

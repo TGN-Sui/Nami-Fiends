@@ -6,8 +6,10 @@ import {
   updateApprovalRequestStatus,
 } from './approval-requests-store.js';
 import { isGameChannelOwner } from './channel-owner-access.js';
+import { createdSquadById, getCreatedSquadRecords } from './squad-creation-store.js';
+import { discoverableGuildSpaceMembers } from './guild-space-members.js';
 import { canLeadSquadInvites } from './guild-space-access.js';
-import { getSelfMember } from './member-access.js';
+import { getSelfMember, memberFeatureTier, SELF_MEMBER_ID } from './member-access.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
 import { unlockAdventurerBenefitsForMember } from './squad-benefits-store.js';
 import {
@@ -141,7 +143,9 @@ export function squadSlotsFromMembership(): number {
 }
 
 export function squadSlotsForLeader(memberId: string): number {
-  const member = members.find((entry) => entry.id === memberId);
+  const member =
+    discoverableGuildSpaceMembers().find((entry) => entry.id === memberId) ??
+    members.find((entry) => entry.id === memberId);
   const tier: PaidMembershipTier =
     memberId === getSelfMember().id
       ? effectiveMemberTier()
@@ -149,7 +153,9 @@ export function squadSlotsForLeader(memberId: string): number {
         ? member.tier
         : 'Adventurer';
 
-  if (member?.tier === 'NPC') {
+  const resolvedTier = memberId === SELF_MEMBER_ID && member ? memberFeatureTier(member) : member?.tier;
+
+  if (resolvedTier === 'NPC') {
     return 0;
   }
 
@@ -160,8 +166,21 @@ export function squadSlotsForLeader(memberId: string): number {
   return membershipPlanForTier(tier).squadSlots;
 }
 
+export function allMemberSquads(): NamiSquadRecord[] {
+  const seen = new Set<string>();
+
+  return [...getCreatedSquadRecords(), ...namiSquads].filter((squad) => {
+    if (seen.has(squad.id)) {
+      return false;
+    }
+
+    seen.add(squad.id);
+    return true;
+  });
+}
+
 export function squadsLedByMember(memberId: string): NamiSquadRecord[] {
-  return namiSquads.filter((squad) => squad.memberIds[0] === memberId);
+  return allMemberSquads().filter((squad) => squad.memberIds[0] === memberId);
 }
 
 export function effectiveSquadMemberIds(squad: NamiSquadRecord): string[] {
@@ -200,32 +219,55 @@ export function availableSquadInviteSlots(memberId: string = getSelfMember().id)
   );
 }
 
-export function invitableSquadsForMember(memberId: string = getSelfMember().id): NamiSquadRecord[] {
-  return squadsLedByMember(memberId).filter((squad) => {
-    const roster = effectiveSquadMemberIds(squad);
-
-    return roster.length < squad.maxSlots;
-  });
+export function sponsoredMembersInSquad(squad: NamiSquadRecord): number {
+  return Math.max(0, effectiveSquadMemberIds(squad).length - 1);
 }
 
-export function invitableSquadsForTarget(targetMemberId: string): NamiSquadRecord[] {
+export function squadHasOpenRosterSlots(squad: NamiSquadRecord): boolean {
+  return sponsoredMembersInSquad(squad) < squad.maxSlots;
+}
+
+export function squadCapacityDisplay(
+  squad: NamiSquadRecord,
+  viewerMemberId: string = getSelfMember().id
+): { filled: number; total: number } {
+  const roster = effectiveSquadMemberIds(squad);
+  const filled = roster.length;
+  const isLeader = squad.memberIds[0] === viewerMemberId;
+
+  if (isLeader) {
+    const remaining = availableSquadInviteSlots(viewerMemberId);
+
+    return {
+      filled,
+      total: filled + remaining,
+    };
+  }
+
+  return {
+    filled,
+    total: squad.maxSlots + 1,
+  };
+}
+
+export function invitableSquadsForMember(memberId: string = getSelfMember().id): NamiSquadRecord[] {
+  return squadsLedByMember(memberId).filter((squad) => squadHasOpenRosterSlots(squad));
+}
+
+export function squadsLedForProfileInvite(targetMemberId: string): NamiSquadRecord[] {
   const selfMember = getSelfMember();
 
-  if (!canLeadSquadInvites(selfMember) || availableSquadInviteSlots(selfMember.id) <= 0) {
+  if (!canLeadSquadInvites(selfMember) || targetMemberId === selfMember.id) {
     return [];
   }
 
-  if (targetMemberId === selfMember.id) {
-    return [];
-  }
-
-  const targetMember = members.find((member) => member.id === targetMemberId);
+  const targetMember = discoverableGuildSpaceMembers().find((member) => member.id === targetMemberId);
 
   if (!targetMember || targetMember.signal === 'Black') {
     return [];
   }
 
-  return invitableSquadsForMember(selfMember.id).filter((squad) => {
+  return squadsLedByMember(selfMember.id).filter((squad) => {
     const roster = effectiveSquadMemberIds(squad);
 
     if (roster.includes(targetMemberId)) {
@@ -241,8 +283,32 @@ export function invitableSquadsForTarget(targetMemberId: string): NamiSquadRecor
   });
 }
 
+export function invitableSquadsForTarget(targetMemberId: string): NamiSquadRecord[] {
+  return squadsLedForProfileInvite(targetMemberId).filter((squad) => {
+    if (availableSquadInviteSlots(getSelfMember().id) <= 0) {
+      return false;
+    }
+
+    return squadHasOpenRosterSlots(squad);
+  });
+}
+
+export function canShowSquadInviteOnProfile(targetMember: NamiMember): boolean {
+  const selfMember = getSelfMember();
+
+  if (targetMember.id === selfMember.id || !canLeadSquadInvites(selfMember)) {
+    return false;
+  }
+
+  if (targetMember.signal === 'Black') {
+    return false;
+  }
+
+  return squadsLedByMember(selfMember.id).length > 0;
+}
+
 export function canInviteMemberToAnySquad(targetMember: NamiMember): boolean {
-  return invitableSquadsForTarget(targetMember.id).length > 0;
+  return canShowSquadInviteOnProfile(targetMember);
 }
 
 export function membersEligibleForSquadInvite(
@@ -253,7 +319,7 @@ export function membersEligibleForSquadInvite(
   const roster = new Set(effectiveSquadMemberIds(squad));
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  return members.filter((member) => {
+  return discoverableGuildSpaceMembers().filter((member) => {
     if (member.id === selfMember.id || member.signal === 'Black' || roster.has(member.id)) {
       return false;
     }
@@ -283,11 +349,16 @@ export function sendSquadInvite(squad: NamiSquadRecord, targetMember: NamiMember
     };
   }
 
-  const roster = effectiveSquadMemberIds(squad);
+  if (!squadHasOpenRosterSlots(squad)) {
+    const capacity = squadCapacityDisplay(squad, selfMember.id);
 
-  if (roster.length >= squad.maxSlots) {
-    return { ok: false, reason: squad.name + ' is full (' + squad.maxSlots + '/' + squad.maxSlots + ' slots).' };
+    return {
+      ok: false,
+      reason: squad.name + ' is full (' + capacity.filled + '/' + capacity.total + ' slots).',
+    };
   }
+
+  const roster = effectiveSquadMemberIds(squad);
 
   if (roster.includes(targetMember.id)) {
     return { ok: false, reason: targetMember.name + ' is already in ' + squad.name + '.' };
@@ -388,17 +459,17 @@ export function acceptSquadInvite(inviteId: string): SquadInviteResult {
     };
   }
 
-  const squad = namiSquads.find((entry) => entry.id === invite.squadId);
+  const squad = createdSquadById(invite.squadId) ?? namiSquads.find((entry) => entry.id === invite.squadId);
 
   if (!squad) {
     return { ok: false, reason: 'Squad no longer exists.' };
   }
 
-  const roster = effectiveSquadMemberIds(squad);
-
-  if (roster.length >= squad.maxSlots) {
+  if (!squadHasOpenRosterSlots(squad)) {
     return { ok: false, reason: invite.squadName + ' is already full.' };
   }
+
+  const roster = effectiveSquadMemberIds(squad);
 
   const overrides = readRosterOverrides();
   const squadOverride = overrides[squad.id] ?? { addedMemberIds: [], removedMemberIds: [] };

@@ -94,7 +94,7 @@ export function GoonQuickBuy(props: {
     <div className="goon-quick-buy">
       <div className="goon-quick-buy-head">
         <div>
-          <strong>Buy {NAMI_GOON_SYMBOL}</strong>
+          <strong>Buy Goon</strong>
           <p>Pick an amount and confirm once — we open the swap for you.</p>
         </div>
         {props.onClose ? (

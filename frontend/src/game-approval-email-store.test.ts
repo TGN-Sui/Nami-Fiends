@@ -37,6 +37,7 @@ function createLocalStorageMock(): Storage {
 
 const sampleTicket: GameSubmissionTicket = {
   id: 'game-ticket-demo',
+  ticketKind: 'new-game',
   gameTitle: 'Vortex Arena',
   studioName: 'North Arcade',
   contactName: 'River Chen',

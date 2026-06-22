@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import { ChannelBannerOwnerPreviewOverlay } from './ChannelBannerOwnerPreviewOverlay.js';
+import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
 import {
   publishChannelBannerAlertForOwner,
   readChannelBannerContent,
@@ -25,31 +26,17 @@ type BannerPreviewDraft = {
   body: string;
 };
 
-export function ChannelBannerEditorCard(props: {
-  channel: NamiChannel;
-  isEliteOwner: boolean;
-}): ReactElement {
+export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactElement {
+  const settings = useChannelOwnerSettings();
   const initialContent = readChannelBannerContent(props.channel.id, props.channel);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [headline, setHeadline] = useState(initialContent.headline);
-  const [body, setBody] = useState(initialContent.body);
   const [coverUrl, setCoverUrl] = useState(initialContent.coverUrl);
   const [notice, setNotice] = useState('');
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [previewDraft, setPreviewDraft] = useState<BannerPreviewDraft | null>(null);
   const sendLocked = isPreApprovedGameOwnerWorkspace(props.channel.id);
-
-  if (!props.isEliteOwner) {
-    return (
-      <article className="media-upload-prep-card channel-banner-editor-card is-locked-banner-editor">
-        <div className="media-upload-prep-copy">
-          <span className="media-upload-prep-eyebrow">Focused banner alerts</span>
-          <strong>Banner editor locked</strong>
-          <small>Elite channel owners can edit banner cover and copy for Get Banners subscribers.</small>
-        </div>
-      </article>
-    );
-  }
+  const headline = settings.draft.bannerEditor.headline;
+  const body = settings.draft.bannerEditor.body;
 
   function readResolvedDraft(): BannerPreviewDraft {
     return {
@@ -59,22 +46,18 @@ export function ChannelBannerEditorCard(props: {
     };
   }
 
-  function persistDraft(): void {
+  function persistCover(nextCoverUrl: string): void {
     const draft = readResolvedDraft();
 
     saveChannelBannerContent(props.channel.id, {
       ...draft,
+      coverUrl: nextCoverUrl,
       updatedAtMs: Date.now(),
     });
   }
 
-  function handleSave(): void {
-    persistDraft();
-    setNotice('Banner draft saved for ' + props.channel.name + '.');
-  }
-
   function handlePreview(): void {
-    persistDraft();
+    settings.saveSettings();
     setPreviewDraft(readResolvedDraft());
     setNotice('');
   }
@@ -85,7 +68,7 @@ export function ChannelBannerEditorCard(props: {
       return;
     }
 
-    persistDraft();
+    settings.saveSettings();
     const published = publishChannelBannerAlertForOwner(props.channel.id);
 
     setPreviewDraft(null);
@@ -121,6 +104,7 @@ export function ChannelBannerEditorCard(props: {
     void readFileAsDataUrl(file)
       .then((dataUrl) => {
         setCoverUrl(dataUrl);
+        persistCover(dataUrl);
         setNotice('Banner cover updated.');
       })
       .catch((error: unknown) => {
@@ -169,7 +153,7 @@ export function ChannelBannerEditorCard(props: {
             <label className="channel-banner-editor-field">
               <span>Headline</span>
               <input
-                onChange={(event) => setHeadline(event.target.value)}
+                onChange={(event) => settings.updateBannerEditor({ headline: event.target.value })}
                 type="text"
                 value={headline}
               />
@@ -177,7 +161,11 @@ export function ChannelBannerEditorCard(props: {
 
             <label className="channel-banner-editor-field">
               <span>Banner message</span>
-              <textarea onChange={(event) => setBody(event.target.value)} rows={3} value={body} />
+              <textarea
+                onChange={(event) => settings.updateBannerEditor({ body: event.target.value })}
+                rows={3}
+                value={body}
+              />
             </label>
 
             <small className="channel-owner-tool-footnote">{MEDIA_UPLOAD_ACCEPTED_LABEL}</small>
@@ -199,9 +187,6 @@ export function ChannelBannerEditorCard(props: {
               >
                 {isReadingFile ? 'Reading…' : 'Upload cover'}
               </button>
-              <button className="nami-surface-button" onClick={handleSave} type="button">
-                Save draft
-              </button>
               <button
                 className="nami-surface-button is-primary-surface-button"
                 onClick={handlePreview}
@@ -210,6 +195,10 @@ export function ChannelBannerEditorCard(props: {
                 Preview
               </button>
             </div>
+
+            <p className="channel-owner-tool-footnote">
+              Headline and message save with Save settings below.
+            </p>
           </div>
         </div>
 

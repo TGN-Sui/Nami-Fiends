@@ -417,12 +417,26 @@
 
 .embedded-social-card-actions {
   display: flex;
-  justify-content: flex-start;
-  margin-top: 2px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 4px;
 }
 
 .embedded-social-open-external {
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: min(100%, 200px);
+  max-width: 100%;
+  padding: 0 18px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .embedded-social-player {
@@ -470,26 +484,32 @@
 
 .embedded-social-player.is-unconfigured:not(.is-unconfigured-x-post) {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   padding: 12px;
   aspect-ratio: 16 / 9;
   place-content: center;
+  justify-items: center;
   text-align: center;
   border: 1px dashed rgba(117, 188, 224, 0.24);
 }
 
 .embedded-social-player.is-unconfigured-x-post {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   padding: 12px;
   width: 100%;
   max-width: 550px;
   min-height: 520px;
   margin-inline: auto;
   place-content: center;
+  justify-items: center;
   text-align: center;
   border: 1px dashed rgba(117, 188, 224, 0.24);
   aspect-ratio: auto;
+}
+
+.embedded-social-player.is-unconfigured .embedded-social-open-external {
+  justify-self: center;
 }
 
 .embedded-social-panel[data-embedded-surface='member'] .embedded-social-grid {
@@ -1331,6 +1351,13 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+}
+
+.affiliation-toolbar-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .affiliation-view-toggle {
@@ -4874,11 +4901,11 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 .member-public-chat-passport-peek-card.is-horizontal-passport-peek
   .is-horizontal-tcg-passport
   .tcg-passport-horizontal-details
-  div,
+  > div:not(.member-preference-strip),
 .member-public-chat-passport-peek-card.is-horizontal-passport-peek
   .is-horizontal-tcg-passport
   .nami-profile-card-details
-  div {
+  > div:not(.member-preference-strip) {
   text-align: left;
 }
 
@@ -6253,11 +6280,30 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   border-top: 1px solid rgba(117, 215, 255, 0.1);
 }
 
-.is-horizontal-tcg-passport .tcg-passport-horizontal-details div {
+.is-horizontal-tcg-passport .tcg-passport-horizontal-details > div:not(.member-preference-strip) {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2px;
   text-align: left;
+  min-width: 0;
+}
+
+.is-horizontal-tcg-passport .tcg-passport-horizontal-details .member-preference-strip.is-passport-horizontal-preference-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  grid-column: 1 / -1;
+  margin-top: 0;
+  min-width: 0;
+}
+
+.is-horizontal-tcg-passport
+  .tcg-passport-horizontal-details
+  .member-preference-strip.is-passport-horizontal-preference-strip
+  .member-preference-indicator-row {
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -8429,8 +8475,102 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
   font-size: 0.84rem;
 }
 
-.platform-link-action.is-linked {
+.platform-link-action {
+  flex-shrink: 0;
+  min-width: 132px;
+  justify-content: center;
+}
+
+.platform-link-action.is-linked-platform-action {
+  border-color: rgba(67, 245, 167, 0.42);
+  background: rgba(67, 245, 167, 0.12);
   color: #9fffd2;
+  cursor: default;
+  pointer-events: none;
+}
+
+.platform-link-action.is-steam-unlink-action {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.platform-link-row.is-platform-linked {
+  border-color: rgba(67, 245, 167, 0.22);
+}
+
+.platform-link-sync-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+
+.platform-link-sync-stats span {
+  display: grid;
+  gap: 2px;
+}
+
+.platform-link-sync-stats strong {
+  font-size: 0.95rem;
+  color: #dff7ff;
+}
+
+.platform-link-sync-stats small {
+  color: rgba(190, 210, 235, 0.72);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.platform-link-sync-updated {
+  width: 100%;
+  color: rgba(159, 255, 210, 0.82);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.platform-link-sync-note,
+.platform-link-handle-note,
+.platform-link-notice {
+  margin-top: 8px;
+}
+
+.platform-link-handle-note {
+  color: rgba(159, 255, 210, 0.9);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.platform-link-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 12, 0.72);
+}
+
+.platform-link-dialog {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: linear-gradient(180deg, rgba(18, 24, 34, 0.98), rgba(10, 14, 22, 0.98));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.platform-link-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.platform-link-danger-button {
+  border-color: rgba(248, 113, 113, 0.5);
 }
 
 .platform-link-gate-hint {
@@ -12308,6 +12448,11 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   display: grid;
   gap: 10px;
   padding: 0 12px 12px;
+  justify-items: center;
+}
+
+.embedded-social-accordion-body .embedded-social-player {
+  width: 100%;
 }
 
 .embedded-social-accordion-card.is-embed-collapsed .embedded-social-player,
@@ -16613,8 +16758,49 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .nami-hub-rotating-banner.has-partner-banner-cover {
+  color: #fff8f4;
+}
+
+.nami-hub-banner-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
+}
+
+.nami-hub-banner-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6, 10, 16, 0.12) 0%, rgba(6, 10, 16, 0.72) 100%),
+    linear-gradient(90deg, rgba(6, 10, 16, 0.35), rgba(6, 10, 16, 0.1) 42%, rgba(6, 10, 16, 0.35));
+}
+
+.nami-hub-banner-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  place-items: center;
+  width: 100%;
+  padding: 18px 20px;
+}
+
+.nami-hub-rotating-banner.has-partner-banner-cover::before {
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+}
+
+.nami-hub-rotating-banner.has-partner-banner-cover::after {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 184, 77, 0.48),
+    inset 0 0 28px rgba(0, 0, 0, 0.28);
 }
 
 .nami-hub-rotating-banner.is-hub-featured-active {
@@ -16671,6 +16857,23 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 @media (max-width: 760px) {
+  .channel-owner-settings-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .channel-owner-settings-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .channel-owner-settings-footer-actions {
+    justify-content: stretch;
+  }
+
+  .channel-owner-settings-footer-actions .nami-surface-button {
+    flex: 1;
+  }
+
   .channel-owner-duration-picker,
   .channel-owner-brand-color-grid,
   .channel-banner-editor-compact-grid {
@@ -17031,9 +17234,124 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   line-height: 1.45;
 }
 
+.channel-owner-settings-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.channel-owner-settings-nav-tab {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 215, 255, 0.18);
+  background: rgba(8, 14, 22, 0.55);
+  color: rgba(223, 236, 250, 0.88);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.channel-owner-settings-nav-tab strong {
+  font-size: 0.88rem;
+}
+
+.channel-owner-settings-nav-tab span {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: rgba(159, 214, 255, 0.68);
+}
+
+.channel-owner-settings-nav-tab.is-active {
+  border-color: rgba(117, 215, 255, 0.48);
+  background: rgba(18, 34, 52, 0.82);
+}
+
+.channel-owner-settings-panel-stack,
 .channel-owner-layout-panel-stack {
   display: grid;
   gap: 14px;
+}
+
+.channel-owner-settings-panel {
+  min-width: 0;
+}
+
+.channel-owner-settings-empty {
+  margin: 0;
+  padding: 18px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(117, 215, 255, 0.22);
+  color: rgba(159, 214, 255, 0.72);
+  font-size: 0.86rem;
+}
+
+.channel-owner-settings-footer {
+  position: sticky;
+  bottom: 12px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background: rgba(6, 12, 20, 0.94);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.channel-owner-settings-footer-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.channel-owner-settings-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.channel-owner-settings-dirty-pill,
+.channel-owner-settings-saved-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.channel-owner-settings-dirty-pill {
+  border: 1px solid rgba(255, 184, 77, 0.42);
+  background: rgba(255, 184, 77, 0.12);
+  color: rgba(255, 232, 196, 0.95);
+}
+
+.channel-owner-settings-saved-pill {
+  border: 1px solid rgba(52, 211, 153, 0.32);
+  background: rgba(52, 211, 153, 0.1);
+  color: rgba(196, 255, 228, 0.92);
+}
+
+.channel-owner-settings-footer-notice {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.channel-owner-settings-footer-notice.is-success {
+  color: rgba(196, 255, 228, 0.92);
+}
+
+.channel-owner-settings-footer-notice.is-error {
+  color: rgba(255, 196, 196, 0.95);
 }
 
 .channel-owner-layout-panel-shell {
@@ -17327,12 +17645,15 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .member-preference-strip.is-passport-horizontal-preference-strip {
   grid-column: 1 / -1;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .member-preference-strip.is-passport-indicator-strip {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
 }
 
 .member-preference-indicator-row {
@@ -17819,5 +18140,111 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 .global-chat-owner-delete:hover {
   background: rgba(185, 28, 28, 0.45);
   color: #fff;
+}
+
+.group-display-photo-avatar {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 2px solid rgba(117, 215, 255, 0.24);
+  background:
+    linear-gradient(145deg, rgba(117, 215, 255, 0.12), rgba(5, 9, 15, 0.72)),
+    rgba(5, 9, 15, 0.55);
+  background-size: cover;
+  background-position: center;
+  color: #eef7ff;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.group-display-photo-avatar.is-tone-guild {
+  border-color: rgba(67, 245, 167, 0.42);
+  color: #43f5a7;
+}
+
+.group-display-photo-avatar.is-tone-squad {
+  border-color: rgba(255, 171, 61, 0.42);
+  color: #ffab3d;
+}
+
+.group-display-photo-avatar-sm {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  font-size: 0.72rem;
+}
+
+.group-display-photo-avatar-md {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  font-size: 0.82rem;
+}
+
+.group-display-photo-avatar-lg {
+  width: 88px;
+  height: 88px;
+  min-width: 88px;
+  font-size: 1rem;
+}
+
+.group-display-photo-avatar.has-group-display-photo span {
+  opacity: 0;
+}
+
+.affiliation-card-grid .fixed-card-body {
+  flex-direction: row;
+  align-items: center;
+}
+
+.affiliation-card-grid .fixed-card-body .group-display-photo-avatar {
+  flex: 0 0 auto;
+}
+
+.guild-detail-hero-with-photo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.guild-detail-hero-with-photo .guild-detail-hero-actions {
+  align-self: start;
+}
+
+.member-showcase-squad-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-showcase-squad-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 108px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(170, 120, 255, 0.24);
+  background: rgba(6, 12, 24, 0.42);
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-showcase-squad-card strong {
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.member-showcase-squad-card span {
+  font-size: 0.92rem;
+  color: rgba(180, 200, 230, 0.84);
+}
+
+.has-group-display-photo-card {
+  gap: 12px;
 }
 

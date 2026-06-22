@@ -1,6 +1,15 @@
 import { useSyncExternalStore } from 'react';
 
 import {
+  CHANNEL_MEDIA_HYDRATED_EVENT,
+  ensureChannelMediaHydratedForKey,
+  migrateLegacyLocalStorageMedia,
+  readChannelMediaPersistenceVersion,
+  readChannelMediaUrl,
+  saveChannelMediaValue,
+  clearChannelMediaValue,
+} from './channel-media-persistence.js';
+import {
   isChannelPreferencesApiAvailable,
   syncChannelPreferencesToBackend,
 } from './channel-preferences-api.js';
@@ -39,34 +48,43 @@ function dispatchCoverChange(): void {
 }
 
 export function readChannelCoverOverride(channelId: string): string | null {
-  try {
-    const stored = window.localStorage.getItem(coverStorageKey(channelId));
+  const key = coverStorageKey(channelId);
+  void ensureChannelMediaHydratedForKey(key);
+  const stored = readChannelMediaUrl(key);
 
-    if (!stored || stored.trim() === '') {
-      return null;
-    }
-
-    return stored;
-  } catch {
+  if (!stored || stored.trim() === '') {
     return null;
   }
+
+  return stored;
 }
 
 export function hydrateChannelCoverOverride(channelId: string, coverUrl: string): void {
-  window.localStorage.setItem(coverStorageKey(channelId), coverUrl);
-  dispatchCoverChange();
+  const key = coverStorageKey(channelId);
+
+  void saveChannelMediaValue(key, coverUrl).then(() => {
+    dispatchCoverChange();
+  });
 }
 
-export function saveChannelCoverOverride(channelId: string, dataUrl: string): void {
-  window.localStorage.setItem(coverStorageKey(channelId), dataUrl);
-  dispatchCoverChange();
-  pushChannelCoverToBackend(channelId, dataUrl);
+export function saveChannelCoverOverride(channelId: string, coverUrl: string): void {
+  const key = coverStorageKey(channelId);
+
+  void (async () => {
+    await migrateLegacyLocalStorageMedia(key);
+    await saveChannelMediaValue(key, coverUrl);
+    dispatchCoverChange();
+    pushChannelCoverToBackend(channelId, coverUrl);
+  })();
 }
 
 export function clearChannelCoverOverride(channelId: string): void {
-  window.localStorage.removeItem(coverStorageKey(channelId));
-  dispatchCoverChange();
-  pushChannelCoverToBackend(channelId, null);
+  const key = coverStorageKey(channelId);
+
+  void clearChannelMediaValue(key).then(() => {
+    dispatchCoverChange();
+    pushChannelCoverToBackend(channelId, null);
+  });
 }
 
 export function resolveChannelCoverUrl(channel: NamiChannel): string | undefined {
@@ -98,14 +116,16 @@ function subscribeChannelCovers(onStoreChange: () => void): () => void {
   }
 
   window.addEventListener('nami-channel-cover-changed', handleChange);
+  window.addEventListener(CHANNEL_MEDIA_HYDRATED_EVENT, handleChange);
 
   return () => {
     window.removeEventListener('nami-channel-cover-changed', handleChange);
+    window.removeEventListener(CHANNEL_MEDIA_HYDRATED_EVENT, handleChange);
   };
 }
 
 function getCoverVersionSnapshot(): number {
-  return coverVersion;
+  return coverVersion + readChannelMediaPersistenceVersion();
 }
 
 export function useChannelCoverVersion(): number {

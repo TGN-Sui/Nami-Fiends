@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { NamiMember } from './domain/types.js';
 import { members as seedMembers } from './fixtures/seed-data.js';
+import { listLocalDiscoveryMembers } from './local-member-directory.js';
 import type { ProtocolLoadState } from './protocol-query.js';
 
 export type DirectoryDataSource = 'live' | 'fixture';
@@ -24,9 +25,19 @@ export function resolveMemberDirectory(input: {
   loadState: ProtocolLoadState;
   liveQueryEnabled: boolean;
   fixtureMembers?: NamiMember[];
+  localMembers?: NamiMember[];
 }): MemberDirectoryItem[] {
   if (input.liveMembers.length > 0) {
     return input.liveMembers.map((member) => ({
+      member,
+      source: 'live',
+    }));
+  }
+
+  const localMembers = input.localMembers ?? listLocalDiscoveryMembers();
+
+  if (localMembers.length > 0) {
+    return localMembers.map((member) => ({
       member,
       source: 'live',
     }));

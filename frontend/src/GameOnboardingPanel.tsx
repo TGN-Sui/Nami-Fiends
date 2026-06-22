@@ -230,7 +230,7 @@ export function GameOnboardingPanel(props: {
     setSubmitError(null);
 
     if (!isGameSubmissionReady(draft)) {
-      setSubmitError('Complete identity, official social authorization, and zkLogin wallet before submitting.');
+      setSubmitError('Complete identity, official social authorization, and zkLogin sign-in before submitting.');
       return;
     }
 
@@ -245,6 +245,7 @@ export function GameOnboardingPanel(props: {
 
     const ticket = buildOfficialGameSubmissionTicket({
       id: ticketId,
+      ticketKind: 'new-game',
       gameTitle: draft.gameTitle.trim(),
       studioName: draft.studioName.trim(),
       contactName: draft.contactName.trim(),
@@ -448,7 +449,7 @@ export function GameOnboardingPanel(props: {
             )}
 
             <div className="onboarding-zklogin-block">
-              <p className="protocol-hint">Link zkLogin so Nami Officials can verify wallet ownership.</p>
+              <p className="protocol-hint">Link zkLogin so Nami Officials can verify your Sui account.</p>
               <ZkLoginConnectControl />
             </div>
 

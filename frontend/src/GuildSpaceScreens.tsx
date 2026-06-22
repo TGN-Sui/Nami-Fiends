@@ -33,6 +33,8 @@ import {
   useFrozenChatMessages,
   usePausedMessagesStoreSignal,
 } from './use-chat-viewport.js';
+import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
+import { GroupDisplayPhotoUploadCard } from './GroupDisplayPhotoUploadCard.js';
 import { MemberPassportCarousel } from './MemberPassportCarousel.js';
 import {
   cofounderPendingGuildApprovals,
@@ -62,7 +64,14 @@ import {
   useGuildHierarchyStore,
   type GuildRankPermissionKey,
 } from './guild-hierarchy-store.js';
+import { findDiscoverableGuildSpaceMember } from './guild-space-members.js';
 import { canFoundNewGuild, canLeadSquadInvites, canUseGuildLeadershipTools } from './guild-space-access.js';
+import {
+  canMemberCreateSquad,
+  createMemberSquad,
+  getCreatedSquadRecords,
+  useSquadCreationStore,
+} from './squad-creation-store.js';
 import {
   invitableGuildsForTarget,
   sendGuildInvite,
@@ -73,6 +82,7 @@ import {
   invitableSquadsForMember,
   membersEligibleForSquadInvite,
   sendSquadInvite,
+  squadCapacityDisplay,
   squadSlotsFromMembership,
   useSquadRosterStore,
 } from './squad-roster-store.js';
@@ -104,7 +114,7 @@ function guildRosterMembers(guild: NamiGuildRecord): NamiMember[] {
   const memberIds = effectiveGuildMemberIds(guild).filter((memberId) => !removed.has(memberId));
 
   return memberIds
-    .map((memberId) => members.find((member) => member.id === memberId))
+    .map((memberId) => findDiscoverableGuildSpaceMember(memberId))
     .filter((member): member is NamiMember => Boolean(member));
 }
 
@@ -655,7 +665,7 @@ function GuildHierarchyPanel(props: {
             {hierarchy.cofounderMemberIds
               .filter((memberId) => memberId !== props.selfMember.id)
               .map((memberId) => {
-                const member = members.find((entry) => entry.id === memberId);
+                const member = findDiscoverableGuildSpaceMember(memberId);
 
                 if (!member) {
                   return null;
@@ -831,7 +841,10 @@ export function GuildCreationPanel(props: {
   if (!canFoundNewGuild(selfMember)) {
     return (
       <article className="panel">
-        <p className="protocol-hint">Guild creation is unavailable for NPC members.</p>
+        <p className="protocol-hint">
+          Guild founding requires a verified membership tier. Upgrade your passport or complete verification
+          to start a guild with two co-founders.
+        </p>
       </article>
     );
   }
@@ -1010,7 +1023,7 @@ export function GuildCreationPanel(props: {
         <div className="guild-creation-cofounder-row">
           <div className="guild-creation-selected-chips">
             {selectedCofounders.map((memberId) => {
-              const member = members.find((entry) => entry.id === memberId);
+              const member = findDiscoverableGuildSpaceMember(memberId);
 
               if (!member) {
                 return null;
@@ -1081,6 +1094,66 @@ export function GuildCreationPanel(props: {
         >
           Send approvals
         </button>
+      </details>
+
+      {notice ? <p className="protocol-hint">{notice}</p> : null}
+    </article>
+  );
+}
+
+function SquadCreationPanel(props: {
+  onOpenSquad: (squad: NamiSquadRecord, showInvitePanel?: boolean) => void;
+}): ReactElement {
+  const selfMember = useSelfMember();
+  const [squadName, setSquadName] = useState('');
+  const [notice, setNotice] = useState('');
+  const [formExpanded, setFormExpanded] = useState(false);
+
+  if (!canMemberCreateSquad(selfMember)) {
+    return (
+      <article className="panel">
+        <p className="protocol-hint">
+          Squad creation requires a verified membership tier. Upgrade or sign in as the official owner to
+          create squads.
+        </p>
+      </article>
+    );
+  }
+
+  function submitSquad(): void {
+    const result = createMemberSquad(squadName);
+
+    if (!result.ok) {
+      setNotice(result.reason);
+      return;
+    }
+
+    setSquadName('');
+    setNotice(result.squad.name + ' is live. Invite members to fill your roster.');
+    props.onOpenSquad(result.squad, true);
+  }
+
+  return (
+    <article className="panel squad-creation-panel is-compact">
+      <details
+        className="guild-creation-form-details"
+        onToggle={(event) => setFormExpanded(event.currentTarget.open)}
+        open={formExpanded}
+      >
+        <summary>Start a new squad</summary>
+
+        <div className="guild-creation-inline-row">
+          <input
+            aria-label="Squad name"
+            className="guild-creation-name-input"
+            onChange={(event) => setSquadName(event.target.value)}
+            placeholder="Squad name"
+            value={squadName}
+          />
+          <button className="primary-action" onClick={submitSquad} type="button">
+            Create squad
+          </button>
+        </div>
       </details>
 
       {notice ? <p className="protocol-hint">{notice}</p> : null}
@@ -1222,10 +1295,12 @@ export function MyGuildHomeScreen(props: {
 }): ReactElement {
   const selfMember = useSelfMember();
   const { proposals } = useGuildCreationStore();
+  const createdSquads = useSquadCreationStore();
   const [viewMode, setViewMode] = useState<AffiliationViewMode>(() => readAffiliationViewMode());
-
   const squadSlotsAvailable = availableSquadInviteSlots(selfMember.id);
   const canLeadSquads = canLeadSquadInvites(selfMember);
+  const canCreateGuild = canFoundNewGuild(selfMember);
+  const canCreateSquad = canMemberCreateSquad(selfMember);
 
   const guildAffiliations = useMemo(
     () =>
@@ -1247,8 +1322,10 @@ export function MyGuildHomeScreen(props: {
         liveQueryEnabled: props.squadLiveQueryEnabled,
         memberId: selfMember.id,
         protocolOwner: props.protocolOwner,
+        createdSquads: getCreatedSquadRecords(),
       }),
     [
+      createdSquads,
       props.protocolOwner,
       props.squadLoadState,
       props.squadLiveQueryEnabled,
@@ -1273,7 +1350,12 @@ export function MyGuildHomeScreen(props: {
             type="button"
           >
             <div className="fixed-card-body">
-              <div className="guild-card-icon guild-icon-green">{guild.title.slice(0, 2).toUpperCase()}</div>
+              <GroupDisplayPhotoAvatar
+                groupId={guild.id}
+                groupName={guild.title}
+                kind="guild"
+                size="md"
+              />
               <div className="fixed-card-copy">
                 <h2>{guild.title}</h2>
                 <p>{guild.subtitle}</p>
@@ -1341,15 +1423,23 @@ export function MyGuildHomeScreen(props: {
   function renderSquadCards(squads: SquadAffiliationItem[]): ReactElement {
     return (
       <section className="account-grid uniform-card-grid affiliation-card-grid">
-        {squads.map((squad) => (
+        {squads.map((squad) => {
+          const capacity = squadCapacityDisplay(squad.record, selfMember.id);
+
+          return (
           <article className="profile-panel account-card fixed-card guild-card affiliation-squad-card" key={squad.id}>
             <button className="affiliation-squad-open" onClick={() => props.onOpenSquad(squad.record)} type="button">
               <div className="fixed-card-body">
-                <div className="guild-card-icon guild-icon-orange">{squad.title.slice(0, 2).toUpperCase()}</div>
+                <GroupDisplayPhotoAvatar
+                  groupId={squad.id}
+                  groupName={squad.title}
+                  kind="squad"
+                  size="md"
+                />
                 <div className="fixed-card-copy">
                   <h2>{squad.title}</h2>
                   <p>
-                    {squad.memberCount}/{squad.maxSlots} slots
+                    {capacity.filled}/{capacity.total} slots
                   </p>
                 </div>
               </div>
@@ -1369,7 +1459,8 @@ export function MyGuildHomeScreen(props: {
               </button>
             ) : null}
           </article>
-        ))}
+          );
+        })}
       </section>
     );
   }
@@ -1390,13 +1481,16 @@ export function MyGuildHomeScreen(props: {
             </tr>
           </thead>
           <tbody>
-            {squads.map((squad) => (
+            {squads.map((squad) => {
+              const capacity = squadCapacityDisplay(squad.record, selfMember.id);
+
+              return (
               <tr key={squad.id}>
                 <td>
                   <strong>{squad.title}</strong>
                 </td>
                 <td>
-                  {squad.memberCount}/{squad.maxSlots}
+                  {capacity.filled}/{capacity.total}
                 </td>
                 <td>{squad.roleLabel}</td>
                 {showSourceColumn ? <td>{squad.source === 'live' ? squad.badgeLabel : '—'}</td> : null}
@@ -1420,7 +1514,8 @@ export function MyGuildHomeScreen(props: {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1444,7 +1539,31 @@ export function MyGuildHomeScreen(props: {
             ? ' · ' + squadSlotsAvailable + ' invite slot' + (squadSlotsAvailable === 1 ? '' : 's')
             : ''}
         </p>
-        <AffiliationViewToggle mode={viewMode} onChange={setAffiliationView} />
+        <div className="affiliation-toolbar-actions">
+          {canCreateSquad ? (
+            <button
+              className="nami-surface-button is-primary-surface-button"
+              onClick={() => {
+                document.getElementById('squad-founding')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              type="button"
+            >
+              New squad
+            </button>
+          ) : null}
+          {canCreateGuild ? (
+            <button
+              className="nami-surface-button"
+              onClick={() => {
+                document.getElementById('guild-founding')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              type="button"
+            >
+              New guild
+            </button>
+          ) : null}
+          <AffiliationViewToggle mode={viewMode} onChange={setAffiliationView} />
+        </div>
       </div>
 
       {props.guildLoadState === 'loading' || props.squadLoadState === 'loading' ? (
@@ -1465,7 +1584,10 @@ export function MyGuildHomeScreen(props: {
           <span className="mini-badge">{guildCount}</span>
         </header>
         {guildCount === 0 ? (
-          <p className="protocol-hint">You are not in a guild yet.</p>
+          <p className="protocol-hint">
+            You are not in a guild yet.
+            {canCreateGuild ? ' Use New guild below to found one with two verified co-founders.' : ''}
+          </p>
         ) : viewMode === 'cards' ? (
           renderGuildCards(guildAffiliations)
         ) : (
@@ -1479,7 +1601,10 @@ export function MyGuildHomeScreen(props: {
           <span className="mini-badge">{squadCount}</span>
         </header>
         {squadCount === 0 ? (
-          <p className="protocol-hint">You are not in a squad yet.</p>
+          <p className="protocol-hint">
+            You are not in a squad yet.
+            {canCreateSquad ? ' Use New squad below to create your first roster.' : ''}
+          </p>
         ) : viewMode === 'cards' ? (
           renderSquadCards(squadAffiliations)
         ) : (
@@ -1487,14 +1612,32 @@ export function MyGuildHomeScreen(props: {
         )}
       </section>
 
-      {canUseGuildLeadershipTools(selfMember) ? (
-        <section className="affiliation-section affiliation-leadership-section">
-          <header className="affiliation-section-heading">
-            <h2>Guild founding</h2>
-          </header>
+      <section className="affiliation-section affiliation-leadership-section" id="squad-founding">
+        <header className="affiliation-section-heading">
+          <h2>Squad founding</h2>
+        </header>
+        {canCreateSquad ? (
+          <SquadCreationPanel onOpenSquad={props.onOpenSquad} />
+        ) : (
+          <p className="protocol-hint">
+            Squad creation unlocks with a verified membership tier (Adventurer or above).
+          </p>
+        )}
+      </section>
+
+      <section className="affiliation-section affiliation-leadership-section" id="guild-founding">
+        <header className="affiliation-section-heading">
+          <h2>Guild founding</h2>
+        </header>
+        {canCreateGuild ? (
           <GuildCreationPanel {...(props.onOpenMessage ? { onOpenMessage: props.onOpenMessage } : {})} />
-        </section>
-      ) : null}
+        ) : (
+          <p className="protocol-hint">
+            Guild founding unlocks with a verified membership tier. You will need two verified co-founders to
+            launch.
+          </p>
+        )}
+      </section>
     </div>
   );
 }
@@ -1511,7 +1654,7 @@ export function GuildDetailScreen(props: {
 
   const selfMember = useSelfMember();
   const guildMembers = useMemo(() => guildRosterMembers(props.guild), [props.guild]);
-  const masterMember = members.find((member) => member.id === getGuildMasterMemberId(props.guild));
+  const masterMember = findDiscoverableGuildSpaceMember(getGuildMasterMemberId(props.guild));
   const [eventTitle, setEventTitle] = useState('');
   const [createNotice, setCreateNotice] = useState('');
   const [joinNotice, setJoinNotice] = useState('');
@@ -1559,7 +1702,13 @@ export function GuildDetailScreen(props: {
       </header>
 
       <section className="guild-detail-page">
-        <article className="panel guild-detail-hero">
+        <article className="panel guild-detail-hero guild-detail-hero-with-photo">
+          <GroupDisplayPhotoAvatar
+            groupId={props.guild.id}
+            groupName={props.guild.name}
+            kind="guild"
+            size="lg"
+          />
           <div className="guild-detail-hero-copy">
             <span className="mini-badge">{props.guild.isPublic ? 'Public Guild' : 'Private Guild'}</span>
             <h2>{props.guild.name}</h2>
@@ -1597,6 +1746,15 @@ export function GuildDetailScreen(props: {
             ) : null}
           </div>
         </article>
+
+        {showHierarchy ? (
+          <GroupDisplayPhotoUploadCard
+            canEdit={isGuildMaster(props.guild, selfMember.id)}
+            groupId={props.guild.id}
+            groupName={props.guild.name}
+            kind="guild"
+          />
+        ) : null}
 
         {joinNotice ? <p className="protocol-hint">{joinNotice}</p> : null}
 
@@ -1683,7 +1841,9 @@ export function SquadDetailScreen(props: {
   showInvitePanel?: boolean;
 }): ReactElement {
   const selfMember = useSelfMember();
+  useSquadRosterStore();
   const squadMembers = useMemo(() => membersForSquad(props.squad), [props.squad]);
+  const squadCapacity = squadCapacityDisplay(props.squad, selfMember.id);
   const isLeader = props.squad.memberIds[0] === selfMember.id;
   const [activeTab, setActiveTab] = useState<'roster' | 'invite'>(
     props.showInvitePanel && isLeader && canLeadSquadInvites(selfMember) ? 'invite' : 'roster'
@@ -1698,12 +1858,18 @@ export function SquadDetailScreen(props: {
       </header>
 
       <section className="guild-detail-page">
-        <article className="panel guild-detail-hero">
+        <article className="panel guild-detail-hero guild-detail-hero-with-photo">
+          <GroupDisplayPhotoAvatar
+            groupId={props.squad.id}
+            groupName={props.squad.name}
+            kind="squad"
+            size="lg"
+          />
           <div className="guild-detail-hero-copy">
             <span className="mini-badge guild-signal-pill guild-signal-orange">Squad</span>
             <h2>{props.squad.name}</h2>
             <p>
-              {squadMembers.length}/{props.squad.maxSlots} slots filled
+              {squadCapacity.filled}/{squadCapacity.total} slots filled
             </p>
           </div>
 
@@ -1711,6 +1877,15 @@ export function SquadDetailScreen(props: {
             Back to My Guild
           </button>
         </article>
+
+        {isLeader ? (
+          <GroupDisplayPhotoUploadCard
+            canEdit={canLeadSquadInvites(selfMember)}
+            groupId={props.squad.id}
+            groupName={props.squad.name}
+            kind="squad"
+          />
+        ) : null}
 
         {showInviteTab ? (
           <div className="guild-space-tab-row" role="tablist">

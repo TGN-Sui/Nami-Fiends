@@ -6,7 +6,7 @@ import {
   resolveChannelCoverUrl,
   saveChannelCoverOverride,
 } from './channel-cover-store.js';
-import { persistMediaImage } from './media-upload-service.js';
+import { canUploadMediaToBackend, persistMediaImage } from './media-upload-service.js';
 import { OwnerMediaUploadField } from './OwnerMediaUploadField.js';
 import {
   hydrateChannelCoverPreference,
@@ -36,7 +36,7 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
 
     void (async () => {
       try {
-        await persistMediaImage({
+        const result = await persistMediaImage({
           kind: 'channel-cover',
           owner,
           file,
@@ -46,7 +46,13 @@ export function ChannelCoverUploadCard(props: { channel: NamiChannel }): ReactEl
           onSaved: (url) => saveChannelCoverOverride(props.channel.id, url),
           onLocalFallback: (url) => saveChannelCoverOverride(props.channel.id, url),
         });
-        setNotice('Cover image updated.');
+        setNotice(
+          result.destination === 'server'
+            ? 'Cover image updated and synced to the server.'
+            : canUploadMediaToBackend(owner)
+              ? 'Cover image saved locally on this device.'
+              : 'Cover image saved locally. Connect your Sui wallet in Settings to sync uploads.',
+        );
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Try again.');
       } finally {

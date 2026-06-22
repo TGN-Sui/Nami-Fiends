@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`).
+Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped (230 frontend unit tests).
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -146,7 +146,7 @@ npm --prefix frontend run build
 npm --prefix frontend test
 ```
 
-All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22; **133** after Phase 8 onboarding + officials stores).
+All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22; 133 after Phase 8 onboarding + officials stores; **230** after owner settings, media persistence, and discovery fixes).
 
 ## Phase 8 — Enter Nami + Game Onboarding (UI-C23)
 
@@ -167,6 +167,25 @@ Docs: [game-onboarding.md](./game-onboarding.md), [officials-submissions.md](./o
 
 Latest commits: `0b364a3` (ticket preview + genres), `6c93b7c` (officials submissions), `dd96c12` (sidebar fix).
 
+## Post-Phase 7 — Owner Settings + Media Persistence (UI-C24)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| UI-C24.1 | Complete | Grouped owner settings (Brand & media, Promotions, Alerts & emojis, Advanced) with tabbed nav. |
+| UI-C24.2 | Complete | Unified draft + dirty state; sticky **Save settings** / **Discard** footer. |
+| UI-C24.3 | Complete | Focused banner alerts for all game owners (Elite gate removed). |
+| UI-C24.4 | Complete | IndexedDB channel media persistence; bootstrap on startup; survives refresh. |
+| UI-C24.5 | Complete | Hub partner banner layered cover + scrim (no flat red gradient). |
+| UI-C24.6 | Complete | Subscribed + owner-provisioned channels in hub/profile discovery. |
+| UI-C24.7 | Complete | Boost cycle visibility for game owners (Settings + pinned profile card). |
+| UI-C24.8 | Complete | Settings Account tab render fix (`player-platform-sync-store` snapshot cache). |
+| UI-C24.9 | Complete | Wallet copy removed from landing/onboarding; connect in Settings; Buy Goon on profiles. |
+| UI-C24.10 | Complete | Upload auth fallback when `wallet_auth_invalid`; local fallback in `media-upload-service`. |
+
+Key files: `ChannelOwnerSection.tsx`, `channel-owner-settings-draft.ts`, `channel-owner-settings-context.tsx`, `channel-owner-settings-groups.ts`, `channel-media-persistence.ts`, `channel-cover-store.ts`, `channel-owner-media-store.ts`, `local-channel-directory.ts`, `subscriptions-store.ts`, `PinnedGameChannelProfileCard.tsx`, `PlatformLinkSettingsPanel.tsx`, `account-connect.tsx`, `GoonQuickBuy.tsx`.
+
+Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test && npm --prefix frontend run build` — **230** unit tests passing.
+
 ## Product Rules Preserved
 
 - Paid placement, paid subscriptions, Pro, and Elite features do not create verification or trust.
@@ -186,7 +205,7 @@ Latest commits: `0b364a3` (ticket preview + genres), `6c93b7c` (officials submis
 
 ## UI Build Outcome
 
-Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped with 133 frontend unit tests passing.
+Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped. Owner settings, media persistence, and discovery fixes bring the frontend to **230** unit tests passing.
 
 Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
 

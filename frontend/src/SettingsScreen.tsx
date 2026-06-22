@@ -10,6 +10,7 @@ import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
 import { OwnerAccessPrompt } from './OwnerAccessPrompt.js';
 import { OwnerPassportLabelsPanel } from './OwnerPassportLabelsPanel.js';
 import { OwnerHubCurationPanel } from './OwnerHubCurationPanel.js';
+import { OwnerProvisionedChannelsPanel } from './OwnerProvisionedChannelsPanel.js';
 import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
@@ -44,7 +45,7 @@ import { countPendingGameSubmissionTickets } from './nami-officials-submission-c
 import { countPendingPartnerBannerSubmissions } from './partner-banner-submission-store.js';
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
-import { members, type NamiMember, type NamiPage } from './uiMockData.js';
+import { members, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 
 import {
   consumeSettingsSectionFocus,
@@ -228,6 +229,7 @@ function ChannelBrandPalettePanel(props: {
 export function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
   onOpenMember?: (member: NamiMember) => void;
+  onOpenChannel?: (channel: NamiChannel) => void;
   onDemoPerspectiveApplied?: (page: NamiPage, channelId?: string) => void;
 } = {}): ReactElement {
   const { owner } = useProtocolOwner();
@@ -404,7 +406,19 @@ export function SettingsScreen(props: {
                 Manage account
               </button>
             </article>
-            {!channelOwnerView ? (
+            {channelOwnerView ? (
+              <article className="panel settings-overview-card">
+                <h2>Weekly boosts</h2>
+                <p>Discovery boosts for your membership tier reset every Friday at noon Central.</p>
+                <button
+                  className="profile-secondary-link"
+                  onClick={() => setActiveSection('account')}
+                  type="button"
+                >
+                  View boosts left
+                </button>
+              </article>
+            ) : (
               <article className="panel settings-overview-card">
                 <h2>Membership</h2>
                 <p>Plans, fulfillment, and surface role for feeds.</p>
@@ -416,7 +430,7 @@ export function SettingsScreen(props: {
                   View membership
                 </button>
               </article>
-            ) : null}
+            )}
             <article className="panel settings-overview-card">
               <h2>Feeds</h2>
               <p>Enable member, game, guild, or studio embeds.</p>
@@ -462,8 +476,14 @@ export function SettingsScreen(props: {
             <OwnerAccessPrompt />
             {isOwnerDashboard ? <OwnerPassportLabelsPanel /> : null}
             {isOwnerDashboard ? <OwnerHubCurationPanel /> : null}
+            {isOwnerDashboard ? (
+              <OwnerProvisionedChannelsPanel
+                {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+              />
+            ) : null}
             {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
             {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
+            <BoostCycleSettingsCard />
             {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
             <article className="panel settings-card settings-compact-card">
               <div className="profile-panel-heading">
@@ -501,7 +521,8 @@ export function SettingsScreen(props: {
                   <div className="profile-panel-heading">
                     <h2>Game channel owner</h2>
                     <p>
-                      Membership upgrades, boosts, and purchases are managed through Owner tools on your game profile.
+                      Promotion purchases and owner tools live on your game profile. Weekly discovery boosts
+                      are tracked here.
                     </p>
                   </div>
                   <button
@@ -512,6 +533,7 @@ export function SettingsScreen(props: {
                     Open My Game Profile
                   </button>
                 </article>
+                <BoostCycleSettingsCard />
                 <ChannelOwnerPromotionsStatusCard />
               </>
             )}
@@ -582,7 +604,10 @@ export function SettingsScreen(props: {
 
         {activeSection === 'advanced' ? (
           <div className="settings-section-stack">
-            <NamiOwnerAdvancedPanel onEnterEditMode={() => props.onNavigate?.('hub')} />
+            <NamiOwnerAdvancedPanel
+              onEnterEditMode={() => props.onNavigate?.('hub')}
+              {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+            />
           </div>
         ) : null}
       </section>

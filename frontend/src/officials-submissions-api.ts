@@ -8,6 +8,7 @@ export type OfficialsSubmissionsProjection = {
   gameTickets: unknown[];
   partnerBanners: unknown[];
   nodenameClaims: unknown[];
+  ownerProvisionedChannels: unknown[];
   updatedAtMs: number;
 };
 
@@ -65,6 +66,7 @@ export type SyncOfficialsSubmissionsInput = {
   gameTickets?: unknown[];
   partnerBanners?: unknown[];
   nodenameClaims?: unknown[];
+  ownerProvisionedChannels?: unknown[];
 };
 
 export async function syncOfficialsSubmissions(

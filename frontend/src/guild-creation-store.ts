@@ -8,7 +8,8 @@ import {
 } from './approval-requests-store.js';
 import { initializeGuildHierarchy } from './guild-hierarchy-store.js';
 import { isGameChannelOwner } from './channel-owner-access.js';
-import { getSelfMember, isMemberVerified } from './member-access.js';
+import { getSelfMember, isMemberVerified, memberFeatureTier, SELF_MEMBER_ID } from './member-access.js';
+import { discoverableGuildSpaceMembers } from './guild-space-members.js';
 import { deliverIncomingPrivateMessage } from './messages-store.js';
 import { type NamiGuildRecord } from './nami-affiliations.js';
 import { members, type NamiMember } from './uiMockData.js';
@@ -164,8 +165,14 @@ export function channelOwnerOfficialGuildCount(memberId: string): number {
   return getCreatedGuildRecords().filter((guild) => guild.ownerMemberId === memberId).length;
 }
 
+function memberHasGuildCreationTier(member: NamiMember): boolean {
+  const tier = member.id === SELF_MEMBER_ID ? memberFeatureTier(member) : member.tier;
+
+  return tier !== 'NPC';
+}
+
 export function canMemberCreateGuild(member: NamiMember): boolean {
-  if (!isMemberVerified(member) || member.tier === 'NPC' || member.signal === 'Black') {
+  if (!isMemberVerified(member) || !memberHasGuildCreationTier(member) || member.signal === 'Black') {
     return false;
   }
 
@@ -179,7 +186,7 @@ export function canMemberCreateGuild(member: NamiMember): boolean {
 export function membersEligibleForGuildCreation(excludeMemberIds: string[] = []): NamiMember[] {
   const excluded = new Set(excludeMemberIds);
 
-  return members.filter(
+  return discoverableGuildSpaceMembers().filter(
     (member) => !excluded.has(member.id) && canMemberCreateGuild(member)
   );
 }

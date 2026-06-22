@@ -1,8 +1,16 @@
-import { isMemberVerified } from './member-access.js';
+import {
+  isMemberVerified,
+  isOfficialOwnerSelfMember,
+  isProOrHigherTier,
+} from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
 export function canPublishMemberFeed(member: NamiMember): boolean {
-  return (member.tier === 'Pro' || member.tier === 'Elite') && isMemberVerified(member);
+  if (!isMemberVerified(member)) {
+    return false;
+  }
+
+  return isProOrHigherTier(member) || isOfficialOwnerSelfMember(member);
 }
 
 export function canViewMemberFeeds(viewer: NamiMember): boolean {

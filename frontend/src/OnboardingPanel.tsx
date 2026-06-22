@@ -162,7 +162,7 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
         <h2>Tell us who you are, then step into the hub.</h2>
         <p>
           Sign up with your display name and email. Every passport is issued a Player Score that
-          rises as you link wallets, socials, and game platforms from Settings.
+          rises as you link socials and game platforms from Settings.
         </p>
       </div>
 
@@ -328,8 +328,8 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
                 <span>{draft.flavorBadgeId}</span>
               </div>
               <p className="protocol-hint">
-                Your passport will be issued with the Player Score below. Link Steam, Epic, X, and your
-                wallet from Settings to raise it after you enter the hub.
+                Your passport will be issued with the Player Score below. Link Steam, Epic, X, and more
+                from Settings to raise it after you enter the hub.
               </p>
             </article>
 

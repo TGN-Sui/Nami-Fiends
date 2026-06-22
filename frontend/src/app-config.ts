@@ -98,6 +98,11 @@ export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): bo
   return shouldUseDevFixtures(config);
 }
 
+/** Functional mock catalog is disabled — discovery uses real created accounts/channels. */
+export function shouldUseFunctionalMockCatalog(_config: AppConfig = readAppConfig()): boolean {
+  return false;
+}
+
 /** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */
 export function shouldUseFixtureCatalogFallback(
   liveItemCount: number,
@@ -108,7 +113,7 @@ export function shouldUseFixtureCatalogFallback(
     return false;
   }
 
-  return shouldUseDevFixtures(config);
+  return shouldUseDevFixtures(config) || shouldUseFunctionalMockCatalog(config);
 }
 
 /** Local mock checkout and provider simulation (dev only, never in test launch). */

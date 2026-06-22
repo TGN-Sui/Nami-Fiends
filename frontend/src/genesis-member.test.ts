@@ -37,6 +37,7 @@ vi.mock('./app-config.js', () => ({
     devFixtures: false,
   }),
   shouldUseDevFixtures: () => false,
+  shouldUseFunctionalMockCatalog: () => true,
   shouldUseDemoOwnerFallback: () => false,
   isTestLaunchMode: () => true,
 }));

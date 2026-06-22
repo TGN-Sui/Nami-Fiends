@@ -4,7 +4,8 @@ import { LandingGenreBubbleField } from './LandingGenreBubbleField.js';
 import { NamiGridSpotlight } from './NamiGridSpotlight.js';
 import { LandingHeroVisual } from './LandingHeroVisual.js';
 import { LandingScenarioDeck } from './LandingScenarioDeck.js';
-import { genreOfficialChats } from './global-chats.js';
+import { genreBubbleScaleFromWeeklyChatters } from './bubble-weekly-scale.js';
+import { genreOfficialChats, resolveGenreChatWeeklyActiveMembers } from './global-chats.js';
 import {
   LANDING_GENRE_LOUNGES,
   LANDING_HERO,
@@ -22,7 +23,9 @@ import {
 } from './member-session-store.js';
 import { getZkLoginSession } from './zklogin.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
+import { GameChannelClaimPanel } from './GameChannelClaimPanel.js';
 import { GameOnboardingPanel } from './GameOnboardingPanel.js';
+import { GameStudioPathSelector, type GameStudioPath } from './GameStudioPathSelector.js';
 import { OnboardingPanel } from './OnboardingPanel.js';
 import { OnboardingRoleSelector, type OnboardingRole } from './OnboardingRoleSelector.js';
 
@@ -114,8 +117,7 @@ function EntryGatePanel(props: {
         <span className="mini-badge">Enter Nami</span>
         <h2 id="nami-entry-gate-title">Log in or sign up</h2>
         <p>
-          Log in with Google, email, X, or your wallet. Sign up to choose Gamer or Game and create
-          your passport.
+          Log in with Google, email, or X. Sign up to choose Gamer or Game and create your passport.
         </p>
       </div>
 
@@ -242,13 +244,15 @@ function LandingOverview(props: {
           <h2>Every genre has an official lounge, not just every game</h2>
           <p>
             After signup, jump into Nami Hub and Game Hub for all 23 official IGDB genre lounges,
-            from Shooter and MOBA to Visual Novel and Pinball. Bubble size reflects live activity.
+            from Shooter and MOBA to Visual Novel and Pinball. Bubble size reflects weekly active chatters.
           </p>
         </header>
 
         <div className="nami-landing-genre-showcase" aria-label="Official genre lounge bubbles preview">
           {genreOfficialChats.slice(0, 8).map((chat) => {
             const isHighlighted = genrePopHighlight?.chatId === chat.id;
+            const weeklyActiveMembers = resolveGenreChatWeeklyActiveMembers(chat);
+            const showcaseScale = 0.62 * genreBubbleScaleFromWeeklyChatters(weeklyActiveMembers);
 
             return (
             <div
@@ -256,10 +260,10 @@ function LandingOverview(props: {
                 'nami-landing-genre-showcase-bubble' + (isHighlighted ? ' is-genre-pop-highlight' : '')
               }
               key={isHighlighted ? chat.id + '-' + genrePopHighlight.pulse : chat.id}
-              style={{ '--bubble-scale': String(0.62 + chat.activeMembers / 1800) } as CSSProperties}
+              style={{ '--bubble-scale': String(showcaseScale) } as CSSProperties}
             >
               <strong>{chat.title}</strong>
-              <small>{chat.activeMembers.toLocaleString()} active</small>
+              <small>{weeklyActiveMembers.toLocaleString()} active this week</small>
             </div>
             );
           })}
@@ -349,6 +353,7 @@ export function EntryPage(props: {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [onboardingRole, setOnboardingRole] = useState<OnboardingRole | null>(null);
+  const [gameStudioPath, setGameStudioPath] = useState<GameStudioPath | null>(null);
 
   function beginSignupFlow(): void {
     clearMemberSession();
@@ -356,6 +361,7 @@ export function EntryPage(props: {
     setShowRoleSelector(true);
     setShowOnboarding(false);
     setOnboardingRole(null);
+    setGameStudioPath(null);
   }
 
   function openEntryGate(): void {
@@ -379,6 +385,13 @@ export function EntryPage(props: {
   function handleRoleSelection(role: OnboardingRole): void {
     setOnboardingRole(role);
     setShowRoleSelector(false);
+    setGameStudioPath(null);
+
+    if (role === 'game') {
+      setShowOnboarding(false);
+      return;
+    }
+
     setShowOnboarding(true);
   }
 
@@ -386,6 +399,7 @@ export function EntryPage(props: {
     setShowOnboarding(false);
     setShowRoleSelector(false);
     setOnboardingRole(null);
+    setGameStudioPath(null);
   }
 
   function closeEntryGate(): void {
@@ -434,7 +448,47 @@ export function EntryPage(props: {
     );
   }
 
-  if (showOnboarding && onboardingRole === 'game') {
+  if (onboardingRole === 'game' && gameStudioPath === null && !showRoleSelector) {
+    return (
+      <>
+        <div className="nami-entry-onboarding-shell">
+          <header className="page-title nami-entry-onboarding-title">
+            <p>Game studio onboarding</p>
+            <h1>Choose your studio path</h1>
+          </header>
+
+          <GameStudioPathSelector
+            onSelect={(path) => {
+              setGameStudioPath(path);
+              setShowOnboarding(true);
+            }}
+          />
+
+          <button
+            className="secondary-action entry-back-button"
+            onClick={() => {
+              setOnboardingRole(null);
+              setShowRoleSelector(true);
+            }}
+            type="button"
+          >
+            Back to role selection
+          </button>
+
+          <button
+            className="secondary-action entry-back-button"
+            onClick={resetOnboardingFlow}
+            type="button"
+          >
+            Back to overview
+          </button>
+        </div>
+        {entryGateOverlay}
+      </>
+    );
+  }
+
+  if (showOnboarding && onboardingRole === 'game' && gameStudioPath === 'new-game') {
     return (
       <>
         <div className="nami-entry-onboarding-shell">
@@ -446,11 +500,39 @@ export function EntryPage(props: {
           <GameOnboardingPanel
             onBack={() => {
               setShowOnboarding(false);
-              setShowRoleSelector(true);
-              setOnboardingRole(null);
+              setGameStudioPath(null);
             }}
             onEnterPreApprovedChannel={() => {
               props.onEnterPreApprovedGame?.();
+            }}
+          />
+
+          <button
+            className="secondary-action entry-back-button"
+            onClick={resetOnboardingFlow}
+            type="button"
+          >
+            Back to overview
+          </button>
+        </div>
+        {entryGateOverlay}
+      </>
+    );
+  }
+
+  if (showOnboarding && onboardingRole === 'game' && gameStudioPath === 'claim-channel') {
+    return (
+      <>
+        <div className="nami-entry-onboarding-shell">
+          <header className="page-title nami-entry-onboarding-title">
+            <p>Game studio onboarding</p>
+            <h1>Claim your channel</h1>
+          </header>
+
+          <GameChannelClaimPanel
+            onBack={() => {
+              setShowOnboarding(false);
+              setGameStudioPath(null);
             }}
           />
 

@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { GoonQuickBuy } from './GoonQuickBuy.js';
 import { isMemberVerified } from './member-access.js';
-import { guildMaxMembers, guildMemberCount } from './nami-affiliations.js';
+import { guildMaxMembers } from './nami-affiliations.js';
 import {
+  activeGuildMemberCount,
   canInviteMemberToAnyGuild,
   invitableGuildsForTarget,
   sendGuildInvite,
@@ -21,14 +22,14 @@ import { fetchPaymentConfig, isPaymentApiAvailable } from './membership-payments
 import { useSelfMember } from './member-avatar-store.js';
 import {
   canInviteMemberToAnySquad,
-  effectiveSquadMemberIds,
-  invitableSquadsForTarget,
+  squadCapacityDisplay,
   sendSquadInvite,
+  squadsLedForProfileInvite,
   useSquadRosterStore,
 } from './squad-roster-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { type NamiMember } from './uiMockData.js';
-import { useProtocolOwner } from './wallet.js';
+
 
 type MemberProfileActionsProps = {
   member: NamiMember;
@@ -36,14 +37,14 @@ type MemberProfileActionsProps = {
 };
 
 export function MemberProfileActions(props: MemberProfileActionsProps): ReactElement | null {
-  const { source } = useProtocolOwner();
   const selfMember = useSelfMember();
   const walletAccount = useCurrentAccount();
   const suiClient = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
 
-  const showBuy = source === 'wallet';
-  const showTip = !isSelfMember(props.member.id) && source === 'wallet' && isMemberVerified(selfMember);
+  const showBuy = Boolean(walletAccount?.address);
+  const showTip =
+    !isSelfMember(props.member.id) && Boolean(walletAccount?.address) && isMemberVerified(selfMember);
   const guildInvites = useGuildInvites();
   const squadRoster = useSquadRosterStore();
   const [inviteGuildId, setInviteGuildId] = useState('');
@@ -61,16 +62,13 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
     () => invitableGuildsForTarget(props.member.id),
     [props.member.id, guildInvites]
   );
-  const invitableSquads = useMemo(
-    () => invitableSquadsForTarget(props.member.id),
+  const profileInviteSquads = useMemo(
+    () => squadsLedForProfileInvite(props.member.id),
     [props.member.id, squadRoster.invites, squadRoster.rosterOverrides]
   );
 
-  const showGuildInvite =
-    !isSelfMember(props.member.id) &&
-    isMemberVerified(selfMember) &&
-    canInviteMemberToAnyGuild(props.member);
-  const showSquadInvite = !isSelfMember(props.member.id) && canInviteMemberToAnySquad(props.member);
+  const showGuildInvite = canInviteMemberToAnyGuild(props.member);
+  const showSquadInvite = canInviteMemberToAnySquad(props.member);
   const tipsTotal = totalTipsReceived(props.member.id);
 
   useEffect(() => {
@@ -93,7 +91,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
   }
 
   function sendSquadInviteToMember(): void {
-    const squad = invitableSquads.find((entry) => entry.id === inviteSquadId);
+    const squad = profileInviteSquads.find((entry) => entry.id === inviteSquadId);
 
     if (!squad) {
       setSquadInviteStatus('Pick a squad to invite ' + props.member.name + ' into.');
@@ -218,7 +216,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             onClick={() => {
               setSquadInviteStatus(null);
               setActivePanel(activePanel === 'squad-invite' ? null : 'squad-invite');
-              setInviteSquadId(invitableSquads[0]?.id ?? '');
+              setInviteSquadId(profileInviteSquads[0]?.id ?? '');
             }}
             type="button"
           >
@@ -235,7 +233,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             }}
             type="button"
           >
-            Buy {NAMI_GOON_SYMBOL}
+            Buy Goon
           </button>
         ) : null}
 
@@ -269,14 +267,14 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             <span>Squad</span>
             <select
               onChange={(event) => setInviteSquadId(event.target.value)}
-              value={inviteSquadId || invitableSquads[0]?.id || ''}
+              value={inviteSquadId || profileInviteSquads[0]?.id || ''}
             >
-              {invitableSquads.map((squad) => {
-                const rosterCount = effectiveSquadMemberIds(squad).length;
+              {profileInviteSquads.map((squad) => {
+                const capacity = squadCapacityDisplay(squad, selfMember.id);
 
                 return (
                   <option key={squad.id} value={squad.id}>
-                    {squad.name} ({rosterCount}/{squad.maxSlots})
+                    {squad.name} ({capacity.filled}/{capacity.total})
                   </option>
                 );
               })}
@@ -292,7 +290,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
 
       {activePanel === 'invite' ? (
         <div className="member-profile-action-panel">
-          <p>Guild owners and members can invite others. Slots follow membership tier limits.</p>
+          <p>Guild members with invite permission can send invites. Slots follow membership tier limits.</p>
           <label className="member-profile-action-field">
             <span>Guild</span>
             <select
@@ -301,7 +299,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             >
               {invitableGuilds.map((guild) => (
                 <option key={guild.id} value={guild.id}>
-                  {guild.name} ({guildMemberCount(guild.id)}/{guildMaxMembers(guild)})
+                  {guild.name} ({activeGuildMemberCount(guild)}/{guildMaxMembers(guild)})
                 </option>
               ))}
             </select>

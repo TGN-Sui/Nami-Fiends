@@ -35,7 +35,7 @@ export function OnboardingRoleSelector(props: {
           <span className="onboarding-role-card-index">02</span>
           <strong>Game</strong>
           <p>
-            Submit a studio ticket with official X or Twitch, zkLogin wallet, phone, and email. Trust
+            Submit a studio ticket with official X or Twitch, zkLogin sign-in, phone, and email. Trust
             Score 60%+ unlocks pre-approval.
           </p>
         </button>

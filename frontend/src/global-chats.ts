@@ -5,7 +5,11 @@ import { readMemberSession } from './member-session-store.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
+import { genreBubbleScaleFromWeeklyChatters } from './bubble-weekly-scale.js';
+import { getGenreWeeklyActiveChatters } from './genre-chat-activity-store.js';
+import { createShellChannel } from './fixtures/shell-catalog.js';
 import { channels, members, userProfile, type ConductSignal, type NamiChannel, type NamiMember } from './uiMockData.js';
+import type { NamiCryptoBubbleEntry } from './CryptoBubbleBoard.js';
 
 export type GlobalChatKind = 'official' | 'genre' | 'temporary';
 
@@ -450,25 +454,44 @@ export type SocialEmbed = {
   live?: boolean;
 };
 
-export function genreChatToBubbleChannel(chat: GlobalChatRoom, template: NamiChannel): NamiChannel {
+export function resolveGenreChatWeeklyActiveMembers(chat: GlobalChatRoom): number {
+  return getGenreWeeklyActiveChatters(chat.id);
+}
+
+export function genreChatToBubbleChannel(
+  chat: GlobalChatRoom,
+  template: NamiChannel,
+  weeklyActiveMembers = resolveGenreChatWeeklyActiveMembers(chat),
+): NamiChannel {
   return {
     ...template,
     id: chat.id,
     name: chat.title,
     genre: chat.genre ?? chat.title,
-    subscribers: chat.activeMembers,
+    subscribers: weeklyActiveMembers,
     handle: '@' + chat.id.replace('genre-', ''),
-    tagline: 'Official Nami genre lounge · ' + chat.activeMembers.toLocaleString() + ' active',
+    tagline: 'Official Nami genre lounge · ' + weeklyActiveMembers.toLocaleString() + ' active this week',
     officialNami: chat.isOfficial,
     partner: chat.isOfficial ? true : template.partner,
   };
 }
 
-export function buildGenreBubbleEntries(): Array<{ channel: NamiChannel; slotId: string }> {
-  return genreOfficialChats.map((chat, index) => ({
-    channel: genreChatToBubbleChannel(chat, channels[index % channels.length]!),
-    slotId: chat.id + '-genre-bubble',
-  }));
+export function buildGenreBubbleEntries(): NamiCryptoBubbleEntry[] {
+  const templatePool = channels.length > 0 ? channels : [createShellChannel()];
+
+  return genreOfficialChats.map((chat, index) => {
+    const weeklyActiveMembers = resolveGenreChatWeeklyActiveMembers(chat);
+
+    return {
+      channel: genreChatToBubbleChannel(
+        chat,
+        templatePool[index % templatePool.length]!,
+        weeklyActiveMembers,
+      ),
+      slotId: chat.id + '-genre-bubble',
+      weeklyScale: genreBubbleScaleFromWeeklyChatters(weeklyActiveMembers),
+    };
+  });
 }
 
 export const defaultSocialEmbeds: SocialEmbed[] = [

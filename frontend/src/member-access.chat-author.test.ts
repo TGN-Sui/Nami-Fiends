@@ -1,25 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import { getChatPresenceMembers, resolveMessageAuthorMember } from './member-access.js';
+import {
+  getChatPresenceMembers,
+  resolveChatMessageAuthorLabel,
+  resolveMessageAuthorMember,
+} from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
 const selfMember: NamiMember = {
   id: 'm1',
   surfaceType: 'member',
-  name: 'Robbos',
-  avatarSeed: 'RB',
+  name: 'NAMI',
+  avatarSeed: 'NA',
   signal: 'Green',
-  tier: 'NPC',
-  badge: 'Hearth Basic',
-};
-
-const shellSelfMember: NamiMember = {
-  ...selfMember,
-  name: 'Traveler',
+  tier: 'Pro',
+  badge: 'Owner',
 };
 
 const roster: NamiMember[] = [
-  shellSelfMember,
+  selfMember,
   {
     id: 'm2',
     surfaceType: 'member',
@@ -27,33 +26,44 @@ const roster: NamiMember[] = [
     avatarSeed: 'HM',
     signal: 'Green',
     tier: 'Adventurer',
-    badge: 'Community Mark',
+    badge: 'Builder',
   },
 ];
 
-describe('chat author resolution', () => {
-  it('does not treat fixture authors with the same display name as the signed-in member', () => {
+describe('resolveMessageAuthorMember', () => {
+  it('maps legacy self author names to the live passport', () => {
     const fixtureMessage = {
-      id: 'og1',
+      id: 'fiends-m0',
       author: 'Robbos',
     };
 
-    expect(resolveMessageAuthorMember(fixtureMessage, selfMember, roster)).toBeUndefined();
+    expect(resolveMessageAuthorMember(fixtureMessage, selfMember, roster)?.id).toBe('m1');
   });
 
-  it('still resolves messages the signed-in member actually sent', () => {
+  it('maps roster fixture authors by display name', () => {
+    const fixtureMessage = {
+      id: 'fiends-m1',
+      author: 'HarborMint',
+    };
+
+    expect(resolveMessageAuthorMember(fixtureMessage, selfMember, roster)?.id).toBe('m2');
+  });
+
+  it('labels user-authored global chat with the current display name', () => {
     const userMessage = {
-      id: 'user-gc-official-nami-global-123',
+      id: 'user-gc-hub-123',
       author: 'Robbos',
     };
 
-    expect(resolveMessageAuthorMember(userMessage, selfMember, roster)?.id).toBe('m1');
+    expect(resolveChatMessageAuthorLabel(userMessage, selfMember, selfMember)).toBe('NAMI');
   });
+});
 
-  it('shows the live self passport in chat presence instead of the shell placeholder', () => {
-    const presence = getChatPresenceMembers(selfMember, roster);
+describe('getChatPresenceMembers', () => {
+  it('always includes the live self passport first', () => {
+    const presence = getChatPresenceMembers(selfMember, roster, 3);
 
-    expect(presence[0]?.name).toBe('Robbos');
-    expect(presence.some((member) => member.name === 'Traveler')).toBe(false);
+    expect(presence[0]?.id).toBe('m1');
+    expect(presence[0]?.name).toBe('NAMI');
   });
 });

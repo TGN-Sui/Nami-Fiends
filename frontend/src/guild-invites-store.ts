@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from 'react';
 
 import { canUseGuildLeadershipTools } from './guild-space-access.js';
+import { getCreatedGuildRecords } from './guild-creation-store.js';
+import { canGuildMember, getGuildHierarchy } from './guild-hierarchy-store.js';
+import { effectiveGuildMemberIds } from './guild-join-requests-store.js';
 import { getSelfMember, isMemberVerified } from './member-access.js';
 import {
   canMemberInviteToGuild,
   guildMaxMembers,
-  guildMemberCount,
   guildOwnerMember,
   namiGuilds,
   type NamiGuildRecord,
@@ -78,6 +80,51 @@ export function useGuildInvites(): GuildInvite[] {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+export function allGuildRecords(): NamiGuildRecord[] {
+  const seen = new Set<string>();
+
+  return [...getCreatedGuildRecords(), ...namiGuilds].filter((guild) => {
+    if (seen.has(guild.id)) {
+      return false;
+    }
+
+    seen.add(guild.id);
+    return true;
+  });
+}
+
+export function activeGuildMemberIds(guild: NamiGuildRecord): string[] {
+  const removed = new Set(getGuildHierarchy(guild).removedMemberIds);
+
+  return effectiveGuildMemberIds(guild).filter((memberId) => !removed.has(memberId));
+}
+
+export function activeGuildMemberCount(guild: NamiGuildRecord): number {
+  return activeGuildMemberIds(guild).length;
+}
+
+export function guildsWithInvitePermissionForMember(
+  memberId: string = getSelfMember().id
+): NamiGuildRecord[] {
+  return allGuildRecords().filter((guild) => {
+    if (!activeGuildMemberIds(guild).includes(memberId)) {
+      return false;
+    }
+
+    return canGuildMember(guild, memberId, 'inviteMembers');
+  });
+}
+
+export function canShowGuildInviteOnProfile(targetMember: NamiMember): boolean {
+  const selfMember = getSelfMember();
+
+  if (targetMember.id === selfMember.id || !canUseGuildLeadershipTools(selfMember)) {
+    return false;
+  }
+
+  return guildsWithInvitePermissionForMember(selfMember.id).length > 0;
+}
+
 export function invitableGuildsForTarget(targetMemberId: string): NamiGuildRecord[] {
   const selfMember = getSelfMember();
 
@@ -85,16 +132,16 @@ export function invitableGuildsForTarget(targetMemberId: string): NamiGuildRecor
     return [];
   }
 
-  return namiGuilds.filter((guild) => {
+  return guildsWithInvitePermissionForMember(selfMember.id).filter((guild) => {
     if (!canMemberInviteToGuild(selfMember.id, guild)) {
       return false;
     }
 
-    if (guild.memberIds.includes(targetMemberId)) {
+    if (activeGuildMemberIds(guild).includes(targetMemberId)) {
       return false;
     }
 
-    if (guildMemberCount(guild.id) >= guildMaxMembers(guild)) {
+    if (activeGuildMemberCount(guild) >= guildMaxMembers(guild)) {
       return false;
     }
 
@@ -114,7 +161,7 @@ export function canInviteMemberToAnyGuild(targetMember: NamiMember): boolean {
     return false;
   }
 
-  return invitableGuildsForTarget(targetMember.id).length > 0;
+  return canShowGuildInviteOnProfile(targetMember);
 }
 
 export function sendGuildInvite(targetMember: NamiMember, guild: NamiGuildRecord): GuildInviteResult {
@@ -125,19 +172,19 @@ export function sendGuildInvite(targetMember: NamiMember, guild: NamiGuildRecord
   }
 
   if (!canMemberInviteToGuild(selfMember.id, guild)) {
-    return { ok: false, reason: 'Only guild owners and members can send invites.' };
+    return { ok: false, reason: 'Your guild rank does not allow member invites.' };
   }
 
   if (!isMemberVerified(targetMember)) {
     return { ok: false, reason: targetMember.name + ' must verify their passport before guild invites.' };
   }
 
-  if (guild.memberIds.includes(targetMember.id)) {
+  if (activeGuildMemberIds(guild).includes(targetMember.id)) {
     return { ok: false, reason: targetMember.name + ' is already in ' + guild.name + '.' };
   }
 
   const maxMembers = guildMaxMembers(guild);
-  const memberCount = guildMemberCount(guild.id);
+  const memberCount = activeGuildMemberCount(guild);
 
   if (memberCount >= maxMembers) {
     const owner = guildOwnerMember(guild);

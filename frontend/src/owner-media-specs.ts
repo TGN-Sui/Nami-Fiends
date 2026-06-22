@@ -2,6 +2,8 @@ import type { MediaUploadKind } from './media-upload-service.js';
 
 export type OwnerMediaSlot =
   | 'channel-cover'
+  | 'guild-display-photo'
+  | 'squad-display-photo'
   | 'partner-carousel-banner'
   | 'super-banner-cover'
   | 'focused-banner-cover'
@@ -23,6 +25,24 @@ export const OWNER_MEDIA_SPECS: Record<OwnerMediaSlot, OwnerMediaSpec> = {
     id: 'channel-cover',
     label: 'Cover image',
     usage: 'Game Hub cards, channel avatars, and directory tiles.',
+    recommendedPixels: '800 × 800 px',
+    aspectRatio: '1:1 square',
+    previewClassName: 'is-owner-media-preview-square',
+    uploadKind: 'channel-cover',
+  },
+  'guild-display-photo': {
+    id: 'guild-display-photo',
+    label: 'Guild display photo',
+    usage: 'Guild cards, detail headers, and member profile group listings.',
+    recommendedPixels: '800 × 800 px',
+    aspectRatio: '1:1 square',
+    previewClassName: 'is-owner-media-preview-square',
+    uploadKind: 'channel-cover',
+  },
+  'squad-display-photo': {
+    id: 'squad-display-photo',
+    label: 'Squad display photo',
+    usage: 'Squad cards, detail headers, and member profile group listings.',
     recommendedPixels: '800 × 800 px',
     aspectRatio: '1:1 square',
     previewClassName: 'is-owner-media-preview-square',

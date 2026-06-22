@@ -1,10 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
+import { resolveChannelById } from './channel-owner-access.js';
 import { channels, type NamiChannel, type NamiMember } from './uiMockData.js';
 
 const SUBSCRIPTIONS_KEY = 'nami.user.subscriptions';
-
-const defaultChannelIds = channels.slice(0, 4).map((channel) => channel.id);
 
 let cachedChannelSnapshot: NamiChannel[] | null = null;
 let cachedChannelIdsKey = '';
@@ -35,19 +34,23 @@ export function readSubscribedChannelIds(): string[] {
     const stored = window.localStorage.getItem(SUBSCRIPTIONS_KEY);
 
     if (!stored) {
-      return [...defaultChannelIds];
+      return [];
     }
 
     const parsed = JSON.parse(stored);
 
     if (!Array.isArray(parsed)) {
-      return [...defaultChannelIds];
+      return [];
     }
 
     return parsed.filter((entry): entry is string => typeof entry === 'string');
   } catch {
-    return [...defaultChannelIds];
+    return [];
   }
+}
+
+function resolveSubscribedChannel(channelId: string): NamiChannel | undefined {
+  return resolveChannelById(channelId) ?? channels.find((channel) => channel.id === channelId);
 }
 
 export function saveSubscribedChannelIds(channelIds: string[]): void {
@@ -66,7 +69,7 @@ export function readSubscribedChannels(): NamiChannel[] {
 
   cachedChannelIdsKey = idsKey;
   cachedChannelSnapshot = ids
-    .map((id) => channels.find((channel) => channel.id === id))
+    .map((id) => resolveSubscribedChannel(id))
     .filter((channel): channel is NamiChannel => channel !== undefined);
 
   return cachedChannelSnapshot;

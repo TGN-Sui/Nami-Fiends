@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactElement } from 'react';
 
-import { getChannelBoostPower } from './channel-boost-store.js';
+import { boostCycleLimit, getChannelBoostPower, getRemainingBoosts } from './channel-boost-store.js';
+import { getSelfMember } from './member-access.js';
 import { resolveOwnedGameChannel } from './channel-owner-access.js';
 import { readOwnerPromotionStatuses, useChannelOwnerPromotionsState } from './channel-owner-promotions-store.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
@@ -36,6 +37,9 @@ export function PinnedGameChannelProfileCard(props: {
 
   const coverUrl = resolveChannelCoverUrl(channel)?.trim();
   const boostPower = getChannelBoostPower(channel.id);
+  const selfMember = getSelfMember();
+  const boostLimit = boostCycleLimit(selfMember.tier);
+  const remainingBoosts = getRemainingBoosts(selfMember);
   const badgePreview = channel.officialBadges?.slice(0, 3) ?? [];
 
   return (
@@ -63,6 +67,11 @@ export function PinnedGameChannelProfileCard(props: {
             <div className="pinned-game-channel-meta-row">
               <span>{channel.subscribers.toLocaleString()} subscribers</span>
               <span>{boostPower.toLocaleString()} boost power</span>
+              {boostLimit > 0 ? (
+                <span>
+                  {remainingBoosts} of {boostLimit} boost{boostLimit === 1 ? '' : 's'} left
+                </span>
+              ) : null}
             </div>
           </div>
 

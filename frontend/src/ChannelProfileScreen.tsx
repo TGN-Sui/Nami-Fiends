@@ -57,32 +57,6 @@ function gameVerificationLabel(channel: NamiChannel): string {
   return channel.verifiedGame ? 'Verified Game' : 'Community Game';
 }
 
-function readOwnerBrandPalette(): string[] {
-  try {
-    const savedPalette = window.localStorage.getItem('nami-channel-brand-palette');
-
-    if (!savedPalette) {
-      return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
-    }
-
-    const parsedPalette = JSON.parse(savedPalette);
-
-    if (!Array.isArray(parsedPalette)) {
-      return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
-    }
-
-    return parsedPalette
-      .filter((color): color is string => typeof color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(color))
-      .slice(0, 4);
-  } catch {
-    return ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
-  }
-}
-
-function saveOwnerBrandPalette(palette: string[]): void {
-  window.localStorage.setItem('nami-channel-brand-palette', JSON.stringify(palette.slice(0, 4)));
-}
-
 function gameVerificationClass(channel: NamiChannel): string {
   const developer = channelDeveloper(channel);
 
@@ -141,7 +115,6 @@ export function ChannelProfileScreen(props: {
     : props.initialSection ?? (chrome.isChannelOwner ? 'owner' : 'news');
   const [activeSection, setActiveSection] = useState<ChannelProfileSection>(defaultSection);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
-  const [ownerBrandPalette, setOwnerBrandPalette] = useState<string[]>(() => readOwnerBrandPalette());
   const relatedChannels = channels
     .filter((entry) => entry.id !== channel.id)
     .sort((left, right) => {
@@ -212,10 +185,10 @@ export function ChannelProfileScreen(props: {
     {
       id: 'banner-slot-available',
       title: 'Custom banner slot available',
-      summary: 'Elite owners can rotate profile banners and focused alert creative for Get Banners subscribers.',
+      summary: 'Game owners can draft focused banner alerts for Get Banners subscribers.',
       fullBody:
-        'Elite channel owners can now rotate profile banners, frames, and focused alert creative.\n\nUse Owner tools to upload cover art, draft alert copy, preview the subscriber popup, and publish when the message looks right. Get Banners subscribers receive the alert anywhere in Nami without subscribing to every chat room.\n\nPro members can still customize frames while Elite unlocks the full banner workflow.',
-      tag: 'Pro / Elite',
+        'Game channel owners can upload cover art, draft alert copy, preview the subscriber popup, and publish when the message looks right.\n\nGet Banners subscribers receive the alert anywhere in Nami without subscribing to every chat room. Open Owner tools → Alerts & emojis to manage your focused banner workflow.',
+      tag: 'Owner tools',
       publishedAtLabel: 'Posted 1 week ago',
     },
   ];
@@ -540,31 +513,9 @@ export function ChannelProfileScreen(props: {
     );
   }
 
-  function updateOwnerBrandColor(index: number, color: string): void {
-    const nextPalette = ownerBrandPalette
-      .map((currentColor, currentIndex) => (currentIndex === index ? color : currentColor))
-      .slice(0, 4);
-
-    setOwnerBrandPalette(nextPalette);
-    saveOwnerBrandPalette(nextPalette);
-  }
-
-  function resetOwnerBrandPalette(): void {
-    const defaultPalette = ['#4da3ff', '#e11d48', '#34d399', '#f97316'];
-
-    setOwnerBrandPalette(defaultPalette);
-    saveOwnerBrandPalette(defaultPalette);
-  }
-
   function renderOwnerSection(): ReactElement {
     return (
-      <ChannelOwnerSection
-        channel={channel}
-        isEliteOwner={chrome.isEliteChannelOwner}
-        onChangeBrandColor={updateOwnerBrandColor}
-        onResetBrandPalette={resetOwnerBrandPalette}
-        ownerBrandPalette={ownerBrandPalette}
-      />
+      <ChannelOwnerSection channel={channel} />
     );
   }
 

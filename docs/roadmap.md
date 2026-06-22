@@ -617,6 +617,74 @@ Provider interfaces (affiliation, channel directory, member directory) are the p
 
 ---
 
+# Phase 7.1 — $GOON Economy & Gifting (Planned)
+
+Status:
+
+```text
+Planned — live-stream and user gifting next; Buy Goon + profile tips shipped
+```
+
+Shipped (UI slice):
+
+```text
+Wallet connect lives in Settings only — landing and onboarding avoid "wallet" copy
+Buy Goon on member profiles when a Sui wallet is connected (GoonQuickBuy swap flow)
+Tip $GOON to members from connected wallet (treasury-routed, local activity ledger)
+```
+
+---
+
+# Phase 7.2 — Game Channel Owner UX (Shipped)
+
+Status:
+
+```text
+Shipped — grouped owner settings, media persistence, boost visibility, discovery fixes
+```
+
+Shipped:
+
+```text
+Tabbed owner settings: Brand & media | Promotions | Alerts & emojis | Advanced
+Unified draft + Save settings / Discard footer (channel-owner-settings-draft.ts)
+Focused banner alerts for all game owners (Elite gate removed)
+IndexedDB channel media persistence (cover, hero, trailer) with startup bootstrap
+Hub partner banner layered cover + scrim CSS
+Subscribed + owner-provisioned channels in hub/profile discovery
+Boost cycle summary for game owners in Settings + pinned profile card
+Settings Account tab render fix (player-platform-sync-store snapshot cache)
+Upload local fallback when wallet auth fails (media-upload-service.ts)
+Pro squad slots aligned to 2 on-chain (squad.move) and in membership plans
+```
+
+Verification:
+
+```text
+npm --prefix frontend test — 230 passing
+sui move test — 80 passing
+```
+
+Planned — Gifting:
+
+```text
+Send gifts to live streams and to member profiles
+Gifts must be purchased with $GOON or typical payment options (Stripe, PayPal, card)
+Gift catalog with tiered animations surfaced on stream embeds and profile showcases
+Gift revenue split: creator / channel owner / platform treasury (policy TBD)
+Backend fulfillment + on-chain $GOON settlement where wallet is connected
+```
+
+Depends on:
+
+```text
+Phase 8 receiving server payment webhooks (fiat → $GOON credit or direct gift purchase)
+Treasury + $GOON coin type configured on testnet/mainnet
+Embedded social / live embed player hooks for real-time gift overlays
+```
+
+---
+
 # Phase 8 — Public Launch Preparation
 
 Status:

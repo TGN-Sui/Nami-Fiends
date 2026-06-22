@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 
+import type { GuildAffiliationItem, SquadAffiliationItem } from './affiliation-provider.js';
+import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
 import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
 import { useMemberChatTimeVersion } from './member-chat-time-store.js';
@@ -9,7 +11,8 @@ import { useSelfProfileEdits } from './member-profile-store.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { isSelfMember } from './surface-preferences.js';
-import type { NamiGuildRecord } from './nami-affiliations.js';
+import { squadCapacityDisplay, useSquadRosterStore } from './squad-roster-store.js';
+import type { NamiGuildRecord, NamiSquadRecord } from './nami-affiliations.js';
 import type { NamiChannel, NamiMember, NamiPage } from './uiMockData.js';
 
 type ShowcaseTab = 'overview' | 'activity' | 'groups';
@@ -62,15 +65,18 @@ export function MemberProfileShowcase(props: {
   mode?: 'self' | 'visitor';
   onOpenChannel?: (channel: NamiChannel) => void;
   onOpenGuild?: (guild: NamiGuildRecord) => void;
+  onOpenSquad?: (squad: NamiSquadRecord) => void;
   onNavigate?: (page: NamiPage) => void;
   onOpenStatusSettings?: () => void;
-  guildAffiliations?: Array<{ id: string; title: string; memberCount: number; isPublic: boolean; record: NamiGuildRecord }>;
+  guildAffiliations?: GuildAffiliationItem[];
+  squadAffiliations?: SquadAffiliationItem[];
   subscriptions?: NamiChannel[];
   belowShowcase?: ReactNode;
   safetyPanel?: ReactNode;
 }): ReactElement {
   const selfProfileEdits = useSelfProfileEdits();
   const chatTimeVersion = useMemberChatTimeVersion();
+  useSquadRosterStore();
   const [activeTab, setActiveTab] = useState<ShowcaseTab>('overview');
   const [progressTick, setProgressTick] = useState(() => Date.now());
   const isSelf = props.mode === 'self' || isSelfMember(props.member.id);
@@ -93,6 +99,17 @@ export function MemberProfileShowcase(props: {
     showcase.progression.currentXp,
     showcase.progression.nextLevelXp
   );
+  const guildAffiliations = props.guildAffiliations ?? [];
+  const squadAffiliations = props.squadAffiliations ?? [];
+  const guildNames =
+    guildAffiliations.length > 0
+      ? guildAffiliations.map((guild) => guild.title)
+      : showcase.progression.guilds;
+  const squadNames =
+    squadAffiliations.length > 0
+      ? squadAffiliations.map((squad) => squad.title)
+      : showcase.progression.squads;
+  const hasGroupCards = guildAffiliations.length > 0 || squadAffiliations.length > 0;
 
   return (
     <section className="member-profile-showcase member-profile-showcase-tabbed" aria-label={props.member.name + ' activity showcase'}>
@@ -349,39 +366,46 @@ export function MemberProfileShowcase(props: {
                 <p>Standing groups tied to this passport.</p>
               </header>
 
-              <div className="member-showcase-group-lanes">
-                <div className="member-showcase-group-lane">
-                  <span className="member-showcase-eyebrow">Guilds</span>
-                  <div className="member-showcase-group-chip-row">
-                    {showcase.progression.guilds.map((guild) => (
-                      <span className="member-showcase-group-chip" key={'guild-' + guild}>
-                        {guild}
-                      </span>
-                    ))}
+              {!hasGroupCards ? (
+                <div className="member-showcase-group-lanes">
+                  <div className="member-showcase-group-lane">
+                    <span className="member-showcase-eyebrow">Guilds</span>
+                    <div className="member-showcase-group-chip-row">
+                      {guildNames.map((guild) => (
+                        <span className="member-showcase-group-chip" key={'guild-' + guild}>
+                          {guild}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="member-showcase-group-lane">
+                    <span className="member-showcase-eyebrow">Squads</span>
+                    <div className="member-showcase-group-chip-row">
+                      {squadNames.map((squad) => (
+                        <span className="member-showcase-group-chip is-squad-chip" key={'squad-' + squad}>
+                          {squad}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="member-showcase-group-lane">
-                  <span className="member-showcase-eyebrow">Squads</span>
-                  <div className="member-showcase-group-chip-row">
-                    {showcase.progression.squads.map((squad) => (
-                      <span className="member-showcase-group-chip is-squad-chip" key={'squad-' + squad}>
-                        {squad}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              ) : null}
 
-              {props.guildAffiliations && props.guildAffiliations.length > 0 ? (
+              {guildAffiliations.length > 0 ? (
                 <div className="member-showcase-guild-card-grid">
-                  {props.guildAffiliations.map((guild) => (
+                  {guildAffiliations.map((guild) => (
                     <button
-                      className="member-showcase-guild-card"
+                      className="member-showcase-guild-card has-group-display-photo-card"
                       key={guild.id}
                       onClick={() => props.onOpenGuild?.(guild.record)}
                       type="button"
                     >
-                      <span className="legend-dot signal-ring signal-green" />
+                      <GroupDisplayPhotoAvatar
+                        groupId={guild.id}
+                        groupName={guild.title}
+                        kind="guild"
+                        size="sm"
+                      />
                       <div>
                         <strong>{guild.title}</strong>
                         <span>
@@ -390,6 +414,36 @@ export function MemberProfileShowcase(props: {
                       </div>
                     </button>
                   ))}
+                </div>
+              ) : null}
+
+              {squadAffiliations.length > 0 ? (
+                <div className="member-showcase-squad-card-grid">
+                  {squadAffiliations.map((squad) => {
+                    const capacity = squadCapacityDisplay(squad.record, props.member.id);
+
+                    return (
+                      <button
+                        className="member-showcase-squad-card has-group-display-photo-card"
+                        key={squad.id}
+                        onClick={() => props.onOpenSquad?.(squad.record)}
+                        type="button"
+                      >
+                        <GroupDisplayPhotoAvatar
+                          groupId={squad.id}
+                          groupName={squad.title}
+                          kind="squad"
+                          size="sm"
+                        />
+                        <div>
+                          <strong>{squad.title}</strong>
+                          <span>
+                            {squad.roleLabel} · {capacity.filled}/{capacity.total} slots
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : null}
 

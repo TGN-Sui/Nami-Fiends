@@ -3,6 +3,10 @@ import { useMemo } from 'react';
 import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { ChannelModule, ConductSignal, NamiChannel } from './domain/types.js';
 import { channels as seedChannels } from './fixtures/seed-data.js';
+import {
+  channelDirectoryDedupeKey,
+  listLocalDiscoveryChannels,
+} from './local-channel-directory.js';
 import type { DiscoveryChannelRanking } from './protocol.js';
 import { useDiscoveryChannelsQuery, type ProtocolLoadState } from './protocol-query.js';
 
@@ -136,23 +140,65 @@ function mapFixtureChannel(channel: NamiChannel, index: number): ChannelDirector
   };
 }
 
+function mapLocalChannel(channel: NamiChannel, index: number): ChannelDirectoryItem {
+  return {
+    channel,
+    source: 'live',
+    rank: index + 1,
+    score: channel.subscribers,
+  };
+}
+
+function mergeDirectoryChannels(items: ChannelDirectoryItem[]): ChannelDirectoryItem[] {
+  const seen = new Set<string>();
+  const merged: ChannelDirectoryItem[] = [];
+
+  for (const item of items) {
+    const key = channelDirectoryDedupeKey(item.channel);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    merged.push(item);
+  }
+
+  return merged.map((item, index) => ({
+    ...item,
+    rank: index + 1,
+  }));
+}
+
 export function resolveChannelDirectory(input: {
   liveRankings: DiscoveryChannelRanking[];
   loadState: ProtocolLoadState;
   liveQueryEnabled: boolean;
   fixtureChannels?: NamiChannel[];
+  localChannels?: NamiChannel[];
 }): ChannelDirectoryItem[] {
   const fixtureChannels = input.fixtureChannels ?? seedChannels;
+  const localChannels = input.localChannels ?? listLocalDiscoveryChannels();
 
   if (input.liveRankings.length > 0) {
-    return input.liveRankings.map((ranking) => mapLiveRanking(ranking, fixtureChannels));
+    const liveItems = input.liveRankings.map((ranking) => mapLiveRanking(ranking, fixtureChannels));
+    const liveKeys = new Set(liveItems.map((item) => channelDirectoryDedupeKey(item.channel)));
+    const supplementalLocal = localChannels
+      .filter((channel) => !liveKeys.has(channelDirectoryDedupeKey(channel)))
+      .map(mapLocalChannel);
+
+    return mergeDirectoryChannels([...liveItems, ...supplementalLocal]);
+  }
+
+  if (localChannels.length > 0) {
+    return mergeDirectoryChannels(localChannels.map(mapLocalChannel));
   }
 
   if (!shouldUseFixtureCatalogFallback(input.liveRankings.length, input.loadState)) {
     return [];
   }
 
-  return fixtureChannels.map(mapFixtureChannel);
+  return mergeDirectoryChannels(fixtureChannels.map(mapFixtureChannel));
 }
 
 export function channelDirectoryUsesFixtures(items: ChannelDirectoryItem[]): boolean {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 
-import { genreOfficialChats } from './global-chats.js';
+import { genreBubbleBaseRadiusFromWeeklyChatters } from './bubble-weekly-scale.js';
+import { genreOfficialChats, resolveGenreChatWeeklyActiveMembers } from './global-chats.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
 import { prefersReducedMotion, subscribeVisibilityPause } from './perf-utils.js';
 
@@ -35,10 +36,6 @@ const BUBBLE_SCALE_MIN = 1.36;
 const BUBBLE_SCALE_SPREAD = 0.36;
 const POP_CLICK_HIT_MS = 180;
 
-function bubbleBaseRadius(members: number): number {
-  return 26 + Math.min(18, Math.round(members / 60));
-}
-
 function popClicksRequiredForBubble(): number {
   return 3 + Math.floor(Math.random() * 3);
 }
@@ -51,7 +48,8 @@ function spawnBubble(width: number, height: number, now: number): FloatingGenreB
   const sideWidth = width * 0.28;
   const scale = BUBBLE_SCALE_MIN + Math.random() * BUBBLE_SCALE_SPREAD;
   const riseSpeed = 0.55 + Math.random() * 1.35;
-  const radius = bubbleBaseRadius(chat.activeMembers) * scale;
+  const weeklyActiveMembers = resolveGenreChatWeeklyActiveMembers(chat);
+  const radius = genreBubbleBaseRadiusFromWeeklyChatters(weeklyActiveMembers) * scale;
   const x = spawnLeft
     ? sidePadding + Math.random() * sideWidth
     : width - sidePadding - Math.random() * sideWidth;
@@ -60,7 +58,7 @@ function spawnBubble(width: number, height: number, now: number): FloatingGenreB
     id: chat.id + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
     chatId: chat.id,
     title,
-    members: chat.activeMembers,
+    members: weeklyActiveMembers,
     x,
     y: height + radius + 12,
     vx: (Math.random() - 0.5) * 0.42,

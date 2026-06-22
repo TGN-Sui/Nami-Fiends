@@ -19,6 +19,8 @@ import {
   unbanMemberTarget,
   useNamiAdminStore,
 } from './nami-admin-store.js';
+import { OwnerProvisionedChannelsPanel } from './OwnerProvisionedChannelsPanel.js';
+import type { NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 function shortenAddress(value: string): string {
@@ -29,7 +31,10 @@ function shortenAddress(value: string): string {
   return value.slice(0, 10) + '…' + value.slice(-6);
 }
 
-export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): ReactElement | null {
+export function NamiOwnerSettingsPanel(props: {
+  embedded?: boolean;
+  onOpenChannel?: (channel: NamiChannel) => void;
+} = {}): ReactElement | null {
   const { owner } = useProtocolOwner();
   const { pendingClaims, openPendingCount, banList, moderators } = useNamiAdminStore();
 
@@ -256,6 +261,11 @@ export function NamiOwnerSettingsPanel(props: { embedded?: boolean } = {}): Reac
           <li key={capability}>{OWNER_CAPABILITY_LABELS[capability]}</li>
         ))}
       </ul>
+
+      <OwnerProvisionedChannelsPanel
+        embedded
+        {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+      />
 
       <article className="nami-owner-section panel">
         <div className="profile-panel-heading">

@@ -54,8 +54,7 @@ export function PlayerScorePanel(props: PlayerScorePanelProps): ReactElement {
       </div>
 
       <p className="protocol-hint player-score-summary">
-        Proves you are a real gamer. Link wallets, socials, and game platforms in Settings to raise
-        your score.
+        Proves you are a real gamer. Link socials and game platforms in Settings to raise your score.
       </p>
 
       {typeof props.issuedScore === 'number' ? (

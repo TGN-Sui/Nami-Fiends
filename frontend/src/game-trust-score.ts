@@ -275,7 +275,7 @@ export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScor
     technical += 8;
     boosters.push({
       id: 'zklogin-wallet',
-      label: 'zkLogin wallet linked',
+      label: 'zkLogin account linked',
       points: 8,
       category: 'technical',
     });
@@ -283,12 +283,12 @@ export function computeGameTrustScore(input: GameTrustScoreInput): GameTrustScor
     technical += 5;
     boosters.push({
       id: 'wallet-linked',
-      label: 'Wallet linked',
+      label: 'Sui account linked',
       points: 5,
       category: 'technical',
     });
   } else {
-    suggestions.push('Connect zkLogin to link a wallet for up to +8 Trust Score.');
+    suggestions.push('Connect zkLogin to link a Sui account for up to +8 Trust Score.');
   }
 
   if (input.officialSocialVerified) {

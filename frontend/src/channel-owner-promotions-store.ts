@@ -3,6 +3,14 @@ import { useSyncExternalStore } from 'react';
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
 import { readOwnedGameChannelId } from './channel-owner-access.js';
 import {
+  CHANNEL_MEDIA_REF_PREFIX,
+  externalizePromotionCoverUrl,
+  PARTNER_CAROUSEL_COVER_PREFIX,
+  readPartnerCarouselCoverUrl,
+  resolveChannelMediaRef,
+  SUPER_BANNER_COVER_PREFIX,
+} from './channel-owner-media-store.js';
+import {
   preApprovedOwnerCapabilityAllowed,
   preApprovedOwnerRestrictionMessage,
 } from './game-owner-approval-guards.js';
@@ -300,6 +308,44 @@ function normalizeSuperBannerWindow(state: ChannelOwnerPromotionsState): Channel
   };
 }
 
+async function compactPromotionCoverUrls(
+  state: ChannelOwnerPromotionsState,
+): Promise<ChannelOwnerPromotionsState> {
+  const partnerChannelId = state.partnerCarousel.ticket?.channelId ?? readOwnedGameChannelId() ?? 'channel';
+  const superChannelId = readOwnedGameChannelId() ?? partnerChannelId;
+  const partnerCover = state.partnerCarousel.ticket?.coverUrl ?? '';
+  const superCover = state.superBanner.draft.coverUrl;
+
+  const [partnerCoverRef, superCoverRef] = await Promise.all([
+    partnerCover
+      ? externalizePromotionCoverUrl(partnerChannelId, partnerCover, PARTNER_CAROUSEL_COVER_PREFIX)
+      : Promise.resolve(''),
+    superCover
+      ? externalizePromotionCoverUrl(superChannelId, superCover, SUPER_BANNER_COVER_PREFIX)
+      : Promise.resolve(''),
+  ]);
+
+  return {
+    ...state,
+    superBanner: {
+      ...state.superBanner,
+      draft: {
+        ...state.superBanner.draft,
+        coverUrl: superCoverRef || superCover,
+      },
+    },
+    partnerCarousel: {
+      ...state.partnerCarousel,
+      ticket: state.partnerCarousel.ticket
+        ? {
+            ...state.partnerCarousel.ticket,
+            coverUrl: partnerCoverRef || partnerCover,
+          }
+        : null,
+    },
+  };
+}
+
 function loadChannelOwnerPromotionsState(): ChannelOwnerPromotionsState {
   const defaults = defaultState();
 
@@ -312,7 +358,7 @@ function loadChannelOwnerPromotionsState(): ChannelOwnerPromotionsState {
 
     const parsed = JSON.parse(stored) as Partial<ChannelOwnerPromotionsState>;
 
-    return normalizeSuperBannerWindow({
+    const loaded = normalizeSuperBannerWindow({
       ...defaults,
       ...parsed,
       superBanner: {
@@ -333,6 +379,17 @@ function loadChannelOwnerPromotionsState(): ChannelOwnerPromotionsState {
         ticket: parsed.partnerCarousel?.ticket ?? null,
       },
     });
+
+    if (
+      loaded.partnerCarousel.ticket?.coverUrl?.startsWith('data:') ||
+      loaded.superBanner.draft.coverUrl.startsWith('data:')
+    ) {
+      void compactPromotionCoverUrls(loaded).then((compactState) => {
+        saveChannelOwnerPromotionsState(compactState);
+      });
+    }
+
+    return loaded;
   } catch {
     return normalizeSuperBannerWindow(defaults);
   }
@@ -363,14 +420,61 @@ export function readChannelOwnerPromotionsState(): ChannelOwnerPromotionsState {
   return cachedPromotionsState;
 }
 
-export function saveChannelOwnerPromotionsState(state: ChannelOwnerPromotionsState): void {
-  const serialized = JSON.stringify(state);
+export function resolvePartnerCarouselCoverUrl(
+  ticket: PartnerCarouselTicket | null | undefined,
+): string {
+  if (!ticket) {
+    return '';
+  }
 
-  window.localStorage.setItem(STORAGE_KEY, serialized);
-  cachedPromotionsState = state;
-  cachedPromotionsStorageRaw = serialized;
-  cachedSuperBannerWindowKey = currentSuperBannerWindowKey();
-  window.dispatchEvent(new CustomEvent('nami-channel-owner-promotions-changed'));
+  const storedCover = ticket.coverUrl?.trim() ?? '';
+
+  if (storedCover) {
+    const resolved = resolveChannelMediaRef(storedCover);
+
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return readPartnerCarouselCoverUrl(ticket.channelId) ?? '';
+}
+
+export function partnerCarouselCoverHydrationKey(
+  ticket: PartnerCarouselTicket | null | undefined,
+): string | null {
+  const storedCover = ticket?.coverUrl?.trim() ?? '';
+
+  if (storedCover.startsWith(CHANNEL_MEDIA_REF_PREFIX)) {
+    return storedCover.slice(CHANNEL_MEDIA_REF_PREFIX.length);
+  }
+
+  if (ticket?.channelId) {
+    return 'nami.channel.partner-carousel-cover.' + ticket.channelId;
+  }
+
+  return null;
+}
+
+export function resolveSuperBannerCoverUrl(coverUrl: string): string {
+  if (!coverUrl.trim()) {
+    return '';
+  }
+
+  return resolveChannelMediaRef(coverUrl.trim());
+}
+
+export function saveChannelOwnerPromotionsState(state: ChannelOwnerPromotionsState): void {
+  void (async () => {
+    const compactState = await compactPromotionCoverUrls(state);
+    const serialized = JSON.stringify(compactState);
+
+    window.localStorage.setItem(STORAGE_KEY, serialized);
+    cachedPromotionsState = compactState;
+    cachedPromotionsStorageRaw = serialized;
+    cachedSuperBannerWindowKey = currentSuperBannerWindowKey();
+    window.dispatchEvent(new CustomEvent('nami-channel-owner-promotions-changed'));
+  })();
 }
 
 export type PromotionActionResult =
@@ -708,32 +812,46 @@ export function savePartnerCarouselTicket(
   patch: Partial<PartnerCarouselTicket>
 ): PromotionActionResult {
   const state = readChannelOwnerPromotionsState();
-  const ticket: PartnerCarouselTicket = {
-    ...(state.partnerCarousel.ticket ?? {
-      id: 'partner-ticket-' + channelId,
-      channelId,
-      coverUrl: '',
-      title: '',
-      description: '',
-      duration: '72h' as PromotionDuration,
-      status: 'draft' as const,
-      submittedAtMs: null,
-      expiresAtMs: null,
-      updatedAtMs: Date.now(),
-    }),
-    ...patch,
-    channelId,
-    updatedAtMs: Date.now(),
-  };
+  const nextCoverUrl = patch.coverUrl;
 
-  saveChannelOwnerPromotionsState({
-    ...state,
-    partnerCarousel: {
-      ...state.partnerCarousel,
-      ticket,
+  void (async () => {
+    const coverUrl =
+      typeof nextCoverUrl === 'string' && nextCoverUrl.trim() !== ''
+        ? await externalizePromotionCoverUrl(
+            channelId,
+            nextCoverUrl,
+            PARTNER_CAROUSEL_COVER_PREFIX,
+          )
+        : state.partnerCarousel.ticket?.coverUrl ?? '';
+
+    const ticket: PartnerCarouselTicket = {
+      ...(state.partnerCarousel.ticket ?? {
+        id: 'partner-ticket-' + channelId,
+        channelId,
+        coverUrl: '',
+        title: '',
+        description: '',
+        duration: '72h' as PromotionDuration,
+        status: 'draft' as const,
+        submittedAtMs: null,
+        expiresAtMs: null,
+        updatedAtMs: Date.now(),
+      }),
+      ...patch,
+      ...(typeof nextCoverUrl === 'string' ? { coverUrl } : {}),
+      channelId,
       updatedAtMs: Date.now(),
-    },
-  });
+    };
+
+    saveChannelOwnerPromotionsState({
+      ...state,
+      partnerCarousel: {
+        ...state.partnerCarousel,
+        ticket,
+        updatedAtMs: Date.now(),
+      },
+    });
+  })();
 
   return { ok: true, message: 'Partner banner draft saved.' };
 }

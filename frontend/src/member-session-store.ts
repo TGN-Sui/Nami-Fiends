@@ -272,6 +272,22 @@ export function completeSignupFromDraft(
   return session;
 }
 
+export function listRegisteredMemberAccounts(): MemberSession[] {
+  const registry = readMemberAccountsRegistry();
+  const activeSession = readMemberSession();
+  const byEmail = new Map<string, MemberSession>();
+
+  for (const session of Object.values(registry)) {
+    byEmail.set(normalizeEmail(session.email), session);
+  }
+
+  if (activeSession) {
+    byEmail.set(normalizeEmail(activeSession.email), activeSession);
+  }
+
+  return [...byEmail.values()].sort((left, right) => right.signedUpAtMs - left.signedUpAtMs);
+}
+
 export function hasActiveMemberSession(): boolean {
   return readMemberSession() !== null;
 }

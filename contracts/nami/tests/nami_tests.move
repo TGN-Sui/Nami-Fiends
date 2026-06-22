@@ -1995,7 +1995,7 @@ module nami::nami_tests {
             test_scenario::take_from_sender<squad::Squad>(&scenario);
 
         assert!(squad::get_owner(&squad_obj) == USER, 160);
-        assert!(squad::get_max_slots(&squad_obj) == 3, 161);
+        assert!(squad::get_max_slots(&squad_obj) == 2, 161);
         assert!(squad::get_member_count(&squad_obj) == 0, 162);
 
         test_scenario::return_to_sender(&scenario, squad_obj);

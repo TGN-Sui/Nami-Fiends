@@ -8,6 +8,8 @@ import { type NamiChannel } from './uiMockData.js';
 export type NamiCryptoBubbleEntry = {
   channel: NamiChannel;
   slotId: string;
+  /** Weekly discovery scale multiplier (boosts for games, chatters for genre lounges). */
+  weeklyScale?: number;
 };
 
 type NamiCryptoBubbleNode = {
@@ -84,7 +86,8 @@ function buildNamiCryptoBubbleNodes(
             ? 37 + randomScale * 9
             : 27 + randomScale * 8) * bubbleScale;
 
-    const scale = 0.88 + randomScale * 0.3;
+    const weeklyScale = entry.weeklyScale ?? 1;
+    const scale = (0.88 + randomScale * 0.3) * weeklyScale;
     const visualRadius = baseRadius * scale;
     const softMoat = baseRadius >= 50 ? 6 : baseRadius >= 40 ? 5 : 4;
     const candidateRadius = visualRadius * 0.82 + softMoat;

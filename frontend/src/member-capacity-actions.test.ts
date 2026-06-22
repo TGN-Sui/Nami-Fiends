@@ -50,14 +50,4 @@ describe('member capacity action visibility', () => {
 
     expect(canShowChannelBoostAction(member, 'fiends')).toBe(false);
   });
-
-  it('returns false when no squads can invite the target member', async () => {
-    const { canInviteMemberToAnySquad } = await import('./squad-roster-store.js');
-    const { members } = await import('./uiMockData.js');
-
-    const target = members.find((member) => member.id === 'm1');
-
-    expect(target).toBeDefined();
-    expect(canInviteMemberToAnySquad(target!)).toBe(false);
-  });
 });

@@ -110,6 +110,61 @@ describe('channel-directory-provider', () => {
     expect(items[0]?.source).toBe('fixture');
   });
 
+  it('deduplicates channels by handle when live and local catalogs overlap', () => {
+    const localChannel: NamiChannel = {
+      ...fixtureChannel,
+      id: 'owner-game-fiends',
+      handle: '@fiends',
+      name: 'FIENDS',
+    };
+
+    const items = resolveChannelDirectory({
+      liveRankings: [
+        {
+          channel_id: 'fiends',
+          owner: '0xowner',
+          is_verified: true,
+          is_public: true,
+          boost_power: 40,
+          boost_count: 2,
+          score: 220,
+          week_id: 12,
+          rank: 1,
+          signals: ['green'],
+        },
+      ],
+      loadState: 'ready',
+      liveQueryEnabled: true,
+      fixtureChannels: [fixtureChannel],
+      localChannels: [localChannel],
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.channel.id).toBe('fiends');
+    expect(items[0]?.source).toBe('live');
+  });
+
+  it('prefers local created channels when live discovery is empty', () => {
+    const localChannel: NamiChannel = {
+      ...fixtureChannel,
+      id: 'owner-game-pawtato',
+      name: 'Pawtato Land',
+      handle: '@pawtato',
+    };
+
+    const items = resolveChannelDirectory({
+      liveRankings: [],
+      loadState: 'ready',
+      liveQueryEnabled: true,
+      fixtureChannels: [fixtureChannel],
+      localChannels: [localChannel],
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.channel.id).toBe('owner-game-pawtato');
+    expect(items[0]?.source).toBe('live');
+  });
+
   it('enriches fixture metadata when a live ranking matches a fixture id', () => {
     const items = resolveChannelDirectory({
       liveRankings: [

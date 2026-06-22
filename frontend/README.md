@@ -18,7 +18,7 @@ npm run dev
 
 ```bash
 npm run typecheck   # TypeScript
-npm test            # 133 unit tests (vitest)
+npm test            # 230 unit tests (vitest)
 npm run build       # Production bundle
 ```
 
@@ -42,7 +42,7 @@ Game Trust Score rules: [docs/Trust-Score_rules.md](../docs/Trust-Score_rules.md
 | Section | Key panels |
 |---------|------------|
 | Overview | Safety snapshot, shortcuts |
-| Account | Profile, passport, platform links |
+| Account | Profile, passport, platform links, Sui wallet connect, boost cycle summary |
 | Membership | Plans, demo perspectives |
 | Feeds | Embedded feed toggles |
 | **Feedback** | `UserSuggestionsSettingsPanel` → Nami Officials |
@@ -51,6 +51,25 @@ Game Trust Score rules: [docs/Trust-Score_rules.md](../docs/Trust-Score_rules.md
 | Advanced (official owner) | Assets, emojis, **Submissions**, security, indexed data |
 
 `requestSettingsSection('feedback')` from `settings-navigation.ts` deep-links sections.
+
+---
+
+## Game channel owner tools
+
+Tabbed owner section on game channel profiles (`ChannelOwnerSection.tsx`):
+
+| Group | Panels / stores |
+|-------|-----------------|
+| Brand & media | `ChannelCoverUploadCard`, `ChannelTrailerUploadCard`, brand palette |
+| Promotions | `ChannelOwnerPromotionsPanel`, partner carousel tickets |
+| Alerts & emojis | `ChannelBannerEditorCard`, `channel-banner-notifications-store` |
+| Advanced | `ChannelOwnerPlatformsPanel`, security / indexed data |
+
+Draft state: `channel-owner-settings-draft.ts`, `channel-owner-settings-context.tsx`, `channel-owner-settings-groups.ts`. Sticky **Save settings** / **Discard** footer; uploads commit immediately.
+
+Media persistence: `channel-media-persistence.ts` (IndexedDB + manifest). Bootstrapped on startup in `main.tsx`. Cover, hero, and trailer survive page refresh.
+
+Discovery: owner-provisioned and subscribed channels resolve through `local-channel-directory.ts` and `subscriptions-store.ts`.
 
 ---
 

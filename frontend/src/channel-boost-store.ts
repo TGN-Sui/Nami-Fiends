@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
 import { getBoostCycleId } from './boost-cycle.js';
-import { isGameChannelOwner } from './channel-owner-access.js';
 import { isMemberVerified } from './member-access.js';
 import { MEMBERSHIP_PLANS } from './membership-plans-store.js';
 import { type NamiMember } from './uiMockData.js';
@@ -104,10 +103,6 @@ export function canMemberBoost(member: NamiMember): boolean {
 }
 
 export function canShowChannelBoostAction(member: NamiMember, channelId: string): boolean {
-  if (isGameChannelOwner()) {
-    return false;
-  }
-
   if (!canMemberBoost(member)) {
     return false;
   }

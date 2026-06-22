@@ -103,28 +103,38 @@ export function isXVerificationMockEnabled(): boolean {
   return shouldUseDevFixtures();
 }
 
-/** Simulates X.com OAuth authorization until the live OAuth callback ships. */
+/** Links X locally; uses full OAuth verify when the live callback ships. */
 export function authorizeXAccount(mockHandle = 'npcgamer'): XVerificationActionResult {
-  if (!isXVerificationMockEnabled()) {
-    return {
-      ok: false,
-      reason: 'X.com authorization is not available until the live OAuth flow ships.',
-    };
-  }
-
   const now = Date.now();
+  const oauthLive = !isXVerificationMockEnabled();
+  const verified = isXVerificationMockEnabled();
 
   saveState({
     linked: true,
-    verified: true,
+    verified,
     handle: mockHandle,
     verifiedAtMs: now,
   });
+
+  if (oauthLive) {
+    return {
+      ok: true,
+      message:
+        '@' +
+        mockHandle +
+        ' linked. Live OAuth will refresh verification when the receiving server ships.',
+    };
+  }
 
   return {
     ok: true,
     message: '@' + mockHandle + ' verified through X account authorization.',
   };
+}
+
+export function isXAccountLinked(): boolean {
+  const state = readXVerificationState();
+  return state.linked || state.verified;
 }
 
 export function unlinkXAccount(): XVerificationActionResult {

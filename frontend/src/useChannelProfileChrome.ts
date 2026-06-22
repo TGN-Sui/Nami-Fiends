@@ -16,7 +16,7 @@ import {
   getRemainingBoosts,
   useChannelBoostStore,
 } from './channel-boost-store.js';
-import { isGameChannelOwner, ownsGameChannel } from './channel-owner-access.js';
+import { ownsGameChannel } from './channel-owner-access.js';
 import { canSubscribeToChannelBanners, getSelfMember } from './member-access.js';
 import {
   isChannelSubscribed,
@@ -37,9 +37,8 @@ export function useChannelProfileChrome(channel: NamiChannel) {
   const selfMember = getSelfMember();
   const channelIsSubscribed = isChannelSubscribed(channel.id);
   const bannerAlertsEnabled = isChannelBannerAlertsEnabled(channel.id);
-  const isChannelOwner = isGameChannelOwner() && ownsGameChannel(channel.id);
-  const isEliteChannelOwner = isChannelOwner && selfMember.tier === 'Elite';
-  const showMemberConsumerActions = !isGameChannelOwner();
+  const isChannelOwner = ownsGameChannel(channel.id);
+  const showMemberConsumerActions = true;
 
   const selectedBrandTheme = useMemo(() => getStoredChannelBrandTheme(channel.id), [channel.id]);
 
@@ -186,7 +185,6 @@ export function useChannelProfileChrome(channel: NamiChannel) {
     channelIsSubscribed,
     bannerAlertsEnabled,
     isChannelOwner,
-    isEliteChannelOwner,
     showMemberConsumerActions,
     profileBrandStyle,
     selectedBrandTheme,

@@ -22,7 +22,7 @@ import { useProtocolOwner } from './wallet.js';
 
 type ReviewTicket = {
   id: string;
-  kind: 'partner-carousel' | 'nodename-claim' | 'game-ticket';
+  kind: 'partner-carousel' | 'nodename-claim' | 'game-ticket' | 'channel-claim';
   title: string;
   description: string;
   detail: string | null;
@@ -31,6 +31,10 @@ type ReviewTicket = {
 function ticketKindLabel(kind: ReviewTicket['kind']): string {
   if (kind === 'partner-carousel') {
     return 'Partner Carousel';
+  }
+
+  if (kind === 'channel-claim') {
+    return 'Channel Claim';
   }
 
   if (kind === 'game-ticket') {
@@ -75,13 +79,16 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       .filter((ticket) => ticket.status === 'submitted' || ticket.status === 'preapproved')
       .map((ticket) => ({
         id: ticket.id,
-        kind: 'game-ticket' as const,
-        title: ticket.gameTitle,
+        kind: (ticket.ticketKind === 'channel-claim' ? 'channel-claim' : 'game-ticket') as
+          | 'channel-claim'
+          | 'game-ticket',
+        title: ticket.ticketKind === 'channel-claim' ? 'Claim: ' + ticket.gameTitle : ticket.gameTitle,
         description: ticket.studioName + ' · ' + ticket.email,
         detail:
           ticket.trustScore +
           '% trust · ' +
           ticket.status +
+          (ticket.claimProofNotes ? ' · proof on file' : '') +
           (ticket.genres.length > 0 ? ' · ' + ticket.genres.join(', ') : ''),
       }));
 
@@ -128,7 +135,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return updated !== null;
     }
 
-    if (ticket.kind === 'game-ticket') {
+    if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
       const result = applyGameTicketOfficialReview(ticket.id, status, owner);
       return result.ok;
     }
@@ -150,7 +157,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return;
     }
 
-    if (ticket.kind === 'game-ticket') {
+    if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
       const result = applyGameTicketOfficialReview(ticket.id, 'approved', owner);
 
       if (!result.ok) {
@@ -190,7 +197,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       return;
     }
 
-    if (ticket.kind === 'game-ticket') {
+    if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
       const result = applyGameTicketOfficialReview(ticket.id, 'rejected', owner);
 
       if (!result.ok) {
@@ -238,7 +245,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
         continue;
       }
 
-      if (ticket.kind === 'game-ticket') {
+      if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
         const result = applyGameTicketOfficialReview(ticket.id, 'approved', owner);
 
         if (result.ok) {
@@ -282,7 +289,7 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
         continue;
       }
 
-      if (ticket.kind === 'game-ticket') {
+      if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
         const result = applyGameTicketOfficialReview(ticket.id, 'rejected', owner);
 
         if (result.ok) {
@@ -312,8 +319,8 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
         <span className="mini-badge">Owner Account</span>
         <h2>Submitted Tickets</h2>
         <p>
-          Approve or disapprove partner carousel banners, game onboarding tickets, and nodename
-          claims from your owner account.
+          Approve or disapprove partner carousel banners, new game tickets, channel claim tickets,
+          and nodename claims from your owner account.
         </p>
       </div>
 

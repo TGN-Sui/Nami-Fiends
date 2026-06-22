@@ -34,7 +34,7 @@ export function SocialEmbedPlayer(props: SocialEmbedPlayerProps): ReactElement {
         </div>
         <p>{embedSetupHint(props.embed)}</p>
         <a
-          className="profile-secondary-link embedded-social-open-external"
+          className="nami-surface-button embedded-social-open-external"
           href={resolved.externalUrl}
           rel="noreferrer"
           target="_blank"

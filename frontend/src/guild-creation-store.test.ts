@@ -47,6 +47,8 @@ vi.mock('./member-access.js', () => ({
   })),
   isMemberVerified: (member: { signal: string; tier: string }) =>
     member.signal === 'Green' && member.tier !== 'NPC',
+  memberFeatureTier: (member: { tier: string }) => member.tier,
+  SELF_MEMBER_ID: 'm1',
 }));
 
 vi.mock('./messages-store.js', () => ({

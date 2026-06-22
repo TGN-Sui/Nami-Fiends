@@ -6,6 +6,7 @@ import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import type { NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 const ADVANCED_TABS = [
@@ -40,6 +41,7 @@ type AdvancedTabId = (typeof ADVANCED_TABS)[number]['id'];
 
 export function NamiOwnerAdvancedPanel(props: {
   onEnterEditMode: () => void;
+  onOpenChannel?: (channel: NamiChannel) => void;
 }): ReactElement | null {
   const { owner } = useProtocolOwner();
   const [activeTab, setActiveTab] = useState<AdvancedTabId>('assets');
@@ -88,7 +90,12 @@ export function NamiOwnerAdvancedPanel(props: {
         ) : null}
         {activeTab === 'emojis' ? <NamiOwnerEmojiPanel embedded /> : null}
         {activeTab === 'submissions' ? <NamiOfficialsSubmissionsPanel embedded /> : null}
-        {activeTab === 'security' ? <NamiOwnerSettingsPanel embedded /> : null}
+        {activeTab === 'security' ? (
+          <NamiOwnerSettingsPanel
+            embedded
+            {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+          />
+        ) : null}
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
       </div>
     </article>

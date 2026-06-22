@@ -1,4 +1,6 @@
 import type { GameSubmissionTicket } from './game-submission-ticket-store.js';
+import type { OwnerProvisionedChannel } from './owner-provisioned-channels-store.js';
+import { replaceOwnerProvisionedChannelsFromServer } from './owner-provisioned-channels-store.js';
 import type { PendingNodenameClaim } from './nami-admin-store.js';
 import type { NamiUserSuggestion } from './nami-user-suggestions-store.js';
 import {
@@ -13,7 +15,6 @@ const SUGGESTIONS_KEY = 'nami.user.suggestions';
 const TICKETS_KEY = 'nami.game.submission.tickets';
 const PARTNER_BANNERS_KEY = 'nami.partner.banner.submissions';
 const NODENAME_CLAIMS_KEY = 'nami.admin.pendingClaims';
-
 function writeJson(key: string, value: unknown): void {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
@@ -23,6 +24,7 @@ function dispatchHydrated(): void {
   window.dispatchEvent(new CustomEvent('nami-game-submission-tickets-changed'));
   window.dispatchEvent(new CustomEvent('nami-partner-banner-submissions-changed'));
   window.dispatchEvent(new CustomEvent('nami-admin-changed'));
+  window.dispatchEvent(new CustomEvent('nami-owner-provisioned-channels-changed'));
 }
 
 export async function hydrateOfficialsSubmissionsFromServer(): Promise<boolean> {
@@ -37,6 +39,13 @@ export async function hydrateOfficialsSubmissionsFromServer(): Promise<boolean> 
     writeJson(TICKETS_KEY, projection.gameTickets);
     writeJson(PARTNER_BANNERS_KEY, projection.partnerBanners);
     writeJson(NODENAME_CLAIMS_KEY, projection.nodenameClaims);
+
+    if (Array.isArray(projection.ownerProvisionedChannels)) {
+      replaceOwnerProvisionedChannelsFromServer(
+        projection.ownerProvisionedChannels as OwnerProvisionedChannel[]
+      );
+    }
+
     dispatchHydrated();
     return true;
   } catch {
@@ -68,4 +77,10 @@ export function syncPartnerBannersToServer(partnerBanners: PartnerBannerSubmissi
 
 export function syncNodenameClaimsToServer(nodenameClaims: PendingNodenameClaim[]): void {
   queueOfficialsSubmissionsSync({ nodenameClaims });
+}
+
+export function syncOwnerProvisionedChannelsToServer(
+  ownerProvisionedChannels: OwnerProvisionedChannel[]
+): void {
+  queueOfficialsSubmissionsSync({ ownerProvisionedChannels });
 }

@@ -18,6 +18,7 @@ export interface ZkLoginSession {
   maxEpoch: number;
   provider: 'google';
   createdAtMs: number;
+  ephemeralSecretKey?: string;
 }
 
 interface ZkLoginPending {
@@ -103,6 +104,9 @@ export function getZkLoginSession(): ZkLoginSession | null {
       maxEpoch: typeof parsed.maxEpoch === 'number' ? parsed.maxEpoch : 0,
       provider: 'google',
       createdAtMs: typeof parsed.createdAtMs === 'number' ? parsed.createdAtMs : Date.now(),
+      ...(typeof parsed.ephemeralSecretKey === 'string'
+        ? { ephemeralSecretKey: parsed.ephemeralSecretKey }
+        : {}),
     };
   } catch {
     return null;
@@ -225,6 +229,7 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
       maxEpoch: pending.maxEpoch,
       provider: 'google',
       createdAtMs: Date.now(),
+      ephemeralSecretKey: pending.ephemeralSecretKey,
     };
 
     saveSession(session);
