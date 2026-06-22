@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { hasActiveMemberSession } from './member-session-store.js';
 import { setLastWalletOwner } from './protocol-owner-snapshot.js';
 import { getConfiguredNetwork } from './nami.js';
 import { resolveProtocolConnectionState } from './protocol-availability.js';
@@ -142,11 +143,18 @@ export function ZkLoginConnectControl(): ReactElement {
   }, []);
 
   if (session) {
+    const memberLinked = hasActiveMemberSession();
+
     return (
       <div className="zklogin-connect">
         <p className="protocol-hint">
-          Signed in · {session.address.slice(0, 10)}…
+          Google wallet connected · {session.address.slice(0, 10)}…
         </p>
+        {!memberLinked ? (
+          <p className="protocol-hint">
+            Complete gamer signup or log in with email to link your Nami passport to this wallet.
+          </p>
+        ) : null}
         <button
           className="onboarding-secondary-btn"
           onClick={() => {

@@ -6,7 +6,10 @@ import {
   isContactVerificationAvailable,
 } from './contact-code-verification-store.js';
 import { memberHasPasswordCredential } from './member-credential-store.js';
-import { authenticateMemberCredentials } from './member-session-store.js';
+import {
+  authenticateMemberCredentials,
+  hasRegisteredMemberAccount,
+} from './member-session-store.js';
 import { clearSignedOut } from './member-auth-store.js';
 import {
   linkMemberSessionAuth,
@@ -24,6 +27,7 @@ import {
   recoveryEmailOnboardingHint,
   zkLoginAccountLinkHint,
 } from './onboarding-recovery.js';
+import { getZkLoginSession } from './zklogin.js';
 import { useProtocolOwner, ZkLoginConnectControl } from './wallet.js';
 
 function isValidEmail(value: string): boolean {
@@ -62,7 +66,7 @@ export function EntryLoginPanel(props: {
     });
     clearSignedOut();
     props.onLoginSuccess();
-  }, [owner, source, props.onLoginSuccess]);
+  }, [owner, source, props]);
 
   function handleEmailSignIn(): void {
     setLoginError(null);
@@ -72,12 +76,18 @@ export function EntryLoginPanel(props: {
       return;
     }
 
-    if (emailVerificationRequired && !isContactVerified('email', email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const returningAccount =
+      memberHasPasswordCredential(normalizedEmail) || hasRegisteredMemberAccount(email);
+
+    if (
+      emailVerificationRequired &&
+      !isContactVerified('email', email) &&
+      !returningAccount
+    ) {
       setLoginError('Verify your email with the one-time code before signing in.');
       return;
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
     const passwordRequired = memberHasPasswordCredential(normalizedEmail);
 
     if (passwordRequired && password.trim().length === 0) {
@@ -102,7 +112,12 @@ export function EntryLoginPanel(props: {
       return;
     }
 
-    linkMemberSessionAuth(restored, { email: restored.email });
+    const zkSession = getZkLoginSession();
+
+    linkMemberSessionAuth(restored, {
+      email: restored.email,
+      ...(zkSession ? { zkLoginAddress: zkSession.address } : {}),
+    });
     clearSignedOut();
     props.onLoginSuccess();
   }
@@ -188,7 +203,10 @@ export function EntryLoginPanel(props: {
             disabled={
               emailPending ||
               !isValidEmail(email) ||
-              (emailVerificationRequired && !emailVerified)
+              (emailVerificationRequired &&
+                !emailVerified &&
+                !memberHasPasswordCredential(email.trim().toLowerCase()) &&
+                !hasRegisteredMemberAccount(email))
             }
             onClick={handleEmailSignIn}
             type="button"

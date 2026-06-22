@@ -292,6 +292,14 @@ export function hasActiveMemberSession(): boolean {
   return readMemberSession() !== null;
 }
 
+export function hasRegisteredMemberAccount(email: string): boolean {
+  if (!isValidEmail(email)) {
+    return false;
+  }
+
+  return Boolean(readMemberAccountsRegistry()[normalizeEmail(email)]);
+}
+
 export function bootstrapSessionFromDraft(): MemberSession | null {
   const draft = loadOnboardingDraft();
 
