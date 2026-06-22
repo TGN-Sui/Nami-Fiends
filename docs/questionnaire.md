@@ -3,7 +3,11 @@
 **Purpose of this expanded bank**  
 This is a large, categorized collection of potential questions for the game studio onboarding questionnaire. Not every studio will answer every question (use progressive disclosure, conditional logic, and "core vs optional" tagging in the actual form).
 
-**Shipped wizard (subset):** The live Enter Nami game path implements identity, official social proof, genres, store URLs, ticket submit, and a short badge questionnaire. See [game-onboarding.md](./game-onboarding.md) and [Studio-portal-UI-flow.md](./Studio-portal-UI-flow.md). Questions below remain the long-term design bank for Gems balance and curator review.
+**Shipped wizard (subset):** The live Enter Nami game path implements identity, official social proof, genres, store URLs, ticket submit, and a short badge questionnaire. See [game-onboarding.md](./game-onboarding.md), [Studio-portal-UI-flow.md](./Studio-portal-UI-flow.md), and [Trust-Score_rules.md](./Trust-Score_rules.md) for the live Trust Score inputs.
+
+**Not in the live wizard:** Most sections below (studio legitimacy depth, achievement counts, Stage 1/2/3 condition bank) are design reference for Officials review and future Gems balance — they are not form fields in the shipped UI yet.
+
+Questions below remain the long-term design bank for Gems balance and curator review.
 
 The goal is to **balance the badge/Gem system** by:
 - Strongly verifying that real, published games with substance are participating.

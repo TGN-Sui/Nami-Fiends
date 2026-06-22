@@ -23,7 +23,7 @@ contracts/nami
 Current protocol status:
 
 ```text
-77 tests passing
+80 tests passing
 0 warnings
 Phase 1 + Phase 1.8 (Break-the-System hardening): complete
 ```

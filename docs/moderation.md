@@ -37,11 +37,21 @@ recovery.move
 Current protocol status:
 
 ```text
-77 tests passing
+80 tests passing
 0 warnings
 ```
 
-Phase 2 indexer: `ModerationService`, `AppealService`, `JuryService` project on-chain moderation events to read-only HTTP routes (`/api/moderation`, `/api/appeals`, `/api/jury`).
+Phase 2 indexer (shipped):
+
+```text
+ModerationService  → /api/moderation, /api/moderation/active, /api/moderation/passport/:owner, /api/moderation/target/:target, /api/moderation/:id
+AppealService      → /api/appeals, /api/appeals/open, /api/appeals/passport/:owner, /api/appeals/:id
+JuryService        → /api/jury, /api/jury/open, /api/jury/appeal/:appealId, /api/jury/:id
+```
+
+Frontend surfaces: `ProtocolModerationPanel`, `ProtocolModerationRecordsPanel`, appeals/jury protocol panels via `@nami/sdk` indexer client when `VITE_NAMI_INDEXER_URL` is set.
+
+See also: [conduct-system.md](./conduct-system.md), [appeals.md](./appeals.md), [jury.md](./jury.md), [roadmap.md](./roadmap.md) Phase 2.
 
 ---
 

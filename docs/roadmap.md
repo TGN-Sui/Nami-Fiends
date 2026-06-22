@@ -213,12 +213,13 @@ docs/ui-build-checkpoint.md Phase 8 slice log
 frontend/README.md          Frontend module map
 ```
 
-Remaining mini-sync targets:
+Documentation mini-sync (Phase 0): **Complete** (2026-06-22)
 
 ```text
-moderation.md
-conduct-system.md
-questionnaire.md (long-form bank vs live wizard — cross-linked)
+moderation.md       — indexer routes + 80-test status synced
+conduct-system.md   — timeline + SDK surfaces synced
+questionnaire.md    — live wizard vs design bank cross-linked
+docs/README.md      — conduct-system index entry added
 ```
 
 ---
@@ -259,11 +260,11 @@ Current breakdown:
 
 ```text
 On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
-Documentation architecture:                 Mini-sync in progress
-Backend/indexer:                            0% done (Phase 2)
-Frontend/profile UI:                        Phase 7 + Phase 8 onboarding shipped; protocol wiring pending (Phase 3)
-SDK integration:                            Thin client exists; rich helpers pending (Phase 4)
-zkLogin production flow:                    0% done (Phase 5)
+Documentation architecture:                 100% done (Phase 0 mini-sync complete)
+Backend/indexer:                            ~85% done (Phase 2 — indexer + projections + HTTP shipped; ops hardening pending)
+Frontend/profile UI:                        ~90% done (Phase 3 + Phase 7/8 UI shipped; live-only surfaces audit pending)
+SDK integration:                            ~70% done (Phase 4 — @nami/sdk reads + indexer client shipped; subscribe helpers partial)
+zkLogin production flow:                    ~30% done (Phase 5 — client wiring shipped; OAuth per deploy origin pending, see Phase 8.3)
 ```
 
 ---
@@ -273,17 +274,17 @@ zkLogin production flow:                    0% done (Phase 5)
 Status:
 
 ```text
-Mostly complete
+Complete
 ```
 
 Goal:
 
 Keep docs aligned with source code.
 
-Current focus:
+Last sync:
 
 ```text
-Mini-sync docs after title, cosmetics, recovery, channel, and profile modules
+2026-06-22 — moderation, conduct-system, questionnaire, docs index
 ```
 
 ---
@@ -368,28 +369,40 @@ This phase is intentionally hostile-flow focused and is now validated.
 Status:
 
 ```text
-Not started
+~85% complete — core indexer + projections + read-only HTTP shipped
 ```
 
 Goal:
 
 Index Sui events and build app-ready views.
 
-Initial backend services:
+Shipped backend services (`backend/src/projection-registry.ts`):
 
 ```text
-Event indexer
-Profile service
-Passport timeline
-Badge history
-Boost history
-Channel service
-Moderation service
-Appeal service
-Jury service
-Squad service
-Guild service
-Recovery service
+NamiEventIndexer (poll + cursor + JSONL log)
+PassportTimelineService
+ProfileService
+ChannelService
+ChannelAccessService
+ModerationService
+AppealService
+JuryService
+SquadService
+GuildService
+RecoveryService
+BadgeHistoryService
+BoostHistoryService
+Discovery rankings (/api/discovery/channels, /api/discovery/guilds)
+Read-only HTTP server (server.ts) + receiving-server routes (payments, media, officials)
+Replay CLI (npm --prefix backend run replay)
+```
+
+Remaining before Phase 2 exit:
+
+```text
+Expand backend/README.md (route catalog + testnet runbook)
+Production persistence/ops (hosted deploy, backups, replay verification on testnet package)
+Indexer health monitoring + alert hooks for public URL
 ```
 
 ---
@@ -399,7 +412,7 @@ Recovery service
 Status:
 
 ```text
-UI-B21 + test-launch polish complete; core surfaces wired to receiving server with fixture fallback
+~90% complete — UI-B21/B22 + test-launch polish shipped; protocol panels wired with fixture fallback
 ```
 
 Recent Phase 3 UI checkpoints:
@@ -441,26 +454,27 @@ Recovery request page
 Status:
 
 ```text
-Not started
+~70% complete — @nami/sdk package shipped with chain reads + indexer client
 ```
 
-Initial SDK helpers:
+Shipped SDK helpers (`SDK/src/`):
 
 ```text
-Read Identity
-Read Passport
-Read Profile
-Read Membership
-Read Reputation
-Read Badges
-Read Conduct
-Read Channel
-Check Channel Access
-Read Squads
-Read Guilds
-Read Titles
-Read Cosmetics
-Subscribe to events
+createNamiClient + object parsers (identity, passport, profile, conduct, channel, squad, guild, titles, cosmetics)
+loadIdentityProtocolView, loadPassportProtocolView, loadProfileProtocolView, loadMembershipProtocolView
+loadConductProtocolView, loadCustomizationProtocolView, loadSquadsProtocolView, loadGuildCardsForMember
+loadChannelCardsForOwner, loadOwnerChannelAccessPolicies, checkChannelAccessRead
+createNamiIndexerClient (appeals, jury, moderation, recovery, discovery, timelines, badge/boost history)
+fetchNamiModuleEvents, subscribeToNamiEvents (partial)
+enterNamiMoveTarget transaction helper
+```
+
+Remaining before Phase 4 exit:
+
+```text
+SDK README + published build in CI
+Unified subscribe helpers for all projection types
+Integration tests against testnet indexer URL
 ```
 
 ---
@@ -470,21 +484,25 @@ Subscribe to events
 Status:
 
 ```text
-Not started
+~30% complete — client wiring shipped; production OAuth registration pending (see Phase 8.3)
 ```
 
-Goal:
-
-Create a gamer-friendly login and onboarding flow.
-
-Potential paths:
+Shipped:
 
 ```text
-Wallet connect
-zkLogin
-Social login references
-Future linked accounts
-Recovery-aware onboarding
+zkLogin session helpers (frontend/src/zklogin.ts)
+Enter Nami Google path (EntryLoginPanel, EntryPage)
+Game studio onboarding requires zkLogin link before ticket submit
+Trust Score + wallet source tracking (zklogin vs wallet vs demo)
+```
+
+Remaining:
+
+```text
+Register OAuth client per public deploy origin
+Production redirect URI + salt handling runbook (docs/testnet-zklogin.md)
+Remove demo wallet paths on VITE_NAMI_TEST_LAUNCH=true builds
+Recovery-aware onboarding polish
 ```
 
 ---

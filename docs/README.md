@@ -53,6 +53,7 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [officials-submissions.md](./officials-submissions.md) | Suggestions, game tickets, partner banners |
 | [security-audit.md](./security-audit.md) | Owner capability matrix |
 | [moderation.md](./moderation.md) | Moderation actions |
+| [conduct-system.md](./conduct-system.md) | Conduct signals and Black Passport restrictions |
 | [appeals.md](./appeals.md) | Appeals flow |
 | [jury.md](./jury.md) | Advisory jury |
 

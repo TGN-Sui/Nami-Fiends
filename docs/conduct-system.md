@@ -37,11 +37,20 @@ module nami::conduct
 Current protocol status:
 
 ```text
-77 tests passing
+80 tests passing
 0 warnings
 ```
 
-Phase 2 indexer: conduct signal changes feed `PassportTimelineService`; frontend reads live `ConductStatus` via SDK `loadConductProtocolView`.
+Phase 2 indexer (shipped):
+
+```text
+PassportTimelineService → /api/passports/:owner/timeline, /api/passports/:owner/timeline/snapshot (category: conduct)
+ModerationService       → active records that drive Black Passport restrictions
+```
+
+Frontend surfaces: `ProtocolConductPanel`, passport timeline in `ProtocolHistoryPanel`, SDK `loadConductProtocolView` (chain + indexer merge).
+
+See also: [moderation.md](./moderation.md), [access-control.md](./access-control.md), [events.md](./events.md).
 
 Conduct is currently integrated with:
 
