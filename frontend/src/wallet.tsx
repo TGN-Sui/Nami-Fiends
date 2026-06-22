@@ -26,12 +26,14 @@ import {
 } from './protocol-owner-resolve.js';
 import { getProtocolContext, type ProtocolContext, type ProtocolDataMode } from './protocol.js';
 import { useMemberSession } from './member-session-store.js';
+import { zkLoginLaunchReadinessMessage } from './onboarding-recovery.js';
 import {
   clearZkLoginSession,
   clearZkLoginSessionIfExpired,
   completeZkLoginFromRedirect,
   getZkLoginSession,
   isZkLoginConfigured,
+  readZkLoginLastError,
   startZkLoginFlow,
   type ZkLoginSession,
 } from './zklogin.js';
@@ -78,14 +80,29 @@ export function WalletConnectControl(): ReactElement {
   );
 }
 
-function useZkLoginSessionState(): ZkLoginSession | null {
+function useZkLoginSessionState(): {
+  session: ZkLoginSession | null;
+  redirectError: string | null;
+  setRedirectError: (message: string | null) => void;
+} {
   const [session, setSession] = useState<ZkLoginSession | null>(() => getZkLoginSession());
+  const [redirectError, setRedirectError] = useState<string | null>(() => readZkLoginLastError());
 
   useEffect(() => {
     let cancelled = false;
 
     void completeZkLoginFromRedirect().then((nextSession) => {
-      if (!cancelled && nextSession) {
+      if (cancelled) {
+        return;
+      }
+
+      const callbackError = readZkLoginLastError();
+
+      if (callbackError) {
+        setRedirectError(callbackError);
+      }
+
+      if (nextSession) {
         setSession(nextSession);
       }
     });
@@ -104,13 +121,13 @@ function useZkLoginSessionState(): ZkLoginSession | null {
     };
   }, []);
 
-  return session;
+  return { session, redirectError, setRedirectError };
 }
 
 export function ZkLoginConnectControl(): ReactElement {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const session = useZkLoginSessionState();
+  const { session, redirectError, setRedirectError } = useZkLoginSessionState();
 
   const handleStart = useCallback(() => {
     setError(null);
@@ -144,17 +161,24 @@ export function ZkLoginConnectControl(): ReactElement {
     );
   }
 
+  const readinessMessage = zkLoginLaunchReadinessMessage();
+  const displayError = error ?? redirectError;
+
   return (
     <div className="zklogin-connect">
       <button
         className="onboarding-primary-btn"
         disabled={!isZkLoginConfigured() || pending}
-        onClick={handleStart}
+        onClick={() => {
+          setRedirectError(null);
+          handleStart();
+        }}
         type="button"
       >
         {pending ? 'Redirecting…' : 'Sign in with Google'}
       </button>
-      {error ? <p className="onboarding-field-error">{error}</p> : null}
+      <small className="protocol-hint">{readinessMessage}</small>
+      {displayError ? <p className="onboarding-field-error">{displayError}</p> : null}
     </div>
   );
 }
@@ -166,7 +190,7 @@ export function useProtocolOwner(): {
   mode: ProtocolDataMode;
 } {
   const account = useCurrentAccount();
-  const zkSession = useZkLoginSessionState();
+  const { session: zkSession } = useZkLoginSessionState();
   const memberSession = useMemberSession();
   const context = useMemo(() => getProtocolContext(), []);
   const walletOwner = account?.address ?? null;

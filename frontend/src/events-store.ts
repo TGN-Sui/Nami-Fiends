@@ -764,6 +764,10 @@ export function toggleEventInterest(eventId: string, memberId = getSelfMember().
 }
 
 export function canEditOfficialEvent(member = getSelfMember()): boolean {
+  if (isOfficialOwner(readResolvedProtocolOwner())) {
+    return true;
+  }
+
   return isNamiBossMember(member) || isNamiTeamMember(member);
 }
 

@@ -91,6 +91,56 @@ describe('genesis-member', () => {
     expect(member.isNamiTeam).toBeUndefined();
   });
 
+  it('clears seeded official team flags for non-owner genesis members', async () => {
+    window.localStorage.setItem(
+      'nami.member.session',
+      JSON.stringify({
+        displayName: 'Traveler',
+        email: 'traveler@example.com',
+        flavorBadgeId: 'Hearth Basic',
+      }),
+    );
+
+    vi.resetModules();
+    vi.doMock('./protocol-owner-resolve.js', () => ({
+      readResolvedProtocolOwner: () => '0xsomeotherwallet',
+    }));
+    vi.doMock('./app-config.js', () => ({
+      readAppConfig: () => ({
+        testLaunch: true,
+        devFixtures: false,
+      }),
+      shouldUseDevFixtures: () => false,
+      shouldUseFunctionalMockCatalog: () => true,
+      shouldUseDemoOwnerFallback: () => false,
+      isTestLaunchMode: () => true,
+    }));
+    vi.doMock('./protocol-env.js', () => ({
+      readOfficialOwner: () => OFFICIAL_OWNER,
+      readDemoOwner: () => null,
+    }));
+    vi.doMock('./zklogin.js', () => ({
+      getZkLoginSession: () => null,
+    }));
+
+    const { applyGenesisSelfOverrides } = await import('./genesis-member.js');
+
+    const member = applyGenesisSelfOverrides({
+      id: 'm1',
+      surfaceType: 'member',
+      name: 'Robbos',
+      avatarSeed: 'RB',
+      signal: 'Green',
+      tier: 'Pro',
+      badge: 'Top Helper',
+      isNamiTeam: true,
+    });
+
+    expect(member.isNamiBoss).toBeUndefined();
+    expect(member.isNamiTeam).toBeUndefined();
+    expect(member.tier).toBe('NPC');
+  });
+
   it('purges demo chat stores once on test launch boot', async () => {
     window.localStorage.setItem('nami.user.message-threads', JSON.stringify([{ memberId: 'm2' }]));
 

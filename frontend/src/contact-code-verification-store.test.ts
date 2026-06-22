@@ -10,6 +10,7 @@ import {
 
 vi.mock('./app-config.js', () => ({
   shouldUseDevFixtures: () => true,
+  isTestLaunchMode: () => false,
 }));
 
 function createLocalStorageMock(): Storage {
@@ -69,6 +70,27 @@ describe('contact-code-verification-store', () => {
     const verifyResult = verifyContactCode('email', 'studio@example.com', '123456');
     expect(verifyResult.ok).toBe(true);
     expect(isContactVerified('email', 'studio@example.com')).toBe(true);
+  });
+
+  it('explains the fixed testnet code when delivery is not wired', async () => {
+    vi.resetModules();
+    vi.doMock('./app-config.js', () => ({
+      shouldUseDevFixtures: () => false,
+      isTestLaunchMode: () => true,
+    }));
+
+    const { contactVerificationTestnetCodeHint, sendContactVerificationCode } = await import(
+      './contact-code-verification-store.js'
+    );
+
+    expect(contactVerificationTestnetCodeHint()).toContain('123456');
+
+    const sendResult = sendContactVerificationCode('email', 'traveler@example.com');
+
+    expect(sendResult.ok).toBe(true);
+    if (sendResult.ok) {
+      expect(sendResult.message).toContain('123456');
+    }
   });
 
   it('verifies phone after sending and entering the dev code', () => {

@@ -217,9 +217,30 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
     window.history.replaceState({}, document.title, cleanUrl);
 
     return session;
-  } catch {
+  } catch (error) {
+    window.localStorage.removeItem(PENDING_KEY);
+
+    const message =
+      error instanceof Error ? error.message : 'zkLogin redirect could not be completed.';
+
+    window.sessionStorage.setItem('nami.zklogin.last-error', message);
     return getZkLoginSession();
   }
+}
+
+export function readZkLoginLastError(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const message = window.sessionStorage.getItem('nami.zklogin.last-error');
+
+  if (!message) {
+    return null;
+  }
+
+  window.sessionStorage.removeItem('nami.zklogin.last-error');
+  return message;
 }
 
 export async function isZkLoginSessionExpired(

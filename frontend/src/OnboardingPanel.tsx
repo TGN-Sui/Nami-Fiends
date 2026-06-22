@@ -282,6 +282,16 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
               ))}
             </div>
 
+            {!createReady ? (
+              <p className="protocol-hint">
+                {draft.emailVerified
+                  ? passwordValidation.ok
+                    ? 'Answer every quiz question to continue.'
+                    : 'Set and confirm your password (8+ characters), then finish the quiz.'
+                  : 'Verify your email with Send code before the password step unlocks Continue.'}
+              </p>
+            ) : null}
+
             <button
               className="onboarding-primary-btn"
               disabled={!createReady}

@@ -41,6 +41,9 @@ export function applyGenesisSelfOverrides(member: NamiMember): NamiMember {
   if (isBoss) {
     next.isNamiBoss = true;
     delete next.isNamiTeam;
+  } else {
+    delete next.isNamiBoss;
+    delete next.isNamiTeam;
   }
 
   return next;

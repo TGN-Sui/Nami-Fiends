@@ -132,7 +132,21 @@ export function isContactVerificationAvailable(): boolean {
   return isContactVerificationMockEnabled() || isTestLaunchMode();
 }
 
+export function contactVerificationTestnetCodeHint(): string | null {
+  if (!isTestLaunchMode() || isContactVerificationMockEnabled()) {
+    return null;
+  }
+
+  return 'Testnet: email/SMS delivery is not live yet. Tap Send code, then enter 123456 to verify.';
+}
+
 export function contactVerificationStatusMessage(channel: ContactVerificationChannel): string {
+  const testnetHint = contactVerificationTestnetCodeHint();
+
+  if (testnetHint) {
+    return testnetHint;
+  }
+
   if (isContactVerificationAvailable()) {
     return channel === 'email'
       ? 'We will email a one-time code to confirm you own this address.'
@@ -203,13 +217,16 @@ export function sendContactVerificationCode(
   });
 
   const destination = channel === 'email' ? target : target;
+  const testnetHint = contactVerificationTestnetCodeHint();
   const devHint = isContactVerificationMockEnabled()
     ? ' Use code ' + DEV_VERIFICATION_CODE + ' in dev.'
-    : '';
+    : testnetHint
+      ? ' Enter code ' + DEV_VERIFICATION_CODE + ' on testnet (delivery not wired yet).'
+      : '';
 
   return {
     ok: true,
-    message: 'Code sent to ' + destination + '.' + devHint,
+    message: (testnetHint ? 'Verification ready for ' : 'Code sent to ') + destination + '.' + devHint,
   };
 }
 
