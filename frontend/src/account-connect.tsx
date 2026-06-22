@@ -1,6 +1,9 @@
 import { type ReactElement } from 'react';
 
 import { isTestLaunchMode } from './app-config.js';
+import { isOfficialOwner } from './nami-capabilities.js';
+import { readOfficialOwner, readOfficialOwnerEmail } from './protocol-env.js';
+import { getZkLoginSession } from './zklogin.js';
 import {
   useProtocolOwner,
   useWalletDisconnect,
@@ -19,6 +22,14 @@ function shortenAccountId(value: string): string {
 export function AccountConnectSection(): ReactElement {
   const { owner, source } = useProtocolOwner();
   const disconnect = useWalletDisconnect();
+  const zkSession = getZkLoginSession();
+  const configuredOwner = readOfficialOwner();
+  const officialEmail = readOfficialOwnerEmail();
+  const ownerAligned = isOfficialOwner(owner);
+  const zkMatchesConfigured =
+    zkSession &&
+    configuredOwner &&
+    zkSession.address.toLowerCase() === configuredOwner.toLowerCase();
 
   return (
     <article className="panel settings-card settings-account-connect-card">
@@ -56,6 +67,38 @@ export function AccountConnectSection(): ReactElement {
           Sign in to sync your passport, badges, and chat privileges across devices.
         </p>
       )}
+
+      {isTestLaunchMode() && zkSession ? (
+        <div className="settings-account-owner-diagnostics panel">
+          <span className="mini-badge">{ownerAligned ? 'Owner wallet' : 'Wallet check'}</span>
+          <p className="protocol-hint">
+            <strong>Your Google zkLogin address:</strong>
+            <br />
+            <code>{zkSession.address}</code>
+          </p>
+          {configuredOwner ? (
+            <p className="protocol-hint">
+              <strong>Configured official owner (Vercel):</strong>
+              <br />
+              <code>{configuredOwner}</code>
+            </p>
+          ) : (
+            <p className="onboarding-field-error">
+              <code>VITE_NAMI_OFFICIAL_OWNER</code> is not set on this deploy.
+            </p>
+          )}
+          {zkMatchesConfigured ? (
+            <p className="protocol-hint">Addresses match — owner tools unlock when this wallet is active.</p>
+          ) : (
+            <p className="onboarding-field-error">
+              Addresses do not match. Copy your zkLogin address into{' '}
+              <code>VITE_NAMI_OFFICIAL_OWNER</code> in Vercel, redeploy, then hard-refresh. Signup
+              email alone does not grant owner access
+              {officialEmail ? ' — use Google as ' + officialEmail + '.' : '.'}
+            </p>
+          )}
+        </div>
+      ) : null}
 
       <div className="settings-account-connect-actions">
         <div className="settings-account-connect-block">

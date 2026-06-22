@@ -5,6 +5,12 @@ const LINKED_WALLET = '0xlinkedwallet';
 
 vi.mock('./app-config.js', () => ({
   shouldUseDemoOwnerFallback: () => false,
+  shouldUseDevFixtures: () => false,
+  isTestLaunchMode: () => true,
+}));
+
+vi.mock('./nami-capabilities.js', () => ({
+  isOfficialOwner: (owner: string | null) => owner?.toLowerCase() === OFFICIAL_OWNER.toLowerCase(),
 }));
 
 vi.mock('./protocol-env.js', () => ({
@@ -59,6 +65,23 @@ describe('protocol-owner-resolve', () => {
     expect(resolveProtocolOwnerState()).toEqual({
       owner: LINKED_WALLET,
       source: 'linked',
+    });
+  });
+
+  it('prefers zkLogin over a non-official browser wallet on test launch', () => {
+    const zkOwner = '0xzkloginowner';
+
+    readLastWalletOwnerMock.mockReturnValue(LINKED_WALLET);
+    getZkLoginSessionMock.mockReturnValue({
+      address: zkOwner,
+      maxEpoch: 1,
+      provider: 'google',
+      createdAtMs: Date.now(),
+    });
+
+    expect(resolveProtocolOwnerState()).toEqual({
+      owner: zkOwner,
+      source: 'zklogin',
     });
   });
 

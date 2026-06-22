@@ -3,7 +3,7 @@ import { type ReactElement } from 'react';
 import { readMemberSession } from './member-session-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readOfficialOwner, readOfficialOwnerEmail } from './protocol-env.js';
-import { isZkLoginConfigured } from './zklogin.js';
+import { getZkLoginSession, isZkLoginConfigured } from './zklogin.js';
 import { useProtocolOwner } from './wallet.js';
 
 function shortenAddress(value: string): string {
@@ -36,6 +36,7 @@ export function OwnerAccessPrompt(): ReactElement | null {
   }
 
   const envOwnerMissing = officialOwner === null;
+  const zkSession = getZkLoginSession();
 
   return (
     <article className="panel settings-card settings-compact-card settings-section-wide nami-owner-access-prompt">
@@ -71,13 +72,20 @@ export function OwnerAccessPrompt(): ReactElement | null {
             ? 'Connected as ' + shortenAddress(owner) + (source ? ' (' + source + ')' : '') + '.'
             : 'No protocol wallet connected yet.'}
         </li>
+        {zkSession ? (
+          <li>
+            Your zkLogin address: <code>{zkSession.address}</code>
+          </li>
+        ) : null}
         {owner && !isOfficialOwner(owner) ? (
           <li>
             {envOwnerMissing
-              ? 'Set VITE_NAMI_OFFICIAL_OWNER in frontend/.env.local to your zkLogin address, then restart the dev server.'
+              ? 'Set VITE_NAMI_OFFICIAL_OWNER in Vercel to your zkLogin address above, then redeploy.'
               : source === 'wallet'
-                ? 'A browser wallet extension is connected, but it does not match the official owner address. Sign in with Google zkLogin using the owner account, or disconnect the extension wallet.'
-                : 'Connected wallet does not match the official owner address. Update VITE_NAMI_OFFICIAL_OWNER to your zkLogin address after signing in, or sign in with the owner Google account that derives this wallet.'}
+                ? 'A browser wallet extension is connected, but it does not match the official owner address. Disconnect the extension wallet and use Google zkLogin with ' +
+                  officialEmail +
+                  ', or update VITE_NAMI_OFFICIAL_OWNER to your zkLogin address in Vercel and redeploy.'
+                : 'Connected wallet does not match VITE_NAMI_OFFICIAL_OWNER on this deploy. Copy your zkLogin address into Vercel env and redeploy.'}
           </li>
         ) : null}
       </ul>

@@ -1,4 +1,5 @@
-import { shouldUseDemoOwnerFallback } from './app-config.js';
+import { isTestLaunchMode, shouldUseDemoOwnerFallback } from './app-config.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 import { readLinkedWalletAddressForEmail } from './member-auth-link-store.js';
 import { readMemberSession } from './member-session-store.js';
 import { readDemoOwner, readOfficialOwner } from './protocol-env.js';
@@ -51,6 +52,12 @@ export function resolveProtocolOwnerState(): ResolvedProtocolOwner {
 
     if (officialMatch) {
       return officialMatch;
+    }
+  }
+
+  if (isTestLaunchMode() && zkOwner && walletOwner && walletOwner.toLowerCase() !== zkOwner.toLowerCase()) {
+    if (!isOfficialOwner(walletOwner)) {
+      return { owner: zkOwner, source: 'zklogin' };
     }
   }
 
