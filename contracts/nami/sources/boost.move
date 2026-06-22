@@ -97,7 +97,7 @@ module nami::boost {
     ) {
         let owner = tx_context::sender(ctx);
 
-        let tier = membership::get_effective_tier(passport_obj);
+        let tier = membership::get_effective_tier(passport_obj, ctx);
 
         let boost = create_boost(
             owner,

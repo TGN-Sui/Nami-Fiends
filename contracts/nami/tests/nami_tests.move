@@ -608,11 +608,19 @@ module nami::nami_tests {
             test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
 
         assert!(
-            channel_access::can_chat(&passport_obj, &policy),
+            channel_access::can_chat(
+                &passport_obj,
+                &policy,
+                test_scenario::ctx(&mut scenario)
+            ),
             70
         );
 
-        channel_access::assert_can_chat(&passport_obj, &policy);
+        channel_access::assert_can_chat(
+            &passport_obj,
+            &policy,
+            test_scenario::ctx(&mut scenario)
+        );
 
         test_scenario::return_to_sender(&scenario, passport_obj);
         test_scenario::return_to_sender(&scenario, policy);
@@ -651,7 +659,11 @@ module nami::nami_tests {
         let policy =
             test_scenario::take_from_sender<channel_access::ChannelAccessPolicy>(&scenario);
 
-        channel_access::assert_can_chat(&passport_obj, &policy);
+        channel_access::assert_can_chat(
+            &passport_obj,
+            &policy,
+            test_scenario::ctx(&mut scenario)
+        );
 
         test_scenario::return_to_sender(&scenario, passport_obj);
         test_scenario::return_to_sender(&scenario, policy);
@@ -711,9 +723,20 @@ module nami::nami_tests {
         );
 
         assert!(passport::get_tier(&passport_obj) == ADVENTURER, 71);
-        assert!(channel_access::can_chat(&passport_obj, &policy), 72);
+        assert!(
+            channel_access::can_chat(
+                &passport_obj,
+                &policy,
+                test_scenario::ctx(&mut scenario)
+            ),
+            72
+        );
 
-        channel_access::assert_can_chat(&passport_obj, &policy);
+        channel_access::assert_can_chat(
+            &passport_obj,
+            &policy,
+            test_scenario::ctx(&mut scenario)
+        );
 
         test_scenario::return_to_sender(&scenario, identity_obj);
         test_scenario::return_to_sender(&scenario, passport_obj);
@@ -6083,6 +6106,133 @@ module nami::nami_tests {
             test_scenario::take_from_sender<admin::AdminCap>(&scenario);
 
         test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Expired Pro membership falls back to Adventurer effective tier.
+    /// Raw tier remains Pro for audit/history.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_expired_pro_membership_falls_back_to_adventurer_effective_tier() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        admin::upgrade_to_pro(
+            &admin_cap,
+            &mut passport_obj,
+            1000,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(passport::get_tier(&passport_obj) == PRO, 280);
+        assert!(passport::get_tier_expires_at_ms(&passport_obj) == 1000, 281);
+        assert!(membership::effective_tier_at(&passport_obj, 999) == PRO, 282);
+        assert!(membership::effective_tier_at(&passport_obj, 1000) == ADVENTURER, 283);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::end(scenario);
+    }
+
+    /// ---------------------------------------------------------
+    /// Delegated ModerationCap and MembershipCap split authority.
+    /// ---------------------------------------------------------
+    #[test]
+    fun test_delegated_membership_and_moderation_caps_split_authority() {
+        let mut scenario = test_scenario::begin(USER);
+
+        admin::init_for_testing(
+            test_scenario::ctx(&mut scenario)
+        );
+
+        passport::init_passport(
+            IDENTITY_ID,
+            ARCHETYPE_EXPLORER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, USER);
+
+        let admin_cap =
+            test_scenario::take_from_sender<admin::AdminCap>(&scenario);
+
+        let admin_cap_id = admin::get_id(&admin_cap);
+
+        admin::delegate_moderation_cap(
+            &admin_cap,
+            SPONSORED_USER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::delegate_membership_cap(
+            &admin_cap,
+            SPONSORED_USER,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        let mut passport_obj =
+            test_scenario::take_from_sender<passport::Passport>(&scenario);
+
+        passport::verify_to_adventurer(&mut passport_obj);
+
+        test_scenario::return_to_sender(&scenario, admin_cap);
+        test_scenario::return_to_sender(&scenario, passport_obj);
+
+        test_scenario::next_tx(&mut scenario, SPONSORED_USER);
+
+        let moderation_cap =
+            test_scenario::take_from_sender<admin::ModerationCap>(&scenario);
+
+        let membership_cap =
+            test_scenario::take_from_sender<admin::MembershipCap>(&scenario);
+
+        let mut passport_obj =
+            test_scenario::take_from_address<passport::Passport>(&scenario, USER);
+
+        admin::issue_warning_with_moderation_cap(
+            &moderation_cap,
+            USER,
+            &passport_obj,
+            42,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        admin::upgrade_to_pro_with_membership_cap(
+            &membership_cap,
+            &mut passport_obj,
+            0,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        assert!(admin::get_moderation_cap_parent(&moderation_cap) == admin_cap_id, 285);
+        assert!(admin::get_membership_cap_parent(&membership_cap) == admin_cap_id, 286);
+        assert!(passport::get_tier(&passport_obj) == PRO, 284);
+
+        test_scenario::return_to_address(USER, passport_obj);
+        test_scenario::return_to_sender(&scenario, moderation_cap);
+        test_scenario::return_to_sender(&scenario, membership_cap);
+
         test_scenario::end(scenario);
     }
 

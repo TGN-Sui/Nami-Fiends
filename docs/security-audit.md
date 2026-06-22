@@ -11,7 +11,7 @@ Document adversarial checks for **sole-owner control** during the MVP phase. The
 ### Status
 
 ```text
-80 tests passing (includes AdminCap custody hardening)
+82 tests passing (includes AdminCap custody hardening + delegated role caps)
 0 warnings
 ```
 
@@ -45,7 +45,7 @@ test_non_owner_cannot_borrow_admin_cap
 ```text
 AdminCap loss = protocol admin lockout (use secure custody + recovery playbook)
 No subscription-aware membership yet (upgrades are AdminCap-gated)
-No on-chain moderator role separation yet (single AdminCap model)
+Delegated ModerationCap and MembershipCap ship from AdminCap; appeals/jury/recovery remain AdminCap-only
 ```
 
 ---

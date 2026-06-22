@@ -398,14 +398,29 @@ Verify channels
 
 ---
 
-# Future Work
+# Delegated Role Caps (Phase 1)
 
-Admin authority should eventually evolve into more granular permission systems.
+AdminCap can mint scoped capabilities:
+
+```text
+ModerationCap — issue_warning_with_moderation_cap, issue_mute_with_moderation_cap
+MembershipCap — upgrade_to_pro_with_membership_cap, upgrade_to_elite_with_membership_cap
+```
+
+Delegation entry points:
+
+```move
+admin::delegate_moderation_cap(&admin_cap, recipient, ctx);
+admin::delegate_membership_cap(&admin_cap, recipient, ctx);
+```
+
+Appeals, jury, recovery, badge issuers, cosmetics, and channel verification remain **AdminCap-only** during MVP.
+
+# Future Work
 
 Planned improvements:
 
 ```text
-Role-based admin permissions
 Channel moderator authority
 Guild moderator authority
 Developer-owned channel authority

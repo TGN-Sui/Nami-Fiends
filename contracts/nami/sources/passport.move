@@ -66,6 +66,13 @@ module nami::passport {
         /// These will later feed Prestige titles.
         prestige_points: u64,
 
+        /// Paid membership expiration for Pro / Elite.
+        /// 0 means no expiration timestamp is enforced.
+        tier_expires_at_ms: u64,
+
+        /// Prevents duplicate MembershipExpired events for the same cycle.
+        membership_expiry_notified: bool,
+
         created_at_ms: u64,
     }
 
@@ -98,6 +105,12 @@ module nami::passport {
         new_tier: u8,
     }
 
+    public struct MembershipRenewed has copy, drop {
+        passport_id: address,
+        tier: u8,
+        expires_at_ms: u64,
+    }
+
     // =========================================================
     // CREATE PASSPORT
     // =========================================================
@@ -125,6 +138,9 @@ module nami::passport {
 
             boost_score: 0,
             prestige_points: 0,
+
+            tier_expires_at_ms: 0,
+            membership_expiry_notified: false,
 
             created_at_ms: tx_context::epoch_timestamp_ms(ctx),
         }
@@ -303,10 +319,45 @@ module nami::passport {
         });
     }
 
-    public(package) fun upgrade_to_pro(
-        passport: &mut Passport
+    fun assert_valid_membership_expiration(
+        expires_at_ms: u64,
+        now_ms: u64
     ) {
+        assert!(
+            expires_at_ms == 0 || expires_at_ms > now_ms,
+            errors::invalid_membership_expiration()
+        );
+    }
+
+    fun set_membership_expiration(
+        passport: &mut Passport,
+        expires_at_ms: u64,
+        now_ms: u64
+    ) {
+        assert_valid_membership_expiration(expires_at_ms, now_ms);
+        passport.tier_expires_at_ms = expires_at_ms;
+        passport.membership_expiry_notified = false;
+    }
+
+    public(package) fun upgrade_to_pro(
+        passport: &mut Passport,
+        expires_at_ms: u64,
+        ctx: &TxContext
+    ) {
+        let now_ms = tx_context::epoch_timestamp_ms(ctx);
         let old = passport.tier;
+
+        if (old == PRO) {
+            set_membership_expiration(passport, expires_at_ms, now_ms);
+
+            sui::event::emit(MembershipRenewed {
+                passport_id: object::uid_to_address(&passport.id),
+                tier: PRO,
+                expires_at_ms,
+            });
+
+            return
+        };
 
         assert!(
             can_upgrade(old, PRO),
@@ -314,6 +365,7 @@ module nami::passport {
         );
 
         passport.tier = PRO;
+        set_membership_expiration(passport, expires_at_ms, now_ms);
 
         sui::event::emit(TierUpgraded {
             passport_id: object::uid_to_address(&passport.id),
@@ -323,9 +375,24 @@ module nami::passport {
     }
 
     public(package) fun upgrade_to_elite(
-        passport: &mut Passport
+        passport: &mut Passport,
+        expires_at_ms: u64,
+        ctx: &TxContext
     ) {
+        let now_ms = tx_context::epoch_timestamp_ms(ctx);
         let old = passport.tier;
+
+        if (old == ELITE) {
+            set_membership_expiration(passport, expires_at_ms, now_ms);
+
+            sui::event::emit(MembershipRenewed {
+                passport_id: object::uid_to_address(&passport.id),
+                tier: ELITE,
+                expires_at_ms,
+            });
+
+            return
+        };
 
         assert!(
             can_upgrade(old, ELITE),
@@ -333,12 +400,19 @@ module nami::passport {
         );
 
         passport.tier = ELITE;
+        set_membership_expiration(passport, expires_at_ms, now_ms);
 
         sui::event::emit(TierUpgraded {
             passport_id: object::uid_to_address(&passport.id),
             old_tier: old,
             new_tier: ELITE,
         });
+    }
+
+    public(package) fun mark_membership_expiry_notified(
+        passport: &mut Passport
+    ) {
+        passport.membership_expiry_notified = true;
     }
 
     // =========================================================
@@ -378,6 +452,14 @@ module nami::passport {
     
     public fun get_id(passport: &Passport): address {
     object::uid_to_address(&passport.id)
+    }
+
+    public fun get_tier_expires_at_ms(passport: &Passport): u64 {
+        passport.tier_expires_at_ms
+    }
+
+    public fun get_membership_expiry_notified(passport: &Passport): bool {
+        passport.membership_expiry_notified
     }
 
 }

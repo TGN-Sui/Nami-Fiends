@@ -233,9 +233,10 @@ module nami::channel_access {
     // =========================================================
         public(package) fun can_chat(
             passport_obj: &passport::Passport,
-            policy: &ChannelAccessPolicy
+            policy: &ChannelAccessPolicy,
+            ctx: &TxContext
         ): bool {
-            let tier = membership::get_effective_tier(passport_obj);
+            let tier = membership::get_effective_tier(passport_obj, ctx);
             let reputation = passport::get_reputation(passport_obj);
 
             if (tier == NPC && !policy.allow_npc_chat) {
@@ -251,10 +252,11 @@ module nami::channel_access {
 
         public(package) fun assert_can_chat(
             passport_obj: &passport::Passport,
-            policy: &ChannelAccessPolicy
+            policy: &ChannelAccessPolicy,
+            ctx: &TxContext
         ) {
             assert!(
-                can_chat(passport_obj, policy),
+                can_chat(passport_obj, policy, ctx),
                 errors::insufficient_tier()
             );
         }

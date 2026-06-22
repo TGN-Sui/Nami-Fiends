@@ -110,6 +110,7 @@ export interface ParsedPassport {
   archetype: number;
   tier: number;
   membershipTierLabel: string;
+  tierExpiresAtMs: number;
   boostScore: number;
   prestigePoints: number;
   createdAtMs: number;
@@ -243,6 +244,7 @@ export function parsePassportObject(source: SuiObjectData): ParsedPassport | nul
     archetype: readU8(fields.archetype),
     tier: readU8(fields.tier),
     membershipTierLabel: membershipTierLabel(readU8(fields.tier)),
+    tierExpiresAtMs: readU64(fields.tier_expires_at_ms),
     boostScore: readU64(fields.boost_score),
     prestigePoints: readU64(fields.prestige_points),
     createdAtMs: readU64(fields.created_at_ms),

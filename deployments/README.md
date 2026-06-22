@@ -12,7 +12,14 @@ Deployment summaries should be saved as `latest.json` for backend/frontend confi
 
 ```bash
 # Republish (when Move sources change)
-./scripts/publish-testnet.sh
+./scripts/publish-package.sh testnet
+# or: ./scripts/publish-testnet.sh
+
+# Devnet publish + latest.json extract
+./scripts/publish-package.sh devnet
+
+# Local protocol gate (build + 82 Move tests)
+./scripts/phase1-protocol-check.sh
 
 # Or refresh env from existing latest.json
 node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/

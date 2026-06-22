@@ -22,7 +22,7 @@ Current protocol status:
 
 ```text
 Build passing
-80 tests passing
+82 tests passing
 0 warnings
 ```
 
@@ -294,7 +294,7 @@ Last sync:
 Status:
 
 ```text
-Complete
+Complete (2026-06-22)
 ```
 
 Implemented:
@@ -324,13 +324,15 @@ Recovery
 Errors
 ```
 
-Remaining possible Phase 1 items:
+Phase 1 exit items (shipped):
 
 ```text
-Membership expiration
-Admin role separation
-Deployment scripts
+Membership expiration — tier_expires_at_ms on Passport; effective tier falls back to Adventurer; MembershipExpired event
+Admin role separation — ModerationCap + MembershipCap delegation from AdminCap
+Deployment scripts — publish-package.sh, extract-deployment.mjs, phase1-protocol-check.sh
 ```
+
+Protocol tests: **82 passing**, 0 warnings.
 
 ---
 

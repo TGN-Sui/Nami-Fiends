@@ -498,27 +498,30 @@ Future versions should replace this with subscription-aware membership logic.
 
 ---
 
-# Future Expiration and Renewal
+# Membership Expiration and Renewal
 
-Membership expiration is planned.
-
-Future membership should support:
+Shipped on Passport (Phase 1 complete):
 
 ```text
-Expiration timestamp
-Renewal status
-Grace period
-Downgrade rules
-Membership history
-Subscription proof
+tier_expires_at_ms — 0 means no enforced expiration (complimentary / legacy grants)
+effective_tier_at — expired Pro / Elite fall back to Adventurer without deleting raw tier
+MembershipExpired event — emitted via membership::notify_membership_expired_if_due
+MembershipRenewed event — Pro / Elite renewal updates expiration timestamp
 ```
 
-Possible future behavior:
+Planned next:
 
 ```text
-Expired Elite → fallback to Adventurer if still verified
-Expired Pro → fallback to Adventurer if still verified
-Expired verified status → fallback to NPC
+Grace period
+Subscription proof linkage
+Membership history object
+```
+
+Expired behavior (shipped):
+
+```text
+Expired Elite → effective Adventurer (raw tier preserved)
+Expired Pro → effective Adventurer (raw tier preserved)
 ```
 
 Expiration should not delete:

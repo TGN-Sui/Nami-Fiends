@@ -53,6 +53,7 @@ module nami::errors {
     // =========================================================
     const EInvalidTierTransition: u64 = 80;
     const ENotEligibleForTier: u64 = 81;
+    const EInvalidMembershipExpiration: u64 = 82;
 
     // =========================================================
     // BADGE ISSUER ERRORS
@@ -150,6 +151,8 @@ module nami::errors {
     public fun invalid_tier_transition(): u64 { EInvalidTierTransition }
 
     public fun not_eligible_for_tier(): u64 { ENotEligibleForTier }
+
+    public fun invalid_membership_expiration(): u64 { EInvalidMembershipExpiration }
 
     public fun invalid_issuer_type(): u64 { EInvalidIssuerType }
 

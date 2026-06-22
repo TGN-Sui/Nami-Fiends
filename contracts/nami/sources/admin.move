@@ -31,12 +31,29 @@ module nami::admin {
     const ACTION_GRANT_COSMETIC: u8 = 11;
     const ACTION_RESOLVE_RECOVERY: u8 = 12;
     const ACTION_VERIFY_CHANNEL: u8 = 13;
+    const ACTION_DELEGATE_MODERATION_CAP: u8 = 14;
+    const ACTION_DELEGATE_MEMBERSHIP_CAP: u8 = 15;
 
     // =========================================================
     // ADMIN CAPABILITY
     // =========================================================
     public struct AdminCap has key {
         id: UID,
+        created_at_ms: u64,
+    }
+
+    // =========================================================
+    // DELEGATED ROLE CAPABILITIES
+    // =========================================================
+    public struct ModerationCap has key {
+        id: UID,
+        parent_admin_cap_id: address,
+        created_at_ms: u64,
+    }
+
+    public struct MembershipCap has key {
+        id: UID,
+        parent_admin_cap_id: address,
         created_at_ms: u64,
     }
 
@@ -88,6 +105,49 @@ module nami::admin {
             action_type,
             target,
         });
+    }
+
+    // =========================================================
+    // ROLE DELEGATION
+    // =========================================================
+    public fun delegate_moderation_cap(
+        admin: &AdminCap,
+        recipient: address,
+        ctx: &mut TxContext
+    ) {
+        let cap = ModerationCap {
+            id: object::new(ctx),
+            parent_admin_cap_id: object::uid_to_address(&admin.id),
+            created_at_ms: tx_context::epoch_timestamp_ms(ctx),
+        };
+
+        transfer::transfer(cap, recipient);
+
+        emit_admin_action(
+            admin,
+            ACTION_DELEGATE_MODERATION_CAP,
+            recipient
+        );
+    }
+
+    public fun delegate_membership_cap(
+        admin: &AdminCap,
+        recipient: address,
+        ctx: &mut TxContext
+    ) {
+        let cap = MembershipCap {
+            id: object::new(ctx),
+            parent_admin_cap_id: object::uid_to_address(&admin.id),
+            created_at_ms: tx_context::epoch_timestamp_ms(ctx),
+        };
+
+        transfer::transfer(cap, recipient);
+
+        emit_admin_action(
+            admin,
+            ACTION_DELEGATE_MEMBERSHIP_CAP,
+            recipient
+        );
     }
 
     // =========================================================
@@ -159,6 +219,44 @@ module nami::admin {
             ACTION_UPGRADE_TO_ELITE,
             passport::get_id(passport_obj)
         );
+    }
+
+    public fun upgrade_to_pro_with_membership_cap(
+        cap: &MembershipCap,
+        passport_obj: &mut passport::Passport,
+        expires_at_ms: u64,
+        ctx: &mut TxContext
+    ) {
+        membership::upgrade_to_pro(
+            passport_obj,
+            expires_at_ms,
+            ctx
+        );
+
+        sui::event::emit(AdminAction {
+            admin_cap_id: cap.parent_admin_cap_id,
+            action_type: ACTION_UPGRADE_TO_PRO,
+            target: passport::get_id(passport_obj),
+        });
+    }
+
+    public fun upgrade_to_elite_with_membership_cap(
+        cap: &MembershipCap,
+        passport_obj: &mut passport::Passport,
+        expires_at_ms: u64,
+        ctx: &mut TxContext
+    ) {
+        membership::upgrade_to_elite(
+            passport_obj,
+            expires_at_ms,
+            ctx
+        );
+
+        sui::event::emit(AdminAction {
+            admin_cap_id: cap.parent_admin_cap_id,
+            action_type: ACTION_UPGRADE_TO_ELITE,
+            target: passport::get_id(passport_obj),
+        });
     }
 
     // =========================================================
@@ -258,6 +356,52 @@ module nami::admin {
             ACTION_BLACK_PASSPORT,
             passport::get_id(passport_obj)
         );
+    }
+
+    public fun issue_warning_with_moderation_cap(
+        cap: &ModerationCap,
+        target_owner: address,
+        passport_obj: &passport::Passport,
+        reason_code: u64,
+        ctx: &mut TxContext
+    ) {
+        moderation::issue_warning(
+            target_owner,
+            passport_obj,
+            reason_code,
+            ctx
+        );
+
+        sui::event::emit(AdminAction {
+            admin_cap_id: cap.parent_admin_cap_id,
+            action_type: ACTION_WARNING,
+            target: passport::get_id(passport_obj),
+        });
+    }
+
+    public fun issue_mute_with_moderation_cap(
+        cap: &ModerationCap,
+        target_owner: address,
+        passport_obj: &passport::Passport,
+        channel_id: address,
+        reason_code: u64,
+        expires_at_ms: u64,
+        ctx: &mut TxContext
+    ) {
+        moderation::issue_mute(
+            target_owner,
+            passport_obj,
+            channel_id,
+            reason_code,
+            expires_at_ms,
+            ctx
+        );
+
+        sui::event::emit(AdminAction {
+            admin_cap_id: cap.parent_admin_cap_id,
+            action_type: ACTION_MUTE,
+            target: passport::get_id(passport_obj),
+        });
     }
 
     // =========================================================
@@ -404,5 +548,21 @@ module nami::admin {
 
     public fun get_created_at_ms(admin: &AdminCap): u64 {
         admin.created_at_ms
+    }
+
+    public fun get_moderation_cap_id(cap: &ModerationCap): address {
+        object::uid_to_address(&cap.id)
+    }
+
+    public fun get_membership_cap_id(cap: &MembershipCap): address {
+        object::uid_to_address(&cap.id)
+    }
+
+    public fun get_moderation_cap_parent(cap: &ModerationCap): address {
+        cap.parent_admin_cap_id
+    }
+
+    public fun get_membership_cap_parent(cap: &MembershipCap): address {
+        cap.parent_admin_cap_id
     }
 }
