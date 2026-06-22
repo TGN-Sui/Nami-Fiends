@@ -13,10 +13,11 @@ import {
 import { clearSignedOut } from './member-auth-store.js';
 import {
   linkMemberSessionAuth,
+  restoreMemberSessionAfterZkLogin,
   restoreMemberSessionByEmail,
-  restoreMemberSessionByLinkedOwner,
   restoreMemberSessionByXHandle,
 } from './member-auth-link-store.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 
 import {
   authorizeXAccount,
@@ -53,17 +54,13 @@ export function EntryLoginPanel(props: {
       return;
     }
 
-    const restored = restoreMemberSessionByLinkedOwner(owner, source);
+    const restored = restoreMemberSessionAfterZkLogin(owner);
 
-    if (!restored) {
+    if (!restored && !isOfficialOwner(owner)) {
       setLoginError(zkLoginAccountLinkHint());
       return;
     }
 
-    linkMemberSessionAuth(restored, {
-      email: restored.email,
-      zkLoginAddress: owner,
-    });
     clearSignedOut();
     props.onLoginSuccess();
   }, [owner, source, props]);

@@ -1,3 +1,5 @@
+import { isOfficialOwner } from './nami-capabilities.js';
+import { readOfficialOwnerEmail } from './protocol-env.js';
 import type { MemberSession } from './member-session-store.js';
 import { readMemberSession, saveMemberSession } from './member-session-store.js';
 
@@ -190,8 +192,30 @@ export function restoreMemberSessionByLinkedOwner(
   source: 'wallet' | 'zklogin',
 ): MemberSession | null {
   if (source === 'zklogin') {
-    return restoreMemberSessionByZkLoginAddress(owner);
+    return restoreMemberSessionAfterZkLogin(owner);
   }
 
   return restoreMemberSessionByWalletAddress(owner);
+}
+
+/** Restore passport session after Google zkLogin, including official-owner email fallback. */
+export function restoreMemberSessionAfterZkLogin(address: string): MemberSession | null {
+  let restored = restoreMemberSessionByZkLoginAddress(address);
+
+  if (!restored && isOfficialOwner(address)) {
+    const officialEmail = readOfficialOwnerEmail();
+
+    if (officialEmail) {
+      restored = restoreMemberSessionByEmail(officialEmail);
+    }
+  }
+
+  if (restored) {
+    linkMemberSessionAuth(restored, {
+      email: restored.email,
+      zkLoginAddress: address,
+    });
+  }
+
+  return restored;
 }

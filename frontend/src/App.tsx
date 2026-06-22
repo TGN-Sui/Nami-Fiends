@@ -15,7 +15,10 @@ import {
   isTestLaunchMode,
   shouldUseDevFixtures,
 } from './app-config.js';
+import { clearSignedOut } from './member-auth-store.js';
+import { restoreMemberSessionAfterZkLogin } from './member-auth-link-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
+import { consumeZkLoginOAuthReturn, getZkLoginSession } from './zklogin.js';
 import { hydrateOfficialsSubmissionsFromServer } from './officials-submissions-sync.js';
 import { findSeedChannelById } from './fixture-catalog-access.js';
 import {
@@ -5424,6 +5427,38 @@ export function App(): ReactElement {
     setEntrySignedOutNotice(false);
     setActivePage('hub');
   }
+
+  useEffect(() => {
+    function handleZkLoginOAuthReturn(): void {
+      if (!consumeZkLoginOAuthReturn()) {
+        return;
+      }
+
+      const zkSession = getZkLoginSession();
+
+      if (!zkSession) {
+        return;
+      }
+
+      const restored = restoreMemberSessionAfterZkLogin(zkSession.address);
+
+      if (restored || isOfficialOwner(zkSession.address)) {
+        clearSignedOut();
+        enterNamiHub();
+      }
+    }
+
+    function onZkLoginReady(): void {
+      handleZkLoginOAuthReturn();
+    }
+
+    window.addEventListener('nami-zklogin-session-ready', onZkLoginReady);
+    handleZkLoginOAuthReturn();
+
+    return () => {
+      window.removeEventListener('nami-zklogin-session-ready', onZkLoginReady);
+    };
+  }, []);
 
   function openEntryGate(): void {
     setEntrySignedOutNotice(false);

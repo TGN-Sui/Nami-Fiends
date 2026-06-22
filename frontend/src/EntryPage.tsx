@@ -14,11 +14,7 @@ import {
 } from './landing-content.js';
 import { EntryLoginPanel } from './EntryLoginPanel.js';
 import { clearSignedOut } from './member-auth-store.js';
-import {
-  linkMemberSessionAuth,
-  restoreMemberSessionByEmail,
-  restoreMemberSessionByZkLoginAddress,
-} from './member-auth-link-store.js';
+import { restoreMemberSessionAfterZkLogin } from './member-auth-link-store.js';
 import { resolveMemberDisplayName } from './member-display-name-store.js';
 import {
   clearMemberSession,
@@ -26,7 +22,6 @@ import {
   useMemberSession,
 } from './member-session-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
-import { readOfficialOwnerEmail } from './protocol-env.js';
 import { getZkLoginSession } from './zklogin.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { GameChannelClaimPanel } from './GameChannelClaimPanel.js';
@@ -381,24 +376,9 @@ export function EntryPage(props: {
       return;
     }
 
-    let restored = restoreMemberSessionByZkLoginAddress(zkSession.address);
+    const restored = restoreMemberSessionAfterZkLogin(zkSession.address);
 
-    if (!restored && isOfficialOwner(zkSession.address)) {
-      const officialEmail = readOfficialOwnerEmail();
-
-      if (officialEmail) {
-        restored = restoreMemberSessionByEmail(officialEmail);
-
-        if (restored) {
-          linkMemberSessionAuth(restored, {
-            email: restored.email,
-            zkLoginAddress: zkSession.address,
-          });
-        }
-      }
-    }
-
-    if (restored) {
+    if (restored || isOfficialOwner(zkSession.address)) {
       clearSignedOut();
     }
   }, []);

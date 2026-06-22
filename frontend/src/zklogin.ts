@@ -101,9 +101,14 @@ export function clearZkLoginSession(): void {
   window.localStorage.removeItem(PENDING_KEY);
 }
 
-function saveSession(session: ZkLoginSession): void {
+function saveSession(session: ZkLoginSession, fromOAuthReturn = false): void {
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   window.localStorage.removeItem(PENDING_KEY);
+
+  if (fromOAuthReturn) {
+    window.sessionStorage.setItem('nami.zklogin.oauth-return', 'true');
+    window.dispatchEvent(new CustomEvent('nami-zklogin-session-ready'));
+  }
 }
 
 function parseHashParams(): URLSearchParams {
@@ -211,7 +216,7 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
       ephemeralSecretKey: pending.ephemeralSecretKey,
     };
 
-    saveSession(session);
+    saveSession(session, true);
 
     const cleanUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
     window.history.replaceState({}, document.title, cleanUrl);
@@ -226,6 +231,20 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
     window.sessionStorage.setItem('nami.zklogin.last-error', message);
     return getZkLoginSession();
   }
+}
+
+export function consumeZkLoginOAuthReturn(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const flag = window.sessionStorage.getItem('nami.zklogin.oauth-return') === 'true';
+
+  if (flag) {
+    window.sessionStorage.removeItem('nami.zklogin.oauth-return');
+  }
+
+  return flag;
 }
 
 export function readZkLoginLastError(): string | null {
