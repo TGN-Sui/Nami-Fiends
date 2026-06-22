@@ -33,6 +33,10 @@ Continue indexing and frontend/SDK work against the pinned package in `deploymen
 # Phase 5 zkLogin gate (policy tests + env verification)
 ./scripts/phase5-zklogin-check.sh
 
+# Phase 8 deploy gate (env + public URL probes + production build)
+./scripts/phase8-deploy-check.sh
+# node scripts/verify-public-deploy.mjs  # public URL only
+
 # Refresh env from existing latest.json (no republish)
 node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
 

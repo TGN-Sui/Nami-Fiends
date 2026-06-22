@@ -15,6 +15,9 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [roadmap.md](./roadmap.md) | Delivery phases and status |
 | [testnet-launch-checklist.md](./testnet-launch-checklist.md) | Official testnet build and deploy steps |
 | [testnet-zklogin.md](./testnet-zklogin.md) | Google OAuth + zkLogin for testnet origin |
+| [admincap-custody.md](./admincap-custody.md) | AdminCap holder + backup runbook |
+| [privacy-guidelines-draft.md](./privacy-guidelines-draft.md) | Privacy draft (testnet review) |
+| [community-guidelines-draft.md](./community-guidelines-draft.md) | Community standards draft |
 
 ---
 

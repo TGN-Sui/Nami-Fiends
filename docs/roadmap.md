@@ -714,18 +714,18 @@ Embedded social / live embed player hooks for real-time gift overlays
 Status:
 
 ```text
-In progress — Phase 8 overall ~80% complete
+In progress — Phase 8 overall ~85% complete
 ```
 
 ```text
 Phase 8 progress
 
-[████████████████░░░░] ~80%
+[█████████████████░░░] ~85%
 
 8.1 Testnet launch mode      █████████████████░░░  ~88%
-8.2 Deploy + public URL      ████░░░░░░░░░░░░░░░░  ~20%
+8.2 Deploy + public URL      ████████░░░░░░░░░░░░  ~40%
 8.3 zkLogin production       ████████████████████  100%
-8.4 Security + custody       ████░░░░░░░░░░░░░░░░  ~20%
+8.4 Security + custody       ████████████░░░░░░░░  ~60%
 ```
 
 Launch requirements:
@@ -801,12 +801,12 @@ AdminCap custody plan finalized + privacy/community guideline drafts
 
 ---
 
-## Phase 8.2 — Public Deploy URL (Not started)
+## Phase 8.2 — Public Deploy URL (In progress)
 
 Status:
 
 ```text
-Blocked on hosting choice — Walrus Sites (Phase 9.1) or traditional static host + public receiving server
+~40% — Render + Vercel blueprints shipped; verify-public-deploy.mjs probes public URLs; human deploy pending
 ```
 
 Deliverables:
@@ -815,6 +815,7 @@ Deliverables:
 Public VITE_NAMI_INDEXER_URL
 Public frontend origin with zkLogin redirect registered
 Health + officials API reachable from browser CORS
+scripts/verify-public-deploy.mjs + scripts/phase8-deploy-check.sh
 ```
 
 ---
@@ -836,7 +837,7 @@ See [testnet-zklogin.md](./testnet-zklogin.md). Run `node scripts/verify-zklogin
 Status:
 
 ```text
-~20% — officials sync auth shipped; custody + privacy docs pending
+~60% — custody runbook + privacy/community drafts shipped; human backup holder + legal review pending
 ```
 
 Shipped:
@@ -846,14 +847,15 @@ Officials POST /sync wallet auth on NAMI_TEST_LAUNCH=true
 Official owner full merge; member-scoped merge for tickets, claims, suggestions
 Optional NAMI_OFFICIALS_SYNC_SECRET for ops-only server sync
 NAMI_PAYMENT_ALLOW_MOCK=false enforced when NAMI_TEST_LAUNCH=true
-AdminCap custody notes in testnet-launch-checklist.md
+docs/admincap-custody.md — primary/backup holder runbook
+docs/privacy-guidelines-draft.md + docs/community-guidelines-draft.md
 ```
 
 Remaining:
 
 ```text
-Finalize AdminCap backup holder + key management runbook
-Privacy + community guidelines drafts
+Assign named backup holder (human step)
+Legal review of privacy draft before mainnet
 Full security review before public URL
 ```
 

@@ -1,0 +1,103 @@
+# AdminCap Custody Runbook
+
+Operational guide for holding and recovering the Nami `AdminCap` on testnet and mainnet.
+
+---
+
+## Objects
+
+| Object | ID source | Holder |
+|--------|-----------|--------|
+| `AdminCap` | `deployments/testnet/latest.json` → `adminCapId` | `NAMI_OFFICIAL_OWNER` wallet |
+| Published package | `latest.json` → `packageId` | Immutable on-chain |
+
+Current testnet artifact (pinned until Phase 8 go-live republish):
+
+```text
+packageId:  0xd4ccad8f0687e31aaee2524db96c7a1d9509abaeadc949e0136c6522a631e058
+adminCapId: 0x170eaaa308ffb88096ebdc664bdcd27dc0a36ce42461fdb2422fb79657009edc
+```
+
+---
+
+## Primary holder
+
+1. **Wallet role:** `NAMI_OFFICIAL_OWNER` is the sole on-chain admin for MVP entry points gated by `&AdminCap`.
+2. **Access path:** Official owner signs in via Google zkLogin; derived address must match `VITE_NAMI_OFFICIAL_OWNER` / `NAMI_OFFICIAL_OWNER`.
+3. **Never commit:** Private keys, mnemonics, or OAuth client secrets. Store only in deploy dashboards (Render, Vercel) and password manager.
+
+---
+
+## Backup holder
+
+Designate one **backup holder** (co-founder or trusted ops lead) before public URL:
+
+| Responsibility | Primary | Backup |
+|----------------|---------|--------|
+| Day-to-day moderation / jury / recovery | Primary zkLogin wallet | Read-only until invoked |
+| Emergency AdminCap transfer | Primary | Receives object if primary is compromised |
+| Env secret rotation | Primary | Can update Render/Vercel with repo access |
+
+**Backup setup checklist**
+
+```text
+[ ] Backup wallet address recorded offline (not in git)
+[ ] Backup holder can sign Sui transactions independently
+[ ] Transfer procedure rehearsed on testnet (AdminCap `public_transfer` if policy allows)
+[ ] Google OAuth recovery email documented for primary owner account
+[ ] Incident contact list (primary + backup + infra)
+```
+
+---
+
+## Key management
+
+```text
+Primary owner:     zkLogin-derived Sui address (no exported seed)
+Backup holder:     Hardware wallet or air-gapped key — address only in runbook
+Treasury:          Separate wallet from AdminCap (NAMI_PAYMENT_TREASURY_ADDRESS)
+Publish wallet:    Used once per republish; fund minimally on testnet
+```
+
+**Rotation**
+
+- Rotate `NAMI_OFFICIALS_SYNC_SECRET` and payment provider keys on compromise suspicion.
+- Changing `NAMI_OFFICIAL_OWNER` requires on-chain AdminCap transfer **and** env updates on Render + Vercel + OAuth console.
+
+---
+
+## Loss scenarios
+
+| Scenario | Impact | Response |
+|----------|--------|----------|
+| Primary zkLogin lost | Cannot sign owner UI actions | Use Google account recovery; re-derive same address if salt unchanged |
+| AdminCap object lost / burned | Permanent protocol admin lockout | Requires package republish + migration — treat as Sev-1 |
+| Backup holder unavailable | Delayed emergency response | Document tertiary contact; pause public URL until resolved |
+| Env leak (sync secret) | Unauthorized officials merge | Rotate secret; audit `officials-submissions.json` projection |
+
+---
+
+## Pre-launch verification
+
+```bash
+node scripts/verify-testnet-ready.mjs
+node scripts/verify-public-deploy.mjs
+```
+
+Confirm:
+
+```text
+NAMI_OFFICIAL_OWNER matches connected owner wallet in Settings
+AdminCap object owned by that address (Sui explorer)
+VITE_NAMI_DEMO_OWNER unset
+NAMI_PAYMENT_ALLOW_MOCK=false
+```
+
+---
+
+## Related docs
+
+- [admin.md](./admin.md) — AdminCap authority matrix
+- [security-audit.md](./security-audit.md) — adversarial checks
+- [testnet-launch-checklist.md](./testnet-launch-checklist.md) — deploy steps
+- [recovery.md](./recovery.md) — member recovery (distinct from owner custody)

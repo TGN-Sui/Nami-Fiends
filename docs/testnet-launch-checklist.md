@@ -136,12 +136,19 @@ npm --prefix frontend run build
 
 ## 7. Security before public URL
 
-- AdminCap custody: hold `AdminCap` in a dedicated wallet (`NAMI_OFFICIAL_OWNER`); never commit private keys; document backup holder
+- AdminCap custody: [admincap-custody.md](./admincap-custody.md) — primary holder, backup holder, loss scenarios
+- Privacy + community drafts: [privacy-guidelines-draft.md](./privacy-guidelines-draft.md), [community-guidelines-draft.md](./community-guidelines-draft.md)
 - `VITE_NAMI_DEMO_OWNER` unset on testnet builds
 - `NAMI_PAYMENT_ALLOW_MOCK=false` on backend
 - zkLogin redirect URIs locked to production/testnet origin only
 - Officials `POST /api/officials/submissions/sync` requires wallet signature on test launch; official owner may merge all queues; members merge only their own entries
 - Optional `NAMI_OFFICIALS_SYNC_SECRET` for server-side ops (header `X-Nami-Officials-Sync`) — never expose in frontend env
+
+Public deploy probe:
+
+```bash
+node scripts/verify-public-deploy.mjs
+```
 
 ---
 
