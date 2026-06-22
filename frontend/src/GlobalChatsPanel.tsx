@@ -63,7 +63,7 @@ import {
   globalChatListCreatorLine,
   globalChatPresenceKindLabel,
   globalChatSurfaceLabel,
-  hubGlobalChats,
+  listHubGlobalChats,
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
   type GlobalChatRoom,
 } from './global-chats.js';
@@ -400,11 +400,13 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
   const [newChatVoice, setNewChatVoice] = useState(false);
   const [extraChats, setExtraChats] = useState<GlobalChatRoom[]>([]);
 
+  const hubChats = useMemo(() => listHubGlobalChats(), []);
+
   const allChats = useMemo(
-    () => filterModeratedGlobalChats([...hubGlobalChats, ...extraChats]),
-    [extraChats]
+    () => filterModeratedGlobalChats([...hubChats, ...extraChats]),
+    [extraChats, hubChats]
   );
-  const activeChat = allChats.find((chat) => chat.id === activeChatId) ?? hubGlobalChats[0]!;
+  const activeChat = allChats.find((chat) => chat.id === activeChatId) ?? hubChats[0]!;
 
   function createTemporaryChat(): void {
     if (!canCreateTemporaryChat() || !newChatTitle.trim()) {

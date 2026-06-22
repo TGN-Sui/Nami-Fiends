@@ -3,7 +3,7 @@ import { readChannelGameReviews, type ChannelGameReview } from './channel-game-r
 import {
   collectedBadgesForMember,
   genreOfficialChats,
-  hubGlobalChats,
+  listHubGlobalChats,
   type CollectedBadge,
 } from './global-chats.js';
 import { memberChatPresenceForMember, type MemberChatPresence } from './member-chat-time-store.js';
@@ -133,7 +133,7 @@ function chatPoolForMember(member: NamiMember) {
     hoursThisWeek: 4 + (index % 5) * 2.5,
   }));
 
-  const globalChats = hubGlobalChats.slice(0, 3).map((chat, chatIndex) => ({
+  const globalChats = listHubGlobalChats().slice(0, 3).map((chat, chatIndex) => ({
     chatId: chat.id,
     chatTitle: chat.title,
     surfaceLabel: chat.kind === 'official' ? 'Nami Global' : 'Open Lounge',

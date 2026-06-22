@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { shouldAutoSeedLocalData } from './app-config.js';
 import { hasChannelGameBadge, readMemberChannelBadgeLabel } from './channel-game-badge-store.js';
 import { isGameChannelOwner } from './channel-owner-access.js';
 import { isMemberVerified } from './member-access.js';
@@ -120,6 +121,10 @@ function isValidReview(entry: unknown): entry is ChannelGameReview {
   );
 }
 
+function defaultReviewCatalog(): ChannelGameReview[] {
+  return shouldAutoSeedLocalData() ? defaultReviews : [];
+}
+
 export function readChannelGameReviews(): ChannelGameReview[] {
   if (cachedReviews) {
     return cachedReviews;
@@ -129,21 +134,21 @@ export function readChannelGameReviews(): ChannelGameReview[] {
     const stored = window.localStorage.getItem(REVIEWS_KEY);
 
     if (!stored) {
-      cachedReviews = [...defaultReviews];
+      cachedReviews = defaultReviewCatalog();
       return cachedReviews;
     }
 
     const parsed = JSON.parse(stored);
 
     if (!Array.isArray(parsed)) {
-      cachedReviews = [...defaultReviews];
+      cachedReviews = defaultReviewCatalog();
       return cachedReviews;
     }
 
     cachedReviews = parsed.filter(isValidReview);
     return cachedReviews;
   } catch {
-    cachedReviews = [...defaultReviews];
+    cachedReviews = defaultReviewCatalog();
     return cachedReviews;
   }
 }

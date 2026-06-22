@@ -262,7 +262,7 @@ Current breakdown:
 On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
 Documentation architecture:                 100% done (Phase 0 mini-sync complete)
 Backend/indexer:                            100% done (Phase 2 complete — indexer + projections + HTTP + ops hardening)
-Frontend/profile UI:                        ~90% done (Phase 3 + Phase 7/8 UI shipped; live-only surfaces audit pending)
+Frontend/profile UI:                        100% done (Phase 3 complete — live-only surfaces audit shipped)
 SDK integration:                            ~70% done (Phase 4 — @nami/sdk reads + indexer client shipped; subscribe helpers partial)
 zkLogin production flow:                    ~30% done (Phase 5 — client wiring shipped; OAuth per deploy origin pending, see Phase 8.3)
 ```
@@ -410,7 +410,19 @@ scripts/verify-indexer.mjs + scripts/phase2-indexer-check.sh
 Status:
 
 ```text
-~90% complete — UI-B21/B22 + test-launch polish shipped; protocol panels wired with fixture fallback
+Complete (2026-06-22) — live-only surfaces audit; pinned testnet package
+```
+
+Phase 3 exit (live-surface audit):
+
+```text
+fixture-catalog-access.ts — gated seed-data reads (empty on test launch)
+App.tsx / channel-owner-access — no direct seed-data fallback or vortex default on test launch
+channel-directory-provider — live discovery no longer enriches from fixture catalog when fixtures off
+listHubGlobalChats() — official global room only during test launch
+LandingHeroVisual — shell passport silhouettes instead of fixture hero members
+channel-game-reviews-store — no default review seed on test launch
+scripts/phase3-live-audit.mjs + live-surface-audit.test.ts
 ```
 
 Recent Phase 3 UI checkpoints:

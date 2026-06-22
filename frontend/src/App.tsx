@@ -17,7 +17,7 @@ import {
 } from './app-config.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { hydrateOfficialsSubmissionsFromServer } from './officials-submissions-sync.js';
-import { channels as seedChannels } from './fixtures/seed-data.js';
+import { findSeedChannelById } from './fixture-catalog-access.js';
 import {
   createShellChannel,
   createShellDeveloper,
@@ -1201,7 +1201,7 @@ function NamiHub(props: {
     return (
       directoryChannels.find((channel) => channel.id === channelId) ??
       channels.find((channel) => channel.id === channelId) ??
-      seedChannels.find((channel) => channel.id === channelId)
+      findSeedChannelById(channelId)
     );
   }
 
@@ -5142,7 +5142,7 @@ export function App(): ReactElement {
   const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
-    const defaultChannel = channels[0] ?? (shouldUseDevFixtures() ? seedChannels[0] : undefined);
+    const defaultChannel = channels[0] ?? findSeedChannelById('fiends');
     return defaultChannel ?? createShellChannel();
   });
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
@@ -5221,7 +5221,7 @@ export function App(): ReactElement {
       if (channelId) {
         const channel =
           channels.find((entry) => entry.id === channelId) ??
-          seedChannels.find((entry) => entry.id === channelId);
+          findSeedChannelById(channelId);
 
         if (channel) {
           openChannelProfile(channel, 'news', null);
@@ -5290,7 +5290,7 @@ export function App(): ReactElement {
     onOpenChannel: (channelId) => {
       const channel =
         channels.find((entry) => entry.id === channelId) ??
-        seedChannels.find((entry) => entry.id === channelId) ??
+        findSeedChannelById(channelId) ??
         resolveChannelById(channelId);
 
       if (channel) {

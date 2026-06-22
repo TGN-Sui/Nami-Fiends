@@ -1,4 +1,5 @@
-import { channels as seedChannels } from './fixtures/seed-data.js';
+import { shouldUseDevFixtures } from './app-config.js';
+import { findSeedChannelById } from './fixture-catalog-access.js';
 import { readGameOwnerSession } from './game-owner-session-store.js';
 import { withChannelOwnerProfile } from './channel-owner-profile-store.js';
 import { readSignedInOwner } from './member-access.js';
@@ -108,14 +109,11 @@ export function readOwnedGameChannelId(): string | null {
     // fall through
   }
 
-  return DEFAULT_OWNED_CHANNEL_ID;
+  return shouldUseDevFixtures() ? DEFAULT_OWNED_CHANNEL_ID : null;
 }
 
 function findChannelById(channelId: string): NamiChannel | undefined {
-  return (
-    channels.find((channel) => channel.id === channelId) ??
-    seedChannels.find((channel) => channel.id === channelId)
-  );
+  return channels.find((channel) => channel.id === channelId) ?? findSeedChannelById(channelId);
 }
 
 export function canOfficialOwnerEditProvisionedChannel(channelId: string): boolean {
@@ -262,6 +260,10 @@ export function resolveOwnedGameChannel(): NamiChannel | undefined {
 
   if (resolved) {
     return withChannelOwnerProfile(resolved);
+  }
+
+  if (!shouldUseDevFixtures()) {
+    return undefined;
   }
 
   const fallback = findChannelById(DEFAULT_OWNED_CHANNEL_ID);

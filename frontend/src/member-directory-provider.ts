@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { NamiMember } from './domain/types.js';
-import { members as seedMembers } from './fixtures/seed-data.js';
+import { readSeedMembers } from './fixture-catalog-access.js';
 import { listLocalDiscoveryMembers } from './local-member-directory.js';
 import type { ProtocolLoadState } from './protocol-query.js';
 
@@ -47,7 +47,7 @@ export function resolveMemberDirectory(input: {
     return [];
   }
 
-  const fixtureMembers = input.fixtureMembers ?? seedMembers;
+  const fixtureMembers = input.fixtureMembers ?? readSeedMembers();
 
   return fixtureMembers.map(mapFixtureMember);
 }

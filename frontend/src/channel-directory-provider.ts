@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { shouldUseFixtureCatalogFallback } from './app-config.js';
 import type { ChannelModule, ConductSignal, NamiChannel } from './domain/types.js';
-import { channels as seedChannels } from './fixtures/seed-data.js';
+import { readSeedChannels } from './fixture-catalog-access.js';
 import {
   channelDirectoryDedupeKey,
   listLocalDiscoveryChannels,
@@ -177,7 +177,7 @@ export function resolveChannelDirectory(input: {
   fixtureChannels?: NamiChannel[];
   localChannels?: NamiChannel[];
 }): ChannelDirectoryItem[] {
-  const fixtureChannels = input.fixtureChannels ?? seedChannels;
+  const fixtureChannels = input.fixtureChannels ?? readSeedChannels();
   const localChannels = input.localChannels ?? listLocalDiscoveryChannels();
 
   if (input.liveRankings.length > 0) {

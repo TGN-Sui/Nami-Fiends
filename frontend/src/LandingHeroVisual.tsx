@@ -1,10 +1,12 @@
 import { type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
+import { shouldUseDevFixtures } from './app-config.js';
 import {
   LANDING_HERO_ELITE_MEMBER,
   LANDING_HERO_OFFICIAL_MEMBER,
   LANDING_HERO_PRO_MEMBER,
 } from './fixtures/landing-hero-members.js';
+import { createShellSelfMember } from './fixtures/shell-catalog.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import type { NamiMember } from './uiMockData.js';
 
@@ -119,30 +121,46 @@ function LandingPassportCard(props: { member: NamiMember; withGlitter?: boolean 
   );
 }
 
+function landingShellMember(tier: NamiMember['tier'], avatarSeed: string): NamiMember {
+  return {
+    ...createShellSelfMember(),
+    tier,
+    avatarSeed,
+    name: 'Member',
+    badge: 'Unset',
+  };
+}
+
 export function LandingHeroVisual(): ReactElement {
+  const useFixtureHeroes = shouldUseDevFixtures();
+  const eliteMember = useFixtureHeroes
+    ? withLandingAvatar(LANDING_HERO_ELITE_MEMBER, LANDING_HERO_ELITE_MEMBER.avatarSeed, 'elite')
+    : landingShellMember('Elite', 'EL');
+  const officialMember = useFixtureHeroes
+    ? LANDING_HERO_OFFICIAL_MEMBER
+    : landingShellMember('Adventurer', 'NA');
+  const proMember = useFixtureHeroes
+    ? withLandingAvatar(LANDING_HERO_PRO_MEMBER, LANDING_HERO_PRO_MEMBER.avatarSeed, 'pro')
+    : landingShellMember('Pro', 'PR');
+
   return (
     <div className="nami-landing-hero-visual" aria-hidden="true">
       <div className="nami-landing-hero-collage">
         <div className="nami-landing-hero-elite-passport-slot is-desktop-passport">
-          <LandingPassportCard
-            member={withLandingAvatar(LANDING_HERO_ELITE_MEMBER, LANDING_HERO_ELITE_MEMBER.avatarSeed, 'elite')}
-            withGlitter
-          />
+          <LandingPassportCard member={eliteMember} withGlitter />
         </div>
 
         <div className="nami-landing-hero-official-passport-slot is-desktop-passport">
-          <LandingPassportCard member={LANDING_HERO_OFFICIAL_MEMBER} />
+          <LandingPassportCard member={officialMember} />
         </div>
 
         <div className="nami-landing-hero-pro-passport-slot is-desktop-passport">
-          <LandingPassportCard
-            member={withLandingAvatar(LANDING_HERO_PRO_MEMBER, LANDING_HERO_PRO_MEMBER.avatarSeed, 'pro')}
-          />
+          <LandingPassportCard member={proMember} />
         </div>
       </div>
 
       <div className="nami-landing-hero-mobile-pass">
-        <LandingPassportCard member={LANDING_HERO_OFFICIAL_MEMBER} />
+        <LandingPassportCard member={officialMember} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { shouldAutoSeedLocalData } from './app-config.js';
+import { isTestLaunchMode, shouldAutoSeedLocalData } from './app-config.js';
 import { shouldUseGenesisSelfMember } from './genesis-member.js';
 import { canManageTemporaryGlobalChats, getSelfMember } from './member-access.js';
 import { readMemberSession } from './member-session-store.js';
@@ -95,6 +95,15 @@ export const hubGlobalChats: GlobalChatRoom[] = [
     closesOnExit: true,
   },
 ];
+
+/** Official test launch exposes only the primary global room — no demo lounges. */
+export function listHubGlobalChats(testLaunch = isTestLaunchMode()): GlobalChatRoom[] {
+  if (testLaunch) {
+    return [officialNamiGlobalChat];
+  }
+
+  return hubGlobalChats;
+}
 
 const GENRE_LOUNGE_ACTIVE_MEMBERS: readonly number[] = [
   920, 812, 748, 688, 612, 568, 528, 492, 458, 428, 398, 372, 348, 322, 298, 276, 254, 234, 216, 198, 182, 168, 154,
