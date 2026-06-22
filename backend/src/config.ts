@@ -64,7 +64,7 @@ export const config = {
   eventLogPath: process.env.NAMI_EVENT_LOG_PATH ?? 'data/events.jsonl',
 
   httpEnabled: (process.env.NAMI_HTTP_ENABLED ?? 'true').toLowerCase() !== 'false',
-  httpPort: readNumber('NAMI_HTTP_PORT', 8787)
+  httpPort: readNumber('PORT', readNumber('NAMI_HTTP_PORT', 8787)),
 } as const;
 
 export function assertRuntimeConfig(): void {

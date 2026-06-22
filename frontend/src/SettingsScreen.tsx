@@ -7,6 +7,7 @@ import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
 import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
+import { OwnerAccessPrompt } from './OwnerAccessPrompt.js';
 import { OwnerPassportLabelsPanel } from './OwnerPassportLabelsPanel.js';
 import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
@@ -442,6 +443,7 @@ export function SettingsScreen(props: {
 
         {activeSection === 'account' ? (
           <div className="settings-section-stack">
+            <OwnerAccessPrompt />
             {isOwnerDashboard ? <OwnerPassportLabelsPanel /> : null}
             {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
             {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}

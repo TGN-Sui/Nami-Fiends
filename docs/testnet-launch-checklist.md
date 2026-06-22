@@ -67,7 +67,32 @@ node scripts/verify-testnet-ready.mjs
 
 ---
 
-## 4. Frontend testnet build
+## 4. Deploy (Vercel + Render)
+
+**Render (backend receiving server)**
+
+1. Connect repo → use `render.yaml` or create a Web Service with root build/start commands from that file.
+2. Set env from `backend/.env.testnet.example` + your `deployments/testnet/latest.json` package IDs.
+3. Copy the public service URL (e.g. `https://nami-backend.onrender.com`).
+
+**Vercel (frontend)**
+
+1. Set project root to `frontend/`.
+2. Build: `npm install && npm run build` (monorepo: build `../sdk` first if `@nami/sdk` link fails — use install script below).
+3. Set env vars from `frontend/.env.testnet.example`; set `VITE_NAMI_INDEXER_URL` to your Render URL.
+4. Add the Vercel origin to Google OAuth (zkLogin) redirect URIs — must match `VITE_ZKLOGIN_REDIRECT_URL` exactly.
+
+Suggested Vercel install command when building from `frontend/`:
+
+```bash
+cd .. && npm --prefix sdk install && npm --prefix sdk run build && cd frontend && npm install && npm run build
+```
+
+**Owner access on deploy:** Advanced settings require Google zkLogin as `VITE_NAMI_OFFICIAL_OWNER_EMAIL`; the derived address must match `VITE_NAMI_OFFICIAL_OWNER`. Onboarding email alone does not grant owner tools.
+
+---
+
+## 5. Frontend testnet build
 
 Required values:
 
@@ -92,7 +117,7 @@ npm --prefix frontend run build
 
 ---
 
-## 5. Smoke checks (test launch)
+## 6. Smoke checks (test launch)
 
 | Check | Expected |
 |-------|----------|
@@ -109,7 +134,7 @@ npm --prefix frontend run build
 
 ---
 
-## 6. Security before public URL
+## 7. Security before public URL
 
 - AdminCap custody: hold `AdminCap` in a dedicated wallet (`NAMI_OFFICIAL_OWNER`); never commit private keys; document backup holder
 - `VITE_NAMI_DEMO_OWNER` unset on testnet builds

@@ -1,0 +1,33 @@
+# Render blueprint — Nami receiving server (testnet indexer + HTTP API)
+# Set secrets in the Render dashboard after linking this repo.
+services:
+  - type: web
+    name: nami-backend
+    runtime: node
+    plan: free
+    buildCommand: >-
+      npm --prefix sdk install &&
+      npm --prefix sdk run build &&
+      npm --prefix backend install &&
+      npm --prefix backend run build
+    startCommand: npm --prefix backend run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: NAMI_NETWORK
+        value: testnet
+      - key: NAMI_TEST_LAUNCH
+        value: 'true'
+      - key: NAMI_PAYMENT_ALLOW_MOCK
+        value: 'false'
+      - key: NAMI_HTTP_ENABLED
+        value: 'true'
+      - key: NAMI_PACKAGE_ID
+        sync: false
+      - key: NAMI_ADMIN_CAP_ID
+        sync: false
+      - key: NAMI_OFFICIAL_OWNER
+        sync: false
+      - key: NAMI_OFFICIAL_OWNER_EMAIL
+        sync: false

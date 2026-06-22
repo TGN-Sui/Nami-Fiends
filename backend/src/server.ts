@@ -1041,8 +1041,8 @@ export function startReadOnlyServer(registry: ProjectionRegistry): void {
     });
   });
 
-  server.listen(config.httpPort, () => {
-    console.log(`[nami-http] read-only API listening on http://127.0.0.1:${config.httpPort}`);
+  server.listen(config.httpPort, '0.0.0.0', () => {
+    console.log(`[nami-http] read-only API listening on http://0.0.0.0:${config.httpPort}`);
     console.log('[nami-http] routes: /health, /stats, /api/payments/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
   });
 }
