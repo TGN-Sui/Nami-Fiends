@@ -1,9 +1,10 @@
 import { assertRuntimeConfig, config } from './config.js';
-import { createSuiClient } from './sui.js';
+import { IndexerRuntime } from './indexer-runtime.js';
 import { NamiEventIndexer } from './indexer.js';
 import { ProjectionRegistry } from './projection-registry.js';
 import { startReadOnlyServer } from './server.js';
 import { collectIndexerStats, formatIndexerStats } from './stats.js';
+import { createSuiClient } from './sui.js';
 
 /**
  * Phase 2 entry point — clean, architectural wiring.
@@ -25,6 +26,7 @@ async function main(): Promise<void> {
 
   const client = createSuiClient();
   const indexer = new NamiEventIndexer(client);
+  const runtime = new IndexerRuntime();
   const registry = new ProjectionRegistry();
 
   await registry.load();
@@ -47,12 +49,13 @@ async function main(): Promise<void> {
   console.log(formatIndexerStats(stats));
 
   if (config.httpEnabled) {
-    startReadOnlyServer(registry);
+    startReadOnlyServer(registry, runtime);
   }
 
   const poll = async (): Promise<void> => {
     try {
       const count = await indexer.pollOnce();
+      runtime.recordPollSuccess(count);
 
       if (count > 0) {
         await registry.save();
@@ -61,6 +64,7 @@ async function main(): Promise<void> {
         console.log('[nami-indexer] no new events');
       }
     } catch (error) {
+      runtime.recordPollFailure(error);
       console.error('[nami-indexer] poll failed');
       console.error(error);
     }

@@ -154,7 +154,9 @@ const indexerUrl = frontendEnv?.VITE_NAMI_INDEXER_URL;
 
 if (indexerUrl && !isPlaceholder(indexerUrl)) {
   try {
-    const health = await fetch(indexerUrl.replace(/\/$/, '') + '/health');
+    const origin = indexerUrl.replace(/\/$/, '');
+
+    const health = await fetch(origin + '/health');
 
     if (health.ok) {
       pass('receiving server /health', String(health.status));
@@ -162,7 +164,17 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
       fail('receiving server /health', 'HTTP ' + health.status);
     }
 
-    const officials = await fetch(indexerUrl.replace(/\/$/, '') + '/api/officials/submissions');
+    const ready = await fetch(origin + '/ready');
+
+    if (ready.ok) {
+      pass('receiving server /ready', String(ready.status));
+    } else if (ready.status === 503) {
+      fail('receiving server /ready', 'Indexer not ready — wait for first successful poll');
+    } else {
+      fail('receiving server /ready', 'HTTP ' + ready.status);
+    }
+
+    const officials = await fetch(origin + '/api/officials/submissions');
 
     if (officials.ok) {
       pass('officials submissions API', String(officials.status));

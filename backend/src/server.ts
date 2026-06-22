@@ -49,6 +49,7 @@ import {
   buildChannelDiscoveryRankings,
   buildGuildDiscoveryRankings,
 } from './services/discovery.service.js';
+import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
 
 const TIMELINE_CATEGORIES = new Set<TimelineCategory>([
@@ -64,7 +65,8 @@ type RouteHandler = (
   registry: ProjectionRegistry,
   request: IncomingMessage,
   response: ServerResponse,
-  params: Record<string, string>
+  params: Record<string, string>,
+  runtime: IndexerRuntime
 ) => Promise<void> | void;
 
 type HttpMethod = 'GET' | 'POST' | 'OPTIONS';
@@ -99,8 +101,49 @@ const routes: Route[] = [
     method: 'GET',
     pattern: /^\/health$/,
     paramNames: [],
-    handler: (_registry, _request, response) => {
-      sendJson(response, 200, { ok: true });
+    handler: (_registry, _request, response, _params, runtime) => {
+      const snapshot = runtime.getSnapshot();
+
+      sendJson(response, 200, {
+        ok: snapshot.healthy,
+        service: 'nami-receiving-server',
+        network: snapshot.network,
+        packageId: snapshot.packageId,
+        uptimeMs: snapshot.uptimeMs,
+        indexer: {
+          consecutiveFailures: snapshot.consecutiveFailures,
+          lastPollAt: snapshot.lastPoll
+            ? new Date(snapshot.lastPoll.atMs).toISOString()
+            : null,
+        },
+      });
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/ready$/,
+    paramNames: [],
+    handler: (_registry, _request, response, _params, runtime) => {
+      const snapshot = runtime.getSnapshot();
+      const body = {
+        ready: snapshot.ready,
+        network: snapshot.network,
+        packageId: snapshot.packageId,
+        pollIntervalMs: snapshot.pollIntervalMs,
+        totalPolls: snapshot.totalPolls,
+        totalEventsIndexed: snapshot.totalEventsIndexed,
+        consecutiveFailures: snapshot.consecutiveFailures,
+        lastPoll: snapshot.lastPoll
+          ? {
+              at: new Date(snapshot.lastPoll.atMs).toISOString(),
+              success: snapshot.lastPoll.success,
+              eventsIndexed: snapshot.lastPoll.eventsIndexed,
+              error: snapshot.lastPoll.error,
+            }
+          : null,
+      };
+
+      sendJson(response, snapshot.ready ? 200 : 503, body);
     },
   },
   {
@@ -1010,7 +1053,10 @@ function matchRoute(
   return null;
 }
 
-export function startReadOnlyServer(registry: ProjectionRegistry): void {
+export function startReadOnlyServer(
+  registry: ProjectionRegistry,
+  runtime: IndexerRuntime
+): void {
   const server = createServer((request, response) => {
     void (async () => {
       const method = request.method ?? 'GET';
@@ -1033,7 +1079,13 @@ export function startReadOnlyServer(registry: ProjectionRegistry): void {
         return;
       }
 
-      await matched.route.handler(registry, request, response, matched.params);
+      await matched.route.handler(
+        registry,
+        request,
+        response,
+        matched.params,
+        runtime
+      );
     })().catch((error) => {
       console.error('[nami-http] request failed');
       console.error(error);
@@ -1043,6 +1095,6 @@ export function startReadOnlyServer(registry: ProjectionRegistry): void {
 
   server.listen(config.httpPort, '0.0.0.0', () => {
     console.log(`[nami-http] read-only API listening on http://0.0.0.0:${config.httpPort}`);
-    console.log('[nami-http] routes: /health, /stats, /api/payments/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
+    console.log('[nami-http] routes: /health, /ready, /stats, /api/payments/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
   });
 }

@@ -8,27 +8,43 @@ Raw publish JSON files are saved per network.
 
 Deployment summaries should be saved as `latest.json` for backend/frontend configuration.
 
+## Republish policy (roadmap)
+
+**Defer testnet republish until Phase 8 go-live** unless a blocking on-chain bug requires it.
+
+Local Move changes (Phase 1 membership expiration, admin caps, etc.) are validated with `sui move test` and ship in one batched publish at launch. This saves testnet SUI during Phases 2–7.
+
+Continue indexing and frontend/SDK work against the pinned package in `deployments/testnet/latest.json`.
+
 ## Testnet workflow
 
 ```bash
-# Republish (when Move sources change)
-./scripts/publish-package.sh testnet
-# or: ./scripts/publish-testnet.sh
-
-# Devnet publish + latest.json extract
-./scripts/publish-package.sh devnet
-
-# Local protocol gate (build + 82 Move tests)
+# Local protocol gate (build + 82 Move tests) — no chain publish
 ./scripts/phase1-protocol-check.sh
 
-# Or refresh env from existing latest.json
+# Phase 2 indexer gate (typecheck + optional live probe)
+./scripts/phase2-indexer-check.sh
+# NAMI_INDEXER_URL=http://localhost:8787 ./scripts/phase2-indexer-check.sh
+
+# Refresh env from existing latest.json (no republish)
 node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
 
-# Verify
+# Probe indexer ops endpoints
+node scripts/verify-indexer.mjs --url http://localhost:8787
+
+# Full testnet launch gate (Phase 8)
 node scripts/verify-testnet-ready.mjs
 ```
 
-Current testnet `latest.json` package: see file under `deployments/testnet/`.
+When go-live requires a new publish:
+
+```bash
+./scripts/publish-package.sh testnet
+# or: ./scripts/publish-testnet.sh
+node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
+```
+
+Current testnet `latest.json` package: see file under `deployments/testnet/` (published 2026-06-13).
 
 ## Networks
 

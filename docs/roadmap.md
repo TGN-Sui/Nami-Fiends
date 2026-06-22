@@ -261,7 +261,7 @@ Current breakdown:
 ```text
 On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 complete)
 Documentation architecture:                 100% done (Phase 0 mini-sync complete)
-Backend/indexer:                            ~85% done (Phase 2 — indexer + projections + HTTP shipped; ops hardening pending)
+Backend/indexer:                            100% done (Phase 2 complete — indexer + projections + HTTP + ops hardening)
 Frontend/profile UI:                        ~90% done (Phase 3 + Phase 7/8 UI shipped; live-only surfaces audit pending)
 SDK integration:                            ~70% done (Phase 4 — @nami/sdk reads + indexer client shipped; subscribe helpers partial)
 zkLogin production flow:                    ~30% done (Phase 5 — client wiring shipped; OAuth per deploy origin pending, see Phase 8.3)
@@ -371,7 +371,7 @@ This phase is intentionally hostile-flow focused and is now validated.
 Status:
 
 ```text
-~85% complete — core indexer + projections + read-only HTTP shipped
+Complete (2026-06-22) — pinned testnet package; republish deferred to Phase 8
 ```
 
 Goal:
@@ -397,14 +397,10 @@ BoostHistoryService
 Discovery rankings (/api/discovery/channels, /api/discovery/guilds)
 Read-only HTTP server (server.ts) + receiving-server routes (payments, media, officials)
 Replay CLI (npm --prefix backend run replay)
-```
-
-Remaining before Phase 2 exit:
-
-```text
-Expand backend/README.md (route catalog + testnet runbook)
-Production persistence/ops (hosted deploy, backups, replay verification on testnet package)
-Indexer health monitoring + alert hooks for public URL
+IndexerRuntime poll state + GET /health, GET /ready, GET /stats
+Optional NAMI_ALERT_WEBHOOK_URL on consecutive poll failures
+backend/README.md route catalog + testnet runbook (backups, replay verification)
+scripts/verify-indexer.mjs + scripts/phase2-indexer-check.sh
 ```
 
 ---

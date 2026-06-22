@@ -65,6 +65,9 @@ export const config = {
 
   httpEnabled: (process.env.NAMI_HTTP_ENABLED ?? 'true').toLowerCase() !== 'false',
   httpPort: readNumber('PORT', readNumber('NAMI_HTTP_PORT', 8787)),
+
+  alertWebhookUrl: process.env.NAMI_ALERT_WEBHOOK_URL ?? '',
+  alertFailureThreshold: readNumber('NAMI_ALERT_FAILURE_THRESHOLD', 3),
 } as const;
 
 export function assertRuntimeConfig(): void {
