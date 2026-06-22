@@ -137,6 +137,93 @@ export function playChatSendSfx(): void {
   playPatchSet(CHAT_SEND_PATCHES);
 }
 
+const ARCADE_GAME_START_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 220, durationMs: 120, type: 'square', gainPeak: 0.05 },
+    { frequency: 330, durationMs: 120, type: 'square', gainPeak: 0.048, delayMs: 90 },
+    { frequency: 440, durationMs: 180, type: 'triangle', gainPeak: 0.055, delayMs: 180 },
+  ],
+];
+
+const ARCADE_BUBBLE_CHARGE_PATCHES: TonePatch[][] = [
+  [{ frequency: 360, durationMs: 42, type: 'triangle', gainPeak: 0.028, frequencyEnd: 420 }],
+  [{ frequency: 390, durationMs: 38, type: 'sine', gainPeak: 0.026, frequencyEnd: 470 }],
+];
+
+const ARCADE_BUBBLE_BIG_POP_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 240, durationMs: 140, type: 'sine', gainPeak: 0.07, frequencyEnd: 150 },
+    { frequency: 520, durationMs: 110, type: 'triangle', gainPeak: 0.04, delayMs: 36 },
+    { frequency: 760, durationMs: 90, type: 'sine', gainPeak: 0.028, delayMs: 72 },
+  ],
+];
+
+const ARCADE_BUBBLE_SMALL_POP_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 300, durationMs: 95, type: 'sine', gainPeak: 0.058, frequencyEnd: 210 },
+    { frequency: 480, durationMs: 72, type: 'triangle', gainPeak: 0.032, delayMs: 24 },
+  ],
+];
+
+const ARCADE_GAME_TICK_PATCHES: TonePatch[][] = [
+  [{ frequency: 880, durationMs: 48, type: 'square', gainPeak: 0.03, frequencyEnd: 660 }],
+];
+
+const ARCADE_GAME_OVER_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 420, durationMs: 160, type: 'triangle', gainPeak: 0.05, frequencyEnd: 280 },
+    { frequency: 260, durationMs: 220, type: 'sine', gainPeak: 0.045, delayMs: 120, frequencyEnd: 140 },
+  ],
+];
+
+const ARCADE_SCORE_REVEAL_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 330, durationMs: 90, type: 'triangle', gainPeak: 0.04 },
+    { frequency: 495, durationMs: 110, type: 'sine', gainPeak: 0.042, delayMs: 70 },
+    { frequency: 660, durationMs: 150, type: 'triangle', gainPeak: 0.048, delayMs: 150 },
+  ],
+];
+
+const ARCADE_MENU_SELECT_PATCHES: TonePatch[][] = [
+  [{ frequency: 540, durationMs: 54, type: 'square', gainPeak: 0.034, frequencyEnd: 720 }],
+];
+
+export function playArcadeGameStartSfx(): void {
+  playPatchSet(ARCADE_GAME_START_PATCHES);
+}
+
+export function playArcadeBubbleChargeSfx(progress = 0.5): void {
+  const patches = pickRandomPatch(ARCADE_BUBBLE_CHARGE_PATCHES).map((patch) => ({
+    ...patch,
+    frequency: patch.frequency + progress * 80,
+    gainPeak: patch.gainPeak + progress * 0.01,
+  }));
+
+  for (const patch of patches) {
+    playTone(patch);
+  }
+}
+
+export function playArcadeBubblePopSfx(size: 'small' | 'big' = 'small'): void {
+  playPatchSet(size === 'big' ? ARCADE_BUBBLE_BIG_POP_PATCHES : ARCADE_BUBBLE_SMALL_POP_PATCHES);
+}
+
+export function playArcadeGameTickSfx(): void {
+  playPatchSet(ARCADE_GAME_TICK_PATCHES);
+}
+
+export function playArcadeGameOverSfx(): void {
+  playPatchSet(ARCADE_GAME_OVER_PATCHES);
+}
+
+export function playArcadeScoreRevealSfx(): void {
+  playPatchSet(ARCADE_SCORE_REVEAL_PATCHES);
+}
+
+export function playArcadeMenuSelectSfx(): void {
+  playPatchSet(ARCADE_MENU_SELECT_PATCHES);
+}
+
 export function playSfx(kind: SfxKind): void {
   if (kind === 'button') {
     playButtonClickSfx();

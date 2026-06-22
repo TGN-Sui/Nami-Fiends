@@ -228,9 +228,11 @@ export function useChannelDirectory(limit = 50): {
     [data?.channels, loadState, liveQueryEnabled]
   );
 
+  const channels = useMemo(() => channelsFromDirectory(items), [items]);
+
   return {
     items,
-    channels: channelsFromDirectory(items),
+    channels,
     loadState,
     usesFixtures: channelDirectoryUsesFixtures(items),
   };

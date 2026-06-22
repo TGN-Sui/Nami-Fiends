@@ -7,6 +7,7 @@ import {
   officialNamiPassportMarkLabel,
 } from './channel-surface.js';
 import { isMemberVerified } from './member-access.js';
+import { readMemberArcadeBubblePassportStats } from './arcade-bubble-game-store.js';
 import { getNamiProgression } from './member-progression.js';
 import {
   isOwnerPassportMember,
@@ -122,6 +123,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   const ownerPassport = isOwnerPassportMember(props.member, connectedOwner);
   const ownerLabels = resolveOwnerPassportLabels(connectedOwner);
   const progression = memberProgression(props.member);
+  const arcadeBubbleStats = readMemberArcadeBubblePassportStats(props.member.id);
   const layout = props.layout ?? 'vertical';
   const passportInteractive = ownerPassport || isPassportInteractive(props.member, reviewedSignal);
   const displayTier = ownerPassport
@@ -512,6 +514,10 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div>
               <span>Collectors #</span>
               <strong>#{progression.collectorNumber}</strong>
+            </div>
+            <div>
+              <span>Arcade Bubbles</span>
+              <strong>{arcadeBubbleStats.totalBubblesPopped.toLocaleString()}</strong>
             </div>
             <div>
               <span>Verification</span>

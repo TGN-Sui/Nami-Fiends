@@ -19,6 +19,7 @@ const PROFILE_KEY_PREFIX = 'nami.channel.owner.profile.';
 export type ChannelOwnerProfileEdits = {
   platforms: SupportedPlatform[];
   genres: string[];
+  tagline?: string;
 };
 
 let storeVersion = 0;
@@ -49,19 +50,16 @@ function readStoredEdits(channelId: string): ChannelOwnerProfileEdits | null {
 
     const parsed = JSON.parse(stored) as Partial<ChannelOwnerProfileEdits>;
 
-    if (!Array.isArray(parsed.platforms)) {
-      return null;
-    }
-
     const genres = Array.isArray(parsed.genres)
       ? normalizeGameGenres(parsed.genres.filter((entry) => typeof entry === 'string'))
       : [];
-
+    const platforms = Array.isArray(parsed.platforms)
+      ? normalizeSupportedPlatforms(parsed.platforms.filter((entry) => typeof entry === 'string'))
+      : [];
     return {
-      platforms: normalizeSupportedPlatforms(
-        parsed.platforms.filter((entry) => typeof entry === 'string')
-      ),
+      platforms,
       genres,
+      ...(typeof parsed.tagline === 'string' ? { tagline: parsed.tagline.trim() } : {}),
     };
   } catch {
     return null;
@@ -100,11 +98,17 @@ export function readChannelOwnerProfileEdits(channelId: string): ChannelOwnerPro
 
 export function saveChannelOwnerProfileEdits(
   channelId: string,
-  edits: { platforms: string[]; genres: string[] },
+  edits: { platforms: string[]; genres: string[]; tagline?: string },
 ): void {
+  const existing = readStoredEdits(channelId);
   const normalized: ChannelOwnerProfileEdits = {
     platforms: normalizeSupportedPlatforms(edits.platforms),
     genres: normalizeGameGenres(edits.genres),
+    ...(edits.tagline !== undefined
+      ? { tagline: edits.tagline.trim() }
+      : existing?.tagline
+        ? { tagline: existing.tagline }
+        : {}),
   };
 
   window.localStorage.setItem(
@@ -112,6 +116,20 @@ export function saveChannelOwnerProfileEdits(
     JSON.stringify(normalized satisfies ChannelOwnerProfileEdits),
   );
   emit();
+}
+
+export function saveChannelOwnerTagline(
+  channelId: string,
+  channel: NamiChannel,
+  tagline: string,
+): void {
+  const existing = readStoredEdits(channelId);
+
+  saveChannelOwnerProfileEdits(channelId, {
+    platforms: existing?.platforms ?? defaultPlatformsForChannel(channel),
+    genres: existing?.genres ?? defaultGenresForChannel(channel),
+    tagline,
+  });
 }
 
 export function saveChannelOwnerPlatforms(channelId: string, platforms: string[]): void {
@@ -142,15 +160,23 @@ export function withChannelOwnerProfile(channel: NamiChannel): NamiChannel {
       ? edits.genres
       : ticketGenres ?? defaultGenresForChannel(channel);
   const genre = formatGameGenresForDisplay(genres) || channel.genre;
+  const tagline = edits?.tagline !== undefined ? edits.tagline : channel.tagline;
+  const nextPlatforms = platforms.length > 0 ? [...platforms] : channel.platforms;
+  const unchanged =
+    tagline === channel.tagline &&
+    genre === channel.genre &&
+    nextPlatforms.length === channel.platforms.length &&
+    nextPlatforms.every((platform, index) => platform === channel.platforms[index]);
 
-  if (platforms.length === 0 && genre === channel.genre) {
+  if (unchanged) {
     return channel;
   }
 
   return {
     ...channel,
-    platforms: platforms.length > 0 ? [...platforms] : channel.platforms,
+    platforms: nextPlatforms,
     genre,
+    tagline,
   };
 }
 

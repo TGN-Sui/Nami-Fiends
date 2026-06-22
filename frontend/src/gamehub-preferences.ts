@@ -4,7 +4,6 @@ import { MOBILE_GAMING_GENRE } from './platform-genre-options.js';
 
 export const gameHubBrowserFilters = [
   'All',
-  'Games',
   'IRL',
   'Music & DJs',
   'Creative',
@@ -47,7 +46,7 @@ const defaultInterestModules: GameHubInterestModule[] = [
     label: 'Gaming',
     kind: 'genre',
     ref: 'Gaming / Social',
-    filters: ['Games', 'PC'],
+    filters: ['PC', 'Esports'],
   },
   {
     id: 'interest-2',
@@ -60,6 +59,18 @@ const defaultInterestModules: GameHubInterestModule[] = [
 
 function isBrowserFilter(value: unknown): value is GameHubBrowserFilter {
   return typeof value === 'string' && gameHubBrowserFilters.includes(value as GameHubBrowserFilter);
+}
+
+function sanitizeInterestModuleFilters(filters: unknown): GameHubBrowserFilter[] {
+  if (!Array.isArray(filters)) {
+    return ['All'];
+  }
+
+  const normalized = filters
+    .map((entry) => (entry === 'Games' ? 'PC' : entry))
+    .filter(isBrowserFilter);
+
+  return normalized.length > 0 ? normalized : ['All'];
 }
 
 export function readGameHubInterestModules(): GameHubInterestModule[] {
@@ -85,13 +96,12 @@ export function readGameHubInterestModules(): GameHubInterestModule[] {
           typeof entry.label === 'string' &&
           (entry.kind === 'genre' || entry.kind === 'game' || entry.kind === 'game-genre') &&
           typeof entry.ref === 'string' &&
-          Array.isArray(entry.filters) &&
-          entry.filters.every(isBrowserFilter)
+          Array.isArray(entry.filters)
         );
       })
       .map((module) => ({
         ...module,
-        filters: [...module.filters],
+        filters: sanitizeInterestModuleFilters(module.filters),
       }));
   } catch {
     return defaultInterestModules.map((module) => ({ ...module, filters: [...module.filters] }));
@@ -174,15 +184,6 @@ export function channelMatchesGameHubFilter(
   const platforms = channel.platforms.map((platform) => platform.toLowerCase());
 
   if (filter === 'All') return true;
-  if (filter === 'Games') {
-    return (
-      genre.includes('gaming') ||
-      genre.includes('adventure') ||
-      genre.includes('casual') ||
-      genre.includes('arcade') ||
-      genre.includes('pvp')
-    );
-  }
   if (filter === 'IRL') return genre.includes('irl');
   if (filter === 'Music & DJs') return genre.includes('music') || genre.includes('dj');
   if (filter === 'Creative') return genre.includes('creative') || genre.includes('builder');

@@ -4,6 +4,7 @@ import {
   ChannelNewsDetailOverlay,
   type ChannelNewsItem,
 } from './ChannelNewsDetailOverlay.js';
+import { ChannelAboutDescriptionBlock } from './ChannelAboutDescriptionBlock.js';
 import { ChannelOwnerSection } from './ChannelOwnerSection.js';
 import { ChannelProfileChatSection } from './ChannelProfileChatSection.js';
 import { ChannelGameReviewsSection } from './ChannelGameReviewsSection.js';
@@ -431,7 +432,7 @@ export function ChannelProfileScreen(props: {
       <section className="channel-profile-section channel-profile-about">
         <div className="channel-profile-about-intro">
           <h2>About {channel.name}</h2>
-          <p>{channel.tagline}</p>
+          <ChannelAboutDescriptionBlock channel={channel} isChannelOwner={chrome.isChannelOwner} />
 
           {trailerUrl ? (
             <div className="channel-profile-about-trailer">

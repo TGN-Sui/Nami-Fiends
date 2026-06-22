@@ -11707,6 +11707,7 @@ body::after {
   gap: 10px;
 }
 
+.gamehub-swipe-copy h2,
 .gamehub-swipe-copy h3,
 .gamehub-swipe-copy p {
   margin: 0;
@@ -11717,7 +11718,8 @@ body::after {
   line-height: 1.55;
 }
 
-.gamehub-swipe-copy strong {
+.gamehub-swipe-copy strong,
+.gamehub-swipe-deck-counter {
   width: max-content;
   padding: 7px 10px;
   border-radius: 999px;
@@ -12145,8 +12147,12 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   gap: 12px;
 }
 
-.gamehub-swipe-actions button {
+.gamehub-swipe-actions button:not(.gamehub-swipe-arrow-button) {
   min-width: 132px;
+}
+
+.gamehub-swipe-actions button.gamehub-swipe-arrow-button {
+  min-width: 0;
 }
 
 .gamehub-swipe-actions button.is-open-swipe-card {

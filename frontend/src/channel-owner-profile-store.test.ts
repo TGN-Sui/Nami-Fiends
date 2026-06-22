@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   saveChannelOwnerProfileEdits,
+  saveChannelOwnerTagline,
   withChannelOwnerProfile,
 } from './channel-owner-profile-store.js';
 import type { NamiChannel } from './uiMockData.js';
@@ -73,5 +74,13 @@ describe('channel-owner-profile-store', () => {
 
     expect(updated.genre).toBe('Shooter / Indie');
     expect(updated.platforms).toEqual(['PC', 'Mobile']);
+  });
+
+  it('applies saved game descriptions to the channel profile', () => {
+    saveChannelOwnerTagline(channel.id, channel, 'A tactical roguelike with weekly raids.');
+
+    const updated = withChannelOwnerProfile(channel);
+
+    expect(updated.tagline).toBe('A tactical roguelike with weekly raids.');
   });
 });

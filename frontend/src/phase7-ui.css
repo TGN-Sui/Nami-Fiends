@@ -4043,6 +4043,151 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   filter: saturate(1.06) contrast(1.03);
 }
 
+/* Swipe deck — card column + controls aligned to deck width */
+.gamehub-swipe-deck-column {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.gamehub-swipe-deck-column .gamehub-swipe-deck {
+  width: min(430px, 100%);
+}
+
+.gamehub-swipe-deck-column .gamehub-swipe-actions {
+  grid-column: auto;
+  width: min(430px, 100%);
+  justify-content: center;
+  gap: 14px;
+}
+
+.gamehub-swipe-arrow-button {
+  --gamehub-swipe-arrow-bubble-size: 44px;
+  width: var(--gamehub-swipe-arrow-bubble-size);
+  height: var(--gamehub-swipe-arrow-bubble-size);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 22%, transparent);
+  background:
+    radial-gradient(
+      circle at 30% 24%,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent),
+      transparent 58%
+    ),
+    rgba(5, 9, 15, 0.68);
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 72%, #ffffff);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 16px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 8%, transparent);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.gamehub-swipe-arrow-button::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
+.gamehub-swipe-arrow-button.is-swipe-previous::before {
+  border-right: 9px solid currentColor;
+  margin-left: -2px;
+}
+
+.gamehub-swipe-arrow-button.is-swipe-next::before {
+  border-left: 9px solid currentColor;
+  margin-right: -2px;
+}
+
+.gamehub-swipe-arrow-button:hover,
+.gamehub-swipe-arrow-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 48%, transparent);
+  background:
+    radial-gradient(
+      circle at 30% 24%,
+      color-mix(in srgb, var(--active-channel-brand, #75d7ff) 22%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--active-channel-brand, #75d7ff) 12%, rgba(5, 9, 15, 0.76));
+  color: color-mix(in srgb, var(--active-channel-brand, #75d7ff) 88%, #ffffff);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 22px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 16%, transparent);
+}
+
+.gamehub-swipe-arrow-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--active-channel-brand, #75d7ff) 68%, transparent);
+  outline-offset: 3px;
+}
+
+button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--game-card-brand, #75d7ff) 28%, transparent);
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:focus-visible {
+  outline: 2px solid rgba(117, 215, 255, 0.72);
+  outline-offset: 4px;
+}
+
+button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
+  border-color: color-mix(in srgb, var(--game-card-brand, #75d7ff) 42%, transparent);
+}
+
+/* Swipe deck — reveal card details on hover like the tile strip */
+.gamehub-swipe-cover-card .gamehub-swipe-cover-overlay {
+  transform: translateY(calc(100% + 18px));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 240ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 200ms ease;
+}
+
+.gamehub-swipe-cover-card:hover .gamehub-swipe-cover-overlay,
+.gamehub-swipe-cover-card:focus-within .gamehub-swipe-cover-overlay {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gamehub-swipe-cover-card:not(:hover):not(:focus-within) .gamehub-swipe-cover-art::after {
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(5, 9, 15, 0.12) 72%, rgba(5, 9, 15, 0.34) 100%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.06), transparent 38%);
+}
+
+.gamehub-swipe-cover-card:hover .gamehub-swipe-cover-art::after,
+.gamehub-swipe-cover-card:focus-within .gamehub-swipe-cover-art::after {
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(5, 9, 15, 0.3) 48%, rgba(5, 9, 15, 0.9) 100%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.11), transparent 38%);
+}
+
 .gamehub-channel-tile-hover-head {
   display: flex;
   align-items: center;
@@ -14952,6 +15097,46 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   line-height: 1.55;
 }
 
+.channel-about-description-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.channel-about-description-field textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.channel-about-description-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.channel-about-description-saved {
+  color: rgba(159, 255, 210, 0.92);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.gamehub-swipe-copy.channel-profile-about-intro {
+  align-content: start;
+}
+
+.gamehub-swipe-copy.channel-profile-about-intro h2 {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+}
+
+.gamehub-swipe-copy.channel-profile-about-intro p {
+  margin-top: 10px;
+}
+
+.gamehub-swipe-deck-counter {
+  margin-top: 14px;
+}
+
 .channel-profile-about-meta {
   display: flex;
   flex-wrap: wrap;
@@ -15844,9 +16029,15 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   --sidebar-rail-scale-duration: 720ms;
   --sidebar-rail-scale-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-rail-shift-duration: 720ms;
-  --sidebar-rail-icon-gap: calc(var(--sidebar-glyph-size) * 0.28);
-  --sidebar-rail-section-gap: calc(var(--sidebar-glyph-size) * 0.35);
+  --sidebar-rail-icon-gap: calc(var(--sidebar-glyph-size) * 0.18);
+  --sidebar-rail-section-gap: calc(var(--sidebar-glyph-size) * 0.22);
   --sidebar-rail-item-slot: calc(var(--sidebar-glyph-size) * var(--sidebar-glyph-hover-scale));
+  --sidebar-rail-secondary-slot: calc(var(--sidebar-glyph-size) * 1.14);
+  --sidebar-hub-collapse-absorb-scale: 1.08;
+  --sidebar-rail-collapse-duration: 520ms;
+  --sidebar-rail-collapse-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --sidebar-collapse-flight-step: calc(var(--sidebar-rail-secondary-slot) + var(--sidebar-rail-icon-gap));
+  --sidebar-collapse-flight-tail: calc(var(--sidebar-rail-section-gap) + var(--sidebar-rail-secondary-slot));
 }
 
 .nami-app:has(.sidebar.is-icon-rail) {
@@ -15882,7 +16073,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   width: var(--sidebar-rail-axis-width);
   height: calc(100vh - 56px);
   max-height: calc(100vh - 56px);
-  padding: 8px 0 0;
+  padding: 8px 0 10px;
   margin-left: 14px;
   border: none !important;
   border-radius: 0;
@@ -16048,6 +16239,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .sidebar.is-icon-rail .sidebar-nav > button:hover,
 .sidebar.is-icon-rail .sidebar-nav > button:focus-visible,
 .sidebar.is-icon-rail .sidebar-nav > button.is-active,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:hover,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:focus-visible,
 .sidebar.is-icon-rail .sidebar-radio-toggle,
 .sidebar.is-icon-rail .sidebar-radio-toggle:hover,
 .sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible {
@@ -16294,8 +16488,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   padding: 0 0 0 var(--sidebar-icon-rail-inset);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
@@ -16305,12 +16497,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 /* Active page: keep hover scale, expand right into content. */
-.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active,
 .sidebar.is-icon-rail .sidebar-nav > button.is-active {
   z-index: 12;
 }
 
-.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button.is-active .nav-icon {
   color: #ffffff;
   filter: none;
@@ -16319,12 +16509,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 /* Adjacent icons echo 15% of the hover/selected scale, expanding right. */
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
 .sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
@@ -16398,8 +16582,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   color: rgba(159, 233, 255, 0.78);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:hover .sidebar-nav-label,
-.sidebar.is-icon-rail .sidebar-hub-destinations > button:focus-visible .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-nav > button:hover .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .sidebar-nav-label,
 .sidebar.is-icon-rail .sidebar-radio-toggle:hover .sidebar-nav-label,
@@ -16472,7 +16654,30 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   .sidebar.is-icon-rail .sidebar-nav,
   .sidebar.is-icon-rail .sidebar-hub-rail-mark-stack .sidebar-hub-swap-mark,
   .sidebar.is-icon-rail .sidebar-nav > button::after,
-  .sidebar.is-icon-rail .sidebar-radio-toggle::after {
+  .sidebar.is-icon-rail .sidebar-radio-toggle::after,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button,
+  .sidebar.is-icon-rail .sidebar-hub-destinations {
+    transition: none;
+  }
+
+  .sidebar.is-icon-rail.is-vertically-collapsed .sidebar-hub-destinations {
+    transform: scale(1);
+    filter: none;
+  }
+
+  .sidebar.is-icon-rail.is-vertically-collapsed .sidebar-icon-rail-secondary > *,
+  .sidebar.is-icon-rail.is-vertically-collapsed .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+    animation: none;
+    transform: translate3d(0, var(--collapse-travel-y), 0);
+    opacity: 0;
+    transition: none;
+  }
+
+  .sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-icon-rail-secondary > *,
+  .sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+    animation: none;
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
     transition: none;
   }
 }
@@ -18257,31 +18462,191 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 }
 
 /* =========================================================
-   Sidebar hub destinations — uniform rail cluster
+   Sidebar hub destinations — downward triangle cluster
    ========================================================= */
 
 .sidebar.is-icon-rail .sidebar-hub-destinations {
-  display: grid;
-  gap: calc(var(--sidebar-rail-icon-gap) * 0.72);
+  --hub-triangle-half-width: calc(var(--sidebar-glyph-size) * 0.9);
+  --hub-triangle-rise: calc(var(--sidebar-glyph-size) * 1.08);
+  position: relative;
   width: 100%;
+  height: calc(var(--sidebar-glyph-size) * 2.72);
+  margin: calc(var(--sidebar-rail-icon-gap) * 0.15) 0 calc(var(--sidebar-rail-icon-gap) * 0.25);
+  display: block;
+  overflow: visible;
+  transform: scale(1);
+  transform-origin: var(--sidebar-rail-center) 52%;
+  transition:
+    transform var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease),
+    filter var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-destinations > button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  min-width: 0;
-  min-height: var(--sidebar-rail-item-slot);
-  height: var(--sidebar-rail-item-slot);
+.sidebar.is-icon-rail .sidebar-hub-destinations::before {
+  content: '';
+  position: absolute;
+  left: var(--sidebar-rail-center);
+  top: calc(var(--sidebar-glyph-size) * 0.42);
+  width: calc(var(--hub-triangle-half-width) * 2 + var(--sidebar-glyph-size) * 0.18);
+  height: var(--hub-triangle-rise);
+  transform: translateX(-50%);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: linear-gradient(
+    180deg,
+    rgba(117, 215, 255, 0.1) 0%,
+    rgba(117, 215, 255, 0.03) 58%,
+    transparent 100%
+  );
+  border-top: 1px solid rgba(117, 215, 255, 0.14);
+  filter: drop-shadow(0 0 14px rgba(117, 215, 255, 0.08));
+  pointer-events: none;
+  transition:
+    opacity var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: var(--sidebar-glyph-size);
+  min-width: var(--sidebar-glyph-size);
+  height: var(--sidebar-glyph-size);
+  min-height: var(--sidebar-glyph-size);
   margin: 0;
-  padding: 0 0 0 var(--sidebar-icon-rail-inset);
+  padding: 0;
   overflow: visible;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   color: var(--nami-theme-nav-icon, #9fdcff);
+  transition:
+    top var(--sidebar-rail-shift-duration) var(--sidebar-rail-scale-ease),
+    left var(--sidebar-rail-shift-duration) var(--sidebar-rail-scale-ease),
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left {
+  left: calc(var(--sidebar-rail-center) - var(--hub-triangle-half-width));
+  top: calc(var(--sidebar-glyph-size) * 0.08);
+  transform: translate(-50%, 0);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right {
+  left: calc(var(--sidebar-rail-center) + var(--hub-triangle-half-width));
+  top: calc(var(--sidebar-glyph-size) * 0.08);
+  transform: translate(-50%, 0);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom {
+  left: var(--sidebar-rail-center);
+  top: calc(var(--sidebar-glyph-size) * 0.08 + var(--hub-triangle-rise));
+  transform: translate(-50%, 0);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon {
+  transform-origin: center center;
+  filter: drop-shadow(0 0 0 transparent);
+  transition:
+    transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon.owner-editable-image,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon.owner-editable-image.is-owner-asset-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 0 !important;
+  overflow: visible;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon.owner-editable-image.has-owner-asset-image {
+  background-image: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon.owner-editable-image .owner-editable-image-asset {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:focus-visible,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .nav-icon,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .nav-icon {
+  transform: scale(var(--sidebar-glyph-hover-scale));
+  filter: drop-shadow(0 0 12px rgba(117, 215, 255, 0.42));
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active .nav-icon {
+  color: #ffffff;
+  transform: scale(var(--sidebar-glyph-hover-scale));
+  filter:
+    drop-shadow(0 0 14px rgba(117, 215, 255, 0.55))
+    drop-shadow(0 0 4px rgba(141, 255, 178, 0.35));
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-triangle-apex .nav-icon {
+  filter:
+    drop-shadow(0 0 16px rgba(141, 255, 178, 0.42))
+    drop-shadow(0 0 6px rgba(117, 215, 255, 0.38));
+}
+
+.sidebar.is-icon-rail
+  .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:hover)
+  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
+  .nav-icon,
+.sidebar.is-icon-rail
+  .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:focus-visible)
+  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
+  .nav-icon {
+  transform: scale(var(--sidebar-glyph-neighbor-scale));
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button .sidebar-nav-label {
+  left: calc(50% + var(--sidebar-glyph-size) * 0.62);
+  top: 50%;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .sidebar-nav-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
 }
 
 .sidebar.is-icon-rail .sidebar-nav-divider {
@@ -18299,6 +18664,338 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
     transparent
   );
   opacity: 0.62;
+}
+
+/* Vertical collapse — hub cluster stays tappable; secondary nav folds away */
+
+@keyframes sidebar-secondary-collapse-flight {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+
+  16% {
+    transform: translate3d(calc(var(--collapse-curve-x) * 0.32), calc(var(--collapse-travel-y) * 0.1), 0);
+    opacity: 0.9;
+  }
+
+  48% {
+    transform: translate3d(var(--collapse-curve-x), calc(var(--collapse-travel-y) * 0.54), 0);
+    opacity: 0.5;
+  }
+
+  78% {
+    transform: translate3d(calc(var(--collapse-curve-x) * 0.2), calc(var(--collapse-travel-y) * 0.88), 0);
+    opacity: 0.16;
+  }
+
+  100% {
+    transform: translate3d(0, var(--collapse-travel-y), 0);
+    opacity: 0;
+  }
+}
+
+@keyframes sidebar-secondary-expand-flight {
+  0% {
+    transform: translate3d(0, var(--collapse-travel-y), 0);
+    opacity: 0;
+  }
+
+  22% {
+    transform: translate3d(calc(var(--collapse-curve-x) * 0.2), calc(var(--collapse-travel-y) * 0.88), 0);
+    opacity: 0.16;
+  }
+
+  52% {
+    transform: translate3d(var(--collapse-curve-x), calc(var(--collapse-travel-y) * 0.54), 0);
+    opacity: 0.5;
+  }
+
+  84% {
+    transform: translate3d(calc(var(--collapse-curve-x) * 0.32), calc(var(--collapse-travel-y) * 0.1), 0);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.sidebar.is-icon-rail.is-vertically-collapsed {
+  height: auto;
+  max-height: none;
+}
+
+.sidebar.is-icon-rail.is-vertically-collapsed .sidebar-official-logo-slot {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sidebar.is-icon-rail.is-vertically-collapsed .sidebar-hub-destinations {
+  transform: scale(var(--sidebar-hub-collapse-absorb-scale));
+  filter: drop-shadow(0 0 18px rgba(117, 215, 255, 0.14));
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary {
+  display: grid;
+  gap: var(--sidebar-rail-icon-gap);
+  justify-items: center;
+  width: 100%;
+  overflow: visible;
+  max-height: 720px;
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    max-height var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease),
+    margin var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease);
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > *,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  --collapse-travel-y: 0px;
+  --collapse-curve-x: 0px;
+}
+
+/* Collapse flight order: divider, profile, guild, messages, events, settings */
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(1) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -0.42);
+  --collapse-curve-x: -6px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(2) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -1.08);
+  --collapse-curve-x: 8px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(3) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -2.08);
+  --collapse-curve-x: -10px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(4) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -3.08);
+  --collapse-curve-x: 7px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(5) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -4.08);
+  --collapse-curve-x: -8px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > :nth-child(6) {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -5.08);
+  --collapse-curve-x: 6px;
+}
+
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  --collapse-travel-y: calc(var(--sidebar-collapse-flight-step) * -5.08 - var(--sidebar-collapse-flight-tail));
+  --collapse-curve-x: -5px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > *,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  position: relative;
+  z-index: 1;
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+  transition:
+    transform var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease),
+    opacity var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease);
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sidebar-glyph-size);
+  min-width: var(--sidebar-glyph-size);
+  max-width: var(--sidebar-glyph-size);
+  height: var(--sidebar-rail-secondary-slot);
+  min-height: var(--sidebar-rail-secondary-slot);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: var(--nami-theme-nav-icon, #9fdcff);
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary .nav-icon.owner-editable-image {
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary .nav-icon,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary .nav-icon {
+  transform-origin: center center;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:focus-visible .nav-icon,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:hover .nav-icon,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:focus-visible .nav-icon {
+  transform: scale(var(--sidebar-glyph-hover-scale));
+  transform-origin: center center;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active .nav-icon {
+  color: #ffffff;
+  transform: scale(var(--sidebar-glyph-hover-scale));
+  transform-origin: center center;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
+  transform: scale(var(--sidebar-glyph-neighbor-scale));
+  transform-origin: center center;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:focus-visible .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:hover .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:focus-visible .sidebar-nav-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:hover,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover,
+[data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover,
+[data-nami-theme='dark'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover,
+[data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button.is-active {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-secondary .sidebar-nav-divider {
+  justify-self: center;
+  margin-left: 0;
+  margin-top: calc(var(--sidebar-rail-icon-gap) * 0.1);
+  margin-bottom: calc(var(--sidebar-rail-icon-gap) * 0.05);
+}
+
+.sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary {
+  justify-items: center;
+}
+
+.sidebar.is-icon-rail.is-vertically-collapsed .sidebar-icon-rail-secondary {
+  max-height: 0;
+  margin: 0;
+  pointer-events: none;
+  overflow: visible;
+  transition:
+    max-height 0ms linear var(--sidebar-rail-collapse-duration),
+    margin 0ms linear var(--sidebar-rail-collapse-duration);
+}
+
+.sidebar.is-icon-rail.is-vertically-collapsed .sidebar-icon-rail-secondary > *,
+.sidebar.is-icon-rail.is-vertically-collapsed .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  z-index: 18;
+  pointer-events: none;
+  animation: sidebar-secondary-collapse-flight var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease) forwards;
+  transition: none;
+}
+
+.sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-icon-rail-secondary,
+.sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-radio-block.sidebar-icon-rail-secondary {
+  max-height: 720px !important;
+  margin: 0 !important;
+  pointer-events: auto;
+  overflow: visible;
+  transition: none;
+}
+
+.sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-icon-rail-secondary > *,
+.sidebar.is-icon-rail.is-sidebar-secondary-expanding .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle {
+  z-index: 18;
+  pointer-events: auto;
+  animation: sidebar-secondary-expand-flight var(--sidebar-rail-collapse-duration) var(--sidebar-rail-collapse-ease) both;
+  transition: none !important;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: var(--sidebar-glyph-size);
+  min-width: var(--sidebar-glyph-size);
+  max-width: var(--sidebar-glyph-size);
+  min-height: calc(var(--sidebar-glyph-size) * 0.72);
+  height: calc(var(--sidebar-glyph-size) * 0.72);
+  margin: calc(var(--sidebar-rail-icon-gap) * 0.1) 0 calc(var(--sidebar-rail-icon-gap) * 0.05);
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--nami-theme-nav-icon, #9fdcff);
+  cursor: pointer;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-arrow {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--sidebar-glyph-size);
+  height: calc(var(--sidebar-glyph-size) * 0.42);
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-arrow::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid currentColor;
+  opacity: 0.82;
+  transition: transform 360ms ease, opacity 360ms ease;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-arrow.is-arrow-up::before {
+  border-top: none;
+  border-bottom: 7px solid currentColor;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:hover .sidebar-vertical-collapse-arrow::before,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:focus-visible .sidebar-vertical-collapse-arrow::before {
+  opacity: 1;
+}
+
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:hover .sidebar-nav-label,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:focus-visible .sidebar-nav-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
 }
 
 html.is-nami-arcade-surface,
@@ -18407,6 +19104,11 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
 .nami-app[data-active-page='arcade'] .arcade-stage-background-shell *::before,
 .nami-app[data-active-page='arcade'] .arcade-stage-background-shell *::after {
   border-radius: 0 !important;
+}
+
+.nami-app[data-active-page='arcade'] .arcade-bubble-game-bubble,
+.nami-app[data-active-page='arcade'] .arcade-bubble-game-bubble-pop-ring {
+  border-radius: 999px !important;
 }
 
 .nami-app[data-active-page='arcade'] .owner-editable-image-hint {
@@ -18912,5 +19614,316 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   .arcade-screen-menu-status {
     justify-self: start;
   }
+}
+
+/* Arcade bubble game cabinet + playfield */
+
+.arcade-screen.is-arcade-game-active,
+.nami-arcade-box.is-arcade-game-active {
+  transition:
+    width 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    max-height 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    min-height 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nami-arcade-box.is-arcade-game-active {
+  width: min(1180px, 100%);
+  max-height: min(92vh, 880px);
+  aspect-ratio: 16 / 11;
+}
+
+.arcade-screen-shell.is-bubble-game-playing,
+.arcade-screen-shell.is-bubble-game-results,
+.arcade-screen-shell.is-bubble-game-mode-select {
+  display: block;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.arcade-bubble-mode-select,
+.arcade-bubble-results {
+  display: grid;
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+  padding: 0 !important;
+  border: 3px solid var(--arcade-border) !important;
+  border-radius: 0 !important;
+  background: var(--arcade-panel) !important;
+  box-shadow:
+    0 0 0 1px rgba(141, 255, 178, 0.12) inset,
+    var(--arcade-pixel-shadow) !important;
+}
+
+.arcade-bubble-mode-select-head,
+.arcade-bubble-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(141, 255, 178, 0.18);
+  color: var(--arcade-phosphor);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-bubble-mode-select-copy,
+.arcade-bubble-results-score {
+  padding: 0 14px;
+  color: rgba(214, 244, 224, 0.88);
+}
+
+.arcade-bubble-mode-select-copy h2,
+.arcade-bubble-results-score strong {
+  margin: 0;
+  font-family: var(--arcade-font-title);
+  color: #f4fbff;
+}
+
+.arcade-bubble-results-score {
+  display: grid;
+  gap: 4px;
+}
+
+.arcade-bubble-results-score strong {
+  font-size: clamp(2rem, 6vw, 3rem);
+  letter-spacing: 0.08em;
+  color: var(--arcade-phosphor);
+}
+
+.arcade-bubble-mode-select-actions,
+.arcade-bubble-results-actions {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.arcade-bubble-mode-button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 0;
+  border: 3px solid rgba(117, 215, 255, 0.34);
+  background: rgba(8, 12, 18, 0.88);
+  color: #f4fbff;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--arcade-pixel-shadow);
+}
+
+.arcade-bubble-mode-button.is-hard-mode {
+  border-color: rgba(255, 45, 149, 0.42);
+}
+
+.arcade-bubble-mode-button strong {
+  font-family: var(--arcade-font-title);
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+}
+
+.arcade-bubble-mode-button small,
+.arcade-bubble-results-score p {
+  margin: 0;
+  color: rgba(159, 233, 255, 0.76);
+  font-size: 0.95rem;
+}
+
+.arcade-bubble-mode-select-foot {
+  padding: 0 14px 12px;
+}
+
+.arcade-bubble-results-leaderboard {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px;
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.arcade-bubble-results-leaderboard li {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(141, 255, 178, 0.16);
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(214, 244, 224, 0.86);
+}
+
+.arcade-bubble-results-leaderboard li.is-current-player {
+  border-color: rgba(141, 255, 178, 0.48);
+  background: rgba(141, 255, 178, 0.12);
+  color: var(--arcade-phosphor);
+}
+
+.arcade-bubble-results-empty {
+  display: block;
+  padding: 10px;
+  color: rgba(159, 233, 255, 0.72);
+}
+
+.arcade-bubble-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.arcade-bubble-game-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.arcade-bubble-game-hud-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.arcade-bubble-game-exit-button {
+  pointer-events: auto;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 0;
+  border: 3px solid rgba(255, 49, 82, 0.42);
+  background: rgba(8, 12, 18, 0.88);
+  color: #ffb4c8;
+  font-family: var(--arcade-font-title);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.arcade-bubble-game-hud-block {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 0;
+  border: 2px solid rgba(141, 255, 178, 0.24);
+  background: rgba(8, 12, 18, 0.82);
+  color: var(--arcade-phosphor-dim);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-bubble-game-hud-block strong {
+  color: #f4fbff;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.arcade-bubble-game-hud-block strong.is-arcade-time-warning {
+  color: #ff8ec8;
+}
+
+.arcade-bubble-game-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.arcade-bubble-game-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 8px;
+  margin: 0;
+  text-align: center;
+  border: 1px solid rgba(117, 215, 255, 0.34);
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.24), transparent 20%),
+    radial-gradient(circle at center, rgba(90, 220, 170, 0.18), rgba(77, 163, 255, 0.1) 50%, rgba(20, 36, 56, 0.56) 80%);
+  box-shadow:
+    inset 0 0 16px rgba(117, 215, 255, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  will-change: transform, opacity;
+}
+
+.arcade-bubble-game-bubble.is-big-bubble {
+  border-color: rgba(255, 179, 71, 0.42);
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.28), transparent 20%),
+    radial-gradient(circle at center, rgba(255, 179, 71, 0.22), rgba(255, 45, 149, 0.12) 52%, rgba(20, 36, 56, 0.58) 80%);
+}
+
+.arcade-bubble-game-bubble-pop-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background:
+    conic-gradient(
+      rgba(117, 215, 255, 0.92) calc(var(--pop-progress, 0) * 360deg),
+      rgba(117, 215, 255, 0.12) 0
+    )
+    border-box;
+  mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.arcade-bubble-game-bubble.is-pop-charging .arcade-bubble-game-bubble-pop-ring,
+.arcade-bubble-game-bubble.is-pop-hit .arcade-bubble-game-bubble-pop-ring {
+  opacity: 1;
+}
+
+.arcade-bubble-game-bubble.is-pop-hit {
+  filter: brightness(1.12);
+  border-color: rgba(160, 230, 255, 0.72);
+}
+
+.arcade-bubble-game-bubble.is-popping {
+  pointer-events: none;
+  filter: brightness(1.35) saturate(1.2);
+  animation: landingGenreBubblePopBurst 320ms ease forwards;
+}
+
+.arcade-bubble-game-bubble strong {
+  display: block;
+  font-size: clamp(0.62rem, calc(0.46rem * var(--bubble-scale, 1)), 0.82rem);
+  line-height: 1.15;
+}
+
+.arcade-bubble-game-bubble small {
+  font-size: clamp(0.58rem, calc(0.4rem * var(--bubble-scale, 1)), 0.68rem);
+  color: rgba(214, 232, 255, 0.78);
 }
 

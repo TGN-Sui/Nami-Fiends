@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type ReactElement
 } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 
 import {
   canUseDashboardPerspectives,
@@ -156,6 +156,10 @@ import {
 
 import { clearLocalNamiSession } from './session-sign-out.js';
 import { resolveChannelCoverUrl, useChannelCoverVersion } from './channel-cover-store.js';
+import {
+  useChannelOwnerProfileVersion,
+  withChannelOwnerProfile,
+} from './channel-owner-profile-store.js';
 
 import { StudioLogoUploadCard } from './StudioLogoUploadCard.js';
 import { useStudioLogoVersion, withStudioLogo } from './studio-logo-store.js';
@@ -217,8 +221,20 @@ import {
 import { useGenreChatActivityVersion } from './genre-chat-activity-store.js';
 import { ArcadeScreen } from './ArcadeScreen.js';
 import { ArcadeStageBackground } from './ArcadeStageBackground.js';
-import { hubDestinationItems } from './domain/hub-destinations.js';
+import {
+  hubDestinationItems,
+  hubTriangleSlotClassName,
+  hubTriangleSlotForPage,
+  isHubDestinationPage,
+  resolveHubTriangleAnchor,
+} from './domain/hub-destinations.js';
+import {
+  saveSidebarVerticallyCollapsed,
+  SIDEBAR_SECONDARY_COLLAPSE_ANIMATION_MS,
+  useSidebarVerticallyCollapsed,
+} from './sidebar-vertical-collapse-store.js';
 import { resolveCommunityGrowthLineup } from './hub-community-growth.js';
+import { buildGameHubBrowserDeckEntries } from './gamehub-browser-deck.js';
 import { dedupeChannelsByIdentity } from './local-channel-directory.js';
 import {
   channelMatchesGameHubFilter,
@@ -772,10 +788,53 @@ function Sidebar(props: {
   onNavigateHubDestination: (page: 'hub' | 'gamehub' | 'arcade') => void;
 }): ReactElement {
   const igniteRadioEnabled = useIgniteRadioEnabled();
+  const isVerticallyCollapsed = useSidebarVerticallyCollapsed();
+  const [isSecondaryExpanding, setIsSecondaryExpanding] = useState(false);
+  const secondaryExpandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hubTriangleAnchor = resolveHubTriangleAnchor(props.activePage);
+
+  useEffect(() => {
+    return () => {
+      if (secondaryExpandTimerRef.current !== null) {
+        clearTimeout(secondaryExpandTimerRef.current);
+      }
+    };
+  }, []);
+
+  function handleVerticalCollapseToggle(): void {
+    if (secondaryExpandTimerRef.current !== null) {
+      clearTimeout(secondaryExpandTimerRef.current);
+      secondaryExpandTimerRef.current = null;
+    }
+
+    if (isVerticallyCollapsed) {
+      flushSync(() => {
+        setIsSecondaryExpanding(true);
+      });
+
+      window.requestAnimationFrame(() => {
+        saveSidebarVerticallyCollapsed(false);
+      });
+
+      secondaryExpandTimerRef.current = setTimeout(() => {
+        setIsSecondaryExpanding(false);
+        secondaryExpandTimerRef.current = null;
+      }, SIDEBAR_SECONDARY_COLLAPSE_ANIMATION_MS);
+      return;
+    }
+
+    setIsSecondaryExpanding(false);
+    saveSidebarVerticallyCollapsed(true);
+  }
+
+  const sidebarClassName =
+    'sidebar is-icon-rail' +
+    (isVerticallyCollapsed ? ' is-vertically-collapsed' : '') +
+    (isSecondaryExpanding ? ' is-sidebar-secondary-expanding' : '');
 
   return (
-    <aside className="sidebar is-icon-rail is-collapsed">
-      <div aria-hidden="true" className="sidebar-official-logo-slot">
+    <aside className={sidebarClassName}>
+      <div aria-hidden={isVerticallyCollapsed} className="sidebar-official-logo-slot">
         <OwnerEditableImage
           className="sidebar-official-logo"
           fallback={<span aria-hidden="true">Nami</span>}
@@ -787,13 +846,29 @@ function Sidebar(props: {
 
       <div className="sidebar-icon-rail-controls">
         <nav className="sidebar-nav">
-          <div aria-label="Hub destinations" className="sidebar-hub-destinations" role="group">
-            {hubDestinationItems.map((destination) => (
+          <div
+            aria-label="Hub destinations"
+            className="sidebar-hub-destinations"
+            data-active-hub={isHubDestinationPage(props.activePage) ? props.activePage : undefined}
+            role="group"
+          >
+            {hubDestinationItems.map((destination) => {
+              const triangleSlot = hubTriangleSlotForPage(destination.page, hubTriangleAnchor);
+
+              return (
               <button
                 key={destination.page}
                 aria-label={destination.label}
                 aria-current={props.activePage === destination.page ? 'page' : undefined}
-                className={props.activePage === destination.page ? 'is-active' : ''}
+                className={
+                  'sidebar-hub-triangle-button' +
+                  ' ' +
+                  hubTriangleSlotClassName(triangleSlot) +
+                  (props.activePage === destination.page ? ' is-active' : '') +
+                  (triangleSlot === 'bottom' ? ' is-hub-triangle-apex' : '')
+                }
+                data-hub-page={destination.page}
+                data-hub-slot={triangleSlot}
                 onClick={() => props.onNavigateHubDestination(destination.page)}
                 type="button"
               >
@@ -806,9 +881,30 @@ function Sidebar(props: {
                 />
                 <span className="sidebar-nav-label">{destination.shortLabel}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
 
+          <button
+            aria-expanded={!isVerticallyCollapsed}
+            aria-label={isVerticallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="sidebar-vertical-collapse-toggle"
+            onClick={handleVerticalCollapseToggle}
+            type="button"
+          >
+            <span
+              aria-hidden="true"
+              className={
+                'sidebar-vertical-collapse-arrow' +
+                (isVerticallyCollapsed && !isSecondaryExpanding ? ' is-arrow-up' : ' is-arrow-down')
+              }
+            />
+            <span className="sidebar-nav-label">
+              {isVerticallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            </span>
+          </button>
+
+          <div className="sidebar-icon-rail-secondary">
           <div aria-hidden="true" className="sidebar-nav-divider" />
 
           {navItems.filter((item) => item.page !== 'hub').map((item) => {
@@ -860,9 +956,10 @@ function Sidebar(props: {
             </button>
             );
           })}
+          </div>
         </nav>
 
-        <div className="sidebar-radio-block">
+        <div className="sidebar-radio-block sidebar-icon-rail-secondary">
           <button
             aria-label={igniteRadioEnabled ? 'Radio on' : 'Ignite Radio'}
             aria-pressed={igniteRadioEnabled}
@@ -1610,12 +1707,13 @@ function GameHub(props: {
 }): ReactElement {
   useChannelCoverVersion();
   useChannelBoostStore();
+  const ownerProfileVersion = useChannelOwnerProfileVersion();
   const genreChatActivityVersion = useGenreChatActivityVersion();
   const selfMember = useSelfMember();
   const { channels: directoryChannels } = useChannelDirectory(50);
   const uniqueDirectoryChannels = useMemo(
-    () => dedupeChannelsByIdentity(directoryChannels),
-    [directoryChannels],
+    () => dedupeChannelsByIdentity(directoryChannels).map(withChannelOwnerProfile),
+    [directoryChannels, ownerProfileVersion],
   );
   const [gameHubBoostNotice, setGameHubBoostNotice] = useState('');
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
@@ -1633,7 +1731,7 @@ function GameHub(props: {
     return readGameHubInterestModules();
   });
   const [nextModuleKind, setNextModuleKind] = useState<'genre' | 'game' | 'game-genre'>('genre');
-  const [nextModuleFilter, setNextModuleFilter] = useState<GameHubBrowserFilter>('Games');
+  const [nextModuleFilter, setNextModuleFilter] = useState<GameHubBrowserFilter>('PC');
   const [draggedInterestModuleId, setDraggedInterestModuleId] = useState<string | null>(null);
   const genreBubbleEntries = useMemo(
     () => buildGenreBubbleEntries(),
@@ -1644,17 +1742,8 @@ function GameHub(props: {
     .sort((left, right) => right.subscribers - left.subscribers)
     .slice(0, 4);
 
-  const randomizedBrowserEntries = useMemo(() => {
-    return uniqueDirectoryChannels
-      .map((channel) => ({
-        channel,
-        copyIndex: 0,
-        sortKey: Math.random(),
-      }))
-      .sort((left, right) => left.sortKey - right.sortKey);
-  }, [uniqueDirectoryChannels]);
-
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
+
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
   const [swipeIndex, setSwipeIndex] = useState(0);
   const tileStripRef = useHorizontalScrollStrip<HTMLDivElement>();
@@ -1676,13 +1765,19 @@ function GameHub(props: {
     props.onOpenProfile(channel);
   }
 
-  const filteredBrowserEntries = randomizedBrowserEntries.filter(({ channel }) => {
-    return channelMatchesGameHubFilter(channel, selectedBrowserFilter);
-  });
+  const filteredBrowserChannels = useMemo(() => {
+    return uniqueDirectoryChannels.filter((channel) =>
+      channelMatchesGameHubFilter(channel, selectedBrowserFilter),
+    );
+  }, [uniqueDirectoryChannels, selectedBrowserFilter]);
 
-  const filteredBrowserChannels = filteredBrowserEntries.map(({ channel }) => channel);
+  const randomizedBrowserEntries = useMemo(() => {
+    return buildGameHubBrowserDeckEntries(filteredBrowserChannels, selectedBrowserFilter);
+  }, [filteredBrowserChannels, selectedBrowserFilter]);
+
   const activeSwipeChannel =
-    filteredBrowserChannels[swipeIndex % Math.max(1, filteredBrowserChannels.length)] ?? props.selectedChannel;
+    randomizedBrowserEntries[swipeIndex % Math.max(1, randomizedBrowserEntries.length)]?.channel ??
+    props.selectedChannel;
   const showGameHubBoostAction = canShowChannelBoostAction(selfMember, props.selectedChannel.id);
   const selectedChannelBoostPower = getChannelBoostPower(props.selectedChannel.id);
 
@@ -1721,12 +1816,12 @@ function GameHub(props: {
     );
   }
   const nextSwipeChannel =
-    filteredBrowserChannels.length > 1
-      ? filteredBrowserChannels[(swipeIndex + 1) % filteredBrowserChannels.length]!
+    randomizedBrowserEntries.length > 1
+      ? randomizedBrowserEntries[(swipeIndex + 1) % randomizedBrowserEntries.length]!.channel
       : activeSwipeChannel;
   const thirdSwipeChannel =
-    filteredBrowserChannels.length > 2
-      ? filteredBrowserChannels[(swipeIndex + 2) % filteredBrowserChannels.length]!
+    randomizedBrowserEntries.length > 2
+      ? randomizedBrowserEntries[(swipeIndex + 2) % randomizedBrowserEntries.length]!.channel
       : nextSwipeChannel;
   const activeSwipeDeveloper = channelDeveloper(activeSwipeChannel);
 
@@ -1734,12 +1829,21 @@ function GameHub(props: {
     setSwipeIndex(0);
   }, [selectedBrowserFilter, browserViewMode]);
 
+  useEffect(() => {
+    if (randomizedBrowserEntries.length === 0) {
+      setSwipeIndex(0);
+      return;
+    }
+
+    setSwipeIndex((value) => value % randomizedBrowserEntries.length);
+  }, [randomizedBrowserEntries]);
+
   function moveSwipeDeck(direction: 'previous' | 'next'): void {
-    if (filteredBrowserChannels.length === 0) return;
+    if (randomizedBrowserEntries.length === 0) return;
 
     setSwipeIndex((value) => {
       const nextValue = direction === 'previous' ? value - 1 : value + 1;
-      return (nextValue + filteredBrowserChannels.length) % filteredBrowserChannels.length;
+      return (nextValue + randomizedBrowserEntries.length) % randomizedBrowserEntries.length;
     });
   }
 
@@ -1999,7 +2103,7 @@ function GameHub(props: {
           ))}
         </div>
 
-        {filteredBrowserEntries.length === 0 ? (
+        {randomizedBrowserEntries.length === 0 ? (
           <GameHubDirectoryEmpty
             copy={
               isTestLaunchMode()
@@ -2019,7 +2123,7 @@ function GameHub(props: {
             tabIndex={0}
           >
             <div className="gamehub-channel-tile-grid">
-              {filteredBrowserEntries.map(({ channel, copyIndex }) => {
+              {randomizedBrowserEntries.map(({ channel, copyIndex }) => {
                 const channelTheme = getStoredChannelBrandTheme(channel.id);
 
                 return (
@@ -2036,19 +2140,17 @@ function GameHub(props: {
           </div>
         ) : (
           <section className="gamehub-swipe-stage" aria-label="Swipe deck channel browser">
-            <div className="gamehub-swipe-copy">
-              <span className="feature-label">Swipe Discovery</span>
-              <h3>Browse game covers like a deck</h3>
-              <p>
-                Game channels use full-card cover art. Verified game channels receive the graded foil sleeve.
-              </p>
-              <strong>
-                {filteredBrowserChannels.length === 0
+            <div className="gamehub-swipe-copy channel-profile-about-intro" key={activeSwipeChannel.id}>
+              <h2>About {activeSwipeChannel.name}</h2>
+              <p>{activeSwipeChannel.tagline}</p>
+              <strong className="gamehub-swipe-deck-counter">
+                {randomizedBrowserEntries.length === 0
                   ? '0 / 0'
-                  : (swipeIndex + 1).toLocaleString() + ' / ' + filteredBrowserChannels.length.toLocaleString()}
+                  : (swipeIndex + 1).toLocaleString() + ' / ' + randomizedBrowserEntries.length.toLocaleString()}
               </strong>
             </div>
 
+            <div className="gamehub-swipe-deck-column">
             <div className="gamehub-swipe-deck">
               <div className="gamehub-swipe-shadow-card is-third">
                 <strong>{thirdSwipeChannel.name}</strong>
@@ -2057,12 +2159,15 @@ function GameHub(props: {
                 <strong>{nextSwipeChannel.name}</strong>
               </div>
 
-              <article
+              <button
+                key={activeSwipeChannel.id}
+                aria-label={'Open ' + activeSwipeChannel.name + ' profile'}
                 className={
-                  'gamehub-swipe-card gamehub-swipe-cover-card ' +
+                  'gamehub-swipe-card gamehub-swipe-cover-card is-swipe-card-open ' +
                   gameVerificationClass(activeSwipeChannel) +
                   (activeSwipeChannel.verifiedGame ? ' is-verified-foil' : '')
                 }
+                onClick={() => props.onOpenProfile(activeSwipeChannel)}
                 onPointerLeave={(event) => {
                   resetGameCardTilt(event.currentTarget);
                 }}
@@ -2073,13 +2178,14 @@ function GameHub(props: {
                   {
                     '--game-card-brand': getStoredChannelBrandTheme(activeSwipeChannel.id).primary,
                     '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary,
-                      ...gameCoverAssetVariables(activeSwipeChannel)
                   } as CSSProperties
                 }
+                type="button"
               >
                 <div
                     className={'gamehub-swipe-cover-art' + (resolveChannelCoverUrl(activeSwipeChannel) ? ' has-game-cover-image' : '')}
                     aria-hidden="true"
+                    style={gameCoverAssetVariables(activeSwipeChannel)}
                   >
                   <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
                 </div>
@@ -2132,23 +2238,23 @@ function GameHub(props: {
                     <span>{gameVerificationBadgeLabel(activeSwipeChannel)}</span>
                   </div>
                 </div>
-              </article>
+              </button>
             </div>
 
             <div className="gamehub-swipe-actions">
-              <button className="nami-surface-button" onClick={() => moveSwipeDeck('previous')} type="button">
-                Swipe Left
-              </button>
               <button
-                className="nami-surface-button is-primary-surface-button is-open-swipe-card"
-                onClick={() => props.onOpenProfile(activeSwipeChannel)}
+                aria-label="Previous card"
+                className="gamehub-swipe-arrow-button is-swipe-previous"
+                onClick={() => moveSwipeDeck('previous')}
                 type="button"
-              >
-                View Profile
-              </button>
-              <button className="nami-surface-button" onClick={() => moveSwipeDeck('next')} type="button">
-                Swipe Right
-              </button>
+              />
+              <button
+                aria-label="Next card"
+                className="gamehub-swipe-arrow-button is-swipe-next"
+                onClick={() => moveSwipeDeck('next')}
+                type="button"
+              />
+            </div>
             </div>
           </section>
         )}
@@ -5388,16 +5494,7 @@ export function App(): ReactElement {
 
     if (activePage === 'arcade') {
       return (
-        <ArcadeScreen
-          onExitToHub={(page) => navigateFromCurrentPage(page)}
-          onOpenChannel={(channelId) => {
-            const channel = resolveChannelById(channelId);
-
-            if (channel) {
-              openChannelProfile(channel);
-            }
-          }}
-        />
+        <ArcadeScreen onExitToHub={(page) => navigateFromCurrentPage(page)} />
       );
     }
 
