@@ -263,7 +263,7 @@ On-chain protocol foundation + hardening:   100% done (Phase 1 + Phase 1.8 compl
 Documentation architecture:                 100% done (Phase 0 mini-sync complete)
 Backend/indexer:                            100% done (Phase 2 complete — indexer + projections + HTTP + ops hardening)
 Frontend/profile UI:                        100% done (Phase 3 complete — live-only surfaces audit shipped)
-SDK integration:                            ~70% done (Phase 4 — @nami/sdk reads + indexer client shipped; subscribe helpers partial)
+SDK integration:                            100% done (Phase 4 complete — reads + indexer client + subscribe helpers + CI gate)
 zkLogin production flow:                    ~30% done (Phase 5 — client wiring shipped; OAuth per deploy origin pending, see Phase 8.3)
 ```
 
@@ -464,7 +464,7 @@ Recovery request page
 Status:
 
 ```text
-~70% complete — @nami/sdk package shipped with chain reads + indexer client
+Complete (2026-06-22) — pinned testnet package; republish deferred to Phase 8
 ```
 
 Shipped SDK helpers (`SDK/src/`):
@@ -475,16 +475,13 @@ loadIdentityProtocolView, loadPassportProtocolView, loadProfileProtocolView, loa
 loadConductProtocolView, loadCustomizationProtocolView, loadSquadsProtocolView, loadGuildCardsForMember
 loadChannelCardsForOwner, loadOwnerChannelAccessPolicies, checkChannelAccessRead
 createNamiIndexerClient (appeals, jury, moderation, recovery, discovery, timelines, badge/boost history)
-fetchNamiModuleEvents, subscribeToNamiEvents (partial)
+getHealth / getReady / getStats on indexer client
+fetchNamiModuleEvents, subscribeToNamiEvents (on-chain modules)
+indexer-subscriptions.ts — subscribeToIndexerProjection + dedicated projection poll helpers
+SDK/README.md + scripts/phase4-sdk-check.sh + scripts/verify-sdk-indexer.mjs
+indexer-integration.test.ts (runs when NAMI_INDEXER_URL is set)
+mvp-check.sh SDK build + unit test gate
 enterNamiMoveTarget transaction helper
-```
-
-Remaining before Phase 4 exit:
-
-```text
-SDK README + published build in CI
-Unified subscribe helpers for all projection types
-Integration tests against testnet indexer URL
 ```
 
 ---

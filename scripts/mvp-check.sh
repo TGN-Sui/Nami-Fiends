@@ -24,21 +24,25 @@ npm --prefix backend install
 npm --prefix backend run typecheck
 
 echo ""
-echo "[4/7] SDK typecheck"
-npm --prefix sdk install
-npm --prefix sdk run typecheck
+echo "[4/8] SDK typecheck"
+npm --prefix SDK install
+npm --prefix SDK run typecheck
 
 echo ""
-echo "[5/7] SDK build"
-npm --prefix sdk run build
+echo "[5/8] SDK build"
+npm --prefix SDK run build
 
 echo ""
-echo "[6/7] Frontend typecheck"
+echo "[6/8] SDK unit tests"
+npm --prefix SDK run test -- src/indexer-subscriptions.test.ts
+
+echo ""
+echo "[7/8] Frontend typecheck"
 npm --prefix frontend install
 npm --prefix frontend run typecheck
 
 echo ""
-echo "[7/7] Frontend build"
+echo "[8/8] Frontend build"
 npm --prefix frontend run build
 
 echo ""

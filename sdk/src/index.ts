@@ -59,6 +59,30 @@ export {
   type NamiEventSubscriptionOptions,
 } from './events.js';
 
+export {
+  NAMI_INDEXER_SUBSCRIPTION_KEYS,
+  subscribeToAppealProjections,
+  subscribeToBadgeHistory,
+  subscribeToBoostHistory,
+  subscribeToChannelAccessProjections,
+  subscribeToChannelProjections,
+  subscribeToDiscoveryChannelRankings,
+  subscribeToDiscoveryGuildRankings,
+  subscribeToGuildProjections,
+  subscribeToIndexerProjection,
+  subscribeToJuryProjections,
+  subscribeToModerationProjections,
+  subscribeToPassportTimeline,
+  subscribeToProfileProjections,
+  subscribeToRecoveryProjections,
+  subscribeToSquadProjections,
+  type IndexerPollOptions,
+  type IndexerPollSnapshot,
+  type IndexerProjectionSubscriptionOptions,
+  type IndexerUnsubscribe,
+  type NamiIndexerSubscriptionKey,
+} from './indexer-subscriptions.js';
+
 export type {
   AppealProjection,
   BadgeHistoryEntry,

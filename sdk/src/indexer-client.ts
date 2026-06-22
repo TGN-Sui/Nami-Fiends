@@ -43,8 +43,46 @@ export class NamiIndexerClient {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
   }
 
-  async getHealth(): Promise<{ ok: boolean }> {
+  async getHealth(): Promise<{
+    ok: boolean;
+    service?: string;
+    network?: string;
+    packageId?: string;
+    uptimeMs?: number;
+  }> {
     return fetchJson(`${this.baseUrl}/health`);
+  }
+
+  async getReady(): Promise<{
+    ready: boolean;
+    network?: string;
+    packageId?: string;
+    totalPolls?: number;
+    totalEventsIndexed?: number;
+  }> {
+    const response = await fetch(`${this.baseUrl}/ready`);
+    const body = (await response.json()) as {
+      ready: boolean;
+      network?: string;
+      packageId?: string;
+      totalPolls?: number;
+      totalEventsIndexed?: number;
+    };
+
+    if (!response.ok && response.status !== 503) {
+      throw new Error(`Indexer request failed (${response.status}): ${this.baseUrl}/ready`);
+    }
+
+    return body;
+  }
+
+  async getStats(): Promise<{
+    network: string;
+    packageId: string;
+    eventLog: { totalEvents: number };
+    projections: { services: string[] };
+  }> {
+    return fetchJson(`${this.baseUrl}/stats`);
   }
 
   async getGuilds(): Promise<GuildProjection[]> {
