@@ -8,6 +8,7 @@ import {
 } from '@mysten/sui/zklogin';
 
 import { getConfiguredNetwork } from './nami.js';
+import { readZkLoginEnvConfig } from './zklogin-config.js';
 
 const PENDING_KEY = 'nami.zklogin.pending';
 const SESSION_KEY = 'nami.zklogin.session';
@@ -29,37 +30,15 @@ interface ZkLoginPending {
 }
 
 function readClientId(): string | null {
-  const value = import.meta.env.VITE_ZKLOGIN_CLIENT_ID;
-
-  if (typeof value !== 'string' || value.trim() === '') {
-    return null;
-  }
-
-  return value.trim();
+  return readZkLoginEnvConfig().clientId;
 }
 
 function readRedirectUrl(): string {
-  const value = import.meta.env.VITE_ZKLOGIN_REDIRECT_URL;
-
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value.trim();
-  }
-
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${window.location.pathname}`;
-  }
-
-  return 'http://localhost:5173/';
+  return readZkLoginEnvConfig().redirectUrl;
 }
 
 function readSaltUrl(): string {
-  const value = import.meta.env.VITE_ZKLOGIN_SALT_URL;
-
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value.trim().replace(/\/$/, '');
-  }
-
-  return 'https://salt.api.mystenlabs.com/get_salt';
+  return readZkLoginEnvConfig().saltUrl;
 }
 
 function createRpcClient(): SuiJsonRpcClient {
@@ -243,6 +222,39 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
   }
 }
 
+export async function isZkLoginSessionExpired(
+  session: ZkLoginSession | null = getZkLoginSession()
+): Promise<boolean> {
+  if (!session || !session.address || session.maxEpoch <= 0) {
+    return true;
+  }
+
+  try {
+    const client = createRpcClient();
+    const systemState = await client.getLatestSuiSystemState();
+    const currentEpoch = Number(systemState.epoch);
+
+    return Number.isFinite(currentEpoch) && currentEpoch > session.maxEpoch;
+  } catch {
+    return false;
+  }
+}
+
+export async function clearZkLoginSessionIfExpired(): Promise<boolean> {
+  const session = getZkLoginSession();
+
+  if (!session) {
+    return false;
+  }
+
+  if (await isZkLoginSessionExpired(session)) {
+    clearZkLoginSession();
+    return true;
+  }
+
+  return false;
+}
+
 export function zkLoginStatusMessage(): string {
   if (!isZkLoginConfigured()) {
     return 'Set VITE_ZKLOGIN_CLIENT_ID (Google OAuth) to enable zkLogin sign-in.';
@@ -250,6 +262,8 @@ export function zkLoginStatusMessage(): string {
 
   return 'Sign in with Google via zkLogin. Protocol reads use your derived Sui address.';
 }
+
+export { readZkLoginEnvConfig, validateZkLoginEnv, isZkLoginProductionReady } from './zklogin-config.js';
 
 export function getExtendedEphemeralPublicKeyBase64(): string | null {
   const pendingRaw =

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isDemoSimulationEnabled,
+  isDemoWalletOnboardingEnabled,
   isMockMembershipCheckoutEnabled,
   shouldAutoSeedLocalData,
   shouldUseDemoOwnerFallback,
@@ -94,5 +95,11 @@ describe('app-config test launch policy', () => {
         createConfig({ testLaunch: true, devFixtures: true, demoOwner: '0xabc' })
       )
     ).toBe(false);
+  });
+
+  it('blocks demo wallet onboarding during test launch', () => {
+    expect(isDemoWalletOnboardingEnabled(createConfig({ testLaunch: true, devFixtures: true }))).toBe(
+      false
+    );
   });
 });

@@ -6,6 +6,7 @@ import {
   GAME_PREAPPROVAL_THRESHOLD,
   type GameTrustScoreBreakdown,
 } from './game-trust-score.js';
+import { resolveTrustWalletSource } from './wallet-source.js';
 import { useProtocolOwner } from './wallet.js';
 
 type GameTrustScorePanelProps = {
@@ -40,7 +41,7 @@ export function GameTrustScorePanel(props: GameTrustScorePanelProps): ReactEleme
       officialSocialHandle: props.draft.officialSocialHandle,
       officialSocialVerified: props.draft.officialSocialVerified,
       walletLinked: props.draft.walletLinked || owner !== null,
-      walletSource: props.draft.walletLinked ? (source ?? 'demo') : source,
+      walletSource: resolveTrustWalletSource(source, props.draft.walletLinked || owner !== null),
     });
 
   return (

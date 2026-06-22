@@ -31,6 +31,7 @@ import {
   ownerProvisionedChannelById,
   useOwnerProvisionedChannels,
 } from './owner-provisioned-channels-store.js';
+import { resolveTrustWalletSource } from './wallet-source.js';
 import { ZkLoginConnectControl, useProtocolOwner } from './wallet.js';
 
 type ClaimAct = 'select-channel' | 'identity' | 'officials' | 'proof' | 'review';
@@ -93,7 +94,7 @@ export function GameChannelClaimPanel(props: {
     officialSocialHandle: draft.officialSocialHandle,
     officialSocialVerified: draft.officialSocialVerified,
     walletLinked,
-    walletSource: (walletLinked ? (source ?? 'demo') : null) as 'demo' | 'zklogin' | null,
+    walletSource: resolveTrustWalletSource(source, walletLinked),
   });
 
   const ticketPreviewFields = useMemo(

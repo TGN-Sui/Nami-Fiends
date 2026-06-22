@@ -1,4 +1,4 @@
-import { isChainConfigured, isIndexerLive, readAppConfig } from './app-config.js';
+import { isChainConfigured, isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js';
 import type { ProtocolContext } from './protocol.js';
 import type { ProtocolOwnerSource } from './wallet.js';
 
@@ -51,7 +51,7 @@ export function resolveProtocolConnectionState(
     };
   }
 
-  if (source === 'demo') {
+  if (source === 'demo' && !isTestLaunchMode(config)) {
     const detail = indexerReady
       ? 'Preview wallet active · activity feed connected'
       : 'Preview wallet active · fixture data until receiving server is live';

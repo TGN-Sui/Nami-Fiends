@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 
+import { isTestLaunchMode } from './app-config.js';
 import {
   useProtocolOwner,
   useWalletDisconnect,
@@ -38,7 +39,7 @@ export function AccountConnectSection(): ReactElement {
               ? 'Signed in with your connected account.'
               : source === 'linked'
                 ? 'Owner wallet linked to your email session.'
-                : source === 'demo'
+                : source === 'demo' && !isTestLaunchMode()
                   ? 'Preview session active.'
                   : 'Account linked and ready.'}
           </p>

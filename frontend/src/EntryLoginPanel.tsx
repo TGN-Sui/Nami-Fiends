@@ -20,6 +20,10 @@ import {
   isXVerificationMockEnabled,
   useXVerificationState,
 } from './x-verification-store.js';
+import {
+  recoveryEmailOnboardingHint,
+  zkLoginAccountLinkHint,
+} from './onboarding-recovery.js';
 import { useProtocolOwner, ZkLoginConnectControl } from './wallet.js';
 
 function isValidEmail(value: string): boolean {
@@ -48,9 +52,7 @@ export function EntryLoginPanel(props: {
     const restored = restoreMemberSessionByLinkedOwner(owner, source);
 
     if (!restored) {
-      setLoginError(
-        'No Nami account is linked to this Google / zkLogin sign-in yet. Sign up first, then link methods in Settings.',
-      );
+      setLoginError(zkLoginAccountLinkHint());
       return;
     }
 
@@ -154,6 +156,7 @@ export function EntryLoginPanel(props: {
         <section className="nami-entry-login-block">
           <span className="nami-entry-login-label">Google via zkLogin</span>
           <ZkLoginConnectControl />
+          <small className="protocol-hint">{recoveryEmailOnboardingHint()}</small>
         </section>
 
         <section className="nami-entry-login-block">

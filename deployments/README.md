@@ -30,6 +30,9 @@ Continue indexing and frontend/SDK work against the pinned package in `deploymen
 ./scripts/phase4-sdk-check.sh
 # NAMI_INDEXER_URL=http://localhost:8787 ./scripts/phase4-sdk-check.sh
 
+# Phase 5 zkLogin gate (policy tests + env verification)
+./scripts/phase5-zklogin-check.sh
+
 # Refresh env from existing latest.json (no republish)
 node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
 

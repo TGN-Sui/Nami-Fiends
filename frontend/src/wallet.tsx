@@ -28,6 +28,7 @@ import { getProtocolContext, type ProtocolContext, type ProtocolDataMode } from 
 import { useMemberSession } from './member-session-store.js';
 import {
   clearZkLoginSession,
+  clearZkLoginSessionIfExpired,
   completeZkLoginFromRedirect,
   getZkLoginSession,
   isZkLoginConfigured,
@@ -55,7 +56,7 @@ export function NamiWalletProvider(props: { children: ReactNode }): ReactElement
   const network = getConfiguredNetwork() as keyof typeof networkConfig;
 
   useEffect(() => {
-    void completeZkLoginFromRedirect();
+    void clearZkLoginSessionIfExpired().then(() => completeZkLoginFromRedirect());
   }, []);
 
   return (

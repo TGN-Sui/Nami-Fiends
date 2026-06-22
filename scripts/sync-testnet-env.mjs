@@ -107,7 +107,22 @@ function resolveOfficialOwnerEmail(cliValue) {
 
 const officialOwner = resolveOfficialOwner(readArg('--official-owner'));
 const officialOwnerEmail = resolveOfficialOwnerEmail(readArg('--official-owner-email'));
-const zkloginOrigin = readArg('--zklogin-origin') || 'http://localhost:5173/';
+function normalizeZkLoginOrigin(value) {
+  const trimmed = (value || 'http://localhost:5173/').trim();
+
+  if (trimmed.endsWith('/')) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return `${parsed.origin}/`;
+  } catch {
+    return `${trimmed}/`;
+  }
+}
+
+const zkloginOrigin = normalizeZkLoginOrigin(readArg('--zklogin-origin') || 'http://localhost:5173/');
 const zkloginClientId =
   readArg('--zklogin-client-id') ||
   process.env.ZKLOGIN_CLIENT_ID ||

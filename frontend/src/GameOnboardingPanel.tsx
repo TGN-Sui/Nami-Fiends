@@ -25,6 +25,7 @@ import { GAME_ONBOARDING_GENRES, GAME_STORE_LINK_FIELDS } from './game-genres.js
 import { SUPPORTED_PLATFORMS } from './platform-genre-options.js';
 import { buildGameTicketPreviewFields } from './game-ticket-preview.js';
 import { computeGameTrustScoreFromDraft } from './game-trust-score.js';
+import { resolveTrustWalletSource } from './wallet-source.js';
 import { ContactCodeVerificationControl } from './ContactCodeVerificationControl.js';
 import { GameOfficialSocialAuthControl } from './GameOfficialSocialAuthControl.js';
 import { isContactVerified } from './contact-code-verification-store.js';
@@ -87,7 +88,7 @@ export function GameOnboardingPanel(props: {
     officialSocialHandle: draft.officialSocialHandle,
     officialSocialVerified: draft.officialSocialVerified,
     walletLinked,
-    walletSource: (walletLinked ? (source ?? 'demo') : null) as any,
+    walletSource: resolveTrustWalletSource(source, walletLinked),
   });
 
   const ticketPreviewFields = useMemo(

@@ -1,3 +1,4 @@
+import { isTestLaunchMode } from './app-config.js';
 import { isQuizComplete } from './onboarding-quiz.js';
 
 export type PlayerScoreTier = 'basic' | 'verified' | 'premium';
@@ -123,7 +124,7 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
       points: 10,
       category: 'identity',
     });
-  } else if (input.walletLinked && input.walletSource === 'demo') {
+  } else if (input.walletLinked && input.walletSource === 'demo' && !isTestLaunchMode()) {
     identity += 4;
     boosters.push({
       id: 'demo-wallet',

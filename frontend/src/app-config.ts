@@ -80,6 +80,11 @@ export function isDemoSimulationEnabled(config: AppConfig = readAppConfig()): bo
   return shouldUseDevFixtures(config);
 }
 
+/** Demo wallet claim path and preview owner fallback (never on official testnet). */
+export function isDemoWalletOnboardingEnabled(config: AppConfig = readAppConfig()): boolean {
+  return isDemoSimulationEnabled(config);
+}
+
 /** Fallback protocol owner when no wallet/zkLogin is connected (dev only). */
 export function shouldUseDemoOwnerFallback(config: AppConfig = readAppConfig()): boolean {
   return shouldUseDevFixtures(config) && config.demoOwner !== null;

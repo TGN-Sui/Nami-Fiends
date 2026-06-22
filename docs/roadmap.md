@@ -264,7 +264,7 @@ Documentation architecture:                 100% done (Phase 0 mini-sync complet
 Backend/indexer:                            100% done (Phase 2 complete — indexer + projections + HTTP + ops hardening)
 Frontend/profile UI:                        100% done (Phase 3 complete — live-only surfaces audit shipped)
 SDK integration:                            100% done (Phase 4 complete — reads + indexer client + subscribe helpers + CI gate)
-zkLogin production flow:                    ~30% done (Phase 5 — client wiring shipped; OAuth per deploy origin pending, see Phase 8.3)
+zkLogin production flow:                    100% done (Phase 5 + 8.3 complete — env validation, demo wallet gated, recovery polish)
 ```
 
 ---
@@ -491,26 +491,25 @@ enterNamiMoveTarget transaction helper
 Status:
 
 ```text
-~30% complete — client wiring shipped; production OAuth registration pending (see Phase 8.3)
+Complete (2026-06-22) — pinned testnet package; OAuth registration is per deploy origin (human step)
 ```
 
 Shipped:
 
 ```text
-zkLogin session helpers (frontend/src/zklogin.ts)
+zkLogin session helpers (frontend/src/zklogin.ts) + session expiry cleanup
+zklogin-config.ts env validation + readZkLoginEnvConfig / validateZkLoginEnv
 Enter Nami Google path (EntryLoginPanel, EntryPage)
 Game studio onboarding requires zkLogin link before ticket submit
-Trust Score + wallet source tracking (zklogin vs wallet vs demo)
+wallet-source.ts — demo wallet never used for trust score on test launch
+Demo claim / demo owner / demo trust paths gated when VITE_NAMI_TEST_LAUNCH=true
+onboarding-recovery.ts — recovery email hints on signup + login
+docs/testnet-zklogin.md expanded (multi-origin, salt, session lifecycle)
+scripts/verify-zklogin-config.mjs + scripts/phase5-zklogin-check.sh
+sync-testnet-env.mjs normalizes zklogin redirect trailing slash
 ```
 
-Remaining:
-
-```text
-Register OAuth client per public deploy origin
-Production redirect URI + salt handling runbook (docs/testnet-zklogin.md)
-Remove demo wallet paths on VITE_NAMI_TEST_LAUNCH=true builds
-Recovery-aware onboarding polish
-```
+Human step at go-live: register each public origin in Google OAuth console (see docs/testnet-zklogin.md).
 
 ---
 
@@ -725,7 +724,7 @@ Phase 8 progress
 
 8.1 Testnet launch mode      █████████████████░░░  ~88%
 8.2 Deploy + public URL      ████░░░░░░░░░░░░░░░░  ~20%
-8.3 zkLogin production       ██████░░░░░░░░░░░░░░  ~30%
+8.3 zkLogin production       ████████████████████  100%
 8.4 Security + custody       ████░░░░░░░░░░░░░░░░  ~20%
 ```
 
@@ -820,15 +819,15 @@ Health + officials API reachable from browser CORS
 
 ---
 
-## Phase 8.3 — zkLogin Production (In progress)
+## Phase 8.3 — zkLogin Production (Complete)
 
 Status:
 
 ```text
-~30% — client wiring shipped; OAuth registration per deploy origin pending
+Complete (2026-06-22) — code + docs + verify scripts shipped; register OAuth per origin at deploy
 ```
 
-See [testnet-zklogin.md](./testnet-zklogin.md).
+See [testnet-zklogin.md](./testnet-zklogin.md). Run `node scripts/verify-zklogin-config.mjs` before each public origin build.
 
 ---
 

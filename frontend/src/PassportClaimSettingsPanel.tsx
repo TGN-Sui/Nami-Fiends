@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
-import { isDemoSimulationEnabled } from './app-config.js';
+import { isDemoWalletOnboardingEnabled } from './app-config.js';
+import { recoverySettingsHint, zkLoginLaunchReadinessMessage } from './onboarding-recovery.js';
 import {
   isValidNodename,
   nodenameValidationMessage,
@@ -19,7 +20,7 @@ import {
   type ClaimMethod,
 } from './nami-admin-store.js';
 import { useProtocolOwner, WalletConnectControl, ZkLoginConnectControl } from './wallet.js';
-import { zkLoginStatusMessage } from './zklogin.js';
+
 
 export function PassportClaimSettingsPanel(): ReactElement {
   const session = useMemberSession();
@@ -35,7 +36,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
   const [claimNotice, setClaimNotice] = useState<string | null>(null);
 
   const nodenameError = nodenameValidationMessage(claimNodename);
-  const demoClaimEnabled = isDemoSimulationEnabled();
+  const demoClaimEnabled = isDemoWalletOnboardingEnabled();
   const claimPending = userClaimStatus.status === 'pending';
   const claimApproved = userClaimStatus.status === 'approved';
   const claimRejected = userClaimStatus.status === 'rejected';
@@ -67,7 +68,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
       return 'zklogin';
     }
 
-    if (method === 'demo') {
+    if (method === 'demo' && demoClaimEnabled) {
       return 'demo';
     }
 
@@ -89,6 +90,11 @@ export function PassportClaimSettingsPanel(): ReactElement {
     }
 
     if (claimPending) {
+      return;
+    }
+
+    if (method === 'demo' && !demoClaimEnabled) {
+      setClaimError('Demo claim method is disabled on official testnet builds.');
       return;
     }
 
@@ -177,7 +183,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
 
       {method === 'zklogin' ? (
         <div className="onboarding-zklogin-block">
-          <p className="protocol-hint">{zkLoginStatusMessage()}</p>
+          <p className="protocol-hint">{zkLoginLaunchReadinessMessage()}</p>
           <ZkLoginConnectControl />
         </div>
       ) : null}
@@ -219,6 +225,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
 
       {claimError ? <p className="onboarding-field-error">{claimError}</p> : null}
       {claimNotice ? <p className="protocol-hint">{claimNotice}</p> : null}
+      <p className="protocol-hint">{recoverySettingsHint()}</p>
       {claimApproved ? (
         <p className="protocol-hint passport-claim-approved-note">
           Your nodename claim was approved. On-chain minting will attach once enter_nami is live.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isDemoSimulationEnabled,
+  isDemoWalletOnboardingEnabled,
   isMockMembershipCheckoutEnabled,
   shouldAutoSeedLocalData,
   shouldUseDevFixtures,
@@ -32,6 +33,7 @@ describe('live surface audit — test launch policy', () => {
   it('disables fixture catalogs and demo surfaces', () => {
     expect(shouldUseDevFixtures(config)).toBe(false);
     expect(isDemoSimulationEnabled(config)).toBe(false);
+    expect(isDemoWalletOnboardingEnabled(config)).toBe(false);
     expect(shouldAutoSeedLocalData(config)).toBe(false);
     expect(isMockMembershipCheckoutEnabled(config)).toBe(false);
     expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(false);

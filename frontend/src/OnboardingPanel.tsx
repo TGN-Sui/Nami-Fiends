@@ -33,6 +33,10 @@ import {
 import { OfficialSocialAuthControl } from './OfficialSocialAuthControl.js';
 import { useGamerScopedOfficialSocialAuthState } from './official-social-auth-store.js';
 import { PlayerScorePanel } from './PlayerScorePanel.js';
+import {
+  recoveryEmailOnboardingHint,
+  shouldShowRecoveryOnboardingNote,
+} from './onboarding-recovery.js';
 import { useProtocolOwner } from './wallet.js';
 
 interface OnboardingPanelProps {
@@ -212,6 +216,9 @@ export function OnboardingPanel(props: OnboardingPanelProps): ReactElement {
               value={draft.email}
               verified={draft.emailVerified}
             />
+            {shouldShowRecoveryOnboardingNote() ? (
+              <p className="protocol-hint">{recoveryEmailOnboardingHint()}</p>
+            ) : null}
 
             <label className="onboarding-field">
               <span>Password</span>
