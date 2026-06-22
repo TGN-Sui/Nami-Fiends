@@ -82,10 +82,10 @@ node scripts/verify-testnet-ready.mjs
 3. Set env vars from `frontend/.env.testnet.example`; set `VITE_NAMI_INDEXER_URL` to your Render URL.
 4. Add the Vercel origin to Google OAuth (zkLogin) redirect URIs — must match `VITE_ZKLOGIN_REDIRECT_URL` exactly.
 
-Suggested Vercel install command when building from `frontend/`:
+Vercel uses `frontend/vercel.json` to build the local SDK before the app (`@nami/sdk` is `file:../sdk` and `dist/` is not committed). Override install command only if you removed that file:
 
 ```bash
-cd .. && npm --prefix sdk install && npm --prefix sdk run build && cd frontend && npm install && npm run build
+npm --prefix ../sdk install && npm --prefix ../sdk run build && npm install
 ```
 
 **Owner access on deploy:** Advanced settings require Google zkLogin as `VITE_NAMI_OFFICIAL_OWNER_EMAIL`; the derived address must match `VITE_NAMI_OFFICIAL_OWNER`. Onboarding email alone does not grant owner tools.

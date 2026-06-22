@@ -1,3 +1,5 @@
 {
+  "installCommand": "npm --prefix ../sdk install && npm --prefix ../sdk run build && npm install",
+  "buildCommand": "npm run build",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
