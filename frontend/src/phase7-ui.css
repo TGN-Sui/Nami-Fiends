@@ -349,17 +349,84 @@
   margin: 4px 0 0;
 }
 
-.global-chat-composer {
-  display: grid;
-  gap: 8px;
+.global-chat-conversation {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
 }
 
-.global-chat-composer input {
+.global-chat-room-pane .chat-window-buildout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: min(68vh, 640px);
+}
+
+.global-chat-room-pane .chat-window-buildout .global-chat-conversation {
+  flex: 1 1 auto;
+}
+
+.global-chat-room-pane .global-message-stack,
+.global-chats-unified-panel .message-stack.global-message-stack {
+  flex: 1 1 auto;
+  min-height: 260px;
+  max-height: none;
+  margin: 0;
+  padding: 12px 10px;
+  border: 1px solid rgba(117, 188, 224, 0.16);
+  border-radius: 16px;
+  background: rgba(3, 8, 14, 0.44);
+}
+
+.global-chat-composer-bar.chat-composer-with-emojis {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(120, 190, 255, 0.2);
+  border: 1px solid rgba(117, 188, 224, 0.22);
+  border-radius: 16px;
+  background: rgba(5, 10, 18, 0.78);
+}
+
+.global-chat-composer-bar input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 190, 255, 0.22);
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
+}
+
+.global-chat-composer-bar input:focus-visible {
+  outline: 2px solid rgba(117, 215, 255, 0.42);
+  outline-offset: 1px;
+}
+
+.global-chat-send-button {
+  min-height: 44px;
+  min-width: 0;
+  width: auto;
+  max-width: 92px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(67, 245, 167, 0.42);
+  background: linear-gradient(135deg, rgba(67, 245, 167, 0.24), rgba(117, 215, 255, 0.14));
+  color: #eafff6;
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.global-chat-send-button:disabled {
+  opacity: 0.45;
 }
 
 .global-chat-voice-controls {
@@ -4895,8 +4962,13 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: minmax(0, 1fr);
   padding: 10px 12px 8px;
+}
+
+.member-public-chat-pinned-dock .global-chat-conversation {
+  min-height: 0;
+  height: 100%;
 }
 
 .member-public-chat-pinned-dock .global-message-stack {
@@ -4923,12 +4995,12 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   font-size: 0.72rem;
 }
 
-.member-public-chat-pinned-dock .global-chat-composer input {
+.member-public-chat-pinned-dock .global-chat-composer-bar input {
   font-size: 0.84rem;
 }
 
-.member-public-chat-pinned-dock .chat-composer-with-emojis {
-  padding: 0 10px 10px;
+.member-public-chat-pinned-dock .global-chat-composer-bar {
+  padding: 8px 10px 10px;
 }
 
 .member-public-chat-broadcast-popup {
@@ -6751,13 +6823,18 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   height: 10px;
 }
 
-.chat-window-buildout .message-stack,
-.global-chats-unified-panel .message-stack.global-message-stack {
+.chat-window-buildout .message-stack {
   max-height: min(52vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   padding: 2px 6px 2px 8px;
+}
+
+.global-chats-unified-panel .message-stack.global-message-stack {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
 .message-log-page {
@@ -8232,7 +8309,7 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   align-content: stretch;
   gap: 8px;
   padding: 10px 12px 8px;
@@ -8242,10 +8319,15 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 .genre-chat-pinned-dock .global-chat-room-pane.is-compact-global-chat .chat-window-buildout {
   min-height: 0 !important;
   height: 100%;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-content: stretch;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.genre-chat-pinned-dock .global-chat-conversation,
+.member-public-chat-pinned-dock .global-chat-conversation {
+  min-height: 0;
+  height: 100%;
 }
 
 .genre-chat-pinned-dock .global-message-stack {
@@ -8256,13 +8338,9 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   overflow-y: auto;
 }
 
-.genre-chat-pinned-dock .global-chat-composer,
-.genre-chat-pinned-dock .chat-composer-with-emojis {
+.genre-chat-pinned-dock .global-chat-composer-bar {
   flex-shrink: 0;
-}
-
-.genre-chat-pinned-dock .chat-composer-with-emojis {
-  padding: 0;
+  padding: 8px 10px 10px;
 }
 
 .genre-chat-pinned-collapse {
@@ -8519,7 +8597,21 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
   display: grid;
   grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .global-chat-composer-bar.chat-composer-with-emojis {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .global-chat-send-button {
+    max-width: 76px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+  }
 }
 
 .global-chats-list-sidebar {
@@ -8528,7 +8620,14 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
 }
 
 .global-chats-unified-panel .global-chat-room-pane {
-  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: min(72vh, 700px);
+}
+
+.global-chats-unified-panel .global-chat-room-pane .chat-window-expand-host {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .message-log-passport-rail {
@@ -11264,7 +11363,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   font-size: 0.95rem;
 }
 
-.genre-chat-pinned-dock .global-chat-composer input {
+.genre-chat-pinned-dock .global-chat-composer-bar input {
   font-size: 0.82rem;
 }
 

@@ -206,6 +206,7 @@ export function GlobalChatRoomView(props: {
         </div>
       ) : null}
 
+      <div className="global-chat-conversation">
       <div className="message-stack global-message-stack" ref={messageStackRef}>
         {messages.map((message) => {
           const member = resolveMessageAuthorMember(message, selfMember);
@@ -251,7 +252,7 @@ export function GlobalChatRoomView(props: {
       <ChatComposerWithEmojis
         ariaLabel="Message global chat"
         canSend={canSend}
-        className="global-chat-composer chat-composer-row"
+        className="chat-composer-row global-chat-composer-bar"
         {...(genreEmojis.length > 0
           ? {
               customEmojis: genreEmojis,
@@ -267,6 +268,7 @@ export function GlobalChatRoomView(props: {
               : 'Say something to the room… · ' + tagSuggestionHint()
             : 'Sign in and verify to send official chat messages'
         }
+        sendButtonClassName="global-chat-send-button"
         value={draft}
       />
 
@@ -280,6 +282,7 @@ export function GlobalChatRoomView(props: {
           </button>
         </div>
       ) : null}
+      </div>
     </>
   );
 

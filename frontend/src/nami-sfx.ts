@@ -281,7 +281,7 @@ export function initNamiSoundscape(): void {
 
       if (
         !event.target.closest(
-          '.chat-composer-row, .chat-composer-with-emojis, .global-chat-composer, .message-log-composer'
+          '.chat-composer-row, .chat-composer-with-emojis, .global-chat-composer-bar, .message-log-composer'
         )
       ) {
         return;
