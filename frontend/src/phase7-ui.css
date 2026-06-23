@@ -16620,28 +16620,125 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 @media (max-width: 900px) {
+  .sidebar.is-icon-rail {
+    --sidebar-glyph-size: 34px;
+    --official-nami-logo-scale: 2.35;
+    --sidebar-hub-fixed-scale: 1.65;
+    --sidebar-glyph-hover-scale: 1.28;
+    --sidebar-rail-scale-duration: 420ms;
+    --sidebar-rail-shift-duration: 420ms;
+    margin-left: 6px;
+  }
+
   .nami-app:has(.sidebar.is-icon-rail) {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-top: calc(16px + 84px) !important;
+    padding-left: calc(var(--sidebar-rail-axis-width) + 10px) !important;
+    padding-right: 10px !important;
+    padding-top: calc(12px + 58px) !important;
   }
 
   .nami-app:has(.sidebar.is-icon-rail) > .main-stage {
-    width: min(var(--main-stage-centered-width), calc(100vw - 24px)) !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: min(var(--main-stage-centered-width), 100%) !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
   }
 
   .nami-app:has(.sidebar.is-icon-rail) > .main-stage:has(.channel-profile-redesign) {
-    width: min(1120px, calc(100vw - 24px)) !important;
-  }
-
-  .sidebar.is-icon-rail {
-    margin-left: 10px;
+    width: min(1120px, 100%) !important;
+    max-width: 100% !important;
   }
 
   .sidebar.is-icon-rail .sidebar-nav-label,
   .sidebar.is-icon-rail .sidebar-hub-swap-copy.sidebar-nav-label,
   .sidebar.is-icon-rail .sidebar-brand-wordmark.sidebar-nav-label {
-    display: grid;
+    display: none;
+  }
+
+  .nami-pinned-profile-card {
+    top: 12px;
+    right: 10px;
+    width: min(156px, calc(100vw - var(--sidebar-rail-axis-width) - 28px));
+  }
+
+  .nami-pinned-profile-card .sidebar-player-copy,
+  .nami-pinned-profile-card .nami-pinned-profile-chevron,
+  .nami-pinned-profile-card .sidebar-player-progress-bar {
+    display: none;
+  }
+
+  .nami-pinned-profile-trigger.sidebar-player-progress-button {
+    grid-template-columns: auto;
+    justify-items: center;
+    padding: 8px;
+  }
+
+  .nami-landing-official-logo-bar {
+    --official-nami-logo-scale: 2.2;
+  }
+
+  .nami-landing-hero-actions .onboarding-primary-btn,
+  .nami-landing-hero-actions .onboarding-secondary-btn,
+  .nami-landing-hero-actions .nami-surface-button,
+  .nami-landing-final-cta .onboarding-primary-btn,
+  .nami-landing-final-cta .onboarding-secondary-btn,
+  .nami-landing-final-cta .nami-surface-button {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .sidebar.is-icon-rail {
+    --sidebar-glyph-size: 28px;
+    --official-nami-logo-scale: 2;
+    --sidebar-hub-fixed-scale: 1.45;
+    --sidebar-glyph-hover-scale: 1.15;
+    margin-left: 4px;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) {
+    padding-left: calc(var(--sidebar-rail-axis-width) + 6px) !important;
+    padding-right: 6px !important;
+    padding-top: calc(10px + 52px) !important;
+  }
+
+  .nami-pinned-profile-card {
+    top: 10px;
+    right: 8px;
+    width: auto;
+  }
+
+  .nami-pinned-profile-stack {
+    border-radius: 999px;
+  }
+
+  .nami-pinned-profile-trigger.sidebar-player-progress-button {
+    padding: 6px;
+  }
+
+  .nami-landing-official-logo-bar {
+    --official-nami-logo-scale: 1.75;
+  }
+}
+
+@media (max-width: 900px) and (pointer: coarse) {
+  .sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
+  .sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
+  .sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible .nav-icon {
+    transform: scale(1);
+  }
+
+  .sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
+    transform: scale(1);
   }
 }
 

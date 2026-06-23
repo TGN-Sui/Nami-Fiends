@@ -44,6 +44,11 @@ import {
   handleOfficialsSubmissionsOptions,
   handleOfficialsSubmissionsSync,
 } from './routes/officials-submissions.routes.js';
+import {
+  handlePlatformOwnerAssetsGet,
+  handlePlatformOwnerAssetsOptions,
+  handlePlatformOwnerAssetsSync,
+} from './routes/platform-owner-assets.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -1023,6 +1028,24 @@ const routes: Route[] = [
     pattern: /^\/api\/officials\/submissions\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handleOfficialsSubmissionsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/platform\/owner-assets$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePlatformOwnerAssetsOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/platform\/owner-assets$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePlatformOwnerAssetsGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/platform\/owner-assets\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePlatformOwnerAssetsSync(request, response),
   },
 ];
 

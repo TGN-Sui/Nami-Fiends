@@ -4,12 +4,14 @@ import { randomUUID } from 'node:crypto';
 
 import { mkdir } from 'node:fs/promises';
 
+import { config } from '../config.js';
 import { paymentConfig } from '../payment-config.js';
 
 const UPLOAD_ROOT = 'data/uploads';
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const MAX_CHANNEL_COVER_BYTES = 4 * 1024 * 1024;
 const MAX_STUDIO_LOGO_BYTES = 2 * 1024 * 1024;
+const MAX_PLATFORM_OWNER_ASSET_BYTES = 2 * 1024 * 1024;
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
@@ -33,8 +35,15 @@ function safeStudioId(studioId: string): string {
   return studioId.replace(/[^a-zA-Z0-9._-]/g, '');
 }
 
+function safePlatformAssetSlotId(slotId: string): string {
+  return slotId.replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
 export function buildMediaPublicUrl(owner: string, filename: string): string {
-  const base = 'http://127.0.0.1:' + paymentConfig.httpPort;
+  const base =
+    config.publicApiUrl !== ''
+      ? config.publicApiUrl
+      : 'http://127.0.0.1:' + paymentConfig.httpPort;
   return (
     base +
     '/api/media/files/' +
@@ -154,6 +163,48 @@ export async function saveStudioLogoUpload(
   await mkdir(dir, { recursive: true });
 
   const filename = 'studio-' + safeStudioId(input.studioId) + '-' + randomUUID() + extension;
+  const filePath = join(dir, filename);
+
+  await writeFile(filePath, buffer);
+
+  return {
+    filename,
+    url: buildMediaPublicUrl(owner, filename),
+  };
+}
+
+export type PlatformOwnerAssetUploadInput = {
+  owner: string;
+  slotId: string;
+  contentType: string;
+  dataBase64: string;
+};
+
+export async function savePlatformOwnerAssetUpload(
+  input: PlatformOwnerAssetUploadInput
+): Promise<{ url: string; filename: string }> {
+  if (!input.owner.startsWith('0x') || !input.slotId.trim()) {
+    throw new Error('invalid_payload');
+  }
+
+  const extension = MIME_EXTENSIONS[input.contentType];
+
+  if (!extension) {
+    throw new Error('unsupported_content_type');
+  }
+
+  const buffer = Buffer.from(input.dataBase64, 'base64');
+
+  if (buffer.byteLength === 0 || buffer.byteLength > MAX_PLATFORM_OWNER_ASSET_BYTES) {
+    throw new Error('invalid_file_size');
+  }
+
+  const owner = normalizeOwner(input.owner);
+  const dir = ownerUploadDir(owner);
+  await mkdir(dir, { recursive: true });
+
+  const filename =
+    'platform-asset-' + safePlatformAssetSlotId(input.slotId) + '-' + randomUUID() + extension;
   const filePath = join(dir, filename);
 
   await writeFile(filePath, buffer);

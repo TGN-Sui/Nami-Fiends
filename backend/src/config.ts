@@ -65,6 +65,7 @@ export const config = {
 
   httpEnabled: (process.env.NAMI_HTTP_ENABLED ?? 'true').toLowerCase() !== 'false',
   httpPort: readNumber('PORT', readNumber('NAMI_HTTP_PORT', 8787)),
+  publicApiUrl: (process.env.NAMI_PUBLIC_API_URL ?? '').trim().replace(/\/$/, ''),
 
   alertWebhookUrl: process.env.NAMI_ALERT_WEBHOOK_URL ?? '',
   alertFailureThreshold: readNumber('NAMI_ALERT_FAILURE_THRESHOLD', 3),

@@ -2,6 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 import { isOfficialOwner } from './nami-capabilities.js';
 import {
+  hydratePlatformOwnerAssetsFromServer,
+  syncPlatformOwnerAssetsToServer,
+} from './platform-owner-assets-sync.js';
+import {
   ensureOwnerAssetsHydrated as hydrateOwnerAssetsPersistence,
   persistOwnerAssets,
   readPersistedOwnerAssets,
@@ -12,7 +16,12 @@ export { prepareOwnerAssetImage, readImageFileAsDataUrl } from './owner-asset-im
 
 export async function ensureOwnerAssetsHydrated(): Promise<void> {
   await hydrateOwnerAssetsPersistence();
-  emit();
+
+  const hydratedFromServer = await hydratePlatformOwnerAssetsFromServer();
+
+  if (hydratedFromServer) {
+    emit();
+  }
 }
 
 const MAX_LOGO_BYTES = 1024 * 1024;
@@ -324,6 +333,11 @@ export async function saveOwnerAssets(
   try {
     await persistOwnerAssets(assets);
     emit();
+    void syncPlatformOwnerAssetsToServer(assets).then((synced) => {
+      if (synced) {
+        emit();
+      }
+    });
     return null;
   } catch (error) {
     return classifyPersistenceError(error);
