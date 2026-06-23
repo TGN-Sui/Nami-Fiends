@@ -8,7 +8,7 @@ import {
 
 /**
  * Builds the target single-PTB onboarding claim in the frontend package graph.
- * Requires `nami::onboarding::enter_nami` on the deployed package (not yet in contracts).
+ * Requires published `nami::onboarding::enter_nami` and the shared NodenameRegistry object id.
  */
 export function buildEnterNamiTransaction(
   packageId: string,
@@ -20,9 +20,10 @@ export function buildEnterNamiTransaction(
   tx.moveCall({
     target: enterNamiMoveTarget(packageId),
     arguments: [
+      tx.object(validated.nodenameRegistryId),
       tx.pure.string(validated.nodename),
-      tx.pure.string(validated.displayName),
       tx.pure.u8(validated.archetype),
+      tx.pure.string(validated.avatarRef),
     ],
   });
 

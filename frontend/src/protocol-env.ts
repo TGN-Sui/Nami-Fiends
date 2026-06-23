@@ -58,6 +58,16 @@ export function readAdminCapId(): string | null {
   return value.trim();
 }
 
+export function readNodenameRegistryId(): string | null {
+  const value = import.meta.env.VITE_NAMI_NODENAME_REGISTRY_ID;
+
+  if (typeof value !== 'string' || !value.startsWith('0x') || value.trim() === '') {
+    return null;
+  }
+
+  return value.trim();
+}
+
 export function readDemoOwner(): string | null {
   return readConfiguredOwnerAddress('VITE_NAMI_DEMO_OWNER');
 }

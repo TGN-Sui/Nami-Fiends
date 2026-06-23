@@ -47,6 +47,9 @@ export async function hydrateOfficialsSubmissionsFromServer(): Promise<boolean> 
     }
 
     dispatchHydrated();
+    void import('./passport-claim-status-sync.js').then(({ syncUserClaimStatusFromHydratedClaims }) => {
+      syncUserClaimStatusFromHydratedClaims();
+    });
     return true;
   } catch {
     return false;

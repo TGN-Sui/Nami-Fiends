@@ -105,6 +105,16 @@ module nami::errors {
     const ECosmeticNotUnlocked: u64 = 151;
 
     // =========================================================
+    // ONBOARDING ERRORS
+    // =========================================================
+    const EInvalidNodename: u64 = 170;
+    const ENodenameTaken: u64 = 171;
+    const EAlreadyEnteredNami: u64 = 172;
+    const EInvalidDisplayName: u64 = 173;
+    const EInvalidAvatarRef: u64 = 174;
+    const EPassportAlreadyLinked: u64 = 175;
+
+    // =========================================================
     // RECOVERY ERRORS
     // =========================================================
     const EInvalidRecoveryRequest: u64 = 160;
@@ -204,6 +214,15 @@ module nami::errors {
 
     public fun invalid_recovery_result(): u64 { EInvalidRecoveryResult }
 
+    public fun invalid_nodename(): u64 { EInvalidNodename }
 
-    
+    public fun nodename_taken(): u64 { ENodenameTaken }
+
+    public fun already_entered_nami(): u64 { EAlreadyEnteredNami }
+
+    public fun invalid_display_name(): u64 { EInvalidDisplayName }
+
+    public fun invalid_avatar_ref(): u64 { EInvalidAvatarRef }
+
+    public fun passport_already_linked(): u64 { EPassportAlreadyLinked }
 }

@@ -103,6 +103,16 @@ module nami::conduct {
         initial_signal: u8,
         ctx: &mut TxContext
     ) {
+        let status = mint_initial_status(passport_obj, initial_signal, ctx);
+        let owner = status.owner;
+        transfer::transfer(status, owner);
+    }
+
+    public(package) fun mint_initial_status(
+        passport_obj: &passport::Passport,
+        initial_signal: u8,
+        ctx: &mut TxContext
+    ): ConductStatus {
         assert!(
             is_user_selectable_signal(initial_signal),
             errors::invalid_conduct_signal()
@@ -110,11 +120,12 @@ module nami::conduct {
 
         let owner = tx_context::sender(ctx);
         let now = tx_context::epoch_timestamp_ms(ctx);
+        let passport_id = passport::get_id(passport_obj);
 
         let status = ConductStatus {
             id: object::new(ctx),
             owner,
-            passport_id: passport::get_id(passport_obj),
+            passport_id,
             signal: initial_signal,
             reason_code: 0,
             expires_at_ms: 0,
@@ -124,10 +135,14 @@ module nami::conduct {
 
         sui::event::emit(ConductStatusCreated {
             owner,
-            passport_id: passport::get_id(passport_obj),
+            passport_id,
             signal: initial_signal,
         });
 
+        status
+    }
+
+    public(package) fun transfer_to_owner(status: ConductStatus, owner: address) {
         transfer::transfer(status, owner);
     }
 

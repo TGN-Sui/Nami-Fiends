@@ -9,6 +9,7 @@ import { applyMembershipTierToMember, effectiveMemberTier } from './membership-p
 import { hasComplimentaryMembershipAccess } from './official-membership-access.js';
 import { hasTestLaunchTesterEliteAccess } from './test-launch-tester-access.js';
 import { hasActiveMemberSession } from './member-session-store.js';
+import { hasPassportAccess, hasVerifiedPassportOwnership } from './passport-access.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { withMemberAvatar } from './member-avatar-store.js';
 import { withMemberProfile } from './member-profile-store.js';
@@ -90,6 +91,10 @@ export function isMemberVerified(member: NamiMember): boolean {
     if (isOfficialOwner(owner) || hasComplimentaryMembershipAccess(owner)) {
       return true;
     }
+
+    if (hasVerifiedPassportOwnership()) {
+      return true;
+    }
   }
 
   return member.tier !== 'NPC';
@@ -108,8 +113,12 @@ export function canMessageOtherMembers(sender: NamiMember = getSelfMember()): bo
 }
 
 export function canAccessBadgeBook(member: NamiMember): boolean {
-  if (member.id === SELF_MEMBER_ID && isMemberVerified(member)) {
-    return true;
+  if (member.id === SELF_MEMBER_ID) {
+    if (isOfficialOwner(readSignedInOwner())) {
+      return true;
+    }
+
+    return hasPassportAccess();
   }
 
   return !isNpcMember(member);

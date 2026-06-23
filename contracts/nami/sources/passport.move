@@ -146,6 +146,31 @@ module nami::passport {
         }
     }
 
+    /// Minimal on-chain anchor for enter_nami.
+    /// XP, tier, reputation, and conduct are tracked off-chain for frictionless UX.
+    public(package) fun create_onboarding_anchor(
+        identity_id: address,
+        archetype: u8,
+        ctx: &mut TxContext
+    ): Passport {
+        Passport {
+            id: object::new(ctx),
+            identity_id,
+            archetype,
+            xp: 0,
+            level: 0,
+            level_progress: 0,
+            badge_points: 0,
+            reputation: NEWBIE,
+            tier: NPC,
+            boost_score: 0,
+            prestige_points: 0,
+            tier_expires_at_ms: 0,
+            membership_expiry_notified: false,
+            created_at_ms: tx_context::epoch_timestamp_ms(ctx),
+        }
+    }
+
     // =========================================================
     // INIT PASSPORT
     // =========================================================
@@ -155,14 +180,26 @@ module nami::passport {
         ctx: &mut TxContext
     ) {
         let passport = create_passport(identity_id, archetype, ctx);
-        let passport_id = object::uid_to_address(&passport.id);
+        emit_passport_created(
+            object::uid_to_address(&passport.id),
+            identity_id
+        );
 
+        transfer::transfer(passport, tx_context::sender(ctx));
+    }
+
+    public(package) fun emit_passport_created(
+        passport_id: address,
+        identity_id: address
+    ) {
         sui::event::emit(PassportCreated {
             passport_id,
             identity_id,
         });
+    }
 
-        transfer::transfer(passport, tx_context::sender(ctx));
+    public(package) fun transfer_to_owner(passport: Passport, owner: address) {
+        transfer::transfer(passport, owner);
     }
 
     // =========================================================
@@ -444,6 +481,10 @@ module nami::passport {
 
     public fun get_prestige_points(passport: &Passport): u64 {
         passport.prestige_points
+    }
+
+    public fun get_archetype(passport: &Passport): u8 {
+        passport.archetype
     }
 
     public fun get_identity_id(passport: &Passport): address {

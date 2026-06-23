@@ -101,4 +101,21 @@ module nami::badge {
 
         transfer::transfer(badge, owner);
     }
+
+    /// Onboarding flavor badge proof — does not mutate passport progression.
+    public(package) fun mint_onboarding_badge(
+        owner: address,
+        source: vector<u8>,
+        ctx: &mut TxContext
+    ) {
+        let badge = create_badge(owner, BASIC_BADGE, source, ctx);
+
+        sui::event::emit(BadgeMinted {
+            owner,
+            badge_type: BASIC_BADGE,
+            points: badge.points,
+        });
+
+        transfer::transfer(badge, owner);
+    }
 }

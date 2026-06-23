@@ -1,5 +1,6 @@
 import { readAppConfig, shouldUseDevFixtures, isTestLaunchMode } from './app-config.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
+import { readLinkedMemberDisplayName } from './linked-member-store.js';
 import { resolveMemberDisplayName } from './member-display-name-store.js';
 import { readMemberSession } from './member-session-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
@@ -30,11 +31,14 @@ export function applyGenesisSelfOverrides(member: NamiMember): NamiMember {
   const owner = readResolvedProtocolOwner();
   const isBoss = resolveNamiAdminRole(owner) === 'official-owner';
 
+  const linkedDisplayName = readLinkedMemberDisplayName();
+  const resolvedName = resolveMemberDisplayName(SELF_MEMBER_ID, member.name);
+
   const next: NamiMember = {
     ...member,
     tier: 'NPC',
     signal: 'Green',
-    name: resolveMemberDisplayName(SELF_MEMBER_ID, member.name),
+    name: linkedDisplayName ?? resolvedName,
     badge: session?.flavorBadgeId?.trim() || member.badge,
   };
 

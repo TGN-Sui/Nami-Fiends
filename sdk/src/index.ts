@@ -141,6 +141,17 @@ export {
   type EnterNamiParams,
 } from './transactions.js';
 
+export {
+  evaluateNamiMemberProof,
+  isVerifiedNamiMember,
+  resolveNamiMemberFromWallet,
+  type NamiLinkedMemberAnchor,
+  type NamiLinkedMemberProgression,
+  type NamiLinkedMemberView,
+  type NamiMemberProof,
+  type NamiMemberProofStatus,
+} from './resolve-member.js';
+
 export type {
   NamiNetwork,
   NamiSdkConfig,

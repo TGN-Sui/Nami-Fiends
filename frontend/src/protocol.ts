@@ -9,6 +9,7 @@ import {
   loadPassportProtocolView,
   loadProfileProtocolView,
   loadSquadsProtocolView,
+  resolveNamiMemberFromWallet,
   type AppealProjection,
   type BadgeHistoryEntry,
   type BoostHistoryEntry,
@@ -27,6 +28,7 @@ import {
   type PassportProtocolView,
   type ProfileProtocolView,
   type RecoveryProjection,
+  type NamiLinkedMemberView,
   type SquadCardView,
 } from '@nami/sdk';
 
@@ -34,6 +36,11 @@ import {
   createConfiguredNamiClient,
   getConfiguredNetwork,
 } from './nami.js';
+import {
+  fetchLinkedProfile,
+  syncLinkedProfile,
+  type NamiLinkedProfile,
+} from './nami-linked-profile-api.js';
 import { isValidProtocolOwner, readDemoOwner, readIndexerUrl } from './protocol-env.js';
 
 export type ProtocolDataMode = 'live' | 'mock';
@@ -213,6 +220,35 @@ export async function fetchIdentityView(
   }
 
   return loadIdentityProtocolView(context.chain!, owner);
+}
+
+/**
+ * Cross-platform member resolution: zkLogin or wallet address proves ownership
+ * of on-chain Identity + Passport objects, then optionally hydrates off-chain data.
+ */
+export async function fetchLinkedMemberView(
+  context: ProtocolContext,
+  owner: string,
+  options: { includeOffchain?: boolean; requireWalletProof?: boolean } = {}
+): Promise<{
+  chain: NamiLinkedMemberView | null;
+  linkedProfile: NamiLinkedProfile | null;
+}> {
+  if (!guardOwner(context, owner)) {
+    return { chain: null, linkedProfile: null };
+  }
+
+  const chain = await resolveNamiMemberFromWallet(context.chain!, context.indexer, owner);
+
+  if (!options.includeOffchain) {
+    return { chain, linkedProfile: null };
+  }
+
+  const linkedProfile = options.requireWalletProof
+    ? await syncLinkedProfile(owner)
+    : await fetchLinkedProfile(owner);
+
+  return { chain, linkedProfile };
 }
 
 export async function fetchCustomizationView(

@@ -1,7 +1,8 @@
 export interface EnterNamiParams {
   nodename: string;
-  displayName: string;
   archetype: number;
+  avatarRef: string;
+  nodenameRegistryId: string;
 }
 
 export function enterNamiMoveTarget(packageId: string): string {
@@ -17,13 +18,21 @@ export function validateEnterNamiParams(params: EnterNamiParams): EnterNamiParam
     throw new Error('enter_nami requires a nodename.');
   }
 
-  if (params.displayName.trim() === '') {
-    throw new Error('enter_nami requires a displayName.');
+  const registryId = params.nodenameRegistryId.trim();
+  const avatarRef = params.avatarRef.trim();
+
+  if (!registryId.startsWith('0x')) {
+    throw new Error('enter_nami requires a nodenameRegistryId.');
+  }
+
+  if (avatarRef.length > 512) {
+    throw new Error('enter_nami avatarRef must be 512 characters or fewer.');
   }
 
   return {
     nodename: params.nodename.trim().toLowerCase(),
-    displayName: params.displayName.trim(),
     archetype: params.archetype,
+    avatarRef,
+    nodenameRegistryId: registryId,
   };
 }

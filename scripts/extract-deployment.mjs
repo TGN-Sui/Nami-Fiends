@@ -20,6 +20,7 @@ const objectChanges = raw.objectChanges ?? raw.transaction?.objectChanges ?? [];
 
 let packageId = '';
 let adminCapId = '';
+let nodenameRegistryId = '';
 
 for (const change of objectChanges) {
   if (change.type === 'published' && change.packageId) {
@@ -33,6 +34,14 @@ for (const change of objectChanges) {
   ) {
     adminCapId = change.objectId;
   }
+
+  if (
+    change.type === 'created' &&
+    typeof change.objectType === 'string' &&
+    change.objectType.includes('::onboarding::NodenameRegistry')
+  ) {
+    nodenameRegistryId = change.objectId;
+  }
 }
 
 if (!packageId) {
@@ -44,6 +53,7 @@ const summary = {
   network,
   packageId,
   adminCapId: adminCapId || null,
+  nodenameRegistryId: nodenameRegistryId || null,
   publishedAt: new Date().toISOString(),
   publishDigest: raw.digest ?? raw.transaction?.digest ?? null,
   sourceFile: path.basename(publishPath),

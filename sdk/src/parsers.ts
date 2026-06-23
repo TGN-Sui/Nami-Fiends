@@ -171,6 +171,7 @@ export interface ParsedIdentity {
   trustTier: number;
   verificationLevel: number;
   passportId: string | null;
+  nodename: string;
   createdAtMs: number;
   version: number;
 }
@@ -332,6 +333,7 @@ export function parseIdentityObject(source: SuiObjectData): ParsedIdentity | nul
     trustTier: readU8(fields.trust_tier),
     verificationLevel: readU8(fields.verification_level),
     passportId: readOptionalAddress(fields.passport_id),
+    nodename: readBytesAsString(fields.nodename),
     createdAtMs: readU64(fields.created_at_ms),
     version: readU8(fields.version),
   };

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@mysten/sui": "latest",
+    "@nami/sdk": "file:../SDK",
     "dotenv": "latest"
   },
   "devDependencies": {

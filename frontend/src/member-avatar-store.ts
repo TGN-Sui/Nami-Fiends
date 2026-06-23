@@ -123,6 +123,7 @@ function subscribeSelfMember(onStoreChange: () => void): () => void {
   window.addEventListener('nami-member-session-changed', handleChange);
   window.addEventListener('nami-demo-perspective-changed', handleChange);
   window.addEventListener('nami-membership-plan-changed', handleChange);
+  window.addEventListener('nami-linked-member-changed', handleChange);
 
   return () => {
     window.removeEventListener('nami-self-avatar-changed', handleChange);
@@ -130,6 +131,7 @@ function subscribeSelfMember(onStoreChange: () => void): () => void {
     window.removeEventListener('nami-member-session-changed', handleChange);
     window.removeEventListener('nami-demo-perspective-changed', handleChange);
     window.removeEventListener('nami-membership-plan-changed', handleChange);
+    window.removeEventListener('nami-linked-member-changed', handleChange);
   };
 }
 

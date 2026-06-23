@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { isDemoWalletOnboardingEnabled } from './app-config.js';
-import { recoverySettingsHint, zkLoginLaunchReadinessMessage } from './onboarding-recovery.js';
+import { recoverySettingsHint } from './onboarding-recovery.js';
 import {
   isValidNodename,
   nodenameValidationMessage,
@@ -12,22 +12,36 @@ import {
   FIEND_CLAIM_HANDLE_PREFIX,
   nodenameSuffixFromFull,
 } from './member-public-chat.js';
-import { getOnboardingMethodLabel, type OnboardingMethod } from './onboarding.js';
 import { useMemberSession } from './member-session-store.js';
 import {
   submitNodenameClaim,
   useNamiAdminStore,
   type ClaimMethod,
 } from './nami-admin-store.js';
-import { useProtocolOwner, WalletConnectControl, ZkLoginConnectControl } from './wallet.js';
+import { PassportClaimFulfillmentCard } from './PassportClaimFulfillmentCard.js';
+import { useProtocolOwner } from './wallet.js';
 
+function resolveClaimMethod(
+  source: 'wallet' | 'zklogin' | 'linked' | 'demo' | null,
+  demoClaimEnabled: boolean
+): ClaimMethod {
+  if (source === 'zklogin') {
+    return 'zklogin';
+  }
+
+  if (source === 'demo' && demoClaimEnabled) {
+    return 'demo';
+  }
+
+  return 'wallet';
+}
 
 export function PassportClaimSettingsPanel(): ReactElement {
   const session = useMemberSession();
   const { owner, source } = useProtocolOwner();
   const { userClaimStatus } = useNamiAdminStore();
 
-  const [method, setMethod] = useState<OnboardingMethod>('zklogin');
+  const [preferredName, setPreferredName] = useState(() => session?.displayName ?? '');
   const [nodenameSuffix, setNodenameSuffix] = useState(() =>
     nodenameSuffixFromFull(userClaimStatus.nodename)
   );
@@ -40,6 +54,7 @@ export function PassportClaimSettingsPanel(): ReactElement {
   const claimPending = userClaimStatus.status === 'pending';
   const claimApproved = userClaimStatus.status === 'approved';
   const claimRejected = userClaimStatus.status === 'rejected';
+  const preferredNameValid = preferredName.trim().length >= 2;
 
   useEffect(() => {
     if (userClaimStatus.nodename) {
@@ -48,69 +63,48 @@ export function PassportClaimSettingsPanel(): ReactElement {
   }, [userClaimStatus.nodename]);
 
   useEffect(() => {
-    if (!demoClaimEnabled && method === 'demo') {
-      setMethod('zklogin');
+    if (session?.displayName && !preferredName.trim()) {
+      setPreferredName(session.displayName);
     }
-  }, [demoClaimEnabled, method]);
-
-  useEffect(() => {
-    if (source === 'wallet' || source === 'linked') {
-      setMethod('wallet');
-    } else if (source === 'zklogin') {
-      setMethod('zklogin');
-    } else if (source === 'demo' && demoClaimEnabled) {
-      setMethod('demo');
-    }
-  }, [demoClaimEnabled, source]);
-
-  function resolveClaimMethod(): ClaimMethod {
-    if (method === 'zklogin') {
-      return 'zklogin';
-    }
-
-    if (method === 'demo' && demoClaimEnabled) {
-      return 'demo';
-    }
-
-    return 'wallet';
-  }
+  }, [preferredName, session?.displayName]);
 
   function handleSubmitClaim(): void {
     setClaimError(null);
     setClaimNotice(null);
 
     if (!session) {
-      setClaimError('Complete signup with display name and email before claiming a nodename.');
+      setClaimError('Complete signup with display name and email before claiming your passport.');
+      return;
+    }
+
+    if (!preferredNameValid) {
+      setClaimError('Enter a preferred name (at least 2 characters).');
       return;
     }
 
     if (!isValidNodename(claimNodename)) {
-      setClaimError(nodenameError ?? 'Choose a valid nodename.');
+      setClaimError(nodenameError ?? 'Choose a valid nodename handle.');
       return;
     }
 
-    if (claimPending) {
-      return;
-    }
-
-    if (method === 'demo' && !demoClaimEnabled) {
-      setClaimError('Demo claim method is disabled on official testnet builds.');
+    if (claimPending || claimApproved) {
       return;
     }
 
     submitNodenameClaim({
       email: session.email,
       displayName: session.displayName,
+      preferredName: preferredName.trim(),
       nodename: normalizeNodename(claimNodename),
       archetype: session.archetype,
       archetypeLabel: session.archetypeLabel,
       flavorBadgeId: session.flavorBadgeId,
       submitterAddress: owner,
-      method: resolveClaimMethod(),
+      method: resolveClaimMethod(source, demoClaimEnabled),
     });
 
     setClaimNotice(
-      'Claim submitted for Nami Official review. You will be notified when your nodename is approved.'
+      'Passport claim submitted. A Nami Official will review your preferred name and handle.'
     );
   }
 
@@ -119,48 +113,18 @@ export function PassportClaimSettingsPanel(): ReactElement {
       <div className="profile-panel-heading">
         <h2>Passport Claim</h2>
         <p>
-          Choose your permanent @fiend nodename and submit for Nami Official approval. zkLogin is
-          the default identity path — wallet signing follows once enter_nami is deployed.
+          Set your preferred name and @fiend handle, then submit one ticket for review. Approval
+          automatically queues SuiNS subname provisioning — no manual SuiNS console step.
         </p>
       </div>
 
       {!session ? (
         <p className="settings-account-hint">
-          Finish Enter Nami signup first so your email and display name are on file for claim review.
+          Finish Enter Nami signup first so your email is on file for claim review.
         </p>
       ) : null}
 
-      <div className="method-toggle passport-claim-method-toggle" aria-label="Claim method">
-        <button
-          className={method === 'zklogin' ? 'active' : ''}
-          onClick={() => setMethod('zklogin')}
-          type="button"
-        >
-          zkLogin
-        </button>
-        <button
-          className={method === 'wallet' ? 'active' : ''}
-          onClick={() => setMethod('wallet')}
-          type="button"
-        >
-          Wallet
-        </button>
-        {demoClaimEnabled ? (
-          <button
-            className={method === 'demo' ? 'active' : ''}
-            onClick={() => setMethod('demo')}
-            type="button"
-          >
-            Demo
-          </button>
-        ) : null}
-      </div>
-
       <div className="passport-claim-status-strip">
-        <div>
-          <span>Method</span>
-          <strong>{getOnboardingMethodLabel(method)}</strong>
-        </div>
         <div>
           <span>Claim status</span>
           <strong className={'passport-claim-status-' + userClaimStatus.status}>
@@ -173,23 +137,32 @@ export function PassportClaimSettingsPanel(): ReactElement {
                   : 'Not submitted'}
           </strong>
         </div>
+        {owner ? (
+          <div>
+            <span>Connected wallet</span>
+            <strong>{owner.slice(0, 10)}…{owner.slice(-6)}</strong>
+          </div>
+        ) : null}
       </div>
 
-      {method === 'wallet' ? (
-        <div className="onboarding-wallet-connect">
-          <WalletConnectControl />
-        </div>
-      ) : null}
-
-      {method === 'zklogin' ? (
-        <div className="onboarding-zklogin-block">
-          <p className="protocol-hint">{zkLoginLaunchReadinessMessage()}</p>
-          <ZkLoginConnectControl />
-        </div>
-      ) : null}
+      <label className="onboarding-field">
+        <span>Preferred name</span>
+        <input
+          disabled={claimPending || claimApproved}
+          maxLength={32}
+          onChange={(event) => setPreferredName(event.target.value)}
+          placeholder="How you want to appear on your passport"
+          type="text"
+          value={preferredName}
+        />
+        <small className="protocol-hint">
+          Shown on your passport card and owner review ticket. You can change display copy later;
+          this is what officials approve.
+        </small>
+      </label>
 
       <label className="onboarding-field passport-claim-handle-field">
-        <span>Nodename</span>
+        <span>Nodename handle</span>
         <div className="passport-claim-handle-input-row">
           <span aria-hidden="true" className="passport-claim-handle-prefix">
             @{FIEND_CLAIM_HANDLE_PREFIX}
@@ -208,14 +181,13 @@ export function PassportClaimSettingsPanel(): ReactElement {
           <small className="onboarding-field-error">{nodenameError}</small>
         ) : (
           <small className="protocol-hint">
-            @{FIEND_CLAIM_HANDLE_PREFIX} is reserved for every claim. Add your unique suffix after it.
+            Permanent @fiend handle. SuiNS subname provisioning runs automatically after approval.
           </small>
         )}
       </label>
 
       {session ? (
         <div className="passport-claim-member-summary">
-          <span>{session.displayName}</span>
           <span>{session.email}</span>
           <span>
             {session.archetypeLabel} · {session.flavorBadgeId}
@@ -226,9 +198,12 @@ export function PassportClaimSettingsPanel(): ReactElement {
       {claimError ? <p className="onboarding-field-error">{claimError}</p> : null}
       {claimNotice ? <p className="protocol-hint">{claimNotice}</p> : null}
       <p className="protocol-hint">{recoverySettingsHint()}</p>
-      {claimApproved ? (
-        <p className="protocol-hint passport-claim-approved-note">
-          Your nodename claim was approved. On-chain minting will attach once enter_nami is live.
+
+      {claimApproved ? <PassportClaimFulfillmentCard /> : null}
+
+      {claimRejected ? (
+        <p className="protocol-hint">
+          Your claim was not approved. Adjust your preferred name or handle and submit again.
         </p>
       ) : null}
 
@@ -238,12 +213,13 @@ export function PassportClaimSettingsPanel(): ReactElement {
           !session ||
           claimPending ||
           claimApproved ||
+          !preferredNameValid ||
           !isValidNodename(claimNodename)
         }
         onClick={handleSubmitClaim}
         type="button"
       >
-        {claimPending ? 'Pending' : claimApproved ? 'Approved' : 'Submit claim for review'}
+        {claimPending ? 'Pending review' : claimApproved ? 'Approved' : 'Submit passport claim'}
       </button>
     </article>
   );

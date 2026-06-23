@@ -2,6 +2,7 @@ import { useEffect, type ReactElement } from 'react';
 
 import { linkMemberSessionAuth } from './member-auth-link-store.js';
 import { readMemberSession } from './member-session-store.js';
+import { hydrateLinkedMember } from './linked-member-sync.js';
 import {
   hydrateMemberSessionPreferences,
   setSessionPreferencesSyncOwner,
@@ -28,7 +29,10 @@ export function MemberSessionSync(): ReactElement | null {
       });
     }
 
-    void hydrateMemberSessionPreferences(owner);
+    void Promise.all([
+      hydrateMemberSessionPreferences(owner),
+      hydrateLinkedMember(owner, source),
+    ]);
   }, [owner, source]);
 
   return null;

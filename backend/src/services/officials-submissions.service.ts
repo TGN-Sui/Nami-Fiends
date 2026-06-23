@@ -1,4 +1,5 @@
 import { readJsonFile, writeJsonFile } from '../storage.js';
+import { queuePassportFulfillmentsFromClaims } from './passport-fulfillment.service.js';
 
 export type OfficialsSubmissionsProjection = {
   suggestions: unknown[];
@@ -55,6 +56,46 @@ function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] 
     const leftMs = (left as { submittedAtMs?: number }).submittedAtMs ?? 0;
     const rightMs = (right as { submittedAtMs?: number }).submittedAtMs ?? 0;
     return rightMs - leftMs;
+  });
+}
+
+type NodenameClaimRecord = {
+  id: string;
+  status?: string;
+  email?: string;
+  displayName?: string;
+  preferredName?: string;
+  nodename?: string;
+  submitterAddress?: string | null;
+  archetype?: number;
+};
+
+function asNodenameClaims(value: unknown): NodenameClaimRecord[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((entry) => {
+    if (entry === null || typeof entry !== 'object' || typeof (entry as { id?: unknown }).id !== 'string') {
+      return [];
+    }
+
+    return [entry as NodenameClaimRecord];
+  });
+}
+
+function newlyApprovedClaims(
+  previous: NodenameClaimRecord[],
+  next: NodenameClaimRecord[]
+): NodenameClaimRecord[] {
+  const previousById = new Map(previous.map((claim) => [claim.id, claim.status ?? 'pending']));
+
+  return next.filter((claim) => {
+    if (claim.status !== 'approved') {
+      return false;
+    }
+
+    return previousById.get(claim.id) !== 'approved';
   });
 }
 
@@ -117,5 +158,43 @@ export async function syncOfficialsSubmissions(
   };
 
   await writeProjection(next);
+
+  const approvedClaims = newlyApprovedClaims(
+    asNodenameClaims(current.nodenameClaims),
+    asNodenameClaims(next.nodenameClaims)
+  );
+
+  if (approvedClaims.length > 0) {
+    void queuePassportFulfillmentsFromClaims(
+      approvedClaims.flatMap((claim) => {
+        const email = typeof claim.email === 'string' ? claim.email : '';
+        const nodename = typeof claim.nodename === 'string' ? claim.nodename : '';
+
+        if (!email || !nodename) {
+          return [];
+        }
+
+        return [
+          {
+            claimId: claim.id,
+            email,
+            nodename,
+            preferredName:
+              typeof claim.preferredName === 'string'
+                ? claim.preferredName
+                : typeof claim.displayName === 'string'
+                  ? claim.displayName
+                  : nodename,
+            submitterAddress:
+              typeof claim.submitterAddress === 'string' ? claim.submitterAddress : null,
+            archetype: typeof claim.archetype === 'number' ? claim.archetype : 0,
+          },
+        ];
+      })
+    ).catch((error) => {
+      console.error('[nami-officials] passport fulfillment queue failed', error);
+    });
+  }
+
   return next;
 }

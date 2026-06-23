@@ -40,6 +40,14 @@ import {
   handleMembershipFulfillmentPendingGet,
 } from './routes/membership-fulfillment.routes.js';
 import {
+  handlePassportFulfillmentClaimGet,
+  handlePassportFulfillmentComplete,
+  handlePassportFulfillmentEmailGet,
+  handlePassportFulfillmentPendingGet,
+  handlePassportFulfillmentQueuePost,
+  handlePassportFulfillmentRetrySuinsPost,
+} from './routes/passport-fulfillment.routes.js';
+import {
   handleOfficialsSubmissionsGet,
   handleOfficialsSubmissionsOptions,
   handleOfficialsSubmissionsSync,
@@ -61,6 +69,11 @@ import {
   handleChatRoomRead,
   handleChatUnreadGet,
 } from './routes/chat-favorites.routes.js';
+import {
+  handleLinkedProfileGet,
+  handleLinkedProfileOptions,
+  handleLinkedProfileSync,
+} from './routes/linked-profile.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -977,6 +990,25 @@ const routes: Route[] = [
     handler: (_registry, request, response) => handleMemberPreferencesUpsert(request, response),
   },
   {
+    method: 'OPTIONS',
+    pattern: /^\/api\/nami\/linked-profile$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleLinkedProfileOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/nami\/linked-profile\/([^/]+)$/,
+    paramNames: ['owner'],
+    handler: (registry, request, response, params) =>
+      handleLinkedProfileGet(registry, request, response, params.owner ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/nami\/linked-profile\/sync$/,
+    paramNames: [],
+    handler: (registry, request, response) => handleLinkedProfileSync(registry, request, response),
+  },
+  {
     method: 'POST',
     pattern: /^\/api\/media\/avatar$/,
     paramNames: [],
@@ -1046,6 +1078,46 @@ const routes: Route[] = [
     paramNames: ['fulfillmentId'],
     handler: (_registry, request, response, params) =>
       handleMembershipFulfillmentComplete(request, response, params.fulfillmentId ?? ''),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/passport\/fulfillment\/pending$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePassportFulfillmentPendingGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/passport\/fulfillment\/queue$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePassportFulfillmentQueuePost(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/passport\/fulfillment\/claim\/([^/]+)$/,
+    paramNames: ['claimId'],
+    handler: (_registry, request, response, params) =>
+      handlePassportFulfillmentClaimGet(request, response, params.claimId ?? ''),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/passport\/fulfillment\/email\/([^/]+)$/,
+    paramNames: ['email'],
+    handler: (_registry, request, response, params) =>
+      handlePassportFulfillmentEmailGet(request, response, decodeURIComponent(params.email ?? '')),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/passport\/fulfillment\/([^/]+)\/retry-suins$/,
+    paramNames: ['fulfillmentId'],
+    handler: (_registry, request, response, params) =>
+      handlePassportFulfillmentRetrySuinsPost(request, response, params.fulfillmentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/passport\/fulfillment\/([^/]+)\/complete$/,
+    paramNames: ['fulfillmentId'],
+    handler: (_registry, request, response, params) =>
+      handlePassportFulfillmentComplete(request, response, params.fulfillmentId ?? ''),
   },
   {
     method: 'OPTIONS',

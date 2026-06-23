@@ -5,6 +5,7 @@ import {
   fetchDiscoveryChannels,
   fetchDiscoveryGuilds,
   fetchGuildCards,
+  fetchLinkedMemberView,
   fetchOwnerHistory,
   fetchPassportView,
   fetchSquadCards,
@@ -154,6 +155,15 @@ export function useOwnerHistoryQuery() {
 
 export function usePassportQuery() {
   return useProtocolQuery('passport', fetchPassportView, { requiresChain: true });
+}
+
+export function useLinkedMemberQuery() {
+  return useProtocolQuery(
+    'linked-member',
+    (context, owner) =>
+      fetchLinkedMemberView(context, owner, { includeOffchain: true }),
+    { requiresChain: true }
+  );
 }
 
 export function useGuildCardsQuery() {

@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 
 import { isTestLaunchMode } from './app-config.js';
+import { readLinkedMemberNodename, useLinkedMemberProfile } from './linked-member-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readOfficialOwner, readOfficialOwnerEmail } from './protocol-env.js';
 import { getZkLoginSession } from './zklogin.js';
@@ -21,6 +22,8 @@ function shortenAccountId(value: string): string {
 
 export function AccountConnectSection(): ReactElement {
   const { owner, source } = useProtocolOwner();
+  const linkedProfile = useLinkedMemberProfile();
+  const linkedNodename = readLinkedMemberNodename();
   const disconnect = useWalletDisconnect();
   const zkSession = getZkLoginSession();
   const configuredOwner = readOfficialOwner();
@@ -47,13 +50,22 @@ export function AccountConnectSection(): ReactElement {
           <strong>{shortenAccountId(owner)}</strong>
           <p className="settings-account-source">
             {source === 'zklogin'
-              ? 'Signed in with your connected account.'
+              ? linkedProfile?.proof.status === 'verified'
+                ? 'zkLogin owns your Nami passport — portable across integrated platforms.'
+                : 'Signed in with zkLogin. Mint or sync your passport to unlock cross-platform proof.'
               : source === 'linked'
                 ? 'Owner wallet linked to your email session.'
                 : source === 'demo' && !isTestLaunchMode()
                   ? 'Preview session active.'
-                  : 'Account linked and ready.'}
+                  : linkedProfile?.proof.status === 'verified'
+                    ? 'Wallet owns your Nami passport — portable across integrated platforms.'
+                    : 'Account linked and ready.'}
           </p>
+          {linkedNodename ? (
+            <p className="settings-account-source">
+              Nodename: <strong>{linkedNodename}</strong>
+            </p>
+          ) : null}
           <button
             className="profile-secondary-link"
             onClick={() => void disconnect()}

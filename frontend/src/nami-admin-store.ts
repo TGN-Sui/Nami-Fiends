@@ -27,6 +27,7 @@ export type PendingNodenameClaim = {
   id: string;
   email: string;
   displayName: string;
+  preferredName?: string;
   nodename: string;
   archetype: number;
   archetypeLabel: string;
@@ -219,9 +220,32 @@ function saveUserClaimStatus(status: UserClaimStatus): void {
   dispatchAdminChange();
 }
 
+export function saveUserClaimStatusFromServer(status: UserClaimStatus): void {
+  const current = readUserClaimStatus();
+
+  if (current.updatedAtMs >= status.updatedAtMs && current.status === status.status) {
+    return;
+  }
+
+  saveUserClaimStatus(status);
+}
+
+export function claimPreferredName(
+  claim: Pick<PendingNodenameClaim, 'preferredName' | 'displayName'>
+): string {
+  const preferred = typeof claim.preferredName === 'string' ? claim.preferredName.trim() : '';
+
+  if (preferred) {
+    return preferred;
+  }
+
+  return claim.displayName.trim();
+}
+
 export function submitNodenameClaim(input: {
   email: string;
   displayName: string;
+  preferredName: string;
   nodename: string;
   archetype: number;
   archetypeLabel: string;
@@ -233,6 +257,7 @@ export function submitNodenameClaim(input: {
     id: 'claim-' + Date.now().toString(36),
     email: input.email.trim().toLowerCase(),
     displayName: input.displayName.trim(),
+    preferredName: input.preferredName.trim() || input.displayName.trim(),
     nodename: input.nodename.trim().toLowerCase(),
     archetype: input.archetype,
     archetypeLabel: input.archetypeLabel,
@@ -249,7 +274,7 @@ export function submitNodenameClaim(input: {
   enqueueSubmittedTicket({
     id: claim.id,
     kind: 'nodename-claim',
-    title: '@' + claim.nodename,
+    title: claimPreferredName(claim) + ' · @' + claim.nodename,
     description: claim.displayName + ' · ' + claim.email,
     channelId: null,
     coverUrl: null,
@@ -299,10 +324,25 @@ export function approvePendingClaims(
 
   savePendingClaims(claims);
 
+  const approvedClaims = claims.filter((claim) => idSet.has(claim.id) && claim.status === 'approved');
+
   claimIds.forEach((claimId) => {
     if (idSet.has(claimId)) {
       approveSubmittedTicket(claimId, reviewerOwner);
     }
+  });
+
+  void import('./passport-fulfillment-api.js').then(({ queuePassportFulfillmentsForClaims }) => {
+    void queuePassportFulfillmentsForClaims(
+      approvedClaims.map((claim) => ({
+        claimId: claim.id,
+        email: claim.email,
+        preferredName: claimPreferredName(claim),
+        nodename: claim.nodename,
+        submitterAddress: claim.submitterAddress,
+        archetype: claim.archetype,
+      }))
+    );
   });
 
   const userStatus = readUserClaimStatus();

@@ -5,6 +5,7 @@ import { applyGameTicketOfficialReview } from './game-ticket-official-review.js'
 import { canReviewNodenameClaims } from './nami-capabilities.js';
 import {
   approvePendingClaims,
+  claimPreferredName,
   readOpenPendingClaims,
   rejectPendingClaims,
   useNamiAdminStore,
@@ -70,9 +71,9 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
     const claimTickets = readOpenPendingClaims().map((claim) => ({
       id: claim.id,
       kind: 'nodename-claim' as const,
-      title: '@' + claim.nodename,
-      description: claim.displayName + ' · ' + claim.email,
-      detail: claim.archetypeLabel + ' · ' + claim.method,
+      title: claimPreferredName(claim),
+      description: '@' + claim.nodename + ' · ' + claim.email,
+      detail: claim.displayName + ' · ' + claim.archetypeLabel + ' · ' + claim.method,
     }));
 
     const pendingGameTickets = listGameSubmissionTicketsSorted()

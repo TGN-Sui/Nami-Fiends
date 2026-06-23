@@ -12,6 +12,7 @@ import {
   addOfficialModerator,
   approveAllPendingClaims,
   approvePendingClaims,
+  claimPreferredName,
   rejectPendingClaims,
   banMemberTarget,
   readOpenPendingClaims,
@@ -19,6 +20,7 @@ import {
   unbanMemberTarget,
   useNamiAdminStore,
 } from './nami-admin-store.js';
+import { PassportFulfillmentPanel } from './PassportFulfillmentPanel.js';
 import { OwnerProvisionedChannelsPanel } from './OwnerProvisionedChannelsPanel.js';
 import type { NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
@@ -312,10 +314,11 @@ export function NamiOwnerSettingsPanel(props: {
                       type="checkbox"
                     />
                     <span className="nami-owner-claim-summary">
-                      <strong>@{claim.nodename}</strong>
+                      <strong>{claimPreferredName(claim)}</strong>
                       <span>
-                        {claim.displayName} · {claim.email}
+                        @{claim.nodename} · {claim.email}
                       </span>
+                      <span>{claim.displayName}</span>
                       <span>
                         {claim.archetypeLabel} · {claim.method}
                         {claim.submitterAddress ? ' · ' + shortenAddress(claim.submitterAddress) : ''}
@@ -328,6 +331,8 @@ export function NamiOwnerSettingsPanel(props: {
           </>
         )}
       </article>
+
+      <PassportFulfillmentPanel />
 
       <article className="nami-owner-section panel">
         <div className="profile-panel-heading">

@@ -150,6 +150,8 @@ import {
   type GuildCardView,
   type SquadCardView,
 } from './protocol.js';
+import { buildPassportProofs } from './linked-member-proofs.js';
+import { useLinkedMemberProfile } from './linked-member-store.js';
 import {
   useGuildCardsQuery,
   useOwnerHistoryQuery,
@@ -3929,48 +3931,17 @@ function PassportScreen(props: {
   const memberSession = useMemberSession();
   const passportProgression = getNamiProgression(profileMember);
   const [suiNsPublic, setSuiNsPublic] = useState(() => readSuiNsPublicDisplay());
-  const { owner: protocolOwner } = useProtocolOwner();
+  const { owner: protocolOwner, source: protocolSource } = useProtocolOwner();
   const { data: passportView, loadState: passportLoadState } = usePassportQuery();
   const { data: ownerHistory } = useOwnerHistoryQuery();
+  const linkedProfile = useLinkedMemberProfile();
 
-  const passportProofs = [
-    {
-      title: 'Account Linked',
-      status: 'Verified',
-      detail: 'Your account remains a private identity anchor by default.',
-      category: 'Identity'
-    },
-    {
-      title: 'Nodename',
-      status: 'Verified',
-      detail: 'npcgamer is connected, but hidden publicly until enabled.',
-      category: 'Name Proof'
-    },
-    {
-      title: 'Developer Approval',
-      status: 'Not Requested',
-      detail: 'Developer trust is approval-based and never purchased by subscription.',
-      category: 'Developer Trust'
-    },
-    {
-      title: 'Game Ownership',
-      status: 'Pending',
-      detail: 'Future license proof for gated rooms and events.',
-      category: 'Access'
-    },
-    {
-      title: 'Guild Standing',
-      status: 'Verified',
-      detail: 'Guild participation and channel conduct are in good standing.',
-      category: 'Social'
-    },
-    {
-      title: 'Moderation Standing',
-      status: 'Clear',
-      detail: 'No unresolved enforcement actions on this passport.',
-      category: 'Safety'
-    }
-  ];
+  const passportProofs = buildPassportProofs({
+    linkedProfile,
+    passportView,
+    protocolSource,
+    suiNsPublic,
+  });
 
   return (
     <>

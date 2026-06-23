@@ -13,6 +13,7 @@ import { OwnerHubCurationPanel } from './OwnerHubCurationPanel.js';
 import { OwnerProvisionedChannelsPanel } from './OwnerProvisionedChannelsPanel.js';
 import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
+
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
 import {
