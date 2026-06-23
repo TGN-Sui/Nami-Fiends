@@ -16456,7 +16456,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   min-height: 0;
   max-height: 100%;
   margin-top: var(--sidebar-rail-section-gap);
-  overflow: visible;
+  overflow-x: visible;
+  overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -16768,7 +16769,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   flex: 0 0 auto;
   border: none !important;
   border-radius: 0;
-  overflow: visible;
   background: transparent !important;
   box-shadow: none !important;
   font-size: 0.92rem;
@@ -16954,10 +16954,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   }
 
   .sidebar.is-icon-rail .sidebar-hub-destinations {
-    height: calc(
-      var(--sidebar-glyph-size) * 2.72 +
-        var(--sidebar-glyph-size) * (var(--sidebar-glyph-hover-scale) - 1) * 0.42
-    );
+    height: calc(var(--sidebar-glyph-size) * 2.45);
     margin-bottom: calc(var(--sidebar-rail-icon-gap) * 0.35);
   }
 
@@ -18998,10 +18995,7 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   --hub-triangle-rise: calc(var(--sidebar-glyph-size) * 1.08);
   position: relative;
   width: 100%;
-  height: calc(
-    var(--sidebar-glyph-size) * 2.72 +
-      var(--sidebar-glyph-size) * (var(--sidebar-glyph-hover-scale) - 1) * 0.42
-  );
+  height: calc(var(--sidebar-glyph-size) * 2.72);
   margin: calc(var(--sidebar-rail-icon-gap) * 0.15) 0 calc(var(--sidebar-rail-icon-gap) * 0.25);
   display: block;
   overflow: visible;
@@ -19040,10 +19034,10 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   z-index: 2;
   display: grid;
   place-items: center;
-  width: var(--sidebar-rail-item-slot);
-  min-width: var(--sidebar-rail-item-slot);
-  height: var(--sidebar-rail-item-slot);
-  min-height: var(--sidebar-rail-item-slot);
+  width: var(--sidebar-glyph-size);
+  min-width: var(--sidebar-glyph-size);
+  height: var(--sidebar-glyph-size);
+  min-height: var(--sidebar-glyph-size);
   margin: 0;
   padding: 0;
   overflow: visible;
@@ -19286,9 +19280,8 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   gap: var(--sidebar-rail-icon-gap);
   justify-items: center;
   width: 100%;
-  overflow-x: visible;
-  overflow-y: auto;
-  max-height: min(720px, calc(100dvh - 320px));
+  overflow: visible;
+  max-height: 720px;
   opacity: 1;
   pointer-events: auto;
   transition:
@@ -19354,11 +19347,11 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--sidebar-rail-item-slot);
-  min-width: var(--sidebar-rail-item-slot);
-  max-width: none;
-  height: var(--sidebar-rail-item-slot);
-  min-height: var(--sidebar-rail-item-slot);
+  width: var(--sidebar-glyph-size);
+  min-width: var(--sidebar-glyph-size);
+  max-width: var(--sidebar-glyph-size);
+  height: var(--sidebar-rail-secondary-slot);
+  min-height: var(--sidebar-rail-secondary-slot);
   margin: 0;
   padding: 0;
   overflow: visible;
