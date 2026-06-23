@@ -960,10 +960,7 @@ function Sidebar(props: {
             </button>
             );
           })}
-          </div>
-        </nav>
 
-        <div className="sidebar-radio-block sidebar-icon-rail-secondary">
           <button
             aria-label={igniteRadioEnabled ? 'Radio on' : 'Ignite Radio'}
             aria-pressed={igniteRadioEnabled}
@@ -980,7 +977,8 @@ function Sidebar(props: {
             />
             <span className="sidebar-nav-label">{igniteRadioEnabled ? 'Radio On' : 'Ignite Radio'}</span>
           </button>
-        </div>
+          </div>
+        </nav>
       </div>
     </aside>
   );
