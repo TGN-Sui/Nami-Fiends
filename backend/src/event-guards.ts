@@ -1,6 +1,6 @@
 import type { NamiEventData } from './types/events.js';
 
-type FieldType = 'address' | 'u8' | 'u64' | 'bool';
+type FieldType = 'address' | 'u8' | 'u64' | 'bool' | 'bytes';
 
 type EventSchema = Record<string, FieldType>;
 
@@ -41,6 +41,8 @@ export const KNOWN_EVENT_NAMES = [
   'GuildUpdated',
   'ProfileCreated',
   'ProfileUpdated',
+  'NodenameRegistered',
+  'EnterNamiCompleted',
   'TitleClaimed',
   'TitleDisplayCreated',
   'TitleEquipped',
@@ -265,6 +267,19 @@ const EVENT_SCHEMAS: Record<NamiEventName, EventSchema> = {
     passport_id: 'address',
     is_public: 'bool',
   },
+  NodenameRegistered: {
+    nodename: 'bytes',
+    identity_id: 'address',
+    owner: 'address',
+  },
+  EnterNamiCompleted: {
+    owner: 'address',
+    identity_id: 'address',
+    passport_id: 'address',
+    profile_id: 'address',
+    nodename: 'bytes',
+    archetype: 'u8',
+  },
   TitleClaimed: {
     owner: 'address',
     passport_id: 'address',
@@ -311,6 +326,8 @@ const EVENT_SCHEMAS: Record<NamiEventName, EventSchema> = {
 
 export const PRIORITY_EVENT_NAMES = [
   'PassportCreated',
+  'EnterNamiCompleted',
+  'NodenameRegistered',
   'XPAdded',
   'BadgePointsAdded',
   'TierUpgraded',
@@ -354,6 +371,14 @@ function isBool(value: unknown): value is boolean {
   return typeof value === 'boolean';
 }
 
+function isBytes(value: unknown): value is string | number[] {
+  if (typeof value === 'string') {
+    return true;
+  }
+
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'number');
+}
+
 function checkField(value: unknown, fieldType: FieldType): boolean {
   switch (fieldType) {
     case 'address':
@@ -364,6 +389,8 @@ function checkField(value: unknown, fieldType: FieldType): boolean {
       return isU64(value);
     case 'bool':
       return isBool(value);
+    case 'bytes':
+      return isBytes(value);
     default:
       return false;
   }

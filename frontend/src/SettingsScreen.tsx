@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { AccountConnectSection } from './account-connect.js';
+import { PartnerIntegrationPanel } from './PartnerIntegrationPanel.js';
 import { BoostCycleSettingsCard } from './BoostCycleSettingsCard.js';
 import { MemberDailyStatusSettingsField } from './MemberDailyStatusEditor.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
@@ -503,6 +504,7 @@ export function SettingsScreen(props: {
               </button>
             </article>
             <AccountConnectSection />
+            <PartnerIntegrationPanel />
             <PassportClaimSettingsPanel />
             <PlatformLinkSettingsPanel />
           </div>

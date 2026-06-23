@@ -12,6 +12,7 @@ import { PassportTimelineService } from './services/passport-timeline.service.js
 import { ProfileService } from './services/profile.service.js';
 import { RecoveryService } from './services/recovery.service.js';
 import { SquadService } from './services/squad.service.js';
+import { NodenameRegistryService } from './services/nodename-registry.service.js';
 
 export class ProjectionRegistry {
   readonly guilds = new GuildService();
@@ -26,6 +27,7 @@ export class ProjectionRegistry {
   readonly moderation = new ModerationService();
   readonly badgeHistory = new BadgeHistoryService();
   readonly boostHistory = new BoostHistoryService();
+  readonly nodenameRegistry = new NodenameRegistryService();
 
   private readonly processors: EventProcessor[];
 
@@ -43,6 +45,7 @@ export class ProjectionRegistry {
       this.moderation,
       this.badgeHistory,
       this.boostHistory,
+      this.nodenameRegistry,
     ];
   }
 
@@ -64,6 +67,7 @@ export class ProjectionRegistry {
       this.moderation.load(),
       this.badgeHistory.load(),
       this.boostHistory.load(),
+      this.nodenameRegistry.load(),
     ]);
   }
 
@@ -81,6 +85,7 @@ export class ProjectionRegistry {
       this.moderation.save(),
       this.badgeHistory.save(),
       this.boostHistory.save(),
+      this.nodenameRegistry.save(),
     ]);
   }
 
@@ -98,6 +103,7 @@ export class ProjectionRegistry {
       this.moderation.clear(),
       this.badgeHistory.clear(),
       this.boostHistory.clear(),
+      this.nodenameRegistry.clear(),
     ]);
   }
 
@@ -121,6 +127,7 @@ export class ProjectionRegistry {
       'ModerationService',
       'BadgeHistoryService',
       'BoostHistoryService',
+      'NodenameRegistryService',
     ];
   }
 }

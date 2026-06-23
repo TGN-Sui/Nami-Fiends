@@ -5,18 +5,25 @@ import {
   lookupOwnerInRegistry,
   normalizeNodename,
   resolveMemberByNodename,
+  resolveNamiMemberFromWallet,
 } from '@nami/sdk';
 
 import { config } from '../config.js';
 import type { ProjectionRegistry } from '../projection-registry.js';
 import { buildLinkedProfile } from './linked-profile.service.js';
 
+export type NodenameLookupSource = 'indexer' | 'chain' | 'none';
+
 export type NodenameLookupResponse = {
   nodename: string;
   registered: boolean;
   identityId: string | null;
   owner: string | null;
+  passportId: string | null;
+  profileId: string | null;
+  archetype: number | null;
   memberProofStatus: string | null;
+  source: NodenameLookupSource;
   linkedProfile: Awaited<ReturnType<typeof buildLinkedProfile>>;
 };
 
@@ -55,6 +62,61 @@ function readRegistryId(): string | null {
   return registryId.startsWith('0x') ? registryId : null;
 }
 
+function responseFromProjection(
+  entry: NonNullable<ReturnType<ProjectionRegistry['nodenameRegistry']['getByNodename']>>,
+  memberProofStatus: string | null,
+  linkedProfile: NodenameLookupResponse['linkedProfile'],
+  source: NodenameLookupSource
+): NodenameLookupResponse {
+  return {
+    nodename: entry.nodename,
+    registered: true,
+    identityId: entry.identity_id,
+    owner: entry.owner,
+    passportId: entry.passport_id,
+    profileId: entry.profile_id,
+    archetype: entry.archetype,
+    memberProofStatus,
+    source,
+    linkedProfile,
+  };
+}
+
+function notFoundResponse(nodename: string): NodenameLookupResponse {
+  return {
+    nodename,
+    registered: false,
+    identityId: null,
+    owner: null,
+    passportId: null,
+    profileId: null,
+    archetype: null,
+    memberProofStatus: null,
+    source: 'none',
+    linkedProfile: null,
+  };
+}
+
+async function resolveMemberProofStatus(
+  owner: string | null,
+  registryId: string | null
+): Promise<string | null> {
+  if (!owner?.startsWith('0x')) {
+    return null;
+  }
+
+  const chain = createChainClient();
+
+  if (!chain) {
+    return null;
+  }
+
+  const indexer = createIndexerClient();
+  const member = await resolveNamiMemberFromWallet(chain, indexer, owner);
+
+  return member.proof.status;
+}
+
 export async function lookupNodename(
   registry: ProjectionRegistry,
   nodenameInput: string,
@@ -66,41 +128,36 @@ export async function lookupNodename(
     return null;
   }
 
+  const projectionEntry = registry.nodenameRegistry.getByNodename(nodename);
+
+  if (projectionEntry) {
+    const memberProofStatus = await resolveMemberProofStatus(projectionEntry.owner, readRegistryId());
+    const linkedProfile =
+      options.includeLinkedProfile && projectionEntry.owner
+        ? await buildLinkedProfile(registry, projectionEntry.owner)
+        : null;
+
+    return responseFromProjection(
+      projectionEntry,
+      memberProofStatus,
+      linkedProfile,
+      'indexer'
+    );
+  }
+
   const registryId = readRegistryId();
   const chain = createChainClient();
 
   if (!registryId || !chain) {
-    return {
-      nodename,
-      registered: false,
-      identityId: null,
-      owner: null,
-      memberProofStatus: null,
-      linkedProfile: null,
-    };
+    return notFoundResponse(nodename);
   }
 
   const indexer = createIndexerClient();
-
-  let lookup = await lookupNodenameInRegistry(chain, registryId, nodename);
+  const resolved = await resolveMemberByNodename(chain, indexer, registryId, nodename);
+  const lookup = resolved.lookup;
 
   if (!lookup?.registered) {
-    return {
-      nodename,
-      registered: false,
-      identityId: null,
-      owner: null,
-      memberProofStatus: null,
-      linkedProfile: null,
-    };
-  }
-
-  let memberProofStatus: string | null = null;
-
-  if (lookup.owner) {
-    const resolved = await resolveMemberByNodename(chain, indexer, registryId, nodename);
-    lookup = resolved.lookup ?? lookup;
-    memberProofStatus = resolved.member?.proof.status ?? null;
+    return notFoundResponse(nodename);
   }
 
   let linkedProfile = null;
@@ -111,10 +168,14 @@ export async function lookupNodename(
 
   return {
     nodename: lookup.nodename,
-    registered: lookup.registered,
+    registered: true,
     identityId: lookup.identityId,
     owner: lookup.owner,
-    memberProofStatus,
+    passportId: resolved.member?.passport?.objectId ?? null,
+    profileId: resolved.member?.profile?.objectId ?? null,
+    archetype: resolved.member?.passport?.archetype ?? null,
+    memberProofStatus: resolved.member?.proof.status ?? null,
+    source: 'chain',
     linkedProfile,
   };
 }
@@ -128,6 +189,23 @@ export async function lookupRegistryOwner(
     return null;
   }
 
+  const projectionEntry = registry.nodenameRegistry.getByOwner(ownerInput);
+
+  if (projectionEntry) {
+    const memberProofStatus = await resolveMemberProofStatus(projectionEntry.owner, readRegistryId());
+    const linkedProfile =
+      options.includeLinkedProfile && projectionEntry.owner
+        ? await buildLinkedProfile(registry, projectionEntry.owner)
+        : null;
+
+    return responseFromProjection(
+      projectionEntry,
+      memberProofStatus,
+      linkedProfile,
+      'indexer'
+    );
+  }
+
   const registryId = readRegistryId();
   const chain = createChainClient();
 
@@ -137,22 +215,35 @@ export async function lookupRegistryOwner(
 
   const lookup = await lookupOwnerInRegistry(chain, registryId, ownerInput);
 
-  if (!lookup) {
+  if (!lookup?.registered) {
     return null;
   }
 
   let linkedProfile = null;
+  let memberProofStatus: string | null = null;
 
-  if (options.includeLinkedProfile && lookup.owner) {
-    linkedProfile = await buildLinkedProfile(registry, lookup.owner);
+  if (lookup.owner) {
+    memberProofStatus = await resolveMemberProofStatus(lookup.owner, registryId);
+
+    if (options.includeLinkedProfile) {
+      linkedProfile = await buildLinkedProfile(registry, lookup.owner);
+    }
   }
 
   return {
     nodename: lookup.nodename,
-    registered: lookup.registered,
+    registered: true,
     identityId: lookup.identityId,
     owner: lookup.owner,
-    memberProofStatus: null,
+    passportId: null,
+    profileId: null,
+    archetype: null,
+    memberProofStatus,
+    source: 'chain',
     linkedProfile,
   };
+}
+
+export function listIndexedNodenames(registry: ProjectionRegistry, limit = 50) {
+  return registry.nodenameRegistry.list(limit);
 }

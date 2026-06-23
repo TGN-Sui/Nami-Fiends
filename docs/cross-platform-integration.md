@@ -87,7 +87,10 @@ HTTP equivalent:
 
 ```
 GET /api/nami/nodename/fiendgamer?includeLinkedProfile=true
+GET /api/nami/nodenames?limit=50
 ```
+
+The indexer projects `NodenameRegistered` and `EnterNamiCompleted` events into `data/projections/nodename-registry.json` for fast lookups. Chain `devInspect` is the fallback when a nodename is not indexed yet.
 
 ---
 
@@ -98,6 +101,7 @@ GET /api/nami/nodename/fiendgamer?includeLinkedProfile=true
 | GET | `/api/nami/linked-profile/:owner` | Chain proof + off-chain preferences/claim merge |
 | POST | `/api/nami/linked-profile/sync` | Same bundle with wallet signature proof |
 | GET | `/api/nami/nodename/:nodename` | Registry lookup; `?includeLinkedProfile=true` for full bundle |
+| GET | `/api/nami/nodenames` | Indexed nodename list (`?limit=50`) |
 
 ---
 

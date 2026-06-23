@@ -103,6 +103,11 @@ export interface IndexerStats {
       npcChatEnabledCount: number;
       fileSizeBytes: number | null;
     };
+    nodenameRegistry: {
+      path: string;
+      count: number;
+      fileSizeBytes: number | null;
+    };
   };
 }
 
@@ -129,6 +134,7 @@ export async function collectIndexerStats(
   const badgeHistoryStats = registry.badgeHistory.getStats();
   const boostHistoryStats = registry.boostHistory.getStats();
   const channelAccessStats = registry.channelAccess.getStats();
+  const nodenameRegistryStats = registry.nodenameRegistry.getStats();
 
   return {
     generatedAt: new Date().toISOString(),
@@ -226,6 +232,11 @@ export async function collectIndexerStats(
         count: channelAccessStats.count,
         npcChatEnabledCount: channelAccessStats.npcChatEnabledCount,
         fileSizeBytes: await getFileSizeBytes(registry.channelAccess.getProjectionPath()),
+      },
+      nodenameRegistry: {
+        path: registry.nodenameRegistry.getProjectionPath(),
+        count: nodenameRegistryStats.count,
+        fileSizeBytes: await getFileSizeBytes(registry.nodenameRegistry.getProjectionPath()),
       },
     },
   };

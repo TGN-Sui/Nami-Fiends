@@ -31,6 +31,7 @@ export const NAMI_EVENT_MODULES = [
   'squad',
   'guild',
   'profile',
+  'onboarding',
   'title',
   'cosmetics',
   'recovery'
@@ -45,6 +46,21 @@ export type NamiEventModule = (typeof NAMI_EVENT_MODULES)[number];
 export interface IdentityCreated {
   identity_id: string;
   owner: string;
+}
+
+export interface NodenameRegistered {
+  nodename: string | number[];
+  identity_id: string;
+  owner: string;
+}
+
+export interface EnterNamiCompleted {
+  owner: string;
+  identity_id: string;
+  passport_id: string;
+  profile_id: string;
+  nodename: string | number[];
+  archetype: number;
 }
 
 export interface PassportCreated {
@@ -428,6 +444,8 @@ export type UnknownNamiEventData = Record<string, unknown>;
 
 export type NamiEventData =
   | IdentityCreated
+  | NodenameRegistered
+  | EnterNamiCompleted
   | PassportCreated
   | XPAdded
   | BadgePointsAdded

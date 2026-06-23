@@ -5,7 +5,11 @@ export type NodenameLookup = {
   registered: boolean;
   identityId: string | null;
   owner: string | null;
+  passportId?: string | null;
+  profileId?: string | null;
+  archetype?: number | null;
   memberProofStatus: string | null;
+  source?: 'indexer' | 'chain' | 'none';
   linkedProfile?: unknown;
 };
 
@@ -49,4 +53,12 @@ export async function fetchNodenameLookup(
   );
 
   return payload?.lookup ?? null;
+}
+
+export async function fetchIndexedNodenames(limit = 20): Promise<NodenameLookup[]> {
+  const payload = await nodenameFetch<{ nodenames: NodenameLookup[] }>(
+    '/api/nami/nodenames?limit=' + String(limit)
+  );
+
+  return payload?.nodenames ?? [];
 }

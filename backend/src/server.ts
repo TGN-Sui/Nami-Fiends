@@ -75,6 +75,7 @@ import {
   handleLinkedProfileSync,
 } from './routes/linked-profile.routes.js';
 import {
+  handleNodenameListGet,
   handleNodenameLookupGet,
   handleNodenameLookupOptions,
 } from './routes/nodename-lookup.routes.js';
@@ -1017,6 +1018,12 @@ const routes: Route[] = [
     pattern: /^\/api\/nami\/nodename$/,
     paramNames: [],
     handler: (_registry, request, response) => handleNodenameLookupOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/nami\/nodenames$/,
+    paramNames: [],
+    handler: (registry, request, response) => handleNodenameListGet(registry, request, response),
   },
   {
     method: 'GET',
