@@ -14,6 +14,7 @@ export const NAMI_MODULES = [
   'jury',
   'membership',
   'moderation',
+  'onboarding',
   'passport',
   'profile',
   'recovery',

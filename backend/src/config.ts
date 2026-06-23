@@ -50,6 +50,7 @@ function readNumber(name: string, fallback: number): number {
 export const config = {
   network: readNetwork(),
   packageId: process.env.NAMI_PACKAGE_ID ?? '',
+  nodenameRegistryId: process.env.NAMI_NODENAME_REGISTRY_ID ?? '',
   adminCapId: process.env.NAMI_ADMIN_CAP_ID ?? '',
   officialOwner: process.env.NAMI_OFFICIAL_OWNER ?? '',
   officialOwnerEmail: (process.env.NAMI_OFFICIAL_OWNER_EMAIL ?? '').trim().toLowerCase(),

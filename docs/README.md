@@ -31,6 +31,7 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [Social-linking.md](./Social-linking.md) | OAuth / automation notes for platforms |
 | [passport.md](./passport.md) | Passport progression |
 | [identity.md](./identity.md) | Identity ownership |
+| [cross-platform-integration.md](./cross-platform-integration.md) | Partner zkLogin + passport proof quickstart |
 
 ---
 

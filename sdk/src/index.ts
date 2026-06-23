@@ -142,6 +142,14 @@ export {
 } from './transactions.js';
 
 export {
+  lookupNodenameInRegistry,
+  lookupOwnerInRegistry,
+  normalizeNodename,
+  resolveMemberByNodename,
+  type NodenameRegistryLookup,
+} from './nodename-registry.js';
+
+export {
   evaluateNamiMemberProof,
   isVerifiedNamiMember,
   resolveNamiMemberFromWallet,

@@ -74,6 +74,10 @@ import {
   handleLinkedProfileOptions,
   handleLinkedProfileSync,
 } from './routes/linked-profile.routes.js';
+import {
+  handleNodenameLookupGet,
+  handleNodenameLookupOptions,
+} from './routes/nodename-lookup.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -1007,6 +1011,19 @@ const routes: Route[] = [
     pattern: /^\/api\/nami\/linked-profile\/sync$/,
     paramNames: [],
     handler: (registry, request, response) => handleLinkedProfileSync(registry, request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/nami\/nodename$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleNodenameLookupOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/nami\/nodename\/([^/]+)$/,
+    paramNames: ['nodename'],
+    handler: (registry, request, response, params) =>
+      handleNodenameLookupGet(registry, request, response, params.nodename ?? ''),
   },
   {
     method: 'POST',

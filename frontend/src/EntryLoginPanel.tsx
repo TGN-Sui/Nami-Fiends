@@ -28,6 +28,8 @@ import {
   recoveryEmailOnboardingHint,
   zkLoginAccountLinkHint,
 } from './onboarding-recovery.js';
+import { hydrateLinkedMember } from './linked-member-sync.js';
+import type { NamiLinkedProfile } from './nami-linked-profile-api.js';
 import { getZkLoginSession } from './zklogin.js';
 import { useProtocolOwner, ZkLoginConnectControl } from './wallet.js';
 
@@ -47,23 +49,63 @@ export function EntryLoginPanel(props: {
   const [xHandle, setXHandle] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [emailPending, setEmailPending] = useState(false);
+  const [zkPassportDiscovery, setZkPassportDiscovery] = useState<NamiLinkedProfile | null>(null);
+  const [zkDiscoveryPending, setZkDiscoveryPending] = useState(false);
   const emailVerificationRequired = isContactVerificationAvailable();
 
   useEffect(() => {
     if (!owner || source !== 'zklogin') {
+      setZkPassportDiscovery(null);
+      setZkDiscoveryPending(false);
+      return;
+    }
+
+    let cancelled = false;
+    setZkDiscoveryPending(true);
+
+    void hydrateLinkedMember(owner, source)
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+
+        setZkPassportDiscovery(profile?.proof.status === 'verified' ? profile : null);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setZkDiscoveryPending(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [owner, source]);
+
+  useEffect(() => {
+    if (!owner || source !== 'zklogin' || zkDiscoveryPending) {
       return;
     }
 
     const restored = restoreMemberSessionAfterZkLogin(owner);
 
     if (!restored && !isOfficialOwner(owner)) {
-      setLoginError(zkLoginAccountLinkHint());
+      if (zkPassportDiscovery) {
+        const nodename = zkPassportDiscovery.anchor.nodename ?? 'passport';
+
+        setLoginError(
+          `${nodename} is on this zkLogin wallet. Sign in with the email from your claim, or sign up to link it.`
+        );
+      } else {
+        setLoginError(zkLoginAccountLinkHint());
+      }
+
       return;
     }
 
     clearSignedOut();
     props.onLoginSuccess();
-  }, [owner, source, props]);
+  }, [owner, source, zkDiscoveryPending, zkPassportDiscovery, props]);
 
   function handleEmailSignIn(): void {
     setLoginError(null);
@@ -172,6 +214,18 @@ export function EntryLoginPanel(props: {
             </p>
           </div>
           <ZkLoginConnectControl />
+          {zkDiscoveryPending ? (
+            <p className="nami-entry-login-footnote">Checking this wallet for an existing Nami passport…</p>
+          ) : null}
+          {zkPassportDiscovery ? (
+            <div className="nami-entry-passport-discovery panel">
+              <span className="mini-badge">Passport found</span>
+              <p>
+                <strong>{zkPassportDiscovery.anchor.nodename ?? 'Your nodename'}</strong> is anchored to
+                this zkLogin wallet. Integrated platforms can recognize you without a new claim.
+              </p>
+            </div>
+          ) : null}
           <p className="nami-entry-login-footnote">{recoveryEmailOnboardingHint()}</p>
         </section>
 
