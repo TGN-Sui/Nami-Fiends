@@ -374,6 +374,46 @@ function removeLegacyLocalStorageValue(key: string): void {
   }
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Could not read media.'));
+        return;
+      }
+
+      resolve(reader.result);
+    };
+
+    reader.onerror = () => reject(new Error('Could not read media.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function readChannelMediaDataUrl(key: string): Promise<string | null> {
+  await ensureChannelMediaHydratedForKey(key);
+
+  const cached = memoryUrls.get(key);
+
+  if (cached?.startsWith('data:')) {
+    return cached;
+  }
+
+  const stored = await idbGet(key);
+
+  if (!stored) {
+    return null;
+  }
+
+  if (typeof stored === 'string') {
+    return stored.startsWith('data:') ? stored : null;
+  }
+
+  return blobToDataUrl(stored);
+}
+
 export function readChannelMediaUrl(key: string): string | null {
   return memoryUrls.get(key) ?? null;
 }

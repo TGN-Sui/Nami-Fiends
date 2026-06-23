@@ -9,7 +9,9 @@ export type PlatformOwnerAssetsProjection = {
 
 const PROJECTION_PATH = 'data/projections/platform-owner-assets.json';
 
-const DATA_URL_PATTERN = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i;
+const DATA_URL_PATTERN = /^data:((?:image|video)\/[a-z0-9.+-]+);base64,(.+)$/i;
+const SCENE_SLOT_IDS = new Set(['arcade-background', 'arcade-stage-background']);
+const MAX_SCENE_ASSET_BYTES = 48 * 1024 * 1024;
 
 function emptyProjection(): PlatformOwnerAssetsProjection {
   return {
@@ -86,11 +88,11 @@ async function resolveAssetValue(
     return '';
   }
 
-  if (
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://') ||
-    trimmed.startsWith('channel-media://')
-  ) {
+  if (trimmed.startsWith('channel-media://')) {
+    throw new Error('invalid_asset_value');
+  }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
   }
 
@@ -102,12 +104,18 @@ async function resolveAssetValue(
     throw new Error('invalid_asset_value');
   }
 
-  const uploaded = await savePlatformOwnerAssetUpload({
+  const uploadInput = {
     owner,
     slotId,
     contentType,
     dataBase64,
-  });
+  };
+
+  const uploaded = await savePlatformOwnerAssetUpload(
+    SCENE_SLOT_IDS.has(slotId)
+      ? { ...uploadInput, maxBytes: MAX_SCENE_ASSET_BYTES }
+      : uploadInput
+  );
 
   return uploaded.url;
 }

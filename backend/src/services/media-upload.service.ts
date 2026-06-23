@@ -12,11 +12,15 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const MAX_CHANNEL_COVER_BYTES = 4 * 1024 * 1024;
 const MAX_STUDIO_LOGO_BYTES = 2 * 1024 * 1024;
 const MAX_PLATFORM_OWNER_ASSET_BYTES = 2 * 1024 * 1024;
+const MAX_PLATFORM_OWNER_SCENE_BYTES = 48 * 1024 * 1024;
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
   'image/jpeg': '.jpg',
   'image/webp': '.webp',
+  'image/gif': '.gif',
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
 };
 
 function normalizeOwner(owner: string): string {
@@ -178,6 +182,7 @@ export type PlatformOwnerAssetUploadInput = {
   slotId: string;
   contentType: string;
   dataBase64: string;
+  maxBytes?: number;
 };
 
 export async function savePlatformOwnerAssetUpload(
@@ -194,8 +199,9 @@ export async function savePlatformOwnerAssetUpload(
   }
 
   const buffer = Buffer.from(input.dataBase64, 'base64');
+  const maxBytes = input.maxBytes ?? MAX_PLATFORM_OWNER_ASSET_BYTES;
 
-  if (buffer.byteLength === 0 || buffer.byteLength > MAX_PLATFORM_OWNER_ASSET_BYTES) {
+  if (buffer.byteLength === 0 || buffer.byteLength > maxBytes) {
     throw new Error('invalid_file_size');
   }
 
@@ -238,7 +244,13 @@ export async function readUploadedMediaFile(owner: string, filename: string): Pr
           ? 'image/jpeg'
           : extension === '.webp'
             ? 'image/webp'
-            : 'application/octet-stream';
+            : extension === '.gif'
+              ? 'image/gif'
+              : extension === '.mp4'
+                ? 'video/mp4'
+                : extension === '.webm'
+                  ? 'video/webm'
+                  : 'application/octet-stream';
 
     return { buffer, contentType };
   } catch {

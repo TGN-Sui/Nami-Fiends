@@ -2622,8 +2622,10 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   display: grid;
   place-items: center;
   align-content: center;
+  justify-items: center;
   gap: 2px;
-  padding: 10px;
+  padding: clamp(8px, calc(var(--bubble-size, 72px) * 0.14), 12px);
+  overflow: hidden;
   margin: 0;
   text-align: center;
   border: 1px solid rgba(117, 215, 255, 0.34);
@@ -2704,11 +2706,19 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   }
 }
 
+.nami-landing-floating-genre-bubble strong,
+.nami-landing-floating-genre-bubble small {
+  position: relative;
+  z-index: 1;
+  max-width: 88%;
+  margin: 0;
+  text-align: center;
+}
+
 .nami-landing-floating-genre-bubble strong {
   display: block;
   font-size: clamp(0.62rem, calc(0.46rem * var(--bubble-scale, 1)), 0.82rem);
   line-height: 1.15;
-  max-width: 92%;
   text-wrap: balance;
 }
 
@@ -3263,15 +3273,20 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .nami-landing-genre-showcase-bubble {
-  width: calc(82px * var(--bubble-scale, 1));
-  height: calc(82px * var(--bubble-scale, 1));
+  --bubble-size: calc(82px * var(--bubble-scale, 1));
+  position: relative;
+  isolation: isolate;
+  width: var(--bubble-size);
+  height: var(--bubble-size);
   border-radius: 999px;
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 4px;
-  padding: 12px;
+  justify-items: center;
+  gap: 3px;
+  padding: clamp(8px, calc(var(--bubble-size) * 0.14), 12px);
   text-align: center;
+  overflow: hidden;
   pointer-events: none;
   user-select: none;
   border: 1px solid rgba(117, 215, 255, 0.34);
@@ -3283,14 +3298,23 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
     0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
+.nami-landing-genre-showcase-bubble strong,
+.nami-landing-genre-showcase-bubble small {
+  position: relative;
+  z-index: 1;
+  max-width: 88%;
+  margin: 0;
+}
+
 .nami-landing-genre-showcase-bubble strong {
-  font-size: 0.66rem;
+  font-size: clamp(0.56rem, calc(var(--bubble-size) / 118), 0.72rem);
   line-height: 1.12;
   text-wrap: balance;
 }
 
 .nami-landing-genre-showcase-bubble small {
-  font-size: 0.56rem;
+  font-size: clamp(0.5rem, calc(var(--bubble-size) / 148), 0.62rem);
+  line-height: 1.15;
   color: rgba(214, 232, 255, 0.78);
 }
 
@@ -16075,6 +16099,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   max-height: calc(100vh - 56px);
   padding: 8px 0 10px;
   margin-left: 14px;
+  z-index: 95;
   border: none !important;
   border-radius: 0;
   background: none !important;
@@ -16617,6 +16642,60 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+}
+
+@media (max-width: 1280px) {
+  .sidebar.is-icon-rail {
+    --sidebar-glyph-size: 42px;
+    --official-nami-logo-scale: 2.75;
+    --sidebar-hub-fixed-scale: 1.85;
+    --sidebar-glyph-hover-scale: 1.38;
+    --sidebar-rail-scale-duration: 520ms;
+    --sidebar-rail-shift-duration: 520ms;
+    margin-left: 8px;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) {
+    padding-left: calc(var(--sidebar-rail-axis-width) + 12px) !important;
+    padding-right: 12px !important;
+    padding-top: calc(18px + 68px) !important;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) > .main-stage {
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: min(var(--main-stage-centered-width), calc(100% - var(--sidebar-rail-axis-width) - 24px)) !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+
+  .nami-app:has(.sidebar.is-icon-rail) > .main-stage:has(.channel-profile-redesign) {
+    width: min(1120px, calc(100% - var(--sidebar-rail-axis-width) - 24px)) !important;
+    max-width: 100% !important;
+  }
+
+  .nami-app[data-active-page='arcade']:has(.sidebar.is-icon-rail) {
+    padding-left: calc(var(--sidebar-rail-axis-width) + 12px) !important;
+    padding-right: 12px !important;
+  }
+
+  .sidebar.is-icon-rail .sidebar-nav-label,
+  .sidebar.is-icon-rail .sidebar-hub-swap-copy.sidebar-nav-label,
+  .sidebar.is-icon-rail .sidebar-brand-wordmark.sidebar-nav-label {
+    display: none;
+  }
+
+  .sidebar.is-icon-rail .sidebar-hub-destinations {
+    height: calc(var(--sidebar-glyph-size) * 2.45);
+    margin-bottom: calc(var(--sidebar-rail-icon-gap) * 0.35);
+  }
+
+  .nami-pinned-profile-card {
+    top: 16px;
+    right: 14px;
+    width: min(188px, calc(100vw - var(--sidebar-rail-axis-width) - 36px));
+  }
 }
 
 @media (max-width: 900px) {

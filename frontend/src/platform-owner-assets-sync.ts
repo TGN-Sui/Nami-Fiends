@@ -1,4 +1,5 @@
 import type { OwnerAssetMap } from './nami-owner-assets-store.js';
+import { prepareOwnerAssetsForServerSync } from './owner-asset-sync-prep.js';
 import { persistOwnerAssets } from './owner-assets-persistence.js';
 import {
   fetchPlatformOwnerAssets,
@@ -68,7 +69,8 @@ export async function syncPlatformOwnerAssetsToServer(
   }
 
   try {
-    const projection = await syncPlatformOwnerAssets(assets, owner);
+    const preparedAssets = await prepareOwnerAssetsForServerSync(assets);
+    const projection = await syncPlatformOwnerAssets(preparedAssets, owner);
     await persistOwnerAssets(readSyncedAssetMap(projection));
     lastSyncError = null;
     return { ok: true };

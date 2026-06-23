@@ -209,7 +209,7 @@
 [data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble {
   position: relative;
   isolation: isolate;
-  overflow: visible;
+  overflow: hidden;
   contain: layout style !important;
   border: none !important;
   border-radius: 0 !important;
@@ -333,6 +333,11 @@
 [data-nami-ui='pixel'] .crypto-community-bubble,
 [data-nami-ui='pixel'] .nami-landing-floating-genre-bubble,
 [data-nami-ui='pixel'] .nami-landing-genre-showcase-bubble {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
   text-shadow: none;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;

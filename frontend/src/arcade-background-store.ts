@@ -64,12 +64,45 @@ export async function clearArcadeBackgroundMedia(): Promise<void> {
   await clearChannelMediaValue(ARCADE_BACKGROUND_MEDIA_KEY);
 }
 
+function isRemoteVideoUrl(value: string): boolean {
+  return (
+    (value.startsWith('http://') || value.startsWith('https://')) &&
+    /\.(mp4|webm)(\?|#|$)/i.test(value)
+  );
+}
+
 export function resolveArcadeBackgroundMedia(
   storedValue: string | null | undefined,
 ): ArcadeBackgroundMedia {
   const trimmed = storedValue?.trim();
 
   if (!trimmed) {
+    return { kind: 'default', url: DEFAULT_ARCADE_BACKGROUND_URL };
+  }
+
+  if (isRemoteVideoUrl(trimmed)) {
+    return { kind: 'video', url: trimmed };
+  }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return { kind: 'image', url: trimmed };
+  }
+
+  if (trimmed.startsWith('channel-media://')) {
+    if (isArcadeBackgroundVideoRef(trimmed)) {
+      const mediaKey = trimmed.slice('channel-media://'.length);
+
+      if (mediaKey) {
+        void ensureChannelMediaHydratedForKey(mediaKey);
+      }
+
+      const resolvedUrl = resolveChannelMediaRef(trimmed);
+
+      if (resolvedUrl) {
+        return { kind: 'video', url: resolvedUrl };
+      }
+    }
+
     return { kind: 'default', url: DEFAULT_ARCADE_BACKGROUND_URL };
   }
 

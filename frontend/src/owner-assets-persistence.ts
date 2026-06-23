@@ -16,6 +16,7 @@ function isIndexedDbAvailable(): boolean {
 function isPersistedOwnerAssetValue(value: string): boolean {
   return (
     value.startsWith('data:image/') ||
+    value.startsWith('data:video/') ||
     value.startsWith('channel-media://') ||
     value.startsWith('http://') ||
     value.startsWith('https://')
