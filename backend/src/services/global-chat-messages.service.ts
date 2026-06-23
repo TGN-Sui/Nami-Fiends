@@ -1,3 +1,4 @@
+import { isAllowedChatRoomId } from '../chat-rooms.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type GlobalChatConductSignal = 'Green' | 'Yellow' | 'Red' | 'Black';
@@ -23,8 +24,6 @@ const MAX_MESSAGES_PER_ROOM = 500;
 const MAX_BODY_LENGTH = 2000;
 const MAX_AUTHOR_LENGTH = 64;
 
-const ALLOWED_ROOM_IDS = new Set(['official-nami-global', 'global-welcome-lounge']);
-
 function emptyProjection(): GlobalChatMessagesProjection {
   return {
     rooms: {},
@@ -33,19 +32,7 @@ function emptyProjection(): GlobalChatMessagesProjection {
 }
 
 export function isAllowedGlobalChatRoomId(roomId: string): boolean {
-  if (ALLOWED_ROOM_IDS.has(roomId)) {
-    return true;
-  }
-
-  if (roomId.startsWith('genre-')) {
-    return /^genre-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(roomId);
-  }
-
-  if (roomId.startsWith('global-')) {
-    return /^global-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(roomId);
-  }
-
-  return false;
+  return isAllowedChatRoomId(roomId);
 }
 
 async function readProjection(): Promise<GlobalChatMessagesProjection> {

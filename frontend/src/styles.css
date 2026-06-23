@@ -15018,6 +15018,55 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin-top: 1rem;
 }
 
+.nami-favorited-chat-manage-panel {
+  padding: 0.65rem 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nami-favorited-chat-manage-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.nami-favorited-chat-manage-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.nami-favorited-chat-manage-locked {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.nami-favorited-chat-room-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nami-favorited-chat-room-tab.has-chat-unread {
+  border-color: rgba(117, 215, 255, 0.55);
+}
+
+.nami-favorited-chat-unread-badge {
+  display: inline-flex;
+  min-width: 1.1rem;
+  justify-content: center;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #75d7ff;
+  color: #041018;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .launch-ops-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

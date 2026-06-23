@@ -86,7 +86,7 @@ type GlobalChatsPanelProps = {
   tagHandlers?: TagNavigationHandlers;
 };
 
-function genreChatExpandProps(
+export function genreChatExpandProps(
   chat: GlobalChatRoom,
   options?: { compact?: boolean }
 ): {

@@ -283,6 +283,10 @@ function mergeGlobalChatMessages(
   return [...map.values()];
 }
 
+export function isMemberPublicLiveChatId(chatId: string): boolean {
+  return chatId.startsWith('member-public-live-');
+}
+
 export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   const shared = readSharedGlobalChatMessages(chatId).map((message) => ({
     id: message.id,
@@ -299,7 +303,7 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
     signal: message.signal,
   }));
 
-  if (!shouldAutoSeedLocalData()) {
+  if (isMemberPublicLiveChatId(chatId) || !shouldAutoSeedLocalData()) {
     return mergeGlobalChatMessages(shared, overlay);
   }
 

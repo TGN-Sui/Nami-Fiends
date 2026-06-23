@@ -255,7 +255,8 @@ import {
   type GameHubBrowserFilter,
   type GameHubInterestModule,
 } from './gamehub-preferences.js';
-import { GenreChatRoomPanel, PinnedGenreChatDock, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
@@ -2479,16 +2480,7 @@ function GameHub(props: {
       </section>
 
       {genreDockPinned ? (
-        <PinnedGenreChatDock
-          activeChatId={activeGenreChatId}
-          collapsed={genreDockCollapsed}
-          pinned={genreDockPinned}
-          onCollapsedChange={setGenreDockCollapsed}
-          onOpenMember={props.onOpenMember}
-          onPinnedChange={setGenreDockPinned}
-          onSelectChat={setActiveGenreChatId}
-          tagHandlers={props.tagHandlers}
-        />
+        <NamiFavoritedChatDock onOpenMember={props.onOpenMember} tagHandlers={props.tagHandlers} />
       ) : null}
     </>
   );

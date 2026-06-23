@@ -15,7 +15,7 @@ import { members } from './uiMockData.js';
 const NOTIFICATIONS_KEY = 'nami.user.tag-notifications';
 const PREFERENCES_KEY = 'nami.user.notification-preferences';
 
-export type TagNotificationContext = 'channel' | 'global' | 'private';
+export type TagNotificationContext = 'channel' | 'global' | 'private' | 'visitor';
 
 export type TagNotification = {
   id: string;
@@ -230,6 +230,30 @@ export function processMessageTags(input: {
   }));
 
   writeNotifications([...incoming, ...existing]);
+}
+
+export function pushVisitorChatNotification(input: {
+  bodyPreview: string;
+  roomId: string;
+}): void {
+  const existing = readNotifications();
+  const preview = input.bodyPreview.trim().slice(0, 140);
+
+  writeNotifications([
+    {
+      id: 'visitor-' + Date.now(),
+      createdAt: nowIso(),
+      read: false,
+      authorName: 'Visitor',
+      bodyPreview: preview,
+      context: 'visitor',
+      contextLabel: 'Your Live Chat',
+      tagLabel: 'Live Chat',
+      tagKind: 'member',
+      targetId: input.roomId,
+    },
+    ...existing,
+  ]);
 }
 
 export function memberNameForTagNotification(notification: TagNotification): string | null {

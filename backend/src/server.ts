@@ -54,6 +54,13 @@ import {
   handleGlobalChatMessagesOptions,
   handleGlobalChatMessagesPost,
 } from './routes/global-chat-messages.routes.js';
+import {
+  handleChatFavoritesGet,
+  handleChatFavoritesOptions,
+  handleChatFavoritesUpsert,
+  handleChatRoomRead,
+  handleChatUnreadGet,
+} from './routes/chat-favorites.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -1095,6 +1102,54 @@ const routes: Route[] = [
     paramNames: ['roomId'],
     handler: (_registry, request, response, params) =>
       handleGlobalChatMessagesPost(request, response, params.roomId ?? ''),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/chats\/favorites$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChatFavoritesOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/chats\/favorites$/,
+    paramNames: [],
+    handler: (_registry, request, response) => {
+      const url = new URL(request.url ?? '/', 'http://localhost');
+      const owner = url.searchParams.get('owner') ?? '';
+      const memberId = url.searchParams.get('memberId') ?? '';
+
+      return handleChatFavoritesGet(request, response, owner, memberId);
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/chats\/favorites$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChatFavoritesUpsert(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/chats\/unread$/,
+    paramNames: [],
+    handler: (_registry, request, response) => {
+      const url = new URL(request.url ?? '/', 'http://localhost');
+      const owner = url.searchParams.get('owner') ?? '';
+      const memberId = url.searchParams.get('memberId') ?? '';
+      const roomIdsParam = url.searchParams.get('roomIds') ?? '';
+      const roomIds = roomIdsParam
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+
+      return handleChatUnreadGet(request, response, owner, memberId, roomIds);
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/chats\/rooms\/([^/]+)\/read$/,
+    paramNames: ['roomId'],
+    handler: (_registry, request, response, params) =>
+      handleChatRoomRead(request, response, params.roomId ?? ''),
   },
 ];
 
