@@ -724,15 +724,15 @@ Embedded social / live embed player hooks for real-time gift overlays
 Status:
 
 ```text
-In progress — Phase 8 overall ~85% complete
+In progress — Phase 8 overall ~92% complete
 ```
 
 ```text
 Phase 8 progress
 
-[█████████████████░░░] ~85%
+[██████████████████░░] ~92%
 
-8.1 Testnet launch mode      █████████████████░░░  ~88%
+8.1 Testnet launch mode      ██████████████████░░  ~92%
 8.2 Deploy + public URL      ████████░░░░░░░░░░░░  ~40%
 8.3 zkLogin production       ████████████████████  100%
 8.4 Security + custody       ████████████░░░░░░░░  ~60%
@@ -772,7 +772,7 @@ Live indexer + receiving server required; empty states preferred over simulated 
 Status:
 
 ```text
-~88% — policy + officials API + env tooling + genesis passport + FIEND owner identity shipped; deploy secrets + public URL pending
+~92% — policy + officials API + env tooling + genesis passport + FIEND owner identity + launch ops dashboard shipped; deploy secrets + public URL pending
 ```
 
 Shipped:
@@ -796,6 +796,9 @@ Optional NAMI_OFFICIALS_SYNC_SECRET for server-side ops (never in frontend env)
 NAMI_TEST_LAUNCH on backend disables mock payment providers
 docs/testnet-launch-checklist.md + docs/testnet-zklogin.md
 scripts/sync-testnet-env.mjs, verify-testnet-ready.mjs, extract-testnet-latest.mjs
+GET /api/ops/launch-summary — test launch flags, officials queue depth, discovery cycle, projection counts
+Launch Ops panel (Settings → Advanced → Launch Ops) + Discovery tab on Indexed Data panel
+verify-testnet-ready.mjs probes discovery + launch-summary endpoints
 Move package verified: 80 tests passing (no republish required 2026-06-19)
 ```
 

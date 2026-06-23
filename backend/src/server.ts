@@ -60,6 +60,7 @@ import {
   buildGuildDiscoveryRankings,
   listDiscoveryChannelCategories,
 } from './services/discovery.service.js';
+import { buildLaunchOpsSummary } from './services/launch-ops.service.js';
 import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
 
@@ -871,6 +872,15 @@ const routes: Route[] = [
     paramNames: [],
     handler: (_registry, _request, response) => {
       sendJson(response, 200, { categories: listDiscoveryChannelCategories() });
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/ops\/launch-summary$/,
+    paramNames: [],
+    handler: async (registry, _request, response) => {
+      const summary = await buildLaunchOpsSummary(registry);
+      sendJson(response, 200, summary);
     },
   },
   {

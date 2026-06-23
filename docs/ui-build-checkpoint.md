@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped. Sidebar, global chat, and profile polish wave shipped (`9c417a4`). **296** frontend unit tests passing.
+Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped. Sidebar, global chat, and profile polish wave shipped (`9c417a4`). Launch ops dashboard + discovery tab wiring shipped. **297** frontend unit tests passing.
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -219,7 +219,7 @@ Latest commits: `5d878dc` (profile edit + global chat layer), `42f1f02` (global 
 - **Protocol status:** `protocol-availability.ts` exposes Connected / Online / Preview / Setup badges (no user-facing “Mock” label).
 - **Providers:** `affiliation-provider`, `channel-directory-provider`, `member-directory-provider` unify live indexer data vs fixture fallback.
 - **Fixture policy:** Dev fixtures stay on during polish; live discovery replaces them only when ranked rows return. Hub and Game Hub show fixtures immediately (including while discovery loads).
-- **Operator tools:** `IndexedDataPanel` is visible only to `VITE_NAMI_OFFICIAL_OWNER` in Settings → Advanced.
+- **Operator tools:** `IndexedDataPanel` is visible only to `VITE_NAMI_OFFICIAL_OWNER` in Settings → Advanced (Launch Ops + Discovery tabs).
 
 ## UI Build Outcome
 
@@ -236,9 +236,22 @@ Membership checkout, subscription state, avatar/cover/logo uploads, streaming pr
 | UI-D26.3 | Complete | Nine discovery categories + `GET /api/discovery/categories`; Settings panel tabs. |
 | UI-D26.4 | Complete | Reputation-weighted boosts, conduct/squad/profile signals, boost anomaly penalty. |
 
+## Phase 8 — Launch Ops (UI-C27)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| UI-C27.1 | Complete | `GET /api/ops/launch-summary` — test launch policy, officials queue, discovery cycle, projection counts. |
+| UI-C27.2 | Complete | `LaunchOpsPanel` in Settings → Advanced → Launch Ops (official owner). |
+| UI-C27.3 | Complete | `IndexedDataPanel` Discovery tab wired to `ProtocolDiscoveryPanel`. |
+| UI-C27.4 | Complete | `verify-testnet-ready.mjs` probes `/api/discovery/*` and `/api/ops/launch-summary`. |
+
+Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `NamiOwnerAdvancedPanel.tsx`, `IndexedDataPanel.tsx`.
+
+Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **297** unit tests passing; `node scripts/verify-testnet-ready.mjs` — all checks green.
+
 **Recommended next lane:**
 
-1. Backend persistence for submissions (replace localStorage queues for multi-device officials review).
-3. Testnet deployment and launch ops (security review, moderation dashboards, analytics).
-4. Extend Walrus-backed media references when storage proofs ship.
+1. Public deploy (Render + Vercel) and human secrets (treasury, Stripe/PayPal, zkLogin per origin).
+2. Security review + AdminCap custody finalization.
+3. Extend Walrus-backed media references when storage proofs ship.
 

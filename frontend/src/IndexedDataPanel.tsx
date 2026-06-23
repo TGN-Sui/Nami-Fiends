@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { canAccessModerationQueues } from './member-access.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
+import { ProtocolDiscoveryPanel } from './ProtocolDiscoveryPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import { ProtocolConductPanel } from './ProtocolConductPanel.js';
 import { ProtocolCustomizationPanel } from './ProtocolCustomizationPanel.js';
@@ -24,6 +25,7 @@ const INDEXED_TABS = [
   { id: 'moderation', label: 'Moderation' },
   { id: 'records', label: 'Records' },
   { id: 'recovery', label: 'Recovery' },
+  { id: 'discovery', label: 'Discovery' },
 ] as const;
 
 type IndexedTabId = (typeof INDEXED_TABS)[number]['id'];
@@ -89,6 +91,7 @@ export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactEleme
         {activeTab === 'moderation' ? <ProtocolModerationPanel /> : null}
         {activeTab === 'records' ? <ProtocolModerationRecordsPanel /> : null}
         {activeTab === 'recovery' ? <ProtocolRecoveryPanel /> : null}
+        {activeTab === 'discovery' ? <ProtocolDiscoveryPanel /> : null}
       </div>
     </article>
   );

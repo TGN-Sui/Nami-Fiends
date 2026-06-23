@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from 'react';
 
 import { IndexedDataPanel } from './IndexedDataPanel.js';
+import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
@@ -33,7 +34,12 @@ const ADVANCED_TABS = [
   {
     id: 'data',
     label: 'Indexed Data',
-    hint: 'Synced profile, channel, and safety protocol reads.',
+    hint: 'Synced profile, channel, safety protocol reads, and discovery rankings.',
+  },
+  {
+    id: 'launch',
+    label: 'Launch Ops',
+    hint: 'Testnet policy, officials queue depth, and discovery cycle health.',
   },
 ] as const;
 
@@ -97,6 +103,7 @@ export function NamiOwnerAdvancedPanel(props: {
           />
         ) : null}
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
+        {activeTab === 'launch' ? <LaunchOpsPanel embedded /> : null}
       </div>
     </article>
   );

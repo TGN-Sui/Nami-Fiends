@@ -181,6 +181,38 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
     } else {
       fail('officials submissions API', 'HTTP ' + officials.status);
     }
+
+    const stats = await fetch(origin + '/stats');
+
+    if (stats.ok) {
+      pass('receiving server /stats', String(stats.status));
+    } else {
+      fail('receiving server /stats', 'HTTP ' + stats.status);
+    }
+
+    const discoveryCategories = await fetch(origin + '/api/discovery/categories');
+
+    if (discoveryCategories.ok) {
+      pass('discovery categories API', String(discoveryCategories.status));
+    } else {
+      fail('discovery categories API', 'HTTP ' + discoveryCategories.status);
+    }
+
+    const discoveryChannels = await fetch(origin + '/api/discovery/channels?limit=5');
+
+    if (discoveryChannels.ok) {
+      pass('discovery channels API', String(discoveryChannels.status));
+    } else {
+      fail('discovery channels API', 'HTTP ' + discoveryChannels.status);
+    }
+
+    const launchSummary = await fetch(origin + '/api/ops/launch-summary');
+
+    if (launchSummary.ok) {
+      pass('launch ops summary API', String(launchSummary.status));
+    } else {
+      fail('launch ops summary API', 'HTTP ' + launchSummary.status);
+    }
   } catch (error) {
     fail('receiving server reachable', error instanceof Error ? error.message : 'fetch failed');
   }

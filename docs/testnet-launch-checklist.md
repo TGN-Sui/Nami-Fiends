@@ -55,6 +55,7 @@ Verify:
 ```bash
 curl http://127.0.0.1:8787/health
 curl http://127.0.0.1:8787/api/officials/submissions
+curl http://127.0.0.1:8787/api/ops/launch-summary
 ```
 
 Officials queue projection: `backend/data/projections/officials-submissions.json`
