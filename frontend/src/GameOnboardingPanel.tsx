@@ -450,7 +450,12 @@ export function GameOnboardingPanel(props: {
             )}
 
             <div className="onboarding-zklogin-block">
-              <p className="protocol-hint">Link zkLogin so Nami Officials can verify your Sui account.</p>
+              <div className="onboarding-zklogin-copy">
+                <span className="nami-entry-login-label">Sui wallet via zkLogin</span>
+                <p className="nami-entry-login-method-desc">
+                  Link Google sign-in so Nami Officials can verify your Sui account.
+                </p>
+              </div>
               <ZkLoginConnectControl />
             </div>
 

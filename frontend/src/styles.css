@@ -15073,13 +15073,13 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .onboarding-card {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .onboarding-act-rail {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .onboarding-act-pill {
@@ -15115,7 +15115,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .onboarding-step-body {
   display: grid;
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
 .onboarding-field {
@@ -15335,7 +15335,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 .onboarding-wallet-connect {
-  max-width: 220px;
+  max-width: 300px;
 }
 
 .onboarding-verify-banner h2 {

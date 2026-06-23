@@ -17,7 +17,7 @@
 
 .settings-account-connect-block {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .settings-account-connect-label {
@@ -1885,16 +1885,16 @@
 
 .nami-entry-gate-dialog {
   position: relative;
-  width: min(520px, 100%);
+  width: min(480px, 100%);
   display: grid;
-  gap: 16px;
-  padding: clamp(18px, 2.4vw, 24px);
-  border-radius: 18px;
-  border: 1px solid rgba(90, 220, 170, 0.28);
-  background: linear-gradient(180deg, rgba(8, 14, 24, 0.96), rgba(4, 8, 14, 0.92));
+  gap: 22px;
+  padding: clamp(24px, 3vw, 32px);
+  border-radius: 20px;
+  border: 1px solid rgba(90, 220, 170, 0.22);
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.97), rgba(4, 8, 14, 0.94));
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.5),
-    0 0 36px rgba(67, 245, 167, 0.08);
+    0 28px 72px rgba(0, 0, 0, 0.52),
+    0 0 32px rgba(67, 245, 167, 0.06);
 }
 
 .nami-entry-gate-close {
@@ -1913,18 +1913,21 @@
 
 .nami-entry-gate-copy {
   display: grid;
-  gap: 8px;
-  padding-right: 72px;
+  gap: 10px;
+  padding-right: 56px;
 }
 
 .nami-entry-gate-copy h2 {
   margin: 0;
-  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  font-size: clamp(1.28rem, 2.2vw, 1.55rem);
+  line-height: 1.2;
 }
 
 .nami-entry-gate-copy p {
   margin: 0;
-  color: #a8bdd4;
+  color: #9eb4ca;
+  font-size: 0.94rem;
+  line-height: 1.5;
 }
 
 .nami-entry-gate-form {
@@ -1935,7 +1938,17 @@
 .nami-entry-gate-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+}
+
+.nami-entry-gate-dialog:not(.nami-entry-gate-dialog-login) .nami-entry-gate-actions {
+  flex-direction: column;
+}
+
+.nami-entry-gate-dialog:not(.nami-entry-gate-dialog-login) .nami-entry-gate-actions .primary-action,
+.nami-entry-gate-dialog:not(.nami-entry-gate-dialog-login) .nami-entry-gate-actions .secondary-action {
+  width: 100%;
+  min-height: 44px;
 }
 
 .nami-entry-gate-error {
@@ -1945,36 +1958,171 @@
 }
 
 .nami-entry-gate-dialog-login {
-  width: min(640px, 100%);
-  max-height: min(90vh, 820px);
+  width: min(560px, 100%);
+  max-height: min(92dvh, 860px);
   overflow: auto;
+  gap: 20px;
+  padding-top: clamp(22px, 2.8vw, 28px);
 }
 
 .nami-entry-login-panel {
   display: grid;
-  gap: 14px;
+  gap: 22px;
+}
+
+.nami-entry-login-intro {
+  display: grid;
+  gap: 10px;
+  padding-right: 48px;
+}
+
+.nami-entry-login-intro h2 {
+  margin: 0;
+  font-size: clamp(1.22rem, 2vw, 1.48rem);
+  line-height: 1.22;
+}
+
+.nami-entry-login-lead {
+  margin: 0;
+  color: #9eb4ca;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .nami-entry-login-methods {
   display: grid;
-  gap: 14px;
+  gap: 0;
 }
 
-.nami-entry-login-block {
+.nami-entry-login-method {
   display: grid;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(117, 188, 224, 0.18);
-  background: rgba(4, 8, 14, 0.45);
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(117, 188, 224, 0.12);
+}
+
+.nami-entry-login-method-primary {
+  padding-top: 0;
+}
+
+.nami-entry-login-method:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.nami-entry-login-method-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.nami-entry-login-method-fields {
+  display: grid;
+  gap: 12px;
 }
 
 .nami-entry-login-label {
-  font-size: 0.82rem;
+  margin: 0;
+  font-size: 0.94rem;
   font-weight: 800;
-  color: #9ec7e8;
+  color: #d4e8f8;
+  letter-spacing: 0.01em;
+}
+
+.nami-entry-login-method-desc {
+  margin: 0;
+  color: #8fa8c4;
+  font-size: 0.88rem;
+  line-height: 1.48;
+}
+
+.nami-entry-login-footnote {
+  margin: 0;
+  color: #7a95b0;
+  font-size: 0.82rem;
+  line-height: 1.48;
+}
+
+.nami-entry-login-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 0;
+  color: #6d849c;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+
+.nami-entry-login-or::before,
+.nami-entry-login-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(117, 188, 224, 0.14);
+}
+
+.nami-entry-login-method-submit {
+  justify-self: start;
+  min-height: 42px;
+}
+
+.nami-entry-login-back-actions {
+  padding-top: 4px;
+  border-top: 1px solid rgba(117, 188, 224, 0.1);
+}
+
+.zklogin-connect {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  width: 100%;
+}
+
+.zklogin-connect-action {
+  width: 100%;
+}
+
+.zklogin-connect .onboarding-primary-btn,
+.zklogin-connect .onboarding-secondary-btn {
+  width: 100%;
+  max-width: 300px;
+  min-height: 44px;
+}
+
+.zklogin-connect-hint,
+.zklogin-connect-status {
+  margin: 0;
+  color: #8fa8c4;
+  font-size: 0.84rem;
+  line-height: 1.48;
+}
+
+.zklogin-connect-status {
+  color: #9ec7e8;
+}
+
+.zklogin-connect-error {
+  margin: 0;
+}
+
+.onboarding-zklogin-block {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  background: rgba(4, 10, 18, 0.38);
+}
+
+.onboarding-zklogin-block .protocol-hint {
+  margin: 0;
+  line-height: 1.48;
+}
+
+.onboarding-zklogin-copy {
+  display: grid;
+  gap: 6px;
 }
 
 .game-official-social-auth-block {

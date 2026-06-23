@@ -147,24 +147,26 @@ export function ZkLoginConnectControl(): ReactElement {
 
     return (
       <div className="zklogin-connect">
-        <p className="protocol-hint">
+        <p className="zklogin-connect-status">
           Google wallet connected · {session.address.slice(0, 10)}…
         </p>
         {!memberLinked ? (
-          <p className="protocol-hint">
+          <p className="zklogin-connect-hint">
             Complete gamer signup or log in with email to link your Nami passport to this wallet.
           </p>
         ) : null}
-        <button
-          className="onboarding-secondary-btn"
-          onClick={() => {
-            clearZkLoginSession();
-            window.location.reload();
-          }}
-          type="button"
-        >
-          Sign out
-        </button>
+        <div className="zklogin-connect-action">
+          <button
+            className="onboarding-secondary-btn"
+            onClick={() => {
+              clearZkLoginSession();
+              window.location.reload();
+            }}
+            type="button"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     );
   }
@@ -174,19 +176,21 @@ export function ZkLoginConnectControl(): ReactElement {
 
   return (
     <div className="zklogin-connect">
-      <button
-        className="onboarding-primary-btn"
-        disabled={!isZkLoginConfigured() || pending}
-        onClick={() => {
-          setRedirectError(null);
-          handleStart();
-        }}
-        type="button"
-      >
-        {pending ? 'Redirecting…' : 'Sign in with Google'}
-      </button>
-      <small className="protocol-hint">{readinessMessage}</small>
-      {displayError ? <p className="onboarding-field-error">{displayError}</p> : null}
+      <div className="zklogin-connect-action">
+        <button
+          className="onboarding-primary-btn"
+          disabled={!isZkLoginConfigured() || pending}
+          onClick={() => {
+            setRedirectError(null);
+            handleStart();
+          }}
+          type="button"
+        >
+          {pending ? 'Redirecting…' : 'Sign in with Google'}
+        </button>
+      </div>
+      <p className="zklogin-connect-hint">{readinessMessage}</p>
+      {displayError ? <p className="onboarding-field-error zklogin-connect-error">{displayError}</p> : null}
     </div>
   );
 }

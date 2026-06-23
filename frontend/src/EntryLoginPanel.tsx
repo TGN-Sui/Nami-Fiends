@@ -155,88 +155,111 @@ export function EntryLoginPanel(props: {
 
   return (
     <div className="nami-entry-login-panel">
-      <div className="nami-entry-gate-copy">
+      <header className="nami-entry-login-intro">
         <span className="mini-badge">Log in</span>
         <h2 id="nami-entry-gate-title">Sign in with your linked account</h2>
-        <p>
-          Use Google (zkLogin), email, or X. Every method links to the same Nami account — sign in with
-          any method you used during signup.
+        <p className="nami-entry-login-lead">
+          Pick the method you used at signup — every path links to the same Nami passport.
         </p>
-      </div>
+      </header>
 
       <div className="nami-entry-login-methods">
-        <section className="nami-entry-login-block">
-          <span className="nami-entry-login-label">Google via zkLogin</span>
+        <section className="nami-entry-login-method nami-entry-login-method-primary">
+          <div className="nami-entry-login-method-copy">
+            <h3 className="nami-entry-login-label">Google via zkLogin</h3>
+            <p className="nami-entry-login-method-desc">
+              One-tap sign-in when you linked Google during signup.
+            </p>
+          </div>
           <ZkLoginConnectControl />
-          <small className="protocol-hint">{recoveryEmailOnboardingHint()}</small>
+          <p className="nami-entry-login-footnote">{recoveryEmailOnboardingHint()}</p>
         </section>
 
-        <section className="nami-entry-login-block">
-          <span className="nami-entry-login-label">Email</span>
-          <ContactCodeVerificationControl
-            autoComplete="email"
-            channel="email"
-            inputType="email"
-            label="Signup email"
-            onChange={setEmail}
-            onVerifiedChange={setEmailVerified}
-            placeholder="you@example.com"
-            value={email}
-            verified={emailVerified}
-          />
-          <label className="onboarding-field">
-            <span>Password</span>
-            <input
-              autoComplete="current-password"
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Your signup password"
-              type="password"
-              value={password}
-            />
-          </label>
+        <div aria-hidden="true" className="nami-entry-login-or">
+          <span>or</span>
+        </div>
 
-          <button
-            className="secondary-action"
-            disabled={
-              emailPending ||
-              !isValidEmail(email) ||
-              (emailVerificationRequired &&
-                !emailVerified &&
-                !memberHasPasswordCredential(email.trim().toLowerCase()) &&
-                !hasRegisteredMemberAccount(email))
-            }
-            onClick={handleEmailSignIn}
-            type="button"
-          >
-            {emailPending ? 'Checking…' : 'Continue with email'}
-          </button>
+        <section className="nami-entry-login-method">
+          <div className="nami-entry-login-method-copy">
+            <h3 className="nami-entry-login-label">Email</h3>
+            <p className="nami-entry-login-method-desc">Use the email and password from signup.</p>
+          </div>
+          <div className="nami-entry-login-method-fields">
+            <ContactCodeVerificationControl
+              autoComplete="email"
+              channel="email"
+              inputType="email"
+              label="Signup email"
+              onChange={setEmail}
+              onVerifiedChange={setEmailVerified}
+              placeholder="you@example.com"
+              value={email}
+              verified={emailVerified}
+            />
+            <label className="onboarding-field">
+              <span>Password</span>
+              <input
+                autoComplete="current-password"
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Your signup password"
+                type="password"
+                value={password}
+              />
+            </label>
+            <button
+              className="secondary-action nami-entry-login-method-submit"
+              disabled={
+                emailPending ||
+                !isValidEmail(email) ||
+                (emailVerificationRequired &&
+                  !emailVerified &&
+                  !memberHasPasswordCredential(email.trim().toLowerCase()) &&
+                  !hasRegisteredMemberAccount(email))
+              }
+              onClick={handleEmailSignIn}
+              type="button"
+            >
+              {emailPending ? 'Checking…' : 'Continue with email'}
+            </button>
+          </div>
         </section>
 
-        <section className="nami-entry-login-block">
-          <span className="nami-entry-login-label">X account</span>
-          <label className="onboarding-field">
-            <span>X handle</span>
-            <input
-              onChange={(event) => setXHandle(event.target.value)}
-              placeholder="@yourhandle"
-              type="text"
-              value={xHandle}
-            />
-          </label>
-          <button className="secondary-action" onClick={handleXSignIn} type="button">
-            {xVerification.verified ? 'Sign in with linked X' : 'Authorize & sign in with X'}
-          </button>
-          {!isXVerificationMockEnabled() ? (
-            <small className="protocol-hint">
-              Live X OAuth ships soon. Use Google or email until then.
-            </small>
-          ) : null}
+        <section className="nami-entry-login-method">
+          <div className="nami-entry-login-method-copy">
+            <h3 className="nami-entry-login-label">X account</h3>
+            <p className="nami-entry-login-method-desc">
+              Sign in with the X handle you linked in Settings.
+            </p>
+          </div>
+          <div className="nami-entry-login-method-fields">
+            <label className="onboarding-field">
+              <span>X handle</span>
+              <input
+                onChange={(event) => setXHandle(event.target.value)}
+                placeholder="@yourhandle"
+                type="text"
+                value={xHandle}
+              />
+            </label>
+            <button
+              className="secondary-action nami-entry-login-method-submit"
+              onClick={handleXSignIn}
+              type="button"
+            >
+              {xVerification.verified ? 'Sign in with linked X' : 'Authorize & sign in with X'}
+            </button>
+            {!isXVerificationMockEnabled() ? (
+              <p className="nami-entry-login-footnote">
+                Live X OAuth ships soon. Use Google or email until then.
+              </p>
+            ) : null}
+          </div>
         </section>
       </div>
 
       {loginError ? <p className="nami-entry-gate-error">{loginError}</p> : null}
 
-      <div className="nami-entry-gate-actions">
+      <div className="nami-entry-gate-actions nami-entry-login-back-actions">
         <button className="secondary-action" onClick={props.onBack} type="button">
           Back
         </button>
