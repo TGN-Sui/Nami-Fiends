@@ -16357,8 +16357,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   min-height: 0;
   max-height: 100%;
   margin-top: var(--sidebar-rail-section-gap);
-  overflow-x: visible;
-  overflow-y: auto;
+  overflow: visible;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -16670,6 +16669,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   flex: 0 0 auto;
   border: none !important;
   border-radius: 0;
+  overflow: visible;
   background: transparent !important;
   box-shadow: none !important;
   font-size: 0.92rem;
@@ -16854,14 +16854,11 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     margin-left: 8px;
   }
 
-  .sidebar.is-icon-rail .sidebar-nav-label,
-  .sidebar.is-icon-rail .sidebar-hub-swap-copy.sidebar-nav-label,
-  .sidebar.is-icon-rail .sidebar-brand-wordmark.sidebar-nav-label {
-    display: none;
-  }
-
   .sidebar.is-icon-rail .sidebar-hub-destinations {
-    height: calc(var(--sidebar-glyph-size) * 2.45);
+    height: calc(
+      var(--sidebar-glyph-size) * 2.72 +
+        var(--sidebar-glyph-size) * (var(--sidebar-glyph-hover-scale) - 1) * 0.42
+    );
     margin-bottom: calc(var(--sidebar-rail-icon-gap) * 0.35);
   }
 
@@ -16936,12 +16933,6 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   .nami-app:has(.sidebar.is-icon-rail) > .main-stage:has(.channel-profile-redesign) {
     width: min(1120px, 100%) !important;
     max-width: 100% !important;
-  }
-
-  .sidebar.is-icon-rail .sidebar-nav-label,
-  .sidebar.is-icon-rail .sidebar-hub-swap-copy.sidebar-nav-label,
-  .sidebar.is-icon-rail .sidebar-brand-wordmark.sidebar-nav-label {
-    display: none;
   }
 
   .nami-pinned-profile-card {
@@ -18908,7 +18899,10 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   --hub-triangle-rise: calc(var(--sidebar-glyph-size) * 1.08);
   position: relative;
   width: 100%;
-  height: calc(var(--sidebar-glyph-size) * 2.72);
+  height: calc(
+    var(--sidebar-glyph-size) * 2.72 +
+      var(--sidebar-glyph-size) * (var(--sidebar-glyph-hover-scale) - 1) * 0.42
+  );
   margin: calc(var(--sidebar-rail-icon-gap) * 0.15) 0 calc(var(--sidebar-rail-icon-gap) * 0.25);
   display: block;
   overflow: visible;
@@ -18947,10 +18941,10 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   z-index: 2;
   display: grid;
   place-items: center;
-  width: var(--sidebar-glyph-size);
-  min-width: var(--sidebar-glyph-size);
-  height: var(--sidebar-glyph-size);
-  min-height: var(--sidebar-glyph-size);
+  width: var(--sidebar-rail-item-slot);
+  min-width: var(--sidebar-rail-item-slot);
+  height: var(--sidebar-rail-item-slot);
+  min-height: var(--sidebar-rail-item-slot);
   margin: 0;
   padding: 0;
   overflow: visible;
@@ -18990,6 +18984,19 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
     transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
     color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
     filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+.sidebar.is-icon-rail .nav-icon.owner-editable-image,
+.sidebar.is-icon-rail .nav-icon.owner-editable-image.is-owner-asset-placeholder,
+.sidebar.is-icon-rail .nav-icon.owner-editable-image.has-owner-asset-image {
+  border-radius: 0 !important;
+  overflow: visible;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sidebar.is-icon-rail .nav-icon.owner-editable-image .owner-editable-image-asset {
+  object-fit: contain;
 }
 
 .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon.owner-editable-image,
@@ -19180,8 +19187,9 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   gap: var(--sidebar-rail-icon-gap);
   justify-items: center;
   width: 100%;
-  overflow: visible;
-  max-height: 720px;
+  overflow-x: visible;
+  overflow-y: auto;
+  max-height: min(720px, calc(100dvh - 320px));
   opacity: 1;
   pointer-events: auto;
   transition:
@@ -19247,11 +19255,11 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--sidebar-glyph-size);
-  min-width: var(--sidebar-glyph-size);
-  max-width: var(--sidebar-glyph-size);
-  height: var(--sidebar-rail-secondary-slot);
-  min-height: var(--sidebar-rail-secondary-slot);
+  width: var(--sidebar-rail-item-slot);
+  min-width: var(--sidebar-rail-item-slot);
+  max-width: none;
+  height: var(--sidebar-rail-item-slot);
+  min-height: var(--sidebar-rail-item-slot);
   margin: 0;
   padding: 0;
   overflow: visible;

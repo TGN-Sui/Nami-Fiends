@@ -108,6 +108,11 @@ export function shouldUseFunctionalMockCatalog(_config: AppConfig = readAppConfi
   return false;
 }
 
+/** Read-only showcase catalogs for testnet testers when live discovery is empty. */
+export function shouldUseTestLaunchShowcaseCatalog(config: AppConfig = readAppConfig()): boolean {
+  return isTestLaunchMode(config);
+}
+
 /** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */
 export function shouldUseFixtureCatalogFallback(
   liveItemCount: number,
@@ -118,7 +123,11 @@ export function shouldUseFixtureCatalogFallback(
     return false;
   }
 
-  return shouldUseDevFixtures(config) || shouldUseFunctionalMockCatalog(config);
+  return (
+    shouldUseDevFixtures(config) ||
+    shouldUseFunctionalMockCatalog(config) ||
+    shouldUseTestLaunchShowcaseCatalog(config)
+  );
 }
 
 /** Local mock checkout and provider simulation (dev only, never in test launch). */

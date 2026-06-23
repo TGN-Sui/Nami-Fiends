@@ -1,17 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import {
-  isDemoSimulationEnabled,
-  isDemoWalletOnboardingEnabled,
-  isMockMembershipCheckoutEnabled,
-  shouldAutoSeedLocalData,
-  shouldUseDevFixtures,
-  shouldUseFixtureCatalogFallback,
-  type AppConfig,
-} from './app-config.js';
-import { resolveChannelDirectory } from './channel-directory-provider.js';
-import { resolveMemberDirectory } from './member-directory-provider.js';
-import { listHubGlobalChats } from './global-chats.js';
+import type { AppConfig } from './app-config.js';
 
 function testLaunchConfig(): AppConfig {
   return {
@@ -27,40 +16,77 @@ function testLaunchConfig(): AppConfig {
   };
 }
 
+vi.mock('./app-config.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./app-config.js')>();
+  const config = testLaunchConfig();
+
+  return {
+    ...actual,
+    readAppConfig: () => config,
+    shouldUseDevFixtures: (appConfig?: AppConfig) =>
+      actual.shouldUseDevFixtures(appConfig ?? config),
+    isTestLaunchMode: (appConfig?: AppConfig) => actual.isTestLaunchMode(appConfig ?? config),
+    shouldUseFixtureCatalogFallback: (
+      liveItemCount: number,
+      loadState: 'idle' | 'loading' | 'ready' | 'error',
+      appConfig?: AppConfig
+    ) => actual.shouldUseFixtureCatalogFallback(liveItemCount, loadState, appConfig ?? config),
+  };
+});
+
+import {
+  isDemoSimulationEnabled,
+  isDemoWalletOnboardingEnabled,
+  isMockMembershipCheckoutEnabled,
+  shouldAutoSeedLocalData,
+  shouldUseDevFixtures,
+  shouldUseFixtureCatalogFallback,
+} from './app-config.js';
+import { resolveChannelDirectory } from './channel-directory-provider.js';
+import { readSeedMembers } from './fixture-catalog-access.js';
+import { testLaunchShowcaseMembers } from './fixtures/test-launch-showcase-catalog.js';
+import { resolveMemberDirectory } from './member-directory-provider.js';
+import { listHubGlobalChats } from './global-chats.js';
+
 describe('live surface audit — test launch policy', () => {
   const config = testLaunchConfig();
 
-  it('disables fixture catalogs and demo surfaces', () => {
+  it('disables dev fixture catalogs and demo surfaces but keeps test launch showcase fallback', () => {
     expect(shouldUseDevFixtures(config)).toBe(false);
     expect(isDemoSimulationEnabled(config)).toBe(false);
     expect(isDemoWalletOnboardingEnabled(config)).toBe(false);
     expect(shouldAutoSeedLocalData(config)).toBe(false);
     expect(isMockMembershipCheckoutEnabled(config)).toBe(false);
-    expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(false);
+    expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(true);
   });
 
-  it('returns empty channel directory without live or fixture fallback', () => {
+  it('returns showcase channel directory during test launch when live discovery is empty', () => {
     const items = resolveChannelDirectory({
       liveRankings: [],
       loadState: 'ready',
       liveQueryEnabled: true,
-      fixtureChannels: [],
       localChannels: [],
     });
 
-    expect(items).toEqual([]);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.source === 'fixture')).toBe(true);
+    expect(items.some((item) => item.channel.id === 'vortex')).toBe(true);
   });
 
-  it('returns empty member directory without live or fixture fallback', () => {
+  it('returns showcase member directory during test launch when live discovery is empty', () => {
+    expect(readSeedMembers().every((member) => member.tier === 'NPC')).toBe(true);
+
     const items = resolveMemberDirectory({
       liveMembers: [],
       loadState: 'ready',
       liveQueryEnabled: false,
-      fixtureMembers: [],
       localMembers: [],
+      fixtureMembers: testLaunchShowcaseMembers,
     });
 
-    expect(items).toEqual([]);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.source === 'fixture')).toBe(true);
+    expect(items.every((item) => item.member.tier === 'NPC')).toBe(true);
   });
 
   it('does not enrich live discovery rows with fixture metadata when fixtures are empty', () => {
