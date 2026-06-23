@@ -16095,9 +16095,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .sidebar.is-icon-rail {
   width: var(--sidebar-rail-axis-width);
-  height: calc(100vh - 56px);
-  max-height: calc(100vh - 56px);
-  padding: 8px 0 10px;
+  height: calc(100dvh - 56px);
+  max-height: calc(100dvh - 56px);
+  padding: 8px 0 max(10px, env(safe-area-inset-bottom, 0px));
   margin-left: 14px;
   z-index: 95;
   border: none !important;
@@ -16168,14 +16168,32 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   left: auto;
   z-index: 1;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: flex-start;
   align-self: stretch;
   gap: var(--sidebar-rail-section-gap);
   width: 100%;
+  min-height: 0;
+  max-height: 100%;
   margin-top: var(--sidebar-rail-section-gap);
+  overflow-x: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(117, 215, 255, 0.28) transparent;
   transform: none;
   pointer-events: none;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.28);
 }
 
 .sidebar.is-icon-rail .sidebar-icon-rail-controls > * {
@@ -16196,6 +16214,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   left: auto;
   z-index: 40;
   flex: 0 0 auto;
+  flex-shrink: 0;
   align-self: stretch;
   width: 100%;
   min-height: calc(var(--sidebar-glyph-size) * var(--official-nami-logo-scale) + 8px);
@@ -16644,7 +16663,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   border-top: none;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1280px), (max-height: 920px) {
   .sidebar.is-icon-rail {
     --sidebar-glyph-size: 42px;
     --official-nami-logo-scale: 2.75;
@@ -16706,13 +16725,21 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     --sidebar-glyph-hover-scale: 1.28;
     --sidebar-rail-scale-duration: 420ms;
     --sidebar-rail-shift-duration: 420ms;
+    top: max(12px, env(safe-area-inset-top, 0px));
+    height: calc(
+      100dvh - max(28px, env(safe-area-inset-top, 0px)) - max(10px, env(safe-area-inset-bottom, 0px))
+    );
+    max-height: calc(
+      100dvh - max(28px, env(safe-area-inset-top, 0px)) - max(10px, env(safe-area-inset-bottom, 0px))
+    );
     margin-left: 6px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   }
 
   .nami-app:has(.sidebar.is-icon-rail) {
     padding-left: calc(var(--sidebar-rail-axis-width) + 10px) !important;
-    padding-right: 10px !important;
-    padding-top: calc(12px + 58px) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    padding-top: calc(12px + max(58px, env(safe-area-inset-top, 0px) + 48px)) !important;
   }
 
   .nami-app:has(.sidebar.is-icon-rail) > .main-stage {
@@ -16769,19 +16796,46 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   }
 }
 
+@media (max-height: 820px) {
+  .sidebar.is-icon-rail:not(.is-vertically-collapsed) {
+    --official-nami-logo-scale: 2.35;
+    --sidebar-hub-fixed-scale: 1.65;
+    --sidebar-rail-section-gap: calc(var(--sidebar-glyph-size) * 0.14);
+    --sidebar-rail-icon-gap: calc(var(--sidebar-glyph-size) * 0.12);
+    --sidebar-rail-secondary-slot: calc(var(--sidebar-glyph-size) * 1.02);
+  }
+
+  .sidebar.is-icon-rail .sidebar-hub-destinations {
+    height: calc(var(--sidebar-glyph-size) * 2.2);
+    margin-bottom: calc(var(--sidebar-rail-icon-gap) * 0.2);
+  }
+
+  .sidebar.is-icon-rail .sidebar-official-logo-slot {
+    min-height: calc(var(--sidebar-glyph-size) * var(--official-nami-logo-scale) + 4px);
+  }
+}
+
 @media (max-width: 560px) {
   .sidebar.is-icon-rail {
     --sidebar-glyph-size: 28px;
     --official-nami-logo-scale: 2;
     --sidebar-hub-fixed-scale: 1.45;
     --sidebar-glyph-hover-scale: 1.15;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    height: calc(
+      100dvh - max(20px, env(safe-area-inset-top, 0px)) - max(12px, env(safe-area-inset-bottom, 0px))
+    );
+    max-height: calc(
+      100dvh - max(20px, env(safe-area-inset-top, 0px)) - max(12px, env(safe-area-inset-bottom, 0px))
+    );
     margin-left: 4px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
   }
 
   .nami-app:has(.sidebar.is-icon-rail) {
     padding-left: calc(var(--sidebar-rail-axis-width) + 6px) !important;
-    padding-right: 6px !important;
-    padding-top: calc(10px + 52px) !important;
+    padding-right: max(6px, env(safe-area-inset-right, 0px)) !important;
+    padding-top: calc(10px + max(52px, env(safe-area-inset-top, 0px) + 44px)) !important;
   }
 
   .nami-pinned-profile-card {
@@ -16804,6 +16858,22 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 @media (max-width: 900px) and (pointer: coarse) {
+  .sidebar.is-icon-rail {
+    --sidebar-rail-secondary-slot: max(44px, calc(var(--sidebar-glyph-size) * 1.14));
+    --sidebar-rail-item-slot: max(44px, calc(var(--sidebar-glyph-size) * var(--sidebar-glyph-hover-scale)));
+  }
+
+  .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button,
+  .sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle,
+  .sidebar.is-icon-rail .sidebar-vertical-collapse-toggle {
+    min-height: 44px;
+  }
+
+  .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
   .sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
   .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
@@ -16818,6 +16888,16 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
   .sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
     transform: scale(1);
+  }
+
+  .nami-landing-hero-actions .onboarding-primary-btn,
+  .nami-landing-hero-actions .onboarding-secondary-btn,
+  .nami-landing-hero-actions .nami-surface-button,
+  .nami-landing-final-cta .onboarding-primary-btn,
+  .nami-landing-final-cta .onboarding-secondary-btn,
+  .nami-landing-final-cta .nami-surface-button {
+    min-height: 44px;
+    padding: 10px 16px;
   }
 }
 
