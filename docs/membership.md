@@ -366,6 +366,10 @@ $GOON coin type (testnet):
 
 Crypto checkout prompts wallet sign-in and sends to `NAMI_PAYMENT_TREASURY_ADDRESS`.
 
+### $GOON tips (UI prototype)
+
+Verified members with a connected Sui wallet can **Tip $GOON** from another member's profile (`MemberProfileActions.tsx`). Tips route to `NAMI_PAYMENT_TREASURY_ADDRESS` via wallet-signed transfer (`goon-wallet-payment.ts`). A local activity ledger tracks received tips (`goon-tips-store.ts`). **Buy Goon** uses the same coin type and treasury config (`GoonQuickBuy.tsx`).
+
 ### Billing rules (UI prototype)
 
 ```text

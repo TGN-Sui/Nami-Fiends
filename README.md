@@ -15,9 +15,9 @@ The goal is to build a portable gamer identity and trust layer.
 ```text
 Move build: passing
 Move tests: 80 passing
-Frontend tests: 230 passing (vitest)
+Frontend tests: 296 passing (vitest)
 Warnings: 0
-Documentation: synced (Phase 8 test launch, game channel owner tools, media persistence)
+Documentation: synced (Phase 8 test launch, shell/chat polish, guild invites, $GOON tips)
 MVP progress: ~84% (on-chain complete; owner settings + channel media shipped)
 ```
 
@@ -392,7 +392,7 @@ The current frontend UI build checkpoint is documented in [docs/ui-build-checkpo
 
 **Phase 8** (entry + game onboarding): Enter Nami gate, dual Gamer/Game paths, Trust Score, officials submissions queue, pre-approval workspace — shipped. See [docs/game-onboarding.md](docs/game-onboarding.md).
 
-Frontend verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` (230 tests).
+Frontend verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` (296 tests).
 
 ### Game channel owner tools (shipped)
 

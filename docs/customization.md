@@ -315,6 +315,14 @@ Implementation: `nami-custom-emojis-store.ts`, `NamiOwnerEmojiPanel.tsx`, `ChatE
 
 ---
 
+# Frontend — Chat Tags & Social Embeds
+
+Chat composers support `@` tags for members, channels, studios, devs, squads, and guilds (`nami-tag-registry.ts`). Tagged entities receive in-app notifications unless opted out (`nami-notifications-store.ts`, `TagNotificationsPanel.tsx`). Tags render as clickable links in message bodies (`TaggedMessageBody.tsx`).
+
+Member feed X post embeds use a fixed **550×520** frame (`social-embed.ts`, `SocialEmbedPlayer.tsx`) — not 16:9 video sizing.
+
+---
+
 # Frontend — Game Channel Media
 
 Game channel owners customize brand surfaces from the channel profile **Owner** tab (grouped under **Brand & media**):

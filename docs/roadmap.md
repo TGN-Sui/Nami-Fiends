@@ -685,7 +685,7 @@ Pro squad slots aligned to 2 on-chain (squad.move) and in membership plans
 Verification:
 
 ```text
-npm --prefix frontend test — 230 passing
+npm --prefix frontend test — 296 passing
 sui move test — 80 passing
 ```
 

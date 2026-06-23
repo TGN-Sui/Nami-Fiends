@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped (230 frontend unit tests).
+Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped. Sidebar, global chat, and profile polish wave shipped (`9c417a4`). **296** frontend unit tests passing.
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -146,7 +146,7 @@ npm --prefix frontend run build
 npm --prefix frontend test
 ```
 
-All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22; 133 after Phase 8 onboarding + officials stores; **230** after owner settings, media persistence, and discovery fixes).
+All checks passed (47 unit tests at Phase 7 completion; 74 after UI-B22; 133 after Phase 8 onboarding + officials stores; 230 after owner settings, media persistence, and discovery fixes; **296** after guild/squad invites, tags, $GOON tips, and shell polish).
 
 ## Phase 8 — Enter Nami + Game Onboarding (UI-C23)
 
@@ -184,7 +184,25 @@ Latest commits: `0b364a3` (ticket preview + genres), `6c93b7c` (officials submis
 
 Key files: `ChannelOwnerSection.tsx`, `channel-owner-settings-draft.ts`, `channel-owner-settings-context.tsx`, `channel-owner-settings-groups.ts`, `channel-media-persistence.ts`, `channel-cover-store.ts`, `channel-owner-media-store.ts`, `local-channel-directory.ts`, `subscriptions-store.ts`, `PinnedGameChannelProfileCard.tsx`, `PlatformLinkSettingsPanel.tsx`, `account-connect.tsx`, `GoonQuickBuy.tsx`.
 
-Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test && npm --prefix frontend run build` — **230** unit tests passing.
+Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test && npm --prefix frontend run build` — **296** unit tests passing.
+
+## Post-Phase 8 — Shell & Chat Polish (UI-C25)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| UI-C25.1 | Complete | Sidebar rail scroll, hover labels, 16:9 collapse/radio alignment. |
+| UI-C25.2 | Complete | Global chat layout: messages-first column, compact bottom composer. |
+| UI-C25.3 | Complete | Game profile navigation fixes; hub triangle hover scale tamed. |
+| UI-C25.4 | Complete | Profile edit UX; shared global chat message layer. |
+| UI-C25.5 | Complete | Test-launch showcase sidebar; Elite preview for testers. |
+| UI-C25.6 | Complete | Member profile guild/squad invites with tier slot caps (25 / 100 / 250). |
+| UI-C25.7 | Complete | Buy / Tip $GOON on member profiles (`MemberProfileActions`, treasury-routed tips). |
+| UI-C25.8 | Complete | X post embeds fixed at **550×520** (`social-embed.ts`, not 16:9 video sizing). |
+| UI-C25.9 | Complete | Live-streaming dot on avatar frame border (`member-avatar-live-shell`). |
+
+Key files: `GlobalChatsPanel.tsx`, `MemberProfileActions.tsx`, `guild-invites-store.ts`, `goon-tips-store.ts`, `social-embed.ts`, `member-avatar.tsx`, `phase7-ui.css`.
+
+Latest commits: `5d878dc` (profile edit + global chat layer), `42f1f02` (global chat layout), `7ce5300` (game profile + sidebar), `9c417a4` (sidebar hover labels + radio sync).
 
 ## Product Rules Preserved
 
@@ -205,7 +223,7 @@ Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test
 
 ## UI Build Outcome
 
-Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped. Owner settings, media persistence, and discovery fixes bring the frontend to **230** unit tests passing.
+Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped. Owner settings, media persistence, discovery fixes, and shell/chat polish bring the frontend to **296** unit tests passing.
 
 Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
 

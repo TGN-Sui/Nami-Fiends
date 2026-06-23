@@ -251,6 +251,24 @@ Current tests verify:
 
 ---
 
+# Frontend — Guild Invites (UI prototype)
+
+Guild owners and rank holders with invite permission can send invites from **Member Profile → Invite to guild**. Invites persist in `localStorage` (`guild-invites-store.ts`) until backend sync ships.
+
+Tier slot caps (owner tier sets guild capacity):
+
+```text
+Adventurer → 25 members
+Pro        → 100 members
+Elite      → 250 members
+```
+
+Target members must be verified before an invite can be sent. Invitable guilds are filtered by capacity and hierarchy permissions (`canGuildMember`, `guild-hierarchy-store.ts`).
+
+Key files: `MemberProfileActions.tsx`, `guild-invites-store.ts`, `nami-affiliations.ts`.
+
+---
+
 # Future Work
 
 Planned Guild improvements:
@@ -258,7 +276,6 @@ Planned Guild improvements:
 ```text
 Guild roles
 Guild moderators
-Guild invites
 Guild join requests
 Guild channels
 Guild access policies

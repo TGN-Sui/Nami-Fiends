@@ -18,7 +18,7 @@ npm run dev
 
 ```bash
 npm run typecheck   # TypeScript
-npm test            # 230 unit tests (vitest)
+npm test            # 296 unit tests (vitest)
 npm run build       # Production bundle
 ```
 
