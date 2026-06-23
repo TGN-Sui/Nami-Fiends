@@ -58,10 +58,12 @@ export async function syncPlatformOwnerAssetsToServer(
   owner: string | null
 ): Promise<{ ok: true } | { ok: false; error: PlatformOwnerAssetsSyncError }> {
   if (!isPlatformOwnerAssetsApiAvailable()) {
+    lastSyncError = 'not_configured';
     return { ok: false, error: 'not_configured' };
   }
 
   if (!owner?.startsWith('0x')) {
+    lastSyncError = 'no_owner';
     return { ok: false, error: 'no_owner' };
   }
 
