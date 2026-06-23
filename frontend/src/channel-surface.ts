@@ -7,8 +7,9 @@ export function isOfficialNamiChannel(channel: NamiChannel): boolean {
   return channel.officialNami === true || channel.partner === true;
 }
 
-export function channelRainbowBorderClass(channel: NamiChannel): string {
-  return isOfficialNamiChannel(channel) ? ' is-nami-rainbow-foil-border' : '';
+/** Rainbow foil borders are reserved for the official owner profile — not game channels. */
+export function channelRainbowBorderClass(_channel: NamiChannel): string {
+  return '';
 }
 
 export function isNamiTeamMember(member: NamiMember): boolean {

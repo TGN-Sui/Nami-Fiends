@@ -16314,6 +16314,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   --official-nami-logo-scale: 4;
   --sidebar-glyph-hover-scale: 2;
   --sidebar-glyph-neighbor-scale: calc(1 + (var(--sidebar-glyph-hover-scale) - 1) * 0.15);
+  --sidebar-hub-glyph-hover-scale: 1.14;
+  --sidebar-hub-glyph-neighbor-scale: 1.03;
   --sidebar-hub-fixed-scale: 2.5;
   --sidebar-hub-neighbor-scale: calc(var(--sidebar-hub-fixed-scale) * var(--sidebar-glyph-neighbor-scale));
   --sidebar-hub-mark-scale: calc(var(--sidebar-glyph-size) / 16px);
@@ -16948,6 +16950,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     --official-nami-logo-scale: 2.75;
     --sidebar-hub-fixed-scale: 1.85;
     --sidebar-glyph-hover-scale: 1.38;
+    --sidebar-hub-glyph-hover-scale: 1.1;
+    --sidebar-hub-glyph-neighbor-scale: 1.02;
     --sidebar-rail-scale-duration: 520ms;
     --sidebar-rail-shift-duration: 520ms;
     margin-left: 8px;
@@ -16998,6 +17002,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     --official-nami-logo-scale: 2.35;
     --sidebar-hub-fixed-scale: 1.65;
     --sidebar-glyph-hover-scale: 1.28;
+    --sidebar-hub-glyph-hover-scale: 1.08;
+    --sidebar-hub-glyph-neighbor-scale: 1.01;
     --sidebar-rail-scale-duration: 420ms;
     --sidebar-rail-shift-duration: 420ms;
     top: max(12px, env(safe-area-inset-top, 0px));
@@ -17141,6 +17147,20 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button {
     min-width: 44px;
     min-height: 44px;
+  }
+
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .nav-icon,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .nav-icon,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active .nav-icon,
+  .sidebar.is-icon-rail
+    .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:hover)
+    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
+    .nav-icon,
+  .sidebar.is-icon-rail
+    .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:focus-visible)
+    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
+    .nav-icon {
+    transform: scale(1);
   }
 
   .sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
@@ -19146,13 +19166,13 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 
 .sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .nav-icon {
-  transform: scale(var(--sidebar-glyph-hover-scale));
+  transform: scale(var(--sidebar-hub-glyph-hover-scale));
   filter: drop-shadow(0 0 12px rgba(117, 215, 255, 0.42));
 }
 
 .sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active .nav-icon {
   color: #ffffff;
-  transform: scale(var(--sidebar-glyph-hover-scale));
+  transform: scale(var(--sidebar-hub-glyph-hover-scale));
   filter:
     drop-shadow(0 0 14px rgba(117, 215, 255, 0.55))
     drop-shadow(0 0 4px rgba(141, 255, 178, 0.35));
@@ -19172,7 +19192,7 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:focus-visible)
   > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
   .nav-icon {
-  transform: scale(var(--sidebar-glyph-neighbor-scale));
+  transform: scale(var(--sidebar-hub-glyph-neighbor-scale));
 }
 
 .sidebar.is-icon-rail .sidebar-hub-triangle-button .sidebar-nav-label {

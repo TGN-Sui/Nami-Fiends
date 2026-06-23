@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  channelRainbowBorderClass,
   isFiendMember,
   isOfficialNamiGalaxyMember,
   memberDisplayRankLabel,
@@ -10,7 +11,7 @@ import {
   officialNamiPassportMarkLabel,
   officialNamiTeamBadgeLabel,
 } from './channel-surface.js';
-import type { NamiMember } from './uiMockData.js';
+import type { NamiChannel, NamiMember } from './uiMockData.js';
 
 function createMember(overrides: Partial<NamiMember> = {}): NamiMember {
   return {
@@ -24,6 +25,41 @@ function createMember(overrides: Partial<NamiMember> = {}): NamiMember {
     ...overrides,
   };
 }
+
+describe('channel-surface game channel styling', () => {
+  it('does not apply rainbow foil borders to game channels', () => {
+    const partnerChannel = {
+      id: 'pebble',
+      surfaceType: 'game',
+      name: 'Pebble',
+      handle: '@pebble',
+      owner: 'Pebble Labs',
+      developerId: 'pebble-labs',
+      developerName: 'Pebble Labs',
+      developerLogoSeed: 'PL',
+      coverArtSeed: 'builder-wave',
+      coverArtStyle: 'ocean',
+      verifiedGame: true,
+      genre: 'Builder',
+      platforms: ['Sui'],
+      subscribers: 1000,
+      verified: true,
+      partner: true,
+      officialNami: true,
+      signal: 'Green',
+      tagline: 'Builder community',
+      banner: 'Banner',
+      theme: 'teal',
+      modules: [],
+      officialBadges: [],
+      customBadges: [],
+      verifiedLinks: [],
+      announcements: [],
+    } satisfies NamiChannel;
+
+    expect(channelRainbowBorderClass(partnerChannel)).toBe('');
+  });
+});
 
 describe('channel-surface FIEND owner identity', () => {
   it('reserves galaxy styling for the official owner only', () => {
