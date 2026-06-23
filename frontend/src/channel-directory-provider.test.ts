@@ -2,6 +2,24 @@ import { describe, expect, it } from 'vitest';
 
 import { resolveChannelDirectory } from './channel-directory-provider.js';
 import type { NamiChannel } from './domain/types.js';
+import type { DiscoveryChannelRanking } from './protocol.js';
+
+function discoveryRanking(
+  partial: Omit<DiscoveryChannelRanking, 'score_components'> &
+    Partial<Pick<DiscoveryChannelRanking, 'score_components'>>,
+): DiscoveryChannelRanking {
+  return {
+    ...partial,
+    score_components: partial.score_components ?? {
+      boost: partial.boost_power * 10,
+      verification: partial.is_verified ? 50 : 0,
+      badges: 0,
+      guild: 0,
+      moderation: 0,
+      base: partial.is_public ? 10 : 0,
+    },
+  };
+}
 
 const fixtureChannel: NamiChannel = {
   id: 'fiends',
@@ -35,7 +53,7 @@ describe('channel-directory-provider', () => {
   it('prefers live discovery rankings when indexed data is available', () => {
     const items = resolveChannelDirectory({
       liveRankings: [
-        {
+        discoveryRanking({
           channel_id: '0xabc123',
           owner: '0xowner',
           is_verified: true,
@@ -45,8 +63,8 @@ describe('channel-directory-provider', () => {
           score: 420,
           week_id: 12,
           rank: 1,
-          signals: ['green'],
-        },
+          signals: ['verified'],
+        }),
       ],
       loadState: 'ready',
       liveQueryEnabled: true,
@@ -120,7 +138,7 @@ describe('channel-directory-provider', () => {
 
     const items = resolveChannelDirectory({
       liveRankings: [
-        {
+        discoveryRanking({
           channel_id: 'fiends',
           owner: '0xowner',
           is_verified: true,
@@ -130,8 +148,8 @@ describe('channel-directory-provider', () => {
           score: 220,
           week_id: 12,
           rank: 1,
-          signals: ['green'],
-        },
+          signals: ['verified'],
+        }),
       ],
       loadState: 'ready',
       liveQueryEnabled: true,
@@ -168,7 +186,7 @@ describe('channel-directory-provider', () => {
   it('enriches fixture metadata when a live ranking matches a fixture id', () => {
     const items = resolveChannelDirectory({
       liveRankings: [
-        {
+        discoveryRanking({
           channel_id: 'fiends',
           owner: '0xowner',
           is_verified: true,
@@ -178,8 +196,8 @@ describe('channel-directory-provider', () => {
           score: 900,
           week_id: 12,
           rank: 2,
-          signals: ['green'],
-        },
+          signals: ['verified'],
+        }),
       ],
       loadState: 'ready',
       liveQueryEnabled: true,

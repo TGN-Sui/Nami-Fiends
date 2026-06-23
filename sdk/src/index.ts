@@ -93,6 +93,7 @@ export type {
   DiscoveryChannelRanking,
   DiscoveryCycleSnapshot,
   DiscoveryGuildRanking,
+  DiscoveryScoreComponents,
   GuildDiscoveryResponse,
   GuildProjection,
   JuryCaseProjection,

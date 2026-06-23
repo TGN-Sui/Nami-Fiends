@@ -1,3 +1,13 @@
+import {
+  aggregateWeeklyChannelBoosts,
+  computeChannelModerationPenalty,
+  computeGuildModerationPenalty,
+  currentDiscoveryWeekId,
+  scoreChannelDiscovery,
+  scoreGuildDiscovery,
+  scoreOwnerBadges,
+  type DiscoveryScoreComponents,
+} from '../discovery-scoring.js';
 import type { ProjectionRegistry } from '../projection-registry.js';
 
 export interface DiscoveryChannelRanking {
@@ -11,6 +21,7 @@ export interface DiscoveryChannelRanking {
   week_id: number;
   rank: number;
   signals: string[];
+  score_components: DiscoveryScoreComponents;
 }
 
 export interface DiscoveryGuildRanking {
@@ -21,6 +32,7 @@ export interface DiscoveryGuildRanking {
   score: number;
   rank: number;
   signals: string[];
+  score_components: DiscoveryScoreComponents;
 }
 
 export interface DiscoveryCycleSnapshot {
@@ -28,11 +40,10 @@ export interface DiscoveryCycleSnapshot {
   generated_at_ms: number;
   channel_count: number;
   guild_count: number;
+  engine_version: string;
 }
 
-function currentWeekId(nowMs = Date.now()): number {
-  return Math.floor(nowMs / 604_800_000);
-}
+const DISCOVERY_ENGINE_VERSION = 'phase6-multi-signal-v1';
 
 function resolveWeekId(registry: ProjectionRegistry, override?: number): number {
   if (override !== undefined && Number.isFinite(override)) {
@@ -48,57 +59,60 @@ function resolveWeekId(registry: ProjectionRegistry, override?: number): number 
     return Math.max(...boostWeeks);
   }
 
-  return currentWeekId();
+  return currentDiscoveryWeekId();
+}
+
+function maxGuildMembersForOwner(registry: ProjectionRegistry, owner: string): number {
+  return registry.guilds
+    .getAll()
+    .filter((guild) => guild.owner === owner && guild.is_public)
+    .reduce((max, guild) => Math.max(max, guild.member_count), 0);
 }
 
 export function buildChannelDiscoveryRankings(
   registry: ProjectionRegistry,
-  options: { weekId?: number; limit?: number } = {}
+  options: { weekId?: number; limit?: number } = {},
 ): {
   cycle: DiscoveryCycleSnapshot;
   channels: DiscoveryChannelRanking[];
 } {
   const weekId = resolveWeekId(registry, options.weekId);
   const limit = options.limit ?? 50;
-  const boostByChannel = new Map<string, { power: number; count: number }>();
-
-  for (const entry of registry.boostHistory.getAll()) {
-    if (entry.week_id !== weekId) {
-      continue;
-    }
-
-    const current = boostByChannel.get(entry.channel_id) ?? { power: 0, count: 0 };
-
-    boostByChannel.set(entry.channel_id, {
-      power: current.power + entry.power,
-      count: current.count + 1,
-    });
-  }
+  const boostByChannel = aggregateWeeklyChannelBoosts(registry.boostHistory.getAll(), weekId);
+  const moderationRecords = registry.moderation.getAll();
+  const badgeEntries = registry.badgeHistory.getAll();
+  const nowMs = Date.now();
 
   const channels = registry.channels
     .getAll()
     .filter((channel) => channel.is_public)
     .map((channel) => {
-      const boost = boostByChannel.get(channel.id) ?? { power: 0, count: 0 };
-      const signals: string[] = [];
-
-      if (boost.power > 0) {
-        signals.push(`boost:${boost.power}`);
-      }
-
-      if (channel.is_verified) {
-        signals.push('verified');
-      }
-
-      if (channel.is_public) {
-        signals.push('public');
-      }
-
-      const score =
-        boost.power * 10 +
-        boost.count * 2 +
-        (channel.is_verified ? 50 : 0) +
-        (channel.is_public ? 10 : 0);
+      const boost = boostByChannel.get(channel.id) ?? {
+        power: 0,
+        count: 0,
+        unique_boosters: 0,
+        concentration_capped: false,
+      };
+      const badgeScore = scoreOwnerBadges(badgeEntries, channel.owner, {
+        issuer: 8,
+        minted: 3,
+        cap: 40,
+      });
+      const guildMemberCount = maxGuildMembersForOwner(registry, channel.owner);
+      const moderationPenalty = computeChannelModerationPenalty(
+        moderationRecords,
+        channel.id,
+        channel.owner,
+        nowMs,
+      );
+      const ranked = scoreChannelDiscovery({
+        boost,
+        isVerified: channel.is_verified,
+        isPublic: channel.is_public,
+        badgeScore,
+        guildMemberCount,
+        moderationPenalty,
+      });
 
       return {
         channel_id: channel.id,
@@ -107,10 +121,11 @@ export function buildChannelDiscoveryRankings(
         is_public: channel.is_public,
         boost_power: boost.power,
         boost_count: boost.count,
-        score,
+        score: ranked.score,
         week_id: weekId,
         rank: 0,
-        signals,
+        signals: ranked.signals,
+        score_components: ranked.score_components,
       } satisfies DiscoveryChannelRanking;
     })
     .sort((left, right) => right.score - left.score)
@@ -123,9 +138,10 @@ export function buildChannelDiscoveryRankings(
   return {
     cycle: {
       week_id: weekId,
-      generated_at_ms: Date.now(),
+      generated_at_ms: nowMs,
       channel_count: channels.length,
       guild_count: 0,
+      engine_version: DISCOVERY_ENGINE_VERSION,
     },
     channels,
   };
@@ -133,32 +149,45 @@ export function buildChannelDiscoveryRankings(
 
 export function buildGuildDiscoveryRankings(
   registry: ProjectionRegistry,
-  options: { limit?: number } = {}
+  options: { limit?: number } = {},
 ): {
   cycle: DiscoveryCycleSnapshot;
   guilds: DiscoveryGuildRanking[];
 } {
   const limit = options.limit ?? 50;
+  const moderationRecords = registry.moderation.getAll();
+  const badgeEntries = registry.badgeHistory.getAll();
+  const nowMs = Date.now();
 
   const guilds = registry.guilds
     .listPublicGuilds(limit * 2)
     .map((guild) => {
-      const signals: string[] = ['public'];
-
-      if (guild.member_count >= 8) {
-        signals.push('active-guild');
-      }
-
-      const score = guild.member_count * 5 + (guild.is_public ? 10 : 0);
+      const badgeScore = scoreOwnerBadges(badgeEntries, guild.owner, {
+        issuer: 4,
+        minted: 2,
+        cap: 24,
+      });
+      const moderationPenalty = computeGuildModerationPenalty(
+        moderationRecords,
+        guild.owner,
+        nowMs,
+      );
+      const ranked = scoreGuildDiscovery({
+        memberCount: guild.member_count,
+        isPublic: guild.is_public,
+        badgeScore,
+        moderationPenalty,
+      });
 
       return {
         guild_id: guild.id,
         owner: guild.owner,
         is_public: guild.is_public,
         member_count: guild.member_count,
-        score,
+        score: ranked.score,
         rank: 0,
-        signals,
+        signals: ranked.signals,
+        score_components: ranked.score_components,
       } satisfies DiscoveryGuildRanking;
     })
     .sort((left, right) => right.score - left.score)
@@ -171,9 +200,10 @@ export function buildGuildDiscoveryRankings(
   return {
     cycle: {
       week_id: resolveWeekId(registry),
-      generated_at_ms: Date.now(),
+      generated_at_ms: nowMs,
       channel_count: 0,
       guild_count: guilds.length,
+      engine_version: DISCOVERY_ENGINE_VERSION,
     },
     guilds,
   };

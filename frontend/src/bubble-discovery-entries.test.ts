@@ -100,4 +100,36 @@ describe('bubble-discovery-entries', () => {
     expect(entries[0]?.channel.id).toBe('beta');
     expect(entries[0]?.weeklyScale).toBeGreaterThan(entries[1]?.weeklyScale ?? 0);
   });
+
+  it('prefers indexed discovery scores over local boost power when provided', async () => {
+    const { boostChannel } = await import('./channel-boost-store.js');
+    const { buildGameBubbleDiscoveryEntries } = await import('./bubble-discovery-entries.js');
+
+    const alpha = createChannel('alpha', '@alpha');
+    const beta = createChannel('beta', '@beta');
+    const adventurer = {
+      id: 'm1',
+      surfaceType: 'member' as const,
+      name: 'Tester',
+      avatarSeed: 'TE',
+      signal: 'Green' as const,
+      tier: 'Adventurer' as const,
+      badge: 'Builder',
+    };
+
+    boostChannel('beta', adventurer);
+    boostChannel('beta', adventurer);
+    boostChannel('beta', adventurer);
+
+    const entries = buildGameBubbleDiscoveryEntries(
+      [alpha, beta],
+      10,
+      new Map([
+        ['alpha', 500],
+        ['beta', 120],
+      ]),
+    );
+
+    expect(entries[0]?.channel.id).toBe('alpha');
+  });
 });

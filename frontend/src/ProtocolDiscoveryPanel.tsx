@@ -21,7 +21,7 @@ export function ProtocolDiscoveryPanel(): ReactElement {
   return (
     <ProtocolPanelShell
       context={context}
-      description="Off-chain discovery rankings anchored by indexed boosts, verification, and guild activity."
+      description="Off-chain discovery rankings anchored by boosts, verification, badge quality, guild activity, and moderation health."
       owner={owner}
       requiresIndexer
       requiresOwner={false}
@@ -34,7 +34,13 @@ export function ProtocolDiscoveryPanel(): ReactElement {
       />
 
       {weekId !== undefined ? (
-        <p className="protocol-hint">Cycle week {weekId} · scores are MVP-weighted (boost-heavy).</p>
+        <p className="protocol-hint">
+          Cycle week {weekId}
+          {channelDiscovery?.cycle.engine_version
+            ? ` · engine ${channelDiscovery.cycle.engine_version}`
+            : ''}
+          .
+        </p>
       ) : null}
 
       <div className="protocol-moderation-grid">
@@ -50,7 +56,9 @@ export function ProtocolDiscoveryPanel(): ReactElement {
                     #{channel.rank} · {channel.channel_id.slice(0, 10)}…
                   </strong>
                   <p>
-                    Score {channel.score} · boost {channel.boost_power} ·{' '}
+                    Score {channel.score} · boost {channel.boost_power} · badges{' '}
+                    {channel.score_components?.badges ?? 0} · moderation{' '}
+                    {channel.score_components?.moderation ?? 0} ·{' '}
                     {channel.is_verified ? 'verified' : 'unverified'}
                   </p>
                 </li>
@@ -71,7 +79,9 @@ export function ProtocolDiscoveryPanel(): ReactElement {
                     #{guild.rank} · {guild.guild_id.slice(0, 10)}…
                   </strong>
                   <p>
-                    Score {guild.score} · {guild.member_count} members
+                    Score {guild.score} · {guild.member_count} members · badges{' '}
+                    {guild.score_components?.badges ?? 0} · moderation{' '}
+                    {guild.score_components?.moderation ?? 0}
                   </p>
                 </li>
               ))}

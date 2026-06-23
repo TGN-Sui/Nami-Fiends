@@ -517,18 +517,46 @@ On-chain data should provide trustworthy signals.
 
 ---
 
+# Phase 6 Ranking Engine (Shipped — v1)
+
+The receiving server computes weekly discovery rankings off-chain from indexed projections.
+
+**Engine:** `phase6-multi-signal-v1` (`backend/src/discovery-scoring.ts`, `discovery.service.ts`)
+
+**Channel score components:**
+
+| Signal | Weight / rule |
+| --- | --- |
+| Boost power | ×10 per weekly power point |
+| Boost count | ×2 per counted boost (after concentration cap) |
+| Verified channel | +50 |
+| Public channel | +10 |
+| Owner badge quality | +8 issuer / +3 minted badges (cap +40) |
+| Owner guild activity | +15 when a public guild has ≥8 members |
+| Moderation health | −5 recent warning, −12 active mute, −20 active channel ban, −100 active black passport |
+
+**Anti-abuse (v1):** each member may contribute at most **3 boosts per channel per weekly cycle**. Additional boosts are ignored and emit `boost-concentration-capped`.
+
+**Guild score components:** member count ×5, public +10, active guild (≥8 members) +20, owner badge quality (cap +24), owner moderation penalties.
+
+**API:** `GET /api/discovery/channels?limit=&weekId=` and `GET /api/discovery/guilds?limit=` return `score_components` for transparency.
+
+**Frontend:** Nami Hub crypto bubbles and Game Hub top tiles prefer live `score` from the indexer when connected; local boost power remains the offline fallback.
+
+---
+
 # Future Discovery Engine
 
 Future backend components may include:
 
-* Event indexer
-* Boost cycle processor
-* Badge quality analyzer
-* Channel ranking engine
-* Guild ranking engine
+* Event indexer — shipped (Phase 2)
+* Boost cycle processor — partial (weekly `week_id` aggregation)
+* Badge quality analyzer — partial (issuer vs minted weighting)
+* Channel ranking engine — shipped (v1)
+* Guild ranking engine — shipped (v1)
 * Event discovery engine
-* Moderation health analyzer
-* Anti-abuse detector
+* Moderation health analyzer — partial (penalty model)
+* Anti-abuse detector — partial (boost concentration cap)
 * Personalized recommendation service
 
 ---

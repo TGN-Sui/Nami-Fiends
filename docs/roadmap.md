@@ -518,22 +518,36 @@ Human step at go-live: register each public origin in Google OAuth console (see 
 Status:
 
 ```text
-Planned
+In progress — Phase 6.1 multi-signal ranking engine shipped (backend + Hub/Game Hub wiring)
+```
+
+Shipped (Phase 6.1):
+
+```text
+backend/src/discovery-scoring.ts — weighted boosts, verification, badge quality, guild activity, moderation penalties
+Per-owner per-channel boost concentration cap (3 boosts / cycle)
+GET /api/discovery/channels + /guilds return score_components + engine_version
+Nami Hub + Game Hub bubble/tile ordering prefers live discovery scores when indexer is connected
+ProtocolDiscoveryPanel shows score breakdown hints
 ```
 
 Discovery may use:
 
 ```text
-Boosts
-Reputation
-Badge quality
-Conduct health
-Moderation health
-Channel verification
-Guild activity
-Squad activity
-Profile activity
-Developer verification
+Boosts                    — shipped (weekly cycle, concentration cap)
+Badge quality             — shipped (issuer-weighted owner badges)
+Channel verification      — shipped
+Guild activity            — shipped (owner-linked public guild size)
+Moderation health         — shipped (mutes, bans, warnings, black passport penalties)
+Reputation                — planned (member-quality weighting on boost signal)
+Conduct health            — planned (channel conduct mix analytics)
+Squad activity            — planned
+Profile activity          — planned
+Developer verification    — planned (studio trust beyond channel.is_verified)
+Event discovery boosts    — planned
+Discovery categories      — planned (Rising, Cozy, Competitive, etc.)
+Anti-abuse anomaly detection — planned
+Personalized discovery    — planned
 ```
 
 Discovery should be mostly off-chain and anchored by on-chain signals.

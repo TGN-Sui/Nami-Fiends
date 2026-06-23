@@ -216,7 +216,10 @@ import {
   useMemberFeedAbuseReports,
   useOfficialFeedAbuseAlerts,
 } from './member-feed-abuse-store.js';
-import { buildGameBubbleDiscoveryEntries } from './bubble-discovery-entries.js';
+import {
+  buildGameBubbleDiscoveryEntries,
+  discoveryScoreLookupFromDirectory,
+} from './bubble-discovery-entries.js';
 import {
   buildGenreBubbleEntries,
   genreOfficialChats,
@@ -1189,7 +1192,11 @@ function NamiHub(props: {
   const canCurateHub = isOfficialOwner(owner);
   const mediaVersion = useChannelOwnerMediaVersion();
   const promotions = useChannelOwnerPromotionsState();
-  const { channels: directoryChannels } = useChannelDirectory(50);
+  const { items: directoryItems, channels: directoryChannels } = useChannelDirectory(50);
+  const discoveryScoreByChannelId = useMemo(
+    () => discoveryScoreLookupFromDirectory(directoryItems),
+    [directoryItems],
+  );
   const uniqueDirectoryChannels = useMemo(
     () => dedupeChannelsByIdentity(directoryChannels),
     [directoryChannels],
@@ -1246,7 +1253,12 @@ function NamiHub(props: {
   const partnerBannerCover = resolvePartnerCarouselCoverUrl(partnerTicket);
 
   const sortedGrowthChannels = [...uniqueDirectoryChannels].sort((left, right) => {
-    return right.subscribers - left.subscribers;
+    const leftScore =
+      discoveryScoreByChannelId.get(left.id) ?? left.subscribers;
+    const rightScore =
+      discoveryScoreByChannelId.get(right.id) ?? right.subscribers;
+
+    return rightScore - leftScore;
   });
 
   const growthLineup = resolveCommunityGrowthLineup({
@@ -1266,7 +1278,11 @@ function NamiHub(props: {
 
   const topCommunityBubbles =
     sortedGrowthChannels.length > 0
-      ? buildGameBubbleDiscoveryEntries(sortedGrowthChannels, bubbleLeaderboardSize)
+      ? buildGameBubbleDiscoveryEntries(
+          sortedGrowthChannels,
+          bubbleLeaderboardSize,
+          discoveryScoreByChannelId.size > 0 ? discoveryScoreByChannelId : undefined,
+        )
       : buildGameBubbleDiscoveryEntries([props.selectedChannel], 1);
 
   const spotlightEligibleMembers = directoryMembers.filter((member) => {
@@ -1712,7 +1728,11 @@ function GameHub(props: {
   const ownerProfileVersion = useChannelOwnerProfileVersion();
   const genreChatActivityVersion = useGenreChatActivityVersion();
   const selfMember = useSelfMember();
-  const { channels: directoryChannels } = useChannelDirectory(50);
+  const { items: gameHubDirectoryItems, channels: directoryChannels } = useChannelDirectory(50);
+  const gameHubDiscoveryScores = useMemo(
+    () => discoveryScoreLookupFromDirectory(gameHubDirectoryItems),
+    [gameHubDirectoryItems],
+  );
   const uniqueDirectoryChannels = useMemo(
     () => dedupeChannelsByIdentity(directoryChannels).map(withChannelOwnerProfile),
     [directoryChannels, ownerProfileVersion],
@@ -1741,7 +1761,14 @@ function GameHub(props: {
   );
   const partnerChannels = uniqueDirectoryChannels.filter((channel) => channel.partner);
   const topChannels = [...uniqueDirectoryChannels]
-    .sort((left, right) => right.subscribers - left.subscribers)
+    .sort((left, right) => {
+      const leftScore =
+        gameHubDiscoveryScores.get(left.id) ?? left.subscribers;
+      const rightScore =
+        gameHubDiscoveryScores.get(right.id) ?? right.subscribers;
+
+      return rightScore - leftScore;
+    })
     .slice(0, 4);
 
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');

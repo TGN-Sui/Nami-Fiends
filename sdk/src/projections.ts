@@ -174,6 +174,15 @@ export interface ChannelAccessProjection {
   updated_at_ms: string | null;
 }
 
+export interface DiscoveryScoreComponents {
+  boost: number;
+  verification: number;
+  badges: number;
+  guild: number;
+  moderation: number;
+  base: number;
+}
+
 export interface DiscoveryChannelRanking {
   channel_id: string;
   owner: string;
@@ -185,6 +194,7 @@ export interface DiscoveryChannelRanking {
   week_id: number;
   rank: number;
   signals: string[];
+  score_components: DiscoveryScoreComponents;
 }
 
 export interface DiscoveryGuildRanking {
@@ -195,6 +205,7 @@ export interface DiscoveryGuildRanking {
   score: number;
   rank: number;
   signals: string[];
+  score_components: DiscoveryScoreComponents;
 }
 
 export interface DiscoveryCycleSnapshot {
@@ -202,6 +213,7 @@ export interface DiscoveryCycleSnapshot {
   generated_at_ms: number;
   channel_count: number;
   guild_count: number;
+  engine_version?: string;
 }
 
 export interface ChannelDiscoveryResponse {
