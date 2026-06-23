@@ -12,6 +12,7 @@ import {
   isMembershipSubscriptionApiAvailable,
   syncMembershipSubscriptionToBackend,
 } from './membership-subscriptions-api.js';
+import { hasTestLaunchTesterEliteAccess } from './test-launch-tester-access.js';
 import { isXVerificationEligibleForAdventurerClaim } from './x-verification-store.js';
 import { type NamiMember } from './uiMockData.js';
 
@@ -358,6 +359,10 @@ export function membershipCheckoutSelectionLabel(
 export function effectiveMemberTier(state: MembershipPlanState = readMembershipPlanState()): PaidMembershipTier {
   if (hasComplimentaryMembershipAccess()) {
     return COMPLIMENTARY_MEMBERSHIP_TIER;
+  }
+
+  if (hasTestLaunchTesterEliteAccess()) {
+    return 'Elite';
   }
 
   if (state.status === 'pending-upgrade' && state.pendingTier) {

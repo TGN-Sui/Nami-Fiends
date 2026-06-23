@@ -7,6 +7,7 @@ import {
 import { isOfficialOwner, resolveNamiAdminRole } from './nami-capabilities.js';
 import { applyMembershipTierToMember, effectiveMemberTier } from './membership-plans-store.js';
 import { hasComplimentaryMembershipAccess } from './official-membership-access.js';
+import { hasTestLaunchTesterEliteAccess } from './test-launch-tester-access.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { withMemberAvatar } from './member-avatar-store.js';
@@ -40,6 +41,10 @@ export function memberFeatureTier(member: NamiMember): NamiMember['tier'] {
     return effectiveMemberTier();
   }
 
+  if (hasTestLaunchTesterEliteAccess()) {
+    return 'Elite';
+  }
+
   return member.tier;
 }
 
@@ -49,6 +54,10 @@ export function isOfficialOwnerSelfMember(member: NamiMember = getSelfMember()):
 
 export function memberHasEliteAccess(member: NamiMember): boolean {
   if (member.id === SELF_MEMBER_ID && hasComplimentaryMembershipAccess(readSignedInOwner())) {
+    return true;
+  }
+
+  if (member.id === SELF_MEMBER_ID && hasTestLaunchTesterEliteAccess()) {
     return true;
   }
 
@@ -188,6 +197,10 @@ export function canSendOfficialChatMessages(): boolean {
 
 export function isProOrHigherTier(member: NamiMember): boolean {
   if (member.id === SELF_MEMBER_ID && hasComplimentaryMembershipAccess(readSignedInOwner())) {
+    return true;
+  }
+
+  if (member.id === SELF_MEMBER_ID && hasTestLaunchTesterEliteAccess()) {
     return true;
   }
 
