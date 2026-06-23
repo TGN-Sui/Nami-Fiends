@@ -239,13 +239,28 @@ export async function fetchChannelAccessPolicies(
 
 export async function fetchDiscoveryChannels(
   context: ProtocolContext,
-  limit = 20
+  limit = 20,
+  category?: string,
 ): Promise<ChannelDiscoveryResponse | null> {
   if (!context.indexer) {
     return null;
   }
 
-  return context.indexer.getDiscoveryChannels(limit);
+  const requestOptions: { category?: string } = {};
+
+  if (category) {
+    requestOptions.category = category;
+  }
+
+  return context.indexer.getDiscoveryChannels(limit, requestOptions);
+}
+
+export async function fetchDiscoveryCategories(context: ProtocolContext) {
+  if (!context.indexer) {
+    return null;
+  }
+
+  return context.indexer.getDiscoveryCategories();
 }
 
 export async function fetchDiscoveryGuilds(
@@ -267,9 +282,13 @@ export type {
   ChannelCardView,
   ChannelDiscoveryResponse,
   ConductProtocolView,
+  DiscoveryCategoriesResponse,
+  DiscoveryCategoryDefinition,
+  DiscoveryChannelCategoryId,
   DiscoveryChannelRanking,
   DiscoveryCycleSnapshot,
   DiscoveryGuildRanking,
+  DiscoveryScoreComponents,
   GuildDiscoveryResponse,
   CustomizationProtocolView,
   GuildCardView,

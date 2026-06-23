@@ -163,13 +163,25 @@ export function subscribeToRecoveryProjections(
 export function subscribeToDiscoveryChannelRankings(
   indexer: NamiIndexerClient,
   onData: (snapshot: IndexerPollSnapshot<ChannelDiscoveryResponse>) => void,
-  options?: IndexerPollOptions & { limit?: number; weekId?: number }
+  options?: IndexerPollOptions & {
+    limit?: number;
+    weekId?: number;
+    category?: string;
+  }
 ): IndexerUnsubscribe {
   const limit = options?.limit ?? 20;
-  const weekId = options?.weekId;
+  const requestOptions: { weekId?: number; category?: string } = {};
+
+  if (options?.weekId !== undefined) {
+    requestOptions.weekId = options.weekId;
+  }
+
+  if (options?.category) {
+    requestOptions.category = options.category;
+  }
 
   return pollIndexer(
-    () => indexer.getDiscoveryChannels(limit, weekId),
+    () => indexer.getDiscoveryChannels(limit, requestOptions),
     onData,
     options
   );

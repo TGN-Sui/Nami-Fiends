@@ -164,10 +164,19 @@ export function useSquadCardsQuery() {
   return useProtocolQuery('squads', fetchSquadCards, { requiresChain: true });
 }
 
-export function useDiscoveryChannelsQuery(limit = 12) {
-  return useProtocolIndexerQuery('discovery-channels', (context) =>
-    fetchDiscoveryChannels(context, limit)
+export function useDiscoveryChannelsQuery(limit = 12, category?: string) {
+  return useProtocolIndexerQuery(
+    `discovery-channels:${category ?? 'featured'}:${limit}`,
+    (context) => fetchDiscoveryChannels(context, limit, category),
   );
+}
+
+export function useDiscoveryCategoriesQuery() {
+  return useProtocolIndexerQuery('discovery-categories', async (context) => {
+    const { fetchDiscoveryCategories } = await import('./protocol.js');
+
+    return fetchDiscoveryCategories(context);
+  });
 }
 
 export function useDiscoveryGuildsQuery(limit = 8) {

@@ -10,12 +10,17 @@ function discoveryRanking(
 ): DiscoveryChannelRanking {
   return {
     ...partial,
+    rising_delta: partial.rising_delta ?? 0,
     score_components: partial.score_components ?? {
       boost: partial.boost_power * 10,
       verification: partial.is_verified ? 50 : 0,
       badges: 0,
       guild: 0,
       moderation: 0,
+      reputation: 0,
+      squad: 0,
+      profile: 0,
+      anomaly: 0,
       base: partial.is_public ? 10 : 0,
     },
   };

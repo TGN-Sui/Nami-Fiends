@@ -58,6 +58,7 @@ import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
   buildGuildDiscoveryRankings,
+  listDiscoveryChannelCategories,
 } from './services/discovery.service.js';
 import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
@@ -843,10 +844,11 @@ const routes: Route[] = [
       const url = new URL(request.url ?? '/', 'http://localhost');
       const limit = Number(url.searchParams.get('limit') ?? '50');
       const weekId = url.searchParams.get('weekId');
+      const category = url.searchParams.get('category');
       const parsedWeekId =
         weekId !== null && weekId.trim() !== '' ? Number(weekId) : undefined;
 
-      const rankingOptions: { limit?: number; weekId?: number } = {
+      const rankingOptions: { limit?: number; weekId?: number; category?: string } = {
         limit: Number.isFinite(limit) ? limit : 50,
       };
 
@@ -854,9 +856,21 @@ const routes: Route[] = [
         rankingOptions.weekId = parsedWeekId;
       }
 
+      if (category) {
+        rankingOptions.category = category;
+      }
+
       const result = buildChannelDiscoveryRankings(registry, rankingOptions);
 
       sendJson(response, 200, result);
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/discovery\/categories$/,
+    paramNames: [],
+    handler: (_registry, _request, response) => {
+      sendJson(response, 200, { categories: listDiscoveryChannelCategories() });
     },
   },
   {

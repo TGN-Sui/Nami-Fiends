@@ -521,7 +521,7 @@ On-chain data should provide trustworthy signals.
 
 The receiving server computes weekly discovery rankings off-chain from indexed projections.
 
-**Engine:** `phase6-multi-signal-v1` (`backend/src/discovery-scoring.ts`, `discovery.service.ts`)
+**Engine:** `phase6-complete-v2` (`backend/src/discovery-scoring.ts`, `discovery-categories.ts`, `discovery.service.ts`)
 
 **Channel score components:**
 
@@ -534,14 +534,29 @@ The receiving server computes weekly discovery rankings off-chain from indexed p
 | Owner badge quality | +8 issuer / +3 minted badges (cap +40) |
 | Owner guild activity | +15 when a public guild has ≥8 members |
 | Moderation health | −5 recent warning, −12 active mute, −20 active channel ban, −100 active black passport |
+| Conduct health | +8 Green owner, +4 Orange, +2 Red; Black owners excluded |
+| Squad activity | +2 per sponsored squad member (cap +16) |
+| Public profile | +10 when owner profile is public |
+| Reputation-weighted boosts | Booster passport reputation + membership tier scale raw boost power |
+| Boost anomaly | −15 when one booster contributes >60% weighted power |
 
 **Anti-abuse (v1):** each member may contribute at most **3 boosts per channel per weekly cycle**. Additional boosts are ignored and emit `boost-concentration-capped`.
 
-**Guild score components:** member count ×5, public +10, active guild (≥8 members) +20, owner badge quality (cap +24), owner moderation penalties.
+**Guild score components:** member count ×5, public +10, active guild (≥8 members) +20, owner badge quality (cap +24), squad/profile signals, owner moderation penalties.
 
-**API:** `GET /api/discovery/channels?limit=&weekId=` and `GET /api/discovery/guilds?limit=` return `score_components` for transparency.
+**Categories:** `featured`, `top_boosted`, `rising`, `verified`, `new_player_friendly`, `guild_spotlight`, `badge_campaigns`, `cozy`, `competitive`.
 
-**Frontend:** Nami Hub crypto bubbles and Game Hub top tiles prefer live `score` from the indexer when connected; local boost power remains the offline fallback.
+**API:**
+
+```text
+GET /api/discovery/categories
+GET /api/discovery/channels?limit=&weekId=&category=
+GET /api/discovery/guilds?limit=
+```
+
+Responses return `score_components` for transparency.
+
+**Frontend:** Nami Hub crypto bubbles and Game Hub top tiles prefer live `score` from the indexer when connected; local boost power remains the offline fallback. Settings → Discovery panel exposes category tabs.
 
 ---
 

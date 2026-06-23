@@ -15018,6 +15018,29 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin-top: 1rem;
 }
 
+.protocol-discovery-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.protocol-discovery-category-tab {
+  border: 1px solid rgba(120, 170, 255, 0.22);
+  background: rgba(8, 14, 28, 0.55);
+  color: rgba(210, 230, 255, 0.88);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.protocol-discovery-category-tab.is-active {
+  border-color: rgba(120, 220, 255, 0.55);
+  background: rgba(36, 92, 160, 0.35);
+  color: #f4fbff;
+}
+
 .protocol-moderation-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

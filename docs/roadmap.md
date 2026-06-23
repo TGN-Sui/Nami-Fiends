@@ -518,36 +518,32 @@ Human step at go-live: register each public origin in Google OAuth console (see 
 Status:
 
 ```text
-In progress — Phase 6.1 multi-signal ranking engine shipped (backend + Hub/Game Hub wiring)
+Complete (2026-06-22) — phase6-complete-v2 engine + categories shipped
 ```
 
-Shipped (Phase 6.1):
+Shipped:
 
 ```text
-backend/src/discovery-scoring.ts — weighted boosts, verification, badge quality, guild activity, moderation penalties
+backend/src/discovery-scoring.ts — multi-signal channel + guild scoring
+backend/src/discovery-categories.ts — featured, top_boosted, rising, verified, new_player_friendly, guild_spotlight, badge_campaigns, cozy, competitive
+Reputation-weighted boost power (booster passport reputation + membership tier)
+Conduct health scoring (Green/Orange/Red; Black excluded)
+Squad sponsorship + public profile activity signals
+Boost anomaly penalty when one booster dominates >60% weighted power
 Per-owner per-channel boost concentration cap (3 boosts / cycle)
-GET /api/discovery/channels + /guilds return score_components + engine_version
-Nami Hub + Game Hub bubble/tile ordering prefers live discovery scores when indexer is connected
-ProtocolDiscoveryPanel shows score breakdown hints
+GET /api/discovery/channels?category=&weekId= + /guilds + /categories
+score_components transparency (boost, verification, badges, guild, moderation, reputation, squad, profile, anomaly)
+Nami Hub + Game Hub ordering prefers live discovery scores when indexer is connected
+ProtocolDiscoveryPanel category tabs + score breakdown
 ```
 
-Discovery may use:
+Deferred to post-MVP:
 
 ```text
-Boosts                    — shipped (weekly cycle, concentration cap)
-Badge quality             — shipped (issuer-weighted owner badges)
-Channel verification      — shipped
-Guild activity            — shipped (owner-linked public guild size)
-Moderation health         — shipped (mutes, bans, warnings, black passport penalties)
-Reputation                — planned (member-quality weighting on boost signal)
-Conduct health            — planned (channel conduct mix analytics)
-Squad activity            — planned
-Profile activity          — planned
-Developer verification    — planned (studio trust beyond channel.is_verified)
-Event discovery boosts    — planned
-Discovery categories      — planned (Rising, Cozy, Competitive, etc.)
-Anti-abuse anomaly detection — planned
-Personalized discovery    — planned
+Event discovery boosts (needs backend event projection sync)
+Developer verification beyond channel.is_verified flag
+Personalized per-member discovery recommendations
+Full anomaly detection + human review queue
 ```
 
 Discovery should be mostly off-chain and anchored by on-chain signals.

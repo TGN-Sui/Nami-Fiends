@@ -324,16 +324,27 @@ export class NamiIndexerClient {
     return body.entries;
   }
 
-  async getDiscoveryChannels(limit = 20, weekId?: number): Promise<ChannelDiscoveryResponse> {
+  async getDiscoveryChannels(
+    limit = 20,
+    options: { weekId?: number; category?: string } = {},
+  ): Promise<ChannelDiscoveryResponse> {
     const params = new URLSearchParams({ limit: String(limit) });
 
-    if (weekId !== undefined) {
-      params.set('weekId', String(weekId));
+    if (options.weekId !== undefined) {
+      params.set('weekId', String(options.weekId));
+    }
+
+    if (options.category) {
+      params.set('category', options.category);
     }
 
     return fetchJson<ChannelDiscoveryResponse>(
       `${this.baseUrl}/api/discovery/channels?${params.toString()}`
     );
+  }
+
+  async getDiscoveryCategories(): Promise<import('./projections.js').DiscoveryCategoriesResponse> {
+    return fetchJson(`${this.baseUrl}/api/discovery/categories`);
   }
 
   async getDiscoveryGuilds(limit = 20): Promise<GuildDiscoveryResponse> {

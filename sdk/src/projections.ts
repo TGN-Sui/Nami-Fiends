@@ -180,7 +180,32 @@ export interface DiscoveryScoreComponents {
   badges: number;
   guild: number;
   moderation: number;
+  reputation: number;
+  squad: number;
+  profile: number;
+  anomaly: number;
   base: number;
+}
+
+export type DiscoveryChannelCategoryId =
+  | 'featured'
+  | 'top_boosted'
+  | 'rising'
+  | 'verified'
+  | 'new_player_friendly'
+  | 'guild_spotlight'
+  | 'badge_campaigns'
+  | 'cozy'
+  | 'competitive';
+
+export interface DiscoveryCategoryDefinition {
+  id: DiscoveryChannelCategoryId;
+  label: string;
+  description: string;
+}
+
+export interface DiscoveryCategoriesResponse {
+  categories: DiscoveryCategoryDefinition[];
 }
 
 export interface DiscoveryChannelRanking {
@@ -190,6 +215,7 @@ export interface DiscoveryChannelRanking {
   is_public: boolean;
   boost_power: number;
   boost_count: number;
+  rising_delta: number;
   score: number;
   week_id: number;
   rank: number;
@@ -214,6 +240,7 @@ export interface DiscoveryCycleSnapshot {
   channel_count: number;
   guild_count: number;
   engine_version?: string;
+  category?: DiscoveryChannelCategoryId;
 }
 
 export interface ChannelDiscoveryResponse {

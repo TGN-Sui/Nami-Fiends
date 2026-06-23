@@ -227,19 +227,18 @@ Phase 7 is complete. Phase 8 entry and game onboarding surfaces are shipped. Own
 
 Membership checkout, subscription state, avatar/cover/logo uploads, streaming presence, and directory surfaces sync through the receiving server when `VITE_NAMI_INDEXER_URL` is set, with fixture fallback for offline or empty discovery cycles.
 
-## Phase 6 — Discovery Layer (UI-D26, in progress)
+## Phase 6 — Discovery Layer (UI-D26, complete)
 
 | Slice | Status | Result |
 | --- | --- | --- |
-| UI-D26.1 | Complete | Multi-signal discovery engine (`discovery-scoring.ts`, `phase6-multi-signal-v1`). |
+| UI-D26.1 | Complete | Multi-signal discovery engine (`discovery-scoring.ts`, `phase6-complete-v2`). |
 | UI-D26.2 | Complete | Hub bubbles + Game Hub top tiles prefer live indexer `score` with local boost fallback. |
-| UI-D26.3 | Planned | Discovery categories (Rising, Event Spotlight, etc.). |
-| UI-D26.4 | Planned | Reputation-weighted boost signal + conduct mix analytics. |
+| UI-D26.3 | Complete | Nine discovery categories + `GET /api/discovery/categories`; Settings panel tabs. |
+| UI-D26.4 | Complete | Reputation-weighted boosts, conduct/squad/profile signals, boost anomaly penalty. |
 
 **Recommended next lane:**
 
-1. Phase 6.2 — discovery categories and event spotlight boosts.
-2. Backend persistence for submissions (replace localStorage queues for multi-device officials review).
+1. Backend persistence for submissions (replace localStorage queues for multi-device officials review).
 3. Testnet deployment and launch ops (security review, moderation dashboards, analytics).
 4. Extend Walrus-backed media references when storage proofs ship.
 
