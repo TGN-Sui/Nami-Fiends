@@ -144,7 +144,7 @@ export async function saveOwnerAssetDrafts(actorOwner: string | null): Promise<b
     ...snapshot,
     dirty: false,
     drafts: readAllOwnerAssets(),
-    notice: 'Platform artwork saved. Testers will see it after the next page load.',
+    notice: 'Platform artwork saved to the receiving server. Testers will see it after refresh.',
     error: null,
   };
 

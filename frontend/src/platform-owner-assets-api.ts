@@ -54,9 +54,10 @@ export async function fetchPlatformOwnerAssets(): Promise<PlatformOwnerAssetsPro
 }
 
 export async function syncPlatformOwnerAssets(
-  assets: Record<string, string>
+  assets: Record<string, string>,
+  ownerOverride?: string | null
 ): Promise<PlatformOwnerAssetsProjection> {
-  const owner = readWalletAuthOwner();
+  const owner = ownerOverride ?? readWalletAuthOwner();
 
   if (!owner?.startsWith('0x')) {
     throw new Error('Platform owner assets sync requires a connected wallet or zkLogin session.');

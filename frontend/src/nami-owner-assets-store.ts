@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
 import { isOfficialOwner } from './nami-capabilities.js';
+import { isPlatformOwnerAssetsApiAvailable } from './platform-owner-assets-api.js';
 import {
   hydratePlatformOwnerAssetsFromServer,
+  platformOwnerAssetsSyncErrorMessage,
+  readLastPlatformOwnerAssetsSyncError,
   syncPlatformOwnerAssetsToServer,
 } from './platform-owner-assets-sync.js';
 import {
@@ -297,7 +300,7 @@ export function validateOwnerAssetFile(
   return null;
 }
 
-export type OwnerAssetSaveError = 'unauthorized' | 'quota' | 'storage';
+export type OwnerAssetSaveError = 'unauthorized' | 'quota' | 'storage' | 'sync';
 
 function classifyPersistenceError(error: unknown): OwnerAssetSaveError {
   if (
@@ -319,6 +322,12 @@ export function ownerAssetSaveErrorMessage(error: OwnerAssetSaveError): string {
     return 'Artwork storage is full. Remove unused slots in Visual Assets, or upload a smaller image.';
   }
 
+  if (error === 'sync') {
+    return platformOwnerAssetsSyncErrorMessage(
+      readLastPlatformOwnerAssetsSyncError() ?? 'request_failed'
+    );
+  }
+
   return 'Could not save artwork. Try again in a moment.';
 }
 
@@ -333,11 +342,17 @@ export async function saveOwnerAssets(
   try {
     await persistOwnerAssets(assets);
     emit();
-    void syncPlatformOwnerAssetsToServer(assets).then((synced) => {
-      if (synced) {
-        emit();
-      }
-    });
+
+    const syncResult = await syncPlatformOwnerAssetsToServer(assets, actorOwner);
+
+    if (!syncResult.ok && isPlatformOwnerAssetsApiAvailable()) {
+      return 'sync';
+    }
+
+    if (syncResult.ok) {
+      emit();
+    }
+
     return null;
   } catch (error) {
     return classifyPersistenceError(error);
