@@ -16473,29 +16473,16 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   align-self: stretch;
   gap: var(--sidebar-rail-section-gap);
   width: 100%;
   min-height: 0;
-  max-height: 100%;
+  max-height: none;
   margin-top: var(--sidebar-rail-section-gap);
   overflow: visible;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(117, 215, 255, 0.28) transparent;
   transform: none;
   pointer-events: none;
-}
-
-.sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(117, 215, 255, 0.28);
 }
 
 .sidebar.is-icon-rail .sidebar-icon-rail-controls > * {
@@ -16507,8 +16494,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   align-self: stretch;
-  min-height: 0;
   overflow: visible;
 }
 
@@ -16583,16 +16570,10 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   text-align: center;
 }
 
-.sidebar.is-icon-rail .sidebar-nav > button,
-.sidebar.is-icon-rail .sidebar-nav > button:hover,
-.sidebar.is-icon-rail .sidebar-nav > button:focus-visible,
-.sidebar.is-icon-rail .sidebar-nav > button.is-active,
-.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle,
-.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:hover,
-.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:focus-visible,
-.sidebar.is-icon-rail .sidebar-radio-toggle,
-.sidebar.is-icon-rail .sidebar-radio-toggle:hover,
-.sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible {
+.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle),
+.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle):hover,
+.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle):focus-visible,
+.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle).is-active {
   position: relative;
   display: flex;
   align-items: center;
@@ -19324,11 +19305,8 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   gap: var(--sidebar-rail-icon-gap);
   justify-items: center;
   width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-x: visible;
-  overflow-y: auto;
-  max-height: min(720px, calc(100dvh - 360px));
+  flex: 0 0 auto;
+  overflow: visible;
   opacity: 1;
   pointer-events: auto;
   transition:
@@ -19424,6 +19402,26 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   transform-origin: center center;
 }
 
+@media (max-height: 720px) {
+  .sidebar.is-icon-rail .sidebar-icon-rail-controls {
+    min-height: 0;
+    max-height: calc(100dvh - 280px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(117, 215, 255, 0.28) transparent;
+  }
+
+  .sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .sidebar.is-icon-rail .sidebar-icon-rail-controls::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(117, 215, 255, 0.28);
+  }
+}
+
 .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button:focus-visible .nav-icon,
 .sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary > .sidebar-radio-toggle:hover .nav-icon,
@@ -19486,7 +19484,11 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 }
 
 .sidebar.is-icon-rail .sidebar-radio-block.sidebar-icon-rail-secondary {
+  display: grid;
   justify-items: center;
+  width: 100%;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .sidebar.is-icon-rail.is-vertically-collapsed .sidebar-icon-rail-secondary {
@@ -19535,7 +19537,7 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   max-width: var(--sidebar-glyph-size);
   min-height: calc(var(--sidebar-glyph-size) * 0.72);
   height: calc(var(--sidebar-glyph-size) * 0.72);
-  margin: calc(var(--sidebar-rail-icon-gap) * 0.1) 0 calc(var(--sidebar-rail-icon-gap) * 0.05);
+  margin: calc(var(--sidebar-rail-icon-gap) * 0.1) auto calc(var(--sidebar-rail-icon-gap) * 0.05);
   padding: 0;
   border: none !important;
   background: transparent !important;
