@@ -49,6 +49,11 @@ import {
   handlePlatformOwnerAssetsOptions,
   handlePlatformOwnerAssetsSync,
 } from './routes/platform-owner-assets.routes.js';
+import {
+  handleGlobalChatMessagesGet,
+  handleGlobalChatMessagesOptions,
+  handleGlobalChatMessagesPost,
+} from './routes/global-chat-messages.routes.js';
 import type { TimelineCategory } from './services/passport-timeline.service.js';
 import {
   buildChannelDiscoveryRankings,
@@ -1046,6 +1051,26 @@ const routes: Route[] = [
     pattern: /^\/api\/platform\/owner-assets\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handlePlatformOwnerAssetsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/global-chats\/([^/]+)\/messages$/,
+    paramNames: ['roomId'],
+    handler: (_registry, request, response) => handleGlobalChatMessagesOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/global-chats\/([^/]+)\/messages$/,
+    paramNames: ['roomId'],
+    handler: (_registry, request, response, params) =>
+      handleGlobalChatMessagesGet(request, response, params.roomId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/global-chats\/([^/]+)\/messages$/,
+    paramNames: ['roomId'],
+    handler: (_registry, request, response, params) =>
+      handleGlobalChatMessagesPost(request, response, params.roomId ?? ''),
   },
 ];
 

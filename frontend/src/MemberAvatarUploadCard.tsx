@@ -15,6 +15,8 @@ import {
 import { isPreferencesApiAvailable, preferencesStorageHint } from './preferences-sync.js';
 import { useProtocolOwner } from './wallet.js';
 
+export const MEMBER_AVATAR_UPLOAD_CARD_ID = 'member-avatar-upload-card';
+
 export function MemberAvatarUploadCard(): ReactElement {
   const member = useSelfMember();
   const { owner } = useProtocolOwner();
@@ -80,7 +82,10 @@ export function MemberAvatarUploadCard(): ReactElement {
   }
 
   return (
-    <article className="media-upload-prep-card member-avatar-upload-card" id="member-avatar-upload">
+    <article
+      className="media-upload-prep-card member-avatar-upload-card"
+      id={MEMBER_AVATAR_UPLOAD_CARD_ID}
+    >
       <div className="media-upload-prep-copy">
         <span className="media-upload-prep-eyebrow">My Profile media</span>
         <strong>Profile avatar</strong>

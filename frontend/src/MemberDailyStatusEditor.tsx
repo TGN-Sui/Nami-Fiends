@@ -56,9 +56,21 @@ export function MemberDailyStatusSettingsField(): ReactElement {
 
 export function MemberDailyStatusQuickEdit(props: {
   onOpenSettings?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }): ReactElement {
   const savedProfile = useSelfProfileEdits();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = props.open ?? internalOpen;
+
+  function setOpen(nextOpen: boolean): void {
+    if (props.onOpenChange) {
+      props.onOpenChange(nextOpen);
+      return;
+    }
+
+    setInternalOpen(nextOpen);
+  }
   const [draft, setDraft] = useState(savedProfile.dailyStatus);
   const [savedNotice, setSavedNotice] = useState(false);
 
@@ -80,7 +92,7 @@ export function MemberDailyStatusQuickEdit(props: {
       <button
         className="nami-surface-button member-daily-status-quick-button"
         onClick={() => {
-          setOpen((value) => !value);
+          setOpen(!open);
           setSavedNotice(false);
         }}
         type="button"

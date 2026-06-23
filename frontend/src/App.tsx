@@ -311,6 +311,7 @@ import {
 } from './member-avatar.js';
 import { useMemberStreamingOnline, useSelfStreamingOnline } from './member-online-store.js';
 import {
+  PROFILE_EDIT_PANEL_ID,
   requestProfileEditFocus,
   useSelfMember,
 } from './member-avatar-store.js';
@@ -4420,6 +4421,7 @@ function UserProfileScreen(props: {
             </article>
           )
         ) : (
+          <>
           <MemberProfileShowcase
             guildAffiliations={profileGuildAffiliations}
             isStreamingOnline={selfStreamingOnline}
@@ -4427,6 +4429,24 @@ function UserProfileScreen(props: {
             mode="self"
             squadAffiliations={profileSquadAffiliations}
             subscriptions={mySubscriptions}
+            onEditPhoto={() => {
+              requestProfileEditFocus();
+              window.requestAnimationFrame(() => {
+                document.getElementById(PROFILE_EDIT_PANEL_ID)?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                });
+              });
+            }}
+            onOpenFullProfileEditor={() => {
+              requestProfileEditFocus();
+              window.requestAnimationFrame(() => {
+                document.getElementById(PROFILE_EDIT_PANEL_ID)?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                });
+              });
+            }}
             onOpenStatusSettings={() => {
               requestSettingsSection('account');
               props.onNavigate?.('settings');
@@ -4455,15 +4475,16 @@ function UserProfileScreen(props: {
                 </details>
                 <details className="panel member-profile-collapsible-panel">
                   <summary>
-                    <strong>Membership & Profile</strong>
-                    <small>Plans and identity edits</small>
+                    <strong>Membership</strong>
+                    <small>Plans and upgrades</small>
                   </summary>
                   <MembershipAccessCard />
-                  <ProfileEditPanel />
                 </details>
               </>
             }
           />
+          <ProfileEditPanel />
+          </>
         )}
       </section>
 

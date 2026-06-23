@@ -16033,6 +16033,38 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   opacity: 0;
 }
 
+.member-profile-identity-toolbar {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(117, 215, 255, 0.2);
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.92), rgba(4, 8, 14, 0.82));
+}
+
+.member-profile-identity-toolbar-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.member-profile-identity-toolbar-copy p {
+  margin: 0;
+  color: #9eb4ca;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.member-profile-identity-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-profile-page .profile-edit-panel {
+  margin-top: 14px;
+}
+
 .member-daily-status-quick-edit {
   position: relative;
   display: grid;

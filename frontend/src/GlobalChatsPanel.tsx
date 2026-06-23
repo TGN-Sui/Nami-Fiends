@@ -43,6 +43,10 @@ import {
 import { isOfficialOwner } from './nami-capabilities.js';
 import { memberPassportTierLabel } from './owner-passport-display.js';
 import { readSignedInOwner } from './member-access.js';
+import {
+  startSharedGlobalChatPolling,
+  useSharedGlobalChatSyncSignal,
+} from './global-chat-messages-sync.js';
 import { appendGlobalChatMessage, removeGlobalChatMessages } from './messages-store.js';
 import {
   useChatAutoScroll,
@@ -163,11 +167,14 @@ export function GlobalChatRoomView(props: {
       : [];
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
+  const sharedSignal = useSharedGlobalChatSyncSignal();
   const computeMessages = useCallback(
     () => getGlobalChatMessages(props.chat.id),
-    [props.chat.id]
+    [props.chat.id, sharedSignal]
   );
-  const messages = useFrozenChatMessages(paused, resumeCount, storeSignal, computeMessages);
+  const messages = useFrozenChatMessages(paused, resumeCount, storeSignal + sharedSignal, computeMessages);
+
+  useEffect(() => startSharedGlobalChatPolling(props.chat.id), [props.chat.id]);
   const isOwner = props.chat.createdBy === selfMember.name;
   const [draft, setDraft] = useState('');
   const canSend = props.chat.isOfficial ? canSendOfficialChatMessages() : canSendChatMessages();

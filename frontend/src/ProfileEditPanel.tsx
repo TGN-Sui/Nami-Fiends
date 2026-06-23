@@ -6,7 +6,7 @@ import {
   collectedTitlesForMember,
   cosmeticsForKind,
 } from './global-chats.js';
-import { MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
+import { MEMBER_AVATAR_UPLOAD_CARD_ID, MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
 import {
   consumeProfileEditFocus,
   PROFILE_EDIT_PANEL_ID,
@@ -58,7 +58,7 @@ export function ProfileEditPanel(): ReactElement {
     setExpanded(true);
 
     window.requestAnimationFrame(() => {
-      document.getElementById(PROFILE_EDIT_PANEL_ID)?.scrollIntoView({
+      document.getElementById(MEMBER_AVATAR_UPLOAD_CARD_ID)?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });

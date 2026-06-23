@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 
 import type { GuildAffiliationItem, SquadAffiliationItem } from './affiliation-provider.js';
 import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
+import { MemberProfileIdentityToolbar } from './MemberProfileIdentityToolbar.js';
 import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
 import { useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
@@ -68,6 +69,8 @@ export function MemberProfileShowcase(props: {
   onOpenSquad?: (squad: NamiSquadRecord) => void;
   onNavigate?: (page: NamiPage) => void;
   onOpenStatusSettings?: () => void;
+  onEditPhoto?: () => void;
+  onOpenFullProfileEditor?: () => void;
   guildAffiliations?: GuildAffiliationItem[];
   squadAffiliations?: SquadAffiliationItem[];
   subscriptions?: NamiChannel[];
@@ -78,6 +81,7 @@ export function MemberProfileShowcase(props: {
   const chatTimeVersion = useMemberChatTimeVersion();
   useSquadRosterStore();
   const [activeTab, setActiveTab] = useState<ShowcaseTab>('overview');
+  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [progressTick, setProgressTick] = useState(() => Date.now());
   const isSelf = props.mode === 'self' || isSelfMember(props.member.id);
 
@@ -113,6 +117,14 @@ export function MemberProfileShowcase(props: {
 
   return (
     <section className="member-profile-showcase member-profile-showcase-tabbed" aria-label={props.member.name + ' activity showcase'}>
+      {isSelf && props.onEditPhoto && props.onOpenFullProfileEditor ? (
+        <MemberProfileIdentityToolbar
+          onEditPhoto={props.onEditPhoto}
+          onEditStatus={() => setStatusEditorOpen(true)}
+          onOpenFullEditor={props.onOpenFullProfileEditor}
+        />
+      ) : null}
+
       <article className="panel member-showcase-status-panel">
         <div className="member-showcase-status-hero">
           <div className="member-showcase-status-copy">
@@ -122,6 +134,8 @@ export function MemberProfileShowcase(props: {
 
           {isSelf ? (
             <MemberDailyStatusQuickEdit
+              onOpenChange={setStatusEditorOpen}
+              open={statusEditorOpen}
               {...(props.onOpenStatusSettings ? { onOpenSettings: props.onOpenStatusSettings } : {})}
             />
           ) : null}

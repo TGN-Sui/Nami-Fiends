@@ -3,6 +3,7 @@ import { shouldUseGenesisSelfMember } from './genesis-member.js';
 import { canManageTemporaryGlobalChats, getSelfMember } from './member-access.js';
 import { readMemberSession } from './member-session-store.js';
 import { LANDING_GENRE_LOUNGES } from './landing-content.js';
+import { readSharedGlobalChatMessages } from './global-chat-messages-sync.js';
 import { readGlobalChatOverlay } from './messages-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { genreBubbleScaleFromWeeklyChatters } from './bubble-weekly-scale.js';
@@ -269,7 +270,27 @@ function buildFixtureGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   });
 }
 
+function mergeGlobalChatMessages(
+  base: GlobalChatMessage[],
+  overlay: GlobalChatMessage[]
+): GlobalChatMessage[] {
+  const map = new Map(base.map((message) => [message.id, message]));
+
+  for (const message of overlay) {
+    map.set(message.id, message);
+  }
+
+  return [...map.values()];
+}
+
 export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
+  const shared = readSharedGlobalChatMessages(chatId).map((message) => ({
+    id: message.id,
+    author: message.author,
+    body: message.body,
+    time: message.time,
+    signal: message.signal,
+  }));
   const overlay = readGlobalChatOverlay(chatId).map((message) => ({
     id: message.id,
     author: message.author,
@@ -279,10 +300,10 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
   }));
 
   if (!shouldAutoSeedLocalData()) {
-    return overlay;
+    return mergeGlobalChatMessages(shared, overlay);
   }
 
-  return [...buildFixtureGlobalChatMessages(chatId), ...overlay];
+  return mergeGlobalChatMessages([...buildFixtureGlobalChatMessages(chatId), ...shared], overlay);
 }
 
 export function canCreateTemporaryChat(): boolean {

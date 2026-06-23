@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { isGlobalChatMessagesApiAvailable } from './global-chat-messages-api.js';
+import { sendSharedGlobalChatMessage } from './global-chat-messages-sync.js';
 import { playChatSendSfx } from './nami-sfx.js';
 import { canSendPrivateMessages, getSelfMember, isSelfMessageAuthor } from './member-access.js';
 import { processMessageTags } from './nami-notifications-store.js';
@@ -271,12 +273,61 @@ export function appendGlobalChatMessage(
   author = getSelfMember().name,
   signal: ConductSignal = 'Green'
 ): ChatMessage {
+  const trimmedBody = body.trim();
+  const selfMember = getSelfMember();
+
+  if (isGlobalChatMessagesApiAvailable()) {
+    void sendSharedGlobalChatMessage({
+      roomId: chatId,
+      author,
+      body: trimmedBody,
+      signal,
+      memberId: selfMember.id,
+    })
+      .then((sharedMessage) => {
+        if (!sharedMessage) {
+          return;
+        }
+
+        processMessageTags({
+          body: sharedMessage.body,
+          authorName: author,
+          context: 'global',
+          contextLabel: 'Global Chat · ' + chatId,
+        });
+        playChatSendSfx();
+      })
+      .catch((error) => {
+        console.warn('[nami-global-chat] shared send failed, using local fallback', error);
+        appendLocalGlobalChatMessage(chatId, trimmedBody, author, signal);
+      });
+
+    const optimisticMessage: ChatMessage = {
+      id: 'pending-gc-' + chatId + '-' + Date.now(),
+      time: nowTime(),
+      author,
+      signal,
+      body: trimmedBody,
+    };
+
+    return optimisticMessage;
+  }
+
+  return appendLocalGlobalChatMessage(chatId, trimmedBody, author, signal);
+}
+
+function appendLocalGlobalChatMessage(
+  chatId: string,
+  body: string,
+  author: string,
+  signal: ConductSignal
+): ChatMessage {
   const message: ChatMessage = {
     id: 'user-gc-' + chatId + '-' + Date.now(),
     time: nowTime(),
     author,
     signal,
-    body: body.trim(),
+    body,
   };
 
   const globalMessages = readGlobalMessages();
