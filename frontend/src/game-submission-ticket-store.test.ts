@@ -1,6 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { buildOfficialGameSubmissionTicket } from './game-submission-ticket-store.js';
+vi.mock('./app-config.js', () => ({
+  shouldUseDevFixtures: () => false,
+  isTestLaunchMode: () => true,
+}));
+
+import { buildOfficialGameSubmissionTicket, isChannelHiddenFromPublic } from './game-submission-ticket-store.js';
+
+describe('isChannelHiddenFromPublic', () => {
+  it('allows showcase fixture game channels to open public profiles', () => {
+    expect(isChannelHiddenFromPublic('vortex')).toBe(false);
+    expect(isChannelHiddenFromPublic('pebble')).toBe(false);
+  });
+});
 
 describe('buildOfficialGameSubmissionTicket', () => {
   it('never includes phone in officials-facing tickets', () => {

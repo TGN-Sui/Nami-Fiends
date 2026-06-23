@@ -59,23 +59,25 @@ export function ChatComposerWithEmojis(props: ChatComposerWithEmojisProps): Reac
         {...(props.emojiPickerLabel ? { pickerLabel: props.emojiPickerLabel } : {})}
         onSelect={insertEmojiToken}
       />
-      <input
-        aria-label={props.ariaLabel}
-        disabled={!props.canSend}
-        onChange={(event) => props.onChange(event.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={props.placeholder}
-        ref={inputRef}
-        value={props.value}
-      />
-      <button
-        className={props.sendButtonClassName === undefined ? 'primary-action' : props.sendButtonClassName}
-        disabled={!props.canSend || !props.value.trim()}
-        onClick={props.onSend}
-        type="button"
-      >
-        {props.sendLabel ?? 'Send'}
-      </button>
+      <div className="chat-composer-field-row">
+        <input
+          aria-label={props.ariaLabel}
+          disabled={!props.canSend}
+          onChange={(event) => props.onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={props.placeholder}
+          ref={inputRef}
+          value={props.value}
+        />
+        <button
+          className={props.sendButtonClassName === undefined ? 'primary-action' : props.sendButtonClassName}
+          disabled={!props.canSend || !props.value.trim()}
+          onClick={props.onSend}
+          type="button"
+        >
+          {props.sendLabel ?? 'Send'}
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { findSeedChannelById } from './fixture-catalog-access.js';
 import { gameTrustScoreTierLabel } from './game-trust-score.js';
 import type { GameOfficialSocialPlatform } from './game-onboarding-draft.js';
 import { isOwnerProvisionedChannelHidden } from './owner-provisioned-channels-store.js';
@@ -212,6 +213,10 @@ export function resolveGameTicketChannelId(ticket: GameSubmissionTicket): string
 }
 
 export function isChannelHiddenFromPublic(channelId: string): boolean {
+  if (findSeedChannelById(channelId)) {
+    return false;
+  }
+
   const ticket = gameSubmissionTicketByChannelId(channelId);
 
   if (ticket) {
