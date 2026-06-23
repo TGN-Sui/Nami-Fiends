@@ -134,12 +134,12 @@ export function readGenreChatDockPinned(): boolean {
     const stored = window.localStorage.getItem(GENRE_CHAT_PINNED_KEY);
 
     if (stored === null) {
-      return true;
+      return false;
     }
 
     return stored === 'true';
   } catch {
-    return true;
+    return false;
   }
 }
 

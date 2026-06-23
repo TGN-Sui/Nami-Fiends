@@ -84,7 +84,7 @@ export function validateFavoriteSelection(roomIds: string[], memberId: string): 
   }
 
   if (roomIds.length === 0) {
-    return 'Pick at least one chat room.';
+    return 'Keep at least your My Chat room pinned.';
   }
 
   return null;

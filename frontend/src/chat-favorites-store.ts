@@ -8,8 +8,10 @@ import {
 } from './chat-favorites-api.js';
 import {
   defaultFavoriteRoomIds,
+  isGenreChatRoomId,
   validateFavoriteSelection,
 } from './chat-room-registry.js';
+import { memberPublicChatId } from './member-public-chat.js';
 import { getSelfMember, readSignedInOwner } from './member-access.js';
 import { createWalletAuthPayload } from './wallet-auth.js';
 
@@ -192,25 +194,49 @@ export function updateFavoriteRooms(roomIds: string[]): { ok: true } | { ok: fal
   return { ok: true };
 }
 
-export function toggleGenreFavorite(roomId: string): { ok: true } | { ok: false; reason: string } {
+export function toggleGenreFavorite(
+  roomId: string
+): { ok: true; swappedFrom?: string } | { ok: false; reason: string } {
   const current = snapshot.roomIds;
   const isFavorited = current.includes(roomId);
+  const ownRoomId = memberPublicChatId(getSelfMember().id);
 
   if (isFavorited) {
-    if (current.length <= 1) {
-      return { ok: false, reason: 'Keep at least one chat room pinned.' };
+    const next = current.filter((entry) => entry !== roomId);
+
+    if (!next.includes(ownRoomId)) {
+      return { ok: false, reason: 'Your My Chat room must stay pinned.' };
     }
 
-    return updateFavoriteRooms(current.filter((entry) => entry !== roomId));
+    const result = updateFavoriteRooms(next);
+
+    if (!result.ok) {
+      return result;
+    }
+
+    return { ok: true };
   }
 
-  if (countGenreInList(current) >= 2) {
-    return { ok: false, reason: 'You can pin up to two genre lounges.' };
+  const genreFavorites = current.filter((entry) => isGenreChatRoomId(entry));
+
+  if (genreFavorites.length >= 2) {
+    const activeId = snapshot.activeRoomId;
+    const swapOut = genreFavorites.find((entry) => entry !== activeId) ?? genreFavorites[0]!;
+    const withoutSwap = current.filter((entry) => entry !== swapOut);
+    const result = updateFavoriteRooms([...withoutSwap, roomId]);
+
+    if (!result.ok) {
+      return result;
+    }
+
+    return { ok: true, swappedFrom: swapOut };
   }
 
-  return updateFavoriteRooms([...current, roomId]);
-}
+  const result = updateFavoriteRooms([...current, roomId]);
 
-function countGenreInList(roomIds: string[]): number {
-  return roomIds.filter((roomId) => roomId.startsWith('genre-')).length;
+  if (!result.ok) {
+    return result;
+  }
+
+  return { ok: true };
 }

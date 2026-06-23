@@ -2480,7 +2480,14 @@ function GameHub(props: {
       </section>
 
       {genreDockPinned ? (
-        <NamiFavoritedChatDock onOpenMember={props.onOpenMember} tagHandlers={props.tagHandlers} />
+        <NamiFavoritedChatDock
+          collapsed={genreDockCollapsed}
+          onCollapsedChange={setGenreDockCollapsed}
+          onOpenMember={props.onOpenMember}
+          onPinnedChange={setGenreDockPinned}
+          pinned={genreDockPinned}
+          tagHandlers={props.tagHandlers}
+        />
       ) : null}
     </>
   );

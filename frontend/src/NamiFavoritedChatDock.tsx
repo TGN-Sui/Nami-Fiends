@@ -30,8 +30,6 @@ import {
 import { genreOfficialChats, type GlobalChatRoom } from './global-chats.js';
 import { genreChatExpandProps, GlobalChatRoomView } from './GlobalChatsPanel.js';
 import {
-  readGenreChatDockCollapsed,
-  readGenreChatDockPinned,
   readGenreChatDockSize,
   saveGenreChatDockCollapsed,
   saveGenreChatDockPinned,
@@ -44,6 +42,10 @@ import type { NamiMember } from './uiMockData.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
 
 type NamiFavoritedChatDockProps = {
+  pinned: boolean;
+  collapsed: boolean;
+  onPinnedChange: (pinned: boolean) => void;
+  onCollapsedChange: (collapsed: boolean) => void;
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
 };
@@ -52,8 +54,6 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
   const selfMember = useSelfMember();
   const favorites = useChatFavorites();
   const unreadMap = useChatRoomUnreadMap();
-  const [pinned, setPinned] = useState(readGenreChatDockPinned);
-  const [collapsed, setCollapsed] = useState(readGenreChatDockCollapsed);
   const [dockSize, setDockSize] = useState<GenreChatDockSize>(readGenreChatDockSize);
   const [manageOpen, setManageOpen] = useState(false);
   const [manageStatus, setManageStatus] = useState<string | null>(null);
@@ -154,19 +154,19 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
     updateFavoriteRooms([...favorites.roomIds, ownRoomId]);
   }, [favorites.roomIds, ownRoomId]);
 
-  if (!pinned || !activeChat) {
+  if (!props.pinned || !activeChat) {
     return null;
   }
 
   const totalUnread = totalChatRoomUnread(unreadMap);
 
   function toggleCollapsed(nextCollapsed: boolean): void {
-    setCollapsed(nextCollapsed);
+    props.onCollapsedChange(nextCollapsed);
     saveGenreChatDockCollapsed(nextCollapsed);
   }
 
   function unpinDock(): void {
-    setPinned(false);
+    props.onPinnedChange(false);
     saveGenreChatDockPinned(false);
   }
 
@@ -193,10 +193,17 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
       return;
     }
 
+    if (result.swappedFrom) {
+      const replaced = favoriteRoomTabLabel(result.swappedFrom, selfMember);
+      const added = favoriteRoomTabLabel(roomId, selfMember);
+      setManageStatus('Swapped ' + replaced + ' for ' + added + '.');
+      return;
+    }
+
     setManageStatus(null);
   }
 
-  const dockContent = collapsed ? (
+  const dockContent = props.collapsed ? (
     <button
       aria-expanded={false}
       aria-label={'Open favorited chats: ' + activeChat.title}
@@ -226,7 +233,10 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
           <button
             aria-expanded={manageOpen}
             aria-label="Manage favorited chat rooms"
-            className={'nami-surface-button nami-favorited-chat-manage' + (manageOpen ? ' is-active-surface-button' : '')}
+            className={
+              'nami-surface-button nami-favorited-chat-manage' +
+              (manageOpen ? ' is-active-surface-button' : '')
+            }
             onClick={() => {
               setManageStatus(null);
               setManageOpen((open) => !open);
@@ -256,7 +266,9 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
 
       {manageOpen ? (
         <section className="nami-favorited-chat-manage-panel">
-          <p className="protocol-hint">Pin up to two genre lounges plus your public live chat.</p>
+          <p className="protocol-hint">
+            Pin up to two genre lounges plus your public live chat. Picking a third genre swaps one out.
+          </p>
           <ul className="nami-favorited-chat-manage-list">
             {genreOfficialChats.map((chat) => {
               const favorited = favorites.roomIds.includes(chat.id);
@@ -282,7 +294,11 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
         </section>
       ) : null}
 
-      <div className="genre-chat-pinned-room-row nami-favorited-chat-tab-row" role="tablist" aria-label="Favorited chat rooms">
+      <div
+        className="genre-chat-pinned-room-row nami-favorited-chat-tab-row"
+        role="tablist"
+        aria-label="Favorited chat rooms"
+      >
         {favorites.roomIds.map((roomId) => {
           const unread = unreadMap[roomId] ?? 0;
           const label = favoriteRoomTabLabel(roomId, selfMember);
