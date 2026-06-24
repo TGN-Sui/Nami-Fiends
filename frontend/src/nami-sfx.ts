@@ -7,52 +7,152 @@ type TonePatch = {
   gainPeak: number;
   frequencyEnd?: number;
   delayMs?: number;
+  filterFreq?: number;
+  filterQ?: number;
 };
 
 let audioContext: AudioContext | null = null;
 let soundEnabled = true;
 
+const HOVER_THROTTLE_MS = 48;
+const HOVER_ELEMENT_COOLDOWN_MS = 220;
+const TYPE_THROTTLE_MS = 34;
+const BUBBLE_COLLISION_THROTTLE_MS = 110;
+const BUBBLE_MOTION_THROTTLE_MS = 180;
+
+let lastHoverSfxAt = 0;
+let lastTypeSfxAt = 0;
+let lastBubbleCollisionSfxAt = 0;
+let lastBubbleMotionSfxAt = 0;
+const hoverElementCooldown = new WeakMap<HTMLElement, number>();
+
 const BUTTON_CLICK_PATCHES: TonePatch[][] = [
-  [{ frequency: 520, durationMs: 70, type: 'triangle', gainPeak: 0.045 }],
-  [{ frequency: 440, durationMs: 62, type: 'square', gainPeak: 0.038 }],
-  [{ frequency: 610, durationMs: 58, type: 'sine', gainPeak: 0.042, frequencyEnd: 720 }],
   [
-    { frequency: 380, durationMs: 48, type: 'triangle', gainPeak: 0.03 },
-    { frequency: 540, durationMs: 56, type: 'sine', gainPeak: 0.028, delayMs: 24 },
+    { frequency: 180, durationMs: 58, type: 'square', gainPeak: 0.042, frequencyEnd: 120, filterFreq: 520 },
+    { frequency: 360, durationMs: 42, type: 'triangle', gainPeak: 0.022, delayMs: 18 },
   ],
-  [{ frequency: 680, durationMs: 54, type: 'square', gainPeak: 0.034, frequencyEnd: 520 }],
-  [{ frequency: 470, durationMs: 66, type: 'triangle', gainPeak: 0.04, frequencyEnd: 390 }],
-  [{ frequency: 560, durationMs: 64, type: 'sine', gainPeak: 0.041, frequencyEnd: 430 }],
   [
-    { frequency: 410, durationMs: 52, type: 'square', gainPeak: 0.033 },
-    { frequency: 620, durationMs: 48, type: 'triangle', gainPeak: 0.028, delayMs: 20 },
+    { frequency: 140, durationMs: 64, type: 'square', gainPeak: 0.04, frequencyEnd: 90 },
+    { frequency: 280, durationMs: 36, type: 'sine', gainPeak: 0.018, delayMs: 22 },
   ],
+  [{ frequency: 220, durationMs: 52, type: 'triangle', gainPeak: 0.038, frequencyEnd: 160, filterFreq: 640 }],
+  [
+    { frequency: 110, durationMs: 44, type: 'square', gainPeak: 0.034 },
+    { frequency: 440, durationMs: 28, type: 'square', gainPeak: 0.016, delayMs: 16, filterFreq: 900 },
+  ],
+];
+
+const BUTTON_HOVER_PATCHES: TonePatch[][] = [
+  [{ frequency: 300, durationMs: 28, type: 'triangle', gainPeak: 0.014, frequencyEnd: 420, filterFreq: 1200 }],
+  [{ frequency: 340, durationMs: 24, type: 'sine', gainPeak: 0.012, frequencyEnd: 260 }],
+  [{ frequency: 260, durationMs: 30, type: 'triangle', gainPeak: 0.013, frequencyEnd: 380 }],
+];
+
+const SIDEBAR_HOVER_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 92, durationMs: 46, type: 'square', gainPeak: 0.02, frequencyEnd: 68, filterFreq: 280 },
+    { frequency: 184, durationMs: 34, type: 'triangle', gainPeak: 0.012, delayMs: 14 },
+  ],
+  [
+    { frequency: 78, durationMs: 52, type: 'square', gainPeak: 0.022, frequencyEnd: 58 },
+    { frequency: 156, durationMs: 38, type: 'sine', gainPeak: 0.011, delayMs: 16, filterFreq: 420 },
+  ],
+  [{ frequency: 104, durationMs: 40, type: 'triangle', gainPeak: 0.018, frequencyEnd: 82, filterFreq: 360 }],
+];
+
+const TYPE_KEY_PATCHES: TonePatch[][] = [
+  [{ frequency: 210, durationMs: 18, type: 'square', gainPeak: 0.009, filterFreq: 1400 }],
+  [{ frequency: 240, durationMs: 16, type: 'triangle', gainPeak: 0.008, frequencyEnd: 280 }],
+  [{ frequency: 190, durationMs: 20, type: 'square', gainPeak: 0.0085, filterFreq: 1100 }],
+  [{ frequency: 255, durationMs: 14, type: 'sine', gainPeak: 0.0075 }],
 ];
 
 const BUBBLE_POP_PATCHES: TonePatch[][] = [
   [
-    { frequency: 280, durationMs: 120, type: 'sine', gainPeak: 0.06, frequencyEnd: 180 },
-    { frequency: 420, durationMs: 90, type: 'sine', gainPeak: 0.035, frequencyEnd: 640, delayMs: 30 },
+    { frequency: 120, durationMs: 110, type: 'sine', gainPeak: 0.055, frequencyEnd: 70 },
+    { frequency: 240, durationMs: 72, type: 'triangle', gainPeak: 0.028, delayMs: 24, filterFreq: 700 },
   ],
   [
-    { frequency: 240, durationMs: 110, type: 'triangle', gainPeak: 0.055, frequencyEnd: 160 },
-    { frequency: 360, durationMs: 80, type: 'sine', gainPeak: 0.03, frequencyEnd: 520, delayMs: 28 },
+    { frequency: 96, durationMs: 100, type: 'square', gainPeak: 0.05, frequencyEnd: 64, filterFreq: 420 },
+    { frequency: 320, durationMs: 58, type: 'sine', gainPeak: 0.022, delayMs: 20 },
   ],
+];
+
+const BUBBLE_COLLISION_PATCHES: TonePatch[][] = [
   [
-    { frequency: 310, durationMs: 95, type: 'sine', gainPeak: 0.058, frequencyEnd: 210 },
-    { frequency: 500, durationMs: 70, type: 'triangle', gainPeak: 0.032, delayMs: 22 },
+    { frequency: 72, durationMs: 72, type: 'square', gainPeak: 0.034, frequencyEnd: 48, filterFreq: 220 },
+    { frequency: 180, durationMs: 36, type: 'triangle', gainPeak: 0.014, delayMs: 10 },
   ],
-  [{ frequency: 260, durationMs: 130, type: 'sine', gainPeak: 0.062, frequencyEnd: 140 }],
+  [{ frequency: 88, durationMs: 64, type: 'sine', gainPeak: 0.03, frequencyEnd: 58 }],
+  [
+    { frequency: 64, durationMs: 80, type: 'square', gainPeak: 0.028, filterFreq: 180 },
+    { frequency: 200, durationMs: 28, type: 'square', gainPeak: 0.01, delayMs: 12, filterFreq: 900 },
+  ],
+];
+
+const BUBBLE_MOTION_PATCHES: TonePatch[][] = [
+  [{ frequency: 420, durationMs: 58, type: 'triangle', gainPeak: 0.012, frequencyEnd: 140, filterFreq: 600 }],
+  [{ frequency: 360, durationMs: 52, type: 'sine', gainPeak: 0.011, frequencyEnd: 110 }],
+  [{ frequency: 500, durationMs: 48, type: 'triangle', gainPeak: 0.01, frequencyEnd: 180, filterFreq: 720 }],
 ];
 
 const CHAT_SEND_PATCHES: TonePatch[][] = [
-  [{ frequency: 360, durationMs: 100, type: 'triangle', gainPeak: 0.05, frequencyEnd: 720 }],
-  [{ frequency: 420, durationMs: 88, type: 'sine', gainPeak: 0.048, frequencyEnd: 680 }],
   [
-    { frequency: 300, durationMs: 72, type: 'triangle', gainPeak: 0.04 },
-    { frequency: 540, durationMs: 84, type: 'sine', gainPeak: 0.036, frequencyEnd: 760, delayMs: 18 },
+    { frequency: 200, durationMs: 88, type: 'triangle', gainPeak: 0.044, frequencyEnd: 520 },
+    { frequency: 640, durationMs: 42, type: 'square', gainPeak: 0.014, delayMs: 36, filterFreq: 1400 },
   ],
-  [{ frequency: 390, durationMs: 92, type: 'square', gainPeak: 0.042, frequencyEnd: 610 }],
+  [{ frequency: 240, durationMs: 76, type: 'sine', gainPeak: 0.04, frequencyEnd: 480 }],
+];
+
+const ARCADE_GAME_START_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 110, durationMs: 120, type: 'square', gainPeak: 0.05 },
+    { frequency: 165, durationMs: 120, type: 'square', gainPeak: 0.048, delayMs: 90 },
+    { frequency: 220, durationMs: 180, type: 'triangle', gainPeak: 0.055, delayMs: 180 },
+  ],
+];
+
+const ARCADE_BUBBLE_CHARGE_PATCHES: TonePatch[][] = [
+  [{ frequency: 180, durationMs: 42, type: 'triangle', gainPeak: 0.028, frequencyEnd: 260 }],
+  [{ frequency: 200, durationMs: 38, type: 'sine', gainPeak: 0.026, frequencyEnd: 300 }],
+];
+
+const ARCADE_BUBBLE_BIG_POP_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 96, durationMs: 140, type: 'sine', gainPeak: 0.07, frequencyEnd: 58 },
+    { frequency: 260, durationMs: 110, type: 'triangle', gainPeak: 0.04, delayMs: 36 },
+    { frequency: 420, durationMs: 90, type: 'sine', gainPeak: 0.028, delayMs: 72 },
+  ],
+];
+
+const ARCADE_BUBBLE_SMALL_POP_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 120, durationMs: 95, type: 'sine', gainPeak: 0.058, frequencyEnd: 82 },
+    { frequency: 240, durationMs: 72, type: 'triangle', gainPeak: 0.032, delayMs: 24 },
+  ],
+];
+
+const ARCADE_GAME_TICK_PATCHES: TonePatch[][] = [
+  [{ frequency: 440, durationMs: 48, type: 'square', gainPeak: 0.03, frequencyEnd: 330, filterFreq: 1200 }],
+];
+
+const ARCADE_GAME_OVER_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 210, durationMs: 160, type: 'triangle', gainPeak: 0.05, frequencyEnd: 120 },
+    { frequency: 90, durationMs: 220, type: 'sine', gainPeak: 0.045, delayMs: 120, frequencyEnd: 55 },
+  ],
+];
+
+const ARCADE_SCORE_REVEAL_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 165, durationMs: 90, type: 'triangle', gainPeak: 0.04 },
+    { frequency: 247, durationMs: 110, type: 'sine', gainPeak: 0.042, delayMs: 70 },
+    { frequency: 330, durationMs: 150, type: 'triangle', gainPeak: 0.048, delayMs: 150 },
+  ],
+];
+
+const ARCADE_MENU_SELECT_PATCHES: TonePatch[][] = [
+  [{ frequency: 270, durationMs: 54, type: 'square', gainPeak: 0.034, frequencyEnd: 360, filterFreq: 800 }],
 ];
 
 function getAudioContext(): AudioContext | null {
@@ -79,6 +179,47 @@ function getAudioContext(): AudioContext | null {
   return audioContext;
 }
 
+function playNoiseBurst(durationMs: number, gainPeak: number, filterFreq = 900): void {
+  if (!soundEnabled) {
+    return;
+  }
+
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
+  }
+
+  const bufferSize = Math.max(1, Math.floor(context.sampleRate * (durationMs / 1000)));
+  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let index = 0; index < bufferSize; index += 1) {
+    data[index] = (Math.random() * 2 - 1) * (1 - index / bufferSize);
+  }
+
+  const source = context.createBufferSource();
+  const gain = context.createGain();
+  const filter = context.createBiquadFilter();
+
+  source.buffer = buffer;
+  filter.type = 'bandpass';
+  filter.frequency.value = filterFreq;
+  filter.Q.value = 0.7;
+
+  const startAt = context.currentTime;
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(gainPeak, startAt + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + durationMs / 1000);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(context.destination);
+
+  source.start(startAt);
+  source.stop(startAt + durationMs / 1000 + 0.01);
+}
+
 function playTone(patch: TonePatch): void {
   if (!soundEnabled) {
     return;
@@ -94,6 +235,17 @@ function playTone(patch: TonePatch): void {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
 
+  if (patch.filterFreq) {
+    const filter = context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = patch.filterFreq;
+    filter.Q.value = patch.filterQ ?? 0.8;
+    oscillator.connect(filter);
+    filter.connect(gain);
+  } else {
+    oscillator.connect(gain);
+  }
+
   oscillator.type = patch.type;
   oscillator.frequency.setValueAtTime(patch.frequency, startAt);
 
@@ -105,10 +257,9 @@ function playTone(patch: TonePatch): void {
   }
 
   gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(patch.gainPeak, startAt + 0.01);
+  gain.gain.exponentialRampToValueAtTime(patch.gainPeak, startAt + 0.008);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + patch.durationMs / 1000);
 
-  oscillator.connect(gain);
   gain.connect(context.destination);
 
   oscillator.start(startAt);
@@ -119,74 +270,79 @@ function pickRandomPatch(patches: TonePatch[][]): TonePatch[] {
   return patches[Math.floor(Math.random() * patches.length)] ?? patches[0]!;
 }
 
-function playPatchSet(patches: TonePatch[][]): void {
+function playPatchSet(patches: TonePatch[][], intensity = 1): void {
+  const scale = Math.max(0.35, Math.min(1.4, intensity));
+
   for (const patch of pickRandomPatch(patches)) {
-    playTone(patch);
+    playTone({
+      ...patch,
+      gainPeak: patch.gainPeak * scale,
+    });
   }
+}
+
+function shouldThrottle(lastAt: number, throttleMs: number): boolean {
+  const now = performance.now();
+
+  if (now - lastAt < throttleMs) {
+    return true;
+  }
+
+  return false;
+}
+
+export function setNamiSoundEnabled(enabled: boolean): void {
+  soundEnabled = enabled;
+}
+
+export function isNamiSoundEnabled(): boolean {
+  return soundEnabled;
 }
 
 export function playButtonClickSfx(): void {
   playPatchSet(BUTTON_CLICK_PATCHES);
+  playNoiseBurst(12, 0.006, 1800);
+}
+
+export function playButtonHoverSfx(): void {
+  playPatchSet(BUTTON_HOVER_PATCHES);
+}
+
+export function playSidebarHoverSfx(): void {
+  playPatchSet(SIDEBAR_HOVER_PATCHES);
+  playNoiseBurst(10, 0.004, 420);
+}
+
+export function playTypeKeySfx(): void {
+  playPatchSet(TYPE_KEY_PATCHES, 0.85);
 }
 
 export function playBubblePopSfx(): void {
   playPatchSet(BUBBLE_POP_PATCHES);
 }
 
+export function playBubbleCollisionSfx(intensity = 0.6): void {
+  if (shouldThrottle(lastBubbleCollisionSfxAt, BUBBLE_COLLISION_THROTTLE_MS)) {
+    return;
+  }
+
+  lastBubbleCollisionSfxAt = performance.now();
+  playPatchSet(BUBBLE_COLLISION_PATCHES, intensity);
+  playNoiseBurst(14, 0.005 * intensity, 320);
+}
+
+export function playBubbleMotionSfx(intensity = 0.5): void {
+  if (shouldThrottle(lastBubbleMotionSfxAt, BUBBLE_MOTION_THROTTLE_MS)) {
+    return;
+  }
+
+  lastBubbleMotionSfxAt = performance.now();
+  playPatchSet(BUBBLE_MOTION_PATCHES, intensity);
+}
+
 export function playChatSendSfx(): void {
   playPatchSet(CHAT_SEND_PATCHES);
 }
-
-const ARCADE_GAME_START_PATCHES: TonePatch[][] = [
-  [
-    { frequency: 220, durationMs: 120, type: 'square', gainPeak: 0.05 },
-    { frequency: 330, durationMs: 120, type: 'square', gainPeak: 0.048, delayMs: 90 },
-    { frequency: 440, durationMs: 180, type: 'triangle', gainPeak: 0.055, delayMs: 180 },
-  ],
-];
-
-const ARCADE_BUBBLE_CHARGE_PATCHES: TonePatch[][] = [
-  [{ frequency: 360, durationMs: 42, type: 'triangle', gainPeak: 0.028, frequencyEnd: 420 }],
-  [{ frequency: 390, durationMs: 38, type: 'sine', gainPeak: 0.026, frequencyEnd: 470 }],
-];
-
-const ARCADE_BUBBLE_BIG_POP_PATCHES: TonePatch[][] = [
-  [
-    { frequency: 240, durationMs: 140, type: 'sine', gainPeak: 0.07, frequencyEnd: 150 },
-    { frequency: 520, durationMs: 110, type: 'triangle', gainPeak: 0.04, delayMs: 36 },
-    { frequency: 760, durationMs: 90, type: 'sine', gainPeak: 0.028, delayMs: 72 },
-  ],
-];
-
-const ARCADE_BUBBLE_SMALL_POP_PATCHES: TonePatch[][] = [
-  [
-    { frequency: 300, durationMs: 95, type: 'sine', gainPeak: 0.058, frequencyEnd: 210 },
-    { frequency: 480, durationMs: 72, type: 'triangle', gainPeak: 0.032, delayMs: 24 },
-  ],
-];
-
-const ARCADE_GAME_TICK_PATCHES: TonePatch[][] = [
-  [{ frequency: 880, durationMs: 48, type: 'square', gainPeak: 0.03, frequencyEnd: 660 }],
-];
-
-const ARCADE_GAME_OVER_PATCHES: TonePatch[][] = [
-  [
-    { frequency: 420, durationMs: 160, type: 'triangle', gainPeak: 0.05, frequencyEnd: 280 },
-    { frequency: 260, durationMs: 220, type: 'sine', gainPeak: 0.045, delayMs: 120, frequencyEnd: 140 },
-  ],
-];
-
-const ARCADE_SCORE_REVEAL_PATCHES: TonePatch[][] = [
-  [
-    { frequency: 330, durationMs: 90, type: 'triangle', gainPeak: 0.04 },
-    { frequency: 495, durationMs: 110, type: 'sine', gainPeak: 0.042, delayMs: 70 },
-    { frequency: 660, durationMs: 150, type: 'triangle', gainPeak: 0.048, delayMs: 150 },
-  ],
-];
-
-const ARCADE_MENU_SELECT_PATCHES: TonePatch[][] = [
-  [{ frequency: 540, durationMs: 54, type: 'square', gainPeak: 0.034, frequencyEnd: 720 }],
-];
 
 export function playArcadeGameStartSfx(): void {
   playPatchSet(ARCADE_GAME_START_PATCHES);
@@ -244,13 +400,109 @@ function isInteractiveTarget(target: EventTarget | null): HTMLElement | null {
   }
 
   return target.closest(
-    'button, .primary-action, .secondary-action, .nami-surface-button, .onboarding-primary-btn, .onboarding-secondary-btn, .profile-secondary-link, .crypto-community-bubble, input[type="submit"]'
+    'button, .primary-action, .secondary-action, .nami-surface-button, .onboarding-primary-btn, .onboarding-secondary-btn, .profile-secondary-link, .crypto-community-bubble, input[type="submit"], a[href], [role="button"]'
   );
+}
+
+function isSidebarNavTarget(element: HTMLElement): boolean {
+  return Boolean(
+    element.closest(
+      '.sidebar-nav button, .sidebar-profile-menu button, .sidebar-player-progress-button, .nami-pinned-profile-trigger, .sidebar-profile-tag-bell'
+    )
+  );
+}
+
+function isTypingTarget(target: EventTarget | null): target is HTMLInputElement | HTMLTextAreaElement {
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+    return false;
+  }
+
+  if (target.disabled || target.readOnly) {
+    return false;
+  }
+
+  if (target instanceof HTMLInputElement) {
+    const type = target.type.toLowerCase();
+
+    if (type === 'password' || type === 'checkbox' || type === 'radio' || type === 'file' || type === 'hidden') {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function handleHoverSfx(event: MouseEvent): void {
+  const target = event.target;
+  const related = event.relatedTarget;
+
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const interactive = isInteractiveTarget(target);
+
+  if (!interactive) {
+    return;
+  }
+
+  if (related instanceof Node && interactive.contains(related)) {
+    return;
+  }
+
+  const now = performance.now();
+
+  if (now - lastHoverSfxAt < HOVER_THROTTLE_MS) {
+    return;
+  }
+
+  const elementCooldown = hoverElementCooldown.get(interactive) ?? 0;
+
+  if (now - elementCooldown < HOVER_ELEMENT_COOLDOWN_MS) {
+    return;
+  }
+
+  hoverElementCooldown.set(interactive, now);
+  lastHoverSfxAt = now;
+
+  if (isSidebarNavTarget(interactive)) {
+    playSidebarHoverSfx();
+    return;
+  }
+
+  playButtonHoverSfx();
+}
+
+function handleTypingSfx(event: KeyboardEvent): void {
+  if (event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+
+  if (event.key.length !== 1) {
+    return;
+  }
+
+  if (!isTypingTarget(event.target)) {
+    return;
+  }
+
+  const now = performance.now();
+
+  if (now - lastTypeSfxAt < TYPE_THROTTLE_MS) {
+    return;
+  }
+
+  lastTypeSfxAt = now;
+  playTypeKeySfx();
 }
 
 export function initNamiSoundscape(): void {
   if (typeof window === 'undefined') {
     return;
+  }
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    soundEnabled = false;
   }
 
   document.addEventListener(
@@ -271,6 +523,10 @@ export function initNamiSoundscape(): void {
     },
     true
   );
+
+  document.addEventListener('mouseover', handleHoverSfx, true);
+
+  document.addEventListener('keydown', handleTypingSfx, true);
 
   document.addEventListener(
     'keydown',

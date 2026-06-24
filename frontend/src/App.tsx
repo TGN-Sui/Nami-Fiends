@@ -78,6 +78,7 @@ import {
   useChannelOwnerPromotionsState,
 } from './channel-owner-promotions-store.js';
 import { ensureChannelMediaHydratedForKey } from './channel-media-persistence.js';
+import { hydrateChannelCoversForChannels } from './preferences-sync.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
@@ -266,6 +267,7 @@ import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
 import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
 import { GameHubChannelTile } from './GameHubChannelTile.js';
+import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import { pendingApprovalsForMember } from './approval-requests-store.js';
 import { getCreatedGuildRecords } from './guild-creation-store.js';
@@ -1204,6 +1206,11 @@ function NamiHub(props: {
     () => dedupeChannelsByIdentity(directoryChannels),
     [directoryChannels],
   );
+
+  useEffect(() => {
+    void hydrateChannelCoversForChannels(uniqueDirectoryChannels.map((channel) => channel.id));
+  }, [uniqueDirectoryChannels]);
+
   const { members: directoryMembers } = useMemberDirectory();
   const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
 
@@ -1737,6 +1744,7 @@ function GameHub(props: {
   const ownerProfileVersion = useChannelOwnerProfileVersion();
   const genreChatActivityVersion = useGenreChatActivityVersion();
   const selfMember = useSelfMember();
+  const { owner: protocolOwner } = useProtocolOwner();
   const { items: gameHubDirectoryItems, channels: directoryChannels } = useChannelDirectory(50);
   const gameHubDiscoveryScores = useMemo(
     () => discoveryScoreLookupFromDirectory(gameHubDirectoryItems),
@@ -1746,6 +1754,15 @@ function GameHub(props: {
     () => dedupeChannelsByIdentity(directoryChannels).map(withChannelOwnerProfile),
     [directoryChannels, ownerProfileVersion],
   );
+
+  useEffect(() => {
+    void hydrateChannelCoversForChannels(uniqueDirectoryChannels.map((channel) => channel.id));
+  }, [uniqueDirectoryChannels]);
+
+  function canEditChannelCover(channelId: string): boolean {
+    return isOfficialOwner(protocolOwner) || ownsGameChannel(channelId);
+  }
+
   const [gameHubBoostNotice, setGameHubBoostNotice] = useState('');
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
@@ -2171,6 +2188,7 @@ function GameHub(props: {
                     channel={channel}
                     key={channel.id + '-' + copyIndex}
                     onOpen={() => props.onOpenProfile(channel)}
+                    showOwnerCoverUpload={canEditChannelCover(channel.id)}
                   />
                 );
               })}
@@ -2227,6 +2245,14 @@ function GameHub(props: {
                   >
                   <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
                 </div>
+
+                {canEditChannelCover(activeSwipeChannel.id) ? (
+                  <GameHubInlineCoverUpload
+                    channel={activeSwipeChannel}
+                    className="is-swipe-deck-upload"
+                    label="Upload swipe deck cover"
+                  />
+                ) : null}
 
                 <div className="gamehub-swipe-cover-overlay">
                   <div className="gamehub-swipe-card-top">

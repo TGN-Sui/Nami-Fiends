@@ -24,6 +24,7 @@ export type MemberSession = {
   issuedPlayerScoreTier: PlayerScoreTier;
   playerScoreIssuedAtMs: number;
   signedUpAtMs: number;
+  avatarUrl?: string;
 };
 
 let cachedSession: MemberSession | null | undefined;
@@ -89,6 +90,9 @@ function readMemberAccountsRegistry(): Record<string, MemberSession> {
                     : Date.now(),
               signedUpAtMs:
                 typeof snapshot.signedUpAtMs === 'number' ? snapshot.signedUpAtMs : Date.now(),
+              ...(typeof snapshot.avatarUrl === 'string' && snapshot.avatarUrl.trim() !== ''
+                ? { avatarUrl: snapshot.avatarUrl.trim() }
+                : {}),
             } satisfies MemberSession,
           ],
         ];
@@ -101,7 +105,12 @@ function readMemberAccountsRegistry(): Record<string, MemberSession> {
 
 function upsertMemberAccountRegistry(session: MemberSession): void {
   const registry = readMemberAccountsRegistry();
-  registry[normalizeEmail(session.email)] = session;
+  const email = normalizeEmail(session.email);
+  const existing = registry[email];
+  registry[email] = {
+    ...session,
+    ...(existing?.avatarUrl && !session.avatarUrl ? { avatarUrl: existing.avatarUrl } : {}),
+  };
 
   try {
     window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
@@ -110,10 +119,68 @@ function upsertMemberAccountRegistry(session: MemberSession): void {
   }
 
   void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
-    syncRegisteredMemberAccountToServer(session).catch(() => {
+    syncRegisteredMemberAccountToServer(registry[email]!).catch(() => {
       // Best-effort — registry sync is retried on the next signup or session save.
     });
   });
+}
+
+export function updateRegisteredMemberAvatarUrl(email: string, avatarUrl: string | null): void {
+  const normalizedEmail = normalizeEmail(email);
+  const registry = readMemberAccountsRegistry();
+  const existing = registry[normalizedEmail];
+
+  if (!existing) {
+    return;
+  }
+
+  const next: MemberSession = avatarUrl
+    ? { ...existing, avatarUrl: avatarUrl.trim() }
+    : (({ avatarUrl: _removed, ...rest }) => rest)(existing);
+
+  registry[normalizedEmail] = next;
+
+  try {
+    window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
+    window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
+  } catch {
+    // Ignore storage failures in restricted environments.
+  }
+
+  void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
+    syncRegisteredMemberAccountToServer(next).catch(() => {
+      // Best-effort avatar registry sync.
+    });
+  });
+}
+
+export function readRegisteredMemberAvatarUrl(memberId: string): string | null {
+  for (const account of Object.values(readMemberAccountsRegistry())) {
+    const id =
+      readMemberSession() && normalizeEmail(readMemberSession()!.email) === normalizeEmail(account.email)
+        ? 'm1'
+        : memberIdForAccountEmail(account.email);
+
+    if (id !== memberId) {
+      continue;
+    }
+
+    const avatarUrl = account.avatarUrl?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  }
+
+  return null;
+}
+
+function memberIdForAccountEmail(email: string): string {
+  let hash = 0;
+
+  for (const char of normalizeEmail(email)) {
+    hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  }
+
+  return 'member-' + Math.abs(hash).toString(36);
 }
 
 export function mergeRegisteredMemberAccountsFromServer(accounts: MemberSession[]): void {
@@ -126,9 +193,11 @@ export function mergeRegisteredMemberAccountsFromServer(accounts: MemberSession[
 
     const email = normalizeEmail(account.email);
 
-    if (!isValidEmail(email) || registry[email]) {
+    if (!isValidEmail(email)) {
       continue;
     }
+
+    const existing = registry[email];
 
     registry[email] = {
       displayName: account.displayName,
@@ -159,6 +228,11 @@ export function mergeRegisteredMemberAccountsFromServer(accounts: MemberSession[
             ? account.signedUpAtMs
             : Date.now(),
       signedUpAtMs: typeof account.signedUpAtMs === 'number' ? account.signedUpAtMs : Date.now(),
+      ...(typeof account.avatarUrl === 'string' && account.avatarUrl.trim() !== ''
+        ? { avatarUrl: account.avatarUrl.trim() }
+        : existing?.avatarUrl
+          ? { avatarUrl: existing.avatarUrl }
+          : {}),
     };
   }
 

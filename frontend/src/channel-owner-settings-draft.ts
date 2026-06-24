@@ -230,9 +230,12 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
     };
   }
 
+  const existingProfileEdits = readChannelOwnerProfileEdits(channel.id);
+
   saveChannelOwnerProfileEdits(channel.id, {
     platforms: normalizedPlatforms,
     genres: normalizedGenres,
+    ...(existingProfileEdits?.tagline ? { tagline: existingProfileEdits.tagline } : {}),
   });
   saveOwnerBrandPalette(draft.brandPalette);
 

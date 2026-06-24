@@ -5,6 +5,7 @@ import {
   syncMemberPreferencesToBackend,
 } from './member-preferences-api.js';
 import { applyGenesisSelfOverrides, shouldUseGenesisSelfMember } from './genesis-member.js';
+import { readRegisteredMemberAvatarUrl } from './member-session-store.js';
 import { applyDemoMemberOverrides } from './demo-perspective-store.js';
 import { applyMembershipTierToMember } from './membership-plans-store.js';
 import { withMemberProfile } from './member-profile-store.js';
@@ -51,6 +52,13 @@ export function saveSelfAvatarOverride(dataUrl: string): void {
   invalidateSelfMemberCache();
   window.dispatchEvent(new CustomEvent('nami-self-avatar-changed'));
   pushAvatarPreferenceToBackend(dataUrl);
+  void import('./member-session-store.js').then(({ readMemberSession, updateRegisteredMemberAvatarUrl }) => {
+    const session = readMemberSession();
+
+    if (session) {
+      updateRegisteredMemberAvatarUrl(session.email, dataUrl);
+    }
+  });
 }
 
 export function clearSelfAvatarOverride(): void {
@@ -58,6 +66,13 @@ export function clearSelfAvatarOverride(): void {
   invalidateSelfMemberCache();
   window.dispatchEvent(new CustomEvent('nami-self-avatar-changed'));
   pushAvatarPreferenceToBackend(null);
+  void import('./member-session-store.js').then(({ readMemberSession, updateRegisteredMemberAvatarUrl }) => {
+    const session = readMemberSession();
+
+    if (session) {
+      updateRegisteredMemberAvatarUrl(session.email, null);
+    }
+  });
 }
 
 export function resolveMemberAvatarImageUrl(member: NamiMember): string | null {
@@ -71,7 +86,11 @@ export function resolveMemberAvatarImageUrl(member: NamiMember): string | null {
 
   const avatarImageUrl = member.avatarImageUrl?.trim();
 
-  return avatarImageUrl ? avatarImageUrl : null;
+  if (avatarImageUrl) {
+    return avatarImageUrl;
+  }
+
+  return readRegisteredMemberAvatarUrl(member.id);
 }
 
 export function resolveSelfAvatarImageUrl(): string | null {

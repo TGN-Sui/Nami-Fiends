@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type ChannelPreferences = {
@@ -11,7 +12,7 @@ type ChannelPreferencesStore = {
   channels: ChannelPreferences[];
 };
 
-const CHANNEL_PREFERENCES_PATH = 'data/projections/channel-preferences.json';
+const CHANNEL_PREFERENCES_PATH = `${config.dataDir}/projections/channel-preferences.json`;
 
 function emptyStore(): ChannelPreferencesStore {
   return { channels: [] };

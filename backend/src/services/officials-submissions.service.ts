@@ -76,6 +76,7 @@ type RegisteredMemberAccountRecord = {
   issuedPlayerScoreTier: 'basic' | 'verified' | 'premium';
   playerScoreIssuedAtMs: number;
   signedUpAtMs: number;
+  avatarUrl?: string;
 };
 
 function normalizeRegisteredMemberAccount(value: unknown): RegisteredMemberAccountRecord | null {
@@ -123,6 +124,9 @@ function normalizeRegisteredMemberAccount(value: unknown): RegisteredMemberAccou
           ? entry.signedUpAtMs
           : Date.now(),
     signedUpAtMs: typeof entry.signedUpAtMs === 'number' ? entry.signedUpAtMs : Date.now(),
+    ...(typeof entry.avatarUrl === 'string' && entry.avatarUrl.trim() !== ''
+      ? { avatarUrl: entry.avatarUrl.trim() }
+      : {}),
   };
 }
 

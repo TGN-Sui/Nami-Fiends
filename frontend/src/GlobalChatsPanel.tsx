@@ -477,26 +477,35 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
         <aside className="global-chats-list-sidebar">
           <div className="global-chats-list">
             {allChats.map((chat) => (
-              <button
+              <div
                 className={
                   'global-chat-list-row' + (chat.id === activeChatId ? ' is-active-global-chat' : '')
                 }
                 key={chat.id}
                 onClick={() => setActiveChatId(chat.id)}
-                type="button"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveChatId(chat.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
-                <div>
+                <div className="global-chat-list-row-copy">
                   <strong>{chat.title}</strong>
                   {globalChatListCreatorLine(chat) ? (
                     <small>{globalChatListCreatorLine(chat)}</small>
                   ) : null}
                 </div>
-                <span>{resolveGlobalChatLiveStats(chat).membersInside.toLocaleString()} inside</span>
+                <span className="global-chat-list-row-count">
+                  {resolveGlobalChatLiveStats(chat).membersInside.toLocaleString()} inside
+                </span>
                 {chat.closesOnExit &&
                 chat.createdBy === selfMember.name &&
                 canManageTemporaryGlobalChats(selfMember) ? (
                   <button
-                    className="secondary-action global-chat-close-temp"
+                    className="global-chat-row-action global-chat-close-temp"
                     onClick={(event) => {
                       event.stopPropagation();
                       closeTemporaryChat(chat.id);
@@ -508,7 +517,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
                 ) : null}
                 {isOwner && canOfficialOwnerModerateGlobalChat(chat, connectedOwner) ? (
                   <button
-                    className="danger-action global-chat-owner-delete"
+                    className="global-chat-row-action global-chat-owner-delete"
                     onClick={(event) => {
                       event.stopPropagation();
                       ownerDeleteChat(chat);
@@ -519,7 +528,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
                     Delete
                   </button>
                 ) : null}
-              </button>
+              </div>
             ))}
           </div>
 

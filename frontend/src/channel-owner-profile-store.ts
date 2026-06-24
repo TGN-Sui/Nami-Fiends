@@ -130,6 +130,10 @@ export function saveChannelOwnerTagline(
     genres: existing?.genres ?? defaultGenresForChannel(channel),
     tagline,
   });
+
+  void import('./channel-owner-snapshot-sync.js').then(({ syncOwnerProvisionedChannelProfileSnapshot }) => {
+    syncOwnerProvisionedChannelProfileSnapshot(channel, tagline);
+  });
 }
 
 export function saveChannelOwnerPlatforms(channelId: string, platforms: string[]): void {

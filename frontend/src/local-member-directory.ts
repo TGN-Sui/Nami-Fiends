@@ -22,7 +22,7 @@ export function namiMemberFromRegisteredAccount(
   const displayName = account.displayName.trim() || 'Traveler';
   const avatarSeed = displayName.slice(0, 2).toUpperCase() || 'NA';
 
-  return {
+  const member: NamiMember = {
     id: isSelf ? 'm1' : memberIdForAccountEmail(account.email),
     surfaceType: 'member',
     name: displayName,
@@ -31,6 +31,17 @@ export function namiMemberFromRegisteredAccount(
     tier: 'NPC',
     badge: account.flavorBadgeId?.trim() || 'Unset',
   };
+
+  const avatarUrl = account.avatarUrl?.trim();
+
+  if (avatarUrl) {
+    return {
+      ...member,
+      avatarImageUrl: avatarUrl,
+    };
+  }
+
+  return member;
 }
 
 export function listLocalDiscoveryMembers(): NamiMember[] {

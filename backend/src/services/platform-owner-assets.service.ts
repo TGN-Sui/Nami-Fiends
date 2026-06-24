@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 import { savePlatformOwnerAssetUpload } from './media-upload.service.js';
@@ -7,7 +8,7 @@ export type PlatformOwnerAssetsProjection = {
   updatedAtMs: number;
 };
 
-const PROJECTION_PATH = 'data/projections/platform-owner-assets.json';
+const PROJECTION_PATH = `${config.dataDir}/projections/platform-owner-assets.json`;
 
 const DATA_URL_PATTERN = /^data:((?:image|video)\/[a-z0-9.+-]+);base64,(.+)$/i;
 const SCENE_SLOT_IDS = new Set(['arcade-background', 'arcade-stage-background']);

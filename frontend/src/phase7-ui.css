@@ -288,17 +288,42 @@
 
 .global-chat-list-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 6px;
   align-items: center;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   min-height: 0;
   border-radius: 12px;
   border: 1px solid rgba(120, 190, 255, 0.16);
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
   text-align: left;
+  cursor: pointer;
+}
+
+.global-chat-list-row-copy {
+  min-width: 0;
+}
+
+.global-chat-list-row-count {
+  font-size: 0.72rem;
+  color: rgba(180, 205, 230, 0.82);
+  white-space: nowrap;
+}
+
+.global-chat-list-row .global-chat-row-action {
+  min-height: 0;
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  border-radius: 999px;
+}
+
+.global-chat-list-row .global-chat-owner-delete {
+  color: #ffd0d8;
+  border-color: rgba(255, 120, 140, 0.34);
+  background: rgba(120, 20, 36, 0.28);
 }
 
 .global-chat-list-row.is-active-global-chat {
@@ -4013,8 +4038,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  padding: 0 8px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
@@ -4059,7 +4085,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   gap: 14px 18px;
   width: max-content;
   min-width: 100%;
-  padding: 4px 0 14px;
+  padding: 8px 14px 16px;
 }
 
 .gamehub-channel-tile {
@@ -4093,12 +4119,23 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
     0 16px 34px rgba(0, 0, 0, 0.3);
 }
 
+.gamehub-channel-tile.is-standard-tile,
 .gamehub-channel-tile.is-partner-tile {
-  --tile-inset: 8px;
+  --tile-inset: 6px;
   --tile-radius: 12px;
-  padding: 8px;
+  padding: 6px;
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0.16));
+    linear-gradient(155deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.06) 42%, rgba(255, 255, 255, 0.12));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 18px 38px rgba(0, 0, 0, 0.32),
+    0 0 24px color-mix(in srgb, var(--game-card-brand, #75d7ff) 16%, transparent);
+}
+
+.gamehub-channel-tile.is-partner-tile {
+  --tile-inset: 7px;
+  padding: 7px;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.14),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
@@ -4107,20 +4144,21 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 }
 
 .gamehub-channel-tile-slab {
-  display: none;
+  display: block;
+  position: absolute;
+  inset: 2px;
+  z-index: 4;
+  border-radius: calc(var(--tile-radius) + 2px);
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 18px rgba(255, 255, 255, 0.05);
+  pointer-events: none;
 }
 
 .gamehub-channel-tile.is-partner-tile .gamehub-channel-tile-slab {
-  display: block;
-  position: absolute;
-  inset: 3px;
-  z-index: 4;
-  border-radius: calc(var(--tile-radius) + 2px);
-  border: 5px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 24px rgba(255, 255, 255, 0.06);
-  pointer-events: none;
+  border-width: 4px;
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .gamehub-channel-tile-art {
@@ -4297,8 +4335,56 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 
 .gamehub-channel-tile:hover .gamehub-channel-tile-art::before,
 .gamehub-channel-tile:focus-visible .gamehub-channel-tile-art::before {
-  transform: scale(1.06);
-  filter: saturate(1.06) contrast(1.03);
+  transform: scale(1.02);
+  filter: saturate(1.04) contrast(1.02);
+}
+
+.gamehub-inline-cover-upload {
+  position: absolute;
+  top: calc(var(--tile-inset) + 6px);
+  left: calc(var(--tile-inset) + 6px);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  max-width: calc(100% - (var(--tile-inset) * 2) - 12px);
+}
+
+.gamehub-inline-cover-upload.is-swipe-deck-upload {
+  top: 12px;
+  left: 12px;
+  right: auto;
+}
+
+.gamehub-inline-cover-upload-input {
+  display: none;
+}
+
+.gamehub-inline-cover-upload-button,
+.gamehub-inline-cover-upload-remove {
+  min-height: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.34);
+  background: rgba(5, 9, 15, 0.72);
+  color: #dff7ff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.gamehub-inline-cover-upload-remove {
+  border-color: rgba(255, 120, 140, 0.34);
+  color: #ffd0d8;
+}
+
+.gamehub-inline-cover-upload-notice {
+  width: 100%;
+  font-size: 0.62rem;
+  color: rgba(210, 236, 255, 0.86);
 }
 
 /* Swipe deck — card column + controls aligned to deck width */
@@ -8642,12 +8728,32 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
 .global-chats-unified-panel .global-chat-room-pane {
   display: flex;
   flex-direction: column;
-  min-height: 320px;
+  min-height: 0;
+  max-height: min(68vh, 640px);
 }
 
 .global-chats-unified-panel .global-chat-room-pane .chat-window-expand-host {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.global-chats-unified-panel .global-chat-room-pane .chat-window-buildout {
+  min-height: 0;
+  max-height: 100%;
+}
+
+.global-chats-unified-panel .global-chat-room-pane .message-stack.global-message-stack {
+  min-height: 0;
+  max-height: min(42vh, 360px);
+}
+
+.global-chats-unified-panel .global-chat-room-head {
+  padding-bottom: 4px;
+}
+
+.global-chats-unified-panel .global-chat-room-head h3 {
+  font-size: 1rem;
+  margin: 0;
 }
 
 .message-log-passport-rail {

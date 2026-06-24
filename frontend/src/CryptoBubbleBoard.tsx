@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { channelRainbowBorderClass } from './channel-surface.js';
+import { playBubbleCollisionSfx, playBubbleMotionSfx } from './nami-sfx.js';
 import { type BubbleLeaderboardSize } from './events-store.js';
 import { prefersReducedMotion, subscribeIntersectionPause, subscribeVisibilityPause } from './perf-utils.js';
 import { type NamiChannel } from './uiMockData.js';
@@ -724,6 +725,22 @@ export function CryptoBubbleBoard(props: {
       }
 
       solveBubbleCollisions(nodes, width, height, frameDelta, 1);
+
+      let collisionEnergy = 0;
+      let maxSpeed = 0;
+
+      for (const node of nodes) {
+        collisionEnergy += node.collisionStress;
+        maxSpeed = Math.max(maxSpeed, Math.hypot(node.vx, node.vy));
+      }
+
+      if (collisionEnergy > 42) {
+        playBubbleCollisionSfx(Math.min(1.2, collisionEnergy / 180));
+      }
+
+      if (maxSpeed > 13.5) {
+        playBubbleMotionSfx(Math.min(1.1, (maxSpeed - 10) / 14));
+      }
 
       for (const node of nodes) {
         if (node.collisionStress > node.baseRadius * 1.05) {

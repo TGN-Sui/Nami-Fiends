@@ -2,6 +2,7 @@ import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
+import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { developers, type NamiChannel } from './uiMockData.js';
 
 type GameVerificationTier = 'verified-game' | 'studio-approved' | 'community-game';
@@ -62,6 +63,7 @@ export function GameHubChannelTile(props: {
   brandPrimary: string;
   brandSoft: string;
   onOpen: () => void;
+  showOwnerCoverUpload?: boolean;
 }): ReactElement {
   const developerProfile = channelDeveloper(props.channel);
   const hasCoverArt = Boolean(resolveChannelCoverUrl(props.channel));
@@ -103,6 +105,14 @@ export function GameHubChannelTile(props: {
           {gameVerificationShortLabel(props.channel)}
         </span>
       </div>
+
+      {props.showOwnerCoverUpload ? (
+        <GameHubInlineCoverUpload
+          channel={props.channel}
+          className="is-tile-strip-upload"
+          label="Upload tile cover"
+        />
+      ) : null}
 
       <div className="gamehub-channel-tile-hover">
         <div className="gamehub-channel-tile-hover-head">

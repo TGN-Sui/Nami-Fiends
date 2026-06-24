@@ -140,6 +140,22 @@ export async function hydrateChannelCoverPreference(channelId: string): Promise<
   }
 }
 
+export async function hydrateChannelCoversForChannels(channelIds: string[]): Promise<void> {
+  if (!isChannelPreferencesApiAvailable() || channelIds.length === 0) {
+    return;
+  }
+
+  const uniqueIds = [...new Set(channelIds)];
+
+  await Promise.all(
+    uniqueIds.map((channelId) =>
+      hydrateChannelCoverPreference(channelId).catch(() => {
+        // Best-effort per-channel hydration.
+      })
+    )
+  );
+}
+
 export async function hydrateStudioLogoPreference(studioId: string): Promise<void> {
   if (!isStudioPreferencesApiAvailable()) {
     return;

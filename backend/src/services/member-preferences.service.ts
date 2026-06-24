@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type MemberPreferences = {
@@ -11,7 +12,7 @@ type PreferencesStore = {
   preferences: MemberPreferences[];
 };
 
-const PREFERENCES_PATH = 'data/projections/member-preferences.json';
+const PREFERENCES_PATH = `${config.dataDir}/projections/member-preferences.json`;
 
 function emptyStore(): PreferencesStore {
   return { preferences: [] };
