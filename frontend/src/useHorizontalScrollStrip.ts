@@ -137,6 +137,15 @@ export function useHorizontalScrollStrip<T extends HTMLElement>(): RefObject<T |
         return;
       }
 
+      const target = event.target;
+
+      if (
+        target instanceof HTMLElement &&
+        target.closest('.gamehub-channel-tile, button, a, [role="button"], input, textarea, select, label')
+      ) {
+        return;
+      }
+
       stopMomentum();
       stopWheelAnimation();
       wheelTarget = host.scrollLeft;

@@ -11783,34 +11783,6 @@ body::after {
     0 0 34px color-mix(in srgb, var(--active-channel-brand, #75d7ff) 14%, transparent);
 }
 
-.gamehub-swipe-card.is-verified-foil::before {
-  content: '';
-  position: absolute;
-  inset: -45%;
-  background:
-    conic-gradient(
-      from 120deg,
-      transparent,
-      rgba(117, 215, 255, 0.13),
-      rgba(67, 245, 167, 0.12),
-      rgba(255, 255, 255, 0.1),
-      rgba(117, 215, 255, 0.14),
-      transparent
-    );
-  animation: gamehubVerifiedFoil 7.5s linear infinite;
-  opacity: 0.86;
-  pointer-events: none;
-}
-
-.gamehub-swipe-card.is-verified-foil::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 27px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 36%, rgba(255, 255, 255, 0.04));
-  pointer-events: none;
-}
-
 .gamehub-swipe-card > * {
   position: relative;
   z-index: 2;
@@ -12047,25 +12019,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
 }
 
-.gamehub-swipe-card.is-verified-foil::before {
-  content: '';
-  position: absolute;
-  inset: -45%;
-  background:
-    conic-gradient(
-      from 120deg,
-      transparent,
-      rgba(117, 215, 255, 0.13),
-      rgba(67, 245, 167, 0.12),
-      rgba(255, 255, 255, 0.1),
-      rgba(117, 215, 255, 0.14),
-      transparent
-    );
-  animation: gamehubVerifiedFoil 7.5s linear infinite;
-  opacity: 0.86;
-  pointer-events: none;
-}
-
 .gamehub-swipe-card > * {
   position: relative;
   z-index: 2;
@@ -12167,40 +12120,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   box-shadow: 0 0 24px rgba(67, 245, 167, 0.14) !important;
 }
 
-.gamehub-swipe-card.is-verified-foil::before {
-  content: '';
-  position: absolute;
-  inset: -18% -70%;
-  background:
-    linear-gradient(
-      112deg,
-      transparent 0%,
-      transparent 28%,
-      rgba(117, 215, 255, 0.08) 36%,
-      rgba(255, 255, 255, 0.18) 42%,
-      rgba(67, 245, 167, 0.12) 48%,
-      rgba(255, 255, 255, 0.16) 54%,
-      rgba(117, 215, 255, 0.08) 60%,
-      transparent 70%,
-      transparent 100%
-    );
-  animation: gamehubFoilSwipeLoop 4.8s linear infinite;
-  opacity: 0.86;
-  pointer-events: none;
-  transform: translateX(-28%);
-}
 
-.gamehub-swipe-card.is-verified-foil::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 27px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 34%, rgba(255, 255, 255, 0.035)),
-    radial-gradient(circle at 18% 12%, rgba(117, 215, 255, 0.09), transparent 36%),
-    radial-gradient(circle at 88% 86%, rgba(67, 245, 167, 0.08), transparent 34%);
-  pointer-events: none;
-}
 
 @keyframes gamehubFoilSwipeLoop {
   0% {
@@ -12221,7 +12141,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   --game-card-tilt-x: 0deg;
   --game-card-tilt-y: 0deg;
   --game-card-foil-x: 50%;
-  --game-card-foil-y: 18%;
+  --game-card-foil-y: 50%;
+  --game-card-foil-opacity: 0;
   position: relative;
   isolation: isolate;
   min-height: 236px !important;
@@ -12258,8 +12179,12 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .gamehub-tcg-card.is-verified-foil-card::before {
   content: '';
   position: absolute;
-  inset: -18% -72%;
+  inset: 0;
   z-index: 0;
+  border-radius: inherit;
+  opacity: var(--game-card-foil-opacity, 0);
+  pointer-events: none;
+  transition: opacity 160ms ease;
   background:
     linear-gradient(
       112deg,
@@ -12273,13 +12198,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
       transparent 74%,
       transparent 100%
     );
-  opacity: 0.55;
-  pointer-events: none;
-  animation: gamehubFoilBounceSweep 5.2s ease-in-out infinite alternate;
-}
-
-.gamehub-tcg-card.is-verified-foil-card:hover::before {
-  opacity: 0.86;
+  background-size: 210% 210%;
+  background-position: var(--game-card-foil-x) var(--game-card-foil-y);
+  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
 }
 
 .gamehub-tcg-card.is-verified-foil-card::after {
@@ -12289,8 +12211,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   z-index: 1;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.16);
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
-    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.16), transparent 28%),
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.24), transparent 34%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, rgba(255, 255, 255, 0.035));
   box-shadow:
     inset 0 0 18px rgba(255, 255, 255, 0.08),
@@ -12425,7 +12349,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   --game-card-tilt-x: 0deg;
   --game-card-tilt-y: 0deg;
   --game-card-foil-x: 50%;
-  --game-card-foil-y: 18%;
+  --game-card-foil-y: 50%;
+  --game-card-foil-opacity: 0;
   transform:
     perspective(1100px)
     rotateX(var(--game-card-tilt-y))
@@ -12446,7 +12371,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .gamehub-swipe-card.is-verified-foil::before {
   content: '';
   position: absolute;
-  inset: -20% -72%;
+  inset: 0;
+  border-radius: inherit;
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
     linear-gradient(
       112deg,
@@ -12460,10 +12388,11 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
       transparent 74%,
       transparent 100%
     ) !important;
-  opacity: 0.76 !important;
-  animation: gamehubFoilBounceSweep 4.6s ease-in-out infinite alternate !important;
+  background-size: 210% 210% !important;
+  background-position: var(--game-card-foil-x) var(--game-card-foil-y) !important;
   pointer-events: none;
-  transform: translateX(-30%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
 }
 
 .gamehub-swipe-card.is-verified-foil::after {
@@ -12471,8 +12400,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   position: absolute;
   inset: 5px;
   border-radius: 22px;
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
-    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.18), transparent 30%),
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.24), transparent 34%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.075), transparent 34%, rgba(255, 255, 255, 0.035));
   box-shadow:
     inset 0 0 22px rgba(255, 255, 255, 0.08),
@@ -12525,7 +12456,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   --game-card-tilt-x: 0deg;
   --game-card-tilt-y: 0deg;
   --game-card-foil-x: 50%;
-  --game-card-foil-y: 18%;
+  --game-card-foil-y: 50%;
+  --game-card-foil-opacity: 0;
   position: relative;
   isolation: isolate;
   overflow: hidden !important;
@@ -12704,8 +12636,11 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .gamehub-swipe-cover-card.is-verified-foil::before {
   content: '';
   position: absolute;
-  inset: -16% -72%;
+  inset: 0;
   z-index: 2;
+  border-radius: inherit;
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
     linear-gradient(
       112deg,
@@ -12719,14 +12654,11 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
       transparent 74%,
       transparent 100%
     ) !important;
-  opacity: 0.58;
-  animation: gamehubFoilBounceSweepV2 5.2s ease-in-out infinite alternate !important;
+  background-size: 210% 210% !important;
+  background-position: var(--game-card-foil-x) var(--game-card-foil-y) !important;
   pointer-events: none;
-}
-
-.gamehub-cover-card.is-verified-foil-card:hover::before,
-.gamehub-swipe-cover-card.is-verified-foil:hover::before {
-  opacity: 0.9;
+  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
 }
 
 .gamehub-cover-card.is-verified-foil-card::after,
@@ -12737,8 +12669,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   z-index: 3;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 16px;
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
-    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.18), transparent 30%),
+    radial-gradient(circle at var(--game-card-foil-x) var(--game-card-foil-y), rgba(255, 255, 255, 0.24), transparent 34%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%, rgba(255, 255, 255, 0.035));
   box-shadow:
     inset 0 0 22px rgba(255, 255, 255, 0.08),
@@ -13175,21 +13109,18 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateY(-2px);
 }
 
-/* Verified foil bounce: reverse direction instead of hard restarting. */
+/* Game card foil tracks pointer tilt — no idle animation. */
+.gamehub-channel-tile-foil,
+.gamehub-swipe-card.is-verified-foil::before,
+.gamehub-swipe-card.is-verified-foil::after,
 .gamehub-cover-card.is-verified-foil-card::before,
-.gamehub-swipe-cover-card.is-verified-foil::before {
-  animation: gamehubFoilBounceClean 5.4s ease-in-out infinite alternate !important;
-  will-change: transform;
-}
-
-@keyframes gamehubFoilBounceClean {
-  0% {
-    transform: translateX(-34%);
-  }
-
-  100% {
-    transform: translateX(34%);
-  }
+.gamehub-cover-card.is-verified-foil-card::after,
+.gamehub-swipe-cover-card.is-verified-foil::before,
+.gamehub-swipe-cover-card.is-verified-foil::after,
+.gamehub-tcg-card.is-verified-foil-card::before,
+.gamehub-tcg-card.is-verified-foil-card::after {
+  animation: none !important;
+  will-change: auto;
 }
 
 /* Member profile foil eligibility. NPC, unverified, and sponsored/squad-like members are matte. */

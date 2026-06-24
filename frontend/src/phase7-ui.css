@@ -4092,7 +4092,8 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   --game-card-tilt-x: 0deg;
   --game-card-tilt-y: 0deg;
   --game-card-foil-x: 50%;
-  --game-card-foil-y: 18%;
+  --game-card-foil-y: 50%;
+  --game-card-foil-opacity: 0;
   --tile-inset: 0px;
   --tile-radius: 16px;
   position: relative;
@@ -4220,41 +4221,34 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   border-radius: var(--tile-radius);
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.78;
+  opacity: var(--game-card-foil-opacity, 0);
+  transition: opacity 160ms ease;
   background:
     radial-gradient(
       circle at var(--game-card-foil-x) var(--game-card-foil-y),
-      rgba(255, 255, 255, 0.32),
-      transparent 34%
+      rgba(255, 255, 255, 0.42) 0%,
+      rgba(255, 255, 255, 0.16) 20%,
+      transparent 46%
     ),
     linear-gradient(
-      112deg,
-      transparent 0%,
-      transparent 24%,
-      color-mix(in srgb, var(--game-card-brand, #75d7ff) 12%, transparent) 34%,
-      rgba(255, 255, 255, 0.22) 42%,
-      color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 16%, transparent) 50%,
-      rgba(255, 255, 255, 0.16) 58%,
-      transparent 70%,
-      transparent 100%
+      118deg,
+      transparent 16%,
+      color-mix(in srgb, var(--game-card-brand, #75d7ff) 14%, transparent) 44%,
+      rgba(255, 255, 255, 0.14) 52%,
+      color-mix(in srgb, var(--game-card-brand-soft, #43f5a7) 12%, transparent) 58%,
+      transparent 78%
     );
+  background-size: 100% 100%, 210% 210%;
+  background-position:
+    center,
+    var(--game-card-foil-x) var(--game-card-foil-y);
   mix-blend-mode: screen;
-  animation: gamehubPartnerTileFoil 5.6s ease-in-out infinite alternate;
+  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
 }
 
-.gamehub-channel-tile:hover .gamehub-channel-tile-foil,
-.gamehub-channel-tile:focus-visible .gamehub-channel-tile-foil {
-  opacity: 0.96;
-}
-
-@keyframes gamehubPartnerTileFoil {
-  0% {
-    transform: translateX(-36%) translateY(-4%);
-  }
-
-  100% {
-    transform: translateX(36%) translateY(4%);
-  }
+.gamehub-channel-tile.is-game-card-tilting .gamehub-channel-tile-foil {
+  opacity: var(--game-card-foil-opacity, 1);
 }
 
 .gamehub-channel-tile-idle {

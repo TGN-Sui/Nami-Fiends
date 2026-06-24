@@ -265,7 +265,7 @@ import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
-import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
+import { useGameCardTilt } from './game-card-tilt.js';
 import { GameHubChannelTile } from './GameHubChannelTile.js';
 import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
@@ -1802,6 +1802,7 @@ function GameHub(props: {
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
   const [swipeIndex, setSwipeIndex] = useState(0);
   const tileStripRef = useHorizontalScrollStrip<HTMLDivElement>();
+  const swipeCardTilt = useGameCardTilt();
 
   function openGenreBubbleChannel(channel: NamiChannel): void {
     const genreChat = genreOfficialChats.find((chat) => chat.id === channel.id);
@@ -1833,6 +1834,10 @@ function GameHub(props: {
   const activeSwipeChannel =
     randomizedBrowserEntries[swipeIndex % Math.max(1, randomizedBrowserEntries.length)]?.channel ??
     props.selectedChannel;
+
+  useEffect(() => {
+    swipeCardTilt.resetTilt();
+  }, [activeSwipeChannel.id, swipeCardTilt.resetTilt]);
   const showGameHubBoostAction = canShowChannelBoostAction(selfMember, props.selectedChannel.id);
   const selectedChannelBoostPower = getChannelBoostPower(props.selectedChannel.id);
 
@@ -2220,19 +2225,18 @@ function GameHub(props: {
                 aria-label={'Open ' + activeSwipeChannel.name + ' profile'}
                 className={
                   'gamehub-swipe-card gamehub-swipe-cover-card is-swipe-card-open is-verified-foil ' +
-                  gameVerificationClass(activeSwipeChannel)
+                  gameVerificationClass(activeSwipeChannel) +
+                  (swipeCardTilt.tiltClassName ? ' ' + swipeCardTilt.tiltClassName : '')
                 }
                 onClick={() => props.onOpenProfile(activeSwipeChannel)}
-                onPointerLeave={(event) => {
-                  resetGameCardTilt(event.currentTarget);
-                }}
-                onPointerMove={(event) => {
-                  updateGameCardTilt(event.currentTarget, event.clientX, event.clientY);
-                }}
+                onPointerEnter={swipeCardTilt.tiltHandlers.onPointerEnter}
+                onPointerLeave={swipeCardTilt.tiltHandlers.onPointerLeave}
+                onPointerMove={swipeCardTilt.tiltHandlers.onPointerMove}
                 style={
                   {
                     '--game-card-brand': getStoredChannelBrandTheme(activeSwipeChannel.id).primary,
                     '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary,
+                    ...swipeCardTilt.tiltStyle,
                   } as CSSProperties
                 }
                 type="button"

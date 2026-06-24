@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
-import { resetGameCardTilt, updateGameCardTilt } from './game-card-tilt.js';
+import { useGameCardTilt } from './game-card-tilt.js';
 import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { developers, type NamiChannel } from './uiMockData.js';
 
@@ -68,6 +68,7 @@ export function GameHubChannelTile(props: {
   const developerProfile = channelDeveloper(props.channel);
   const hasCoverArt = Boolean(resolveChannelCoverUrl(props.channel));
   const genreLabel = props.channel.genre.split('/')[0]?.trim() ?? props.channel.genre;
+  const { tiltClassName, tiltHandlers, tiltStyle } = useGameCardTilt();
 
   return (
     <button
@@ -76,17 +77,20 @@ export function GameHubChannelTile(props: {
         props.channel.partner ? 'is-partner-tile' : 'is-standard-tile',
         gameVerificationClass(props.channel),
         hasCoverArt ? 'has-cover-art' : '',
+        tiltClassName,
       ]
         .filter(Boolean)
         .join(' ')}
       onClick={props.onOpen}
-      onPointerLeave={(event) => resetGameCardTilt(event.currentTarget)}
-      onPointerMove={(event) => updateGameCardTilt(event.currentTarget, event.clientX, event.clientY)}
+      onPointerEnter={tiltHandlers.onPointerEnter}
+      onPointerLeave={tiltHandlers.onPointerLeave}
+      onPointerMove={tiltHandlers.onPointerMove}
       style={
         {
           '--game-card-brand': props.brandPrimary,
           '--game-card-brand-soft': props.brandSoft,
           ...gameCoverAssetVariables(props.channel),
+          ...tiltStyle,
         } as CSSProperties
       }
       type="button"
