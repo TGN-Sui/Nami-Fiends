@@ -1587,10 +1587,12 @@ dd {
 
 .chat-member-strip {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
   overflow-y: visible;
-  padding: 4px 0 8px;
+  padding: 4px 8px 8px;
+  scroll-padding-inline: 8px;
+  justify-content: flex-start;
 }
 
 .chat-member-card {

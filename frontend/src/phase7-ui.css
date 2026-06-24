@@ -429,16 +429,16 @@
 }
 
 .global-chat-send-button {
-  min-height: 44px;
+  min-height: 32px;
   min-width: 0;
   width: auto;
   max-width: none;
-  padding: 0 14px;
-  border-radius: 12px;
+  padding: 0 10px;
+  border-radius: 10px;
   border: 1px solid rgba(67, 245, 167, 0.42);
   background: linear-gradient(135deg, rgba(67, 245, 167, 0.24), rgba(117, 215, 255, 0.14));
   color: #eafff6;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 800;
   white-space: nowrap;
   box-shadow: none;
@@ -8222,21 +8222,23 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .genre-chat-pinned-room-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
-  padding: 6px 10px;
+  padding: 4px 8px;
+  scroll-padding-inline: 8px;
   border-bottom: 1px solid rgba(120, 190, 255, 0.1);
 }
 
 .genre-chat-pinned-room-tab {
   flex: 0 0 auto;
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: 22px;
+  padding: 0 8px;
   border-radius: 999px;
   border: 1px solid rgba(120, 190, 255, 0.18);
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
@@ -8363,8 +8365,8 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 }
 
 .genre-chat-pinned-collapse {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 28px;
+  min-height: 28px;
   padding: 0;
 }
 
@@ -11460,7 +11462,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 .is-hub-chat-presence-rail .chat-member-strip {
   width: 100%;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .chat-window-expanded-heading-copy.is-centered-hub-chat-heading {
@@ -13068,7 +13070,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 /* Pinned genre chat needs extra inset in the tighter dock shell */
 .genre-chat-pinned-dock .global-message-stack {
-  padding: 8px 12px 8px 14px;
+  padding: 8px 12px;
+  scroll-padding-inline: 12px;
 }
 
 .genre-chat-pinned-dock .message-avatar,

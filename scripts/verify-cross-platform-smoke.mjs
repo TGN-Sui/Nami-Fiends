@@ -5,12 +5,11 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { createNamiClient, lookupNodenameInRegistry, normalizeNodename } from '@nami/sdk';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
+const sdkDist = path.join(rootDir, 'SDK', 'dist', 'index.js');
 
 function readArg(flag) {
   const index = process.argv.indexOf(flag);
@@ -147,33 +146,41 @@ const summary = fs.existsSync(summaryPath)
   : null;
 
 if (summary?.packageId && summary?.nodenameRegistryId) {
-  try {
-    const chain = createNamiClient({
-      packageId: summary.packageId,
-      network: 'testnet',
-    });
+  if (!fs.existsSync(sdkDist)) {
+    fail('@nami/sdk dist build present', 'Run npm --prefix SDK run build');
+  } else {
+    try {
+      const { createNamiClient, lookupNodenameInRegistry, normalizeNodename } = await import(
+        pathToFileURL(sdkDist).href
+      );
 
-    const registryObject = await chain.getObject(summary.nodenameRegistryId);
+      const chain = createNamiClient({
+        packageId: summary.packageId,
+        network: 'testnet',
+      });
 
-    if (registryObject.data?.objectId) {
-      pass('NodenameRegistry on-chain', registryObject.data.objectId);
-    } else {
-      fail('NodenameRegistry on-chain');
+      const registryObject = await chain.getObject(summary.nodenameRegistryId);
+
+      if (registryObject.data?.objectId) {
+        pass('NodenameRegistry on-chain', registryObject.data.objectId);
+      } else {
+        fail('NodenameRegistry on-chain');
+      }
+
+      const probe = await lookupNodenameInRegistry(
+        chain,
+        summary.nodenameRegistryId,
+        'fiendsmoke00'
+      );
+
+      if (probe && probe.registered === false) {
+        pass('registry devInspect reachable', normalizeNodename('fiendsmoke00') ?? '');
+      } else {
+        fail('registry devInspect reachable');
+      }
+    } catch (error) {
+      fail('chain registry probe', error instanceof Error ? error.message : 'failed');
     }
-
-    const probe = await lookupNodenameInRegistry(
-      chain,
-      summary.nodenameRegistryId,
-      'fiendsmoke00'
-    );
-
-    if (probe && probe.registered === false) {
-      pass('registry devInspect reachable', normalizeNodename('fiendsmoke00') ?? '');
-    } else {
-      fail('registry devInspect reachable');
-    }
-  } catch (error) {
-    fail('chain registry probe', error instanceof Error ? error.message : 'failed');
   }
 }
 
