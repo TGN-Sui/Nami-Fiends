@@ -2496,7 +2496,7 @@ button {
     color 180ms ease;
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble) {
   transform: translateY(-2px) scale(1.025);
   border-color: rgba(117, 215, 255, 0.58);
   box-shadow:
@@ -2504,8 +2504,21 @@ button:hover:not(:disabled) {
     0 14px 30px rgba(0, 0, 0, 0.24);
 }
 
-button:active:not(:disabled) {
+button:active:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble) {
   transform: translateY(0) scale(0.985);
+}
+
+/* Game cards use pointer tilt — keep transform off the global button transition. */
+button.gamehub-channel-tile,
+button.gamehub-swipe-card,
+button.gamehub-swipe-cover-card,
+button.gamehub-cover-card,
+button.gamehub-tcg-card {
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
 }
 
 button:disabled {
@@ -12155,9 +12168,17 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
   transition:
-    transform 180ms ease,
     border-color 180ms ease,
     box-shadow 180ms ease;
+}
+
+.gamehub-tcg-card.is-game-card-tilting {
+  transform:
+    perspective(900px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x))
+    translateY(-2px)
+    scale(1.02);
 }
 
 .gamehub-tcg-card.is-static-card {
@@ -12351,12 +12372,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   --game-card-foil-x: 50%;
   --game-card-foil-y: 50%;
   --game-card-foil-opacity: 0;
-  transform:
-    perspective(1100px)
-    rotateX(var(--game-card-tilt-y))
-    rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
-  transition: box-shadow 180ms ease;
 }
 
 .gamehub-swipe-card.is-verified-foil {
@@ -12469,6 +12485,21 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease;
+}
+
+.gamehub-swipe-card.is-game-card-tilting,
+.gamehub-swipe-cover-card.is-game-card-tilting,
+.gamehub-cover-card.is-game-card-tilting {
+  transform:
+    perspective(1000px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x))
+    translateY(-2px)
+    scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 24px 52px rgba(0, 0, 0, 0.36),
+    0 0 32px color-mix(in srgb, var(--game-card-brand, #75d7ff) 20%, transparent) !important;
 }
 
 .gamehub-cover-card {

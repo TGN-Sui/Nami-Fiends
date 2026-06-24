@@ -4112,7 +4112,9 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   isolation: isolate;
   transform: perspective(920px) rotateX(var(--game-card-tilt-y)) rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
-  transition: box-shadow 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    border-color 180ms ease;
   box-shadow:
     0 0 0 1px rgba(117, 215, 255, 0.14),
     0 16px 34px rgba(0, 0, 0, 0.3);
@@ -4245,6 +4247,19 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   mix-blend-mode: screen;
   -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
   mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 62%, transparent 100%);
+}
+
+.gamehub-channel-tile.is-game-card-tilting {
+  transform:
+    perspective(920px)
+    rotateX(var(--game-card-tilt-y))
+    rotateY(var(--game-card-tilt-x))
+    translateY(-2px)
+    scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(117, 215, 255, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.34),
+    0 0 24px color-mix(in srgb, var(--game-card-brand, #75d7ff) 18%, transparent);
 }
 
 .gamehub-channel-tile.is-game-card-tilting .gamehub-channel-tile-foil {
