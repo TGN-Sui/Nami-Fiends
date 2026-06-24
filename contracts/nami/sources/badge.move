@@ -16,6 +16,7 @@ module nami::badge {
 
     // =========================================================
     // BADGE OBJECT
+    // Soulbound: `key` only (no `store`). Wallet-bound at mint.
     // =========================================================
     public struct Badge has key {
         id: UID,

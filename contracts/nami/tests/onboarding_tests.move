@@ -19,6 +19,7 @@ module nami::onboarding_tests {
     }
 
     #[test]
+    /// Identity, Passport, Profile, and Badge are `has key` only (no `store`) — Sui soulbound.
     fun test_enter_nami_mints_anchor_identity_profile_and_badge() {
         let mut scenario = test_scenario::begin(USER);
         share_registry(&mut scenario);

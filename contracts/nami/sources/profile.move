@@ -10,6 +10,7 @@ module nami::profile {
 
     // =========================================================
     // PUBLIC PROFILE OBJECT
+    // Soulbound: `key` only (no `store`). Wallet-bound at enter_nami mint.
     // =========================================================
     public struct Profile has key {
         id: UID,

@@ -30,6 +30,8 @@ module nami::passport {
 
     // =========================================================
     // PASSPORT OBJECT
+    // Soulbound: `key` only (no `store`). Minted once via package transfer,
+    // then cannot be public_transfer'd to another wallet.
     // =========================================================
     public struct Passport has key {
         id: UID,
@@ -198,6 +200,7 @@ module nami::passport {
         });
     }
 
+    /// One-time soulbind delivery to the minting wallet.
     public(package) fun transfer_to_owner(passport: Passport, owner: address) {
         transfer::transfer(passport, owner);
     }

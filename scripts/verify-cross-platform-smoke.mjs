@@ -130,6 +130,7 @@ try {
 
 const smokeOwner =
   readArg('--smoke-owner') ||
+  backendEnv?.NAMI_OFFICIAL_OWNER ||
   '0xd0f93acd58f1ee56fde8ae89f3d1062921dbced9d337c498f09390ae3e732b0d';
 
 try {

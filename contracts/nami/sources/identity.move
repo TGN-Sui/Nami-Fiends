@@ -11,6 +11,7 @@ module nami::identity {
 
     // =========================================================
     // IDENTITY OBJECT
+    // Soulbound: `key` only (no `store`). Wallet-bound at enter_nami mint.
     // =========================================================
     public struct Identity has key {
         id: UID,
