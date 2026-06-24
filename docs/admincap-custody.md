@@ -56,7 +56,7 @@ Designate one **backup holder** (co-founder or trusted ops lead) before public U
 ```text
 Primary owner:     zkLogin-derived Sui address (no exported seed)
 Backup holder:     Hardware wallet or air-gapped key — address only in runbook
-Treasury:          Separate wallet from AdminCap (NAMI_PAYMENT_TREASURY_ADDRESS)
+Treasury:          Separate wallet from AdminCap — testnet `0x6bff7988b87ffce3af4eaee7853f77b6d0d9ebb0e70a2a5924e5bdc7f68c75b4`
 Publish wallet:    Used once per republish; fund minimally on testnet
 ```
 

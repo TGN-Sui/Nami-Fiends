@@ -811,7 +811,7 @@ Assign named AdminCap backup holder (human step — see admincap-custody.md)
 Legal review of privacy draft before mainnet
 ```
 
-Payment readiness on live Render (2026-06-24): Stripe configured; card checkout on; treasury + PayPal off until secrets set.
+Payment readiness on live Render: Stripe configured; card checkout on; treasury `0x6bff…c75b4` in render.yaml (set on Render + redeploy); PayPal optional.
 
 Verified green (2026-06-24):
 

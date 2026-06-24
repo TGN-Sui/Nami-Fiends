@@ -23,6 +23,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 const deployDir = path.join(rootDir, 'deployments', 'testnet');
 const summaryPath = path.join(deployDir, 'latest.json');
+const DEFAULT_TESTNET_TREASURY =
+  '0x6bff7988b87ffce3af4eaee7853f77b6d0d9ebb0e70a2a5924e5bdc7f68c75b4';
 
 function readArg(flag) {
   const index = process.argv.indexOf(flag);
@@ -66,6 +68,30 @@ function isPlaceholderOwner(value) {
     value === '0xYOUR_OFFICIAL_OWNER' ||
     value === '0xYOUR_WALLET_ADDRESS_HERE'
   );
+}
+
+function isPlaceholderTreasury(value) {
+  return !value || value.includes('YOUR_') || value === '0xYOUR_TREASURY_WALLET';
+}
+
+function resolveTreasury(cliValue) {
+  if (cliValue && !isPlaceholderTreasury(cliValue)) {
+    return cliValue;
+  }
+
+  for (const filePath of [
+    path.join(rootDir, 'backend', '.env'),
+    path.join(rootDir, 'backend', '.env.testnet.example'),
+  ]) {
+    const env = parseEnvFile(filePath);
+    const candidate = env.NAMI_PAYMENT_TREASURY_ADDRESS;
+
+    if (candidate && !isPlaceholderTreasury(candidate)) {
+      return candidate;
+    }
+  }
+
+  return DEFAULT_TESTNET_TREASURY;
 }
 
 function resolveOfficialOwner(cliValue) {
@@ -190,6 +216,7 @@ if (!renderUrl || !vercelUrl) {
 
 const officialOwner = resolveOfficialOwner(readArg('--official-owner'));
 const officialOwnerEmail = resolveOfficialOwnerEmail(readArg('--official-owner-email'));
+const treasuryAddress = resolveTreasury(readArg('--treasury'));
 const zkloginClientId =
   readArg('--zklogin-client-id') ||
   process.env.ZKLOGIN_CLIENT_ID ||
@@ -220,7 +247,7 @@ const renderEnv = formatEnvBlock([
   `NAMI_PAYMENT_SUCCESS_URL=${zkloginOrigin}?payment=success`,
   `NAMI_PAYMENT_CANCEL_URL=${zkloginOrigin}?payment=cancel`,
   'NAMI_PAYMENT_ALLOW_MOCK=false',
-  'NAMI_PAYMENT_TREASURY_ADDRESS=0xYOUR_TREASURY_WALLET',
+  `NAMI_PAYMENT_TREASURY_ADDRESS=${treasuryAddress}`,
   '',
   'NAMI_POLL_INTERVAL_MS=5000',
   'NAMI_PAGE_LIMIT=50',
@@ -306,7 +333,7 @@ if (hasFlag('--apply-local')) {
     'NAMI_REQUIRE_WALLET_AUTH=true',
     `NAMI_PAYMENT_SUCCESS_URL=${zkloginOrigin}?payment=success`,
     `NAMI_PAYMENT_CANCEL_URL=${zkloginOrigin}?payment=cancel`,
-    'NAMI_PAYMENT_TREASURY_ADDRESS=0xYOUR_TREASURY_WALLET',
+    `NAMI_PAYMENT_TREASURY_ADDRESS=${treasuryAddress}`,
     '',
     'STRIPE_SECRET_KEY=',
     'STRIPE_PUBLISHABLE_KEY=',
