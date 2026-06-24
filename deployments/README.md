@@ -37,8 +37,16 @@ Continue indexing and frontend/SDK work against the pinned package in `deploymen
 ./scripts/phase8-deploy-check.sh
 # node scripts/verify-public-deploy.mjs  # public URL only
 
-# Refresh env from existing latest.json (no republish)
-node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
+# Refresh local env from existing latest.json (no republish)
+node scripts/sync-testnet-env.mjs --indexer-url http://127.0.0.1:8787 --zklogin-origin http://localhost:5173/
+
+# Generate Render + Vercel bulk env from latest.json (after you have public URLs)
+node scripts/sync-deploy-env.mjs \
+  --render-url https://nami-backend.onrender.com \
+  --vercel-url https://your-app.vercel.app \
+  --apply-local
+# Paste deployments/testnet/render.env + vercel.env into each dashboard, redeploy, then:
+# node scripts/verify-public-deploy.mjs
 
 # Probe indexer ops endpoints
 node scripts/verify-indexer.mjs --url http://localhost:8787
@@ -55,7 +63,7 @@ When go-live requires a new publish:
 node scripts/sync-testnet-env.mjs --indexer-url https://api.example --zklogin-origin https://app.example/
 ```
 
-Current testnet `latest.json` package: see file under `deployments/testnet/` (published 2026-06-13).
+Current testnet `latest.json` package: see file under `deployments/testnet/` (published 2026-06-23).
 
 ## Networks
 

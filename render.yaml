@@ -1,5 +1,6 @@
 # Render blueprint — Nami receiving server (testnet indexer + HTTP API)
-# Set secrets in the Render dashboard after linking this repo.
+# Chain IDs are public on-chain; set secrets in the Render dashboard after linking.
+# Regenerate bulk env: node scripts/sync-deploy-env.mjs --render-url ... --vercel-url ...
 services:
   - type: web
     name: nami-backend
@@ -23,11 +24,39 @@ services:
         value: 'false'
       - key: NAMI_HTTP_ENABLED
         value: 'true'
+      - key: NAMI_REQUIRE_WALLET_AUTH
+        value: 'true'
       - key: NAMI_PACKAGE_ID
-        sync: false
+        value: '0x74f2e6f200d7a814390b89e2e8a1c7d09fb49968a4362c8ab56e100e9573665f'
       - key: NAMI_ADMIN_CAP_ID
-        sync: false
+        value: '0xf4ff9561a7b9dc736b6c9e47b1806fd2e9eeb5eb699e475f86bb82e0cb6258bd'
+      - key: NAMI_NODENAME_REGISTRY_ID
+        value: '0x68e1b656a5fbb5534577f64321fb466512e8534da8749821b085ac8687891fa7'
+      - key: NAMI_PUBLISH_DIGEST
+        value: 'BzH6uKy2Hg82f9UvDYqcNGtpZzYXMWjveqqFxqHWwCWX'
       - key: NAMI_OFFICIAL_OWNER
-        sync: false
+        value: '0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca'
       - key: NAMI_OFFICIAL_OWNER_EMAIL
+        value: 'robbier640@gmail.com'
+      - key: NAMI_OFFICIAL_NODENAME
+        value: fiendtgnceo
+      - key: NAMI_PUBLIC_API_URL
+        sync: false
+      - key: NAMI_PAYMENT_SUCCESS_URL
+        sync: false
+      - key: NAMI_PAYMENT_CANCEL_URL
+        sync: false
+      - key: NAMI_PAYMENT_TREASURY_ADDRESS
+        sync: false
+      - key: NAMI_OFFICIALS_SYNC_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
         sync: false

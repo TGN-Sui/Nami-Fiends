@@ -1,3 +1,8 @@
 node_modules/
 mcps/
 terminals/
+
+# Generated deploy env (run scripts/sync-deploy-env.mjs)
+deployments/testnet/render.env
+deployments/testnet/vercel.env
+deployments/testnet/deploy-urls.json
