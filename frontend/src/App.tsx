@@ -54,6 +54,7 @@ import { ChannelBoostButton } from './ChannelBoostButton.js';
 import { EventInterestedButton } from './EventInterestedButton.js';
 import { EventLivePopup } from './EventLivePopup.js';
 import { GameApprovalWelcomeOverlay } from './GameApprovalWelcomeOverlay.js';
+import { ChannelTransferClaimModal } from './ChannelTransferClaimModal.js';
 import { ChannelProfileScreen } from './ChannelProfileScreen.js';
 import type { ChannelProfileSection } from './channel-profile-sections.js';
 import type { ChannelProfileOwnerFocus } from './channel-profile-navigation.js';
@@ -5886,6 +5887,7 @@ if (activePage === 'userProfile') {
         />
       ) : null}
       {showPlatformShell ? <GameApprovalWelcomeOverlay /> : null}
+      {showPlatformShell ? <ChannelTransferClaimModal /> : null}
     </main>
   );
 }

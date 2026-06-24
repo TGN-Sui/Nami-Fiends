@@ -32,7 +32,7 @@ export const OWNER_SETTINGS_GROUPS: OwnerSettingsGroupDefinition[] = [
     id: 'advanced',
     label: 'Advanced',
     description: 'Channel data and owner layout customization.',
-    panels: ['channel-data'],
+    panels: ['ownership-transfer', 'channel-data'],
   },
 ];
 

@@ -53,6 +53,13 @@ import {
   handleOfficialsSubmissionsSync,
 } from './routes/officials-submissions.routes.js';
 import {
+  handleChannelTransfersCancelPost,
+  handleChannelTransfersCreatePost,
+  handleChannelTransfersOptions,
+  handleChannelTransfersPendingPost,
+  handleChannelTransfersRespondPost,
+} from './routes/channel-transfer.routes.js';
+import {
   handlePlatformOwnerAssetsGet,
   handlePlatformOwnerAssetsOptions,
   handlePlatformOwnerAssetsSync,
@@ -1190,6 +1197,36 @@ const routes: Route[] = [
     pattern: /^\/api\/officials\/submissions\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handleOfficialsSubmissionsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/channel-transfers(?:\/.*)?$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelTransfersOptions(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/channel-transfers\/pending$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelTransfersPendingPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/channel-transfers\/create$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelTransfersCreatePost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/channel-transfers\/respond$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelTransfersRespondPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/channel-transfers\/cancel$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChannelTransfersCancelPost(request, response),
   },
   {
     method: 'OPTIONS',

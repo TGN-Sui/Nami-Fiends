@@ -12,7 +12,8 @@ export type OwnerPanelId =
   | 'trailer'
   | 'custom-emojis'
   | 'banner-editor'
-  | 'channel-data';
+  | 'channel-data'
+  | 'ownership-transfer';
 
 export const DEFAULT_PROFILE_TAB_ORDER: ChannelProfileSection[] = [
   'news',
@@ -34,6 +35,7 @@ export const DEFAULT_OWNER_PANEL_ORDER: OwnerPanelId[] = [
   'custom-emojis',
   'banner-editor',
   'channel-data',
+  'ownership-transfer',
 ];
 
 export const OWNER_PANEL_LABELS: Record<OwnerPanelId, string> = {
@@ -47,6 +49,7 @@ export const OWNER_PANEL_LABELS: Record<OwnerPanelId, string> = {
   'custom-emojis': 'Channel emojis',
   'banner-editor': 'Focused banner alerts',
   'channel-data': 'Channel data',
+  'ownership-transfer': 'Transfer ownership',
 };
 
 type ChannelLayoutState = {

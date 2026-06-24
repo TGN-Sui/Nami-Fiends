@@ -38,7 +38,11 @@ export function buildOwnerProvisionedGameChannel(
       { label: 'Owner', description: 'Owner tools' },
     ],
     officialBadges:
-      channel.status === 'claimed' ? ['Claimed'] : ['Owner-Provisioned', 'Claimable'],
+      channel.status === 'claimed'
+        ? ['Claimed']
+        : channel.status === 'transfer-pending'
+          ? ['Owner-Provisioned', 'Invite pending']
+          : ['Owner-Provisioned', 'Claimable'],
     customBadges: [],
     verifiedLinks: [],
     announcements: [],

@@ -20498,3 +20498,45 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   color: rgba(214, 232, 255, 0.78);
 }
 
+.channel-transfer-claim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(4, 8, 18, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.channel-transfer-claim-modal {
+  width: min(100%, 28rem);
+  display: grid;
+  gap: 1rem;
+}
+
+.channel-transfer-claim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.channel-ownership-transfer-panel .channel-transfer-form,
+.channel-ownership-transfer-panel .channel-transfer-pending-state,
+.channel-ownership-transfer-panel .channel-transfer-danger-zone {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.channel-ownership-transfer-panel .channel-transfer-danger-zone {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nami-surface-button.is-danger-surface-button {
+  border-color: rgba(255, 120, 120, 0.45);
+  color: #ffb4b4;
+}
+

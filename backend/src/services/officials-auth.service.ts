@@ -97,6 +97,7 @@ export function filterOfficialsSyncInput(
     gameTickets?: unknown[];
     partnerBanners?: unknown[];
     nodenameClaims?: unknown[];
+    ownerProvisionedChannels?: unknown[];
   },
   scope: OfficialsSyncScope,
   owner: string | null,
@@ -106,6 +107,7 @@ export function filterOfficialsSyncInput(
   gameTickets?: unknown[];
   partnerBanners?: unknown[];
   nodenameClaims?: unknown[];
+  ownerProvisionedChannels?: unknown[];
 } {
   if (scope === 'open' || scope === 'secret' || scope === 'official') {
     return input;
@@ -122,6 +124,7 @@ export function filterOfficialsSyncInput(
     gameTickets?: unknown[];
     partnerBanners?: unknown[];
     nodenameClaims?: unknown[];
+    ownerProvisionedChannels?: unknown[];
   } = {};
 
   if (input.suggestions !== undefined) {

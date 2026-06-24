@@ -60,3 +60,9 @@ services:
         sync: false
       - key: PAYPAL_CLIENT_SECRET
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: NAMI_TRANSFER_EMAIL_FROM
+        sync: false
+      - key: NAMI_TRANSFER_PORTAL_URL
+        value: 'https://nami-fiends.vercel.app'

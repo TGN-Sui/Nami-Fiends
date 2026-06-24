@@ -132,6 +132,22 @@ export function canOfficialOwnerEditProvisionedChannel(channelId: string): boole
   return entry.createdByOwner.toLowerCase() === owner!.toLowerCase();
 }
 
+function canWalletOwnClaimedProvisionedChannel(channelId: string, owner: string | null): boolean {
+  if (!owner) {
+    return false;
+  }
+
+  const entry = ownerProvisionedChannelById(channelId);
+
+  if (!entry || entry.status !== 'claimed') {
+    return false;
+  }
+
+  const claimedBy = entry.claimedByWallet?.toLowerCase() ?? '';
+
+  return claimedBy !== '' && claimedBy === owner.toLowerCase();
+}
+
 function resolveOfficialOwnerEditableProvisionedChannel(): NamiChannel | undefined {
   const owner = readSignedInOwner();
 
@@ -155,7 +171,8 @@ function resolveOfficialOwnerEditableProvisionedChannel(): NamiChannel | undefin
 
   const editableEntry = listOwnerProvisionedChannelsSorted().find(
     (entry) =>
-      entry.status !== 'claimed' && entry.createdByOwner.toLowerCase() === owner!.toLowerCase()
+      entry.status !== 'claimed' &&
+      entry.createdByOwner.toLowerCase() === owner!.toLowerCase()
   );
 
   if (!editableEntry) {
@@ -242,6 +259,23 @@ export function resolveOwnedGameChannel(): NamiChannel | undefined {
     return provisional;
   }
 
+  const owner = readSignedInOwner();
+
+  if (owner) {
+    const claimedProvisioned = listOwnerProvisionedChannelsSorted().find(
+      (entry) =>
+        entry.status === 'claimed' &&
+        entry.claimedByWallet?.toLowerCase() === owner.toLowerCase()
+    );
+
+    if (claimedProvisioned) {
+      const claimedChannel = buildOwnerProvisionedGameChannel(claimedProvisioned);
+      saveOwnedGameChannelId(claimedChannel.id);
+      saveActiveOwnerProvisionedChannelId(claimedChannel.id);
+      return claimedChannel;
+    }
+  }
+
   const officialOwnerChannel = resolveOfficialOwnerEditableProvisionedChannel();
 
   if (officialOwnerChannel) {
@@ -273,6 +307,10 @@ export function resolveOwnedGameChannel(): NamiChannel | undefined {
 
 export function ownsGameChannel(channelId: string): boolean {
   if (canOfficialOwnerEditProvisionedChannel(channelId)) {
+    return true;
+  }
+
+  if (canWalletOwnClaimedProvisionedChannel(channelId, readSignedInOwner())) {
     return true;
   }
 

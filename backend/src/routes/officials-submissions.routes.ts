@@ -68,6 +68,7 @@ export async function handleOfficialsSubmissionsSync(
       gameTickets?: unknown[];
       partnerBanners?: unknown[];
       nodenameClaims?: unknown[];
+      ownerProvisionedChannels?: unknown[];
     } = {};
 
     if (Array.isArray(body.suggestions)) {
@@ -84,6 +85,10 @@ export async function handleOfficialsSubmissionsSync(
 
     if (Array.isArray(body.nodenameClaims)) {
       rawInput.nodenameClaims = body.nodenameClaims;
+    }
+
+    if (Array.isArray(body.ownerProvisionedChannels)) {
+      rawInput.ownerProvisionedChannels = body.ownerProvisionedChannels;
     }
 
     const input = filterOfficialsSyncInput(rawInput, scope, owner, syncEmail);

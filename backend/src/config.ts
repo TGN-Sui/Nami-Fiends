@@ -70,6 +70,14 @@ export const config = {
 
   alertWebhookUrl: process.env.NAMI_ALERT_WEBHOOK_URL ?? '',
   alertFailureThreshold: readNumber('NAMI_ALERT_FAILURE_THRESHOLD', 3),
+
+  resendApiKey: (process.env.RESEND_API_KEY ?? '').trim(),
+  transferEmailFrom: (process.env.NAMI_TRANSFER_EMAIL_FROM ?? '').trim(),
+  transferPortalUrl: (
+    process.env.NAMI_TRANSFER_PORTAL_URL ?? 'https://nami-fiends.vercel.app'
+  )
+    .trim()
+    .replace(/\/$/, ''),
 } as const;
 
 export function assertRuntimeConfig(): void {

@@ -23,6 +23,10 @@ function statusLabel(status: string): string {
     return 'Claim pending';
   }
 
+  if (status === 'transfer-pending') {
+    return 'Transfer pending';
+  }
+
   return 'Claimed';
 }
 

@@ -6,12 +6,21 @@ vi.mock('./nami-capabilities.js', () => ({
   isOfficialOwner: (owner: string | null) => owner?.toLowerCase() === OFFICIAL_OWNER,
 }));
 
+vi.mock('./officials-submissions-sync.js', () => ({
+  syncOwnerProvisionedChannelsToServer: vi.fn(),
+}));
+
+vi.mock('./owner-provisioned-channel-snapshot-hydrate.js', () => ({
+  applyOwnerProvisionedSnapshots: vi.fn(),
+}));
+
 import {
   createOwnerProvisionedChannel,
   listClaimableOwnerProvisionedChannels,
   markOwnerProvisionedChannelClaimPending,
   markOwnerProvisionedChannelClaimed,
   markOwnerProvisionedChannelClaimRejected,
+  replaceOwnerProvisionedChannelsFromServer,
   resetOwnerProvisionedChannelsStoreForTests,
 } from './owner-provisioned-channels-store.js';
 
@@ -112,5 +121,29 @@ describe('owner-provisioned-channels-store', () => {
       'claim-pending'
     );
     expect(markOwnerProvisionedChannelClaimed(channelId, 'claim-ticket-2')?.status).toBe('claimed');
+  });
+
+  it('excludes transfer-pending channels from the public claim list', () => {
+    const created = createOwnerProvisionedChannel(
+      {
+        gameTitle: 'Private Invite',
+        handle: 'privateinvite',
+        genre: 'Indie',
+        platforms: ['PC'],
+      },
+      OFFICIAL_OWNER
+    );
+
+    const channel = created.channel!;
+
+    replaceOwnerProvisionedChannelsFromServer([
+      {
+        ...channel,
+        status: 'transfer-pending',
+        pendingTransferId: 'transfer-1',
+      },
+    ]);
+
+    expect(listClaimableOwnerProvisionedChannels()).toHaveLength(0);
   });
 });

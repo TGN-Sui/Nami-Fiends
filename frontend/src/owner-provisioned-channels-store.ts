@@ -6,7 +6,19 @@ import { normalizeSupportedPlatforms } from './platform-genre-options.js';
 const STORAGE_KEY = 'nami.owner.provisioned.channels';
 const ACTIVE_OWNER_PROVISIONED_CHANNEL_KEY = 'nami.official-owner.active-provisioned-channel-id';
 
-export type OwnerProvisionedChannelStatus = 'unclaimed' | 'claim-pending' | 'claimed';
+export type OwnerProvisionedChannelStatus =
+  | 'unclaimed'
+  | 'claim-pending'
+  | 'transfer-pending'
+  | 'claimed';
+
+export type OwnerProvisionedChannelSnapshot = {
+  tagline?: string;
+  genres?: string[];
+  platforms?: string[];
+  settingsDraft?: Record<string, unknown>;
+  updatedAtMs: number;
+};
 
 export type OwnerProvisionedChannel = {
   id: string;
@@ -21,6 +33,9 @@ export type OwnerProvisionedChannel = {
   createdAtMs: number;
   claimTicketId?: string;
   claimedAtMs?: number;
+  claimedByWallet?: string;
+  pendingTransferId?: string;
+  ownerSnapshot?: OwnerProvisionedChannelSnapshot;
 };
 
 export type CreateOwnerProvisionedChannelInput = {
@@ -63,7 +78,10 @@ function normalizeChannel(entry: Partial<OwnerProvisionedChannel>): OwnerProvisi
   }
 
   const status =
-    entry.status === 'claim-pending' || entry.status === 'claimed' || entry.status === 'unclaimed'
+    entry.status === 'claim-pending' ||
+    entry.status === 'transfer-pending' ||
+    entry.status === 'claimed' ||
+    entry.status === 'unclaimed'
       ? entry.status
       : 'unclaimed';
 
@@ -87,6 +105,13 @@ function normalizeChannel(entry: Partial<OwnerProvisionedChannel>): OwnerProvisi
     createdAtMs: typeof entry.createdAtMs === 'number' ? entry.createdAtMs : Date.now(),
     ...(typeof entry.claimTicketId === 'string' ? { claimTicketId: entry.claimTicketId } : {}),
     ...(typeof entry.claimedAtMs === 'number' ? { claimedAtMs: entry.claimedAtMs } : {}),
+    ...(typeof entry.claimedByWallet === 'string' ? { claimedByWallet: entry.claimedByWallet } : {}),
+    ...(typeof entry.pendingTransferId === 'string'
+      ? { pendingTransferId: entry.pendingTransferId }
+      : {}),
+    ...(entry.ownerSnapshot && typeof entry.ownerSnapshot === 'object'
+      ? { ownerSnapshot: entry.ownerSnapshot as OwnerProvisionedChannelSnapshot }
+      : {}),
   };
 }
 
@@ -320,6 +345,69 @@ export function isOwnerProvisionedChannelHidden(channelId: string): boolean {
   return ownerProvisionedChannelById(channelId) === undefined;
 }
 
+export function updateOwnerProvisionedChannelSnapshot(
+  channelId: string,
+  snapshot: OwnerProvisionedChannelSnapshot
+): OwnerProvisionedChannel | null {
+  const channels = readChannels();
+  const index = channels.findIndex((entry) => entry.channelId === channelId);
+
+  if (index < 0) {
+    return null;
+  }
+
+  const current = channels[index]!;
+  const next: OwnerProvisionedChannel = {
+    ...current,
+    ...(snapshot.tagline ? { tagline: snapshot.tagline } : {}),
+    ...(snapshot.genres && snapshot.genres.length > 0 ? { genre: snapshot.genres[0]! } : {}),
+    ...(snapshot.platforms && snapshot.platforms.length > 0
+      ? { platforms: normalizeSupportedPlatforms(snapshot.platforms) }
+      : {}),
+    ownerSnapshot: snapshot,
+  };
+
+  channels[index] = next;
+  writeChannels(channels);
+
+  return next;
+}
+
+export function deleteOwnerProvisionedChannel(
+  channelId: string,
+  actorOwner: string | null
+): { ok: boolean; message: string } {
+  const channels = readChannels();
+  const entry = channels.find((channel) => channel.channelId === channelId);
+
+  if (!entry) {
+    return { ok: false, message: 'Channel not found.' };
+  }
+
+  const actor = actorOwner?.toLowerCase() ?? '';
+  const createdBy = entry.createdByOwner.toLowerCase();
+  const claimedBy = entry.claimedByWallet?.toLowerCase() ?? '';
+
+  if (actor !== createdBy && actor !== claimedBy) {
+    return { ok: false, message: 'Only the current channel owner can delete this channel.' };
+  }
+
+  if (entry.status === 'transfer-pending') {
+    return {
+      ok: false,
+      message: 'Cancel the pending ownership transfer before deleting this channel.',
+    };
+  }
+
+  writeChannels(channels.filter((channel) => channel.channelId !== channelId));
+
+  if (readActiveOwnerProvisionedChannelId() === channelId) {
+    window.localStorage.removeItem(ACTIVE_OWNER_PROVISIONED_CHANNEL_KEY);
+  }
+
+  return { ok: true, message: entry.gameTitle + ' channel removed.' };
+}
+
 export function replaceOwnerProvisionedChannelsFromServer(
   channels: OwnerProvisionedChannel[]
 ): void {
@@ -330,6 +418,11 @@ export function replaceOwnerProvisionedChannelsFromServer(
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized.slice(0, 200)));
   emitChange();
+  void import('./owner-provisioned-channel-snapshot-hydrate.js').then(
+    ({ applyOwnerProvisionedSnapshots }) => {
+      applyOwnerProvisionedSnapshots(normalized);
+    }
+  );
 }
 
 export function resetOwnerProvisionedChannelsStoreForTests(): void {

@@ -30,6 +30,7 @@ import {
   saveOwnerSettingsGroup,
   type OwnerSettingsGroup,
 } from './channel-owner-settings-groups.js';
+import { ChannelOwnershipTransferPanel } from './ChannelOwnershipTransferPanel.js';
 import { ProtocolChannelAccessPanel } from './ProtocolChannelAccessPanel.js';
 import { ProtocolChannelPanel } from './ProtocolChannelPanel.js';
 import type { NamiChannel } from './uiMockData.js';
@@ -156,6 +157,10 @@ function ChannelOwnerSectionBody(props: { channel: NamiChannel }): ReactElement 
 
     if (panelId === 'banner-editor') {
       return <ChannelBannerEditorCard channel={props.channel} />;
+    }
+
+    if (panelId === 'ownership-transfer') {
+      return <ChannelOwnershipTransferPanel channel={props.channel} />;
     }
 
     if (panelId === 'channel-data') {

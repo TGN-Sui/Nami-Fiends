@@ -242,6 +242,24 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
   persistedByChannel.set(channel.id, cloneDraft(committed));
   emitDraftChange();
 
+  const profileEdits = readChannelOwnerProfileEdits(channel.id);
+
+  void import('./owner-provisioned-channels-store.js').then(
+    ({ ownerProvisionedChannelById, updateOwnerProvisionedChannelSnapshot }) => {
+      if (!ownerProvisionedChannelById(channel.id)) {
+        return;
+      }
+
+      updateOwnerProvisionedChannelSnapshot(channel.id, {
+        tagline: profileEdits?.tagline ?? draft.superBanner.body,
+        genres: normalizedGenres,
+        platforms: normalizedPlatforms,
+        settingsDraft: committed as unknown as Record<string, unknown>,
+        updatedAtMs: Date.now(),
+      });
+    }
+  );
+
   return {
     ok: true,
     message: 'Owner settings saved for ' + channel.name + '.',
