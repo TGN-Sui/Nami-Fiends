@@ -11316,9 +11316,9 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 }
 
 .genre-chat-pinned-unpin {
-  min-height: 34px;
-  padding: 0 10px;
-  font-size: 0.78rem;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 0.74rem;
 }
 
 .genre-chat-pinned-dock {

@@ -123,6 +123,7 @@ export async function lookupNodenameInRegistry(
 
   const nodenameBytes = nodenameToBytes(nodename);
   const hasTx = new Transaction();
+  hasTx.setSender(DEV_INSPECT_SENDER);
 
   hasTx.moveCall({
     target: onboardingTarget(chain.packageId, 'has_nodename'),
@@ -131,7 +132,7 @@ export async function lookupNodenameInRegistry(
 
   const hasInspect = await chain.sui.devInspectTransactionBlock({
     sender: DEV_INSPECT_SENDER,
-    transactionBlock: await hasTx.build({ client: chain.sui }),
+    transactionBlock: await hasTx.build({ client: chain.sui, onlyTransactionKind: true }),
   });
 
   if (hasInspect.error) {
@@ -155,6 +156,7 @@ export async function lookupNodenameInRegistry(
   }
 
   const resolveTx = new Transaction();
+  resolveTx.setSender(DEV_INSPECT_SENDER);
   resolveTx.moveCall({
     target: onboardingTarget(chain.packageId, 'resolve_identity_for_nodename'),
     arguments: [resolveTx.object(registryId), resolveTx.pure.vector('u8', nodenameBytes)],
@@ -162,7 +164,7 @@ export async function lookupNodenameInRegistry(
 
   const resolveInspect = await chain.sui.devInspectTransactionBlock({
     sender: DEV_INSPECT_SENDER,
-    transactionBlock: await resolveTx.build({ client: chain.sui }),
+    transactionBlock: await resolveTx.build({ client: chain.sui, onlyTransactionKind: true }),
   });
 
   const identityId = decodeReturnAddress(resolveInspect.results?.[0]?.returnValues);
@@ -187,6 +189,7 @@ export async function lookupOwnerInRegistry(
 
   const owner = normalizeSuiAddress(ownerInput);
   const hasTx = new Transaction();
+  hasTx.setSender(DEV_INSPECT_SENDER);
 
   hasTx.moveCall({
     target: onboardingTarget(chain.packageId, 'has_owner'),
@@ -195,7 +198,7 @@ export async function lookupOwnerInRegistry(
 
   const hasInspect = await chain.sui.devInspectTransactionBlock({
     sender: DEV_INSPECT_SENDER,
-    transactionBlock: await hasTx.build({ client: chain.sui }),
+    transactionBlock: await hasTx.build({ client: chain.sui, onlyTransactionKind: true }),
   });
 
   if (hasInspect.error) {
@@ -214,6 +217,7 @@ export async function lookupOwnerInRegistry(
   }
 
   const resolveTx = new Transaction();
+  resolveTx.setSender(DEV_INSPECT_SENDER);
   resolveTx.moveCall({
     target: onboardingTarget(chain.packageId, 'resolve_identity_for_owner'),
     arguments: [resolveTx.object(registryId), resolveTx.pure.address(owner)],
@@ -221,7 +225,7 @@ export async function lookupOwnerInRegistry(
 
   const resolveInspect = await chain.sui.devInspectTransactionBlock({
     sender: DEV_INSPECT_SENDER,
-    transactionBlock: await resolveTx.build({ client: chain.sui }),
+    transactionBlock: await resolveTx.build({ client: chain.sui, onlyTransactionKind: true }),
   });
 
   const identityId = decodeReturnAddress(resolveInspect.results?.[0]?.returnValues);
