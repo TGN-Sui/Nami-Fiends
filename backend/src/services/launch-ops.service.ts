@@ -34,6 +34,13 @@ export interface LaunchOpsPaymentReadiness {
   paypal_checkout_enabled: boolean;
 }
 
+export interface LaunchOpsExitGates {
+  core_policy_ready: boolean;
+  card_checkout_ready: boolean;
+  crypto_checkout_ready: boolean;
+  phase_8_launch_ready: boolean;
+}
+
 export interface LaunchOpsSummary {
   generated_at_ms: number;
   network: string;
@@ -42,6 +49,8 @@ export interface LaunchOpsSummary {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  exit_gates: LaunchOpsExitGates;
+  pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;
   discovery: LaunchOpsDiscoverySnapshot;
   projections: {
@@ -98,6 +107,32 @@ export async function buildLaunchOpsSummary(
   const recoveryStats = registry.recovery.getStats();
   const juryStats = registry.jury.getStats();
   const publicPayment = getPublicPaymentConfig();
+  const corePolicyReady =
+    config.testLaunch && !paymentConfig.allowMockProviders && config.officialOwner.trim() !== '';
+  const cardCheckoutReady = publicPayment.cardEnabled && publicPayment.stripePublishableKey !== null;
+  const cryptoCheckoutReady = publicPayment.cryptoEnabled;
+
+  const pendingActions: string[] = [];
+
+  if (!publicPayment.treasuryAddress) {
+    pendingActions.push(
+      'Set NAMI_PAYMENT_TREASURY_ADDRESS on Render (Sui wallet for crypto checkout + $GOON tips).',
+    );
+  }
+
+  if (!publicPayment.stripePublishableKey) {
+    pendingActions.push('Set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, and STRIPE_WEBHOOK_SECRET on Render.');
+  }
+
+  if (!publicPayment.paypalClientId) {
+    pendingActions.push('Optional: set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET for PayPal checkout.');
+  }
+
+  if (!process.env.NAMI_ADMIN_CAP_BACKUP_HOLDER?.trim()) {
+    pendingActions.push('Assign AdminCap backup holder (see docs/admincap-custody.md).');
+  }
+
+  pendingActions.push('Legal review of privacy draft before mainnet (human step).');
 
   return {
     generated_at_ms: Date.now(),
@@ -114,6 +149,13 @@ export async function buildLaunchOpsSummary(
       card_checkout_enabled: publicPayment.cardEnabled,
       paypal_checkout_enabled: publicPayment.paypalEnabled,
     },
+    exit_gates: {
+      core_policy_ready: corePolicyReady,
+      card_checkout_ready: cardCheckoutReady,
+      crypto_checkout_ready: cryptoCheckoutReady,
+      phase_8_launch_ready: corePolicyReady && cardCheckoutReady,
+    },
+    pending_actions: pendingActions,
     officials_pending: {
       suggestions,
       game_tickets: gameTickets,

@@ -18,6 +18,13 @@ export type LaunchOpsPaymentReadiness = {
   paypal_checkout_enabled: boolean;
 };
 
+export type LaunchOpsExitGates = {
+  core_policy_ready: boolean;
+  card_checkout_ready: boolean;
+  crypto_checkout_ready: boolean;
+  phase_8_launch_ready: boolean;
+};
+
 export type LaunchOpsSummary = {
   generated_at_ms: number;
   network: string;
@@ -26,6 +33,8 @@ export type LaunchOpsSummary = {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  exit_gates: LaunchOpsExitGates;
+  pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;
   discovery: {
     engine_version: string;

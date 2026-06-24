@@ -92,6 +92,37 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
           </section>
 
           <section className="launch-ops-card">
+            <h3>Phase 8 exit gates</h3>
+            <ul className="protocol-timeline-list">
+              <li className="protocol-timeline-item">
+                Core test-launch policy{' '}
+                <strong>{summary.exit_gates.core_policy_ready ? 'ready' : 'blocked'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Card checkout (Stripe){' '}
+                <strong>{summary.exit_gates.card_checkout_ready ? 'ready' : 'blocked'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Crypto checkout (treasury){' '}
+                <strong>{summary.exit_gates.crypto_checkout_ready ? 'ready' : 'blocked'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Phase 8 launch (card + policy){' '}
+                <strong>{summary.exit_gates.phase_8_launch_ready ? 'ready' : 'in progress'}</strong>
+              </li>
+            </ul>
+            {summary.pending_actions.length > 0 ? (
+              <ul className="protocol-timeline-list launch-ops-pending-actions">
+                {summary.pending_actions.map((action) => (
+                  <li key={action} className="protocol-timeline-item protocol-hint">
+                    {action}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+
+          <section className="launch-ops-card">
             <h3>Payment readiness</h3>
             <ul className="protocol-timeline-list">
               <li className="protocol-timeline-item">

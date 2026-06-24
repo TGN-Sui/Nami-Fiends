@@ -41,6 +41,12 @@ Designate one **backup holder** (co-founder or trusted ops lead) before public U
 
 **Backup setup checklist**
 
+When a backup holder is named, set on Render (optional env, clears Launch Ops warning):
+
+```text
+NAMI_ADMIN_CAP_BACKUP_HOLDER=0xBACKUP_WALLET_ADDRESS
+```
+
 ```text
 [ ] Backup wallet address recorded offline (not in git)
 [ ] Backup holder can sign Sui transactions independently

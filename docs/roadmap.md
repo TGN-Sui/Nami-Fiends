@@ -724,16 +724,16 @@ Embedded social / live embed player hooks for real-time gift overlays
 Status:
 
 ```text
-In progress — Phase 8 overall ~96% complete
+In progress — Phase 8 overall ~98% complete
 ```
 
 ```text
 Phase 8 progress
 
-[███████████████████░] ~96%
+[███████████████████░] ~98%
 
-8.1 Testnet launch mode      ███████████████████░  ~98%
-8.2 Deploy + public URL      ██████████████████░░  ~90%
+8.1 Testnet launch mode      ███████████████████░  ~99%
+8.2 Deploy + public URL      ███████████████████░  ~95%
 8.3 zkLogin production       ████████████████████  100%
 8.4 Security + custody       ████████████░░░░░░░░  ~60%
 ```

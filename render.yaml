@@ -54,6 +54,8 @@ services:
         sync: false
       - key: NAMI_PAYMENT_TREASURY_ADDRESS
         value: '0x6bff7988b87ffce3af4eaee7853f77b6d0d9ebb0e70a2a5924e5bdc7f68c75b4'
+      - key: NAMI_ADMIN_CAP_BACKUP_HOLDER
+        sync: false
       - key: NAMI_OFFICIALS_SYNC_SECRET
         sync: false
       - key: STRIPE_SECRET_KEY
