@@ -82,7 +82,12 @@ if (!frontendEnv) {
   if (!isPlaceholder(indexerUrl) && !isLocalhostUrl(indexerUrl)) {
     pass('public VITE_NAMI_INDEXER_URL', indexerUrl);
   } else {
-    fail('public VITE_NAMI_INDEXER_URL', 'Set to Render/public receiving server URL');
+    fail(
+      'public VITE_NAMI_INDEXER_URL',
+      indexerUrl
+        ? `Got "${indexerUrl}" — run: node scripts/sync-deploy-env.mjs --render-url https://YOUR-SERVICE.onrender.com --vercel-url https://YOUR-APP.vercel.app --apply-local`
+        : 'Missing — set to Render receiving server URL',
+    );
   }
 
   const redirect = frontendEnv.VITE_ZKLOGIN_REDIRECT_URL ?? '';
@@ -102,7 +107,12 @@ if (!frontendEnv) {
       fail('zkLogin redirect trailing slash');
     }
   } else {
-    fail('public zkLogin redirect URI', 'Must match deployed frontend origin');
+    fail(
+      'public zkLogin redirect URI',
+      redirect
+        ? `Got "${redirect}" — must be your live Vercel origin with trailing slash`
+        : 'Missing — must match deployed frontend origin',
+    );
   }
 
   if (frontendEnv.VITE_NAMI_TEST_LAUNCH === 'true') {
@@ -131,13 +141,19 @@ if (!backendEnv) {
   if (!isPlaceholder(successUrl) && !isLocalhostUrl(successUrl)) {
     pass('NAMI_PAYMENT_SUCCESS_URL public', successUrl);
   } else {
-    fail('NAMI_PAYMENT_SUCCESS_URL public');
+    fail(
+      'NAMI_PAYMENT_SUCCESS_URL public',
+      successUrl ? `Got "${successUrl}"` : 'Missing',
+    );
   }
 
   if (!isPlaceholder(cancelUrl) && !isLocalhostUrl(cancelUrl)) {
     pass('NAMI_PAYMENT_CANCEL_URL public', cancelUrl);
   } else {
-    fail('NAMI_PAYMENT_CANCEL_URL public');
+    fail(
+      'NAMI_PAYMENT_CANCEL_URL public',
+      cancelUrl ? `Got "${cancelUrl}"` : 'Missing',
+    );
   }
 
   if (backendEnv.NAMI_PAYMENT_ALLOW_MOCK === 'false') {
