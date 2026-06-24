@@ -4111,9 +4111,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   isolation: isolate;
   transform: perspective(920px) rotateX(var(--game-card-tilt-y)) rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
-  transition:
-    transform 170ms ease,
-    box-shadow 200ms ease;
+  transition: box-shadow 200ms ease;
   box-shadow:
     0 0 0 1px rgba(117, 215, 255, 0.14),
     0 16px 34px rgba(0, 0, 0, 0.3);
@@ -4222,11 +4220,11 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
   border-radius: var(--tile-radius);
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.62;
+  opacity: 0.78;
   background:
     radial-gradient(
       circle at var(--game-card-foil-x) var(--game-card-foil-y),
-      rgba(255, 255, 255, 0.24),
+      rgba(255, 255, 255, 0.32),
       transparent 34%
     ),
     linear-gradient(
@@ -4246,7 +4244,7 @@ html.is-nami-app-spotlight .nami-landing-grid-spotlight {
 
 .gamehub-channel-tile:hover .gamehub-channel-tile-foil,
 .gamehub-channel-tile:focus-visible .gamehub-channel-tile-foil {
-  opacity: 0.88;
+  opacity: 0.96;
 }
 
 @keyframes gamehubPartnerTileFoil {

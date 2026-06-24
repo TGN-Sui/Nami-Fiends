@@ -97,7 +97,7 @@ export function GameHubChannelTile(props: {
         <span className="gamehub-channel-tile-fallback">{props.channel.name.slice(0, 2).toUpperCase()}</span>
       </div>
 
-      {props.channel.partner ? <span className="gamehub-channel-tile-foil" aria-hidden="true" /> : null}
+      <span className="gamehub-channel-tile-foil" aria-hidden="true" />
 
       <div className="gamehub-channel-tile-idle" aria-hidden="true">
         {props.channel.partner ? <span className="gamehub-channel-tile-partner-mark">Partner</span> : null}

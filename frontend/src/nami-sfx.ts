@@ -13,6 +13,8 @@ type TonePatch = {
 
 let audioContext: AudioContext | null = null;
 let soundEnabled = true;
+let soundscapeInitialized = false;
+let audioUnlocked = false;
 
 const HOVER_THROTTLE_MS = 48;
 const HOVER_ELEMENT_COOLDOWN_MS = 220;
@@ -43,9 +45,15 @@ const BUTTON_CLICK_PATCHES: TonePatch[][] = [
 ];
 
 const BUTTON_HOVER_PATCHES: TonePatch[][] = [
-  [{ frequency: 300, durationMs: 28, type: 'triangle', gainPeak: 0.014, frequencyEnd: 420, filterFreq: 1200 }],
-  [{ frequency: 340, durationMs: 24, type: 'sine', gainPeak: 0.012, frequencyEnd: 260 }],
-  [{ frequency: 260, durationMs: 30, type: 'triangle', gainPeak: 0.013, frequencyEnd: 380 }],
+  [
+    { frequency: 220, durationMs: 32, type: 'square', gainPeak: 0.024, frequencyEnd: 320, filterFreq: 680 },
+    { frequency: 440, durationMs: 22, type: 'triangle', gainPeak: 0.012, delayMs: 12 },
+  ],
+  [
+    { frequency: 180, durationMs: 34, type: 'square', gainPeak: 0.022, frequencyEnd: 260, filterFreq: 520 },
+    { frequency: 360, durationMs: 20, type: 'sine', gainPeak: 0.011, delayMs: 14 },
+  ],
+  [{ frequency: 240, durationMs: 30, type: 'triangle', gainPeak: 0.021, frequencyEnd: 380, filterFreq: 900 }],
 ];
 
 const SIDEBAR_HOVER_PATCHES: TonePatch[][] = [
@@ -61,10 +69,10 @@ const SIDEBAR_HOVER_PATCHES: TonePatch[][] = [
 ];
 
 const TYPE_KEY_PATCHES: TonePatch[][] = [
-  [{ frequency: 210, durationMs: 18, type: 'square', gainPeak: 0.009, filterFreq: 1400 }],
-  [{ frequency: 240, durationMs: 16, type: 'triangle', gainPeak: 0.008, frequencyEnd: 280 }],
-  [{ frequency: 190, durationMs: 20, type: 'square', gainPeak: 0.0085, filterFreq: 1100 }],
-  [{ frequency: 255, durationMs: 14, type: 'sine', gainPeak: 0.0075 }],
+  [{ frequency: 180, durationMs: 20, type: 'square', gainPeak: 0.02, filterFreq: 1200 }],
+  [{ frequency: 210, durationMs: 18, type: 'triangle', gainPeak: 0.018, frequencyEnd: 300 }],
+  [{ frequency: 165, durationMs: 22, type: 'square', gainPeak: 0.019, filterFreq: 900 }],
+  [{ frequency: 230, durationMs: 16, type: 'sine', gainPeak: 0.017 }],
 ];
 
 const BUBBLE_POP_PATCHES: TonePatch[][] = [
@@ -80,20 +88,26 @@ const BUBBLE_POP_PATCHES: TonePatch[][] = [
 
 const BUBBLE_COLLISION_PATCHES: TonePatch[][] = [
   [
-    { frequency: 72, durationMs: 72, type: 'square', gainPeak: 0.034, frequencyEnd: 48, filterFreq: 220 },
-    { frequency: 180, durationMs: 36, type: 'triangle', gainPeak: 0.014, delayMs: 10 },
+    { frequency: 72, durationMs: 72, type: 'square', gainPeak: 0.044, frequencyEnd: 48, filterFreq: 220 },
+    { frequency: 180, durationMs: 36, type: 'triangle', gainPeak: 0.018, delayMs: 10 },
   ],
-  [{ frequency: 88, durationMs: 64, type: 'sine', gainPeak: 0.03, frequencyEnd: 58 }],
+  [{ frequency: 88, durationMs: 64, type: 'sine', gainPeak: 0.04, frequencyEnd: 58 }],
   [
-    { frequency: 64, durationMs: 80, type: 'square', gainPeak: 0.028, filterFreq: 180 },
-    { frequency: 200, durationMs: 28, type: 'square', gainPeak: 0.01, delayMs: 12, filterFreq: 900 },
+    { frequency: 64, durationMs: 80, type: 'square', gainPeak: 0.038, filterFreq: 180 },
+    { frequency: 200, durationMs: 28, type: 'square', gainPeak: 0.014, delayMs: 12, filterFreq: 900 },
   ],
 ];
 
 const BUBBLE_MOTION_PATCHES: TonePatch[][] = [
-  [{ frequency: 420, durationMs: 58, type: 'triangle', gainPeak: 0.012, frequencyEnd: 140, filterFreq: 600 }],
-  [{ frequency: 360, durationMs: 52, type: 'sine', gainPeak: 0.011, frequencyEnd: 110 }],
-  [{ frequency: 500, durationMs: 48, type: 'triangle', gainPeak: 0.01, frequencyEnd: 180, filterFreq: 720 }],
+  [
+    { frequency: 280, durationMs: 62, type: 'triangle', gainPeak: 0.022, frequencyEnd: 120, filterFreq: 520 },
+    { frequency: 96, durationMs: 38, type: 'square', gainPeak: 0.012, delayMs: 16, filterFreq: 280 },
+  ],
+  [
+    { frequency: 240, durationMs: 56, type: 'sine', gainPeak: 0.02, frequencyEnd: 96 },
+    { frequency: 120, durationMs: 34, type: 'triangle', gainPeak: 0.011, delayMs: 14 },
+  ],
+  [{ frequency: 320, durationMs: 52, type: 'triangle', gainPeak: 0.019, frequencyEnd: 140, filterFreq: 640 }],
 ];
 
 const CHAT_SEND_PATCHES: TonePatch[][] = [
@@ -172,17 +186,36 @@ function getAudioContext(): AudioContext | null {
     audioContext = new AudioContextCtor();
   }
 
-  if (audioContext.state === 'suspended') {
-    void audioContext.resume();
+  return audioContext;
+}
+
+function ensureAudioUnlocked(): void {
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
   }
 
-  return audioContext;
+  if (context.state === 'running') {
+    audioUnlocked = true;
+    return;
+  }
+
+  if (audioUnlocked) {
+    return;
+  }
+
+  void context.resume().then(() => {
+    audioUnlocked = context.state === 'running';
+  });
 }
 
 function playNoiseBurst(durationMs: number, gainPeak: number, filterFreq = 900): void {
   if (!soundEnabled) {
     return;
   }
+
+  ensureAudioUnlocked();
 
   const context = getAudioContext();
 
@@ -224,6 +257,8 @@ function playTone(patch: TonePatch): void {
   if (!soundEnabled) {
     return;
   }
+
+  ensureAudioUnlocked();
 
   const context = getAudioContext();
 
@@ -301,11 +336,12 @@ export function isNamiSoundEnabled(): boolean {
 
 export function playButtonClickSfx(): void {
   playPatchSet(BUTTON_CLICK_PATCHES);
-  playNoiseBurst(12, 0.006, 1800);
+  playNoiseBurst(14, 0.009, 1600);
 }
 
 export function playButtonHoverSfx(): void {
   playPatchSet(BUTTON_HOVER_PATCHES);
+  playNoiseBurst(8, 0.0035, 720);
 }
 
 export function playSidebarHoverSfx(): void {
@@ -314,7 +350,8 @@ export function playSidebarHoverSfx(): void {
 }
 
 export function playTypeKeySfx(): void {
-  playPatchSet(TYPE_KEY_PATCHES, 0.85);
+  playPatchSet(TYPE_KEY_PATCHES);
+  playNoiseBurst(6, 0.0028, 1100);
 }
 
 export function playBubblePopSfx(): void {
@@ -497,13 +534,14 @@ function handleTypingSfx(event: KeyboardEvent): void {
 }
 
 export function initNamiSoundscape(): void {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || soundscapeInitialized) {
     return;
   }
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    soundEnabled = false;
-  }
+  soundscapeInitialized = true;
+
+  document.addEventListener('pointerdown', ensureAudioUnlocked, true);
+  document.addEventListener('keydown', ensureAudioUnlocked, true);
 
   document.addEventListener(
     'click',

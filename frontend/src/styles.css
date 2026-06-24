@@ -12431,9 +12431,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     rotateX(var(--game-card-tilt-y))
     rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+  transition: box-shadow 180ms ease;
 }
 
 .gamehub-swipe-card.is-verified-foil {
@@ -12537,7 +12535,6 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
     rotateY(var(--game-card-tilt-x));
   transform-style: preserve-3d;
   transition:
-    transform 180ms ease,
     border-color 180ms ease,
     box-shadow 180ms ease;
 }

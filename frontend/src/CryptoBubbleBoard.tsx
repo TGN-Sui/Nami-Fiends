@@ -485,6 +485,7 @@ export function CryptoBubbleBoard(props: {
   const offscreenRef = useRef(false);
   const loopActiveRef = useRef(false);
   const lastPointerAtRef = useRef(0);
+  const boardPointerSfxRef = useRef({ at: 0, x: 0, y: 0 });
   const pointerRef = useRef({
     x: 0.5,
     y: 0.5,
@@ -728,18 +729,25 @@ export function CryptoBubbleBoard(props: {
 
       let collisionEnergy = 0;
       let maxSpeed = 0;
+      let maxCursorProximity = 0;
 
       for (const node of nodes) {
         collisionEnergy += node.collisionStress;
         maxSpeed = Math.max(maxSpeed, Math.hypot(node.vx, node.vy));
+        maxCursorProximity = Math.max(maxCursorProximity, node.cursorProximity);
       }
 
-      if (collisionEnergy > 42) {
-        playBubbleCollisionSfx(Math.min(1.2, collisionEnergy / 180));
+      if (collisionEnergy > 10) {
+        playBubbleCollisionSfx(Math.min(1.25, collisionEnergy / 48));
       }
 
-      if (maxSpeed > 13.5) {
-        playBubbleMotionSfx(Math.min(1.1, (maxSpeed - 10) / 14));
+      if (maxSpeed > 5.5 || (maxCursorProximity > 0.12 && maxSpeed > 2.8)) {
+        const motionIntensity = Math.max(
+          maxSpeed > 5.5 ? (maxSpeed - 3) / 10 : 0,
+          maxCursorProximity > 0.12 ? maxCursorProximity * 0.85 : 0,
+        );
+
+        playBubbleMotionSfx(Math.min(1.2, 0.42 + motionIntensity));
       }
 
       for (const node of nodes) {
@@ -891,6 +899,21 @@ export function CryptoBubbleBoard(props: {
         }}
         onPointerMove={(event) => {
           syncBoardCursor(event.clientX, event.clientY, true);
+
+          const now = performance.now();
+          const travel = Math.hypot(
+            event.clientX - boardPointerSfxRef.current.x,
+            event.clientY - boardPointerSfxRef.current.y,
+          );
+
+          if (travel > 5 && now - boardPointerSfxRef.current.at > 130) {
+            boardPointerSfxRef.current = {
+              at: now,
+              x: event.clientX,
+              y: event.clientY,
+            };
+            playBubbleMotionSfx(Math.min(1.15, 0.4 + travel / 72));
+          }
         }}
         ref={boardRef}
       >

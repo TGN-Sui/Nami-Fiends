@@ -2219,9 +2219,8 @@ function GameHub(props: {
                 key={activeSwipeChannel.id}
                 aria-label={'Open ' + activeSwipeChannel.name + ' profile'}
                 className={
-                  'gamehub-swipe-card gamehub-swipe-cover-card is-swipe-card-open ' +
-                  gameVerificationClass(activeSwipeChannel) +
-                  (activeSwipeChannel.verifiedGame ? ' is-verified-foil' : '')
+                  'gamehub-swipe-card gamehub-swipe-cover-card is-swipe-card-open is-verified-foil ' +
+                  gameVerificationClass(activeSwipeChannel)
                 }
                 onClick={() => props.onOpenProfile(activeSwipeChannel)}
                 onPointerLeave={(event) => {
