@@ -772,7 +772,7 @@ Live indexer + receiving server required; empty states preferred over simulated 
 Status:
 
 ```text
-~98% — policy + officials API + env tooling + genesis passport + FIEND owner identity + launch ops dashboard shipped; verify gates green on live Render/Vercel; payment secrets (treasury, Stripe, PayPal) pending
+~99% — policy + officials API + env tooling + genesis passport + FIEND owner identity + launch ops dashboard shipped; verify gates green on live Render/Vercel; Stripe live on Render; treasury + PayPal secrets still optional-warn
 ```
 
 Shipped:
@@ -805,10 +805,13 @@ Move package verified: 80 tests passing (no republish required 2026-06-19)
 Remaining before testnet go-live:
 
 ```text
-Set treasury wallet + Stripe/PayPal secrets on Render (verify script warns until configured)
+Set treasury wallet on Render (crypto + $GOON tips — verify script warns until configured)
+Set PayPal sandbox secrets on Render (optional until PayPal rail needed)
 Assign named AdminCap backup holder (human step — see admincap-custody.md)
 Legal review of privacy draft before mainnet
 ```
+
+Payment readiness on live Render (2026-06-24): Stripe configured; card checkout on; treasury + PayPal off until secrets set.
 
 Verified green (2026-06-24):
 
@@ -879,6 +882,29 @@ Assign named backup holder (human step)
 Legal review of privacy draft before mainnet
 Full security review before public URL
 ```
+
+---
+
+# Build intake — suggested features
+
+Use this section to triage new ideas before implementation. Drop suggestions here (or in chat); we slot each into a release lane.
+
+**Lanes**
+
+```text
+P0 — Phase 8 exit     Must ship or fix before calling testnet launch stable
+P1 — Phase 8.x polish Small slices on current stack; ship right after exit
+P2 — Phase 9+         Walrus Sites, privacy proofs, MemWal, major integrations
+P3 — Deferred         Phase 10 experiments, mobile genre chat, nice-to-have polish
+```
+
+**Intake queue** *(add rows as ideas arrive)*
+
+| Idea | Lane | Notes |
+|------|------|-------|
+| *(your suggestions)* | TBD | Share in chat — we classify together |
+
+**Gate:** Do not start P2/P3 items until Phase 8 verify gates stay green and launch ops stable.
 
 ---
 

@@ -136,7 +136,39 @@ npm --prefix frontend run build
 
 ---
 
-## 7. Security before public URL
+## 7. Payment secrets (Render)
+
+Set on the `nami-backend` Render service (never commit to git):
+
+| Variable | Purpose |
+|----------|---------|
+| `STRIPE_SECRET_KEY` | Test `sk_test_...` from Stripe Dashboard → API keys |
+| `STRIPE_PUBLISHABLE_KEY` | Test `pk_test_...` (same page) |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret from webhook destination (`whsec_...`) |
+| `NAMI_PAYMENT_TREASURY_ADDRESS` | Sui wallet for crypto checkout + $GOON tips |
+| `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | PayPal sandbox credentials (optional until PayPal rail needed) |
+
+**Stripe webhook (test mode)**
+
+```text
+Scope:     Your account
+Event:     checkout.session.completed   (not payment_intent.succeeded or subscription events)
+URL:       https://nami-backend-rv0o.onrender.com/api/payments/webhooks/stripe
+```
+
+Nami uses Checkout `mode: 'payment'` (one-time), not Stripe Billing subscriptions. After deploy, Settings → Launch Ops should show **Stripe: configured** and **card checkout: on**.
+
+Smoke test:
+
+```bash
+stripe trigger checkout.session.completed
+```
+
+Check Stripe Dashboard → Webhooks → Event deliveries for HTTP 200. A bare CLI trigger may not activate a tier (no matching Nami `payment_id`); use a real membership checkout with test card `4242 4242 4242 4242` for end-to-end.
+
+---
+
+## 8. Security before public URL
 
 - AdminCap custody: [admincap-custody.md](./admincap-custody.md) — primary holder, backup holder, loss scenarios
 - Privacy + community drafts: [privacy-guidelines-draft.md](./privacy-guidelines-draft.md), [community-guidelines-draft.md](./community-guidelines-draft.md)
