@@ -408,6 +408,25 @@ export function deleteOwnerProvisionedChannel(
   return { ok: true, message: entry.gameTitle + ' channel removed.' };
 }
 
+function mergeOwnerProvisionedChannels(
+  local: OwnerProvisionedChannel[],
+  server: OwnerProvisionedChannel[]
+): OwnerProvisionedChannel[] {
+  const byChannelId = new Map<string, OwnerProvisionedChannel>();
+
+  for (const entry of server) {
+    byChannelId.set(entry.channelId, entry);
+  }
+
+  for (const entry of local) {
+    if (!byChannelId.has(entry.channelId)) {
+      byChannelId.set(entry.channelId, entry);
+    }
+  }
+
+  return [...byChannelId.values()].sort((left, right) => right.createdAtMs - left.createdAtMs);
+}
+
 export function replaceOwnerProvisionedChannelsFromServer(
   channels: OwnerProvisionedChannel[]
 ): void {
@@ -415,12 +434,13 @@ export function replaceOwnerProvisionedChannelsFromServer(
     const next = normalizeChannel(entry);
     return next ? [next] : [];
   });
+  const merged = mergeOwnerProvisionedChannels(readChannels(), normalized).slice(0, 200);
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized.slice(0, 200)));
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
   emitChange();
   void import('./owner-provisioned-channel-snapshot-hydrate.js').then(
     ({ applyOwnerProvisionedSnapshots }) => {
-      applyOwnerProvisionedSnapshots(normalized);
+      applyOwnerProvisionedSnapshots(merged);
     }
   );
 }

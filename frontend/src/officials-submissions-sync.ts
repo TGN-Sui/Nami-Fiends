@@ -1,6 +1,10 @@
 import type { GameSubmissionTicket } from './game-submission-ticket-store.js';
-import type { OwnerProvisionedChannel } from './owner-provisioned-channels-store.js';
-import { replaceOwnerProvisionedChannelsFromServer } from './owner-provisioned-channels-store.js';
+import type { MemberSession } from './member-session-store.js';
+import { mergeRegisteredMemberAccountsFromServer } from './member-session-store.js';
+import {
+  replaceOwnerProvisionedChannelsFromServer,
+  type OwnerProvisionedChannel,
+} from './owner-provisioned-channels-store.js';
 import type { PendingNodenameClaim } from './nami-admin-store.js';
 import type { NamiUserSuggestion } from './nami-user-suggestions-store.js';
 import {
@@ -25,6 +29,17 @@ function dispatchHydrated(): void {
   window.dispatchEvent(new CustomEvent('nami-partner-banner-submissions-changed'));
   window.dispatchEvent(new CustomEvent('nami-admin-changed'));
   window.dispatchEvent(new CustomEvent('nami-owner-provisioned-channels-changed'));
+  window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
+}
+
+let hydrationPromise: Promise<boolean> | null = null;
+
+export function bootstrapOfficialsSubmissionsHydration(): Promise<boolean> {
+  if (!hydrationPromise) {
+    hydrationPromise = hydrateOfficialsSubmissionsFromServer();
+  }
+
+  return hydrationPromise;
 }
 
 export async function hydrateOfficialsSubmissionsFromServer(): Promise<boolean> {
@@ -43,6 +58,12 @@ export async function hydrateOfficialsSubmissionsFromServer(): Promise<boolean> 
     if (Array.isArray(projection.ownerProvisionedChannels)) {
       replaceOwnerProvisionedChannelsFromServer(
         projection.ownerProvisionedChannels as OwnerProvisionedChannel[]
+      );
+    }
+
+    if (Array.isArray(projection.registeredMemberAccounts)) {
+      mergeRegisteredMemberAccountsFromServer(
+        projection.registeredMemberAccounts as MemberSession[]
       );
     }
 

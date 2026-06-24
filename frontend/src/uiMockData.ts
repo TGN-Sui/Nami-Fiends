@@ -14,7 +14,7 @@ export type {
 export { navItems } from './domain/navigation.js';
 
 import type { NamiChannel, NamiDeveloperProfile, NamiMember } from './domain/types.js';
-import { isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
+import { shouldUseDevFixtures } from './app-config.js';
 import {
   createEmptyUserProfile,
   emptyChannels,
@@ -22,11 +22,6 @@ import {
   emptyDevelopers,
 } from './fixtures/empty-catalog.js';
 import { createShellDeveloper, createShellSelfMember } from './fixtures/shell-catalog.js';
-import {
-  testLaunchShowcaseChannels,
-  testLaunchShowcaseDevelopers,
-  testLaunchShowcaseMembers,
-} from './fixtures/test-launch-showcase-catalog.js';
 import {
   channels as seedChannels,
   chatMessages as seedChatMessages,
@@ -36,15 +31,10 @@ import {
 } from './fixtures/seed-data.js';
 
 const fixturesEnabled = shouldUseDevFixtures();
-const testLaunchShowcaseEnabled = isTestLaunchMode();
 
 function resolveChannels(): NamiChannel[] {
   if (fixturesEnabled) {
     return seedChannels;
-  }
-
-  if (testLaunchShowcaseEnabled) {
-    return testLaunchShowcaseChannels;
   }
 
   return emptyChannels;
@@ -55,20 +45,12 @@ function resolveDevelopers(): NamiDeveloperProfile[] {
     return seedDevelopers;
   }
 
-  if (testLaunchShowcaseEnabled) {
-    return testLaunchShowcaseDevelopers;
-  }
-
   return [createShellDeveloper()];
 }
 
 function resolveMembers(): NamiMember[] {
   if (fixturesEnabled) {
     return seedMembers;
-  }
-
-  if (testLaunchShowcaseEnabled) {
-    return [createShellSelfMember(), ...testLaunchShowcaseMembers];
   }
 
   return [createShellSelfMember()];

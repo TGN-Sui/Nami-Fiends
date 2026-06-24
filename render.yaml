@@ -13,7 +13,13 @@ services:
       npm --prefix backend run build
     startCommand: npm --prefix backend run start
     healthCheckPath: /health
+    disk:
+      name: nami-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
+      - key: NAMI_DATA_DIR
+        value: /var/data
       - key: NODE_VERSION
         value: '20'
       - key: NAMI_NETWORK

@@ -102,6 +102,10 @@ export function readPartnerCarouselCoverUrl(channelId: string): string | null {
   return readOverride(PARTNER_CAROUSEL_COVER_PREFIX, channelId);
 }
 
+export function readSuperBannerCoverUrl(channelId: string): string | null {
+  return readOverride(SUPER_BANNER_COVER_PREFIX, channelId);
+}
+
 export function readChannelNewsBannerOverride(channelId: string): string | null {
   return readOverride(NEWS_BANNER_PREFIX, channelId);
 }

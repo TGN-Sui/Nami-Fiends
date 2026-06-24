@@ -1,3 +1,4 @@
+import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
 
 export type WalletAuthPayload = {
@@ -81,7 +82,7 @@ export function canPromptWalletSignature(owner?: string): boolean {
     return false;
   }
 
-  if (!authContext.memberVerified) {
+  if (!authContext.memberVerified && !isOfficialOwner(resolvedOwner)) {
     return false;
   }
 

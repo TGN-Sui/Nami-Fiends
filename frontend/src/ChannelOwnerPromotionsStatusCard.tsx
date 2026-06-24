@@ -6,10 +6,11 @@ import {
 } from './channel-owner-promotions-store.js';
 
 export function ChannelOwnerPromotionsStatusCard(props: {
+  channelId: string;
   compact?: boolean;
 }): ReactElement {
-  useChannelOwnerPromotionsState();
-  const statuses = readOwnerPromotionStatuses();
+  useChannelOwnerPromotionsState(props.channelId);
+  const statuses = readOwnerPromotionStatuses(props.channelId);
 
   return (
     <article

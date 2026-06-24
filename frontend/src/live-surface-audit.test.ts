@@ -51,30 +51,29 @@ import { listHubGlobalChats } from './global-chats.js';
 describe('live surface audit — test launch policy', () => {
   const config = testLaunchConfig();
 
-  it('disables dev fixture catalogs and demo surfaces but keeps test launch showcase fallback', () => {
+  it('disables dev fixture catalogs, demo surfaces, and showcase fallback during test launch', () => {
     expect(shouldUseDevFixtures(config)).toBe(false);
     expect(isDemoSimulationEnabled(config)).toBe(false);
     expect(isDemoWalletOnboardingEnabled(config)).toBe(false);
     expect(shouldAutoSeedLocalData(config)).toBe(false);
     expect(isMockMembershipCheckoutEnabled(config)).toBe(false);
-    expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(true);
+    expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(false);
   });
 
-  it('returns showcase channel directory during test launch when live discovery is empty', () => {
+  it('returns an empty channel directory during test launch when no created channels exist', () => {
     const items = resolveChannelDirectory({
       liveRankings: [],
       loadState: 'ready',
       liveQueryEnabled: true,
       localChannels: [],
+      fixtureChannels: [],
     });
 
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.every((item) => item.source === 'fixture')).toBe(true);
-    expect(items.some((item) => item.channel.id === 'vortex')).toBe(true);
+    expect(items).toEqual([]);
   });
 
-  it('returns showcase member directory during test launch when live discovery is empty', () => {
-    expect(readSeedMembers().every((member) => member.tier === 'NPC')).toBe(true);
+  it('returns an empty member directory during test launch when no registered accounts exist', () => {
+    expect(readSeedMembers()).toEqual([]);
 
     const items = resolveMemberDirectory({
       liveMembers: [],
@@ -84,9 +83,7 @@ describe('live surface audit — test launch policy', () => {
       fixtureMembers: testLaunchShowcaseMembers,
     });
 
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.every((item) => item.source === 'fixture')).toBe(true);
-    expect(items.every((item) => item.member.tier === 'NPC')).toBe(true);
+    expect(items).toEqual([]);
   });
 
   it('does not enrich live discovery rows with fixture metadata when fixtures are empty', () => {

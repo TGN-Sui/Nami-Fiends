@@ -53,6 +53,10 @@ import {
   handleOfficialsSubmissionsSync,
 } from './routes/officials-submissions.routes.js';
 import {
+  handleMemberRegistryOptions,
+  handleMemberRegistrySync,
+} from './routes/member-registry.routes.js';
+import {
   handleChannelTransfersCancelPost,
   handleChannelTransfersCreatePost,
   handleChannelTransfersOptions,
@@ -1197,6 +1201,18 @@ const routes: Route[] = [
     pattern: /^\/api\/officials\/submissions\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handleOfficialsSubmissionsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/test-launch\/member-registry$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberRegistryOptions(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/test-launch\/member-registry$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberRegistrySync(request, response),
   },
   {
     method: 'OPTIONS',

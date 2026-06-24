@@ -69,6 +69,10 @@ export async function assertWalletAuth(
     throw new Error('wallet_auth_required');
   }
 
+  if (!auth.signature.trim()) {
+    throw new Error('wallet_auth_required');
+  }
+
   const verified = await verifyWalletAuthPayload({
     owner,
     signature: auth.signature,

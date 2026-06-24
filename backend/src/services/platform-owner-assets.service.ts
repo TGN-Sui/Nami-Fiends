@@ -124,7 +124,8 @@ export async function syncPlatformOwnerAssets(input: {
   owner: string;
   assets: Record<string, string>;
 }): Promise<PlatformOwnerAssetsProjection> {
-  const resolvedAssets: Record<string, string> = {};
+  const existing = await readProjection();
+  const resolvedAssets: Record<string, string> = { ...existing.assets };
 
   for (const [slotId, value] of Object.entries(input.assets)) {
     const safeId = safeSlotId(slotId);
@@ -136,6 +137,7 @@ export async function syncPlatformOwnerAssets(input: {
     const trimmed = value.trim();
 
     if (!trimmed) {
+      delete resolvedAssets[safeId];
       continue;
     }
 

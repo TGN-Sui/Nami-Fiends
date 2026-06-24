@@ -61,6 +61,7 @@ export const config = {
   pageLimit: readNumber('NAMI_PAGE_LIMIT', 50),
   maxPagesPerModule: readNumber('NAMI_MAX_PAGES_PER_MODULE', 5),
 
+  dataDir: (process.env.NAMI_DATA_DIR ?? 'data').trim().replace(/\/$/, '') || 'data',
   cursorPath: process.env.NAMI_CURSOR_PATH ?? 'data/cursors.json',
   eventLogPath: process.env.NAMI_EVENT_LOG_PATH ?? 'data/events.jsonl',
 

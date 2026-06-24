@@ -81,7 +81,7 @@ function draftsEqual(left: ChannelOwnerSettingsDraft, right: ChannelOwnerSetting
 
 export function buildPersistedOwnerSettingsDraft(channel: NamiChannel): ChannelOwnerSettingsDraft {
   const profileEdits = readChannelOwnerProfileEdits(channel.id);
-  const promotions = readChannelOwnerPromotionsState();
+  const promotions = readChannelOwnerPromotionsState(channel.id);
   const bannerContent = readChannelBannerContent(channel.id, channel);
 
   return {
@@ -123,6 +123,30 @@ export function ensureOwnerSettingsDraft(channel: NamiChannel): ChannelOwnerSett
   persistedByChannel.set(channel.id, cloneDraft(persisted));
 
   return draft;
+}
+
+export function refreshOwnerSettingsDraftPromotions(channel: NamiChannel): void {
+  if (isOwnerSettingsDirty(channel.id)) {
+    return;
+  }
+
+  const persisted = buildPersistedOwnerSettingsDraft(channel);
+  const existing = draftsByChannel.get(channel.id);
+
+  if (!existing) {
+    ensureOwnerSettingsDraft(channel);
+    return;
+  }
+
+  const next: ChannelOwnerSettingsDraft = {
+    ...existing,
+    superBanner: { ...persisted.superBanner },
+    partnerCarousel: { ...persisted.partnerCarousel },
+  };
+
+  draftsByChannel.set(channel.id, next);
+  persistedByChannel.set(channel.id, cloneDraft(persisted));
+  emitDraftChange();
 }
 
 export function readOwnerSettingsDraft(channelId: string): ChannelOwnerSettingsDraft | null {
@@ -212,7 +236,7 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
   });
   saveOwnerBrandPalette(draft.brandPalette);
 
-  const promotions = readChannelOwnerPromotionsState();
+  const promotions = readChannelOwnerPromotionsState(channel.id);
   saveSuperBannerDraft(channel.id, {
     coverUrl: promotions.superBanner.draft.coverUrl,
     headline: draft.superBanner.headline,

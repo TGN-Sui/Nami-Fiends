@@ -24,8 +24,8 @@ import {
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
 import { readSafetyReportCount } from './safety-report-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import { isGameChannelOwner, resolveOwnedGameChannel } from './channel-owner-access.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
-import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { useProtocolOwner } from './wallet.js';
 import {
@@ -249,6 +249,7 @@ export function SettingsScreen(props: {
   const blockedCount = countBlockedMembers(memberIds);
   const reportCount = readSafetyReportCount();
   const channelOwnerView = isGameChannelOwner();
+  const ownedGameChannelId = resolveOwnedGameChannel()?.id ?? '';
   const showChannelBrandPalette = canManageChannelBrandPalette() && !channelOwnerView;
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
@@ -484,7 +485,9 @@ export function SettingsScreen(props: {
               />
             ) : null}
             {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
-            {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
+            {channelOwnerView && ownedGameChannelId ? (
+              <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
+            ) : null}
             <BoostCycleSettingsCard />
             {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
             <article className="panel settings-card settings-compact-card">
@@ -537,7 +540,9 @@ export function SettingsScreen(props: {
                   </button>
                 </article>
                 <BoostCycleSettingsCard />
-                <ChannelOwnerPromotionsStatusCard />
+                {ownedGameChannelId ? (
+                  <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
+                ) : null}
               </>
             )}
             <DemoPerspectivePanel

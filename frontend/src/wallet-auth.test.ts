@@ -9,9 +9,14 @@ import {
 } from './wallet-auth.js';
 
 const TEST_OWNER = '0xabc123';
+const OFFICIAL_OWNER = '0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca';
 
 vi.mock('./protocol-env.js', () => ({
   readWalletAuthRequired: vi.fn(() => true),
+}));
+
+vi.mock('./nami-capabilities.js', () => ({
+  isOfficialOwner: (owner: string | null) => owner?.toLowerCase() === OFFICIAL_OWNER.toLowerCase(),
 }));
 
 import { readWalletAuthRequired } from './protocol-env.js';
@@ -92,6 +97,28 @@ describe('wallet-auth', () => {
     expect(payload).toBeNull();
     expect(signer).not.toHaveBeenCalled();
     expect(canPromptWalletSignature(TEST_OWNER)).toBe(false);
+  });
+
+  it('prompts for the configured official owner even when member verification is pending', async () => {
+    const signer = vi.fn(async () => ({
+      signature: 'sig-official',
+      timestampMs: Date.now(),
+    }));
+
+    registerWalletAuthSigner(signer);
+    setWalletAuthContext({
+      owner: OFFICIAL_OWNER,
+      source: 'zklogin',
+      memberVerified: false,
+    });
+
+    const payload = await createWalletAuthPayload(OFFICIAL_OWNER);
+
+    expect(payload).toEqual({
+      signature: 'sig-official',
+      timestampMs: expect.any(Number),
+    });
+    expect(canPromptWalletSignature(OFFICIAL_OWNER)).toBe(true);
   });
 
   it('never prompts for unverified members even with a connected wallet', async () => {

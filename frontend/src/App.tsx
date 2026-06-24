@@ -72,7 +72,7 @@ import {
 import { isChannelHiddenFromPublic } from './game-submission-ticket-store.js';
 import {
   readActiveHubFeaturedChannelId,
-  readApprovedPartnerCarouselChannelIds,
+  readPartnerCarouselTicket,
   partnerCarouselCoverHydrationKey,
   resolvePartnerCarouselCoverUrl,
   useChannelOwnerPromotionsState,
@@ -1195,7 +1195,6 @@ function NamiHub(props: {
   const hubCuration = useOwnerHubCuration();
   const canCurateHub = isOfficialOwner(owner);
   const mediaVersion = useChannelOwnerMediaVersion();
-  const promotions = useChannelOwnerPromotionsState();
   const { items: directoryItems, channels: directoryChannels } = useChannelDirectory(50);
   const discoveryScoreByChannelId = useMemo(
     () => discoveryScoreLookupFromDirectory(directoryItems),
@@ -1207,8 +1206,6 @@ function NamiHub(props: {
   );
   const { members: directoryMembers } = useMemberDirectory();
   const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
-  const partnerTicket = promotions.partnerCarousel.ticket;
-  const approvedPartnerChannelIds = readApprovedPartnerCarouselChannelIds();
 
   function resolveDirectoryChannel(channelId: string): NamiChannel | undefined {
     return (
@@ -1219,12 +1216,6 @@ function NamiHub(props: {
   }
 
   const hubFeaturedChannel = hubFeaturedChannelId ? resolveDirectoryChannel(hubFeaturedChannelId) : null;
-  const partnerCarouselChannel =
-    approvedPartnerChannelIds.length > 0
-      ? resolveDirectoryChannel(approvedPartnerChannelIds[0]!)
-      : partnerTicket?.status === 'submitted' || partnerTicket?.status === 'approved'
-        ? resolveDirectoryChannel(partnerTicket.channelId)
-        : null;
   const featuredShowcaseChannels =
     directoryChannels.length > 0
       ? [
@@ -1242,9 +1233,20 @@ function NamiHub(props: {
       ? featuredShowcaseChannels.find((channel) => channel.id === hoveredShowcaseChannelId) ??
         featuredShowcaseChannels[activeShowcaseIndex]
       : featuredShowcaseChannels[activeShowcaseIndex]) ?? props.selectedChannel;
-  const partnerBannerTitle = partnerTicket?.title?.trim() || activeFeaturedChannel.name;
-  const partnerBannerDescription = partnerTicket?.description?.trim() || activeFeaturedChannel.genre;
-  const partnerCoverHydrationKey = partnerCarouselCoverHydrationKey(partnerTicket);
+  useChannelOwnerPromotionsState(activeFeaturedChannel.id);
+  const activePartnerTicket = readPartnerCarouselTicket(activeFeaturedChannel.id);
+  const partnerCarouselChannel =
+    activePartnerTicket &&
+    (activePartnerTicket.status === 'submitted' || activePartnerTicket.status === 'approved')
+      ? resolveDirectoryChannel(activeFeaturedChannel.id)
+      : null;
+  const partnerBannerTitle = activePartnerTicket?.title?.trim() || activeFeaturedChannel.name;
+  const partnerBannerDescription =
+    activePartnerTicket?.description?.trim() || activeFeaturedChannel.genre;
+  const partnerCoverHydrationKey = partnerCarouselCoverHydrationKey(
+    activeFeaturedChannel.id,
+    activePartnerTicket,
+  );
 
   useEffect(() => {
     if (!partnerCoverHydrationKey) {
@@ -1254,7 +1256,10 @@ function NamiHub(props: {
     void ensureChannelMediaHydratedForKey(partnerCoverHydrationKey);
   }, [partnerCoverHydrationKey, mediaVersion]);
 
-  const partnerBannerCover = resolvePartnerCarouselCoverUrl(partnerTicket);
+  const partnerBannerCover = resolvePartnerCarouselCoverUrl(
+    activeFeaturedChannel.id,
+    activePartnerTicket,
+  );
 
   const sortedGrowthChannels = [...uniqueDirectoryChannels].sort((left, right) => {
     const leftScore =
@@ -5162,8 +5167,7 @@ export function App(): ReactElement {
   const [entrySignedOutNotice, setEntrySignedOutNotice] = useState(false);
   const [gridPulseKey, setGridPulseKey] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<NamiChannel>(() => {
-    const defaultChannel = channels[0] ?? findSeedChannelById('fiends');
-    return defaultChannel ?? createShellChannel();
+    return channels[0] ?? createShellChannel();
   });
   const [selectedMember, setSelectedMember] = useState<(typeof members)[number]>(members[0]!);
   const [selectedDeveloper, setSelectedDeveloper] = useState<(typeof developers)[number]>(() =>

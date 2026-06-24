@@ -63,14 +63,14 @@ describe('app-config directory fallback', () => {
     );
   });
 
-  it('enables test launch showcase fallback when live discovery is empty', () => {
+  it('disables fixture fallback during test launch when live discovery is empty', () => {
     expect(
       shouldUseFixtureCatalogFallback(
         0,
         'ready',
         createConfig({ testLaunch: true, devFixtures: false })
       )
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('keeps fixture catalogs visible while discovery is still loading', () => {

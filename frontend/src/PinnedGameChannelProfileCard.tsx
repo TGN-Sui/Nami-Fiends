@@ -26,10 +26,10 @@ export function PinnedGameChannelProfileCard(props: {
 }): ReactElement | null {
   useChannelCoverVersion();
   const channel = resolveOwnedGameChannel();
-  useChannelOwnerPromotionsState();
+  useChannelOwnerPromotionsState(channel?.id ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
   const shellRef = useRef<HTMLDivElement | null>(null);
-  const promotionStatuses = readOwnerPromotionStatuses();
+  const promotionStatuses = readOwnerPromotionStatuses(channel?.id);
 
   if (!channel) {
     return null;

@@ -1,35 +1,23 @@
-import { isTestLaunchMode, shouldUseDevFixtures } from './app-config.js';
+import { shouldUseDevFixtures } from './app-config.js';
 import type { NamiChannel, NamiMember } from './domain/types.js';
 import {
   channels as rawSeedChannels,
   members as rawSeedMembers,
 } from './fixtures/seed-data.js';
-import {
-  testLaunchShowcaseChannels,
-  testLaunchShowcaseMembers,
-} from './fixtures/test-launch-showcase-catalog.js';
 
-/** Seed catalog channels — empty when dev fixtures and test launch showcase are disabled. */
+/** Seed catalog channels — dev fixtures only; test launch uses created channels from the server. */
 export function readSeedChannels(): NamiChannel[] {
   if (shouldUseDevFixtures()) {
     return rawSeedChannels;
   }
 
-  if (isTestLaunchMode()) {
-    return testLaunchShowcaseChannels;
-  }
-
   return [];
 }
 
-/** Seed catalog members — empty when dev fixtures and test launch showcase are disabled. */
+/** Seed catalog members — dev fixtures only; test launch uses registered accounts from the server. */
 export function readSeedMembers(): NamiMember[] {
   if (shouldUseDevFixtures()) {
     return rawSeedMembers;
-  }
-
-  if (isTestLaunchMode()) {
-    return testLaunchShowcaseMembers;
   }
 
   return [];

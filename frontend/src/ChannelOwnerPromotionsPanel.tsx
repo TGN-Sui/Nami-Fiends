@@ -66,7 +66,7 @@ export function ChannelOwnerPromotionsPanel(props: {
 }): ReactElement {
   useChannelOwnerMediaVersion();
   const settings = useChannelOwnerSettings();
-  const promotions = useChannelOwnerPromotionsState();
+  const promotions = useChannelOwnerPromotionsState(props.channel.id);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>('card');
@@ -80,10 +80,13 @@ export function ChannelOwnerPromotionsPanel(props: {
   const partnerTitle = settings.draft.partnerCarousel.title;
   const partnerDescription = settings.draft.partnerCarousel.description;
 
-  const superGate = canSendSuperBanner();
+  const superGate = canSendSuperBanner(props.channel.id);
   const ticket = promotions.partnerCarousel.ticket;
-  const superBannerCoverUrl = resolveSuperBannerCoverUrl(promotions.superBanner.draft.coverUrl);
-  const partnerBannerCoverUrl = resolvePartnerCarouselCoverUrl(ticket);
+  const superBannerCoverUrl = resolveSuperBannerCoverUrl(
+    props.channel.id,
+    promotions.superBanner.draft.coverUrl,
+  );
+  const partnerBannerCoverUrl = resolvePartnerCarouselCoverUrl(props.channel.id, ticket);
   const preApprovedWorkspace = isPreApprovedGameOwnerWorkspace(props.channel.id);
   const purchasesLocked = !preApprovedOwnerCapabilityAllowed(
     'purchase-promotions',
@@ -139,7 +142,7 @@ export function ChannelOwnerPromotionsPanel(props: {
         />
       ) : null}
 
-      <ChannelOwnerPromotionsStatusCard compact />
+      <ChannelOwnerPromotionsStatusCard channelId={props.channel.id} compact />
 
       <article
         className="panel channel-owner-tool-card channel-owner-super-banner-card"

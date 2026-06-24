@@ -108,6 +108,66 @@ function upsertMemberAccountRegistry(session: MemberSession): void {
   } catch {
     // Ignore storage failures in restricted environments.
   }
+
+  void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
+    syncRegisteredMemberAccountToServer(session).catch(() => {
+      // Best-effort — registry sync is retried on the next signup or session save.
+    });
+  });
+}
+
+export function mergeRegisteredMemberAccountsFromServer(accounts: MemberSession[]): void {
+  const registry = readMemberAccountsRegistry();
+
+  for (const account of accounts) {
+    if (typeof account.email !== 'string' || typeof account.displayName !== 'string') {
+      continue;
+    }
+
+    const email = normalizeEmail(account.email);
+
+    if (!isValidEmail(email) || registry[email]) {
+      continue;
+    }
+
+    registry[email] = {
+      displayName: account.displayName,
+      email,
+      archetype: typeof account.archetype === 'number' ? account.archetype : 2,
+      archetypeLabel:
+        typeof account.archetypeLabel === 'string' ? account.archetypeLabel : 'Cozy Voyager',
+      flavorBadgeId:
+        typeof account.flavorBadgeId === 'string' ? account.flavorBadgeId : 'Hearth Basic',
+      quizAnswers:
+        account.quizAnswers !== null &&
+        typeof account.quizAnswers === 'object' &&
+        !Array.isArray(account.quizAnswers)
+          ? account.quizAnswers
+          : {},
+      issuedPlayerScore:
+        typeof account.issuedPlayerScore === 'number' ? account.issuedPlayerScore : 0,
+      issuedPlayerScoreTier:
+        account.issuedPlayerScoreTier === 'basic' ||
+        account.issuedPlayerScoreTier === 'verified' ||
+        account.issuedPlayerScoreTier === 'premium'
+          ? account.issuedPlayerScoreTier
+          : 'basic',
+      playerScoreIssuedAtMs:
+        typeof account.playerScoreIssuedAtMs === 'number'
+          ? account.playerScoreIssuedAtMs
+          : typeof account.signedUpAtMs === 'number'
+            ? account.signedUpAtMs
+            : Date.now(),
+      signedUpAtMs: typeof account.signedUpAtMs === 'number' ? account.signedUpAtMs : Date.now(),
+    };
+  }
+
+  try {
+    window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
+    window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
+  } catch {
+    // Ignore storage failures in restricted environments.
+  }
 }
 
 /** Signup identity name — set at registration and not updated by passport display edits. */

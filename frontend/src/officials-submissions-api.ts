@@ -9,6 +9,7 @@ export type OfficialsSubmissionsProjection = {
   partnerBanners: unknown[];
   nodenameClaims: unknown[];
   ownerProvisionedChannels: unknown[];
+  registeredMemberAccounts: unknown[];
   updatedAtMs: number;
 };
 
@@ -67,7 +68,30 @@ export type SyncOfficialsSubmissionsInput = {
   partnerBanners?: unknown[];
   nodenameClaims?: unknown[];
   ownerProvisionedChannels?: unknown[];
+  registeredMemberAccounts?: unknown[];
 };
+
+export async function syncRegisteredMemberAccountToServer(
+  account: Record<string, unknown>
+): Promise<void> {
+  const base = apiBase();
+
+  if (!base || !isTestLaunchMode()) {
+    return;
+  }
+
+  const response = await fetch(base + '/api/test-launch/member-registry', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ account }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Member registry sync failed (' + response.status + ').');
+  }
+}
 
 export async function syncOfficialsSubmissions(
   input: SyncOfficialsSubmissionsInput

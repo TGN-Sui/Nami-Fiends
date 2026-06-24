@@ -108,9 +108,9 @@ export function shouldUseFunctionalMockCatalog(_config: AppConfig = readAppConfi
   return false;
 }
 
-/** Read-only showcase catalogs for testnet testers when live discovery is empty. */
-export function shouldUseTestLaunchShowcaseCatalog(config: AppConfig = readAppConfig()): boolean {
-  return isTestLaunchMode(config);
+/** Showcase mock catalogs are disabled — test launch uses server-hydrated created content. */
+export function shouldUseTestLaunchShowcaseCatalog(_config: AppConfig = readAppConfig()): boolean {
+  return false;
 }
 
 /** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */

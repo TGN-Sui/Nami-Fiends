@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 
 import { App } from './App.js';
 import { ensureGenesisLocalDataOnTestLaunch } from './genesis-member.js';
+import { bootstrapOfficialsSubmissionsHydration } from './officials-submissions-sync.js';
 import './partner-banner-submission-store.js';
 import { initNamiSoundscape } from './nami-sfx.js';
 import { NamiThemeProvider } from './theme.js';
@@ -27,12 +28,14 @@ if (!rootElement) {
   throw new Error('Root element not found.');
 }
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <NamiWalletProvider>
-      <NamiThemeProvider>
-        <App />
-      </NamiThemeProvider>
-    </NamiWalletProvider>
-  </React.StrictMode>
-);
+void bootstrapOfficialsSubmissionsHydration().finally(() => {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <NamiWalletProvider>
+        <NamiThemeProvider>
+          <App />
+        </NamiThemeProvider>
+      </NamiWalletProvider>
+    </React.StrictMode>
+  );
+});

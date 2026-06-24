@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -12,6 +13,7 @@ import {
   commitOwnerSettings,
   discardOwnerSettingsDraft,
   ensureOwnerSettingsDraft,
+  refreshOwnerSettingsDraftPromotions,
   resetOwnerSettingsBrandPalette,
   updateOwnerSettingsDraft,
   useOwnerSettingsDraft,
@@ -46,6 +48,10 @@ export function ChannelOwnerSettingsProvider(props: {
   const { draft, isDirty } = useOwnerSettingsDraft(props.channel.id);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshOwnerSettingsDraftPromotions(props.channel);
+  }, [props.channel.id]);
 
   const clearMessages = useCallback(() => {
     setSaveNotice(null);

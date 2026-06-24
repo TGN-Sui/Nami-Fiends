@@ -8,9 +8,9 @@ vi.mock('./app-config.js', () => ({
 import { buildOfficialGameSubmissionTicket, isChannelHiddenFromPublic } from './game-submission-ticket-store.js';
 
 describe('isChannelHiddenFromPublic', () => {
-  it('allows showcase fixture game channels to open public profiles', () => {
-    expect(isChannelHiddenFromPublic('vortex')).toBe(false);
-    expect(isChannelHiddenFromPublic('pebble')).toBe(false);
+  it('hides unknown channels during test launch when showcase fixtures are disabled', () => {
+    expect(isChannelHiddenFromPublic('vortex')).toBe(true);
+    expect(isChannelHiddenFromPublic('pebble')).toBe(true);
   });
 });
 
