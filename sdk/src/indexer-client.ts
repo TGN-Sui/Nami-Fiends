@@ -7,8 +7,12 @@ import type {
   ChannelProjection,
   GuildDiscoveryResponse,
   GuildProjection,
+  IdentityProjection,
   JuryCaseProjection,
   ModerationRecordProjection,
+  NamiLinkedProfileResponse,
+  NodenameLookupResponse,
+  NodenameRegistryEntry,
   PassportTimelineProjection,
   PassportTimelineSnapshot,
   ProfileProjection,
@@ -350,6 +354,64 @@ export class NamiIndexerClient {
   async getDiscoveryGuilds(limit = 20): Promise<GuildDiscoveryResponse> {
     return fetchJson<GuildDiscoveryResponse>(
       `${this.baseUrl}/api/discovery/guilds?limit=${limit}`
+    );
+  }
+
+  async getLinkedProfile(owner: string): Promise<NamiLinkedProfileResponse | null> {
+    try {
+      const body = await fetchJson<{ linkedProfile: NamiLinkedProfileResponse }>(
+        `${this.baseUrl}/api/nami/linked-profile/${encodeURIComponent(owner)}`
+      );
+
+      return body.linkedProfile;
+    } catch {
+      return null;
+    }
+  }
+
+  async getNodenameLookup(
+    nodename: string,
+    options: { includeLinkedProfile?: boolean } = {}
+  ): Promise<NodenameLookupResponse | null> {
+    try {
+      const params = new URLSearchParams();
+
+      if (options.includeLinkedProfile) {
+        params.set('includeLinkedProfile', 'true');
+      }
+
+      const query = params.size > 0 ? `?${params.toString()}` : '';
+      const body = await fetchJson<{ lookup: NodenameLookupResponse }>(
+        `${this.baseUrl}/api/nami/nodename/${encodeURIComponent(nodename)}${query}`
+      );
+
+      return body.lookup;
+    } catch {
+      return null;
+    }
+  }
+
+  async listNodenames(limit = 50): Promise<{ nodenames: NodenameRegistryEntry[]; count: number }> {
+    return fetchJson<{ nodenames: NodenameRegistryEntry[]; count: number }>(
+      `${this.baseUrl}/api/nami/nodenames?limit=${limit}`
+    );
+  }
+
+  async getIdentityByOwner(owner: string): Promise<IdentityProjection | null> {
+    try {
+      const body = await fetchJson<{ identity: IdentityProjection }>(
+        `${this.baseUrl}/api/nami/identity/${encodeURIComponent(owner)}`
+      );
+
+      return body.identity;
+    } catch {
+      return null;
+    }
+  }
+
+  async listIdentities(limit = 50): Promise<{ identities: IdentityProjection[]; count: number }> {
+    return fetchJson<{ identities: IdentityProjection[]; count: number }>(
+      `${this.baseUrl}/api/nami/identities?limit=${limit}`
     );
   }
 }

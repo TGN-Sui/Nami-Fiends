@@ -24,7 +24,7 @@ import {
   createNamiIndexerClient,
   isVerifiedNamiMember,
   resolveNamiMemberFromWallet,
-} from '@nami/sdk';
+} from '@nami/sdk/partner';
 
 const chain = createNamiClient({
   packageId: process.env.NAMI_PACKAGE_ID!,
@@ -102,6 +102,8 @@ The indexer projects `NodenameRegistered` and `EnterNamiCompleted` events into `
 | POST | `/api/nami/linked-profile/sync` | Same bundle with wallet signature proof |
 | GET | `/api/nami/nodename/:nodename` | Registry lookup; `?includeLinkedProfile=true` for full bundle |
 | GET | `/api/nami/nodenames` | Indexed nodename list (`?limit=50`) |
+| GET | `/api/nami/identities` | Indexed identity list (`?limit=50`) |
+| GET | `/api/nami/identity/:owner` | Identity projection by wallet owner |
 
 ---
 

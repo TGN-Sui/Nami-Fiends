@@ -75,6 +75,11 @@ import {
   handleLinkedProfileSync,
 } from './routes/linked-profile.routes.js';
 import {
+  handleIdentityByOwnerGet,
+  handleIdentityListGet,
+  handleIdentityOptions,
+} from './routes/identity.routes.js';
+import {
   handleNodenameListGet,
   handleNodenameLookupGet,
   handleNodenameLookupOptions,
@@ -1018,6 +1023,31 @@ const routes: Route[] = [
     pattern: /^\/api\/nami\/nodename$/,
     paramNames: [],
     handler: (_registry, request, response) => handleNodenameLookupOptions(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/nami\/identities$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleIdentityOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/nami\/identities$/,
+    paramNames: [],
+    handler: (registry, request, response) => handleIdentityListGet(registry, request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/nami\/identity$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleIdentityOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/nami\/identity\/([^/]+)$/,
+    paramNames: ['owner'],
+    handler: (registry, request, response, params) =>
+      handleIdentityByOwnerGet(registry, request, response, params.owner ?? ''),
   },
   {
     method: 'GET',

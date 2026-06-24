@@ -46,6 +46,7 @@ export type NamiEventModule = (typeof NAMI_EVENT_MODULES)[number];
 export interface IdentityCreated {
   identity_id: string;
   owner: string;
+  nodename: string | number[];
 }
 
 export interface NodenameRegistered {

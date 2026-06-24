@@ -114,7 +114,7 @@ export function PartnerIntegrationPanel(): ReactElement {
 
       <details className="partner-integration-snippet">
         <summary>Integrator snippet</summary>
-        <pre>{`import { resolveNamiMemberFromWallet, isVerifiedNamiMember } from '@nami/sdk';
+        <pre>{`import { resolveNamiMemberFromWallet, isVerifiedNamiMember } from '@nami/sdk/partner';
 
 const member = await resolveNamiMemberFromWallet(chain, indexer, zkLoginAddress);
 if (isVerifiedNamiMember(member)) {

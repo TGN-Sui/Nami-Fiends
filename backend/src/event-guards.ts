@@ -58,7 +58,7 @@ export type NamiEventName = (typeof KNOWN_EVENT_NAMES)[number];
 const KNOWN_EVENT_NAME_SET = new Set<string>(KNOWN_EVENT_NAMES);
 
 const EVENT_SCHEMAS: Record<NamiEventName, EventSchema> = {
-  IdentityCreated: { identity_id: 'address', owner: 'address' },
+  IdentityCreated: { identity_id: 'address', owner: 'address', nodename: 'bytes' },
   PassportCreated: { passport_id: 'address', identity_id: 'address' },
   XPAdded: {
     passport_id: 'address',

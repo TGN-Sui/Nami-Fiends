@@ -55,6 +55,7 @@ async function main(): Promise<void> {
   );
   console.log(`[nami-replay] squads: ${registry.squads.getAll().length}`);
   console.log(`[nami-replay] profiles: ${registry.profiles.getAll().length}`);
+  console.log(`[nami-replay] identities: ${registry.identities.getStats().count}`);
   console.log(`[nami-replay] channels: ${registry.channels.getAll().length}`);
   console.log(
     `[nami-replay] moderation records: ${registry.moderation.getAll().length} (${registry.moderation.getStats().activeCount} active)`

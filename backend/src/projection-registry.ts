@@ -12,6 +12,7 @@ import { PassportTimelineService } from './services/passport-timeline.service.js
 import { ProfileService } from './services/profile.service.js';
 import { RecoveryService } from './services/recovery.service.js';
 import { SquadService } from './services/squad.service.js';
+import { IdentityService } from './services/identity.service.js';
 import { NodenameRegistryService } from './services/nodename-registry.service.js';
 
 export class ProjectionRegistry {
@@ -27,6 +28,7 @@ export class ProjectionRegistry {
   readonly moderation = new ModerationService();
   readonly badgeHistory = new BadgeHistoryService();
   readonly boostHistory = new BoostHistoryService();
+  readonly identities = new IdentityService();
   readonly nodenameRegistry = new NodenameRegistryService();
 
   private readonly processors: EventProcessor[];
@@ -40,6 +42,7 @@ export class ProjectionRegistry {
       this.jury,
       this.squads,
       this.profiles,
+      this.identities,
       this.channels,
       this.channelAccess,
       this.moderation,
@@ -62,6 +65,7 @@ export class ProjectionRegistry {
       this.jury.load(),
       this.squads.load(),
       this.profiles.load(),
+      this.identities.load(),
       this.channels.load(),
       this.channelAccess.load(),
       this.moderation.load(),
@@ -80,6 +84,7 @@ export class ProjectionRegistry {
       this.jury.save(),
       this.squads.save(),
       this.profiles.save(),
+      this.identities.save(),
       this.channels.save(),
       this.channelAccess.save(),
       this.moderation.save(),
@@ -98,6 +103,7 @@ export class ProjectionRegistry {
       this.jury.clear(),
       this.squads.clear(),
       this.profiles.clear(),
+      this.identities.clear(),
       this.channels.clear(),
       this.channelAccess.clear(),
       this.moderation.clear(),
@@ -122,6 +128,7 @@ export class ProjectionRegistry {
       'JuryService',
       'SquadService',
       'ProfileService',
+      'IdentityService',
       'ChannelService',
       'ChannelAccessService',
       'ModerationService',

@@ -103,6 +103,11 @@ export interface IndexerStats {
       npcChatEnabledCount: number;
       fileSizeBytes: number | null;
     };
+    identities: {
+      path: string;
+      count: number;
+      fileSizeBytes: number | null;
+    };
     nodenameRegistry: {
       path: string;
       count: number;
@@ -134,6 +139,7 @@ export async function collectIndexerStats(
   const badgeHistoryStats = registry.badgeHistory.getStats();
   const boostHistoryStats = registry.boostHistory.getStats();
   const channelAccessStats = registry.channelAccess.getStats();
+  const identityStats = registry.identities.getStats();
   const nodenameRegistryStats = registry.nodenameRegistry.getStats();
 
   return {
@@ -232,6 +238,11 @@ export async function collectIndexerStats(
         count: channelAccessStats.count,
         npcChatEnabledCount: channelAccessStats.npcChatEnabledCount,
         fileSizeBytes: await getFileSizeBytes(registry.channelAccess.getProjectionPath()),
+      },
+      identities: {
+        path: registry.identities.getProjectionPath(),
+        count: identityStats.count,
+        fileSizeBytes: await getFileSizeBytes(registry.identities.getProjectionPath()),
       },
       nodenameRegistry: {
         path: registry.nodenameRegistry.getProjectionPath(),

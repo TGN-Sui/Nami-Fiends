@@ -194,6 +194,26 @@ npm --prefix SDK run test
 
 `scripts/mvp-check.sh` and `scripts/phase4-sdk-check.sh` run SDK typecheck, build, and unit tests. No testnet republish required.
 
+## Partner embed (`@nami/sdk/partner`)
+
+Partner platforms can import a curated surface without the full protocol catalog:
+
+```typescript
+import {
+  createNamiClient,
+  createNamiIndexerClient,
+  resolveNamiMemberFromWallet,
+  isVerifiedNamiMember,
+  lookupNodenameInRegistry,
+} from '@nami/sdk/partner';
+
+const indexer = createNamiIndexerClient({ baseUrl: 'https://your-nami-indexer.example' });
+const linked = await indexer.getLinkedProfile(zkLoginAddress);
+const lookup = await indexer.getNodenameLookup('fiendgamer', { includeLinkedProfile: true });
+```
+
+See [cross-platform-integration.md](../docs/cross-platform-integration.md).
+
 ## Package layout
 
 ```text

@@ -84,6 +84,13 @@ export {
 } from './indexer-subscriptions.js';
 
 export type {
+  IdentityProjection,
+  NamiLinkedProfileResponse,
+  NodenameLookupResponse,
+  NodenameRegistryEntry,
+} from './projections.js';
+
+export type {
   AppealProjection,
   BadgeHistoryEntry,
   BoostHistoryEntry,

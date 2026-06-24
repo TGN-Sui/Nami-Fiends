@@ -128,17 +128,96 @@ try {
   fail('indexer /health', error instanceof Error ? error.message : 'unreachable');
 }
 
+const smokeOwner =
+  readArg('--smoke-owner') ||
+  '0xd0f93acd58f1ee56fde8ae89f3d1062921dbced9d337c498f09390ae3e732b0d';
+
 try {
   const nodenames = await fetch(indexerUrl.replace(/\/$/, '') + '/api/nami/nodenames?limit=5');
 
   if (nodenames.ok) {
     const payload = await nodenames.json();
     pass('GET /api/nami/nodenames', `${payload.count ?? 0} indexed`);
+
+    const first = payload.nodenames?.[0];
+
+    if (first?.nodename) {
+      const lookup = await fetch(
+        indexerUrl.replace(/\/$/, '') +
+          `/api/nami/nodename/${encodeURIComponent(first.nodename)}?includeLinkedProfile=true`
+      );
+
+      if (lookup.ok) {
+        const lookupPayload = await lookup.json();
+        const registered = lookupPayload.lookup?.registered === true;
+
+        if (registered) {
+          pass(
+            'GET /api/nami/nodename includeLinkedProfile',
+            lookupPayload.lookup.nodename ?? first.nodename
+          );
+        } else {
+          fail('GET /api/nami/nodename includeLinkedProfile');
+        }
+      } else {
+        fail('GET /api/nami/nodename includeLinkedProfile', String(lookup.status));
+      }
+    }
   } else {
     fail('GET /api/nami/nodenames', String(nodenames.status));
   }
 } catch (error) {
   fail('GET /api/nami/nodenames', error instanceof Error ? error.message : 'unreachable');
+}
+
+try {
+  const identities = await fetch(indexerUrl.replace(/\/$/, '') + '/api/nami/identities?limit=5');
+
+  if (identities.ok) {
+    const payload = await identities.json();
+    pass('GET /api/nami/identities', `${payload.count ?? 0} indexed`);
+  } else {
+    fail('GET /api/nami/identities', String(identities.status));
+  }
+} catch (error) {
+  fail('GET /api/nami/identities', error instanceof Error ? error.message : 'unreachable');
+}
+
+try {
+  const linked = await fetch(
+    indexerUrl.replace(/\/$/, '') + `/api/nami/linked-profile/${encodeURIComponent(smokeOwner)}`
+  );
+
+  if (linked.ok) {
+    const payload = await linked.json();
+    const status = payload.linkedProfile?.proof?.status ?? 'unknown';
+    pass('GET /api/nami/linked-profile', status);
+  } else if (linked.status === 404) {
+    pass('GET /api/nami/linked-profile', 'not_found (no mint yet)');
+  } else {
+    fail('GET /api/nami/linked-profile', String(linked.status));
+  }
+} catch (error) {
+  fail('GET /api/nami/linked-profile', error instanceof Error ? error.message : 'unreachable');
+}
+
+if (smokeOwner.startsWith('0x')) {
+  try {
+    const identity = await fetch(
+      indexerUrl.replace(/\/$/, '') + `/api/nami/identity/${encodeURIComponent(smokeOwner)}`
+    );
+
+    if (identity.ok) {
+      const payload = await identity.json();
+      pass('GET /api/nami/identity by owner', payload.identity?.nodename ?? 'indexed');
+    } else if (identity.status === 404) {
+      pass('GET /api/nami/identity by owner', 'not_found (replay pending)');
+    } else {
+      fail('GET /api/nami/identity by owner', String(identity.status));
+    }
+  } catch (error) {
+    fail('GET /api/nami/identity by owner', error instanceof Error ? error.message : 'unreachable');
+  }
 }
 
 const summary = fs.existsSync(summaryPath)

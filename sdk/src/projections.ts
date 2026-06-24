@@ -252,3 +252,63 @@ export interface GuildDiscoveryResponse {
   cycle: DiscoveryCycleSnapshot;
   guilds: DiscoveryGuildRanking[];
 }
+
+export interface IdentityProjection {
+  identity_id: string;
+  owner: string;
+  nodename: string | null;
+  created_at_ms: string | null;
+  updated_at_ms: string | null;
+}
+
+export interface NodenameRegistryEntry {
+  nodename: string;
+  identity_id: string;
+  owner: string;
+  passport_id: string | null;
+  profile_id: string | null;
+  archetype: number | null;
+  registered_at_ms: string | null;
+  updated_at_ms: string | null;
+}
+
+export interface NodenameLookupResponse {
+  registered: boolean;
+  nodename: string;
+  identityId: string | null;
+  owner: string | null;
+  passportId: string | null;
+  profileId: string | null;
+  archetype: number | null;
+  memberProofStatus: string | null;
+  source: 'indexer' | 'chain' | 'none';
+  linkedProfile: NamiLinkedProfileResponse | null;
+}
+
+export interface NamiLinkedProfileResponse {
+  owner: string;
+  proof: {
+    status: string;
+    identityId: string | null;
+    passportId: string | null;
+    profileId: string | null;
+  };
+  anchor: {
+    nodename: string | null;
+    archetype: number | null;
+    avatarRef: string | null;
+  };
+  progression: Record<string, unknown> | null;
+  offchain: {
+    displayName: string | null;
+    preferredName: string | null;
+    avatarUrl: string | null;
+    claimStatus: string | null;
+    claimNodename: string | null;
+    profileProjectionId: string | null;
+  };
+  auth: {
+    requireSignature: boolean;
+    verifiedRequest: boolean;
+  };
+}
