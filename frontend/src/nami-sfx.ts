@@ -16,6 +16,8 @@ let soundEnabled = true;
 let soundscapeInitialized = false;
 let audioUnlocked = false;
 
+const SFX_MASTER_GAIN = 1.55;
+
 const HOVER_THROTTLE_MS = 48;
 const HOVER_ELEMENT_COOLDOWN_MS = 220;
 const TYPE_THROTTLE_MS = 34;
@@ -306,12 +308,12 @@ function pickRandomPatch(patches: TonePatch[][]): TonePatch[] {
 }
 
 function playPatchSet(patches: TonePatch[][], intensity = 1): void {
-  const scale = Math.max(0.35, Math.min(1.4, intensity));
+  const scale = Math.max(0.35, Math.min(1.4, intensity)) * SFX_MASTER_GAIN;
 
   for (const patch of pickRandomPatch(patches)) {
     playTone({
       ...patch,
-      gainPeak: patch.gainPeak * scale,
+      gainPeak: Math.min(0.12, patch.gainPeak * scale),
     });
   }
 }
@@ -336,22 +338,22 @@ export function isNamiSoundEnabled(): boolean {
 
 export function playButtonClickSfx(): void {
   playPatchSet(BUTTON_CLICK_PATCHES);
-  playNoiseBurst(14, 0.009, 1600);
+  playNoiseBurst(14, 0.009 * SFX_MASTER_GAIN, 1600);
 }
 
 export function playButtonHoverSfx(): void {
   playPatchSet(BUTTON_HOVER_PATCHES);
-  playNoiseBurst(8, 0.0035, 720);
+  playNoiseBurst(8, 0.0035 * SFX_MASTER_GAIN, 720);
 }
 
 export function playSidebarHoverSfx(): void {
   playPatchSet(SIDEBAR_HOVER_PATCHES);
-  playNoiseBurst(10, 0.004, 420);
+  playNoiseBurst(10, 0.004 * SFX_MASTER_GAIN, 420);
 }
 
 export function playTypeKeySfx(): void {
   playPatchSet(TYPE_KEY_PATCHES);
-  playNoiseBurst(6, 0.0028, 1100);
+  playNoiseBurst(6, 0.0028 * SFX_MASTER_GAIN, 1100);
 }
 
 export function playBubblePopSfx(): void {
@@ -365,7 +367,7 @@ export function playBubbleCollisionSfx(intensity = 0.6): void {
 
   lastBubbleCollisionSfxAt = performance.now();
   playPatchSet(BUBBLE_COLLISION_PATCHES, intensity);
-  playNoiseBurst(14, 0.005 * intensity, 320);
+  playNoiseBurst(14, 0.005 * intensity * SFX_MASTER_GAIN, 320);
 }
 
 export function playBubbleMotionSfx(intensity = 0.5): void {

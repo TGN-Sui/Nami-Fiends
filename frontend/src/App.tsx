@@ -266,6 +266,7 @@ import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
 import { useGameCardTilt } from './game-card-tilt.js';
+import { orbTiltHandlers } from './orb-tilt.js';
 import { GameHubChannelTile } from './GameHubChannelTile.js';
 import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
@@ -883,6 +884,9 @@ function Sidebar(props: {
                 data-hub-page={destination.page}
                 data-hub-slot={triangleSlot}
                 onClick={() => props.onNavigateHubDestination(destination.page)}
+                onPointerEnter={orbTiltHandlers.onPointerEnter}
+                onPointerLeave={orbTiltHandlers.onPointerLeave}
+                onPointerMove={orbTiltHandlers.onPointerMove}
                 type="button"
               >
                 <OwnerEditableImage
@@ -935,6 +939,9 @@ function Sidebar(props: {
               key={item.page}
               aria-label={item.shortLabel}
               className={isNavActive ? 'is-active' : ''}
+              onPointerEnter={orbTiltHandlers.onPointerEnter}
+              onPointerLeave={orbTiltHandlers.onPointerLeave}
+              onPointerMove={orbTiltHandlers.onPointerMove}
               onClick={() => {
                 if (item.page === 'userProfile' && isGameChannelOwner()) {
                   props.onOpenOwnedChannel?.();
@@ -975,6 +982,9 @@ function Sidebar(props: {
             aria-pressed={igniteRadioEnabled}
             className={'sidebar-radio-toggle' + (igniteRadioEnabled ? ' is-active-sidebar-radio' : '')}
             onClick={() => saveIgniteRadioEnabled(!igniteRadioEnabled)}
+            onPointerEnter={orbTiltHandlers.onPointerEnter}
+            onPointerLeave={orbTiltHandlers.onPointerLeave}
+            onPointerMove={orbTiltHandlers.onPointerMove}
             type="button"
           >
             <OwnerEditableImage

@@ -2496,7 +2496,7 @@ button {
     color 180ms ease;
 }
 
-button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble) {
+button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button) {
   transform: translateY(-2px) scale(1.025);
   border-color: rgba(117, 215, 255, 0.58);
   box-shadow:
@@ -2504,8 +2504,18 @@ button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):
     0 14px 30px rgba(0, 0, 0, 0.24);
 }
 
-button:active:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble) {
+button:active:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button) {
   transform: translateY(0) scale(0.985);
+}
+
+.sidebar.is-icon-rail .sidebar-nav > button:hover:not(:disabled),
+.sidebar.is-icon-rail .sidebar-nav > button:focus-visible,
+.sidebar.is-icon-rail .sidebar-radio-toggle:hover:not(:disabled),
+.sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible,
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:hover:not(:disabled),
+.sidebar.is-icon-rail .sidebar-vertical-collapse-toggle:focus-visible {
+  transform: none;
+  box-shadow: none;
 }
 
 /* Game cards use pointer tilt — keep transform off the global button transition. */

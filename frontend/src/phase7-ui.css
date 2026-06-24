@@ -16689,7 +16689,16 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle),
 .sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle):hover,
 .sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle):focus-visible,
-.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle).is-active {
+.sidebar.is-icon-rail .sidebar-nav > button:not(.sidebar-vertical-collapse-toggle).is-active,
+.sidebar.is-icon-rail .sidebar-radio-toggle,
+.sidebar.is-icon-rail .sidebar-radio-toggle:hover,
+.sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible {
+  --orb-tilt-x: 0deg;
+  --orb-tilt-y: 0deg;
+  --orb-glare-x: 38%;
+  --orb-glare-y: 30%;
+  --orb-glare-opacity: 0;
+  --orb-hover-scale: 1;
   position: relative;
   display: flex;
   align-items: center;
@@ -16890,19 +16899,46 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   place-items: center;
   flex: 0 0 auto;
   border: none !important;
-  border-radius: 0;
+  border-radius: 50%;
   background: transparent !important;
   box-shadow: none !important;
   font-size: 0.92rem;
   font-weight: 800;
   line-height: 1;
   color: inherit;
-  transform: scale(1);
-  transform-origin: left center;
+  overflow: visible;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transform:
+    perspective(520px)
+    rotateX(var(--orb-tilt-y))
+    rotateY(var(--orb-tilt-x))
+    scale(var(--orb-hover-scale, 1));
+  transform-origin: center center;
   transition:
-    transform var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
     color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
     filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+.sidebar.is-icon-rail .nav-icon::after,
+.sidebar.is-icon-rail .sidebar-radio-toggle .nav-icon::after {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: var(--orb-glare-opacity, 0);
+  background:
+    radial-gradient(
+      circle at var(--orb-glare-x) var(--orb-glare-y),
+      rgba(255, 255, 255, 0.62) 0%,
+      rgba(255, 255, 255, 0.18) 22%,
+      transparent 54%
+    ),
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.12), transparent 42%);
+  mix-blend-mode: screen;
+  transition: opacity 120ms ease;
 }
 
 .sidebar.is-icon-rail .sidebar-hub-rail-mark-stack.nav-icon,
@@ -16933,12 +16969,11 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   padding: 0 0 0 var(--sidebar-icon-rail-inset);
 }
 
-.sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
-.sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
-.sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible .nav-icon {
-  transform: scale(var(--sidebar-glyph-hover-scale));
-  transform-origin: left center;
+.sidebar.is-icon-rail .sidebar-nav > button:hover,
+.sidebar.is-icon-rail .sidebar-nav > button:focus-visible,
+.sidebar.is-icon-rail .sidebar-radio-toggle:hover,
+.sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible {
+  --orb-hover-scale: var(--sidebar-glyph-hover-scale);
 }
 
 /* Active page: keep hover scale, expand right into content. */
@@ -16946,22 +16981,23 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   z-index: 12;
 }
 
+.sidebar.is-icon-rail .sidebar-nav > button.is-active {
+  --orb-hover-scale: var(--sidebar-glyph-hover-scale);
+}
+
 .sidebar.is-icon-rail .sidebar-nav > button.is-active .nav-icon {
   color: #ffffff;
   filter: none;
-  transform: scale(var(--sidebar-glyph-hover-scale));
-  transform-origin: left center;
 }
 
 /* Adjacent icons echo 15% of the hover/selected scale, expanding right. */
-.sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-.sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
-  transform: scale(var(--sidebar-glyph-neighbor-scale));
-  transform-origin: left center;
+.sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active),
+.sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active),
+.sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active),
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active),
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active),
+.sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) {
+  --orb-hover-scale: var(--sidebar-glyph-neighbor-scale);
 }
 
 .sidebar.is-icon-rail .sidebar-radio-toggle.is-active-sidebar-radio .nav-icon {
@@ -17268,34 +17304,33 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
     min-height: 44px;
   }
 
-  .sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .nav-icon,
-  .sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .nav-icon,
-  .sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active .nav-icon,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button:hover,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible,
+  .sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active,
   .sidebar.is-icon-rail
     .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:hover)
-    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
-    .nav-icon,
+    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active),
   .sidebar.is-icon-rail
     .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:focus-visible)
-    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
-    .nav-icon {
-    transform: scale(1);
+    > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active) {
+    --orb-hover-scale: 1;
   }
 
-  .sidebar.is-icon-rail .sidebar-nav > button:hover .nav-icon,
-  .sidebar.is-icon-rail .sidebar-radio-toggle:hover .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible .nav-icon,
-  .sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible .nav-icon {
-    transform: scale(1);
+  .sidebar.is-icon-rail .sidebar-nav > button:hover,
+  .sidebar.is-icon-rail .sidebar-radio-toggle:hover,
+  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible,
+  .sidebar.is-icon-rail .sidebar-radio-toggle:focus-visible,
+  .sidebar.is-icon-rail .sidebar-nav > button.is-active {
+    --orb-hover-scale: 1;
   }
 
-  .sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active) .nav-icon,
-  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) .nav-icon {
-    transform: scale(1);
+  .sidebar.is-icon-rail .sidebar-nav > button:hover + button:not(:hover):not(:focus-visible):not(.is-active),
+  .sidebar.is-icon-rail .sidebar-nav > button:focus-visible + button:not(:hover):not(:focus-visible):not(.is-active),
+  .sidebar.is-icon-rail .sidebar-nav > button.is-active + button:not(:hover):not(:focus-visible):not(.is-active),
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:hover):not(:hover):not(:focus-visible):not(.is-active),
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button:focus-visible):not(:hover):not(:focus-visible):not(.is-active),
+  .sidebar.is-icon-rail .sidebar-nav > button:has(+ button.is-active):not(:hover):not(:focus-visible):not(.is-active) {
+    --orb-hover-scale: 1;
   }
 
   .nami-landing-hero-actions .onboarding-primary-btn,
@@ -19189,19 +19224,37 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
     filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left {
+.sidebar.is-icon-rail .sidebar-hub-triangle-button {
+  --orb-tilt-x: 0deg;
+  --orb-tilt-y: 0deg;
+  --orb-glare-x: 38%;
+  --orb-glare-y: 30%;
+  --orb-glare-opacity: 0;
+  --orb-hover-scale: 1;
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left:hover,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left:focus-visible,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-left.is-active {
   left: calc(var(--sidebar-rail-center) - var(--hub-triangle-half-width));
   top: calc(var(--sidebar-glyph-size) * 0.08);
   transform: translate(-50%, 0);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right {
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right:hover,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right:focus-visible,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-top-right.is-active {
   left: calc(var(--sidebar-rail-center) + var(--hub-triangle-half-width));
   top: calc(var(--sidebar-glyph-size) * 0.08);
   transform: translate(-50%, 0);
 }
 
-.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom {
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom:hover,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom:focus-visible,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-hub-slot-bottom.is-active {
   left: var(--sidebar-rail-center);
   top: calc(var(--sidebar-glyph-size) * 0.08 + var(--hub-triangle-rise));
   transform: translate(-50%, 0);
@@ -19223,6 +19276,12 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   overflow: visible;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+.sidebar.is-icon-rail .nav-icon.owner-editable-image .owner-editable-image-asset,
+.sidebar.is-icon-rail .nav-icon.owner-editable-image > span {
+  position: relative;
+  z-index: 2;
 }
 
 .sidebar.is-icon-rail .nav-icon.owner-editable-image .owner-editable-image-asset {
@@ -19281,15 +19340,22 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
   border: none !important;
 }
 
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:hover,
+.sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible {
+  --orb-hover-scale: var(--sidebar-hub-glyph-hover-scale);
+}
+
 .sidebar.is-icon-rail .sidebar-hub-triangle-button:hover .nav-icon,
 .sidebar.is-icon-rail .sidebar-hub-triangle-button:focus-visible .nav-icon {
-  transform: scale(var(--sidebar-hub-glyph-hover-scale));
   filter: drop-shadow(0 0 12px rgba(117, 215, 255, 0.42));
+}
+
+.sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active {
+  --orb-hover-scale: var(--sidebar-hub-glyph-hover-scale);
 }
 
 .sidebar.is-icon-rail .sidebar-hub-triangle-button.is-active .nav-icon {
   color: #ffffff;
-  transform: scale(var(--sidebar-hub-glyph-hover-scale));
   filter:
     drop-shadow(0 0 14px rgba(117, 215, 255, 0.55))
     drop-shadow(0 0 4px rgba(141, 255, 178, 0.35));
@@ -19303,13 +19369,11 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 
 .sidebar.is-icon-rail
   .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:hover)
-  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
-  .nav-icon,
+  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active),
 .sidebar.is-icon-rail
   .sidebar-hub-destinations:has(.sidebar-hub-triangle-button:focus-visible)
-  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active)
-  .nav-icon {
-  transform: scale(var(--sidebar-hub-glyph-neighbor-scale));
+  > .sidebar-hub-triangle-button:not(:hover):not(:focus-visible):not(.is-active) {
+  --orb-hover-scale: var(--sidebar-hub-glyph-neighbor-scale);
 }
 
 .sidebar.is-icon-rail .sidebar-icon-rail-secondary > button .sidebar-nav-label,
