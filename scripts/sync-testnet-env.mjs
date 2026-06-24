@@ -192,7 +192,7 @@ console.log('  frontend/.env.local');
 console.log('');
 console.log('Package ID:     ', packageId);
 console.log('AdminCap ID:    ', adminCapId || '(not in summary)');
-console.log('Registry ID:    ', nodenameRegistryId || '(not in summary — republish after onboarding module)');
+console.log('Registry ID:    ', nodenameRegistryId || '(not in summary — run publish-testnet.sh)');
 console.log('Indexer URL:    ', indexerUrl);
 console.log('zkLogin origin: ', zkloginOrigin);
 console.log('Owner email:    ', officialOwnerEmail || '(not set)');

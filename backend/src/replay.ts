@@ -62,6 +62,9 @@ async function main(): Promise<void> {
   console.log(`[nami-replay] badge history: ${registry.badgeHistory.getAll().length}`);
   console.log(`[nami-replay] boost history: ${registry.boostHistory.getAll().length}`);
   console.log(`[nami-replay] channel access policies: ${registry.channelAccess.getAll().length}`);
+  console.log(
+    `[nami-replay] nodename registry: ${registry.nodenameRegistry.getStats().count} nodename(s)`
+  );
 }
 
 void main().catch((error) => {

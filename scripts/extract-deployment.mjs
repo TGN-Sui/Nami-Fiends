@@ -15,7 +15,8 @@ if (!network || !publishPath) {
   process.exit(1);
 }
 
-const raw = JSON.parse(fs.readFileSync(publishPath, 'utf8'));
+const rawText = fs.readFileSync(publishPath, 'utf8').replace(/^\uFEFF/, '');
+const raw = JSON.parse(rawText);
 const objectChanges = raw.objectChanges ?? raw.transaction?.objectChanges ?? [];
 
 let packageId = '';
