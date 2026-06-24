@@ -10,8 +10,9 @@ Current testnet artifact: `deployments/testnet/latest.json`
 
 ```json
 {
-  "packageId": "0xd4ccad8f0687e31aaee2524db96c7a1d9509abaeadc949e0136c6522a631e058",
-  "adminCapId": "0x170eaaa308ffb88096ebdc664bdcd27dc0a36ce42461fdb2422fb79657009edc"
+  "packageId": "0x74f2e6f200d7a814390b89e2e8a1c7d09fb49968a4362c8ab56e100e9573665f",
+  "adminCapId": "0xf4ff9561a7b9dc736b6c9e47b1806fd2e9eeb5eb699e475f86bb82e0cb6258bd",
+  "nodenameRegistryId": "0x68e1b656a5fbb5534577f64321fb466512e8534da8749821b085ac8687891fa7"
 }
 ```
 

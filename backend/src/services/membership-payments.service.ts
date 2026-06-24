@@ -1,7 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 
-import { paymentConfig } from '../payment-config.js';
+import {
+  isConfiguredSecret,
+  isConfiguredWalletAddress,
+  paymentConfig,
+} from '../payment-config.js';
 import { createSuiClient } from '../sui.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 import { activateMembershipFromPaymentIntent } from './membership-subscriptions.service.js';
@@ -92,15 +96,23 @@ export type PublicPaymentConfig = {
 };
 
 export function getPublicPaymentConfig(): PublicPaymentConfig {
+  const treasuryConfigured = isConfiguredWalletAddress(paymentConfig.treasuryAddress);
+  const stripeConfigured =
+    isConfiguredSecret(paymentConfig.stripeSecretKey) &&
+    isConfiguredSecret(paymentConfig.stripePublishableKey);
+  const paypalConfigured =
+    isConfiguredSecret(paymentConfig.paypalClientId) &&
+    isConfiguredSecret(paymentConfig.paypalClientSecret);
+
   return {
-    treasuryAddress: paymentConfig.treasuryAddress,
+    treasuryAddress: treasuryConfigured ? paymentConfig.treasuryAddress : null,
     usdcCoinType: paymentConfig.usdcCoinType,
     goonCoinType: paymentConfig.goonCoinType,
-    stripePublishableKey: paymentConfig.stripePublishableKey,
-    paypalClientId: paymentConfig.paypalClientId,
-    cardEnabled: paymentConfig.stripeSecretKey.trim() !== '' || paymentConfig.allowMockProviders,
-    paypalEnabled: paymentConfig.paypalClientId.trim() !== '' || paymentConfig.allowMockProviders,
-    cryptoEnabled: paymentConfig.treasuryAddress.trim() !== '',
+    stripePublishableKey: stripeConfigured ? paymentConfig.stripePublishableKey : null,
+    paypalClientId: paypalConfigured ? paymentConfig.paypalClientId : null,
+    cardEnabled: stripeConfigured || paymentConfig.allowMockProviders,
+    paypalEnabled: paypalConfigured || paymentConfig.allowMockProviders,
+    cryptoEnabled: treasuryConfigured,
     mockProviders: paymentConfig.allowMockProviders,
   };
 }
@@ -303,7 +315,7 @@ function buildCryptoPayload(intent: MembershipPaymentIntent): CryptoCheckoutPayl
     throw new Error('Crypto asset is required for Other payments.');
   }
 
-  if (!paymentConfig.treasuryAddress.trim()) {
+  if (!isConfiguredWalletAddress(paymentConfig.treasuryAddress)) {
     throw new Error('Payment treasury address is not configured on the server.');
   }
 

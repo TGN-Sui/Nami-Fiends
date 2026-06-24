@@ -5,6 +5,7 @@ import {
 } from './discovery.service.js';
 import { getOfficialsSubmissions } from './officials-submissions.service.js';
 import { paymentConfig } from '../payment-config.js';
+import { getPublicPaymentConfig } from './membership-payments.service.js';
 import type { ProjectionRegistry } from '../projection-registry.js';
 
 export interface LaunchOpsOfficialsPending {
@@ -24,6 +25,15 @@ export interface LaunchOpsDiscoverySnapshot {
   category_count: number;
 }
 
+export interface LaunchOpsPaymentReadiness {
+  treasury_configured: boolean;
+  stripe_configured: boolean;
+  paypal_configured: boolean;
+  crypto_checkout_enabled: boolean;
+  card_checkout_enabled: boolean;
+  paypal_checkout_enabled: boolean;
+}
+
 export interface LaunchOpsSummary {
   generated_at_ms: number;
   network: string;
@@ -31,6 +41,7 @@ export interface LaunchOpsSummary {
   payment_allow_mock: boolean;
   package_id: string;
   official_owner_configured: boolean;
+  payment_readiness: LaunchOpsPaymentReadiness;
   officials_pending: LaunchOpsOfficialsPending;
   discovery: LaunchOpsDiscoverySnapshot;
   projections: {
@@ -86,6 +97,7 @@ export async function buildLaunchOpsSummary(
   const appealStats = registry.appeals.getStats();
   const recoveryStats = registry.recovery.getStats();
   const juryStats = registry.jury.getStats();
+  const publicPayment = getPublicPaymentConfig();
 
   return {
     generated_at_ms: Date.now(),
@@ -94,6 +106,14 @@ export async function buildLaunchOpsSummary(
     payment_allow_mock: paymentConfig.allowMockProviders,
     package_id: config.packageId,
     official_owner_configured: config.officialOwner.trim() !== '',
+    payment_readiness: {
+      treasury_configured: publicPayment.treasuryAddress !== null,
+      stripe_configured: publicPayment.stripePublishableKey !== null,
+      paypal_configured: publicPayment.paypalClientId !== null,
+      crypto_checkout_enabled: publicPayment.cryptoEnabled,
+      card_checkout_enabled: publicPayment.cardEnabled,
+      paypal_checkout_enabled: publicPayment.paypalEnabled,
+    },
     officials_pending: {
       suggestions,
       game_tickets: gameTickets,

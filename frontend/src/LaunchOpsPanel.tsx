@@ -92,6 +92,30 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
           </section>
 
           <section className="launch-ops-card">
+            <h3>Payment readiness</h3>
+            <ul className="protocol-timeline-list">
+              <li className="protocol-timeline-item">
+                Treasury wallet{' '}
+                <strong>{summary.payment_readiness.treasury_configured ? 'configured' : 'missing'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Stripe keys <strong>{summary.payment_readiness.stripe_configured ? 'configured' : 'missing'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                PayPal keys <strong>{summary.payment_readiness.paypal_configured ? 'configured' : 'missing'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Checkout rails{' '}
+                <strong>
+                  crypto {summary.payment_readiness.crypto_checkout_enabled ? 'on' : 'off'} / card{' '}
+                  {summary.payment_readiness.card_checkout_enabled ? 'on' : 'off'} / PayPal{' '}
+                  {summary.payment_readiness.paypal_checkout_enabled ? 'on' : 'off'}
+                </strong>
+              </li>
+            </ul>
+          </section>
+
+          <section className="launch-ops-card">
             <h3>Officials queue</h3>
             <ul className="protocol-timeline-list">
               <li className="protocol-timeline-item">

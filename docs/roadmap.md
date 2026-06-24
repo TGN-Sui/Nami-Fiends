@@ -724,16 +724,16 @@ Embedded social / live embed player hooks for real-time gift overlays
 Status:
 
 ```text
-In progress — Phase 8 overall ~92% complete
+In progress — Phase 8 overall ~96% complete
 ```
 
 ```text
 Phase 8 progress
 
-[██████████████████░░] ~92%
+[███████████████████░] ~96%
 
-8.1 Testnet launch mode      ██████████████████░░  ~92%
-8.2 Deploy + public URL      ████████░░░░░░░░░░░░  ~40%
+8.1 Testnet launch mode      ███████████████████░  ~98%
+8.2 Deploy + public URL      ██████████████████░░  ~90%
 8.3 zkLogin production       ████████████████████  100%
 8.4 Security + custody       ████████████░░░░░░░░  ~60%
 ```
@@ -772,7 +772,7 @@ Live indexer + receiving server required; empty states preferred over simulated 
 Status:
 
 ```text
-~92% — policy + officials API + env tooling + genesis passport + FIEND owner identity + launch ops dashboard shipped; deploy secrets + public URL pending
+~98% — policy + officials API + env tooling + genesis passport + FIEND owner identity + launch ops dashboard shipped; verify gates green on live Render/Vercel; payment secrets (treasury, Stripe, PayPal) pending
 ```
 
 Shipped:
@@ -796,20 +796,28 @@ Optional NAMI_OFFICIALS_SYNC_SECRET for server-side ops (never in frontend env)
 NAMI_TEST_LAUNCH on backend disables mock payment providers
 docs/testnet-launch-checklist.md + docs/testnet-zklogin.md
 scripts/sync-testnet-env.mjs, verify-testnet-ready.mjs, extract-testnet-latest.mjs
-GET /api/ops/launch-summary — test launch flags, officials queue depth, discovery cycle, projection counts
+GET /api/ops/launch-summary — test launch flags, officials queue depth, discovery cycle, projection counts, payment readiness
 Launch Ops panel (Settings → Advanced → Launch Ops) + Discovery tab on Indexed Data panel
-verify-testnet-ready.mjs probes discovery + launch-summary endpoints
+verify-testnet-ready.mjs probes discovery + launch-summary + payment readiness warnings
 Move package verified: 80 tests passing (no republish required 2026-06-19)
 ```
 
 Remaining before testnet go-live:
 
 ```text
-Set official owner, treasury, Stripe/PayPal, and zkLogin client ID (human secrets)
-Deploy receiving server to a public URL + set VITE_NAMI_INDEXER_URL
-node scripts/verify-testnet-ready.mjs — all checks green
-npm --prefix frontend run build against .env.local
-AdminCap custody plan finalized + privacy/community guideline drafts
+Set treasury wallet + Stripe/PayPal secrets on Render (verify script warns until configured)
+Assign named AdminCap backup holder (human step — see admincap-custody.md)
+Legal review of privacy draft before mainnet
+```
+
+Verified green (2026-06-24):
+
+```text
+node scripts/verify-testnet-ready.mjs — core checks pass (payment secrets warn)
+node scripts/verify-public-deploy.mjs — all checks pass
+node scripts/verify-zklogin-config.mjs — all checks pass
+npm --prefix frontend run build — production build passes
+Live: https://nami-fiends.vercel.app + https://nami-backend-rv0o.onrender.com
 ```
 
 ---
@@ -819,7 +827,7 @@ AdminCap custody plan finalized + privacy/community guideline drafts
 Status:
 
 ```text
-~40% — Render + Vercel blueprints shipped; verify-public-deploy.mjs probes public URLs; human deploy pending
+~90% — Render + Vercel live; verify-public-deploy.mjs green; CORS + health + officials API reachable from browser
 ```
 
 Deliverables:

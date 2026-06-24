@@ -11,6 +11,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 const checks = [];
 let failed = 0;
+let warned = 0;
 
 function pass(label, detail = '') {
   checks.push({ ok: true, label, detail });
@@ -19,6 +20,11 @@ function pass(label, detail = '') {
 function fail(label, detail = '') {
   checks.push({ ok: false, label, detail });
   failed += 1;
+}
+
+function warn(label, detail = '') {
+  checks.push({ ok: 'warn', label, detail });
+  warned += 1;
 }
 
 function parseEnvFile(filePath) {
@@ -148,6 +154,30 @@ if (!backendEnv) {
   } else {
     fail('NAMI_OFFICIAL_OWNER configured', 'Set AdminCap holder wallet');
   }
+
+  if (!isPlaceholder(backendEnv.NAMI_PAYMENT_TREASURY_ADDRESS)) {
+    pass('NAMI_PAYMENT_TREASURY_ADDRESS configured');
+  } else {
+    warn('NAMI_PAYMENT_TREASURY_ADDRESS configured', 'Set treasury wallet for crypto + $GOON tips');
+  }
+
+  if (
+    !isPlaceholder(backendEnv.STRIPE_SECRET_KEY) &&
+    !isPlaceholder(backendEnv.STRIPE_PUBLISHABLE_KEY)
+  ) {
+    pass('Stripe keys configured');
+  } else {
+    warn('Stripe keys configured', 'Card checkout disabled until Render secrets are set');
+  }
+
+  if (
+    !isPlaceholder(backendEnv.PAYPAL_CLIENT_ID) &&
+    !isPlaceholder(backendEnv.PAYPAL_CLIENT_SECRET)
+  ) {
+    pass('PayPal keys configured');
+  } else {
+    warn('PayPal keys configured', 'PayPal checkout disabled until Render secrets are set');
+  }
 }
 
 const indexerUrl = frontendEnv?.VITE_NAMI_INDEXER_URL;
@@ -210,6 +240,27 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
 
     if (launchSummary.ok) {
       pass('launch ops summary API', String(launchSummary.status));
+
+      const summary = await launchSummary.json();
+      const payment = summary?.payment_readiness;
+
+      if (payment?.treasury_configured) {
+        pass('live treasury configured');
+      } else {
+        warn('live treasury configured', 'Set NAMI_PAYMENT_TREASURY_ADDRESS on Render');
+      }
+
+      if (payment?.stripe_configured) {
+        pass('live Stripe configured');
+      } else {
+        warn('live Stripe configured', 'Set STRIPE_* secrets on Render');
+      }
+
+      if (payment?.paypal_configured) {
+        pass('live PayPal configured');
+      } else {
+        warn('live PayPal configured', 'Set PAYPAL_* secrets on Render');
+      }
     } else {
       fail('launch ops summary API', 'HTTP ' + launchSummary.status);
     }
@@ -223,11 +274,19 @@ console.log('Nami testnet readiness');
 console.log('======================');
 
 for (const check of checks) {
-  const mark = check.ok ? '[ok]' : '[!!]';
+  const mark = check.ok === true ? '[ok]' : check.ok === 'warn' ? '[!!]' : '[XX]';
   console.log(mark, check.label, check.detail ? '— ' + check.detail : '');
 }
 
 console.log('');
-console.log(failed === 0 ? 'All checks passed.' : failed + ' check(s) need attention.');
+if (failed === 0) {
+  console.log(
+    warned === 0
+      ? 'All checks passed.'
+      : 'Core checks passed. ' + warned + ' optional payment secret(s) still need attention.',
+  );
+} else {
+  console.log(failed + ' check(s) need attention.');
+}
 
 process.exit(failed === 0 ? 0 : 1);

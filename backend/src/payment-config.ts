@@ -28,6 +28,23 @@ function readNumber(name: string, fallback: number): number {
 
 const paypalMode = readString('NAMI_PAYPAL_MODE', 'sandbox');
 
+export function isConfiguredWalletAddress(value: string): boolean {
+  const trimmed = value.trim();
+
+  return (
+    trimmed.startsWith('0x') &&
+    trimmed.length > 10 &&
+    !trimmed.includes('YOUR_') &&
+    !trimmed.includes('your-')
+  );
+}
+
+export function isConfiguredSecret(value: string): boolean {
+  const trimmed = value.trim();
+
+  return trimmed !== '' && !trimmed.includes('YOUR_') && !trimmed.includes('your-');
+}
+
 export const paymentConfig = {
   treasuryAddress: readString('NAMI_PAYMENT_TREASURY_ADDRESS'),
   usdcCoinType: readString(

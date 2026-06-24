@@ -244,6 +244,7 @@ Membership checkout, subscription state, avatar/cover/logo uploads, streaming pr
 | UI-C27.2 | Complete | `LaunchOpsPanel` in Settings → Advanced → Launch Ops (official owner). |
 | UI-C27.3 | Complete | `IndexedDataPanel` Discovery tab wired to `ProtocolDiscoveryPanel`. |
 | UI-C27.4 | Complete | `verify-testnet-ready.mjs` probes `/api/discovery/*` and `/api/ops/launch-summary`. |
+| UI-C27.5 | Complete | Launch summary + panel expose payment readiness (treasury, Stripe, PayPal); placeholder treasury no longer enables crypto checkout. |
 
 Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `NamiOwnerAdvancedPanel.tsx`, `IndexedDataPanel.tsx`.
 
@@ -251,7 +252,7 @@ Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test
 
 **Recommended next lane:**
 
-1. Public deploy (Render + Vercel) and human secrets (treasury, Stripe/PayPal, zkLogin per origin).
-2. Security review + AdminCap custody finalization.
-3. Extend Walrus-backed media references when storage proofs ship.
+1. Set Render payment secrets (treasury, Stripe, PayPal) — verify script warns until green.
+2. Assign AdminCap backup holder + legal review of privacy draft (Phase 8.4).
+3. Phase 9.1 Walrus Sites frontend hosting once Phase 8 exit criteria are met.
 

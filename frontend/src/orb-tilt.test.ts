@@ -38,7 +38,8 @@ describe('orb-tilt', () => {
     applyOrbTilt(element, 36, 12);
 
     expect(element.classList.contains('is-orb-tilting')).toBe(true);
-    expect(element.style.getPropertyValue('--orb-tilt-x')).toBe('1.50deg');
+    expect(element.style.getPropertyValue('--orb-tilt-x')).toBe('2.25deg');
+    expect(element.style.getPropertyValue('--orb-tilt-y')).toBe('2.00deg');
     expect(element.style.getPropertyValue('--orb-glare-opacity')).toBe('0.92');
 
     resetOrbTilt(element);

@@ -9,6 +9,15 @@ export type LaunchOpsOfficialsPending = {
   total: number;
 };
 
+export type LaunchOpsPaymentReadiness = {
+  treasury_configured: boolean;
+  stripe_configured: boolean;
+  paypal_configured: boolean;
+  crypto_checkout_enabled: boolean;
+  card_checkout_enabled: boolean;
+  paypal_checkout_enabled: boolean;
+};
+
 export type LaunchOpsSummary = {
   generated_at_ms: number;
   network: string;
@@ -16,6 +25,7 @@ export type LaunchOpsSummary = {
   payment_allow_mock: boolean;
   package_id: string;
   official_owner_configured: boolean;
+  payment_readiness: LaunchOpsPaymentReadiness;
   officials_pending: LaunchOpsOfficialsPending;
   discovery: {
     engine_version: string;
