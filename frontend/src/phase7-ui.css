@@ -313,10 +313,10 @@
 }
 
 .global-chat-list-row .global-chat-row-action {
-  min-height: 0;
-  padding: 4px 8px;
-  font-size: 0.68rem;
-  line-height: 1.1;
+  min-height: 28px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  line-height: 1.2;
   border-radius: 999px;
 }
 
@@ -437,6 +437,12 @@
   margin-left: auto;
 }
 
+.global-chat-composer-bar.chat-composer-with-emojis .chat-emoji-picker-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
 .global-chat-composer-bar input {
   width: 100%;
   min-width: 0;
@@ -453,24 +459,49 @@
   outline-offset: 1px;
 }
 
+/* Global chat send — matched to composer input height (Hub + Game Hub dock). */
 .global-chat-send-button {
-  min-height: 32px;
-  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 76px;
   width: auto;
   max-width: none;
-  padding: 0 10px;
-  border-radius: 10px;
+  padding: 0 16px;
+  border-radius: 12px;
   border: 1px solid rgba(67, 245, 167, 0.42);
   background: linear-gradient(135deg, rgba(67, 245, 167, 0.24), rgba(117, 215, 255, 0.14));
   color: #eafff6;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   font-weight: 800;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   box-shadow: none;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 120ms ease;
+}
+
+.global-chat-send-button:hover:not(:disabled) {
+  border-color: rgba(67, 245, 167, 0.62);
+  background: linear-gradient(135deg, rgba(67, 245, 167, 0.34), rgba(117, 215, 255, 0.22));
+}
+
+.global-chat-send-button:focus-visible {
+  outline: 2px solid rgba(117, 215, 255, 0.48);
+  outline-offset: 2px;
+}
+
+.global-chat-send-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .global-chat-send-button:disabled {
   opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .global-chat-voice-controls {
@@ -4979,9 +5010,10 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .member-public-chat-pinned-tab {
   display: grid;
-  gap: 2px;
-  min-width: 168px;
-  padding: 12px 16px;
+  gap: 3px;
+  min-width: 188px;
+  min-height: 56px;
+  padding: 14px 18px;
   cursor: pointer;
   border-radius: 14px 14px 4px 14px;
   border: 1px solid rgba(255, 92, 122, 0.45);
@@ -8245,9 +8277,10 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .genre-chat-pinned-tab {
   display: grid;
-  gap: 2px;
-  min-width: 168px;
-  padding: 12px 16px;
+  gap: 3px;
+  min-width: 188px;
+  min-height: 56px;
+  padding: 14px 18px;
   cursor: pointer;
   border-radius: 14px 14px 4px 14px;
   border: 1px solid rgba(90, 220, 170, 0.45);
@@ -8324,13 +8357,13 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .genre-chat-pinned-room-tab {
   flex: 0 0 auto;
-  min-height: 22px;
-  padding: 0 8px;
+  min-height: 32px;
+  padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid rgba(120, 190, 255, 0.18);
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -8454,13 +8487,23 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .genre-chat-pinned-dock .global-chat-composer-bar {
   flex-shrink: 0;
-  padding: 8px 10px 10px;
+  padding: 10px 12px 12px;
+  gap: 10px;
+}
+
+.genre-chat-pinned-dock .global-chat-send-button,
+.nami-favorited-chat-dock .global-chat-send-button,
+.member-public-chat-pinned-dock .global-chat-send-button {
+  min-height: 44px;
+  min-width: 72px;
 }
 
 .genre-chat-pinned-collapse {
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 32px;
+  min-height: 32px;
   padding: 0;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .tcg-foil-passport-shell.is-pro-passport-foil .tcg-foil-passport-frame,
@@ -8722,8 +8765,16 @@ button.uniform-member-avatar > *:not(.uniform-member-tier-foil):not(.uniform-mem
   }
 
   .global-chat-send-button {
-    padding: 0 12px;
-    font-size: 0.82rem;
+    min-height: 44px;
+    min-width: 68px;
+    padding: 0 14px;
+    font-size: 0.84rem;
+  }
+
+  .genre-chat-pinned-tab {
+    min-width: 172px;
+    min-height: 52px;
+    padding: 12px 16px;
   }
 }
 
@@ -11429,9 +11480,9 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 }
 
 .genre-chat-pinned-unpin {
-  min-height: 28px;
-  padding: 0 8px;
-  font-size: 0.74rem;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.76rem;
 }
 
 .genre-chat-pinned-dock {
