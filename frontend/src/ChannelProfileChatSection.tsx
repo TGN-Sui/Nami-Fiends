@@ -39,6 +39,7 @@ import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { resolveChatEmojisForChannel, useChannelCustomEmojis } from './channel-custom-emojis-store.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
+import { useChatCosmeticLiveSync } from './use-chat-cosmetic-live-sync.js';
 import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 
 const conductLanguageTerms = [
@@ -87,6 +88,7 @@ export function ChannelProfileChatSection(props: {
   const [adultLanguageCollapsed, setAdultLanguageCollapsed] = useState(true);
   const [reportPulse, setReportPulse] = useState('');
   const [adultLanguageMode, setAdultLanguageMode] = useState<'censor' | 'filter' | 'show'>('censor');
+  useChatCosmeticLiveSync();
   useChannelCustomEmojis(props.channel.id);
   const channelEmojis = resolveChatEmojisForChannel(props.channel.id);
 

@@ -11,6 +11,7 @@ import { readSelfProfileEdits } from './member-profile-store.js';
 const STORAGE_KEY = 'nami.member.cosmetic-equips';
 
 let cachedEquips: Record<string, string> | null = null;
+let cachedUpdatedAtMs = 0;
 let equipSyncOwner: string | null = null;
 
 function dispatchChange(): void {
@@ -35,7 +36,12 @@ function readLocalEquips(): Record<string, string> {
       return cachedEquips;
     }
 
-    const parsed = JSON.parse(stored) as { equips?: Record<string, string> };
+    const parsed = JSON.parse(stored) as { equips?: Record<string, string>; updatedAtMs?: number };
+
+    cachedUpdatedAtMs =
+      typeof parsed.updatedAtMs === 'number' && Number.isFinite(parsed.updatedAtMs)
+        ? parsed.updatedAtMs
+        : 0;
 
     cachedEquips =
       parsed.equips && typeof parsed.equips === 'object' && !Array.isArray(parsed.equips)
@@ -57,10 +63,18 @@ function readLocalEquips(): Record<string, string> {
   }
 }
 
-function writeLocalEquips(equips: Record<string, string>): void {
+function writeLocalEquips(equips: Record<string, string>, updatedAtMs = Date.now()): void {
   cachedEquips = { ...equips };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ equips: cachedEquips }));
+  cachedUpdatedAtMs = updatedAtMs;
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ equips: cachedEquips, updatedAtMs: cachedUpdatedAtMs })
+  );
   dispatchChange();
+}
+
+export function readLocalEquipsForSync(): Record<string, string> {
+  return readLocalEquips();
 }
 
 export function readEquippedChatOverlayIdForMember(memberId: string): string {
@@ -108,12 +122,16 @@ export async function hydrateMemberCosmeticEquipsFromServer(): Promise<boolean> 
   try {
     const projection = await fetchMemberCosmeticEquips();
     const serverEquips = projection.equips ?? {};
+    const serverUpdatedAtMs =
+      typeof projection.updatedAtMs === 'number' && Number.isFinite(projection.updatedAtMs)
+        ? projection.updatedAtMs
+        : Date.now();
 
-    if (Object.keys(serverEquips).length === 0) {
+    if (serverUpdatedAtMs <= cachedUpdatedAtMs) {
       return false;
     }
 
-    writeLocalEquips(serverEquips);
+    writeLocalEquips(serverEquips, serverUpdatedAtMs);
     return true;
   } catch {
     return false;
@@ -138,7 +156,10 @@ export async function syncEquippedChatOverlayToServer(
       ownerOverride: owner,
     });
 
-    writeLocalEquips(projection.equips ?? {});
+    writeLocalEquips(
+      projection.equips ?? {},
+      typeof projection.updatedAtMs === 'number' ? projection.updatedAtMs : Date.now()
+    );
     return true;
   } catch {
     return false;
@@ -168,6 +189,7 @@ export function useMemberCosmeticEquips(): Record<string, string> {
 
 export function resetMemberCosmeticEquipsForTests(): void {
   cachedEquips = null;
+  cachedUpdatedAtMs = 0;
   equipSyncOwner = null;
 
   try {

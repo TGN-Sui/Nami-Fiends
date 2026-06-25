@@ -32,6 +32,7 @@ import { isChatOverlayRewardsApiAvailable } from './chat-overlay-rewards-api.js'
 import { syncChatOverlayRewardsToServer } from './chat-overlay-rewards-sync.js';
 import { overlayRewardClassName } from './chat-overlay-rewards.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import { members } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 function createDraftReward(): OfficialChatOverlayReward {
@@ -393,23 +394,43 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
               ) : null}
 
               {activeDraft.condition.type === 'official-grant' ? (
-                <label className="onboarding-field">
-                  <span>Granted member ids (comma-separated)</span>
-                  <input
-                    onChange={(event) =>
-                      updateCondition({
-                        type: 'official-grant',
-                        memberIds: event.target.value
-                          .split(',')
-                          .map((entry) => entry.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="m1, m2, partner-member-id"
-                    type="text"
-                    value={activeDraft.condition.memberIds.join(', ')}
-                  />
-                </label>
+                <fieldset className="profile-edit-chip-field">
+                  <legend>Granted members</legend>
+                  <p className="profile-edit-field-hint">
+                    Select roster members who can unlock this border without tier or verification checks.
+                  </p>
+                  <div className="profile-edit-chip-row">
+                    {members.map((member) => {
+                      const selected = activeDraft.condition.type === 'official-grant'
+                        && activeDraft.condition.memberIds.includes(member.id);
+
+                      return (
+                        <button
+                          aria-pressed={selected}
+                          className={
+                            'nami-surface-button profile-edit-chip-button' +
+                            (selected ? ' is-active-view' : '')
+                          }
+                          key={member.id}
+                          onClick={() => {
+                            if (activeDraft.condition.type !== 'official-grant') {
+                              return;
+                            }
+
+                            const memberIds = selected
+                              ? activeDraft.condition.memberIds.filter((entry) => entry !== member.id)
+                              : [...activeDraft.condition.memberIds, member.id];
+
+                            updateCondition({ type: 'official-grant', memberIds });
+                          }}
+                          type="button"
+                        >
+                          {member.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
               ) : null}
             </fieldset>
 

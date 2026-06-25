@@ -66,7 +66,7 @@ export async function hydrateChatOverlayRewardsFromServer(): Promise<boolean> {
   try {
     const catalog = await fetchChatOverlayRewardsCatalog();
 
-    if (!Array.isArray(catalog.rewards) || catalog.rewards.length === 0) {
+    if (!Array.isArray(catalog.rewards)) {
       return false;
     }
 

@@ -272,6 +272,7 @@ import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
+import { useChatCosmeticLiveSync } from './use-chat-cosmetic-live-sync.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
@@ -4715,6 +4716,7 @@ function MessageLogScreen(props: {
 }): ReactElement {
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
+  useChatCosmeticLiveSync();
   const computeThreadMessages = useCallback(() => {
     const activeThread = readMessageThreads().find((thread) => thread.memberId === props.member.id);
 

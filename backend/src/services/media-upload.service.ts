@@ -13,7 +13,8 @@ const MAX_CHANNEL_COVER_BYTES = 4 * 1024 * 1024;
 const MAX_STUDIO_LOGO_BYTES = 2 * 1024 * 1024;
 const MAX_PLATFORM_OWNER_ASSET_BYTES = 2 * 1024 * 1024;
 const MAX_PLATFORM_OWNER_SCENE_BYTES = 48 * 1024 * 1024;
-const MAX_BORDER_ART_BYTES = 2 * 1024 * 1024;
+const MAX_BORDER_ART_STATIC_BYTES = 2 * 1024 * 1024;
+const MAX_BORDER_ART_ANIMATED_BYTES = 4 * 1024 * 1024;
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
@@ -248,8 +249,10 @@ export async function saveBorderArtUpload(
   }
 
   const buffer = Buffer.from(input.dataBase64, 'base64');
+  const maxBytes =
+    input.artKind === 'animated' ? MAX_BORDER_ART_ANIMATED_BYTES : MAX_BORDER_ART_STATIC_BYTES;
 
-  if (buffer.byteLength === 0 || buffer.byteLength > MAX_BORDER_ART_BYTES) {
+  if (buffer.byteLength === 0 || buffer.byteLength > maxBytes) {
     throw new Error('invalid_file_size');
   }
 

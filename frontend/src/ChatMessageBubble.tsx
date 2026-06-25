@@ -6,6 +6,7 @@ import {
   resolveEquippedChatOverlayReward,
 } from './chat-overlay-rewards.js';
 import { messageBubbleClass } from './member-access.js';
+import { useChatCosmeticLiveSyncSignal } from './use-chat-cosmetic-live-sync.js';
 import type { NamiMember } from './uiMockData.js';
 
 export function ChatMessageBubble(props: {
@@ -13,6 +14,7 @@ export function ChatMessageBubble(props: {
   authorName: string;
   children: ReactNode;
 }): ReactElement {
+  useChatCosmeticLiveSyncSignal();
   const fallbackClass = messageBubbleClass(props.member, props.authorName);
   const overlay = resolveChatOverlayForMember(props.member);
   const equippedReward = resolveEquippedChatOverlayReward(props.member);
