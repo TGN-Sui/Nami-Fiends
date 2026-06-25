@@ -54,7 +54,7 @@ import {
   requestSettingsSection,
   type SettingsSection,
 } from './settings-navigation.js';
-import { dispatchTutorialRestart, resetTutorialForReplay } from './tutorial-queue.js';
+import { resetTutorialForReplay, scheduleTutorialReplay } from './tutorial-queue.js';
 
 export type { SettingsSection } from './settings-navigation.js';
 export { requestSettingsSection } from './settings-navigation.js';
@@ -628,10 +628,9 @@ export function SettingsScreen(props: {
                     return;
                   }
 
-                  void resetTutorialForReplay(owner).then(() => {
-                    props.onNavigate?.('hub');
-                    dispatchTutorialRestart(owner);
-                  });
+                  props.onNavigate?.('hub');
+                  scheduleTutorialReplay(owner);
+                  void resetTutorialForReplay(owner);
                 }}
                 type="button"
               >

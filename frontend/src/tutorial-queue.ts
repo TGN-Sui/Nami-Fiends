@@ -7,6 +7,21 @@ import {
 } from './member-preferences-api.js';
 import { TUTORIAL_STEPS_V1, TUTORIAL_VERSION } from './tutorial-registry.js';
 
+let replaySkipBannersPending = false;
+
+export function markTutorialReplayFromSettings(): void {
+  replaySkipBannersPending = true;
+}
+
+export function consumeTutorialReplaySkipBanners(): boolean {
+  if (!replaySkipBannersPending) {
+    return false;
+  }
+
+  replaySkipBannersPending = false;
+  return true;
+}
+
 export function shouldShowTutorial(preferences: MemberPreferences): boolean {
   return preferences.tutorialStatus === 'pending' || preferences.tutorialVersion < TUTORIAL_VERSION;
 }
@@ -62,10 +77,24 @@ export async function resetTutorialForReplay(owner: string): Promise<void> {
     return;
   }
 
-  await syncMemberPreferencesToBackend({
-    owner,
-    tutorialStatus: 'pending',
-    tutorialVersion: 0,
+  try {
+    await syncMemberPreferencesToBackend({
+      owner,
+      tutorialStatus: 'pending',
+      tutorialVersion: 0,
+    });
+  } catch {
+    // Replay still works locally when prefs sync fails (e.g. wallet auth prompt declined).
+  }
+}
+
+export function scheduleTutorialReplay(owner: string): void {
+  markTutorialReplayFromSettings();
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      dispatchTutorialRestart(owner);
+    });
   });
 }
 

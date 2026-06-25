@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { MemberPreferences } from './member-preferences-api.js';
-import { shouldShowTutorial } from './tutorial-queue.js';
+import {
+  consumeTutorialReplaySkipBanners,
+  markTutorialReplayFromSettings,
+  shouldShowTutorial,
+} from './tutorial-queue.js';
 import { TUTORIAL_VERSION } from './tutorial-registry.js';
 
 function samplePreferences(overrides: Partial<MemberPreferences> = {}): MemberPreferences {
@@ -54,5 +58,12 @@ describe('tutorial-queue', () => {
         }),
       ),
     ).toBe(false);
+  });
+
+  it('consumes replay skip-banners flag once', () => {
+    markTutorialReplayFromSettings();
+
+    expect(consumeTutorialReplaySkipBanners()).toBe(true);
+    expect(consumeTutorialReplaySkipBanners()).toBe(false);
   });
 });

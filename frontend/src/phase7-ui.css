@@ -17769,7 +17769,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .nami-tutorial-overlay {
   position: fixed;
   inset: 0;
-  z-index: 11950;
+  z-index: 12150;
   pointer-events: none;
 }
 

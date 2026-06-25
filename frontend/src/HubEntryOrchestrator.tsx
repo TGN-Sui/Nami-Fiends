@@ -1,7 +1,6 @@
 import { useEffect, type ReactElement } from 'react';
 
 import { playHubEntrySequence } from './hub-entry-orchestrator.js';
-import { hasActiveMemberSession } from './member-session-store.js';
 
 export function HubEntryOrchestrator(props: {
   activePage: string;
@@ -13,10 +12,6 @@ export function HubEntryOrchestrator(props: {
     }
 
     if (!props.owner?.startsWith('0x')) {
-      return;
-    }
-
-    if (!hasActiveMemberSession()) {
       return;
     }
 
