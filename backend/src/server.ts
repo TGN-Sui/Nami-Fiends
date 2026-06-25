@@ -78,6 +78,11 @@ import {
   handleChatOverlayRewardsSync,
 } from './routes/chat-overlay-rewards.routes.js';
 import {
+  handleMemberCosmeticEquipSync,
+  handleMemberCosmeticEquipsGet,
+  handleMemberCosmeticEquipsOptions,
+} from './routes/member-cosmetic-equips.routes.js';
+import {
   handleGlobalChatMessagesGet,
   handleGlobalChatMessagesOptions,
   handleGlobalChatMessagesPost,
@@ -1300,6 +1305,24 @@ const routes: Route[] = [
     pattern: /^\/api\/platform\/chat-overlay-rewards\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handleChatOverlayRewardsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/member-cosmetics\/equips$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberCosmeticEquipsOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/member-cosmetics\/equips$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberCosmeticEquipsGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/member-cosmetics\/equips\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMemberCosmeticEquipSync(request, response),
   },
   {
     method: 'OPTIONS',

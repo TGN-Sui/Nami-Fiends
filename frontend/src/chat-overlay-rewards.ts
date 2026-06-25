@@ -3,8 +3,7 @@ import {
   readOfficialChatOverlayRewards,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
-import { readSelfProfileEdits } from './member-profile-store.js';
-import { isSelfMember } from './surface-preferences.js';
+import { readEquippedChatOverlayIdForMember } from './member-cosmetic-equips-store.js';
 import type { NamiMember } from './uiMockData.js';
 
 const TIER_RANK: Record<NamiMember['tier'], number> = {
@@ -53,11 +52,7 @@ export function unlockedChatOverlayRewardsForMember(
 }
 
 export function readEquippedChatOverlayId(memberId: string): string {
-  if (!isSelfMember(memberId)) {
-    return '';
-  }
-
-  return readSelfProfileEdits().chatOverlayDisplay.trim();
+  return readEquippedChatOverlayIdForMember(memberId);
 }
 
 export function overlayRewardClassName(reward: OfficialChatOverlayReward): string {

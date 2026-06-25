@@ -26,7 +26,8 @@ import {
 import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
 import { useMemberChatTimeTracker, useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
-import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
+import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
+import { useSelfProfileEdits } from './member-profile-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
 import {
   useChatAutoScroll,
@@ -515,10 +516,7 @@ export function ChannelProfileChatSection(props: {
                     <ChatOverlayEquipPicker
                       member={selfChatMember}
                       onSelect={(overlayId) => {
-                        saveSelfProfileEdits({
-                          ...selfProfileEdits,
-                          chatOverlayDisplay: overlayId,
-                        });
+                        saveEquippedChatOverlay(overlayId, selfProfileEdits);
                       }}
                       selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
                     />

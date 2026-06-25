@@ -31,7 +31,8 @@ import { isOfficialOwner } from './nami-capabilities.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
 import { isGameChannelOwner, readOwnedGameChannelId } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
-import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
+import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
+import { useSelfProfileEdits } from './member-profile-store.js';
 import { useProtocolOwner } from './wallet.js';
 import {
   canConfigureEmbeddedFeedSurface,
@@ -485,10 +486,7 @@ export function SettingsScreen(props: {
               <ChatOverlayEquipPicker
                 member={getSelfMember()}
                 onSelect={(overlayId) => {
-                  saveSelfProfileEdits({
-                    ...selfProfileEdits,
-                    chatOverlayDisplay: overlayId,
-                  });
+                  saveEquippedChatOverlay(overlayId, selfProfileEdits);
                 }}
                 selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
               />

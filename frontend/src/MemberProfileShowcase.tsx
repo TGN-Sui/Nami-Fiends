@@ -11,7 +11,8 @@ import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
 import { useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
 import { percentForNamiSeasonLevel } from './member-progression.js';
-import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
+import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
+import { useSelfProfileEdits } from './member-profile-store.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { isSelfMember } from './surface-preferences.js';
@@ -266,10 +267,7 @@ export function MemberProfileShowcase(props: {
                 <ChatOverlayEquipPicker
                   member={props.member}
                   onSelect={(overlayId) => {
-                    saveSelfProfileEdits({
-                      ...selfProfileEdits,
-                      chatOverlayDisplay: overlayId,
-                    });
+                    saveEquippedChatOverlay(overlayId, selfProfileEdits);
                   }}
                   selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
                 />

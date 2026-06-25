@@ -38,6 +38,10 @@ vi.mock('./member-access.js', async (importOriginal) => {
 });
 
 import {
+  resetMemberCosmeticEquipsForTests,
+  setLocalEquippedChatOverlay,
+} from './member-cosmetic-equips-store.js';
+import {
   overlayRewardUnlockedForMember,
   resolveChatOverlayForMember,
   unlockedChatOverlayRewardsForMember,
@@ -73,11 +77,13 @@ describe('chat-overlay-rewards', () => {
       removeEventListener: vi.fn(),
     });
     resetOfficialChatOverlayRewardsForTests();
+    resetMemberCosmeticEquipsForTests();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     resetOfficialChatOverlayRewardsForTests();
+    resetMemberCosmeticEquipsForTests();
   });
 
   it('unlocks rewards from tier, verification, and official grant conditions', () => {
@@ -120,5 +126,33 @@ describe('chat-overlay-rewards', () => {
     expect(resolved?.className).toContain('chat-overlay-border-genesis-spark');
     expect(resolved?.className).toContain('chat-overlay-motion-premium-loop');
     expect(unlockedChatOverlayRewardsForMember(verifiedPro, customCatalog)).toHaveLength(1);
+  });
+
+  it('resolves equipped overlays for other members from the shared equip cache', () => {
+    const customCatalog: OfficialChatOverlayReward[] = [
+      {
+        id: 'overlay-equipped',
+        name: 'Equipped Spark',
+        description: 'Test overlay',
+        borderStyle: 'genesis-spark',
+        motion: 'premium-loop',
+        accent: 'mint',
+        condition: { type: 'verified' },
+        enabled: true,
+        updatedAtMs: 1,
+      },
+    ];
+
+    const verifiedMember2 = {
+      ...verifiedPro,
+      id: 'm2',
+    };
+
+    setLocalEquippedChatOverlay('m2', 'overlay-equipped');
+
+    const resolved = resolveChatOverlayForMember(verifiedMember2, customCatalog);
+
+    expect(resolved?.rewardId).toBe('overlay-equipped');
+    expect(resolved?.className).toContain('chat-overlay-border-genesis-spark');
   });
 });

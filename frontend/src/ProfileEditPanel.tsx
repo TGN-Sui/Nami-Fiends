@@ -18,6 +18,7 @@ import {
   saveMemberDisplayName,
 } from './member-display-name-store.js';
 import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
+import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
 import {
   profileGenreOptions,
   profilePlatformOptions,
@@ -87,6 +88,7 @@ export function ProfileEditPanel(): ReactElement {
     }
 
     saveSelfProfileEdits(draft);
+    saveEquippedChatOverlay(draft.chatOverlayDisplay, draft);
     setDisplayNameError(null);
     setSavedNotice(true);
   }

@@ -30,6 +30,10 @@ import {
   setMembershipSubscriptionSyncOwner,
 } from './membership-plans-store.js';
 import { fetchStudioPreferences, isStudioPreferencesApiAvailable } from './studio-preferences-api.js';
+import {
+  hydrateMemberCosmeticEquipsFromServer,
+  setMemberCosmeticEquipSyncOwner,
+} from './member-cosmetic-equips-store.js';
 import { hydrateStudioLogoOverride, setStudioPreferencesSyncOwner } from './studio-logo-store.js';
 
 export type PreferencesSurface = 'member' | 'channel' | 'studio';
@@ -67,6 +71,7 @@ export function setSessionPreferencesSyncOwner(owner: string | null): void {
 
   setMembershipSubscriptionSyncOwner(normalizedOwner);
   setMemberPreferencesSyncOwner(normalizedOwner);
+  setMemberCosmeticEquipSyncOwner(normalizedOwner);
   setMemberOnlinePreferencesSyncOwner(normalizedOwner);
   setChannelPreferencesSyncOwner(normalizedOwner);
   setStudioPreferencesSyncOwner(normalizedOwner);
@@ -122,6 +127,7 @@ export async function hydrateMemberPreferences(owner: string): Promise<void> {
 export async function hydrateMemberSessionPreferences(owner: string): Promise<void> {
   await hydrateMembershipPreferences(owner);
   await hydrateMemberPreferences(owner);
+  await hydrateMemberCosmeticEquipsFromServer();
 }
 
 export async function hydrateChannelCoverPreference(channelId: string): Promise<void> {
