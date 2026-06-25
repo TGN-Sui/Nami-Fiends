@@ -197,6 +197,8 @@ import { MembershipPaymentReturnHandler } from './MembershipPaymentReturnHandler
 import { MemberSessionSync } from './MemberSessionSync.js';
 import { useMemberSession } from './member-session-store.js';
 import { PlayerScorePanel } from './PlayerScorePanel.js';
+import { PlayerStarScoreDisplay } from './PlayerStarScoreDisplay.js';
+import { usePlayerScoreSnapshot } from './use-player-score.js';
 
 import { WalletAuthBridge } from './WalletAuthBridge.js';
 import { MembershipUpgradeOverlay } from './MembershipUpgradeOverlay.js';
@@ -605,6 +607,7 @@ function SidebarProfileCard(props: {
   onSignOut: () => void | Promise<void>;
 }): ReactElement {
   const sidebarMember = useSelfMember();
+  const sidebarPlayerScore = usePlayerScoreSnapshot();
   const channelOwnerView = isGameChannelOwner();
   const sidebarProgression = getNamiProgression(sidebarMember);
   const unreadTagNotificationCount = useUnreadTagNotificationCount();
@@ -706,6 +709,11 @@ function SidebarProfileCard(props: {
             <div className="sidebar-xp-track">
               <i style={{ width: (sidebarProgression.currentXp / sidebarProgression.nextLevelXp) * 100 + '%' }} />
             </div>
+            {sidebarPlayerScore ? (
+              <div className="sidebar-player-star-row">
+                <PlayerStarScoreDisplay compact score={sidebarPlayerScore.total} showScore={false} />
+              </div>
+            ) : null}
           </div>
 
           <span aria-hidden="true" className="nami-pinned-profile-chevron" />
@@ -2920,6 +2928,7 @@ function MemberProfileScreen(props: {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const reviewedSignal = readMemberSignalReview(props.member.id, props.member.signal);
+  const memberPlayerScore = usePlayerScoreSnapshot();
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>('horizontal');
   const [privateDraft, setPrivateDraft] = useState('');
@@ -3068,6 +3077,7 @@ function MemberProfileScreen(props: {
               <TcgFoilPassportCard
                 layout={profileCardLayout}
                 member={props.member}
+                playerScore={isSelfMember(props.member.id) ? (memberPlayerScore?.total ?? null) : null}
                 signal={reviewedSignal}
               />
             }
@@ -4286,6 +4296,7 @@ function UserProfileScreen(props: {
   tagHandlers?: TagNavigationHandlers;
 } = {}): ReactElement {
   const profileMember = useSelfMember();
+  const profilePlayerScore = usePlayerScoreSnapshot();
   const selfStreamingOnline = useMemberStreamingOnline(profileMember.id);
   const profileEdits = useSelfProfileEdits();
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
@@ -4433,6 +4444,7 @@ function UserProfileScreen(props: {
               layout={profileCardLayout}
               member={profileMember}
               onOpenPassport={() => props.onNavigate?.('passport')}
+              playerScore={profilePlayerScore?.total ?? null}
             />
           }
         />

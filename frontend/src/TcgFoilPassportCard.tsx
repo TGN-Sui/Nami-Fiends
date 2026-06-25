@@ -27,6 +27,7 @@ import {
   PassportDisplayNameEditor,
   PassportNameHistoryButton,
 } from './PassportDisplayNameControls.js';
+import { PlayerStarScoreDisplay } from './PlayerStarScoreDisplay.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
 
 function isPassportInteractive(member: NamiMember, signal: ConductSignal): boolean {
@@ -114,6 +115,7 @@ type TcgFoilPassportCardProps = {
   signal?: ConductSignal;
   layout?: 'vertical' | 'horizontal';
   onOpenPassport?: () => void;
+  playerScore?: number | null;
   children?: ReactNode;
 };
 
@@ -141,6 +143,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
   const hasGalaxyRainbowShell = isOfficialGalaxy || ownerPassport;
   const isClickable = Boolean(props.onOpenPassport);
+  const resolvedPlayerScore = props.playerScore ?? null;
   const passportTiltRef = useRef<HTMLDivElement | null>(null);
   const foilFrameRef = useRef<number | null>(null);
   const foilStateRef = useRef({
@@ -473,6 +476,13 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             </div>
           </>
         )}
+
+        {!ownerPassport && resolvedPlayerScore !== null ? (
+          <div className="passport-player-star-row">
+            <span>Gamer stars</span>
+            <PlayerStarScoreDisplay score={resolvedPlayerScore} showScore />
+          </div>
+        ) : null}
 
         <div className="nami-profile-card-stats">
           <div>

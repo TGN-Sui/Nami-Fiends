@@ -15502,3 +15502,96 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   color: rgba(223, 236, 250, 0.86);
   font-size: 0.84rem;
 }
+
+.player-star-score-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-star-score-display.is-compact-player-star {
+  gap: 4px;
+}
+
+.player-star-score-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.player-star-score-display.is-compact-player-star .player-star-score-track {
+  gap: 1px;
+}
+
+.player-star-score-star {
+  color: rgba(117, 215, 255, 0.22);
+  font-size: 0.95rem;
+  text-shadow: none;
+  transition: color 160ms ease, text-shadow 160ms ease;
+}
+
+.player-star-score-display.is-compact-player-star .player-star-score-star {
+  font-size: 0.72rem;
+}
+
+.player-star-score-star.is-filled {
+  color: rgba(255, 214, 120, 0.95);
+  text-shadow: 0 0 10px rgba(255, 184, 77, 0.35);
+}
+
+.player-star-score-star.is-foil-star {
+  background: linear-gradient(
+    120deg,
+    #ff8ecf 0%,
+    #ffd978 22%,
+    #8ef7ff 44%,
+    #b48cff 66%,
+    #ffd978 88%,
+    #ff8ecf 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: player-star-foil-shift 4.8s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 184, 77, 0.45));
+}
+
+.player-star-score-value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(223, 236, 250, 0.82);
+  letter-spacing: 0.02em;
+}
+
+.passport-player-star-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(117, 215, 255, 0.14);
+}
+
+.passport-player-star-row > span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(186, 210, 230, 0.72);
+}
+
+.sidebar-player-star-row {
+  margin-top: 4px;
+}
+
+@keyframes player-star-foil-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 220% 50%;
+  }
+}
