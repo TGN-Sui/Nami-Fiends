@@ -1,9 +1,9 @@
 import { useEffect, type ReactElement } from 'react';
 
-import { playHubSuperBannerQueue } from './hub-super-banner-queue.js';
+import { playHubEntrySequence } from './hub-entry-orchestrator.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 
-export function HubSuperBannerQueueRunner(props: {
+export function HubEntryOrchestrator(props: {
   activePage: string;
   owner: string | null;
 }): ReactElement | null {
@@ -20,7 +20,7 @@ export function HubSuperBannerQueueRunner(props: {
       return;
     }
 
-    void playHubSuperBannerQueue(props.owner);
+    void playHubEntrySequence(props.owner);
   }, [props.activePage, props.owner]);
 
   return null;

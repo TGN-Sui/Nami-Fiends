@@ -54,6 +54,7 @@ import {
   requestSettingsSection,
   type SettingsSection,
 } from './settings-navigation.js';
+import { dispatchTutorialRestart, resetTutorialForReplay } from './tutorial-queue.js';
 
 export type { SettingsSection } from './settings-navigation.js';
 export { requestSettingsSection } from './settings-navigation.js';
@@ -66,6 +67,7 @@ const SECTION_LABELS: Record<SettingsSection, string> = {
   feedback: 'Feedback',
   safety: 'Safety',
   appearance: 'Look & Feel',
+  help: 'Help',
   advanced: 'Advanced',
 };
 
@@ -286,6 +288,7 @@ export function SettingsScreen(props: {
     'feedback',
     'safety',
     'appearance',
+    'help',
     ...(showIndexedDataPanel ? (['advanced'] as const) : []),
   ];
 
@@ -607,6 +610,34 @@ export function SettingsScreen(props: {
                 palette={settingsChannelBrandPalette}
               />
             ) : null}
+          </div>
+        ) : null}
+
+        {activeSection === 'help' ? (
+          <div className="settings-section-stack">
+            <article className="panel settings-card settings-compact-card">
+              <div className="profile-panel-heading">
+                <h2>Realm guide</h2>
+                <p>Replay the short Hub tour — passport, lounges, and Game Hub navigation.</p>
+              </div>
+              <button
+                className="nami-surface-button is-primary-surface-button"
+                disabled={!owner?.startsWith('0x')}
+                onClick={() => {
+                  if (!owner?.startsWith('0x')) {
+                    return;
+                  }
+
+                  void resetTutorialForReplay(owner).then(() => {
+                    props.onNavigate?.('hub');
+                    dispatchTutorialRestart(owner);
+                  });
+                }}
+                type="button"
+              >
+                Restart tutorial
+              </button>
+            </article>
           </div>
         ) : null}
 

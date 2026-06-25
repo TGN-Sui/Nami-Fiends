@@ -6,6 +6,7 @@ export type SettingsSection =
   | 'feedback'
   | 'safety'
   | 'appearance'
+  | 'help'
   | 'advanced';
 
 const SETTINGS_SECTION_FOCUS_KEY = 'nami.settings.section-focus';
@@ -18,6 +19,7 @@ const SECTION_IDS: ReadonlySet<string> = new Set([
   'feedback',
   'safety',
   'appearance',
+  'help',
   'advanced',
 ]);
 

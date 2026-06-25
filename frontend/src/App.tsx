@@ -80,8 +80,9 @@ import {
 import { ensureChannelMediaHydratedForKey } from './channel-media-persistence.js';
 import { hydrateChannelCoversForChannels } from './preferences-sync.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
-import { HubSuperBannerQueueRunner } from './HubSuperBannerQueueRunner.js';
+import { HubEntryOrchestrator } from './HubEntryOrchestrator.js';
 import { SuperBannerOverlay } from './SuperBannerOverlay.js';
+import { TutorialOverlay } from './TutorialOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
 
@@ -658,7 +659,11 @@ function SidebarProfileCard(props: {
   }
 
   return (
-    <div aria-label="Signed-in member profile" className="nami-pinned-profile-card">
+    <div
+      aria-label="Signed-in member profile"
+      className="nami-pinned-profile-card"
+      data-tutorial="passport-card"
+    >
       <div
         className={
           'sidebar-profile-shell nami-pinned-profile-stack' +
@@ -884,6 +889,7 @@ function Sidebar(props: {
                 }
                 data-hub-page={destination.page}
                 data-hub-slot={triangleSlot}
+                {...(destination.page === 'gamehub' ? { 'data-tutorial': 'game-hub-nav' } : {})}
                 onClick={() => props.onNavigateHubDestination(destination.page)}
                 onPointerEnter={orbTiltHandlers.onPointerEnter}
                 onPointerLeave={orbTiltHandlers.onPointerLeave}
@@ -1395,7 +1401,7 @@ function NamiHub(props: {
 
   return (
     <>
-      <header className="page-title is-hub-page-title">
+      <header className="page-title is-hub-page-title" data-tutorial="nami-hub">
         <h1>Nami Hub</h1>
       </header>
 
@@ -5912,8 +5918,9 @@ if (activePage === 'userProfile') {
       {showPlatformShell ? <IgniteRadioDock /> : null}
       {showPlatformShell && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
       {showPlatformShell ? <SuperBannerOverlay /> : null}
+      {showPlatformShell ? <TutorialOverlay /> : null}
       {showPlatformShell ? (
-        <HubSuperBannerQueueRunner activePage={activePage} owner={protocolOwner} />
+        <HubEntryOrchestrator activePage={activePage} owner={protocolOwner} />
       ) : null}
       {showPlatformShell ? <MembershipPaymentReturnHandler /> : null}
       {activePage !== 'entry' ? <MemberSessionSync /> : null}
