@@ -17,7 +17,7 @@ import {
   saveGenreChatDockSize,
   type GenreChatDockSize,
 } from './gamehub-preferences.js';
-import { ChatMessageBubble } from './ChatMessageBubble.js';
+
 import {
   canManageTemporaryGlobalChats,
   canSendChatMessages,
