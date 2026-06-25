@@ -1,5 +1,7 @@
 import { type ReactElement } from 'react';
 
+import { BannerShoutoutBadge } from './BannerShoutoutBadge.js';
+import { resolveBannerShoutoutMember } from './channel-banner-shoutout.js';
 import { type NamiChannel } from './uiMockData.js';
 
 export function ChannelBannerOwnerPreviewOverlay(props: {
@@ -7,11 +9,14 @@ export function ChannelBannerOwnerPreviewOverlay(props: {
   coverUrl: string;
   headline: string;
   body: string;
+  shoutoutMemberId?: string | null;
   onClose: () => void;
   onSend: () => void;
   sendLocked?: boolean;
   sendLockedReason?: string;
 }): ReactElement {
+  const shoutout = resolveBannerShoutoutMember(props.shoutoutMemberId ?? null);
+
   function handleDismissSurfaceClick(event: { target: EventTarget }): void {
     const target = event.target;
 
@@ -64,6 +69,7 @@ export function ChannelBannerOwnerPreviewOverlay(props: {
           <span className="channel-banner-owner-preview-badge">Subscriber preview</span>
 
           <div className="channel-banner-popup-hero-copy">
+            {shoutout ? <BannerShoutoutBadge shoutout={shoutout} /> : null}
             <h2 id="channel-banner-owner-preview-title">{props.headline}</h2>
             {props.body ? <p className="channel-banner-popup-hero-lede">{props.body}</p> : null}
           </div>

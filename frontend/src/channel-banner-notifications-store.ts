@@ -7,6 +7,7 @@ import {
   preApprovedOwnerRestrictionMessage,
 } from './game-owner-approval-guards.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
+import { normalizeBannerShoutoutFields } from './channel-banner-shoutout.js';
 import { channels, type NamiChannel } from './uiMockData.js';
 
 const BANNER_SUBSCRIPTIONS_KEY = 'nami.user.banner-subscriptions';
@@ -18,6 +19,8 @@ export type ChannelBannerContent = {
   coverUrl: string;
   headline: string;
   body: string;
+  shoutoutMemberId?: string | null;
+  shoutoutMemberName?: string | null;
   updatedAtMs: number;
 };
 
@@ -27,6 +30,8 @@ export type ChannelBannerNotification = {
   coverUrl: string;
   headline: string;
   body: string;
+  shoutoutMemberId?: string | null;
+  shoutoutMemberName?: string | null;
   createdAtMs: number;
   presented: boolean;
   opened: boolean;
@@ -180,9 +185,11 @@ export function readChannelBannerContent(channelId: string, channel?: NamiChanne
 
 export function saveChannelBannerContent(channelId: string, content: ChannelBannerContent): void {
   const map = readJsonRecord<ChannelBannerContent>(BANNER_CONTENT_KEY);
+  const shoutout = normalizeBannerShoutoutFields(content);
 
   map[channelId] = {
     ...content,
+    ...shoutout,
     updatedAtMs: Date.now(),
   };
 
@@ -246,6 +253,7 @@ function createBannerNotification(channelId: string): ChannelBannerNotification 
   }
 
   const content = readChannelBannerContent(channelId, channel);
+  const shoutout = normalizeBannerShoutoutFields(content);
 
   return {
     id: 'banner-' + channelId + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
@@ -253,6 +261,8 @@ function createBannerNotification(channelId: string): ChannelBannerNotification 
     coverUrl: content.coverUrl,
     headline: content.headline,
     body: content.body,
+    shoutoutMemberId: shoutout.shoutoutMemberId,
+    shoutoutMemberName: shoutout.shoutoutMemberName,
     createdAtMs: Date.now(),
     presented: false,
     opened: false,

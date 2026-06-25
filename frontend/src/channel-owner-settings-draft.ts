@@ -35,6 +35,7 @@ export type ChannelOwnerSettingsDraft = {
   bannerEditor: {
     headline: string;
     body: string;
+    shoutoutMemberId: string | null;
   };
 };
 
@@ -105,6 +106,7 @@ export function buildPersistedOwnerSettingsDraft(channel: NamiChannel): ChannelO
     bannerEditor: {
       headline: bannerContent.headline,
       body: bannerContent.body,
+      shoutoutMemberId: bannerContent.shoutoutMemberId ?? null,
     },
   };
 }
@@ -184,6 +186,10 @@ export function updateOwnerSettingsDraft(channelId: string, patch: OwnerSettings
     bannerEditor: {
       headline: patch.bannerEditor?.headline ?? current.bannerEditor.headline,
       body: patch.bannerEditor?.body ?? current.bannerEditor.body,
+      shoutoutMemberId:
+        patch.bannerEditor?.shoutoutMemberId !== undefined
+          ? patch.bannerEditor.shoutoutMemberId
+          : current.bannerEditor.shoutoutMemberId,
     },
   };
 
@@ -256,6 +262,7 @@ export function commitOwnerSettings(channel: NamiChannel): OwnerSettingsCommitRe
     ...bannerContent,
     headline: draft.bannerEditor.headline,
     body: draft.bannerEditor.body,
+    shoutoutMemberId: draft.bannerEditor.shoutoutMemberId,
     updatedAtMs: Date.now(),
   });
 

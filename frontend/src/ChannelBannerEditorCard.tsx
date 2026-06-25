@@ -1,6 +1,8 @@
 import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
+import { BannerShoutoutBadge } from './BannerShoutoutBadge.js';
 import { ChannelBannerOwnerPreviewOverlay } from './ChannelBannerOwnerPreviewOverlay.js';
+import { resolveBannerShoutoutMember } from './channel-banner-shoutout.js';
 import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
 import {
   publishChannelBannerAlertForOwner,
@@ -18,12 +20,13 @@ import {
 } from './game-owner-approval-guards.js';
 import { ownerMediaDimensionNote } from './owner-media-specs.js';
 import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPanel.js';
-import { type NamiChannel } from './uiMockData.js';
+import { members, type NamiChannel } from './uiMockData.js';
 
 type BannerPreviewDraft = {
   coverUrl: string;
   headline: string;
   body: string;
+  shoutoutMemberId: string | null;
 };
 
 export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactElement {
@@ -37,12 +40,16 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
   const sendLocked = isPreApprovedGameOwnerWorkspace(props.channel.id);
   const headline = settings.draft.bannerEditor.headline;
   const body = settings.draft.bannerEditor.body;
+  const shoutoutMemberId = settings.draft.bannerEditor.shoutoutMemberId;
+  const shoutout = resolveBannerShoutoutMember(shoutoutMemberId);
+  const shoutoutCandidates = members.filter((member) => member.surfaceType === 'member');
 
   function readResolvedDraft(): BannerPreviewDraft {
     return {
       coverUrl,
       headline: headline.trim() || props.channel.name,
       body: body.trim() || props.channel.tagline,
+      shoutoutMemberId: shoutout?.memberId ?? null,
     };
   }
 
@@ -144,6 +151,7 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
             style={coverUrl ? { backgroundImage: 'url(' + JSON.stringify(coverUrl) + ')' } : undefined}
           >
             <div className="channel-banner-editor-preview-overlay">
+              {shoutout ? <BannerShoutoutBadge shoutout={shoutout} /> : null}
               <strong>{headline || props.channel.name}</strong>
               <p>{body || props.channel.tagline}</p>
             </div>
@@ -166,6 +174,25 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
                 rows={3}
                 value={body}
               />
+            </label>
+
+            <label className="channel-banner-editor-field">
+              <span>Member shoutout</span>
+              <select
+                onChange={(event) => {
+                  const nextMemberId = event.target.value || null;
+
+                  settings.updateBannerEditor({ shoutoutMemberId: nextMemberId });
+                }}
+                value={shoutoutMemberId ?? ''}
+              >
+                <option value="">No tagged member</option>
+                {shoutoutCandidates.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <small className="channel-owner-tool-footnote">{MEDIA_UPLOAD_ACCEPTED_LABEL}</small>
@@ -211,6 +238,7 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
           channel={props.channel}
           coverUrl={previewDraft.coverUrl}
           headline={previewDraft.headline}
+          shoutoutMemberId={previewDraft.shoutoutMemberId}
           onClose={() => setPreviewDraft(null)}
           onSend={handleSendFromPreview}
           sendLocked={sendLocked}

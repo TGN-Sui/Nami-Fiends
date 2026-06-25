@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { channels } from './uiMockData.js';
+import { channels, members } from './uiMockData.js';
 
 function createLocalStorageMock(): Storage {
   const store = new Map<string, string>();
@@ -41,6 +41,8 @@ import {
   openBannerReminderQueue,
   publishChannelBannerAlertForOwner,
   readActiveBannerNotificationId,
+  readChannelBannerContent,
+  saveChannelBannerContent,
   readWaitingBannerNotificationCount,
   simulateChannelBannerBurst,
   subscribeToChannelBannerAlerts,
@@ -180,5 +182,24 @@ describe('channel-banner-notifications-store', () => {
 
     expect(created).toBeNull();
     expect(readWaitingBannerNotificationCount()).toBe(0);
+  });
+
+  it('carries tagged member shoutouts into published banner alerts', () => {
+    clearBannerNotifications();
+
+    const channel = channels[0]!;
+    const member = members[1]!;
+
+    saveChannelBannerContent(channel.id, {
+      ...readChannelBannerContent(channel.id, channel),
+      shoutoutMemberId: member.id,
+      shoutoutMemberName: member.name,
+      updatedAtMs: Date.now(),
+    });
+
+    const published = publishChannelBannerAlertForOwner(channel.id);
+
+    expect(published?.shoutoutMemberId).toBe(member.id);
+    expect(published?.shoutoutMemberName).toBe(member.name);
   });
 });

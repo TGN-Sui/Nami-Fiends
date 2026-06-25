@@ -5951,6 +5951,13 @@ if (activePage === 'userProfile') {
             setSelectedChannel(channel);
             openChannelProfile(channel);
           }}
+          onOpenMember={(memberId) => {
+            const member = members.find((entry) => entry.id === memberId);
+
+            if (member) {
+              openMemberProfile(member);
+            }
+          }}
         />
       ) : null}
       {showPlatformShell ? <GameApprovalWelcomeOverlay /> : null}

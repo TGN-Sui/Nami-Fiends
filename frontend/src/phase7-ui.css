@@ -14770,6 +14770,43 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   overflow: hidden;
 }
 
+.channel-banner-shoutout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 184, 77, 0.38);
+  background: rgba(8, 14, 22, 0.72);
+  color: rgba(255, 236, 210, 0.96);
+}
+
+.channel-banner-shoutout-badge .mini-badge {
+  margin: 0;
+}
+
+.channel-banner-shoutout-badge strong {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.channel-banner-shoutout-badge.is-clickable-banner-shoutout {
+  cursor: pointer;
+  text-align: left;
+}
+
+.channel-banner-shoutout-badge.is-clickable-banner-shoutout:hover,
+.channel-banner-shoutout-badge.is-clickable-banner-shoutout:focus-visible {
+  border-color: rgba(255, 208, 120, 0.62);
+  background: rgba(12, 18, 28, 0.88);
+}
+
+.channel-banner-editor-preview-overlay .channel-banner-shoutout-badge {
+  margin-bottom: 8px;
+}
+
 .channel-banner-popup-queue {
   position: absolute;
   top: 18px;

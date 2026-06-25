@@ -1,5 +1,7 @@
 import { useEffect, type ReactElement } from 'react';
 
+import { BannerShoutoutBadge } from './BannerShoutoutBadge.js';
+import { resolveBannerShoutoutMember } from './channel-banner-shoutout.js';
 import {
   closeBannerNotificationOverlay,
   dismissActiveBannerNotification,
@@ -15,6 +17,7 @@ import { type NamiChannel } from './uiMockData.js';
 
 export function ChannelBannerNotificationOverlay(props: {
   onOpenChannel: (channel: NamiChannel) => void;
+  onOpenMember?: (memberId: string) => void;
 }): ReactElement | null {
   useChannelBannerNotificationsStore();
 
@@ -36,6 +39,7 @@ export function ChannelBannerNotificationOverlay(props: {
   );
   const waitingCount = readWaitingBannerNotificationCount();
   const hasMore = waitingCount > 1;
+  const shoutout = resolveBannerShoutoutMember(activeNotification.shoutoutMemberId ?? null);
 
   function handleOpenChannel(): void {
     if (channel) {
@@ -120,6 +124,12 @@ export function ChannelBannerNotificationOverlay(props: {
           ) : null}
 
           <div className="channel-banner-popup-hero-copy">
+            {shoutout ? (
+              <BannerShoutoutBadge
+                {...(props.onOpenMember ? { onOpenMember: props.onOpenMember } : {})}
+                shoutout={shoutout}
+              />
+            ) : null}
             <h2 id="channel-banner-popup-title">{activeNotification.headline}</h2>
             {activeNotification.body ? (
               <p className="channel-banner-popup-hero-lede">{activeNotification.body}</p>
