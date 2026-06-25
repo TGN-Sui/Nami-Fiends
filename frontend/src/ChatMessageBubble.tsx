@@ -12,15 +12,14 @@ export function ChatMessageBubble(props: {
   const overlay = resolveChatOverlayForMember(props.member);
 
   return (
-    <div className={'message-bubble-shell' + (overlay ? ' has-chat-message-overlay' : '')}>
-      {overlay ? (
-        <span
-          aria-hidden="true"
-          className={overlay.className}
-          title={overlay.name + ' chat overlay'}
-        />
-      ) : null}
-      <div className={'message-bubble' + messageBubbleClass(props.member, props.authorName)}>
+    <div className="message-bubble-shell">
+      <div
+        className={
+          'message-bubble' +
+          messageBubbleClass(props.member, props.authorName) +
+          (overlay ? ' ' + overlay.className : '')
+        }
+      >
         {props.children}
       </div>
     </div>

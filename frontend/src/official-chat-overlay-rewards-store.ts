@@ -1,13 +1,20 @@
 import { useSyncExternalStore } from 'react';
 
-export const CHAT_OVERLAY_PADDING_SLOTS = [
-  'top-left',
-  'top-right',
-  'bottom-left',
-  'bottom-right',
+export const CHAT_OVERLAY_BORDER_STYLES = [
+  'signal-glow',
+  'wave-frame',
+  'pulse-ring',
+  'genesis-spark',
 ] as const;
 
-export type ChatOverlayPaddingSlot = (typeof CHAT_OVERLAY_PADDING_SLOTS)[number];
+export type ChatOverlayBorderStyle = (typeof CHAT_OVERLAY_BORDER_STYLES)[number];
+
+const LEGACY_SLOT_TO_BORDER_STYLE: Record<string, ChatOverlayBorderStyle> = {
+  'bottom-right': 'signal-glow',
+  'top-left': 'wave-frame',
+  'top-right': 'pulse-ring',
+  'bottom-left': 'genesis-spark',
+};
 
 export type ChatOverlayMotion = 'static' | 'premium-loop';
 
@@ -20,7 +27,7 @@ export type OfficialChatOverlayReward = {
   id: string;
   name: string;
   description: string;
-  slot: ChatOverlayPaddingSlot;
+  borderStyle: ChatOverlayBorderStyle;
   motion: ChatOverlayMotion;
   accent: 'cyan' | 'gold' | 'violet' | 'mint';
   condition: ChatOverlayUnlockCondition;
@@ -35,7 +42,7 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     id: 'overlay-signal-glow',
     name: 'Signal Glow',
     description: 'Verified members earn a soft cyan glow on chat bubbles.',
-    slot: 'bottom-right',
+    borderStyle: 'signal-glow',
     motion: 'static',
     accent: 'cyan',
     condition: { type: 'verified' },
@@ -45,8 +52,8 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
   {
     id: 'overlay-wave-frame',
     name: 'Wave Frame',
-    description: 'Pro members unlock a wave accent in the top-left padding slot.',
-    slot: 'top-left',
+    description: 'Pro members unlock a gradient wave frame around chat bubbles.',
+    borderStyle: 'wave-frame',
     motion: 'static',
     accent: 'violet',
     condition: { type: 'tier-min', tier: 'Pro' },
@@ -57,7 +64,7 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     id: 'overlay-pulse-ring',
     name: 'Pulse Ring',
     description: 'Elite members get a premium looping ring highlight.',
-    slot: 'top-right',
+    borderStyle: 'pulse-ring',
     motion: 'premium-loop',
     accent: 'gold',
     condition: { type: 'tier-min', tier: 'Elite' },
@@ -68,7 +75,7 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     id: 'overlay-genesis-spark',
     name: 'Genesis Spark',
     description: 'Official grant overlay for launch partners and event winners.',
-    slot: 'bottom-left',
+    borderStyle: 'genesis-spark',
     motion: 'premium-loop',
     accent: 'mint',
     condition: { type: 'official-grant', memberIds: [] },
@@ -84,12 +91,19 @@ function dispatchChange(): void {
   window.dispatchEvent(new CustomEvent('nami-official-chat-overlay-rewards-changed'));
 }
 
-function normalizeSlot(value: string | undefined): ChatOverlayPaddingSlot {
-  if (value && CHAT_OVERLAY_PADDING_SLOTS.includes(value as ChatOverlayPaddingSlot)) {
-    return value as ChatOverlayPaddingSlot;
+function normalizeBorderStyle(
+  value: string | undefined,
+  legacySlot?: string
+): ChatOverlayBorderStyle {
+  if (value && CHAT_OVERLAY_BORDER_STYLES.includes(value as ChatOverlayBorderStyle)) {
+    return value as ChatOverlayBorderStyle;
   }
 
-  return 'top-right';
+  if (legacySlot && legacySlot in LEGACY_SLOT_TO_BORDER_STYLE) {
+    return LEGACY_SLOT_TO_BORDER_STYLE[legacySlot]!;
+  }
+
+  return 'signal-glow';
 }
 
 function normalizeMotion(value: string | undefined): ChatOverlayMotion {
@@ -137,7 +151,12 @@ function normalizeReward(value: Partial<OfficialChatOverlayReward>): OfficialCha
     id,
     name: value.name?.trim() || 'Untitled overlay',
     description: value.description?.trim() || '',
-    slot: normalizeSlot(value.slot),
+    borderStyle: normalizeBorderStyle(
+      value.borderStyle,
+      typeof (value as { slot?: string }).slot === 'string'
+        ? (value as { slot?: string }).slot
+        : undefined
+    ),
     motion: normalizeMotion(value.motion),
     accent: normalizeAccent(value.accent),
     condition: normalizeCondition(value.condition),

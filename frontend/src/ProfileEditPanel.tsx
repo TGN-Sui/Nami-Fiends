@@ -270,7 +270,7 @@ export function ProfileEditPanel(): ReactElement {
             <fieldset className="profile-edit-chip-field">
               <legend>Chat overlay</legend>
               <p className="protocol-hint">
-                Equip earned chat bubble overlays from the Officials Reward Studio catalog.
+                Equip earned chat bubble border styles from the Officials Reward Studio catalog.
               </p>
               <ChatOverlayEquipPicker
                 member={member}

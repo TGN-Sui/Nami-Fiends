@@ -62,6 +62,7 @@ function createLocalStorageMock(): Storage {
 }
 
 import {
+  canViewFeaturedPlacementAuctionPanel,
   closeFeaturedAuctionWeekForTests,
   FEATURED_AUCTION_OPEN_SLOTS,
   isRisingPoolEligibleChannel,
@@ -184,6 +185,10 @@ describe('featured-placement-auction-store', () => {
     expect(winners[0]?.pool).toBe('rising');
     expect(winners.filter((winner) => winner.pool === 'open')).toHaveLength(FEATURED_AUCTION_OPEN_SLOTS);
     expect(readFeaturedAuctionHubChannelIds()).toEqual(winners.map((winner) => winner.channelId));
+  });
+
+  it('limits auction panel visibility to game owners and officials', () => {
+    expect(canViewFeaturedPlacementAuctionPanel()).toBe(true);
   });
 
   it('does not persist auction state while reading status for render', () => {

@@ -49,7 +49,8 @@ export function ChatOverlayEquipPicker(props: {
         >
           <span className="chat-overlay-equip-option-label">{reward.name}</span>
           <small>
-            {reward.slot} · {reward.motion === 'premium-loop' ? 'Premium loop' : 'Static'}
+            {reward.borderStyle.replace('-', ' ')} ·{' '}
+            {reward.motion === 'premium-loop' ? 'Premium loop' : 'Static border'}
           </small>
         </button>
       ))}
@@ -58,5 +59,5 @@ export function ChatOverlayEquipPicker(props: {
 }
 
 export function chatOverlayPreviewLabel(overlay: ResolvedChatOverlay | null): string {
-  return overlay ? overlay.name + ' · ' + overlay.slot : 'Default bubble';
+  return overlay ? overlay.name + ' · ' + overlay.borderStyle : 'Default bubble';
 }

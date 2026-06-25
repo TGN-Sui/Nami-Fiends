@@ -1,13 +1,13 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
 import {
-  CHAT_OVERLAY_PADDING_SLOTS,
+  CHAT_OVERLAY_BORDER_STYLES,
   readOfficialChatOverlayRewards,
   removeOfficialChatOverlayReward,
   upsertOfficialChatOverlayReward,
   useOfficialChatOverlayRewards,
   type ChatOverlayMotion,
-  type ChatOverlayPaddingSlot,
+  type ChatOverlayBorderStyle,
   type ChatOverlayUnlockCondition,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
@@ -22,7 +22,7 @@ function createDraftReward(): OfficialChatOverlayReward {
     id: 'overlay-custom-' + stamp,
     name: 'New overlay reward',
     description: 'Describe how members unlock this chat overlay.',
-    slot: 'top-right',
+    borderStyle: 'signal-glow',
     motion: 'static',
     accent: 'cyan',
     condition: { type: 'verified' },
@@ -121,8 +121,8 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
         <span className="mini-badge">Reward Studio</span>
         <h2>Chat overlay rewards</h2>
         <p>
-          Define condition → reward pairs for chat bubble overlays. Each reward uses one fixed
-          padding slot with static or premium loop motion.
+          Define condition → reward pairs for chat bubble border cosmetics. Each reward maps to one
+          fixed border style with static or premium loop motion.
         </p>
       </div>
 
@@ -146,7 +146,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
                 >
                   <strong>{reward.name}</strong>
                   <small>
-                    {reward.slot} · {reward.motion}
+                    {reward.borderStyle} · {reward.motion}
                     {reward.enabled ? '' : ' · disabled'}
                   </small>
                 </button>
@@ -177,16 +177,16 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
 
             <div className="officials-reward-studio-field-grid">
               <label className="onboarding-field">
-                <span>Padding slot</span>
+                <span>Border style</span>
                 <select
                   onChange={(event) =>
-                    updateDraft({ slot: event.target.value as ChatOverlayPaddingSlot })
+                    updateDraft({ borderStyle: event.target.value as ChatOverlayBorderStyle })
                   }
-                  value={activeDraft.slot}
+                  value={activeDraft.borderStyle}
                 >
-                  {CHAT_OVERLAY_PADDING_SLOTS.map((slot) => (
-                    <option key={slot} value={slot}>
-                      {slot}
+                  {CHAT_OVERLAY_BORDER_STYLES.map((borderStyle) => (
+                    <option key={borderStyle} value={borderStyle}>
+                      {borderStyle}
                     </option>
                   ))}
                 </select>
@@ -305,10 +305,11 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
             </label>
 
             <div className="officials-reward-studio-preview">
-              <p>Padding slot preview</p>
+              <p>Border preview</p>
               <div className="officials-reward-studio-preview-bubble">
-                <span className={overlayRewardClassName(activeDraft)} aria-hidden="true" />
-                <div className="message-bubble">Member message preview</div>
+                <div className={'message-bubble ' + overlayRewardClassName(activeDraft)}>
+                  Member message preview
+                </div>
               </div>
             </div>
 

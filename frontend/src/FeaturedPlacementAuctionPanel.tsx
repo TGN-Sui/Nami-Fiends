@@ -1,9 +1,10 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { resolveOwnedGameChannel } from './channel-owner-access.js';
 import { getChannelBoostPower } from './channel-boost-store.js';
 import {
   canBidFeaturedPlacementAuction,
+  canViewFeaturedPlacementAuctionPanel,
   FEATURED_AUCTION_OPEN_SLOTS,
   FEATURED_AUCTION_RISING_BOOST_CAP,
   FEATURED_AUCTION_RISING_SLOTS,
@@ -14,19 +15,23 @@ import {
 } from './featured-placement-auction-store.js';
 import { useSelfMember } from './member-avatar-store.js';
 
-export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {}): ReactElement {
+export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {}): ReactElement | null {
   const selfMember = useSelfMember();
   const status = useFeaturedPlacementAuctionStatus();
   const ownedChannel = resolveOwnedGameChannel();
   const [pool, setPool] = useState<FeaturedAuctionPool>('open');
   const [bidAmount, setBidAmount] = useState('25');
   const [notice, setNotice] = useState<string | null>(null);
-
+  const canView = canViewFeaturedPlacementAuctionPanel();
   const canBid = canBidFeaturedPlacementAuction(selfMember, ownedChannel?.id);
   const risingEligible = ownedChannel
     ? isRisingPoolEligibleChannel(ownedChannel.id, status.weekId)
     : false;
   const channelBoostPower = ownedChannel ? getChannelBoostPower(ownedChannel.id, status.weekId) : 0;
+
+  useEffect(() => {
+    setPool(risingEligible ? 'rising' : 'open');
+  }, [risingEligible, ownedChannel?.id]);
 
   const standings = useMemo(() => {
     return {
@@ -40,6 +45,10 @@ export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {})
         .slice(0, FEATURED_AUCTION_OPEN_SLOTS),
     };
   }, [status.bids]);
+
+  if (!canView) {
+    return null;
+  }
 
   function placeBid(): void {
     if (!ownedChannel) {
@@ -92,10 +101,30 @@ export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {})
             close.
           </p>
         </div>
-        <div className="featured-placement-auction-status-pill">
+        <div
+          className={
+            'featured-placement-auction-status-pill' +
+            (status.isOpen ? ' is-auction-open-pill' : ' is-auction-closed-pill')
+          }
+        >
           {status.isOpen ? 'Bidding open' : 'Auction closed'}
         </div>
       </header>
+
+      <div className="featured-placement-auction-meta-row">
+        <div className="featured-placement-auction-meta-card">
+          <span>Rising pool</span>
+          <strong>{FEATURED_AUCTION_RISING_SLOTS} hidden slot</strong>
+        </div>
+        <div className="featured-placement-auction-meta-card">
+          <span>Open pool</span>
+          <strong>{FEATURED_AUCTION_OPEN_SLOTS} carousel slots</strong>
+        </div>
+        <div className="featured-placement-auction-meta-card">
+          <span>Boost cap</span>
+          <strong>{FEATURED_AUCTION_RISING_BOOST_CAP} power</strong>
+        </div>
+      </div>
 
       {ownedChannel ? (
         <p className="featured-placement-auction-channel-copy">
@@ -115,35 +144,44 @@ export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {})
           <div className="featured-placement-auction-pool-picker" role="group" aria-label="Auction pool">
             <button
               aria-pressed={pool === 'rising'}
-              className={'nami-surface-button' + (pool === 'rising' ? ' is-primary-surface-button' : '')}
+              className={
+                'featured-placement-auction-pool-option' + (pool === 'rising' ? ' is-active-pool' : '')
+              }
               disabled={!risingEligible}
               onClick={() => setPool('rising')}
               type="button"
             >
-              Rising pool
+              <strong>Rising pool</strong>
+              <span>Low-boost channels only</span>
             </button>
             <button
               aria-pressed={pool === 'open'}
-              className={'nami-surface-button' + (pool === 'open' ? ' is-primary-surface-button' : '')}
+              className={
+                'featured-placement-auction-pool-option' + (pool === 'open' ? ' is-active-pool' : '')
+              }
               disabled={risingEligible}
               onClick={() => setPool('open')}
               type="button"
             >
-              Open pool
+              <strong>Open pool</strong>
+              <span>Above rising boost cap</span>
             </button>
           </div>
-          <label className="onboarding-field">
-            <span>Bid amount</span>
-            <input
-              min={1}
-              onChange={(event) => setBidAmount(event.target.value)}
-              type="number"
-              value={bidAmount}
-            />
-          </label>
-          <button className="onboarding-primary-btn" onClick={placeBid} type="button">
-            Place bid
-          </button>
+
+          <div className="featured-placement-auction-bid-controls">
+            <label className="featured-placement-auction-bid-field">
+              <span>Bid amount</span>
+              <input
+                min={1}
+                onChange={(event) => setBidAmount(event.target.value)}
+                type="number"
+                value={bidAmount}
+              />
+            </label>
+            <button className="featured-placement-auction-place-bid-btn" onClick={placeBid} type="button">
+              Place bid
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -191,7 +229,7 @@ export function FeaturedPlacementAuctionPanel(props: { compact?: boolean } = {})
         </div>
       ) : null}
 
-      {notice ? <p className="protocol-hint nami-owner-action-notice">{notice}</p> : null}
+      {notice ? <p className="featured-placement-auction-notice">{notice}</p> : null}
     </article>
   );
 }

@@ -2,11 +2,13 @@ import { useEffect, useSyncExternalStore } from 'react';
 
 import { currentBoostWeekId, getChannelBoostPower } from './channel-boost-store.js';
 import { ownsGameChannel, resolveOwnedGameChannel } from './channel-owner-access.js';
+import { readGameOwnerSession } from './game-owner-session-store.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 import {
   formatBoostCycleResetCentral,
   getNextBoostCycleResetMs,
 } from './boost-cycle.js';
-import { getSelfMember, isMemberVerified } from './member-access.js';
+import { getSelfMember, isMemberVerified, readSignedInOwner } from './member-access.js';
 import type { NamiMember } from './uiMockData.js';
 
 const STORAGE_KEY = 'nami.featured-placement-auction';
@@ -110,6 +112,20 @@ function emptyWeekRecord(weekId: number): FeaturedAuctionWeekRecord {
 
 export function isRisingPoolEligibleChannel(channelId: string, weekId = currentBoostWeekId()): boolean {
   return getChannelBoostPower(channelId, weekId) <= FEATURED_AUCTION_RISING_BOOST_CAP;
+}
+
+export function canViewFeaturedPlacementAuctionPanel(): boolean {
+  const owner = readSignedInOwner();
+
+  if (owner && isOfficialOwner(owner)) {
+    return true;
+  }
+
+  if (readGameOwnerSession()) {
+    return true;
+  }
+
+  return Boolean(resolveOwnedGameChannel());
 }
 
 export function canBidFeaturedPlacementAuction(

@@ -51,12 +51,12 @@ describe('official-chat-overlay-rewards-store', () => {
     resetOfficialChatOverlayRewardsForTests();
   });
 
-  it('seeds default overlay rewards with fixed padding slots', () => {
+  it('seeds default overlay rewards with fixed border styles', () => {
     const rewards = readOfficialChatOverlayRewards();
 
     expect(rewards.length).toBeGreaterThanOrEqual(4);
     expect(rewards.some((reward) => reward.motion === 'premium-loop')).toBe(true);
-    expect(new Set(rewards.map((reward) => reward.slot)).size).toBeGreaterThan(1);
+    expect(new Set(rewards.map((reward) => reward.borderStyle)).size).toBeGreaterThan(1);
   });
 
   it('upserts and persists official reward studio entries', () => {
@@ -64,7 +64,7 @@ describe('official-chat-overlay-rewards-store', () => {
       id: 'overlay-test-custom',
       name: 'Raid Winner Halo',
       description: 'Granted after official raid events.',
-      slot: 'top-right',
+      borderStyle: 'pulse-ring',
       motion: 'static',
       accent: 'gold',
       condition: { type: 'official-grant', memberIds: ['m1'] },

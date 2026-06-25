@@ -96,13 +96,13 @@ describe('chat-overlay-rewards', () => {
     expect(overlayRewardUnlockedForMember(verifiedElite, eliteReward)).toBe(true);
   });
 
-  it('resolves equipped overlay classes for chat bubble padding slots', () => {
+  it('resolves equipped overlay classes as chat bubble borders', () => {
     const customCatalog: OfficialChatOverlayReward[] = [
       {
         id: 'overlay-equipped',
         name: 'Equipped Spark',
         description: 'Test overlay',
-        slot: 'bottom-left',
+        borderStyle: 'genesis-spark',
         motion: 'premium-loop',
         accent: 'mint',
         condition: { type: 'verified' },
@@ -116,7 +116,8 @@ describe('chat-overlay-rewards', () => {
     const resolved = resolveChatOverlayForMember(verifiedPro, customCatalog);
 
     expect(resolved?.rewardId).toBe('overlay-equipped');
-    expect(resolved?.className).toContain('chat-overlay-slot-bottom-left');
+    expect(resolved?.className).toContain('has-chat-overlay-border');
+    expect(resolved?.className).toContain('chat-overlay-border-genesis-spark');
     expect(resolved?.className).toContain('chat-overlay-motion-premium-loop');
     expect(unlockedChatOverlayRewardsForMember(verifiedPro, customCatalog)).toHaveLength(1);
   });

@@ -17,7 +17,7 @@ const TIER_RANK: Record<NamiMember['tier'], number> = {
 export type ResolvedChatOverlay = {
   rewardId: string;
   name: string;
-  slot: OfficialChatOverlayReward['slot'];
+  borderStyle: OfficialChatOverlayReward['borderStyle'];
   motion: OfficialChatOverlayReward['motion'];
   className: string;
 };
@@ -62,11 +62,13 @@ export function readEquippedChatOverlayId(memberId: string): string {
 
 export function overlayRewardClassName(reward: OfficialChatOverlayReward): string {
   return [
-    'chat-overlay-padding',
-    'chat-overlay-slot-' + reward.slot,
-    'chat-overlay-motion-' + reward.motion,
+    'has-chat-overlay-border',
+    'chat-overlay-border-' + reward.borderStyle,
+    reward.motion === 'premium-loop' ? 'chat-overlay-motion-premium-loop' : '',
     'chat-overlay-accent-' + reward.accent,
-  ].join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 export function resolveChatOverlayForMember(
@@ -81,7 +83,7 @@ export function resolveChatOverlayForMember(
   const equippedId = readEquippedChatOverlayId(member.id);
   const equipped = equippedId
     ? unlocked.find((reward) => reward.id === equippedId)
-    : unlocked[0];
+    : null;
 
   if (!equipped) {
     return null;
@@ -90,7 +92,7 @@ export function resolveChatOverlayForMember(
   return {
     rewardId: equipped.id,
     name: equipped.name,
-    slot: equipped.slot,
+    borderStyle: equipped.borderStyle,
     motion: equipped.motion,
     className: overlayRewardClassName(equipped),
   };

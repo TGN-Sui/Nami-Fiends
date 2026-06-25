@@ -529,7 +529,7 @@ export function ChannelProfileChatSection(props: {
                   )}
 
                   <div className="customization-note">
-                    Overlays use fixed padding slots with static or premium loop motion. Owner brand colors stay in
+                    Chat overlays apply earned border cosmetics around your message bubbles. Owner brand colors stay in
                     Settings.
                   </div>
                 </div>
