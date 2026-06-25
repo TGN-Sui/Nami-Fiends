@@ -265,10 +265,7 @@ import {
 } from './gamehub-preferences.js';
 import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
-import {
-  readFeaturedAuctionHubChannelIds,
-  useFeaturedPlacementAuctionStatus,
-} from './featured-placement-auction-store.js';
+import { useFeaturedPlacementAuctionStatus } from './featured-placement-auction-store.js';
 import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
@@ -1245,7 +1242,7 @@ function NamiHub(props: {
 
   const { members: directoryMembers } = useMemberDirectory();
   const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
-  useFeaturedPlacementAuctionStatus();
+  const auctionStatus = useFeaturedPlacementAuctionStatus();
 
   function resolveDirectoryChannel(channelId: string): NamiChannel | undefined {
     return (
@@ -1256,7 +1253,11 @@ function NamiHub(props: {
   }
 
   const hubFeaturedChannel = hubFeaturedChannelId ? resolveDirectoryChannel(hubFeaturedChannelId) : null;
-  const auctionWinnerChannels = readFeaturedAuctionHubChannelIds()
+  const auctionWinnerChannelIds =
+    auctionStatus.isOpen || auctionStatus.winners.length === 0
+      ? []
+      : auctionStatus.winners.map((winner) => winner.channelId);
+  const auctionWinnerChannels = auctionWinnerChannelIds
     .map((channelId) => resolveDirectoryChannel(channelId))
     .filter((channel): channel is NamiChannel => Boolean(channel));
   const reservedFeaturedIds = new Set([

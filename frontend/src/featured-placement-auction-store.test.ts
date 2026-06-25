@@ -65,6 +65,7 @@ import {
   closeFeaturedAuctionWeekForTests,
   FEATURED_AUCTION_OPEN_SLOTS,
   isRisingPoolEligibleChannel,
+  hydrateFeaturedAuctionStore,
   readFeaturedAuctionHubChannelIds,
   readFeaturedAuctionStatus,
   resetFeaturedPlacementAuctionForTests,
@@ -183,6 +184,20 @@ describe('featured-placement-auction-store', () => {
     expect(winners[0]?.pool).toBe('rising');
     expect(winners.filter((winner) => winner.pool === 'open')).toHaveLength(FEATURED_AUCTION_OPEN_SLOTS);
     expect(readFeaturedAuctionHubChannelIds()).toEqual(winners.map((winner) => winner.channelId));
+  });
+
+  it('does not persist auction state while reading status for render', () => {
+    const localStorage = window.localStorage as Storage & { setItem: ReturnType<typeof vi.fn> };
+    const setItemSpy = vi.spyOn(localStorage, 'setItem');
+
+    readFeaturedAuctionStatus();
+    readFeaturedAuctionHubChannelIds();
+
+    expect(setItemSpy).not.toHaveBeenCalled();
+
+    hydrateFeaturedAuctionStore();
+
+    expect(setItemSpy).toHaveBeenCalledTimes(1);
   });
 
   it('replaces prior bids from the same channel within the active week', () => {

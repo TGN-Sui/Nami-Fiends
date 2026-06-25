@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { currentBoostWeekId, getChannelBoostPower } from './channel-boost-store.js';
 import { ownsGameChannel, resolveOwnedGameChannel } from './channel-owner-access.js';
@@ -89,8 +89,12 @@ function readAllWeeks(): FeaturedAuctionWeekRecord[] {
   }
 }
 
-function writeAllWeeks(weeks: FeaturedAuctionWeekRecord[]): void {
+function persistWeeks(weeks: FeaturedAuctionWeekRecord[]): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks));
+}
+
+function writeAllWeeks(weeks: FeaturedAuctionWeekRecord[]): void {
+  persistWeeks(weeks);
   emit();
 }
 
@@ -183,22 +187,33 @@ function closeWeekRecord(record: FeaturedAuctionWeekRecord): FeaturedAuctionWeek
   };
 }
 
-function ensureCurrentWeekRecord(now = new Date()): FeaturedAuctionWeekRecord {
-  const weekId = currentBoostWeekId(now);
+function materializeWeeksForRead(now = new Date()): FeaturedAuctionWeekRecord[] {
+  const activeWeekId = currentBoostWeekId(now);
   const weeks = readAllWeeks();
-  let current = weeks.find((entry) => entry.weekId === weekId);
 
-  if (!current) {
-    current = emptyWeekRecord(weekId);
-    weeks.unshift(current);
-    writeAllWeeks(weeks);
-    return current;
+  const nextWeeks = weeks.map((record) => {
+    if (record.weekId < activeWeekId && record.status === 'open') {
+      return closeWeekRecord(record);
+    }
+
+    return record;
+  });
+
+  if (!nextWeeks.some((record) => record.weekId === activeWeekId)) {
+    nextWeeks.unshift(emptyWeekRecord(activeWeekId));
   }
 
-  return current;
+  return nextWeeks;
 }
 
-function syncPastWeekClosures(now = new Date()): void {
+function resolveWeekRecordForRead(
+  weeks: readonly FeaturedAuctionWeekRecord[],
+  weekId: number
+): FeaturedAuctionWeekRecord {
+  return weeks.find((entry) => entry.weekId === weekId) ?? emptyWeekRecord(weekId);
+}
+
+export function hydrateFeaturedAuctionStore(now = new Date()): boolean {
   const activeWeekId = currentBoostWeekId(now);
   const weeks = readAllWeeks();
   let changed = false;
@@ -218,14 +233,16 @@ function syncPastWeekClosures(now = new Date()): void {
   }
 
   if (changed) {
-    writeAllWeeks(nextWeeks);
+    persistWeeks(nextWeeks);
+    emit();
   }
+
+  return changed;
 }
 
 export function readFeaturedAuctionStatus(now = new Date()): FeaturedAuctionStatus {
-  syncPastWeekClosures(now);
   const weekId = currentBoostWeekId(now);
-  const record = ensureCurrentWeekRecord(now);
+  const record = resolveWeekRecordForRead(materializeWeeksForRead(now), weekId);
   const isOpen = record.status === 'open';
 
   return {
@@ -342,8 +359,26 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+function getFeaturedAuctionSnapshot(): FeaturedAuctionStatus {
+  if (!cachedStatus) {
+    cachedStatus = readFeaturedAuctionStatus();
+  }
+
+  return cachedStatus;
+}
+
 export function useFeaturedPlacementAuctionStatus(): FeaturedAuctionStatus {
-  return useSyncExternalStore(subscribe, () => readFeaturedAuctionStatus(), () => readFeaturedAuctionStatus());
+  const status = useSyncExternalStore(
+    subscribe,
+    getFeaturedAuctionSnapshot,
+    getFeaturedAuctionSnapshot
+  );
+
+  useEffect(() => {
+    hydrateFeaturedAuctionStore();
+  }, []);
+
+  return status;
 }
 
 export function featuredAuctionClosesAtMs(now = new Date()): number {
