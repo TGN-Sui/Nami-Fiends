@@ -16,14 +16,9 @@ import {
 } from './channel-game-reviews-store.js';
 import { ownsGameChannel } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
+import { LegendReviewMeter } from './LegendReviewMeter.js';
 import { UniformMemberAvatar } from './member-avatar.js';
 import type { NamiChannel, NamiMember } from './uiMockData.js';
-
-function renderRatingStars(rating: number): string {
-  const rounded = Math.max(0, Math.min(5, Math.round(rating)));
-
-  return '★★★★★'.slice(0, rounded) + '☆☆☆☆☆'.slice(0, 5 - rounded);
-}
 
 function eligibilityMessage(eligibility: ReturnType<typeof getChannelGameReviewEligibility>, channelName: string): string {
   if (eligibility === 'eligible') {
@@ -105,13 +100,10 @@ export function ChannelGameReviewsSection(props: {
           </p>
         </div>
 
-        <div className="channel-profile-review-summary" aria-label="Average community rating">
+        <div className="channel-profile-review-summary" aria-label="Average community Legend rating">
           {averageRating !== null ? (
             <>
-              <strong>{averageRating.toFixed(1)}</strong>
-              <span className="channel-profile-review-stars" aria-hidden="true">
-                {renderRatingStars(averageRating)}
-              </span>
+              <LegendReviewMeter className="channel-profile-review-summary-meter" value={averageRating} />
               <small>{reviews.length} review{reviews.length === 1 ? '' : 's'}</small>
             </>
           ) : (
@@ -137,19 +129,7 @@ export function ChannelGameReviewsSection(props: {
         <article className="channel-profile-review-compose-card">
           <h3>Share your review</h3>
 
-          <div className="channel-profile-review-rating-picker" role="group" aria-label="Review rating">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button
-                aria-pressed={rating === value}
-                className={'channel-profile-review-rating-button' + (rating === value ? ' is-selected-review-rating' : '')}
-                key={value}
-                onClick={() => setRating(value)}
-                type="button"
-              >
-                {value}★
-              </button>
-            ))}
-          </div>
+          <LegendReviewMeter onChange={setRating} value={rating} />
 
           <label className="channel-profile-review-field">
             <span>Headline</span>
@@ -213,9 +193,7 @@ export function ChannelGameReviewsSection(props: {
                       >
                         {review.memberName}
                       </button>
-                      <span className="channel-profile-review-stars" aria-label={review.rating + ' out of 5 stars'}>
-                        {renderRatingStars(review.rating)}
-                      </span>
+                      <LegendReviewMeter compact showValue={false} value={review.rating} />
                     </div>
                     <small>
                       {review.badgeLabel} badge · {review.createdAtLabel}

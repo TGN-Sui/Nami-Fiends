@@ -16020,19 +16020,125 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .channel-profile-review-summary {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   justify-items: end;
   text-align: right;
+  min-width: min(100%, 220px);
 }
 
-.channel-profile-review-summary strong {
-  font-size: clamp(1.5rem, 3vw, 1.9rem);
-  line-height: 1;
+.channel-profile-review-summary-meter {
+  width: min(100%, 220px);
 }
 
-.channel-profile-review-stars {
+.legend-review-meter {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.legend-review-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.legend-review-meter-label {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: #ffd978;
-  letter-spacing: 0.08em;
+}
+
+.legend-review-meter-value {
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff6d8;
+}
+
+.legend-review-meter-track-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.legend-review-meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(117, 215, 255, 0.16);
+}
+
+.legend-review-meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(117, 188, 224, 0.85), rgba(255, 217, 120, 0.95));
+  transition: width 0.2s ease;
+}
+
+.legend-review-meter-fill.is-legend-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 217, 120, 0.95),
+    rgba(255, 140, 210, 0.95),
+    rgba(120, 220, 255, 0.95)
+  );
+}
+
+.legend-review-meter.is-legend-tier .legend-review-meter-label {
+  background: linear-gradient(90deg, #ffd978, #ff9fd6, #8fd6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.legend-review-meter-segments {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.legend-review-meter-segment {
+  min-height: 34px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  background: rgba(5, 9, 15, 0.72);
+  color: rgba(223, 236, 250, 0.82);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.legend-review-meter-segment.is-selected-legend-segment {
+  border-color: rgba(255, 217, 120, 0.55);
+  background: rgba(255, 217, 120, 0.12);
+  color: #fff6d8;
+}
+
+.is-compact-legend-review-meter {
+  gap: 4px;
+}
+
+.is-compact-legend-review-meter .legend-review-meter-head {
+  justify-content: flex-start;
+}
+
+.is-compact-legend-review-meter .legend-review-meter-label {
+  font-size: 0.72rem;
+}
+
+.is-compact-legend-review-meter .legend-review-meter-track {
+  height: 7px;
+}
+
+.channel-profile-review-card-meta .legend-review-meter {
+  min-width: 120px;
 }
 
 .channel-profile-review-eligibility-card,
@@ -16070,26 +16176,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   font-size: 1rem;
 }
 
-.channel-profile-review-rating-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.channel-profile-review-compose-card .legend-review-meter {
   margin-bottom: 14px;
-}
-
-.channel-profile-review-rating-button {
-  padding: 8px 12px;
-  border: 1px solid rgba(117, 215, 255, 0.2);
-  border-radius: 999px;
-  background: rgba(5, 9, 15, 0.72);
-  color: rgba(223, 236, 250, 0.86);
-  cursor: pointer;
-}
-
-.channel-profile-review-rating-button.is-selected-review-rating {
-  border-color: rgba(255, 217, 120, 0.55);
-  background: rgba(255, 217, 120, 0.12);
-  color: #fff6d8;
 }
 
 .channel-profile-review-field {

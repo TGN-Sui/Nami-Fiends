@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 
 import type { GuildAffiliationItem, SquadAffiliationItem } from './affiliation-provider.js';
+import { LegendReviewMeter } from './LegendReviewMeter.js';
 import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
 import { MemberProfileIdentityToolbar } from './MemberProfileIdentityToolbar.js';
@@ -46,10 +47,6 @@ function ShowcaseChannelAvatar(props: { channel: NamiChannel; size?: 'sm' | 'md'
       <span>{label}</span>
     </div>
   );
-}
-
-function ratingStars(rating: number): string {
-  return '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
 }
 
 function compactChatLabel(title: string): string {
@@ -332,9 +329,7 @@ export function MemberProfileShowcase(props: {
                           <strong>{review.title}</strong>
                           <span>{channel?.name ?? review.channelId}</span>
                         </div>
-                        <span aria-label={review.rating + ' out of 5 stars'} className="member-showcase-review-stars">
-                          {ratingStars(review.rating)}
-                        </span>
+                        <LegendReviewMeter compact showValue={false} value={review.rating} />
                       </button>
                     );
                   })}
