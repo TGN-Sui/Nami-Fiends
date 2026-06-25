@@ -898,11 +898,43 @@ P2 — Phase 9+         Walrus Sites, privacy proofs, MemWal, major integrations
 P3 — Deferred         Phase 10 experiments, mobile genre chat, nice-to-have polish
 ```
 
-**Intake queue** *(add rows as ideas arrive)*
+**Intake queue** *(clarified 2026-06-24)*
 
-| Idea | Lane | Notes |
-|------|------|-------|
-| *(your suggestions)* | TBD | Share in chat — we classify together |
+| Idea | Lane | Module / connector | Notes |
+|------|------|-------------------|-------|
+| Prestige Players | P2 | `passport` + `title` | Early L100 in season → prestige titles; uses `prestige_points` |
+| Nami season reset (6mo) | P2 | Season rollover + indexer | Reset season level/XP only; subscriptions + Nami Pass cosmetics/badges kept |
+| Account level | P2 | Indexer cosmetic | Lifetime level off-chain; passport soulbound + dynamic on-chain |
+| Badge → membership | P2 | Eligibility + checkout | Badges unlock **purchase option** only; Black still blocks |
+| Customizable overlays | P1→P2 | `cosmetics` + Officials Reward Studio | Officials define condition → reward; static/premium loops; fixed padding slots |
+| Star score display | P1 | Passport card UI | 0–20→1★ … 100→foil star; display only |
+| Legend review bar | P1 | Reviews UI | Horizontal Legend meter, not 5-star |
+| Super banners on Hub return | P1 | `SuperBannerOverlay` + prefs | On login return to Hub only (not logged-out) |
+| Featured placement auction | P1→P2 | Hub auction + discovery | Model D: limited slots; **low-boost pool** (1 hidden slot) + **open pool** (N−1 slots) |
+| NFT chat gate | P2 | `channel_access` + NFT verifier | Sui first, live hold, chat only; Solana later |
+| Game Master | P2 | `GameMasterCap` | Delegate mod/media/news/description only |
+| Black leader relinquish | P2 | channel/guild transfer | Successor must pass conduct; channel in good standing |
+| User tagged in banners | P1 | Banner editor | Owner shoutouts |
+| Global events + notify | P2 | Events + notification connector | Opt-in prefs |
+| Universal calendar | P1→P2 | Calendar projection | Aggregate owner events |
+| Gift-only bounties | P2 | Bounty + gift fulfillment | Pro/Elite only; named in reviews section; no $GOON |
+| New message button | P1 | Messages UI | Compose DM; transport later |
+| Global chat button size | P1 | CSS | Game Hub dock polish |
+| OBS overlay (chat/gifts/bubbles) | P2 | StreamOverlay connector | Browser source; streamer toggles audience mirror |
+| Browser extension / Steam overlay | P3 | NamiHostConnector | After StreamOverlay |
+| Mobile / GameOS / Suiball | P3 | Host shells | Phase 10 gate |
+
+**Featured auction (model D) — spec**
+
+```text
+Week cadence:     aligns with discovery week_id
+Total slots:      N per week (e.g. 6 carousel frames)
+Pool A — Rising:  1 slot, low-boost channels only; hidden in Hub until auction closes
+Pool B — Open:    N−1 slots; channels above rising threshold (or non-Pool-A eligible)
+Eligibility:      verified channel owner, conduct != Black, no active channel ban
+Bid:              wallet-signed + Stripe hold or capture at week start
+Discovery:        featured_placement projection merges into Hub panel only — not verification/trust
+```
 
 **Gate:** Do not start P2/P3 items until Phase 8 verify gates stay green and launch ops stable.
 
