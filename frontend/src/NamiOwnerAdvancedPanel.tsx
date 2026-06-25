@@ -6,9 +6,12 @@ import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
 import { OfficialsRewardStudioPanel } from './OfficialsRewardStudioPanel.js';
-import { OwnerLegendReviewLabelsPanel } from './OwnerLegendReviewLabelsPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { isOfficialOwner } from './nami-capabilities.js';
+import {
+  consumeOwnerAdvancedTabFocus,
+  type OwnerAdvancedTabId,
+} from './settings-navigation.js';
 import type { NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
@@ -22,6 +25,11 @@ const ADVANCED_TABS = [
     id: 'emojis',
     label: 'Chat Emojis',
     hint: 'Upload custom emojis for every member chat picker.',
+  },
+  {
+    id: 'borders',
+    label: 'Border Art',
+    hint: 'Upload scalable chat border cosmetics and define reward conditions.',
   },
   {
     id: 'submissions',
@@ -43,26 +51,16 @@ const ADVANCED_TABS = [
     label: 'Launch Ops',
     hint: 'Testnet policy, officials queue depth, and discovery cycle health.',
   },
-  {
-    id: 'reviews',
-    label: 'Reviews',
-    hint: 'Legend meter tier labels for badge-gated community game reviews.',
-  },
-  {
-    id: 'rewards',
-    label: 'Rewards',
-    hint: 'Official Reward Studio for chat overlay condition → reward catalog.',
-  },
-] as const;
-
-type AdvancedTabId = (typeof ADVANCED_TABS)[number]['id'];
+] as const satisfies ReadonlyArray<{ id: OwnerAdvancedTabId; label: string; hint: string }>;
 
 export function NamiOwnerAdvancedPanel(props: {
   onEnterEditMode: () => void;
   onOpenChannel?: (channel: NamiChannel) => void;
 }): ReactElement | null {
   const { owner } = useProtocolOwner();
-  const [activeTab, setActiveTab] = useState<AdvancedTabId>('assets');
+  const [activeTab, setActiveTab] = useState<OwnerAdvancedTabId>(
+    () => consumeOwnerAdvancedTabFocus() ?? 'assets'
+  );
 
   if (!isOfficialOwner(owner)) {
     return null;
@@ -76,14 +74,14 @@ export function NamiOwnerAdvancedPanel(props: {
         <span className="mini-badge">Nami Official Owner</span>
         <h2>Advanced platform controls</h2>
         <p>
-          Manage artwork, shared chat emojis, security enforcement, and indexed protocol data from
-          one console. Each tab scrolls inside this workspace so long catalogs stay reachable.
+          Manage artwork, border cosmetics, shared chat emojis, security enforcement, and indexed
+          protocol data from one console.
         </p>
       </div>
 
       <div
         aria-label="Owner advanced settings"
-        className="nami-owner-advanced-tab-row tab-row"
+        className="nami-owner-advanced-tab-row tab-row nami-owner-advanced-tab-row-scroll"
         role="tablist"
       >
         {ADVANCED_TABS.map((tab) => (
@@ -107,6 +105,7 @@ export function NamiOwnerAdvancedPanel(props: {
           <NamiOwnerAssetEditPanel embedded onEnterEditMode={props.onEnterEditMode} />
         ) : null}
         {activeTab === 'emojis' ? <NamiOwnerEmojiPanel embedded /> : null}
+        {activeTab === 'borders' ? <OfficialsRewardStudioPanel embedded /> : null}
         {activeTab === 'submissions' ? <NamiOfficialsSubmissionsPanel embedded /> : null}
         {activeTab === 'security' ? (
           <NamiOwnerSettingsPanel
@@ -116,8 +115,6 @@ export function NamiOwnerAdvancedPanel(props: {
         ) : null}
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
         {activeTab === 'launch' ? <LaunchOpsPanel embedded /> : null}
-        {activeTab === 'reviews' ? <OwnerLegendReviewLabelsPanel embedded /> : null}
-        {activeTab === 'rewards' ? <OfficialsRewardStudioPanel embedded /> : null}
       </div>
     </article>
   );

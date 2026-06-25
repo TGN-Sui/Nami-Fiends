@@ -123,6 +123,7 @@ import {
 
   resolveMessageAuthorMember,
 } from './member-access.js';
+import { ChatMessageBubble } from './ChatMessageBubble.js';
 import {
   markThreadRead,
   readMessageThreads,

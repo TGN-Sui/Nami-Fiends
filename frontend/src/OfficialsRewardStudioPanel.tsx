@@ -1,5 +1,19 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
+import {
+  CHAT_BORDER_ANIMATED_ACCEPT_LABEL,
+  CHAT_BORDER_ART_SLICE_DEFAULTS,
+  CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS,
+  CHAT_BORDER_STATIC_ACCEPT_LABEL,
+  chatBorderArtDimensionNote,
+  type ChatBorderSliceInsets,
+} from './chat-border-art-specs.js';
+import {
+  readChatBorderArtDataUrl,
+  validateChatBorderAnimatedArt,
+  validateChatBorderStaticArt,
+} from './chat-border-art-upload.js';
+import { buildChatBorderPresentation } from './chat-border-rendering.js';
 import {
   CHAT_OVERLAY_BORDER_STYLES,
   readOfficialChatOverlayRewards,
@@ -25,18 +39,38 @@ function createDraftReward(): OfficialChatOverlayReward {
     borderStyle: 'signal-glow',
     motion: 'static',
     accent: 'cyan',
+    staticArtUrl: null,
+    animatedArtUrl: null,
+    artSliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+    displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
     condition: { type: 'verified' },
     enabled: true,
     updatedAtMs: stamp,
   };
 }
 
+function updateSliceInset(
+  current: ChatBorderSliceInsets,
+  edge: keyof ChatBorderSliceInsets,
+  value: string
+): ChatBorderSliceInsets {
+  const parsed = Number.parseInt(value, 10);
+
+  return {
+    ...current,
+    [edge]: Number.isFinite(parsed) ? parsed : current[edge],
+  };
+}
+
 export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): ReactElement | null {
   const { owner } = useProtocolOwner();
   const rewards = useOfficialChatOverlayRewards();
+  const staticInputRef = useRef<HTMLInputElement | null>(null);
+  const animatedInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedId, setSelectedId] = useState<string>(() => rewards[0]?.id ?? '');
   const [draft, setDraft] = useState<OfficialChatOverlayReward | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const activeDraft = useMemo(() => {
     if (draft) {
@@ -54,6 +88,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     setSelectedId(reward.id);
     setDraft({ ...reward });
     setNotice(null);
+    setUploadError(null);
   }
 
   function updateDraft(patch: Partial<OfficialChatOverlayReward>): void {
@@ -78,6 +113,44 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     });
   }
 
+  async function handleStaticUpload(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file || !activeDraft) {
+      return;
+    }
+
+    const validationError = validateChatBorderStaticArt(file);
+
+    if (validationError) {
+      setUploadError(validationError);
+      return;
+    }
+
+    updateDraft({ staticArtUrl: await readChatBorderArtDataUrl(file) });
+    setUploadError(null);
+  }
+
+  async function handleAnimatedUpload(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file || !activeDraft) {
+      return;
+    }
+
+    const validationError = validateChatBorderAnimatedArt(file);
+
+    if (validationError) {
+      setUploadError(validationError);
+      return;
+    }
+
+    updateDraft({ animatedArtUrl: await readChatBorderArtDataUrl(file) });
+    setUploadError(null);
+  }
+
   function handleSave(): void {
     if (!activeDraft) {
       return;
@@ -86,14 +159,14 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     const saved = upsertOfficialChatOverlayReward(activeDraft);
     setSelectedId(saved.id);
     setDraft({ ...saved });
-    setNotice('Saved "' + saved.name + '" to the chat overlay reward catalog.');
+    setNotice('Saved "' + saved.name + '" to the border art reward catalog.');
   }
 
   function handleCreate(): void {
     const next = createDraftReward();
     setSelectedId(next.id);
     setDraft(next);
-    setNotice('Draft overlay reward ready — save to publish.');
+    setNotice('Draft border reward ready — upload art and save to publish.');
   }
 
   function handleRemove(): void {
@@ -107,8 +180,12 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
 
     setSelectedId(next?.id ?? '');
     setDraft(next ? { ...next } : null);
-    setNotice('Removed overlay reward from the catalog.');
+    setNotice('Removed border reward from the catalog.');
   }
+
+  const previewPresentation = activeDraft
+    ? buildChatBorderPresentation(activeDraft, overlayRewardClassName(activeDraft))
+    : null;
 
   return (
     <article
@@ -118,19 +195,20 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
       }
     >
       <div className="profile-panel-heading">
-        <span className="mini-badge">Reward Studio</span>
-        <h2>Chat overlay rewards</h2>
+        <span className="mini-badge">Border Art</span>
+        <h2>Chat border rewards</h2>
         <p>
-          Define condition → reward pairs for chat bubble border cosmetics. Each reward maps to one
-          fixed border style with static or premium loop motion.
+          Upload static or animated 9-patch border art, define unlock conditions, and publish
+          scalable chat bubble cosmetics for members to equip.
         </p>
+        <p className="protocol-hint">{chatBorderArtDimensionNote()}</p>
       </div>
 
       <div className="officials-reward-studio-layout">
         <aside className="officials-reward-studio-list">
           <div className="officials-reward-studio-list-actions">
             <button className="nami-surface-button is-primary-surface-button" onClick={handleCreate} type="button">
-              New overlay
+              New border reward
             </button>
           </div>
           <ul>
@@ -295,6 +373,85 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
               ) : null}
             </fieldset>
 
+            <fieldset className="officials-reward-studio-condition-field">
+              <legend>Border art uploads</legend>
+              <div className="profile-edit-chip-row">
+                <button
+                  className="nami-surface-button"
+                  onClick={() => staticInputRef.current?.click()}
+                  type="button"
+                >
+                  Upload static ({CHAT_BORDER_STATIC_ACCEPT_LABEL})
+                </button>
+                <button
+                  className="nami-surface-button"
+                  onClick={() => animatedInputRef.current?.click()}
+                  type="button"
+                >
+                  Upload animated ({CHAT_BORDER_ANIMATED_ACCEPT_LABEL})
+                </button>
+              </div>
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+                onChange={handleStaticUpload}
+                ref={staticInputRef}
+                type="file"
+              />
+              <input
+                accept="image/gif,image/webp"
+                hidden
+                onChange={handleAnimatedUpload}
+                ref={animatedInputRef}
+                type="file"
+              />
+              {uploadError ? <p className="profile-edit-field-hint is-unavailable-name">{uploadError}</p> : null}
+            </fieldset>
+
+            <div className="officials-reward-studio-field-grid">
+              {(['top', 'right', 'bottom', 'left'] as const).map((edge) => (
+                <label className="onboarding-field" key={'art-' + edge}>
+                  <span>Art slice {edge}</span>
+                  <input
+                    min={8}
+                    onChange={(event) =>
+                      updateDraft({
+                        artSliceInsets: updateSliceInset(
+                          activeDraft.artSliceInsets,
+                          edge,
+                          event.target.value
+                        ),
+                      })
+                    }
+                    type="number"
+                    value={activeDraft.artSliceInsets[edge]}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="officials-reward-studio-field-grid">
+              {(['top', 'right', 'bottom', 'left'] as const).map((edge) => (
+                <label className="onboarding-field" key={'display-' + edge}>
+                  <span>Display width {edge}</span>
+                  <input
+                    min={8}
+                    onChange={(event) =>
+                      updateDraft({
+                        displayWidths: updateSliceInset(
+                          activeDraft.displayWidths,
+                          edge,
+                          event.target.value
+                        ),
+                      })
+                    }
+                    type="number"
+                    value={activeDraft.displayWidths[edge]}
+                  />
+                </label>
+              ))}
+            </div>
+
             <label className="officials-reward-studio-enabled-toggle">
               <input
                 checked={activeDraft.enabled}
@@ -307,8 +464,16 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
             <div className="officials-reward-studio-preview">
               <p>Border preview</p>
               <div className="officials-reward-studio-preview-bubble">
-                <div className={'message-bubble ' + overlayRewardClassName(activeDraft)}>
-                  Member message preview
+                <div
+                  className={
+                    'message-bubble ' +
+                    (previewPresentation?.hasCustomArt
+                      ? previewPresentation.className
+                      : overlayRewardClassName(activeDraft))
+                  }
+                  style={previewPresentation?.hasCustomArt ? previewPresentation.style : undefined}
+                >
+                  Member message preview scales with width and height.
                 </div>
               </div>
             </div>
@@ -323,7 +488,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
             </div>
           </div>
         ) : (
-          <p className="protocol-hint">Create an overlay reward to get started.</p>
+          <p className="protocol-hint">Create a border reward to get started.</p>
         )}
       </div>
 

@@ -71,6 +71,19 @@ export function overlayRewardClassName(reward: OfficialChatOverlayReward): strin
     .join(' ');
 }
 
+export function resolveEquippedChatOverlayReward(
+  member: NamiMember | undefined,
+  catalog: readonly OfficialChatOverlayReward[] = readOfficialChatOverlayRewards()
+): OfficialChatOverlayReward | null {
+  const resolved = resolveChatOverlayForMember(member, catalog);
+
+  if (!resolved) {
+    return null;
+  }
+
+  return catalog.find((reward) => reward.id === resolved.rewardId) ?? null;
+}
+
 export function resolveChatOverlayForMember(
   member: NamiMember | undefined,
   catalog: readonly OfficialChatOverlayReward[] = readOfficialChatOverlayRewards()

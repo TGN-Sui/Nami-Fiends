@@ -1,5 +1,12 @@
 import { useSyncExternalStore } from 'react';
 
+import {
+  CHAT_BORDER_ART_SLICE_DEFAULTS,
+  CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS,
+  normalizeChatBorderSliceInsets,
+  type ChatBorderSliceInsets,
+} from './chat-border-art-specs.js';
+
 export const CHAT_OVERLAY_BORDER_STYLES = [
   'signal-glow',
   'wave-frame',
@@ -30,6 +37,10 @@ export type OfficialChatOverlayReward = {
   borderStyle: ChatOverlayBorderStyle;
   motion: ChatOverlayMotion;
   accent: 'cyan' | 'gold' | 'violet' | 'mint';
+  staticArtUrl: string | null;
+  animatedArtUrl: string | null;
+  artSliceInsets: ChatBorderSliceInsets;
+  displayWidths: ChatBorderSliceInsets;
   condition: ChatOverlayUnlockCondition;
   enabled: boolean;
   updatedAtMs: number;
@@ -45,6 +56,10 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     borderStyle: 'signal-glow',
     motion: 'static',
     accent: 'cyan',
+    staticArtUrl: null,
+    animatedArtUrl: null,
+    artSliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+    displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
     condition: { type: 'verified' },
     enabled: true,
     updatedAtMs: 0,
@@ -56,6 +71,10 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     borderStyle: 'wave-frame',
     motion: 'static',
     accent: 'violet',
+    staticArtUrl: null,
+    animatedArtUrl: null,
+    artSliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+    displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
     condition: { type: 'tier-min', tier: 'Pro' },
     enabled: true,
     updatedAtMs: 0,
@@ -67,6 +86,10 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     borderStyle: 'pulse-ring',
     motion: 'premium-loop',
     accent: 'gold',
+    staticArtUrl: null,
+    animatedArtUrl: null,
+    artSliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+    displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
     condition: { type: 'tier-min', tier: 'Elite' },
     enabled: true,
     updatedAtMs: 0,
@@ -78,6 +101,10 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     borderStyle: 'genesis-spark',
     motion: 'premium-loop',
     accent: 'mint',
+    staticArtUrl: null,
+    animatedArtUrl: null,
+    artSliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+    displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
     condition: { type: 'official-grant', memberIds: [] },
     enabled: true,
     updatedAtMs: 0,
@@ -159,6 +186,19 @@ function normalizeReward(value: Partial<OfficialChatOverlayReward>): OfficialCha
     ),
     motion: normalizeMotion(value.motion),
     accent: normalizeAccent(value.accent),
+    staticArtUrl: typeof value.staticArtUrl === 'string' && value.staticArtUrl.trim() ? value.staticArtUrl : null,
+    animatedArtUrl:
+      typeof value.animatedArtUrl === 'string' && value.animatedArtUrl.trim()
+        ? value.animatedArtUrl
+        : null,
+    artSliceInsets: normalizeChatBorderSliceInsets(
+      value.artSliceInsets,
+      CHAT_BORDER_ART_SLICE_DEFAULTS
+    ),
+    displayWidths: normalizeChatBorderSliceInsets(
+      value.displayWidths,
+      CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS
+    ),
     condition: normalizeCondition(value.condition),
     enabled: value.enabled !== false,
     updatedAtMs: typeof value.updatedAtMs === 'number' ? value.updatedAtMs : Date.now(),

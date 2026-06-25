@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { createElement } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SettingsScreen } from './SettingsScreen.js';
 import { NamiWalletProvider } from './wallet.js';
@@ -35,28 +35,45 @@ function createLocalStorageMock(): Storage {
   };
 }
 
+function renderSettingsScreen(): ReturnType<typeof render> {
+  const localStorage = createLocalStorageMock();
+
+  vi.stubGlobal('localStorage', localStorage);
+  vi.stubGlobal('sessionStorage', createLocalStorageMock());
+  vi.stubGlobal('window', {
+    localStorage,
+    sessionStorage: createLocalStorageMock(),
+    location: { hash: '', pathname: '/', search: '' },
+    dispatchEvent: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    scrollTo: vi.fn(),
+    setInterval: (handler: () => void) => setInterval(handler, 60_000),
+    clearInterval: (id: ReturnType<typeof setInterval>) => clearInterval(id),
+  });
+
+  return render(createElement(NamiWalletProvider, null, createElement(SettingsScreen)));
+}
+
 describe('SettingsScreen account section', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the v2 settings shell without owner-only Border Art for members', () => {
+    const view = renderSettingsScreen();
+
+    expect(view.container.querySelector('[data-settings-shell="v2"]')).toBeTruthy();
+    expect(view.getByText('Member mode')).toBeTruthy();
+    expect(view.queryByRole('button', { name: /Border Art/i })).toBeNull();
+  });
+
   it('renders account tab for game channel owners without crashing', () => {
-    const localStorage = createLocalStorageMock();
-    vi.stubGlobal('localStorage', localStorage);
-    vi.stubGlobal('sessionStorage', createLocalStorageMock());
-    vi.stubGlobal('window', {
-      localStorage,
-      sessionStorage: createLocalStorageMock(),
-      location: { hash: '', pathname: '/', search: '' },
-      dispatchEvent: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      scrollTo: vi.fn(),
-      setInterval: (handler: () => void) => setInterval(handler, 60_000),
-      clearInterval: (id: ReturnType<typeof setInterval>) => clearInterval(id),
-    });
+    const view = renderSettingsScreen();
 
-    const view = render(
-      createElement(NamiWalletProvider, null, createElement(SettingsScreen)),
+    fireEvent.click(
+      view.getByRole('button', { name: /Account Sign-in, passport, profile, platforms/i })
     );
-
-    fireEvent.click(view.getByRole('button', { name: 'Account' }));
 
     expect(view.getByText('Account Sign-In')).toBeTruthy();
     expect(view.getByText('Platform Linking')).toBeTruthy();

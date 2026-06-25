@@ -683,6 +683,188 @@ cosmetic_registry.move
 
 ---
 
+# Application Architecture (Full Site)
+
+Nami ships as four cooperating layers. Each layer has a narrow contract with the others.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        frontend/ (React)                        │
+│  Sign-in · Hub · Channels · Guilds · Chat · Profile · Settings   │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ HTTP / wallet-signed uploads
+┌───────────────────────────────▼─────────────────────────────────┐
+│                     backend/ (Express indexer)                  │
+│  Event replay · projections · media · discovery · moderation API  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ Sui RPC + event subscriptions
+┌───────────────────────────────▼─────────────────────────────────┐
+│                   SDK/ + contracts/nami (Move)                    │
+│  Identity · Passport · Cosmetics · Channels · Conduct · Admin     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Settings UX (member vs owner)
+
+Nami uses a **master-detail settings shell** (Discord / Slack / VS Code pattern):
+
+| Pattern | Nami implementation |
+| --- | --- |
+| Shallow navigation (≤2 levels) | Left sidebar groups + one workspace pane |
+| Member vs admin separation | **Your settings** vs **Owner console** sidebar groups |
+| No nested tab rows | Border Art is a **direct sidebar item**, not Advanced → tab |
+| Home dashboard | Compact status cards with deep links — not duplicate nav |
+
+**Member sidebar:** Home, Account, Membership, Safety, Look & feel, Feeds, Feedback
+
+**Owner console** (official owner wallet or Demo Perspective → Nami Official Owner):
+
+Platform ops · **Border Art** · Visual assets · Chat emojis · Submissions · Security · Indexed data · Launch ops
+
+Non-owners see a locked Owner console hint explaining how to unlock platform tools.
+
+## Frontend surfaces
+
+| Surface | Primary modules | Notes |
+| --- | --- | --- |
+| Game Hub | `App.tsx`, discovery stores | Genre lounges, member spotlight, channel directory |
+| Channel profile | `ChannelProfileScreen.tsx`, owner settings draft | Brand media, chat, events, reviews |
+| Global chat | `GlobalChatsPanel.tsx`, `messages-store.ts` | Official + genre + temporary rooms |
+| Guild space | `GuildSpaceScreens.tsx` | Guild chat, roster, leadership tools |
+| Member profile | `ProfileEditPanel.tsx`, passport cards | Cosmetic loadout, linked platforms |
+| Settings | `SettingsScreen.tsx`, owner advanced panel | Owner dashboard + member preferences |
+| Safety | `SafetyCenter` routes, report stores | Mutes, blocks, moderation intake |
+
+## Backend services (implemented)
+
+| Service | Role |
+| --- | --- |
+| `replay.ts` / projection registry | Rebuild read models from chain events |
+| `passport-timeline.service.ts` | Passport activity feed including cosmetic events |
+| `media-upload.service.ts` | Avatar, cover, studio logo, owner assets |
+| `discovery-scoring.ts` | Multi-signal channel ranking |
+| `global-chat-messages.service.ts` | Persisted global room messages |
+| `officials-auth.service.ts` | Owner/moderator gate for admin routes |
+
+## SDK responsibilities (current)
+
+| Area | Status |
+| --- | --- |
+| Identity / passport reads | Implemented |
+| Customization loadout parsers | Implemented (`ParsedCosmeticLoadout`) |
+| Cosmetic equip transactions | Planned |
+| Partner embed entrypoints | Implemented |
+
+## Effective identity stack (runtime)
+
+```text
+Wallet session
+  → Identity + Passport (chain or fixture)
+    → Verification + Membership tier
+      → Conduct signal
+        → Channel policy + moderation records
+          → Effective chat/profile/cosmetic access
+```
+
+Black Passport pauses active customization changes but does not erase unlock history by default.
+
+---
+
+# Chat Border Art System
+
+Chat border cosmetics are **off-chain art** with **on-chain unlock proofs** (`cosmetics.move` → `CHAT_OVERLAY` slot). The frontend renders uploaded 9-patch frames around message bubbles.
+
+## Authoring spec
+
+| Constant | Value | Purpose |
+| --- | --- | --- |
+| Canvas | **384 × 384 px** | Square source art with transparent center |
+| Art slice top | **56 px** | Includes ornate top crowns; scales with bubble width |
+| Art slice right | **32 px** | Right edge patch |
+| Art slice bottom | **24 px** | Bottom edge patch |
+| Art slice left | **32 px** | Left edge patch |
+| Display top | **28 px** | On-screen border thickness (consistent text offset) |
+| Display right | **16 px** | On-screen right border |
+| Display bottom | **12 px** | On-screen bottom border |
+| Display left | **16 px** | On-screen left border |
+
+**Two inset sets are required:**
+
+* `artSliceInsets` — how the source PNG/GIF/WebP is sliced (`border-image-slice`)
+* `displayWidths` — how thick the border draws on screen (`border-image-width`)
+
+Bold or thin top framing keeps message text aligned because display top padding is fixed independent of art ornament height.
+
+## Upload limits
+
+| Kind | Formats | Max size |
+| --- | --- | --- |
+| Static | PNG, JPG, WebP | 2 MB |
+| Animated | GIF, animated WebP | 4 MB |
+
+## Reward catalog flow
+
+```text
+Official owner (Settings → Advanced → Border Art)
+  → OfficialsRewardStudioPanel
+    → define unlock condition
+    → upload static/animated art + slice insets
+    → save to official-chat-overlay-rewards-store (local catalog, MVP)
+
+Member earns unlock when condition matches:
+  verified | tier-min | official-grant (member id list)
+
+Member equips overlay:
+  Profile edit or Channel chat → Chat Style rail
+    → chatOverlayDisplay = reward id (local profile edits)
+
+Chat render:
+  ChatMessageBubble
+    → resolveEquippedChatOverlayReward()
+    → buildChatBorderPresentation() when art URLs exist
+    → CSS fallback classes when art is null (signal-glow, wave-frame, …)
+```
+
+## Default reward presets
+
+| Reward | Border style | Motion | Unlock |
+| --- | --- | --- | --- |
+| Signal Glow | `signal-glow` | static | Verified |
+| Wave Frame | `wave-frame` | static | Pro tier minimum |
+| Pulse Ring | `pulse-ring` | premium-loop | Elite tier minimum |
+| Genesis Spark | `genesis-spark` | premium-loop | Official grant list |
+
+## Key frontend modules
+
+```text
+chat-border-art-specs.ts        — canvas + slice constants
+chat-border-art-upload.ts       — file validation + data URL reads
+official-chat-overlay-rewards-store.ts — owner-editable catalog
+chat-overlay-rewards.ts         — unlock + equip resolution
+chat-border-rendering.ts        — border-image presentation builder
+ChatMessageBubble.tsx           — chat surface wrapper (all chat UIs)
+OfficialsRewardStudioPanel.tsx  — owner Border Art studio
+ChatOverlayEquipPicker.tsx      — member equip UI
+```
+
+## Scaling rules
+
+* Bubble shell uses `width: fit-content` + `max-width: 100%` inside the chat grid column
+* `overflow: hidden` on custom-art bubbles prevents bleed into neighboring rows
+* Message stack gap (`7px` in `.message-stack`) keeps vertical separation between bordered bubbles
+
+## On-chain alignment (future)
+
+| Off-chain field | On-chain field |
+| --- | --- |
+| Reward `id` / catalog entry | `CosmeticUnlock.cosmetic_code` |
+| Equipped overlay | `CosmeticLoadout.chat_overlay_code` |
+| `source_code` on grant | Reward provenance (season, badge, event) |
+
+Planned: `cosmetic_registry.move` + SDK equip PTBs + backend media CDN for border assets.
+
+---
+
 # Architecture Principles
 
 Identity owns presence.

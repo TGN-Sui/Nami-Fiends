@@ -17,6 +17,7 @@ import {
   checkDisplayNameAvailability,
   saveMemberDisplayName,
 } from './member-display-name-store.js';
+import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import {
   profileGenreOptions,
   profilePlatformOptions,
@@ -24,7 +25,6 @@ import {
   useSelfProfileEdits,
   type SelfProfileEdits,
 } from './member-profile-store.js';
-import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { PROFILE_GENRE_LOUNGE_COUNT } from './platform-genre-options.js';
 
 function toggleChip(list: string[], value: string): string[] {
@@ -41,6 +41,7 @@ export function ProfileEditPanel(): ReactElement {
   const frameCosmetics = cosmeticsForKind(collectedCosmetics, 'frame');
   const themeCosmetics = cosmeticsForKind(collectedCosmetics, 'theme');
   const ringCosmetics = cosmeticsForKind(collectedCosmetics, 'ring');
+
   const [expanded, setExpanded] = useState(() => consumeProfileEditFocus());
   const [draft, setDraft] = useState<SelfProfileEdits>(savedProfile);
   const [savedNotice, setSavedNotice] = useState(false);
@@ -270,7 +271,7 @@ export function ProfileEditPanel(): ReactElement {
             <fieldset className="profile-edit-chip-field">
               <legend>Chat overlay</legend>
               <p className="protocol-hint">
-                Equip earned chat bubble border styles from the Officials Reward Studio catalog.
+                Equip earned chat bubble border art on your messages.
               </p>
               <ChatOverlayEquipPicker
                 member={member}

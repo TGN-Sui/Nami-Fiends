@@ -1,31 +1,35 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
+import { OwnerConsoleUnlockPanel } from './OwnerConsoleUnlockPanel.js';
+
 import { AccountConnectSection } from './account-connect.js';
 import { PartnerIntegrationPanel } from './PartnerIntegrationPanel.js';
 import { BoostCycleSettingsCard } from './BoostCycleSettingsCard.js';
 import { MemberDailyStatusSettingsField } from './MemberDailyStatusEditor.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
+import { IndexedDataPanel } from './IndexedDataPanel.js';
+import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
-import { NamiOwnerAdvancedPanel } from './NamiOwnerAdvancedPanel.js';
+import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
+import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
+import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
+import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
+import { OfficialsRewardStudioPanel } from './OfficialsRewardStudioPanel.js';
 import { OwnerAccessPrompt } from './OwnerAccessPrompt.js';
 import { OwnerPassportLabelsPanel } from './OwnerPassportLabelsPanel.js';
 import { OwnerHubCurationPanel } from './OwnerHubCurationPanel.js';
 import { OwnerProvisionedChannelsPanel } from './OwnerProvisionedChannelsPanel.js';
 import { OwnerTicketReviewPanel } from './OwnerTicketReviewPanel.js';
 import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
-
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
-import {
-  countBlockedMembers,
-  countMutedMembers,
-} from './member-preference-store.js';
+import { countBlockedMembers, countMutedMembers } from './member-preference-store.js';
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
 import { readSafetyReportCount } from './safety-report-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
-import { isGameChannelOwner, resolveOwnedGameChannel } from './channel-owner-access.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
+import { isGameChannelOwner } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { useProtocolOwner } from './wallet.js';
 import {
@@ -48,28 +52,20 @@ import { countPendingPartnerBannerSubmissions } from './partner-banner-submissio
 import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
 import { members, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
-
+import { SettingsSidebar } from './SettingsSidebar.js';
 import {
-  consumeSettingsSectionFocus,
+  consumeSettingsNavFocus,
+  requestOwnerAdvancedTab,
+  requestSettingsNav,
   requestSettingsSection,
+  settingsNavHint,
+  settingsNavLabel,
+  type SettingsNavId,
   type SettingsSection,
 } from './settings-navigation.js';
-import { resetTutorialForReplay, scheduleTutorialReplay } from './tutorial-queue.js';
 
 export type { SettingsSection } from './settings-navigation.js';
-export { requestSettingsSection } from './settings-navigation.js';
-
-const SECTION_LABELS: Record<SettingsSection, string> = {
-  overview: 'Overview',
-  account: 'Account',
-  membership: 'Membership',
-  feeds: 'Feeds',
-  feedback: 'Feedback',
-  safety: 'Safety',
-  appearance: 'Look & Feel',
-  help: 'Help',
-  advanced: 'Advanced',
-};
+export { requestOwnerAdvancedTab, requestSettingsNav, requestSettingsSection } from './settings-navigation.js';
 
 function readChannelBrandPalette(): string[] {
   try {
@@ -230,6 +226,10 @@ function ChannelBrandPalettePanel(props: {
   );
 }
 
+function isOwnerNav(navId: SettingsNavId): boolean {
+  return navId.startsWith('owner-');
+}
+
 export function SettingsScreen(props: {
   onNavigate?: (page: NamiPage) => void;
   onOpenMember?: (member: NamiMember) => void;
@@ -239,24 +239,19 @@ export function SettingsScreen(props: {
   const { owner } = useProtocolOwner();
   useDemoPerspective();
   const isOwnerDashboard = isOfficialOwner(owner);
-  const showIndexedDataPanel = isOwnerDashboard;
   const { openPendingCount } = useNamiAdminStore();
   const openSubmittedCount =
     countPendingPartnerBannerSubmissions() + openPendingCount + countPendingGameSubmissionTickets();
-  const [activeSection, setActiveSection] = useState<SettingsSection>(
-    () => consumeSettingsSectionFocus() ?? 'overview'
-  );
+  const [activeNav, setActiveNav] = useState<SettingsNavId>(() => consumeSettingsNavFocus() ?? 'home');
   const memberIds = members.map((member) => member.id);
   const mutedCount = countMutedMembers(memberIds);
   const blockedCount = countBlockedMembers(memberIds);
   const reportCount = readSafetyReportCount();
   const channelOwnerView = isGameChannelOwner();
-  const ownedGameChannelId = resolveOwnedGameChannel()?.id ?? '';
   const showChannelBrandPalette = canManageChannelBrandPalette() && !channelOwnerView;
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
   });
-
   function updateSettingsChannelBrandColor(index: number, color: string): void {
     const nextPalette = settingsChannelBrandPalette
       .map((currentColor, currentIndex) => (currentIndex === index ? color : currentColor))
@@ -280,205 +275,97 @@ export function SettingsScreen(props: {
     saveSelectedChannelBrandColor(defaultPalette[0]!);
   }
 
-  const sections: SettingsSection[] = [
-    'overview',
-    'account',
-    'membership',
-    'feeds',
-    'feedback',
-    'safety',
-    'appearance',
-    'help',
-    ...(showIndexedDataPanel ? (['advanced'] as const) : []),
-  ];
+  useEffect(() => {
+    if (isOwnerNav(activeNav) && !isOwnerDashboard) {
+      setActiveNav('home');
+    }
+  }, [activeNav, isOwnerDashboard]);
 
   useEffect(() => {
-    if (activeSection === 'advanced' && !showIndexedDataPanel) {
-      setActiveSection('overview');
+    function handleOwnerUnlocked(): void {
+      setActiveNav(consumeSettingsNavFocus() ?? 'owner-border-art');
     }
-  }, [activeSection, showIndexedDataPanel]);
 
-  return (
-    <div className="settings-screen-layout settings-screen-redesign" data-settings-screen="true">
-      <header className="page-title settings-page-title">
-        <p>{isOwnerDashboard ? 'Your account' : 'Preferences'}</p>
-        <h1>{isOwnerDashboard ? 'Owner Dashboard' : 'Settings'}</h1>
-      </header>
+    window.addEventListener('nami-settings-owner-unlocked', handleOwnerUnlocked);
 
-      <nav aria-label="Settings sections" className="settings-section-nav">
-        {sections.map((section) => (
-          <button
-            aria-current={activeSection === section ? 'page' : undefined}
-            className={
-              'settings-section-nav-button' + (activeSection === section ? ' is-active-settings-section' : '')
-            }
-            key={section}
-            onClick={() => setActiveSection(section)}
-            type="button"
-          >
-            {SECTION_LABELS[section]}
+    return () => {
+      window.removeEventListener('nami-settings-owner-unlocked', handleOwnerUnlocked);
+    };
+  }, []);
+
+  function renderOwnerWorkspace(navId: SettingsNavId, content: ReactElement): ReactElement {
+    if (!isOwnerDashboard) {
+      return <OwnerConsoleUnlockPanel navId={navId} />;
+    }
+
+    return content;
+  }
+
+  function renderHome(): ReactElement {
+    return (
+      <div className="settings-home-grid">
+        <article className="panel settings-home-status-card">
+          <h3>Safety</h3>
+          <p>
+            {mutedCount} muted · {blockedCount} blocked · {reportCount} reports
+          </p>
+          <button className="profile-secondary-link" onClick={() => setActiveNav('safety')} type="button">
+            Open safety
           </button>
-        ))}
-      </nav>
+        </article>
 
-      <section className="settings-page settings-page-redesign">
-        {activeSection === 'overview' ? (
-          <div className="settings-overview-grid">
-            {isOwnerDashboard ? (
-              <article className="panel settings-overview-card">
-                <h2>Owner passport</h2>
-                <p>Editable Nami CEO and Nami Fiend labels. Independent of scores, ranks, and memberships.</p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('account')}
-                  type="button"
-                >
-                  Edit passport labels
-                </button>
-              </article>
-            ) : null}
-            {isOwnerDashboard ? (
-              <article className="panel settings-overview-card">
-                <h2>Hub spotlight</h2>
-                <p>Curate Community Growth channels and Member Spotlight accounts.</p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('account')}
-                  type="button"
-                >
-                  Curate hub sections
-                </button>
-              </article>
-            ) : null}
-            {isOwnerDashboard ? (
-              <article className="panel settings-overview-card">
-                <h2>Submitted tickets</h2>
-                <p>
-                  {openSubmittedCount > 0
-                    ? openSubmittedCount + ' ticket(s) waiting for your review.'
-                    : 'No tickets waiting for review.'}
-                </p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('account')}
-                  type="button"
-                >
-                  Review tickets
-                </button>
-              </article>
-            ) : null}
-            {isOwnerDashboard ? (
-              <article className="panel settings-overview-card">
-                <h2>Platform console</h2>
-                <p>Visual assets, emojis, security enforcement, and indexed protocol data.</p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('advanced')}
-                  type="button"
-                >
-                  Open advanced console
-                </button>
-              </article>
-            ) : null}
-            <article className="panel settings-overview-card">
-              <h2>Safety snapshot</h2>
-              <p>{mutedCount} muted · {blockedCount} blocked · {reportCount} reports</p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('safety')}
-                type="button"
-              >
-                Open safety settings
-              </button>
-            </article>
-            <article className="panel settings-overview-card">
-              <h2>Account & passport</h2>
-              <p>Sign-in, passport claim, profile edits, and linked platforms.</p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => {
-                  requestProfileEditFocus();
-                  props.onNavigate?.('userProfile');
-                }}
-                type="button"
-              >
-                Edit Profile
-              </button>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('account')}
-                type="button"
-              >
-                Manage account
-              </button>
-            </article>
-            {channelOwnerView ? (
-              <article className="panel settings-overview-card">
-                <h2>Weekly boosts</h2>
-                <p>Discovery boosts for your membership tier reset every Friday at noon Central.</p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('account')}
-                  type="button"
-                >
-                  View boosts left
-                </button>
-              </article>
-            ) : (
-              <article className="panel settings-overview-card">
-                <h2>Membership</h2>
-                <p>Plans, fulfillment, and surface role for feeds.</p>
-                <button
-                  className="profile-secondary-link"
-                  onClick={() => setActiveSection('membership')}
-                  type="button"
-                >
-                  View membership
-                </button>
-              </article>
-            )}
-            <article className="panel settings-overview-card">
-              <h2>Feeds</h2>
-              <p>Enable member, game, guild, or studio embeds.</p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('feeds')}
-                type="button"
-              >
-                Configure feeds
-              </button>
-            </article>
-            <article className="panel settings-overview-card">
-              <h2>Dashboard perspectives</h2>
-              <p>
-                {isOwnerDashboard
-                  ? 'Preview what other tiers and roles see, then restore your owner dashboard.'
-                  : 'Preview NPC, Elite, channel owner, guild owner, and official owner dashboards.'}
-              </p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('membership')}
-                type="button"
-              >
-                Open perspective switcher
-              </button>
-            </article>
-            <article className="panel settings-overview-card">
-              <h2>Suggestions</h2>
-              <p>Send product ideas and feedback directly to Nami Officials.</p>
-              <button
-                className="profile-secondary-link"
-                onClick={() => setActiveSection('feedback')}
-                type="button"
-              >
-                Open suggestions box
-              </button>
-            </article>
-          </div>
+        <article className="panel settings-home-status-card">
+          <h3>Account</h3>
+          <p>Sign-in, passport claim, profile edits, and linked platforms.</p>
+          <button className="profile-secondary-link" onClick={() => setActiveNav('account')} type="button">
+            Manage account
+          </button>
+        </article>
+
+        <article className="panel settings-home-status-card">
+          <h3>{channelOwnerView ? 'Boosts' : 'Membership'}</h3>
+          <p>{channelOwnerView ? 'Weekly discovery boosts for your channel.' : 'Plans, fulfillment, and demo perspectives.'}</p>
+          <button className="profile-secondary-link" onClick={() => setActiveNav('membership')} type="button">
+            Open membership
+          </button>
+        </article>
+
+        {isOwnerDashboard ? (
+          <article className="panel settings-home-status-card is-owner-highlight-card">
+            <span className="mini-badge">Owner</span>
+            <h3>Border Art studio</h3>
+            <p>Upload chat border cosmetics and define who unlocks each reward.</p>
+            <button
+              className="nami-surface-button is-primary-surface-button"
+              onClick={() => setActiveNav('owner-border-art')}
+              type="button"
+            >
+              Open Border Art
+            </button>
+          </article>
         ) : null}
 
-        {activeSection === 'account' ? (
-          <div className="settings-section-stack">
+        {isOwnerDashboard && openSubmittedCount > 0 ? (
+          <article className="panel settings-home-status-card">
+            <h3>Tickets waiting</h3>
+            <p>{openSubmittedCount} submission(s) need review.</p>
+            <button className="profile-secondary-link" onClick={() => setActiveNav('owner-submissions')} type="button">
+              Review submissions
+            </button>
+          </article>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderWorkspaceBody(): ReactElement | null {
+    switch (activeNav) {
+      case 'home':
+        return renderHome();
+
+      case 'account':
+        return (
+          <div className="settings-workspace-stack">
             <OwnerAccessPrompt />
             {isOwnerDashboard ? <OwnerPassportLabelsPanel /> : null}
             {isOwnerDashboard ? <OwnerHubCurationPanel /> : null}
@@ -488,15 +375,13 @@ export function SettingsScreen(props: {
               />
             ) : null}
             {isOwnerDashboard ? <OwnerTicketReviewPanel /> : null}
-            {channelOwnerView && ownedGameChannelId ? (
-              <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
-            ) : null}
+            {channelOwnerView ? <ChannelOwnerPromotionsStatusCard /> : null}
             <BoostCycleSettingsCard />
             {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
             <article className="panel settings-card settings-compact-card">
               <div className="profile-panel-heading">
                 <h2>Edit Profile</h2>
-                <p>Update your display name, bio, avatar, titles, badges, and cosmetics.</p>
+                <p>Update display name, bio, avatar, titles, badges, and chat border cosmetics.</p>
               </div>
               <button
                 className="nami-surface-button is-primary-surface-button"
@@ -514,10 +399,11 @@ export function SettingsScreen(props: {
             <PassportClaimSettingsPanel />
             <PlatformLinkSettingsPanel />
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'membership' ? (
-          <div className="settings-section-stack">
+      case 'membership':
+        return (
+          <div className="settings-workspace-stack">
             {!channelOwnerView ? (
               <>
                 <MembershipAccessCard />
@@ -529,10 +415,7 @@ export function SettingsScreen(props: {
                 <article className="panel settings-card settings-compact-card settings-section-wide">
                   <div className="profile-panel-heading">
                     <h2>Game channel owner</h2>
-                    <p>
-                      Promotion purchases and owner tools live on your game profile. Weekly discovery boosts
-                      are tracked here.
-                    </p>
+                    <p>Promotion purchases and owner tools live on your game profile.</p>
                   </div>
                   <button
                     className="nami-surface-button is-primary-surface-button"
@@ -543,9 +426,7 @@ export function SettingsScreen(props: {
                   </button>
                 </article>
                 <BoostCycleSettingsCard />
-                {ownedGameChannelId ? (
-                  <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
-                ) : null}
+                <ChannelOwnerPromotionsStatusCard />
               </>
             )}
             <DemoPerspectivePanel
@@ -553,22 +434,25 @@ export function SettingsScreen(props: {
               onPerspectiveApplied={props.onDemoPerspectiveApplied}
             />
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'feeds' ? (
-          <div className="settings-section-stack">
+      case 'feeds':
+        return (
+          <div className="settings-workspace-stack">
             <EmbeddedFeedSettingsPanel />
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'feedback' ? (
-          <div className="settings-section-stack">
+      case 'feedback':
+        return (
+          <div className="settings-workspace-stack">
             <UserSuggestionsSettingsPanel />
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'safety' ? (
-          <div className="settings-section-stack">
+      case 'safety':
+        return (
+          <div className="settings-workspace-stack">
             <article className="panel settings-card settings-compact-card">
               <div className="profile-panel-heading">
                 <h2>Safety Center</h2>
@@ -598,10 +482,11 @@ export function SettingsScreen(props: {
               }}
             />
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'appearance' ? (
-          <div className="settings-section-stack">
+      case 'appearance':
+        return (
+          <div className="settings-workspace-stack">
             <ThemeSettingsPanel />
             {showChannelBrandPalette ? (
               <ChannelBrandPalettePanel
@@ -611,44 +496,98 @@ export function SettingsScreen(props: {
               />
             ) : null}
           </div>
-        ) : null}
+        );
 
-        {activeSection === 'help' ? (
-          <div className="settings-section-stack">
-            <article className="panel settings-card settings-compact-card">
-              <div className="profile-panel-heading">
-                <h2>Realm guide</h2>
-                <p>Replay the short Hub tour — passport, lounges, and Game Hub navigation.</p>
-              </div>
-              <button
-                className="nami-surface-button is-primary-surface-button"
-                disabled={!owner?.startsWith('0x')}
-                onClick={() => {
-                  if (!owner?.startsWith('0x')) {
-                    return;
-                  }
-
-                  props.onNavigate?.('hub');
-                  scheduleTutorialReplay(owner);
-                  void resetTutorialForReplay(owner);
-                }}
-                type="button"
-              >
-                Restart tutorial
-              </button>
-            </article>
-          </div>
-        ) : null}
-
-        {activeSection === 'advanced' ? (
-          <div className="settings-section-stack">
-            <NamiOwnerAdvancedPanel
-              onEnterEditMode={() => props.onNavigate?.('hub')}
+      case 'owner-platform':
+        return renderOwnerWorkspace(
+          'owner-platform',
+          <div className="settings-workspace-stack">
+            <OwnerPassportLabelsPanel />
+            <OwnerHubCurationPanel />
+            <OwnerProvisionedChannelsPanel
               {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
             />
+            <OwnerTicketReviewPanel />
           </div>
-        ) : null}
-      </section>
+        );
+
+      case 'owner-border-art':
+        return renderOwnerWorkspace(
+          'owner-border-art',
+          <OfficialsRewardStudioPanel embedded />
+        );
+
+      case 'owner-visual-assets':
+        return renderOwnerWorkspace(
+          'owner-visual-assets',
+          <NamiOwnerAssetEditPanel embedded onEnterEditMode={() => props.onNavigate?.('hub')} />
+        );
+
+      case 'owner-emojis':
+        return renderOwnerWorkspace('owner-emojis', <NamiOwnerEmojiPanel embedded />);
+
+      case 'owner-submissions':
+        return renderOwnerWorkspace(
+          'owner-submissions',
+          <NamiOfficialsSubmissionsPanel embedded />
+        );
+
+      case 'owner-security':
+        return renderOwnerWorkspace(
+          'owner-security',
+          <NamiOwnerSettingsPanel
+            embedded
+            {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+          />
+        );
+
+      case 'owner-data':
+        return renderOwnerWorkspace('owner-data', <IndexedDataPanel embedded />);
+
+      case 'owner-launch':
+        return renderOwnerWorkspace('owner-launch', <LaunchOpsPanel embedded />);
+
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <div
+      className="settings-screen-layout settings-screen-redesign settings-master-detail"
+      data-settings-screen="true"
+      data-settings-shell="v2"
+    >
+      <header className="page-title settings-page-title settings-shell-header">
+        <div className="settings-shell-header-copy">
+          <p>{isOwnerDashboard ? 'Owner dashboard' : 'Member preferences'}</p>
+          <h1>{isOwnerDashboard ? 'Settings & console' : 'Settings'}</h1>
+        </div>
+        <span
+          className={
+            'settings-shell-mode-pill' + (isOwnerDashboard ? ' is-owner-mode-pill' : ' is-member-mode-pill')
+          }
+        >
+          {isOwnerDashboard ? 'Owner mode' : 'Member mode'}
+        </span>
+      </header>
+
+      <div className="settings-master-detail-body">
+        <SettingsSidebar
+          activeNav={activeNav}
+          onSelect={setActiveNav}
+          pendingTicketCount={openSubmittedCount}
+          showOwnerConsole={isOwnerDashboard}
+        />
+
+        <section className="settings-workspace">
+          <header className="settings-workspace-header">
+            <h2>{settingsNavLabel(activeNav)}</h2>
+            <p>{settingsNavHint(activeNav)}</p>
+          </header>
+          <div className="settings-workspace-body">{renderWorkspaceBody()}</div>
+        </section>
+      </div>
 
       <ProtocolStatusBar />
     </div>

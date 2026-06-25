@@ -15,6 +15,7 @@ import './nami-dark-theme.css';
 import './nami-custom-theme.css';
 import './nami-pixel-ui.css';
 
+
 ensureGenesisLocalDataOnTestLaunch();
 initNamiSoundscape();
 

@@ -174,13 +174,18 @@ export function countWeeklyParticipantsInChat(chatId: string, now = Date.now()):
   return participants.size;
 }
 
+export const MAX_MEMBER_CHAT_PRESENCE_ROWS = 6;
+
 export function memberChatPresenceForMember(
   memberId: string,
-  now = Date.now()
+  now = Date.now(),
+  limit = MAX_MEMBER_CHAT_PRESENCE_ROWS
 ): MemberChatPresence[] {
   const activeChatId = readActiveMemberChatId(memberId);
+  const weekKey = currentWeekKey(now);
 
   return readMemberChatTimeRecords(memberId)
+    .filter((record) => record.weekKey === weekKey && record.weekMs > 0)
     .map((record) => ({
       chatId: record.chatId,
       chatTitle: record.chatTitle,
@@ -190,8 +195,8 @@ export function memberChatPresenceForMember(
         record.chatId === activeChatId || now - record.lastSeenAtMs <= ACTIVE_CHAT_WINDOW_MS,
       hoursThisWeek: record.weekMs / (60 * 60 * 1000),
     }))
-    .filter((entry) => entry.hoursThisWeek > 0)
-    .sort((left, right) => right.hoursThisWeek - left.hoursThisWeek);
+    .sort((left, right) => right.hoursThisWeek - left.hoursThisWeek)
+    .slice(0, Math.max(1, limit));
 }
 
 export function useMemberChatTimeVersion(): number {

@@ -149,7 +149,7 @@ export const DEMO_PERSPECTIVE_PRESETS: DemoPerspectivePreset[] = [
   {
     id: 'nami-official-owner',
     label: 'Nami Official Owner',
-    detail: 'Platform owner dashboard, advanced settings, and indexed data.',
+    detail: 'Border Art studio, platform ops, and owner console in Settings.',
     tier: 'Elite',
     surfaceRole: 'member',
     signal: 'Green',

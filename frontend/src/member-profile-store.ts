@@ -67,7 +67,11 @@ export function readSelfProfileEdits(): SelfProfileEdits {
       themeDisplay: typeof parsed.themeDisplay === 'string' ? parsed.themeDisplay : '',
       ringDisplay: typeof parsed.ringDisplay === 'string' ? parsed.ringDisplay : '',
       chatOverlayDisplay:
-        typeof parsed.chatOverlayDisplay === 'string' ? parsed.chatOverlayDisplay : '',
+        typeof parsed.chatOverlayDisplay === 'string'
+          ? parsed.chatOverlayDisplay
+          : typeof (parsed as { chatBorderDisplay?: string }).chatBorderDisplay === 'string'
+            ? ''
+            : '',
       preferredPlatforms: Array.isArray(parsed.preferredPlatforms)
         ? parsed.preferredPlatforms.filter((entry): entry is string => typeof entry === 'string')
         : [],

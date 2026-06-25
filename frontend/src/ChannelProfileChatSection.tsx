@@ -524,13 +524,12 @@ export function ChannelProfileChatSection(props: {
                     />
                   ) : (
                     <div className="customization-note">
-                      Verify your passport to equip earned chat overlays from the Officials Reward Studio catalog.
+                      Verify your passport to equip earned chat borders in Profile Edit.
                     </div>
                   )}
 
                   <div className="customization-note">
-                    Chat overlays apply earned border cosmetics around your message bubbles. Owner brand colors stay in
-                    Settings.
+                    Chat borders scale with your message size. Owner brand colors stay in Settings.
                   </div>
                 </div>
               ) : null}

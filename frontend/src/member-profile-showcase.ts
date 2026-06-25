@@ -6,7 +6,12 @@ import {
   listHubGlobalChats,
   type CollectedBadge,
 } from './global-chats.js';
-import { memberChatPresenceForMember, type MemberChatPresence } from './member-chat-time-store.js';
+import {
+  MAX_MEMBER_CHAT_PRESENCE_ROWS,
+  memberChatPresenceForMember,
+  type MemberChatPresence,
+} from './member-chat-time-store.js';
+import { readActiveDemoPerspective } from './demo-perspective-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { readSelfProfileEdits } from './member-profile-store.js';
 import { getNamiProgression, type NamiProgressionSnapshot } from './member-progression.js';
@@ -114,15 +119,30 @@ function reviewsForMember(memberId: string): ChannelGameReview[] {
     .sort((left, right) => right.rating - left.rating || left.createdAtLabel.localeCompare(right.createdAtLabel));
 }
 
-function chatPoolForMember(member: NamiMember) {
-  if (isSelfMember(member.id)) {
-    const trackedChats = memberChatPresenceForMember(member.id);
+function compactChatPresenceLabel(title: string): string {
+  return title.replace(/ Game Chat$/i, '').replace(/ Lounge$/i, '').trim().toLowerCase();
+}
 
-    if (trackedChats.length > 0) {
-      return trackedChats;
+function dedupeChatPresence(entries: MemberChatPresence[]): MemberChatPresence[] {
+  const merged = new Map<string, MemberChatPresence>();
+
+  for (const entry of entries) {
+    const key = compactChatPresenceLabel(entry.chatTitle);
+    const existing = merged.get(key);
+
+    if (!existing || entry.hoursThisWeek > existing.hoursThisWeek) {
+      merged.set(key, entry);
+    } else if (entry.isActiveNow) {
+      merged.set(key, { ...existing, isActiveNow: true });
     }
   }
 
+  return [...merged.values()]
+    .sort((left, right) => right.hoursThisWeek - left.hoursThisWeek)
+    .slice(0, MAX_MEMBER_CHAT_PRESENCE_ROWS);
+}
+
+function mockChatPresenceForMember(member: NamiMember): MemberChatPresence[] {
   const index = memberIndex(member);
   const channelChats = channels.slice(0, 4).map((channel) => ({
     chatId: channel.id + '-game-chat',
@@ -149,9 +169,25 @@ function chatPoolForMember(member: NamiMember) {
     hoursThisWeek: 3 + chatIndex * 4 + (index % 3),
   }));
 
-  return [...channelChats, ...globalChats, ...genreChats]
-    .sort((left, right) => right.hoursThisWeek - left.hoursThisWeek)
-    .slice(0, 4);
+  return dedupeChatPresence([...channelChats, ...globalChats, ...genreChats]);
+}
+
+function chatPoolForMember(member: NamiMember) {
+  const activeDemo = readActiveDemoPerspective();
+
+  if (isSelfMember(member.id) && activeDemo && activeDemo.adminRole !== 'official-owner') {
+    return mockChatPresenceForMember(member);
+  }
+
+  if (isSelfMember(member.id)) {
+    const trackedChats = memberChatPresenceForMember(member.id);
+
+    if (trackedChats.length > 0) {
+      return dedupeChatPresence(trackedChats);
+    }
+  }
+
+  return mockChatPresenceForMember(member);
 }
 
 function boostedChannelsForMember(member: NamiMember): MemberBoostedChannel[] {

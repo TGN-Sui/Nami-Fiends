@@ -290,19 +290,25 @@ export function MemberProfileShowcase(props: {
                 <p>Weekly time across lounges and game channels.</p>
               </header>
 
-              <div className="member-showcase-activity-rows">
-                {showcase.chatPresence.map((chat) => (
-                  <div className="member-showcase-activity-row" key={chat.chatId}>
-                    <div className="member-showcase-activity-row-copy">
-                      <strong>{compactChatLabel(chat.chatTitle)}</strong>
-                      <span>{chat.surfaceLabel}</span>
+              <div className="member-showcase-activity-rows member-showcase-activity-rows-scroll">
+                {showcase.chatPresence.length > 0 ? (
+                  showcase.chatPresence.map((chat) => (
+                    <div className="member-showcase-activity-row" key={chat.chatId}>
+                      <div className="member-showcase-activity-row-copy">
+                        <strong>{compactChatLabel(chat.chatTitle)}</strong>
+                        <span>{chat.surfaceLabel}</span>
+                      </div>
+                      <div className="member-showcase-activity-row-meta">
+                        {chat.isActiveNow ? (
+                          <span className="member-showcase-presence-pill is-active-now">Now</span>
+                        ) : null}
+                        <strong className="member-showcase-stat-value">{chat.hoursThisWeek.toFixed(1)}h</strong>
+                      </div>
                     </div>
-                    <div className="member-showcase-activity-row-meta">
-                      {chat.isActiveNow ? <span className="member-showcase-presence-pill is-active-now">Now</span> : null}
-                      <strong className="member-showcase-stat-value">{chat.hoursThisWeek.toFixed(1)}h</strong>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="protocol-hint">No chat time logged this week yet.</p>
+                )}
               </div>
             </section>
 

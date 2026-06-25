@@ -11,7 +11,7 @@ import {
   type DemoPerspectiveId,
   useDemoPerspective,
 } from './demo-perspective-store.js';
-import { requestSettingsSection } from './settings-navigation.js';
+import { requestSettingsNav } from './settings-navigation.js';
 import type { NamiPage } from './uiMockData.js';
 
 export function DemoPerspectivePanel(props: {
@@ -41,7 +41,7 @@ export function DemoPerspectivePanel(props: {
     const preset = applyDemoPerspective(perspectiveId);
 
     if (preset.id === 'nami-official-owner') {
-      requestSettingsSection('advanced');
+      requestSettingsNav('owner-border-art');
     }
 
     props.onPerspectiveApplied?.(preset.landingPage, preset.channelId);
@@ -54,7 +54,7 @@ export function DemoPerspectivePanel(props: {
 
   function handleRestoreOwner(): void {
     restoreOwnerDemoPerspective();
-    requestSettingsSection('advanced');
+    requestSettingsNav('owner-border-art');
     props.onPerspectiveApplied?.('settings');
     props.onNavigate?.('settings');
   }
