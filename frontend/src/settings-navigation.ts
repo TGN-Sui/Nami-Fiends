@@ -183,7 +183,7 @@ export const MEMBER_SETTINGS_GROUPS: SettingsNavGroup[] = [
       { id: 'account', label: 'Account', hint: 'Sign-in, passport, profile, platforms' },
       { id: 'membership', label: 'Membership', hint: 'Plans, boosts, demo perspectives' },
       { id: 'safety', label: 'Safety', hint: 'Mutes, blocks, tag notifications' },
-      { id: 'appearance', label: 'Look & feel', hint: 'Theme and channel brand palette' },
+      { id: 'appearance', label: 'Look & feel', hint: 'Theme, chat borders, and brand palette' },
       { id: 'feeds', label: 'Feeds', hint: 'Embedded member and surface feeds' },
       { id: 'feedback', label: 'Feedback', hint: 'Suggestions to Nami Officials' },
     ],

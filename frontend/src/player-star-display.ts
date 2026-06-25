@@ -1,3 +1,6 @@
+import { getNamiProgression } from './member-progression.js';
+import type { NamiMember } from './uiMockData.js';
+
 export const PLAYER_STAR_MAX_SCORE = 100;
 export const PLAYER_STAR_SLOT_COUNT = 5;
 
@@ -36,4 +39,23 @@ export function resolvePlayerStarDisplay(score: number): PlayerStarDisplay {
     isFoil,
     label,
   };
+}
+
+function memberScoreSeed(memberId: string): number {
+  return memberId.split('').reduce((total, character) => total + character.charCodeAt(0), 0);
+}
+
+/** Passport display score: live session score when available, otherwise progression-based fallback. */
+export function resolvePassportPlayerScore(
+  member: NamiMember,
+  liveScore: number | null | undefined
+): number {
+  if (liveScore !== null && liveScore !== undefined && Number.isFinite(liveScore)) {
+    return clampPlayerScore(liveScore);
+  }
+
+  const progression = getNamiProgression(member);
+  const seed = memberScoreSeed(member.id);
+
+  return clampPlayerScore(12 + progression.level * 9 + (seed % 24));
 }

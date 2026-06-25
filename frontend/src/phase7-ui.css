@@ -6630,6 +6630,13 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   min-width: 0;
 }
 
+.is-horizontal-tcg-passport .tcg-passport-horizontal-identity .tcg-passport-avatar-stack {
+  grid-area: auto !important;
+  width: 128px;
+  min-width: 128px;
+  justify-self: start;
+}
+
 .is-horizontal-tcg-passport .tcg-passport-horizontal-identity .nami-profile-card-avatar {
   grid-area: auto !important;
   width: 128px !important;
@@ -6697,21 +6704,9 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 }
 
 .is-horizontal-tcg-passport .tcg-passport-horizontal-details .member-preference-strip.is-passport-horizontal-preference-strip {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
+  display: block;
   grid-column: 1 / -1;
   margin-top: 0;
-  min-width: 0;
-}
-
-.is-horizontal-tcg-passport
-  .tcg-passport-horizontal-details
-  .member-preference-strip.is-passport-horizontal-preference-strip
-  .member-preference-indicator-row {
-  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -10603,21 +10598,26 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 }
 
 .main-stage:has(.settings-screen-layout) {
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   align-self: stretch;
-  padding-bottom: 28px;
+  height: calc(100vh - 148px);
+  max-height: calc(100vh - 148px);
+  padding-bottom: 0;
 }
 
 .settings-screen-layout {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 18px;
   width: 100%;
-  min-height: 480px;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   position: relative;
   z-index: 12;
   color: #eef7ff;
-  padding: 8px 4px 96px;
+  padding: 8px 4px 12px;
+  overflow: hidden;
   background: rgba(5, 9, 15, 0.94);
   border: 1px solid rgba(117, 215, 255, 0.14);
   border-radius: 22px;
@@ -12998,6 +12998,8 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .settings-master-detail {
   gap: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .settings-shell-header {
@@ -13033,16 +13035,20 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   display: grid;
   grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .settings-sidebar {
-  position: sticky;
-  top: 12px;
+  position: relative;
+  top: 0;
   isolation: isolate;
   display: grid;
   gap: 16px;
-  max-height: calc(100vh - 120px);
+  align-self: stretch;
+  max-height: none;
+  height: 100%;
   overflow: auto;
   padding: 14px 14px 14px 18px;
   border-radius: 18px;
@@ -13168,12 +13174,15 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .settings-workspace {
   min-width: 0;
+  min-height: 0;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   padding: 4px;
   border-radius: 18px;
   border: 1px solid rgba(117, 188, 224, 0.12);
   background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
 }
 
 .settings-workspace-header {
@@ -13196,6 +13205,9 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 
 .settings-workspace-body {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .settings-workspace-stack {
@@ -18666,35 +18678,22 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 }
 
 .member-preference-strip.is-passport-indicator-strip {
+  display: block;
+}
+
+.member-preference-indicator-tabs.is-passport-preference-icons {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
-}
-
-.member-preference-indicator-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 3px;
   min-width: 0;
-}
-
-.member-preference-indicator-label {
-  flex: 0 0 auto;
-  min-width: 52px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(159, 181, 202, 0.78);
 }
 
 .member-preference-indicator-tabs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 

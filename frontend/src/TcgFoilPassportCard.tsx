@@ -27,6 +27,7 @@ import {
   PassportDisplayNameEditor,
   PassportNameHistoryButton,
 } from './PassportDisplayNameControls.js';
+import { resolvePassportPlayerScore } from './player-star-display.js';
 import { PlayerStarScoreDisplay } from './PlayerStarScoreDisplay.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
 
@@ -143,7 +144,7 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
   const hasGalaxyRainbowShell = isOfficialGalaxy || ownerPassport;
   const isClickable = Boolean(props.onOpenPassport);
-  const resolvedPlayerScore = props.playerScore ?? null;
+  const resolvedPlayerScore = resolvePassportPlayerScore(props.member, props.playerScore);
   const passportTiltRef = useRef<HTMLDivElement | null>(null);
   const foilFrameRef = useRef<number | null>(null);
   const foilStateRef = useRef({
@@ -456,7 +457,12 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
 
         {layout === 'horizontal' ? (
           <div className="tcg-passport-horizontal-identity">
-            {passportAvatar(props.member)}
+            <div className="tcg-passport-avatar-stack">
+              {passportAvatar(props.member)}
+              <div className="passport-player-star-row">
+                <PlayerStarScoreDisplay score={resolvedPlayerScore} showScore={false} />
+              </div>
+            </div>
 
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
@@ -467,7 +473,12 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
           </div>
         ) : (
           <>
-            {passportAvatar(props.member)}
+            <div className="tcg-passport-avatar-stack">
+              {passportAvatar(props.member)}
+              <div className="passport-player-star-row">
+                <PlayerStarScoreDisplay score={resolvedPlayerScore} showScore={false} />
+              </div>
+            </div>
 
             <div className="nami-profile-card-nameplate">
               {passportNameplateIcons()}
@@ -476,13 +487,6 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             </div>
           </>
         )}
-
-        {!ownerPassport && resolvedPlayerScore !== null ? (
-          <div className="passport-player-star-row">
-            <span>Gamer stars</span>
-            <PlayerStarScoreDisplay score={resolvedPlayerScore} showScore />
-          </div>
-        ) : null}
 
         <div className="nami-profile-card-stats">
           <div>

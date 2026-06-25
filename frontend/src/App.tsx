@@ -4526,10 +4526,6 @@ function UserProfileScreen(props: {
                 });
               });
             }}
-            onOpenStatusSettings={() => {
-              requestSettingsSection('account');
-              props.onNavigate?.('settings');
-            }}
             {...(props.onNavigate ? { onNavigate: props.onNavigate } : {})}
             {...(props.onOpenProfile ? { onOpenChannel: props.onOpenProfile } : {})}
             {...(props.onOpenGuild ? { onOpenGuild: props.onOpenGuild } : {})}

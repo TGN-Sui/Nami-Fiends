@@ -86,49 +86,40 @@ export function MemberPreferenceStrip(props: {
 
     return (
       <div className="member-preference-strip is-passport-horizontal-preference-strip is-passport-indicator-strip">
-        {selectedPlatforms.length > 0 ? (
-          <div className="member-preference-indicator-row" role="list" aria-label="Preferred platforms">
-            <span className="member-preference-indicator-label">Platforms</span>
-            <div className="member-preference-indicator-tabs">
-              {selectedPlatforms.map((platform) => (
-                <PassportHoverDetail
-                  detail={platform + ' is a preferred platform for this member.'}
-                  key={platform}
-                  label={platform}
-                >
-                  <span
-                    className="member-preference-indicator-tab is-active-preference-indicator"
-                    role="listitem"
-                  >
-                    {preferenceIndicatorLabel('platform', platform)}
-                  </span>
-                </PassportHoverDetail>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {selectedGenres.length > 0 ? (
-          <div className="member-preference-indicator-row" role="list" aria-label="Preferred genres">
-            <span className="member-preference-indicator-label">Genres</span>
-            <div className="member-preference-indicator-tabs">
-              {selectedGenres.map((genre) => (
-                <PassportHoverDetail
-                  detail={genre + ' is a preferred genre for this member.'}
-                  key={genre}
-                  label={genre}
-                >
-                  <span
-                    className="member-preference-indicator-tab is-active-preference-indicator"
-                    role="listitem"
-                  >
-                    {preferenceIndicatorLabel('genre', genre)}
-                  </span>
-                </PassportHoverDetail>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <div
+          aria-label="Preferred platforms and genre lounges"
+          className="member-preference-indicator-tabs is-passport-preference-icons"
+          role="list"
+        >
+          {selectedPlatforms.map((platform) => (
+            <PassportHoverDetail
+              detail={platform + ' is a preferred platform for this member.'}
+              key={'platform-' + platform}
+              label={platform}
+            >
+              <span
+                className="member-preference-indicator-tab is-active-preference-indicator"
+                role="listitem"
+              >
+                {preferenceIndicatorLabel('platform', platform)}
+              </span>
+            </PassportHoverDetail>
+          ))}
+          {selectedGenres.map((genre) => (
+            <PassportHoverDetail
+              detail={genre + ' is a preferred genre lounge for this member.'}
+              key={'genre-' + genre}
+              label={genre}
+            >
+              <span
+                className="member-preference-indicator-tab is-active-preference-indicator"
+                role="listitem"
+              >
+                {preferenceIndicatorLabel('genre', genre)}
+              </span>
+            </PassportHoverDetail>
+          ))}
+        </div>
       </div>
     );
   }

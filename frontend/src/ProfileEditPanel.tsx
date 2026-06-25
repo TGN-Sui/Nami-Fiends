@@ -271,7 +271,7 @@ export function ProfileEditPanel(): ReactElement {
             <fieldset className="profile-edit-chip-field">
               <legend>Chat overlay</legend>
               <p className="protocol-hint">
-                Equip earned chat bubble border art on your messages.
+                Equip earned chat bubble border art here or under Look & feel in Settings.
               </p>
               <ChatOverlayEquipPicker
                 member={member}

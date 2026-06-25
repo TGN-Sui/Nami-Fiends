@@ -5,7 +5,7 @@ import { OwnerConsoleUnlockPanel } from './OwnerConsoleUnlockPanel.js';
 import { AccountConnectSection } from './account-connect.js';
 import { PartnerIntegrationPanel } from './PartnerIntegrationPanel.js';
 import { BoostCycleSettingsCard } from './BoostCycleSettingsCard.js';
-import { MemberDailyStatusSettingsField } from './MemberDailyStatusEditor.js';
+import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { EmbeddedFeedLinksPanel } from './EmbeddedFeedLinksPanel.js';
 import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { LaunchOpsPanel } from './LaunchOpsPanel.js';
@@ -31,6 +31,7 @@ import { isOfficialOwner } from './nami-capabilities.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
 import { isGameChannelOwner, readOwnedGameChannelId } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
+import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
 import { useProtocolOwner } from './wallet.js';
 import {
   canConfigureEmbeddedFeedSurface,
@@ -49,7 +50,6 @@ import { useDemoPerspective } from './demo-perspective-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
 import { countPendingGameSubmissionTickets } from './nami-officials-submission-counts.js';
 import { countPendingPartnerBannerSubmissions } from './partner-banner-submission-store.js';
-import { requestProfileEditFocus } from './member-avatar-store.js';
 import { ThemeSettingsPanel } from './theme.js';
 import { members, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 import { SettingsSidebar } from './SettingsSidebar.js';
@@ -253,6 +253,7 @@ export function SettingsScreen(props: {
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
   });
+  const selfProfileEdits = useSelfProfileEdits();
   function updateSettingsChannelBrandColor(index: number, color: string): void {
     const nextPalette = settingsChannelBrandPalette
       .map((currentColor, currentIndex) => (currentIndex === index ? color : currentColor))
@@ -380,23 +381,6 @@ export function SettingsScreen(props: {
               <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
             ) : null}
             <BoostCycleSettingsCard />
-            {!channelOwnerView ? <MemberDailyStatusSettingsField /> : null}
-            <article className="panel settings-card settings-compact-card">
-              <div className="profile-panel-heading">
-                <h2>Edit Profile</h2>
-                <p>Update display name, bio, avatar, titles, badges, and chat border cosmetics.</p>
-              </div>
-              <button
-                className="nami-surface-button is-primary-surface-button"
-                onClick={() => {
-                  requestProfileEditFocus();
-                  props.onNavigate?.('userProfile');
-                }}
-                type="button"
-              >
-                Edit Profile
-              </button>
-            </article>
             <AccountConnectSection />
             <PartnerIntegrationPanel />
             <PassportClaimSettingsPanel />
@@ -493,6 +477,22 @@ export function SettingsScreen(props: {
         return (
           <div className="settings-workspace-stack">
             <ThemeSettingsPanel />
+            <article className="panel settings-card settings-compact-card settings-section-wide">
+              <div className="profile-panel-heading">
+                <h2>Chat borders</h2>
+                <p>Equip earned chat bubble border art on your messages.</p>
+              </div>
+              <ChatOverlayEquipPicker
+                member={getSelfMember()}
+                onSelect={(overlayId) => {
+                  saveSelfProfileEdits({
+                    ...selfProfileEdits,
+                    chatOverlayDisplay: overlayId,
+                  });
+                }}
+                selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+              />
+            </article>
             {showChannelBrandPalette ? (
               <ChannelBrandPalettePanel
                 onChangeColor={updateSettingsChannelBrandColor}

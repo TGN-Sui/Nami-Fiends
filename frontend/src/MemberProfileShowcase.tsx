@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 
 import type { GuildAffiliationItem, SquadAffiliationItem } from './affiliation-provider.js';
+import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
+import { canEditProfileCosmetics } from './member-access.js';
 import { LegendReviewMeter } from './LegendReviewMeter.js';
 import { GroupDisplayPhotoAvatar } from './GroupDisplayPhotoAvatar.js';
 import { MemberDailyStatusQuickEdit } from './MemberDailyStatusEditor.js';
@@ -9,7 +11,7 @@ import { MemberPreferenceStrip } from './MemberPreferenceStrip.js';
 import { useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
 import { percentForNamiSeasonLevel } from './member-progression.js';
-import { useSelfProfileEdits } from './member-profile-store.js';
+import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
 import { isSelfMember } from './surface-preferences.js';
@@ -65,7 +67,6 @@ export function MemberProfileShowcase(props: {
   onOpenGuild?: (guild: NamiGuildRecord) => void;
   onOpenSquad?: (squad: NamiSquadRecord) => void;
   onNavigate?: (page: NamiPage) => void;
-  onOpenStatusSettings?: () => void;
   onEditPhoto?: () => void;
   onOpenFullProfileEditor?: () => void;
   guildAffiliations?: GuildAffiliationItem[];
@@ -133,7 +134,6 @@ export function MemberProfileShowcase(props: {
             <MemberDailyStatusQuickEdit
               onOpenChange={setStatusEditorOpen}
               open={statusEditorOpen}
-              {...(props.onOpenStatusSettings ? { onOpenSettings: props.onOpenStatusSettings } : {})}
             />
           ) : null}
         </div>
@@ -256,6 +256,25 @@ export function MemberProfileShowcase(props: {
                 ) : null}
               </div>
             </section>
+
+            {isSelf && canEditProfileCosmetics(props.member) ? (
+              <section className="member-showcase-section">
+                <header className="member-showcase-section-head">
+                  <h2>Chat borders</h2>
+                  <p>Equip earned border art on your chat bubbles.</p>
+                </header>
+                <ChatOverlayEquipPicker
+                  member={props.member}
+                  onSelect={(overlayId) => {
+                    saveSelfProfileEdits({
+                      ...selfProfileEdits,
+                      chatOverlayDisplay: overlayId,
+                    });
+                  }}
+                  selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+                />
+              </section>
+            ) : null}
 
             {showcase.topBadges.length > 0 ? (
               <section className="member-showcase-section">

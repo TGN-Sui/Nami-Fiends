@@ -117,11 +117,6 @@ export function MemberDailyStatusQuickEdit(props: {
             <button className="nami-surface-button is-primary-surface-button" onClick={saveStatus} type="button">
               Save
             </button>
-            {props.onOpenSettings ? (
-              <button className="profile-secondary-link" onClick={props.onOpenSettings} type="button">
-                Open Settings
-              </button>
-            ) : null}
             <button className="profile-secondary-link" onClick={() => setOpen(false)} type="button">
               Cancel
             </button>

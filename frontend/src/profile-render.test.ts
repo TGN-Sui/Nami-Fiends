@@ -32,6 +32,8 @@ describe('profile render smoke', () => {
 
     expect(container.querySelector('.tcg-foil-passport-shell')).toBeTruthy();
     expect(container.textContent?.length ?? 0).toBeGreaterThan(20);
+    expect(container.querySelector('.passport-player-star-row')).toBeTruthy();
+    expect(container.querySelectorAll('.player-star-score-star').length).toBe(5);
   });
 
   it('renders vertical passport card', async () => {
@@ -40,6 +42,8 @@ describe('profile render smoke', () => {
     );
 
     expect(container.querySelector('.tcg-foil-passport-shell')).toBeTruthy();
+    expect(container.querySelector('.passport-player-star-row')).toBeTruthy();
+    expect(container.querySelectorAll('.player-star-score-star').length).toBe(5);
   });
 
   it('renders display name editor for self member', async () => {
