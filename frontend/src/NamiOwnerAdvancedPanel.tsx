@@ -5,6 +5,7 @@ import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
+import { OfficialsRewardStudioPanel } from './OfficialsRewardStudioPanel.js';
 import { OwnerLegendReviewLabelsPanel } from './OwnerLegendReviewLabelsPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { isOfficialOwner } from './nami-capabilities.js';
@@ -46,6 +47,11 @@ const ADVANCED_TABS = [
     id: 'reviews',
     label: 'Reviews',
     hint: 'Legend meter tier labels for badge-gated community game reviews.',
+  },
+  {
+    id: 'rewards',
+    label: 'Rewards',
+    hint: 'Official Reward Studio for chat overlay condition → reward catalog.',
   },
 ] as const;
 
@@ -111,6 +117,7 @@ export function NamiOwnerAdvancedPanel(props: {
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
         {activeTab === 'launch' ? <LaunchOpsPanel embedded /> : null}
         {activeTab === 'reviews' ? <OwnerLegendReviewLabelsPanel embedded /> : null}
+        {activeTab === 'rewards' ? <OfficialsRewardStudioPanel embedded /> : null}
       </div>
     </article>
   );

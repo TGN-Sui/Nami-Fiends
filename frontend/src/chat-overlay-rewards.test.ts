@@ -1,0 +1,123 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { members } from './uiMockData.js';
+
+function createLocalStorageMock(): Storage {
+  const store = new Map<string, string>();
+
+  return {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.has(key) ? store.get(key)! : null;
+    },
+    key(index: number) {
+      return [...store.keys()][index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, value);
+    },
+  };
+}
+
+vi.mock('./member-access.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./member-access.js')>();
+
+  return {
+    ...actual,
+    isMemberVerified: (member: (typeof members)[number]) =>
+      member.signal === 'Green' && member.tier !== 'NPC',
+  };
+});
+
+import {
+  overlayRewardUnlockedForMember,
+  resolveChatOverlayForMember,
+  unlockedChatOverlayRewardsForMember,
+} from './chat-overlay-rewards.js';
+import {
+  readOfficialChatOverlayRewards,
+  resetOfficialChatOverlayRewardsForTests,
+  type OfficialChatOverlayReward,
+} from './official-chat-overlay-rewards-store.js';
+
+const verifiedPro = {
+  ...members[0]!,
+  id: 'm1',
+  tier: 'Pro' as const,
+  signal: 'Green' as const,
+};
+
+const verifiedElite = {
+  ...verifiedPro,
+  id: 'overlay-test-elite',
+  tier: 'Elite' as const,
+};
+
+describe('chat-overlay-rewards', () => {
+  beforeEach(() => {
+    const localStorage = createLocalStorageMock();
+
+    vi.stubGlobal('localStorage', localStorage);
+    vi.stubGlobal('window', {
+      localStorage,
+      dispatchEvent: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+    resetOfficialChatOverlayRewardsForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetOfficialChatOverlayRewardsForTests();
+  });
+
+  it('unlocks rewards from tier, verification, and official grant conditions', () => {
+    const catalog = readOfficialChatOverlayRewards();
+    const verifiedReward = catalog.find((reward) => reward.condition.type === 'verified')!;
+    const proReward = catalog.find(
+      (reward) => reward.condition.type === 'tier-min' && reward.condition.tier === 'Pro'
+    )!;
+    const eliteReward = catalog.find(
+      (reward) => reward.condition.type === 'tier-min' && reward.condition.tier === 'Elite'
+    )!;
+
+    expect(overlayRewardUnlockedForMember(verifiedPro, verifiedReward)).toBe(true);
+    expect(overlayRewardUnlockedForMember(verifiedPro, proReward)).toBe(true);
+    expect(overlayRewardUnlockedForMember(verifiedPro, eliteReward)).toBe(false);
+    expect(overlayRewardUnlockedForMember(verifiedElite, eliteReward)).toBe(true);
+  });
+
+  it('resolves equipped overlay classes for chat bubble padding slots', () => {
+    const customCatalog: OfficialChatOverlayReward[] = [
+      {
+        id: 'overlay-equipped',
+        name: 'Equipped Spark',
+        description: 'Test overlay',
+        slot: 'bottom-left',
+        motion: 'premium-loop',
+        accent: 'mint',
+        condition: { type: 'verified' },
+        enabled: true,
+        updatedAtMs: 1,
+      },
+    ];
+
+    window.localStorage.setItem('nami.self.profile', JSON.stringify({ chatOverlayDisplay: 'overlay-equipped' }));
+
+    const resolved = resolveChatOverlayForMember(verifiedPro, customCatalog);
+
+    expect(resolved?.rewardId).toBe('overlay-equipped');
+    expect(resolved?.className).toContain('chat-overlay-slot-bottom-left');
+    expect(resolved?.className).toContain('chat-overlay-motion-premium-loop');
+    expect(unlockedChatOverlayRewardsForMember(verifiedPro, customCatalog)).toHaveLength(1);
+  });
+});

@@ -22,7 +22,6 @@ import {
   canSendChatMessages,
   canSendOfficialChatMessages,
   getChatPresenceMembers,
-  messageBubbleClass,
   resolveChatMessageAuthorLabel,
   resolveMessageAuthorMember,
 } from './member-access.js';
@@ -86,6 +85,7 @@ import {
   useMemberTemporaryGlobalChats,
 } from './global-chat-rooms-store.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
 import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
@@ -239,7 +239,7 @@ export function GlobalChatRoomView(props: {
                 <span className="message-avatar">??</span>
               )}
 
-              <div className={'message-bubble' + messageBubbleClass(member, authorLabel)}>
+              <ChatMessageBubble authorName={authorLabel} member={member}>
                 <div className="message-meta">
                   <button
                     className={'message-author-button signal-text-' + message.signal.toLowerCase()}
@@ -258,7 +258,7 @@ export function GlobalChatRoomView(props: {
                     {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
                   />
                 </p>
-              </div>
+              </ChatMessageBubble>
             </div>
           );
         })}

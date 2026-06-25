@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatMessageBubble } from './ChatMessageBubble.js';
+import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import type { ChannelBrandTheme } from './channel-profile-brand.js';
 import {
+  canEditProfileCosmetics,
   canSendChatMessages,
   getSelfMember,
   readSignedInOwner,
-  messageBubbleClass,
   resolveMessageAuthorMember,
 } from './member-access.js';
 import {
@@ -24,6 +26,7 @@ import {
 import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel-chats.js';
 import { useMemberChatTimeTracker, useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
+import { saveSelfProfileEdits, useSelfProfileEdits } from './member-profile-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
 import {
   useChatAutoScroll,
@@ -95,6 +98,8 @@ export function ChannelProfileChatSection(props: {
 
   const preferencesVersion = useMemberPreferencesVersion();
   const selfChatMember = getSelfMember();
+  const canEquipOverlays = canEditProfileCosmetics(selfChatMember);
+  const selfProfileEdits = useSelfProfileEdits();
   const channelChatTimeTarget = useMemo(
     () => channelChatPresenceTarget(props.channel.id, props.channel.name),
     [props.channel.id, props.channel.name],
@@ -280,7 +285,7 @@ export function ChannelProfileChatSection(props: {
                       signal={message.signal}
                     />
 
-                    <div className={'message-bubble' + messageBubbleClass(member, message.author)}>
+                    <ChatMessageBubble authorName={message.author} member={member}>
                       <div className="message-meta">
                         <button
                           className={'message-author-button signal-text-' + message.signal.toLowerCase()}
@@ -313,7 +318,7 @@ export function ChannelProfileChatSection(props: {
                             : {})}
                         />
                       </p>
-                    </div>
+                    </ChatMessageBubble>
                   </div>
                 );
               })}
@@ -506,15 +511,26 @@ export function ChannelProfileChatSection(props: {
                     </div>
                   </div>
 
-                  <div className="chat-style-reward-grid">
-                    <span>Default Bubble</span>
-                    <span>Wave Frame</span>
-                    <span>Signal Glow</span>
-                  </div>
+                  {canEquipOverlays ? (
+                    <ChatOverlayEquipPicker
+                      member={selfChatMember}
+                      onSelect={(overlayId) => {
+                        saveSelfProfileEdits({
+                          ...selfProfileEdits,
+                          chatOverlayDisplay: overlayId,
+                        });
+                      }}
+                      selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+                    />
+                  ) : (
+                    <div className="customization-note">
+                      Verify your passport to equip earned chat overlays from the Officials Reward Studio catalog.
+                    </div>
+                  )}
 
                   <div className="customization-note">
-                    Cosmetic rewards will unlock fonts, overlays, message skins, and animation intensity. Owner brand
-                    colors stay in Settings.
+                    Overlays use fixed padding slots with static or premium loop motion. Owner brand colors stay in
+                    Settings.
                   </div>
                 </div>
               ) : null}

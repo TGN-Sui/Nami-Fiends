@@ -120,7 +120,7 @@ import {
   canSubscribeToChannelBanners,
   canToggleStreamingStatus,
   getSelfMember,
-  messageBubbleClass,
+
   resolveMessageAuthorMember,
 } from './member-access.js';
 import {
@@ -269,6 +269,7 @@ import { useFeaturedPlacementAuctionStatus } from './featured-placement-auction-
 import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
@@ -4800,11 +4801,7 @@ function MessageLogScreen(props: {
                   onClick={() => props.onOpenMember(messageMember)}
                   signal={message.signal}
                 />
-                <div
-                  className={
-                    'message-bubble' + messageBubbleClass(messageMember, message.author)
-                  }
-                >
+                <ChatMessageBubble authorName={message.author} member={messageMember}>
                   <div className="message-meta">
                     <strong>{message.author}</strong>
                     <span>{message.time}</span>
@@ -4812,7 +4809,7 @@ function MessageLogScreen(props: {
                   <p>
                     <TaggedMessageBody body={message.body} handlers={props.tagHandlers} />
                   </p>
-                </div>
+                </ChatMessageBubble>
               </div>
             );
           })}

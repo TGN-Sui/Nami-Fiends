@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 
 import {
   canSendChatMessages,
-  messageBubbleClass,
   readSignedInOwner,
   resolveMessageAuthorMember,
 } from './member-access.js';
@@ -273,7 +273,7 @@ function GuildChatPanel(props: {
                   <span className="message-avatar">??</span>
                 )}
 
-                <div className={'message-bubble' + messageBubbleClass(member, message.author)}>
+                <ChatMessageBubble authorName={message.author} member={member}>
                   <div className="message-meta">
                     <button
                       className={'message-author-button signal-text-' + message.signal.toLowerCase()}
@@ -291,7 +291,7 @@ function GuildChatPanel(props: {
                       {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
                     />
                   </p>
-                </div>
+                </ChatMessageBubble>
               </div>
             );
           })}

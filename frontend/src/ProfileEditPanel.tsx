@@ -24,6 +24,7 @@ import {
   useSelfProfileEdits,
   type SelfProfileEdits,
 } from './member-profile-store.js';
+import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { PROFILE_GENRE_LOUNGE_COUNT } from './platform-genre-options.js';
 
 function toggleChip(list: string[], value: string): string[] {
@@ -264,6 +265,18 @@ export function ProfileEditPanel(): ReactElement {
                   </button>
                 ))}
               </div>
+            </fieldset>
+
+            <fieldset className="profile-edit-chip-field">
+              <legend>Chat overlay</legend>
+              <p className="protocol-hint">
+                Equip earned chat bubble overlays from the Officials Reward Studio catalog.
+              </p>
+              <ChatOverlayEquipPicker
+                member={member}
+                onSelect={(overlayId) => updateDraft({ chatOverlayDisplay: overlayId })}
+                selectedOverlayId={draft.chatOverlayDisplay}
+              />
             </fieldset>
           </>
         ) : (
