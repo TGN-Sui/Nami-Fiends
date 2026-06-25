@@ -10279,8 +10279,9 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 .nami-owner-moderator-row,
 .nami-owner-ban-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
@@ -10326,6 +10327,32 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.nami-owner-legend-review-labels-form {
+  display: grid;
+  gap: 10px;
+}
+
+.nami-owner-legend-review-labels-preview {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.nami-owner-legend-review-labels-preview p {
+  margin: 0;
+  color: rgba(190, 210, 235, 0.85);
+  font-size: 0.86rem;
+}
+
+.nami-owner-legend-review-labels-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
 }
 
 .owner-hub-curation-panel {

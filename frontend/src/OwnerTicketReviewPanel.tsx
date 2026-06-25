@@ -18,7 +18,13 @@ import {
   listGameSubmissionTicketsSorted,
   useGameSubmissionTickets,
 } from './game-submission-ticket-store.js';
-import { useSubmittedTickets } from './owner-submitted-tickets-store.js';
+import {
+  approveSubmittedTicket,
+  readOpenSubmittedTickets,
+  rejectSubmittedTicket,
+  type SubmittedTicket,
+  useSubmittedTickets,
+} from './owner-submitted-tickets-store.js';
 import { useProtocolOwner } from './wallet.js';
 
 type ReviewTicket = {
@@ -28,6 +34,18 @@ type ReviewTicket = {
   description: string;
   detail: string | null;
 };
+
+function submittedTicketToReviewTicket(ticket: SubmittedTicket): ReviewTicket {
+  return {
+    id: ticket.id,
+    kind: ticket.kind,
+    title: ticket.title,
+    description: ticket.description,
+    detail:
+      ticket.submitterDetail ??
+      (ticket.submitterLabel ? 'Submitted by ' + ticket.submitterLabel : null),
+  };
+}
 
 function ticketKindLabel(kind: ReviewTicket['kind']): string {
   if (kind === 'partner-carousel') {
@@ -48,7 +66,7 @@ function ticketKindLabel(kind: ReviewTicket['kind']): string {
 export function OwnerTicketReviewPanel(): ReactElement | null {
   const { owner } = useProtocolOwner();
   const { openPendingCount } = useNamiAdminStore();
-  const { openSubmittedCount: storedOpenCount } = useSubmittedTickets();
+  const { tickets: submittedTickets } = useSubmittedTickets();
   const partnerSubmissions = usePartnerBannerSubmissions();
   const gameTickets = useGameSubmissionTickets();
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
@@ -58,31 +76,38 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
   const canReview = canReviewNodenameClaims(owner);
 
   const openTickets = useMemo((): ReviewTicket[] => {
-    const partnerTickets = partnerSubmissions
-      .filter((entry) => entry.status === 'submitted')
-      .map((entry) => ({
+    const queue = new Map<string, ReviewTicket>();
+
+    for (const ticket of readOpenSubmittedTickets()) {
+      queue.set(ticket.id, submittedTicketToReviewTicket(ticket));
+    }
+
+    for (const entry of partnerSubmissions.filter((submission) => submission.status === 'submitted')) {
+      queue.set(entry.id, {
         id: entry.id,
-        kind: 'partner-carousel' as const,
+        kind: 'partner-carousel',
         title: entry.title || entry.channelTitle,
         description: entry.description,
         detail: PROMOTION_DURATION_LABELS[entry.duration],
-      }));
+      });
+    }
 
-    const claimTickets = readOpenPendingClaims().map((claim) => ({
-      id: claim.id,
-      kind: 'nodename-claim' as const,
-      title: claimPreferredName(claim),
-      description: '@' + claim.nodename + ' · ' + claim.email,
-      detail: claim.displayName + ' · ' + claim.archetypeLabel + ' · ' + claim.method,
-    }));
+    for (const claim of readOpenPendingClaims()) {
+      queue.set(claim.id, {
+        id: claim.id,
+        kind: 'nodename-claim',
+        title: claimPreferredName(claim),
+        description: '@' + claim.nodename + ' · ' + claim.email,
+        detail: claim.displayName + ' · ' + claim.archetypeLabel + ' · ' + claim.method,
+      });
+    }
 
-    const pendingGameTickets = listGameSubmissionTicketsSorted()
-      .filter((ticket) => ticket.status === 'submitted' || ticket.status === 'preapproved')
-      .map((ticket) => ({
+    for (const ticket of listGameSubmissionTicketsSorted().filter(
+      (entry) => entry.status === 'submitted' || entry.status === 'preapproved'
+    )) {
+      queue.set(ticket.id, {
         id: ticket.id,
-        kind: (ticket.ticketKind === 'channel-claim' ? 'channel-claim' : 'game-ticket') as
-          | 'channel-claim'
-          | 'game-ticket',
+        kind: ticket.ticketKind === 'channel-claim' ? 'channel-claim' : 'game-ticket',
         title: ticket.ticketKind === 'channel-claim' ? 'Claim: ' + ticket.gameTitle : ticket.gameTitle,
         description: ticket.studioName + ' · ' + ticket.email,
         detail:
@@ -91,12 +116,13 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
           ticket.status +
           (ticket.claimProofNotes ? ' · proof on file' : '') +
           (ticket.genres.length > 0 ? ' · ' + ticket.genres.join(', ') : ''),
-      }));
+      });
+    }
 
-    return [...partnerTickets, ...claimTickets, ...pendingGameTickets];
-  }, [partnerSubmissions, openPendingCount, gameTickets]);
+    return [...queue.values()].sort((left, right) => left.title.localeCompare(right.title));
+  }, [partnerSubmissions, openPendingCount, gameTickets, submittedTickets]);
 
-  const openSubmittedCount = Math.max(openTickets.length, storedOpenCount);
+  const openSubmittedCount = openTickets.length;
 
   if (!canReview) {
     return null;
@@ -125,6 +151,17 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
     setSelectedTicketIds(new Set(openTickets.map((ticket) => ticket.id)));
   }
 
+  function clearSubmittedTicketQueue(
+    ticketId: string,
+    status: 'approved' | 'rejected'
+  ): boolean {
+    if (status === 'approved') {
+      return approveSubmittedTicket(ticketId, owner) !== null;
+    }
+
+    return rejectSubmittedTicket(ticketId, owner) !== null;
+  }
+
   function reviewTicket(ticket: ReviewTicket, status: 'approved' | 'rejected'): boolean {
     if (ticket.kind === 'partner-carousel') {
       const updated = updatePartnerBannerSubmissionStatus(
@@ -133,19 +170,36 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
         owner ?? 'official-owner'
       );
 
-      return updated !== null;
+      if (updated !== null) {
+        return true;
+      }
+
+      return clearSubmittedTicketQueue(ticket.id, status);
     }
 
     if (ticket.kind === 'game-ticket' || ticket.kind === 'channel-claim') {
       const result = applyGameTicketOfficialReview(ticket.id, status, owner);
-      return result.ok;
+
+      if (result.ok) {
+        return true;
+      }
+
+      return clearSubmittedTicketQueue(ticket.id, status);
     }
 
     if (status === 'approved') {
-      return approvePendingClaims([ticket.id], owner) > 0;
+      if (approvePendingClaims([ticket.id], owner) > 0) {
+        return true;
+      }
+
+      return clearSubmittedTicketQueue(ticket.id, status);
     }
 
-    return rejectPendingClaims([ticket.id], owner) > 0;
+    if (rejectPendingClaims([ticket.id], owner) > 0) {
+      return true;
+    }
+
+    return clearSubmittedTicketQueue(ticket.id, status);
   }
 
   function handleApproveTicket(ticketId: string): void {
@@ -162,7 +216,17 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       const result = applyGameTicketOfficialReview(ticket.id, 'approved', owner);
 
       if (!result.ok) {
-        setActionError(result.message);
+        if (!clearSubmittedTicketQueue(ticket.id, 'approved')) {
+          setActionError(result.message);
+          return;
+        }
+
+        setActionNotice('Queued ticket cleared from owner review list.');
+        setSelectedTicketIds((current) => {
+          const next = new Set(current);
+          next.delete(ticketId);
+          return next;
+        });
         return;
       }
 
@@ -202,7 +266,17 @@ export function OwnerTicketReviewPanel(): ReactElement | null {
       const result = applyGameTicketOfficialReview(ticket.id, 'rejected', owner);
 
       if (!result.ok) {
-        setActionError(result.message);
+        if (!clearSubmittedTicketQueue(ticket.id, 'rejected')) {
+          setActionError(result.message);
+          return;
+        }
+
+        setActionNotice('Queued ticket cleared from owner review list.');
+        setSelectedTicketIds((current) => {
+          const next = new Set(current);
+          next.delete(ticketId);
+          return next;
+        });
         return;
       }
 

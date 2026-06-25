@@ -29,4 +29,10 @@ describe('legend-review-meter', () => {
     expect(meter.isLegend).toBe(true);
     expect(meter.ariaLabel).toContain('Legend');
   });
+
+  it('accepts owner-provided label overrides', () => {
+    const meter = resolveLegendReviewMeter(3, ['A', 'B', 'Core', 'D', 'E']);
+
+    expect(meter.label).toBe('Core');
+  });
 });

@@ -14,6 +14,14 @@ export const LEGEND_REVIEW_TIERS: readonly LegendReviewTier[] = [
   { rating: 5, label: 'Legend', fillPercent: 100 },
 ] as const;
 
+export type LegendReviewLabelOverrides = readonly [
+  string,
+  string,
+  string,
+  string,
+  string,
+];
+
 export type LegendReviewMeterDisplay = {
   rating: number;
   label: string;
@@ -30,15 +38,31 @@ function clampRating(rating: number): number {
   return Math.max(1, Math.min(LEGEND_REVIEW_MAX_RATING, rating));
 }
 
-export function legendReviewTierForRating(rating: number): LegendReviewTier {
-  const rounded = Math.round(clampRating(rating));
-
-  return LEGEND_REVIEW_TIERS.find((tier) => tier.rating === rounded) ?? LEGEND_REVIEW_TIERS[0]!;
+function buildLegendReviewTiers(labelOverrides?: LegendReviewLabelOverrides): LegendReviewTier[] {
+  return LEGEND_REVIEW_TIERS.map((tier, index) => ({
+    ...tier,
+    label: labelOverrides?.[index]?.trim() || tier.label,
+  }));
 }
 
-export function resolveLegendReviewMeter(rating: number): LegendReviewMeterDisplay {
+export function legendReviewTierForRating(
+  rating: number,
+  labelOverrides?: LegendReviewLabelOverrides
+): LegendReviewTier {
+  const rounded = Math.round(clampRating(rating));
+
+  return (
+    buildLegendReviewTiers(labelOverrides).find((tier) => tier.rating === rounded) ??
+    buildLegendReviewTiers(labelOverrides)[0]!
+  );
+}
+
+export function resolveLegendReviewMeter(
+  rating: number,
+  labelOverrides?: LegendReviewLabelOverrides
+): LegendReviewMeterDisplay {
   const clamped = clampRating(rating);
-  const tier = legendReviewTierForRating(clamped);
+  const tier = legendReviewTierForRating(clamped, labelOverrides);
   const fillPercent = Math.round((clamped / LEGEND_REVIEW_MAX_RATING) * 100);
   const isLegend = Math.round(clamped) === LEGEND_REVIEW_MAX_RATING;
 
@@ -51,6 +75,8 @@ export function resolveLegendReviewMeter(rating: number): LegendReviewMeterDispl
   };
 }
 
-export function legendReviewPickerOptions(): readonly LegendReviewTier[] {
-  return LEGEND_REVIEW_TIERS;
+export function legendReviewPickerOptions(
+  labelOverrides?: LegendReviewLabelOverrides
+): readonly LegendReviewTier[] {
+  return buildLegendReviewTiers(labelOverrides);
 }

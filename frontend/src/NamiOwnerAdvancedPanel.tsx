@@ -5,6 +5,7 @@ import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
+import { OwnerLegendReviewLabelsPanel } from './OwnerLegendReviewLabelsPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import type { NamiChannel } from './uiMockData.js';
@@ -40,6 +41,11 @@ const ADVANCED_TABS = [
     id: 'launch',
     label: 'Launch Ops',
     hint: 'Testnet policy, officials queue depth, and discovery cycle health.',
+  },
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    hint: 'Legend meter tier labels for badge-gated community game reviews.',
   },
 ] as const;
 
@@ -104,6 +110,7 @@ export function NamiOwnerAdvancedPanel(props: {
         ) : null}
         {activeTab === 'data' ? <IndexedDataPanel embedded /> : null}
         {activeTab === 'launch' ? <LaunchOpsPanel embedded /> : null}
+        {activeTab === 'reviews' ? <OwnerLegendReviewLabelsPanel embedded /> : null}
       </div>
     </article>
   );

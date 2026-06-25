@@ -3,7 +3,9 @@ import type { ReactElement } from 'react';
 import {
   legendReviewPickerOptions,
   resolveLegendReviewMeter,
+  type LegendReviewLabelOverrides,
 } from './legend-review-meter.js';
+import { ownerLegendReviewLabelList, useOwnerLegendReviewLabels } from './owner-legend-review-labels-store.js';
 
 type LegendReviewMeterProps = {
   value: number;
@@ -14,9 +16,11 @@ type LegendReviewMeterProps = {
 };
 
 export function LegendReviewMeter(props: LegendReviewMeterProps): ReactElement {
-  const display = resolveLegendReviewMeter(props.value);
+  const ownerLabels = useOwnerLegendReviewLabels();
+  const labelOverrides = ownerLegendReviewLabelList(ownerLabels) as LegendReviewLabelOverrides;
+  const display = resolveLegendReviewMeter(props.value, labelOverrides);
   const interactive = typeof props.onChange === 'function';
-  const tiers = legendReviewPickerOptions();
+  const tiers = legendReviewPickerOptions(labelOverrides);
 
   return (
     <div
