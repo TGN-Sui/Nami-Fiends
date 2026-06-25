@@ -21331,3 +21331,240 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   color: #ffb4b4;
 }
 
+.featured-placement-auction-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(117, 215, 255, 0.16);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(117, 215, 255, 0.08), transparent 42%),
+    rgba(8, 14, 22, 0.82);
+}
+
+.featured-placement-auction-panel.is-compact-auction-panel {
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.featured-placement-auction-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.featured-placement-auction-head h2 {
+  margin: 6px 0 4px;
+  font-size: 1.05rem;
+}
+
+.featured-placement-auction-head p {
+  margin: 0;
+  color: rgba(223, 236, 250, 0.78);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.featured-placement-auction-status-pill {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.24);
+  background: rgba(8, 14, 22, 0.72);
+  color: rgba(223, 236, 250, 0.88);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.featured-placement-auction-channel-copy {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.92);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.featured-placement-auction-bid-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 180px) auto;
+  align-items: end;
+}
+
+.featured-placement-auction-pool-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.featured-placement-auction-standings {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.featured-placement-auction-standings section {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(117, 215, 255, 0.14);
+  background: rgba(3, 7, 12, 0.62);
+}
+
+.featured-placement-auction-standings h3 {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+}
+
+.featured-placement-auction-standings ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: rgba(223, 236, 250, 0.9);
+  font-size: 0.88rem;
+}
+
+.featured-placement-auction-winners {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(67, 245, 167, 0.24);
+  background: rgba(8, 22, 16, 0.62);
+}
+
+.featured-placement-auction-winners h3 {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  color: rgba(67, 245, 167, 0.92);
+}
+
+.featured-placement-auction-winners ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.88rem;
+}
+
+.universal-calendar-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.universal-calendar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.universal-calendar-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+}
+
+.universal-calendar-head p {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.92);
+  font-size: 0.9rem;
+  max-width: 52ch;
+}
+
+.universal-calendar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.universal-calendar-filter {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(117, 215, 255, 0.2);
+  background: rgba(8, 14, 22, 0.72);
+  color: rgba(223, 236, 250, 0.88);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.universal-calendar-filter.is-active-calendar-filter {
+  border-color: rgba(117, 215, 255, 0.42);
+  background: rgba(117, 215, 255, 0.14);
+  color: #eef7ff;
+}
+
+.universal-calendar-day-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.universal-calendar-day-group h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: rgba(223, 236, 250, 0.94);
+}
+
+.universal-calendar-day-events {
+  display: grid;
+  gap: 12px;
+}
+
+.universal-calendar-event-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.universal-calendar-event-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.universal-calendar-event-copy strong {
+  font-size: 1rem;
+}
+
+.universal-calendar-event-copy p {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.92);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.universal-calendar-event-copy small {
+  color: rgba(117, 215, 255, 0.78);
+  font-size: 0.8rem;
+}
+
+.universal-calendar-event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .featured-placement-auction-bid-form {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-placement-auction-standings {
+    grid-template-columns: 1fr;
+  }
+
+  .universal-calendar-event-card {
+    flex-direction: column;
+  }
+
+  .universal-calendar-event-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+

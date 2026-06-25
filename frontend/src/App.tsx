@@ -263,7 +263,13 @@ import {
   type GameHubBrowserFilter,
   type GameHubInterestModule,
 } from './gamehub-preferences.js';
+import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import {
+  readFeaturedAuctionHubChannelIds,
+  useFeaturedPlacementAuctionStatus,
+} from './featured-placement-auction-store.js';
+import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -1239,6 +1245,7 @@ function NamiHub(props: {
 
   const { members: directoryMembers } = useMemberDirectory();
   const hubFeaturedChannelId = readActiveHubFeaturedChannelId();
+  useFeaturedPlacementAuctionStatus();
 
   function resolveDirectoryChannel(channelId: string): NamiChannel | undefined {
     return (
@@ -1249,15 +1256,23 @@ function NamiHub(props: {
   }
 
   const hubFeaturedChannel = hubFeaturedChannelId ? resolveDirectoryChannel(hubFeaturedChannelId) : null;
+  const auctionWinnerChannels = readFeaturedAuctionHubChannelIds()
+    .map((channelId) => resolveDirectoryChannel(channelId))
+    .filter((channel): channel is NamiChannel => Boolean(channel));
+  const reservedFeaturedIds = new Set([
+    ...auctionWinnerChannels.map((channel) => channel.id),
+    ...(hubFeaturedChannel ? [hubFeaturedChannel.id] : []),
+  ]);
   const featuredShowcaseChannels =
-    directoryChannels.length > 0
+    auctionWinnerChannels.length > 0 || directoryChannels.length > 0 || hubFeaturedChannel
       ? [
+          ...auctionWinnerChannels,
           ...(hubFeaturedChannel ? [hubFeaturedChannel] : []),
-          ...directoryChannels.filter((channel) => channel.id !== hubFeaturedChannel?.id).slice(0, 8),
+          ...directoryChannels
+            .filter((channel) => !reservedFeaturedIds.has(channel.id))
+            .slice(0, Math.max(0, 8 - auctionWinnerChannels.length)),
         ]
-      : hubFeaturedChannel
-        ? [hubFeaturedChannel]
-        : [props.selectedChannel];
+      : [props.selectedChannel];
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
   const [hoveredShowcaseChannelId, setHoveredShowcaseChannelId] = useState<string | null>(null);
 
@@ -2141,6 +2156,8 @@ function GameHub(props: {
             <p className="report-pulse channel-boost-notice">{gameHubBoostNotice}</p>
           ) : null}
         </article>
+
+        <FeaturedPlacementAuctionPanel compact />
       </section>
 
       <section className="panel gamehub-browser" id="gamehub-browser">
@@ -5129,64 +5146,10 @@ function EventsScreen(props: {
         <h1>My Events</h1>
       </header>
 
-      <section className="account-grid uniform-card-grid">
-        {subscribedUserEvents.map((eventItem) => {
-          const event = getEventById(eventItem.id);
-
-          if (!event) {
-            return null;
-          }
-
-          return (
-          <article
-            className={'profile-panel account-card fixed-card event-card' + eventImportanceClass(event)}
-            key={eventItem.id}
-          >
-            <div className="fixed-card-body">
-              <span className="feature-label">{eventItem.source}</span>
-
-              <div className="fixed-card-copy">
-                <h2>{eventItem.title}</h2>
-                <p>{eventItem.description}</p>
-                <small>
-                  {formatEventTimeInTimezone(event.startsAtUtc)} · {eventItem.status}
-                </small>
-              </div>
-            </div>
-
-            <div className="fixed-card-footer event-card-footer">
-              <EventInterestedButton eventId={eventItem.id} />
-              <div className="event-card-secondary-actions">
-                {eventItem.channelId ? (
-                  <button
-                    className="secondary-action"
-                    onClick={() => {
-                      const channel = channels.find((entry) => entry.id === eventItem.channelId);
-
-                      if (channel) {
-                        props.onOpenChannel(channel);
-                      }
-                    }}
-                    type="button"
-                  >
-                    Open channel
-                  </button>
-                ) : (
-                  <span aria-hidden="true" className="event-card-action-spacer" />
-                )}
-                <button
-                  className="secondary-action"
-                  onClick={() => props.onViewEvent(event)}
-                  type="button"
-                >
-                  View event
-                </button>
-              </div>
-            </div>
-          </article>
-          );
-        })}
-      </section>
+      <UniversalCalendarPanel
+        onOpenChannel={props.onOpenChannel}
+        onViewEvent={props.onViewEvent}
+      />
     </>
   );
 }

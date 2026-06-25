@@ -25,6 +25,7 @@ import {
 } from './game-owner-approval-guards.js';
 import { OwnerMediaUploadField } from './OwnerMediaUploadField.js';
 import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPanel.js';
+import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { PartnerCarouselPreviewOverlay } from './PartnerCarouselPreviewOverlay.js';
 import type { MembershipCheckoutRail, MembershipCryptoAsset } from './membership-plans-store.js';
 import type { NamiChannel } from './uiMockData.js';
@@ -249,6 +250,8 @@ export function ChannelOwnerPromotionsPanel(props: {
           />
         </div>
       </article>
+
+      <FeaturedPlacementAuctionPanel />
 
       <article className="panel channel-owner-tool-card" id="channel-owner-hub-featured">
         <div className="channel-owner-tool-card-head">
