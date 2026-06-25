@@ -298,6 +298,7 @@ import {
   type NamiSquadRecord,
 } from './nami-affiliations.js';
 import { MemberAvatarUploadCard } from './MemberAvatarUploadCard.js';
+import { MessageComposeOverlay } from './MessageComposeOverlay.js';
 import { MemberProfileActions } from './MemberProfileActions.js';
 import { MemberProfileShowcase } from './MemberProfileShowcase.js';
 import { getNamiProgression, percentForNamiSeasonLevel } from './member-progression.js';
@@ -4600,13 +4601,38 @@ function MessagesScreen(props: {
   const messageStore = useMessagesStore();
   const selfMember = useSelfMember();
   const pendingApprovals = pendingApprovalsForMember(selfMember.id);
+  const canCompose = canMessageOtherMembers();
+  const [composeOpen, setComposeOpen] = useState(false);
 
   return (
     <>
-      <header className="page-title">
-        <p>Member conversations</p>
-        <h1>Messages</h1>
+      <header className="page-title messages-page-title">
+        <div className="messages-page-title-copy">
+          <p>Member conversations</p>
+          <h1>Messages</h1>
+        </div>
+        {canCompose ? (
+          <div className="messages-page-title-actions">
+            <button
+              className="nami-surface-button is-primary-surface-button"
+              onClick={() => setComposeOpen(true)}
+              type="button"
+            >
+              New message
+            </button>
+          </div>
+        ) : null}
       </header>
+
+      {composeOpen ? (
+        <MessageComposeOverlay
+          onClose={() => setComposeOpen(false)}
+          onOpenThread={(memberId) => {
+            setComposeOpen(false);
+            props.onOpenThread(memberId);
+          }}
+        />
+      ) : null}
 
       {pendingApprovals.length > 0 ? (
         <section className="messages-thread-list">

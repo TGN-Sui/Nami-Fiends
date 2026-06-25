@@ -1974,6 +1974,136 @@
   font-size: 0.82rem;
 }
 
+.messages-page-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.messages-page-title-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.messages-page-title-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.message-compose-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 28px);
+  background: rgba(4, 8, 18, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.message-compose-modal {
+  width: min(100%, 34rem);
+  max-height: min(88vh, 720px);
+  display: grid;
+  gap: 14px;
+  overflow: auto;
+}
+
+.message-compose-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.message-compose-header p {
+  margin: 0;
+  color: rgba(190, 210, 235, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+}
+
+.message-compose-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.35rem;
+}
+
+.message-compose-search-field {
+  display: grid;
+  gap: 6px;
+}
+
+.message-compose-search-field span {
+  font-size: 0.82rem;
+  color: rgba(190, 210, 235, 0.85);
+}
+
+.message-compose-search-field input {
+  width: 100%;
+}
+
+.message-compose-member-results {
+  display: grid;
+  gap: 8px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.message-compose-member-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+
+.message-compose-member-row strong,
+.message-compose-member-row span {
+  display: block;
+}
+
+.message-compose-member-row span {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: rgba(190, 210, 235, 0.85);
+}
+
+.message-compose-member-row.is-selected {
+  outline: 2px solid rgba(90, 220, 170, 0.55);
+}
+
+.message-compose-empty {
+  margin: 0;
+  color: rgba(190, 210, 235, 0.85);
+}
+
+.message-compose-draft-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.message-compose-draft-label {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.message-compose-composer {
+  margin: 0;
+}
+
+.message-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .badge-book-page-controls {
   display: flex;
   align-items: center;

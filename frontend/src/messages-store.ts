@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { shouldAutoSeedLocalData } from './app-config.js';
+import { EMPTY_THREAD_PREVIEW } from './message-compose.js';
 import { isGlobalChatMessagesApiAvailable } from './global-chat-messages-api.js';
 import { sendSharedGlobalChatMessage } from './global-chat-messages-sync.js';
 import { playChatSendSfx } from './nami-sfx.js';
@@ -503,6 +504,27 @@ export function readGlobalChatOverlay(chatId: string): ChatMessage[] {
 
 export function readGuildChatMessages(guildId: string): ChatMessage[] {
   return readGuildMessages()[guildId] ?? [];
+}
+
+export function ensurePrivateThread(memberId: string, memberName: string): void {
+  const threads = readThreads();
+  const existing = threads.find((thread) => thread.memberId === memberId);
+
+  if (existing) {
+    return;
+  }
+
+  writeThreads([
+    {
+      memberId,
+      memberName,
+      preview: EMPTY_THREAD_PREVIEW,
+      updatedAt: nowTime(),
+      unread: 0,
+      messages: [],
+    },
+    ...threads,
+  ]);
 }
 
 export function sendPrivateMessage(memberId: string, memberName: string, body: string): void {
