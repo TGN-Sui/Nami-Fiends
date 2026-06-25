@@ -1,10 +1,16 @@
 import { readIndexerUrl } from './protocol-env.js';
 import { createWalletAuthPayload } from './wallet-auth.js';
 
+export type TutorialStatus = 'pending' | 'completed' | 'skipped';
+
 export type MemberPreferences = {
   owner: string;
   avatarUrl: string | null;
   streamingOnline: boolean;
+  hubFirstVisitCompleted: boolean;
+  superBannerSeenIds: string[];
+  tutorialStatus: TutorialStatus;
+  tutorialVersion: number;
   updatedAtMs: number;
 };
 
@@ -56,6 +62,11 @@ export async function syncMemberPreferencesToBackend(input: {
   owner: string;
   avatarUrl?: string | null;
   streamingOnline?: boolean;
+  hubFirstVisitCompleted?: boolean;
+  superBannerSeenIds?: string[];
+  appendSuperBannerSeenId?: string;
+  tutorialStatus?: TutorialStatus;
+  tutorialVersion?: number;
 }): Promise<MemberPreferences | null> {
   const auth = await createWalletAuthPayload(input.owner);
 

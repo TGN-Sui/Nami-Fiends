@@ -909,8 +909,8 @@ P3 — Deferred         Phase 10 experiments, mobile genre chat, nice-to-have po
 | Customizable overlays | P1→P2 | `cosmetics` + Officials Reward Studio | Officials define condition → reward; static/premium loops; fixed padding slots |
 | Star score display | P1 | Passport card UI | 0–20→1★ … 100→foil star; display only |
 | Legend review bar | P1 | Reviews UI | Horizontal Legend meter, not 5-star |
-| Super banners on Hub entry | P1 | `SuperBannerOverlay` + prefs | **First-ever login + every Hub entry** until per-banner queue cleared (not logged-out) |
-| New user tutorial | P1 | Tutorial connector + prefs API | Post-auth Hub tour after super banners; step machine; replay from Settings |
+| Super banners on Hub entry | P1 | `SuperBannerOverlay` + prefs | **#14-B:** skip first Hub visit; **return visits** show unseen queue (logged-in only) |
+| New user tutorial | P1 | `tutorial-registry.ts` + overlay | Game-world tone; **4 short steps**; all logged-in users; desktop first; after banner queue |
 | Featured placement auction | P1→P2 | Hub auction + discovery | Model D: limited slots; **low-boost pool** (1 hidden slot) + **open pool** (N−1 slots) |
 | NFT chat gate | P2 | `channel_access` + NFT verifier | Sui first, live hold, chat only; Solana later |
 | Game Master | P2 | `GameMasterCap` | Delegate mod/media/news/description only |
@@ -925,24 +925,26 @@ P3 — Deferred         Phase 10 experiments, mobile genre chat, nice-to-have po
 | Browser extension / Steam overlay | P3 | NamiHostConnector | After StreamOverlay |
 | Mobile / GameOS / Suiball | P3 | Host shells | Phase 10 gate |
 
-**Hub entry sequence (first login + return)**
+**Hub entry sequence (#14-B + tutorial)**
 
 ```text
-1. Auth success → route to Nami Hub
-2. Super banner queue (sequential, min dwell, per-user seen state on preferences API)
-3. Tutorial v1 (if tutorial_state != completed/skipped) — see Tutorial connector below
-4. Hub interactive
+1. Auth success → route to Nami Hub (logged-in only)
+2. First Hub visit ever → mark hubFirstVisitCompleted; skip super banners
+3. Return Hub visits → super banner queue (sequential, min dwell, per-banner seen ids)
+4. Tutorial v1 (tutorialStatus=pending) — 4 steps, game-world tone, all logged-in users
+5. Hub interactive
 ```
 
-**Tutorial connector (v1 — plan)**
+**Tutorial v1 (locked)**
 
 ```text
-Module:     tutorial-registry.ts (step definitions) + TutorialOverlay.tsx
-Persist:    member preferences API — tutorial_version, completed_steps[], dismissed_at
-Steps:      Hub map → passport card → Game Hub → Settings/account → officials feedback opt-in
-Policy:     test launch: no demo shortcuts; genesis passport copy; skip always available
-Replay:     Settings → Help → Restart tutorial
-Lane:       P1 after Phase 8 exit; design now, implement after super-banner queue ships
+Tone:       Game world entrance
+Length:     4 steps (welcome → Hub → passport → Game Hub)
+Audience:   All logged-in users until completed/skipped
+Platform:   Desktop Hub first; mobile later
+Registry:   frontend/src/tutorial-registry.ts (shipped)
+Overlay:    TutorialOverlay.tsx — next slice after super-banner queue
+Persist:    member preferences API — tutorialStatus, tutorialVersion
 ```
 
 **Featured auction (model D) — spec**

@@ -1,10 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
-  getMemberPreferences,
-  upsertMemberPreferences,
-  type TutorialStatus,
-} from '../services/member-preferences.service.js';
+  listActiveHubSuperBanners,
+  publishHubSuperBanner,
+} from '../services/hub-super-banners.service.js';
 import {
   assertWalletAuth,
   type WalletAuthPayload,
@@ -41,27 +40,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-export async function handleMemberPreferencesGet(
-  _request: IncomingMessage,
-  response: ServerResponse,
-  owner: string
-): Promise<void> {
-  const preferences = await getMemberPreferences(owner);
-
-  sendJson(response, 200, {
-    preferences: preferences ?? {
-      owner: owner.trim().toLowerCase(),
-      avatarUrl: null,
-      streamingOnline: false,
-      hubFirstVisitCompleted: false,
-      superBannerSeenIds: [],
-      tutorialStatus: 'pending',
-      tutorialVersion: 0,
-      updatedAtMs: Date.now(),
-    },
-  });
-}
-
 function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
   const auth = body.auth;
 
@@ -83,9 +61,17 @@ function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
   return patch;
 }
 
-export async function handleMemberPreferencesUpsert(
+export async function handleHubSuperBannersActiveGet(
+  _request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  const campaigns = await listActiveHubSuperBanners();
+  sendJson(response, 200, { campaigns });
+}
+
+export async function handleHubSuperBannersPublishPost(
   request: IncomingMessage,
-  response: ServerResponse
+  response: ServerResponse,
 ): Promise<void> {
   try {
     const body = await readJsonBody(request);
@@ -104,45 +90,14 @@ export async function handleMemberPreferencesUpsert(
       timestampMs: walletAuth.timestampMs ?? 0,
     });
 
-    const patch: Parameters<typeof upsertMemberPreferences>[0] = { owner };
+    const campaign = await publishHubSuperBanner({
+      channelId: typeof body.channelId === 'string' ? body.channelId : '',
+      coverUrl: typeof body.coverUrl === 'string' ? body.coverUrl : '',
+      headline: typeof body.headline === 'string' ? body.headline : '',
+      body: typeof body.body === 'string' ? body.body : '',
+    });
 
-    if (body.avatarUrl === null) {
-      patch.avatarUrl = null;
-    } else if (typeof body.avatarUrl === 'string') {
-      patch.avatarUrl = body.avatarUrl;
-    }
-
-    if (typeof body.streamingOnline === 'boolean') {
-      patch.streamingOnline = body.streamingOnline;
-    }
-
-    if (typeof body.hubFirstVisitCompleted === 'boolean') {
-      patch.hubFirstVisitCompleted = body.hubFirstVisitCompleted;
-    }
-
-    if (Array.isArray(body.superBannerSeenIds)) {
-      patch.superBannerSeenIds = body.superBannerSeenIds.filter((id) => typeof id === 'string');
-    }
-
-    if (typeof body.appendSuperBannerSeenId === 'string') {
-      patch.appendSuperBannerSeenId = body.appendSuperBannerSeenId;
-    }
-
-    if (
-      body.tutorialStatus === 'pending' ||
-      body.tutorialStatus === 'completed' ||
-      body.tutorialStatus === 'skipped'
-    ) {
-      patch.tutorialStatus = body.tutorialStatus as TutorialStatus;
-    }
-
-    if (typeof body.tutorialVersion === 'number') {
-      patch.tutorialVersion = body.tutorialVersion;
-    }
-
-    const preferences = await upsertMemberPreferences(patch);
-
-    sendJson(response, 200, { preferences });
+    sendJson(response, 200, { campaign });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
@@ -151,10 +106,12 @@ export async function handleMemberPreferencesUpsert(
       return;
     }
 
-    console.error('[nami-preferences] upsert failed', error);
-    sendJson(response, 500, {
-      error: 'preferences_upsert_failed',
-      message,
-    });
+    if (message === 'invalid_super_banner_copy' || message === 'invalid_channel_id') {
+      sendJson(response, 400, { error: message });
+      return;
+    }
+
+    console.error('[nami-hub-super-banners] publish failed', error);
+    sendJson(response, 500, { error: 'hub_super_banner_publish_failed', message });
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 
 type SuperBannerPayload = {
+  id?: string;
   channelId: string;
   coverUrl: string;
   headline: string;
@@ -59,7 +60,13 @@ export function SuperBannerOverlay(): ReactElement | null {
         <button
           className="nami-surface-button is-primary-surface-button"
           disabled={!canDismiss}
-          onClick={() => setPayload(null)}
+          onClick={() => {
+            const bannerId = payload.id ?? payload.channelId + ':' + payload.sentAtMs;
+            window.dispatchEvent(
+              new CustomEvent('nami-super-banner-dismissed', { detail: { id: bannerId } }),
+            );
+            setPayload(null);
+          }}
           type="button"
         >
           {canDismiss ? 'Dismiss' : 'Please wait…'}

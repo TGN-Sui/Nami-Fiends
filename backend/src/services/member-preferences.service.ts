@@ -1,10 +1,16 @@
 import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
+export type TutorialStatus = 'pending' | 'completed' | 'skipped';
+
 export type MemberPreferences = {
   owner: string;
   avatarUrl: string | null;
   streamingOnline: boolean;
+  hubFirstVisitCompleted: boolean;
+  superBannerSeenIds: string[];
+  tutorialStatus: TutorialStatus;
+  tutorialVersion: number;
   updatedAtMs: number;
 };
 
@@ -35,6 +41,10 @@ function defaultPreferences(owner: string): MemberPreferences {
     owner: normalizeOwner(owner),
     avatarUrl: null,
     streamingOnline: false,
+    hubFirstVisitCompleted: false,
+    superBannerSeenIds: [],
+    tutorialStatus: 'pending',
+    tutorialVersion: 0,
     updatedAtMs: Date.now(),
   };
 }
@@ -50,6 +60,11 @@ export type UpsertMemberPreferencesInput = {
   owner: string;
   avatarUrl?: string | null;
   streamingOnline?: boolean;
+  hubFirstVisitCompleted?: boolean;
+  superBannerSeenIds?: string[];
+  appendSuperBannerSeenId?: string;
+  tutorialStatus?: TutorialStatus;
+  tutorialVersion?: number;
 };
 
 export async function upsertMemberPreferences(
@@ -65,6 +80,20 @@ export async function upsertMemberPreferences(
   const existing = index >= 0 ? store.preferences[index]! : defaultPreferences(input.owner);
   const now = Date.now();
 
+  const seenIds = [...existing.superBannerSeenIds];
+
+  if (input.superBannerSeenIds) {
+    seenIds.splice(0, seenIds.length, ...input.superBannerSeenIds.filter((id) => id.trim()));
+  }
+
+  if (input.appendSuperBannerSeenId?.trim()) {
+    const nextId = input.appendSuperBannerSeenId.trim();
+
+    if (!seenIds.includes(nextId)) {
+      seenIds.push(nextId);
+    }
+  }
+
   const next: MemberPreferences = {
     ...existing,
     owner,
@@ -76,6 +105,16 @@ export async function upsertMemberPreferences(
           : null,
     streamingOnline:
       typeof input.streamingOnline === 'boolean' ? input.streamingOnline : existing.streamingOnline,
+    hubFirstVisitCompleted:
+      typeof input.hubFirstVisitCompleted === 'boolean'
+        ? input.hubFirstVisitCompleted
+        : existing.hubFirstVisitCompleted,
+    superBannerSeenIds: seenIds.slice(-128),
+    tutorialStatus: input.tutorialStatus ?? existing.tutorialStatus,
+    tutorialVersion:
+      typeof input.tutorialVersion === 'number' && input.tutorialVersion >= 0
+        ? input.tutorialVersion
+        : existing.tutorialVersion,
     updatedAtMs: now,
   };
 

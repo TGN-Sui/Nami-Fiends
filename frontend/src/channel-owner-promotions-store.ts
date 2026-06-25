@@ -978,17 +978,44 @@ export function sendSuperBanner(channelId: string): PromotionActionResult {
     },
   }));
 
+  const sentAtMs = Date.now();
+
   window.dispatchEvent(
     new CustomEvent('nami-super-banner-sent', {
       detail: {
+        id: 'local-sb-' + channelId + '-' + sentAtMs,
         channelId,
         coverUrl: draft.coverUrl,
         headline: draft.headline,
         body: draft.body,
-        sentAtMs: Date.now(),
+        sentAtMs,
       },
     }),
   );
+
+  void import('./hub-super-banner-api.js')
+    .then(({ isHubSuperBannerApiAvailable, publishHubSuperBannerToBackend }) => {
+      if (!isHubSuperBannerApiAvailable()) {
+        return null;
+      }
+
+      return import('./protocol-owner-resolve.js').then(({ resolveProtocolOwnerState }) => {
+        const owner = resolveProtocolOwnerState().owner;
+
+        if (!owner?.startsWith('0x')) {
+          return null;
+        }
+
+        return publishHubSuperBannerToBackend({
+          owner,
+          channelId,
+          coverUrl: draft.coverUrl,
+          headline: draft.headline,
+          body: draft.body,
+        });
+      });
+    })
+    .catch(() => null);
 
   return {
     ok: true,

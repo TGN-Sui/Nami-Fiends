@@ -21,6 +21,10 @@ import {
   handleMemberPreferencesUpsert,
 } from './routes/member-preferences.routes.js';
 import {
+  handleHubSuperBannersActiveGet,
+  handleHubSuperBannersPublishPost,
+} from './routes/hub-super-banners.routes.js';
+import {
   handleAvatarUploadPost,
   handleChannelCoverUploadPost,
   handleMediaFileGet,
@@ -1009,6 +1013,18 @@ const routes: Route[] = [
     pattern: /^\/api\/member-preferences\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handleMemberPreferencesUpsert(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/hub\/super-banners\/active$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleHubSuperBannersActiveGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/hub\/super-banners\/publish$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleHubSuperBannersPublishPost(request, response),
   },
   {
     method: 'OPTIONS',

@@ -80,6 +80,7 @@ import {
 import { ensureChannelMediaHydratedForKey } from './channel-media-persistence.js';
 import { hydrateChannelCoversForChannels } from './preferences-sync.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
+import { HubSuperBannerQueueRunner } from './HubSuperBannerQueueRunner.js';
 import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
@@ -5186,6 +5187,7 @@ export function App(): ReactElement {
   const messageUnreadCount = useMessageUnreadCount();
   const guildEventsStore = useGuildEventsStore();
   const selfMember = useSelfMember();
+  const { owner: protocolOwner } = useProtocolOwner();
   const disconnectWallet = useWalletDisconnect();
   useDemoPerspective();
 
@@ -5910,6 +5912,9 @@ if (activePage === 'userProfile') {
       {showPlatformShell ? <IgniteRadioDock /> : null}
       {showPlatformShell && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
       {showPlatformShell ? <SuperBannerOverlay /> : null}
+      {showPlatformShell ? (
+        <HubSuperBannerQueueRunner activePage={activePage} owner={protocolOwner} />
+      ) : null}
       {showPlatformShell ? <MembershipPaymentReturnHandler /> : null}
       {activePage !== 'entry' ? <MemberSessionSync /> : null}
       {activePage !== 'entry' ? <WalletAuthBridge /> : null}
