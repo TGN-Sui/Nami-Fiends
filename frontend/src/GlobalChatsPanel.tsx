@@ -71,6 +71,20 @@ import {
   OFFICIAL_NAMI_GLOBAL_CHAT_ID,
   type GlobalChatRoom,
 } from './global-chats.js';
+import {
+  canMemberOpenAnotherTemporaryChat,
+  filterHubGlobalChats,
+  globalChatHubSectionLabel,
+  isUserOwnedTemporaryChat,
+  temporaryChatQuotaLabel,
+  type GlobalChatHubFilter,
+} from './global-chat-room-limits.js';
+import {
+  createMemberTemporaryGlobalChat,
+  memberTemporaryChatCapMessage,
+  removeMemberTemporaryGlobalChat,
+  useMemberTemporaryGlobalChats,
+} from './global-chat-rooms-store.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
@@ -128,6 +142,7 @@ export function GlobalChatRoomView(props: {
   tagHandlers?: TagNavigationHandlers;
   onClose?: () => void;
   compact?: boolean;
+  hubLayout?: boolean;
   showCompactHead?: boolean;
   expandedAside?: ReactNode;
   renderExpandedAside?: () => ReactNode;
@@ -286,11 +301,46 @@ export function GlobalChatRoomView(props: {
     </>
   );
 
+  const useHubLayout = props.hubLayout === true;
+
   return (
     <div
-      className={'global-chat-room-pane' + (props.compact ? ' is-compact-global-chat' : '')}
+      className={
+        'global-chat-room-pane' +
+        (props.compact ? ' is-compact-global-chat' : '') +
+        (useHubLayout ? ' is-hub-global-chat' : '')
+      }
       ref={viewportRef}
     >
+      {useHubLayout ? (
+        <div className="global-chat-hub-room-bar">
+          <div className="global-chat-hub-room-bar-copy">
+            {presenceKindLabel ? <span className="mini-badge">{presenceKindLabel}</span> : null}
+            <strong>{props.chat.title}</strong>
+            <span>{presenceMeta}</span>
+          </div>
+          <div className="global-chat-hub-room-bar-actions">
+            {canOwnerModerateChat ? (
+              <button
+                className="danger-action global-chat-owner-delete"
+                onClick={() => {
+                  const result = moderateDeleteGlobalChat(props.chat.id, connectedOwner);
+
+                  if (result.ok) {
+                    removeGlobalChatMessages(props.chat.id);
+                    props.onModerationDelete?.();
+                  }
+                }}
+                title="Official owner moderation — permanently remove this community chat"
+                type="button"
+              >
+                Delete chat
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {props.compact ? (
         props.showCompactHead !== false ? (
           <div className="global-chat-compact-head">
@@ -307,7 +357,7 @@ export function GlobalChatRoomView(props: {
             ) : null}
           </div>
         ) : null
-      ) : (
+      ) : useHubLayout ? null : (
         <div className="chat-presence-rail is-hub-chat-presence-rail">
           <div className="chat-presence-channel is-hub-chat-presence-channel">
             <div className="global-chat-presence-copy is-centered-hub-chat-heading">
@@ -397,53 +447,88 @@ export function GenreChatRoomPanel(props: {
   );
 }
 
+const HUB_GLOBAL_CHAT_FILTERS: Array<{ id: GlobalChatHubFilter; label: string }> = [
+  { id: 'all', label: 'All rooms' },
+  { id: 'official', label: 'Official' },
+  { id: 'community', label: 'Community' },
+  { id: 'mine', label: 'Your lounges' },
+];
+
 export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
   const isOwner = isOfficialOwner(connectedOwner);
+  const memberTemporaryChats = useMemberTemporaryGlobalChats();
   useGlobalChatModerationStore();
   useMemberChatTimeVersion();
   useGenreChatActivityVersion();
   const [activeChatId, setActiveChatId] = useState(OFFICIAL_NAMI_GLOBAL_CHAT_ID);
+  const [roomFilter, setRoomFilter] = useState<GlobalChatHubFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
   const [newChatVoice, setNewChatVoice] = useState(false);
-  const [extraChats, setExtraChats] = useState<GlobalChatRoom[]>([]);
+  const [createStatus, setCreateStatus] = useState<string | null>(null);
 
   const hubChats = useMemo(() => listHubGlobalChats(), []);
 
   const allChats = useMemo(
-    () => filterModeratedGlobalChats([...hubChats, ...extraChats]),
-    [extraChats, hubChats]
+    () => filterModeratedGlobalChats([...hubChats, ...memberTemporaryChats]),
+    [hubChats, memberTemporaryChats]
   );
-  const activeChat = allChats.find((chat) => chat.id === activeChatId) ?? hubChats[0]!;
+
+  const filteredChats = useMemo(
+    () => filterHubGlobalChats(allChats, roomFilter, selfMember.name, searchQuery),
+    [allChats, roomFilter, searchQuery, selfMember.name]
+  );
+
+  const activeChat =
+    allChats.find((chat) => chat.id === activeChatId) ??
+    filteredChats[0] ??
+    hubChats[0]!;
+
+  const quotaLabel = temporaryChatQuotaLabel(memberTemporaryChats, selfMember.name);
+  const canCreate = canCreateTemporaryChat();
+  const canOpenAnotherLounge = canMemberOpenAnotherTemporaryChat(
+    memberTemporaryChats,
+    selfMember.name
+  );
+
+  useEffect(() => {
+    if (!allChats.some((chat) => chat.id === activeChatId)) {
+      setActiveChatId(hubChats[0]?.id ?? OFFICIAL_NAMI_GLOBAL_CHAT_ID);
+    }
+  }, [activeChatId, allChats, hubChats]);
 
   function createTemporaryChat(): void {
-    if (!canCreateTemporaryChat() || !newChatTitle.trim()) {
+    if (!canCreate) {
       return;
     }
 
-    const created: GlobalChatRoom = {
-      id: 'temp-' + Date.now(),
-      title: newChatTitle.trim(),
-      kind: 'temporary',
-      createdBy: selfMember.name,
-      creatorVerified: true,
-      activeMembers: 1,
+    const result = createMemberTemporaryGlobalChat({
+      title: newChatTitle,
       voiceEnabled: newChatVoice,
-      isOfficial: false,
-      closesOnExit: true,
-    };
+      creatorName: selfMember.name,
+    });
 
-    setExtraChats((current) => [created, ...current]);
-    setActiveChatId(created.id);
+    if (!result.ok) {
+      if (result.reason === 'cap_reached') {
+        setCreateStatus(memberTemporaryChatCapMessage(selfMember.name, memberTemporaryChats));
+      }
+
+      return;
+    }
+
+    setActiveChatId(result.chat.id);
+    setRoomFilter('mine');
     setNewChatTitle('');
     setNewChatVoice(false);
     setShowCreateForm(false);
+    setCreateStatus(null);
   }
 
   function closeTemporaryChat(chatId: string): void {
-    setExtraChats((current) => current.filter((chat) => chat.id !== chatId));
+    removeMemberTemporaryGlobalChat(chatId);
     removeGlobalChatMessages(chatId);
 
     if (activeChatId === chatId) {
@@ -458,7 +543,10 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
       return;
     }
 
-    setExtraChats((current) => current.filter((entry) => entry.id !== chat.id));
+    if (isUserOwnedTemporaryChat(chat, selfMember.name)) {
+      removeMemberTemporaryGlobalChat(chat.id);
+    }
+
     removeGlobalChatMessages(chat.id);
 
     if (activeChatId === chat.id) {
@@ -468,108 +556,173 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
 
   return (
     <article className="panel global-chats-unified-panel">
-      <div className="profile-panel-heading is-hub-panel-heading">
-        <h2>Global Chats</h2>
-        <p>Pick a room and chat in the same panel.</p>
-      </div>
-
-      <div className="global-chats-unified-layout">
-        <aside className="global-chats-list-sidebar">
-          <div className="global-chats-list">
-            {allChats.map((chat) => (
-              <div
-                className={
-                  'global-chat-list-row' + (chat.id === activeChatId ? ' is-active-global-chat' : '')
-                }
-                key={chat.id}
-                onClick={() => setActiveChatId(chat.id)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    setActiveChatId(chat.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="global-chat-list-row-copy">
-                  <strong>{chat.title}</strong>
-                  {globalChatListCreatorLine(chat) ? (
-                    <small>{globalChatListCreatorLine(chat)}</small>
-                  ) : null}
-                </div>
-                <span className="global-chat-list-row-count">
-                  {resolveGlobalChatLiveStats(chat).membersInside.toLocaleString()} inside
-                </span>
-                {chat.closesOnExit &&
-                chat.createdBy === selfMember.name &&
-                canManageTemporaryGlobalChats(selfMember) ? (
-                  <button
-                    className="global-chat-row-action global-chat-close-temp"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      closeTemporaryChat(chat.id);
-                    }}
-                    type="button"
-                  >
-                    End
-                  </button>
-                ) : null}
-                {isOwner && canOfficialOwnerModerateGlobalChat(chat, connectedOwner) ? (
-                  <button
-                    className="global-chat-row-action global-chat-owner-delete"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      ownerDeleteChat(chat);
-                    }}
-                    title="Official owner moderation — delete this chat"
-                    type="button"
-                  >
-                    Delete
-                  </button>
-                ) : null}
-              </div>
-            ))}
+      <div className="global-chats-hub-shell">
+        <header className="global-chats-hub-header">
+          <div className="global-chats-hub-heading">
+            <h2>Global Chats</h2>
+            <p>Official lounges, community rooms, and your Elite open lounges.</p>
           </div>
-
-          {canCreateTemporaryChat() ? (
-            <div className="global-chat-create-block">
-              {!showCreateForm ? (
-                <button className="secondary-action" onClick={() => setShowCreateForm(true)} type="button">
-                  Create temporary chat
-                </button>
-              ) : (
-                <div className="global-chat-create-form">
-                  <input
-                    aria-label="Temporary chat title"
-                    onChange={(event) => setNewChatTitle(event.target.value)}
-                    placeholder="Room name"
-                    value={newChatTitle}
-                  />
-                  <label className="global-chat-voice-toggle">
-                    <input
-                      checked={newChatVoice}
-                      onChange={(event) => setNewChatVoice(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Enable voice chat
-                  </label>
-                  <div className="global-chat-create-actions">
-                    <button className="primary-action" onClick={createTemporaryChat} type="button">
-                      Open room
-                    </button>
-                    <button className="secondary-action" onClick={() => setShowCreateForm(false)} type="button">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+          {canCreate ? (
+            <div className="global-chats-hub-quota">
+              <span className="mini-badge">Elite lounges</span>
+              <strong>{quotaLabel}</strong>
             </div>
           ) : null}
-        </aside>
+        </header>
+
+        <div className="global-chats-hub-toolbar">
+          <label className="global-chats-hub-search">
+            <span className="sr-only">Search global chat rooms</span>
+            <input
+              aria-label="Search global chat rooms"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search rooms"
+              type="search"
+              value={searchQuery}
+            />
+          </label>
+
+          <div className="global-chats-hub-filters" role="tablist" aria-label="Global chat filters">
+            {HUB_GLOBAL_CHAT_FILTERS.map((filter) => (
+              <button
+                aria-selected={roomFilter === filter.id}
+                className={
+                  'global-chats-hub-filter' + (roomFilter === filter.id ? ' is-active-hub-chat-filter' : '')
+                }
+                key={filter.id}
+                onClick={() => setRoomFilter(filter.id)}
+                role="tab"
+                type="button"
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="global-chats-hub-room-strip" role="tablist" aria-label="Global chat rooms">
+          {filteredChats.length === 0 ? (
+            <p className="global-chats-hub-empty">No rooms match this filter.</p>
+          ) : (
+            filteredChats.map((chat) => {
+              const sectionLabel = globalChatHubSectionLabel(chat, selfMember.name);
+              const liveStats = resolveGlobalChatLiveStats(chat);
+              const isOwned = isUserOwnedTemporaryChat(chat, selfMember.name);
+
+              return (
+                <div className="global-chats-hub-room-chip-wrap" key={chat.id}>
+                  <button
+                    aria-selected={chat.id === activeChat.id}
+                    className={
+                      'global-chats-hub-room-chip' + (chat.id === activeChat.id ? ' is-active-hub-room-chip' : '')
+                    }
+                    onClick={() => setActiveChatId(chat.id)}
+                    role="tab"
+                    type="button"
+                  >
+                    <span className="global-chats-hub-room-chip-kind">{sectionLabel}</span>
+                    <strong>{chat.title}</strong>
+                    <span>{liveStats.membersInside.toLocaleString()} inside</span>
+                    {globalChatListCreatorLine(chat) ? (
+                      <small>{globalChatListCreatorLine(chat)}</small>
+                    ) : null}
+                  </button>
+
+                  {isOwned && canManageTemporaryGlobalChats(selfMember) ? (
+                    <button
+                      className="global-chats-hub-room-chip-end"
+                      onClick={() => closeTemporaryChat(chat.id)}
+                      title="End your open lounge"
+                      type="button"
+                    >
+                      End
+                    </button>
+                  ) : null}
+
+                  {isOwner && canOfficialOwnerModerateGlobalChat(chat, connectedOwner) ? (
+                    <button
+                      className="global-chats-hub-room-chip-end is-owner-delete"
+                      onClick={() => ownerDeleteChat(chat)}
+                      title="Official owner moderation — delete this chat"
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {canCreate ? (
+          <div className="global-chats-hub-create-panel">
+            {!showCreateForm ? (
+              <button
+                className="nami-surface-button is-primary-surface-button"
+                disabled={!canOpenAnotherLounge}
+                onClick={() => {
+                  setCreateStatus(null);
+                  setShowCreateForm(true);
+                }}
+                title={
+                  canOpenAnotherLounge
+                    ? undefined
+                    : memberTemporaryChatCapMessage(selfMember.name, memberTemporaryChats)
+                }
+                type="button"
+              >
+                Open new lounge
+              </button>
+            ) : (
+              <div className="global-chats-hub-create-form panel">
+                <div className="global-chats-hub-create-copy">
+                  <h3>Open a temporary lounge</h3>
+                  <p>{quotaLabel}. Rooms close when you end them.</p>
+                </div>
+                <input
+                  aria-label="Temporary lounge name"
+                  onChange={(event) => setNewChatTitle(event.target.value)}
+                  placeholder="Lounge name"
+                  value={newChatTitle}
+                />
+                <label className="global-chat-voice-toggle">
+                  <input
+                    checked={newChatVoice}
+                    onChange={(event) => setNewChatVoice(event.target.checked)}
+                    type="checkbox"
+                  />
+                  Enable voice chat
+                </label>
+                {createStatus ? <p className="onboarding-field-error">{createStatus}</p> : null}
+                <div className="global-chats-hub-create-actions">
+                  <button className="primary-action" onClick={createTemporaryChat} type="button">
+                    Create lounge
+                  </button>
+                  <button
+                    className="secondary-action"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setCreateStatus(null);
+                    }}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {!showCreateForm && !canOpenAnotherLounge ? (
+              <p className="global-chats-hub-create-hint">
+                {memberTemporaryChatCapMessage(selfMember.name, memberTemporaryChats)}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <GlobalChatRoomView
           chat={activeChat}
+          hubLayout
           key={activeChat.id}
           onModerationDelete={() => ownerDeleteChat(activeChat)}
           onOpenMember={props.onOpenMember}
