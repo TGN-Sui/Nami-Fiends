@@ -73,6 +73,11 @@ import {
   handlePlatformOwnerAssetsSync,
 } from './routes/platform-owner-assets.routes.js';
 import {
+  handleChatOverlayRewardsGet,
+  handleChatOverlayRewardsOptions,
+  handleChatOverlayRewardsSync,
+} from './routes/chat-overlay-rewards.routes.js';
+import {
   handleGlobalChatMessagesGet,
   handleGlobalChatMessagesOptions,
   handleGlobalChatMessagesPost,
@@ -1277,6 +1282,24 @@ const routes: Route[] = [
     pattern: /^\/api\/platform\/owner-assets\/sync$/,
     paramNames: [],
     handler: (_registry, request, response) => handlePlatformOwnerAssetsSync(request, response),
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/platform\/chat-overlay-rewards$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChatOverlayRewardsOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/platform\/chat-overlay-rewards$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChatOverlayRewardsGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/platform\/chat-overlay-rewards\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleChatOverlayRewardsSync(request, response),
   },
   {
     method: 'OPTIONS',

@@ -311,3 +311,8 @@ export function resetOfficialChatOverlayRewardsForTests(): void {
     // Ignore restricted storage environments.
   }
 }
+
+export async function ensureChatOverlayRewardsHydrated(): Promise<void> {
+  const { hydrateChatOverlayRewardsFromServer } = await import('./chat-overlay-rewards-sync.js');
+  await hydrateChatOverlayRewardsFromServer();
+}

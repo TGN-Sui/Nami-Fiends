@@ -15,6 +15,9 @@ import {
 } from './chat-border-art-upload.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
 import {
+  chatOverlayRewardsSyncErrorMessage,
+} from './chat-overlay-rewards-sync.js';
+import {
   CHAT_OVERLAY_BORDER_STYLES,
   readOfficialChatOverlayRewards,
   removeOfficialChatOverlayReward,
@@ -25,6 +28,8 @@ import {
   type ChatOverlayUnlockCondition,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
+import { isChatOverlayRewardsApiAvailable } from './chat-overlay-rewards-api.js';
+import { syncChatOverlayRewardsToServer } from './chat-overlay-rewards-sync.js';
 import { overlayRewardClassName } from './chat-overlay-rewards.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { useProtocolOwner } from './wallet.js';
@@ -71,6 +76,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
   const [draft, setDraft] = useState<OfficialChatOverlayReward | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const activeDraft = useMemo(() => {
     if (draft) {
@@ -151,15 +157,43 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     setUploadError(null);
   }
 
-  function handleSave(): void {
-    if (!activeDraft) {
+  async function syncCatalogToServer(
+    nextRewards: OfficialChatOverlayReward[],
+    successMessage: string
+  ): Promise<void> {
+    if (!isChatOverlayRewardsApiAvailable()) {
+      setNotice(successMessage + ' Saved locally on this browser.');
       return;
     }
 
-    const saved = upsertOfficialChatOverlayReward(activeDraft);
-    setSelectedId(saved.id);
-    setDraft({ ...saved });
-    setNotice('Saved "' + saved.name + '" to the border art reward catalog.');
+    const result = await syncChatOverlayRewardsToServer(nextRewards, owner);
+
+    if (!result.ok) {
+      setNotice(chatOverlayRewardsSyncErrorMessage(result.error));
+      return;
+    }
+
+    setNotice(successMessage + ' Synced to the receiving server.');
+  }
+
+  async function handleSave(): Promise<void> {
+    if (!activeDraft || isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const saved = upsertOfficialChatOverlayReward(activeDraft);
+      setSelectedId(saved.id);
+      setDraft({ ...saved });
+      await syncCatalogToServer(
+        readOfficialChatOverlayRewards(),
+        'Saved "' + saved.name + '" to the border art reward catalog.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handleCreate(): void {
@@ -169,18 +203,24 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     setNotice('Draft border reward ready — upload art and save to publish.');
   }
 
-  function handleRemove(): void {
-    if (!activeDraft) {
+  async function handleRemove(): Promise<void> {
+    if (!activeDraft || isSaving) {
       return;
     }
 
-    removeOfficialChatOverlayReward(activeDraft.id);
-    const remaining = readOfficialChatOverlayRewards();
-    const next = remaining[0] ?? null;
+    setIsSaving(true);
 
-    setSelectedId(next?.id ?? '');
-    setDraft(next ? { ...next } : null);
-    setNotice('Removed border reward from the catalog.');
+    try {
+      removeOfficialChatOverlayReward(activeDraft.id);
+      const remaining = readOfficialChatOverlayRewards();
+      const next = remaining[0] ?? null;
+
+      setSelectedId(next?.id ?? '');
+      setDraft(next ? { ...next } : null);
+      await syncCatalogToServer(remaining, 'Removed border reward from the catalog.');
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const previewPresentation = activeDraft
@@ -479,10 +519,20 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
             </div>
 
             <div className="officials-reward-studio-actions">
-              <button className="nami-surface-button is-primary-surface-button" onClick={handleSave} type="button">
-                Save reward
+              <button
+                className="nami-surface-button is-primary-surface-button"
+                disabled={isSaving}
+                onClick={() => void handleSave()}
+                type="button"
+              >
+                {isSaving ? 'Saving…' : 'Save reward'}
               </button>
-              <button className="nami-surface-button" onClick={handleRemove} type="button">
+              <button
+                className="nami-surface-button"
+                disabled={isSaving}
+                onClick={() => void handleRemove()}
+                type="button"
+              >
                 Remove
               </button>
             </div>

@@ -13,6 +13,7 @@ const MAX_CHANNEL_COVER_BYTES = 4 * 1024 * 1024;
 const MAX_STUDIO_LOGO_BYTES = 2 * 1024 * 1024;
 const MAX_PLATFORM_OWNER_ASSET_BYTES = 2 * 1024 * 1024;
 const MAX_PLATFORM_OWNER_SCENE_BYTES = 48 * 1024 * 1024;
+const MAX_BORDER_ART_BYTES = 2 * 1024 * 1024;
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
@@ -41,6 +42,10 @@ function safeStudioId(studioId: string): string {
 
 function safePlatformAssetSlotId(slotId: string): string {
   return slotId.replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
+function safeBorderRewardId(rewardId: string): string {
+  return rewardId.replace(/[^a-zA-Z0-9._-]/g, '');
 }
 
 export function buildMediaPublicUrl(owner: string, filename: string): string {
@@ -211,6 +216,55 @@ export async function savePlatformOwnerAssetUpload(
 
   const filename =
     'platform-asset-' + safePlatformAssetSlotId(input.slotId) + '-' + randomUUID() + extension;
+  const filePath = join(dir, filename);
+
+  await writeFile(filePath, buffer);
+
+  return {
+    filename,
+    url: buildMediaPublicUrl(owner, filename),
+  };
+}
+
+export type BorderArtUploadInput = {
+  owner: string;
+  rewardId: string;
+  artKind: 'static' | 'animated';
+  contentType: string;
+  dataBase64: string;
+};
+
+export async function saveBorderArtUpload(
+  input: BorderArtUploadInput
+): Promise<{ url: string; filename: string }> {
+  if (!input.owner.startsWith('0x') || !input.rewardId.trim()) {
+    throw new Error('invalid_payload');
+  }
+
+  const extension = MIME_EXTENSIONS[input.contentType];
+
+  if (!extension) {
+    throw new Error('unsupported_content_type');
+  }
+
+  const buffer = Buffer.from(input.dataBase64, 'base64');
+
+  if (buffer.byteLength === 0 || buffer.byteLength > MAX_BORDER_ART_BYTES) {
+    throw new Error('invalid_file_size');
+  }
+
+  const owner = normalizeOwner(input.owner);
+  const dir = ownerUploadDir(owner);
+  await mkdir(dir, { recursive: true });
+
+  const filename =
+    'border-art-' +
+    safeBorderRewardId(input.rewardId) +
+    '-' +
+    input.artKind +
+    '-' +
+    randomUUID() +
+    extension;
   const filePath = join(dir, filename);
 
   await writeFile(filePath, buffer);
