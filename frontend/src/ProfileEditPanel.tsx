@@ -19,6 +19,7 @@ import {
 } from './member-display-name-store.js';
 import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
+import { useSelfEquippedChatOverlayId } from './member-cosmetic-equips-store.js';
 import {
   profileGenreOptions,
   profilePlatformOptions,
@@ -36,6 +37,7 @@ export function ProfileEditPanel(): ReactElement {
   const member = useSelfMember();
   const canEditCosmetics = canEditProfileCosmetics(member);
   const savedProfile = useSelfProfileEdits();
+  const equippedChatOverlayId = useSelfEquippedChatOverlayId();
   const collectedBadges = collectedBadgesForMember(member);
   const collectedTitles = collectedTitlesForMember(member);
   const collectedCosmetics = collectedCosmeticsForMember(member);
@@ -88,7 +90,6 @@ export function ProfileEditPanel(): ReactElement {
     }
 
     saveSelfProfileEdits(draft);
-    saveEquippedChatOverlay(draft.chatOverlayDisplay, draft);
     setDisplayNameError(null);
     setSavedNotice(true);
   }
@@ -277,8 +278,10 @@ export function ProfileEditPanel(): ReactElement {
               </p>
               <ChatOverlayEquipPicker
                 member={member}
-                onSelect={(overlayId) => updateDraft({ chatOverlayDisplay: overlayId })}
-                selectedOverlayId={draft.chatOverlayDisplay}
+                onSelect={(overlayId) => {
+                  saveEquippedChatOverlay(overlayId);
+                }}
+                selectedOverlayId={equippedChatOverlayId}
               />
             </fieldset>
           </>

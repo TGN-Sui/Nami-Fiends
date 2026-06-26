@@ -27,7 +27,7 @@ import { getChannelChatMessages, getChannelChatPresenceMembers } from './channel
 import { useMemberChatTimeTracker, useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { readMemberPreference, useMemberPreferencesVersion } from './member-preference-store.js';
 import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
-import { useSelfProfileEdits } from './member-profile-store.js';
+import { useSelfEquippedChatOverlayId } from './member-cosmetic-equips-store.js';
 import { appendChannelChatMessage } from './messages-store.js';
 import {
   useChatAutoScroll,
@@ -101,7 +101,7 @@ export function ChannelProfileChatSection(props: {
   const preferencesVersion = useMemberPreferencesVersion();
   const selfChatMember = getSelfMember();
   const canEquipOverlays = canEditProfileCosmetics(selfChatMember);
-  const selfProfileEdits = useSelfProfileEdits();
+  const equippedChatOverlayId = useSelfEquippedChatOverlayId();
   const channelChatTimeTarget = useMemo(
     () => channelChatPresenceTarget(props.channel.id, props.channel.name),
     [props.channel.id, props.channel.name],
@@ -517,9 +517,9 @@ export function ChannelProfileChatSection(props: {
                     <ChatOverlayEquipPicker
                       member={selfChatMember}
                       onSelect={(overlayId) => {
-                        saveEquippedChatOverlay(overlayId, selfProfileEdits);
+                        saveEquippedChatOverlay(overlayId);
                       }}
-                      selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+                      selectedOverlayId={equippedChatOverlayId}
                     />
                   ) : (
                     <div className="customization-note">

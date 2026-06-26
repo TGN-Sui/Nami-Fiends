@@ -128,7 +128,7 @@ describe('chat-overlay-rewards', () => {
       },
     ];
 
-    window.localStorage.setItem('nami.self.profile', JSON.stringify({ chatOverlayDisplay: 'overlay-equipped' }));
+    setLocalEquippedChatOverlay('m1', 'overlay-equipped');
 
     const resolved = resolveChatOverlayForMember(verifiedPro, customCatalog);
 

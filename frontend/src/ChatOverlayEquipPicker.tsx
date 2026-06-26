@@ -1,11 +1,57 @@
 import type { ReactElement } from 'react';
 
+import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
+import { buildChatBorderPresentation } from './chat-border-rendering.js';
 import {
+  overlayRewardClassName,
   unlockedChatOverlayRewardsForMember,
   type ResolvedChatOverlay,
 } from './chat-overlay-rewards.js';
-import { useOfficialChatOverlayRewards } from './official-chat-overlay-rewards-store.js';
+import {
+  useOfficialChatOverlayRewards,
+  type OfficialChatOverlayReward,
+} from './official-chat-overlay-rewards-store.js';
 import type { NamiMember } from './uiMockData.js';
+
+function ChatOverlayEquipPreview(props: {
+  reward?: OfficialChatOverlayReward;
+}): ReactElement {
+  if (!props.reward) {
+    return (
+      <div className="chat-overlay-equip-preview-bubble message-bubble">
+        <span className="chat-overlay-equip-preview-copy">Hi</span>
+      </div>
+    );
+  }
+
+  const presentation = buildChatBorderPresentation(
+    props.reward,
+    overlayRewardClassName(props.reward)
+  );
+
+  if (presentation.hasCustomArt && presentation.renderMode === 'nine-slice-animated') {
+    return (
+      <ChatBorderArtFrame
+        className={'chat-overlay-equip-preview-bubble message-bubble ' + presentation.className}
+        presentation={presentation}
+      >
+        <span className="chat-overlay-equip-preview-copy">Hi</span>
+      </ChatBorderArtFrame>
+    );
+  }
+
+  return (
+    <div
+      className={
+        'chat-overlay-equip-preview-bubble message-bubble ' +
+        (presentation.hasCustomArt ? presentation.className : overlayRewardClassName(props.reward))
+      }
+      style={presentation.hasCustomArt ? presentation.style : undefined}
+    >
+      <span className="chat-overlay-equip-preview-copy">Hi</span>
+    </div>
+  );
+}
 
 export function ChatOverlayEquipPicker(props: {
   member: NamiMember;
@@ -34,7 +80,9 @@ export function ChatOverlayEquipPicker(props: {
         onClick={() => props.onSelect('')}
         type="button"
       >
-        Default bubble
+        <ChatOverlayEquipPreview />
+        <span className="chat-overlay-equip-option-label">Default bubble</span>
+        <small>Plain chat bubble</small>
       </button>
       {unlocked.map((reward) => (
         <button
@@ -47,6 +95,7 @@ export function ChatOverlayEquipPicker(props: {
           onClick={() => props.onSelect(reward.id)}
           type="button"
         >
+          <ChatOverlayEquipPreview reward={reward} />
           <span className="chat-overlay-equip-option-label">{reward.name}</span>
           <small>
             {reward.borderStyle.replace('-', ' ')} ·{' '}

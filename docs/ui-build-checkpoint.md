@@ -253,6 +253,7 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-9 | Complete | Equip validation — client unlock gate, Black signal block, server catalog checks. |
 | BA-10 | Complete | App-wide catalog sync — polling, cross-tab, focus refresh (`useChatOverlayCatalogAppSync`). |
 | BA-11 | Complete | Owner catalog save retry queue + error toasts (mirror equip sync). |
+| BA-12 | Complete | Equip picker border previews + equips store as single source of truth. |
 
 ## Phase 8 — Launch Ops (UI-C27)
 

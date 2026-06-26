@@ -60,6 +60,18 @@ describe('member-cosmetic-equips-store', () => {
     expect(readEquippedChatOverlayIdForMember('m9')).toBe('');
   });
 
+  it('migrates legacy profile chat overlay equips into the equip cache', () => {
+    const localStorage = window.localStorage as Storage;
+
+    localStorage.setItem(
+      'nami.self.profile',
+      JSON.stringify({ chatOverlayDisplay: 'overlay-wave-frame' })
+    );
+
+    expect(readEquippedChatOverlayIdForMember('m1')).toBe('overlay-wave-frame');
+    expect(localStorage.getItem(MEMBER_COSMETIC_EQUIPS_STORAGE_KEY)).toContain('overlay-wave-frame');
+  });
+
   it('re-reads equips from localStorage after cache invalidation', () => {
     const localStorage = window.localStorage as Storage;
 

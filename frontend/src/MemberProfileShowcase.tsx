@@ -12,6 +12,7 @@ import { useMemberChatTimeVersion } from './member-chat-time-store.js';
 import { buildMemberProfileShowcase, channelForShowcase } from './member-profile-showcase.js';
 import { percentForNamiSeasonLevel } from './member-progression.js';
 import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
+import { useSelfEquippedChatOverlayId } from './member-cosmetic-equips-store.js';
 import { useSelfProfileEdits } from './member-profile-store.js';
 import { badgeGlyph } from './nami-badge-glyphs.js';
 import { resolveChannelCoverUrl } from './channel-cover-store.js';
@@ -77,6 +78,7 @@ export function MemberProfileShowcase(props: {
   safetyPanel?: ReactNode;
 }): ReactElement {
   const selfProfileEdits = useSelfProfileEdits();
+  const equippedChatOverlayId = useSelfEquippedChatOverlayId();
   const chatTimeVersion = useMemberChatTimeVersion();
   useSquadRosterStore();
   const [activeTab, setActiveTab] = useState<ShowcaseTab>('overview');
@@ -267,9 +269,9 @@ export function MemberProfileShowcase(props: {
                 <ChatOverlayEquipPicker
                   member={props.member}
                   onSelect={(overlayId) => {
-                    saveEquippedChatOverlay(overlayId, selfProfileEdits);
+                    saveEquippedChatOverlay(overlayId);
                   }}
-                  selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+                  selectedOverlayId={equippedChatOverlayId}
                 />
               </section>
             ) : null}

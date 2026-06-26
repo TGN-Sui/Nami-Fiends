@@ -5,11 +5,6 @@ import {
   readMemberCosmeticEquipSyncOwner,
   setLocalEquippedChatOverlay,
 } from './member-cosmetic-equips-store.js';
-import {
-  readSelfProfileEdits,
-  saveSelfProfileEdits,
-  type SelfProfileEdits,
-} from './member-profile-store.js';
 import { pushNamiToast } from './nami-toast-store.js';
 import { readOfficialChatOverlayRewards } from './official-chat-overlay-rewards-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
@@ -75,7 +70,7 @@ export function validateEquippedChatOverlay(
 }
 
 /** Persist self chat overlay equip locally and queue off-chain server sync. */
-export function saveEquippedChatOverlay(overlayId: string, profileEdits?: SelfProfileEdits): boolean {
+export function saveEquippedChatOverlay(overlayId: string): boolean {
   const validation = validateEquippedChatOverlay(overlayId);
 
   if (!validation.ok) {
@@ -84,12 +79,7 @@ export function saveEquippedChatOverlay(overlayId: string, profileEdits?: SelfPr
   }
 
   const trimmed = overlayId.trim();
-  const edits = profileEdits ?? readSelfProfileEdits();
 
-  saveSelfProfileEdits({
-    ...edits,
-    chatOverlayDisplay: trimmed,
-  });
   setLocalEquippedChatOverlay(SELF_MEMBER_ID, trimmed);
   enqueueEquippedChatOverlaySync(SELF_MEMBER_ID, trimmed, resolveEquipSyncOwner());
   return true;

@@ -32,7 +32,7 @@ import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatus
 import { isGameChannelOwner, readOwnedGameChannelId } from './channel-owner-access.js';
 import { getSelfMember } from './member-access.js';
 import { saveEquippedChatOverlay } from './member-cosmetic-equip.js';
-import { useSelfProfileEdits } from './member-profile-store.js';
+import { useSelfEquippedChatOverlayId } from './member-cosmetic-equips-store.js';
 import { useProtocolOwner } from './wallet.js';
 import {
   canConfigureEmbeddedFeedSurface,
@@ -254,7 +254,7 @@ export function SettingsScreen(props: {
   const [settingsChannelBrandPalette, setSettingsChannelBrandPalette] = useState<string[]>(() => {
     return readChannelBrandPalette();
   });
-  const selfProfileEdits = useSelfProfileEdits();
+  const equippedChatOverlayId = useSelfEquippedChatOverlayId();
   function updateSettingsChannelBrandColor(index: number, color: string): void {
     const nextPalette = settingsChannelBrandPalette
       .map((currentColor, currentIndex) => (currentIndex === index ? color : currentColor))
@@ -486,9 +486,9 @@ export function SettingsScreen(props: {
               <ChatOverlayEquipPicker
                 member={getSelfMember()}
                 onSelect={(overlayId) => {
-                  saveEquippedChatOverlay(overlayId, selfProfileEdits);
+                  saveEquippedChatOverlay(overlayId);
                 }}
-                selectedOverlayId={selfProfileEdits.chatOverlayDisplay}
+                selectedOverlayId={equippedChatOverlayId}
               />
             </article>
             {showChannelBrandPalette ? (

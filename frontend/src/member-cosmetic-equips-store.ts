@@ -8,9 +8,9 @@ import {
   syncMemberCosmeticEquipToBackend,
 } from './member-cosmetic-equips-api.js';
 import { SELF_MEMBER_ID } from './member-access.js';
-import { readSelfProfileEdits } from './member-profile-store.js';
 
 export const MEMBER_COSMETIC_EQUIPS_STORAGE_KEY = 'nami.member.cosmetic-equips';
+const LEGACY_PROFILE_STORAGE_KEY = 'nami.self.profile';
 
 export type MemberCosmeticEquipSyncResult =
   | { ok: true }
@@ -27,6 +27,45 @@ function mapEquipSyncError(error: unknown): MemberCosmeticEquipSyncError {
 let cachedEquips: Record<string, string> | null = null;
 let cachedUpdatedAtMs = 0;
 let equipSyncOwner: string | null = null;
+let legacySelfEquipMigrated = false;
+
+function readLegacyProfileChatOverlayId(): string {
+  try {
+    const stored = window.localStorage.getItem(LEGACY_PROFILE_STORAGE_KEY);
+
+    if (!stored) {
+      return '';
+    }
+
+    const parsed = JSON.parse(stored) as { chatOverlayDisplay?: unknown };
+
+    return typeof parsed.chatOverlayDisplay === 'string' ? parsed.chatOverlayDisplay.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+function ensureLegacySelfEquipMigrated(equips: Record<string, string>): Record<string, string> {
+  if (legacySelfEquipMigrated || equips[SELF_MEMBER_ID]?.trim()) {
+    legacySelfEquipMigrated = true;
+    return equips;
+  }
+
+  const legacyOverlayId = readLegacyProfileChatOverlayId();
+  legacySelfEquipMigrated = true;
+
+  if (!legacyOverlayId) {
+    return equips;
+  }
+
+  const next = {
+    ...equips,
+    [SELF_MEMBER_ID]: legacyOverlayId,
+  };
+
+  writeLocalEquips(next, cachedUpdatedAtMs || Date.now());
+  return next;
+}
 
 function dispatchChange(): void {
   cachedEquips = null;
@@ -50,7 +89,7 @@ function readLocalEquips(): Record<string, string> {
     const stored = window.localStorage.getItem(MEMBER_COSMETIC_EQUIPS_STORAGE_KEY);
 
     if (!stored) {
-      cachedEquips = {};
+      cachedEquips = ensureLegacySelfEquipMigrated({});
       return cachedEquips;
     }
 
@@ -74,9 +113,10 @@ function readLocalEquips(): Record<string, string> {
           )
         : {};
 
+    cachedEquips = ensureLegacySelfEquipMigrated(cachedEquips);
     return cachedEquips;
   } catch {
-    cachedEquips = {};
+    cachedEquips = ensureLegacySelfEquipMigrated({});
     return cachedEquips;
   }
 }
@@ -114,17 +154,11 @@ export function readEquippedChatOverlayIdForMember(memberId: string): string {
   }
 
   const equips = readLocalEquips();
-  const equipped = equips[trimmedMemberId]?.trim() ?? '';
+  return equips[trimmedMemberId]?.trim() ?? '';
+}
 
-  if (equipped) {
-    return equipped;
-  }
-
-  if (trimmedMemberId === SELF_MEMBER_ID) {
-    return readSelfProfileEdits().chatOverlayDisplay.trim();
-  }
-
-  return '';
+export function readEquippedChatOverlayIdForSelf(): string {
+  return readEquippedChatOverlayIdForMember(SELF_MEMBER_ID);
 }
 
 export function setLocalEquippedChatOverlay(memberId: string, overlayId: string): void {
@@ -204,12 +238,10 @@ function subscribe(listener: () => void): () => void {
   }
 
   window.addEventListener('nami-member-cosmetic-equips-changed', onChange);
-  window.addEventListener('nami-self-profile-changed', onChange);
   window.addEventListener('storage', onChange);
 
   return () => {
     window.removeEventListener('nami-member-cosmetic-equips-changed', onChange);
-    window.removeEventListener('nami-self-profile-changed', onChange);
     window.removeEventListener('storage', onChange);
   };
 }
@@ -218,10 +250,21 @@ export function useMemberCosmeticEquips(): Record<string, string> {
   return useSyncExternalStore(subscribe, readLocalEquips, readLocalEquips);
 }
 
+export function useEquippedChatOverlayIdForMember(memberId: string): string {
+  const equips = useMemberCosmeticEquips();
+
+  return equips[memberId]?.trim() ?? '';
+}
+
+export function useSelfEquippedChatOverlayId(): string {
+  return useEquippedChatOverlayIdForMember(SELF_MEMBER_ID);
+}
+
 export function resetMemberCosmeticEquipsForTests(): void {
   cachedEquips = null;
   cachedUpdatedAtMs = 0;
   equipSyncOwner = null;
+  legacySelfEquipMigrated = false;
 
   try {
     window.localStorage.removeItem(MEMBER_COSMETIC_EQUIPS_STORAGE_KEY);

@@ -28,7 +28,6 @@ export type SelfProfileEdits = {
   frameDisplay: string;
   themeDisplay: string;
   ringDisplay: string;
-  chatOverlayDisplay: string;
   preferredPlatforms: string[];
   preferredGenres: string[];
 };
@@ -42,7 +41,6 @@ const defaultProfileEdits = (): SelfProfileEdits => ({
   frameDisplay: '',
   themeDisplay: '',
   ringDisplay: '',
-  chatOverlayDisplay: '',
   preferredPlatforms: [],
   preferredGenres: [],
 });
@@ -66,12 +64,6 @@ export function readSelfProfileEdits(): SelfProfileEdits {
       frameDisplay: typeof parsed.frameDisplay === 'string' ? parsed.frameDisplay : '',
       themeDisplay: typeof parsed.themeDisplay === 'string' ? parsed.themeDisplay : '',
       ringDisplay: typeof parsed.ringDisplay === 'string' ? parsed.ringDisplay : '',
-      chatOverlayDisplay:
-        typeof parsed.chatOverlayDisplay === 'string'
-          ? parsed.chatOverlayDisplay
-          : typeof (parsed as { chatBorderDisplay?: string }).chatBorderDisplay === 'string'
-            ? ''
-            : '',
       preferredPlatforms: Array.isArray(parsed.preferredPlatforms)
         ? parsed.preferredPlatforms.filter((entry): entry is string => typeof entry === 'string')
         : [],
@@ -94,18 +86,20 @@ function withoutCosmeticEdits(edits: SelfProfileEdits): SelfProfileEdits {
     frameDisplay: '',
     themeDisplay: '',
     ringDisplay: '',
-    chatOverlayDisplay: '',
   };
 }
 
 export function saveSelfProfileEdits(edits: SelfProfileEdits): void {
   const payload = canEditProfileCosmetics() ? edits : withoutCosmeticEdits(edits);
+  const { chatOverlayDisplay: _legacyOverlay, ...persisted } = payload as SelfProfileEdits & {
+    chatOverlayDisplay?: string;
+  };
 
   window.localStorage.setItem(
     PROFILE_STORAGE_KEY,
     JSON.stringify({
-      ...payload,
-      preferredGenres: normalizePreferredGenres(payload.preferredGenres),
+      ...persisted,
+      preferredGenres: normalizePreferredGenres(persisted.preferredGenres),
     })
   );
   cachedProfileEdits = null;

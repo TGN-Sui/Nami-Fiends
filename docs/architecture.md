@@ -824,7 +824,7 @@ Member earns unlock when condition matches:
 Member equips overlay:
   Profile edit, Settings, or Channel chat → Chat Style rail
     → saveEquippedChatOverlay() validates unlock client-side
-    → chatOverlayDisplay + member-cosmetic-equips local cache
+    → member-cosmetic-equips local cache (single source of truth)
     → wallet-signed POST /api/member-cosmetics/equips/sync
     → member-cosmetic-equips projection (live cross-tab sync)
 
