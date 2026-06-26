@@ -321,10 +321,15 @@ Instead, Move objects may store references to Walrus-stored content.
 Examples:
 
 * blob_id
+* quilt_patch_id (Quilt collections — see BA-14 border art design)
 * content_hash
 * metadata_uri
 * media_type
 * uploaded_at_ms
+
+**Storage priority:** User-facing media (border art, avatars, badges) should be stored on **Walrus** (Quilt for batched small files) and read via the **aggregator**, not served from web2 disk long-term. The receiving server holds coordination projections only.
+
+Border Art Walrus Quilt plan: [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md).
 
 This allows Nami to keep on-chain state small while supporting rich user experiences.
 

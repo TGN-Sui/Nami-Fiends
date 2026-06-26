@@ -865,8 +865,12 @@ Frontend
   ChatOverlayEquipPicker.tsx            — member equip UI
 
 Backend (test launch)
-  chat-overlay-rewards.service.ts       — catalog projection + CDN uploads
+  chat-overlay-rewards.service.ts       — catalog projection + media resolve (Render today)
   member-cosmetic-equips.service.ts     — equip projection + catalog validation
+
+Planned (BA-14 — Walrus Quilt)
+  walrus-quilt-publisher.service.ts     — batch border art to Quilt; aggregator read URLs
+  See docs/border-art-ba14-walrus-quilt.md
 ```
 
 ## Scaling rules
