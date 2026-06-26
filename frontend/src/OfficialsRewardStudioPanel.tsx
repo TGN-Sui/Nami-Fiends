@@ -29,9 +29,10 @@ import {
 } from './official-chat-overlay-rewards-store.js';
 import { isChatOverlayRewardsApiAvailable } from './chat-overlay-rewards-api.js';
 
+import { grantRosterMembers } from './official-grant-roster.js';
+import { useMemberDirectory } from './member-directory-provider.js';
 import { overlayRewardClassName } from './chat-overlay-rewards.js';
 import { isOfficialOwner } from './nami-capabilities.js';
-import { members } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 function createDraftReward(): OfficialChatOverlayReward {
@@ -69,6 +70,7 @@ function updateSliceInset(
 
 export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): ReactElement | null {
   const { owner } = useProtocolOwner();
+  const { members: rosterMembers, usesFixtures } = useMemberDirectory();
   const rewards = useOfficialChatOverlayRewards();
   const staticInputRef = useRef<HTMLInputElement | null>(null);
   const animatedInputRef = useRef<HTMLInputElement | null>(null);
@@ -85,6 +87,14 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
 
     return rewards.find((reward) => reward.id === selectedId) ?? rewards[0] ?? null;
   }, [draft, rewards, selectedId]);
+
+  const officialGrantMemberIds =
+    activeDraft?.condition.type === 'official-grant' ? activeDraft.condition.memberIds : [];
+
+  const grantPickerRoster = useMemo(
+    () => grantRosterMembers(rosterMembers, officialGrantMemberIds),
+    [rosterMembers, officialGrantMemberIds]
+  );
 
   if (!isOfficialOwner(owner)) {
     return null;
@@ -392,37 +402,54 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
                   <p className="profile-edit-field-hint">
                     Select roster members who can unlock this border without tier or verification checks.
                   </p>
-                  <div className="profile-edit-chip-row">
-                    {members.map((member) => {
-                      const selected = activeDraft.condition.type === 'official-grant'
-                        && activeDraft.condition.memberIds.includes(member.id);
+                  {usesFixtures ? (
+                    <p className="protocol-hint">
+                      Showing fixture roster until live member directory indexing ships on this deploy.
+                    </p>
+                  ) : (
+                    <p className="protocol-hint">
+                      Roster includes registered discovery members on this device and testnet session.
+                    </p>
+                  )}
+                  {grantPickerRoster.length === 0 ? (
+                    <p className="protocol-hint">
+                      No roster members available yet. Members appear after discovery registration.
+                    </p>
+                  ) : (
+                    <div className="profile-edit-chip-row">
+                      {grantPickerRoster.map((member) => {
+                          const selected = officialGrantMemberIds.includes(member.id);
 
-                      return (
-                        <button
-                          aria-pressed={selected}
-                          className={
-                            'nami-surface-button profile-edit-chip-button' +
-                            (selected ? ' is-active-view' : '')
-                          }
-                          key={member.id}
-                          onClick={() => {
-                            if (activeDraft.condition.type !== 'official-grant') {
-                              return;
-                            }
+                          return (
+                            <button
+                              aria-pressed={selected}
+                              className={
+                                'nami-surface-button profile-edit-chip-button' +
+                                (selected ? ' is-active-view' : '')
+                              }
+                              key={member.id}
+                              onClick={() => {
+                                if (activeDraft.condition.type !== 'official-grant') {
+                                  return;
+                                }
 
-                            const memberIds = selected
-                              ? activeDraft.condition.memberIds.filter((entry) => entry !== member.id)
-                              : [...activeDraft.condition.memberIds, member.id];
+                                const memberIds = selected
+                                  ? activeDraft.condition.memberIds.filter(
+                                      (entry) => entry !== member.id
+                                    )
+                                  : [...activeDraft.condition.memberIds, member.id];
 
-                            updateCondition({ type: 'official-grant', memberIds });
-                          }}
-                          type="button"
-                        >
-                          {member.name}
-                        </button>
-                      );
-                    })}
-                  </div>
+                                updateCondition({ type: 'official-grant', memberIds });
+                              }}
+                              type="button"
+                            >
+                              {member.name}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
                 </fieldset>
               ) : null}
             </fieldset>

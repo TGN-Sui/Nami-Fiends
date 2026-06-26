@@ -254,6 +254,7 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-10 | Complete | App-wide catalog sync — polling, cross-tab, focus refresh (`useChatOverlayCatalogAppSync`). |
 | BA-11 | Complete | Owner catalog save retry queue + error toasts (mirror equip sync). |
 | BA-12 | Complete | Equip picker border previews + equips store as single source of truth. |
+| BA-13 | Complete | Official grant picker uses member directory roster (fixture fallback preserved). |
 
 ## Phase 8 — Launch Ops (UI-C27)
 

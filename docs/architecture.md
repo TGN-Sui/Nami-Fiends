@@ -860,7 +860,8 @@ Frontend
   member-cosmetic-equip-retry-queue.ts  — optimistic sync + error toasts
   chat-border-rendering.ts              — border-image presentation builder
   ChatMessageBubble.tsx                 — chat surface wrapper (all chat UIs)
-  OfficialsRewardStudioPanel.tsx        — owner Border Art studio
+  OfficialsRewardStudioPanel.tsx        — owner Border Art studio + live grant roster
+  official-grant-roster.ts              — grant picker roster merge helpers
   ChatOverlayEquipPicker.tsx            — member equip UI
 
 Backend (test launch)
