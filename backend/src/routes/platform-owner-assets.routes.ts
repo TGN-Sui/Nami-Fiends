@@ -6,9 +6,7 @@ import {
   syncPlatformOwnerAssets,
 } from '../services/platform-owner-assets.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -64,8 +62,6 @@ export async function handlePlatformOwnerAssetsSync(
   try {
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
       return;
@@ -76,7 +72,7 @@ export async function handlePlatformOwnerAssetsSync(
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const assets =
       typeof body.assets === 'object' && body.assets !== null

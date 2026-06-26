@@ -24,7 +24,13 @@ export type WalletAuthPayload = {
   timestampMs: number;
   signature: string;
   /** Ephemeral zkLogin signer address when the signature is not from the owner key. */
-  signerAddress?: string;
+  signerAddress?: string | undefined;
+};
+
+export type WalletAuthInput = {
+  signature?: string | undefined;
+  timestampMs?: number | undefined;
+  signerAddress?: string | undefined;
 };
 
 async function verifySignatureForAddress(
@@ -84,7 +90,7 @@ export async function verifyWalletAuthPayload(payload: WalletAuthPayload): Promi
   return false;
 }
 
-export function readWalletAuthFromBody(body: Record<string, unknown>): Partial<WalletAuthPayload> {
+export function readWalletAuthFromBody(body: Record<string, unknown>): WalletAuthInput {
   const auth = body.auth;
 
   if (typeof auth !== 'object' || auth === null) {
@@ -92,7 +98,7 @@ export function readWalletAuthFromBody(body: Record<string, unknown>): Partial<W
   }
 
   const record = auth as Record<string, unknown>;
-  const patch: Partial<WalletAuthPayload> = {};
+  const patch: WalletAuthInput = {};
 
   if (typeof record.signature === 'string') {
     patch.signature = record.signature;
@@ -109,10 +115,7 @@ export function readWalletAuthFromBody(body: Record<string, unknown>): Partial<W
   return patch;
 }
 
-export async function assertWalletAuth(
-  owner: string,
-  auth: Partial<WalletAuthPayload> | null | undefined
-): Promise<void> {
+export async function assertWalletAuth(owner: string, auth: WalletAuthInput | null | undefined): Promise<void> {
   if (!walletAuthConfig.requireSignature) {
     return;
   }
@@ -140,6 +143,13 @@ export async function assertWalletAuth(
   if (!verified) {
     throw new Error('wallet_auth_invalid');
   }
+}
+
+export async function assertWalletAuthFromBody(
+  owner: string,
+  body: Record<string, unknown>
+): Promise<void> {
+  await assertWalletAuth(owner, readWalletAuthFromBody(body));
 }
 
 export function walletAuthPublicConfig(): { requireSignature: boolean } {

@@ -6,9 +6,7 @@ import {
   type TutorialStatus,
 } from '../services/member-preferences.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -76,9 +74,7 @@ export async function handleMemberPreferencesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const patch: Parameters<typeof upsertMemberPreferences>[0] = { owner };
 

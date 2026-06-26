@@ -5,9 +5,7 @@ import {
   upsertStudioPreferences,
 } from '../services/studio-preferences.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -64,14 +62,12 @@ export async function handleStudioPreferencesUpsert(
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const studioId = typeof body.studioId === 'string' ? body.studioId : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x') || !studioId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const patch: Parameters<typeof upsertStudioPreferences>[0] = {
       studioId,

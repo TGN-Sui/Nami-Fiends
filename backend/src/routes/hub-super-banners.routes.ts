@@ -5,9 +5,7 @@ import {
   publishHubSuperBanner,
 } from '../services/hub-super-banners.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -62,9 +60,7 @@ export async function handleHubSuperBannersPublishPost(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const campaign = await publishHubSuperBanner({
       channelId: typeof body.channelId === 'string' ? body.channelId : '',

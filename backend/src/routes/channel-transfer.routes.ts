@@ -8,9 +8,7 @@ import {
   type ChannelTransferTargetKind,
 } from '../services/channel-transfers.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -90,9 +88,7 @@ export async function handleChannelTransfersPendingPost(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const query: Parameters<typeof listPendingChannelTransfersForRecipient>[0] = {
       owner,
@@ -128,9 +124,7 @@ export async function handleChannelTransfersCreatePost(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const createInput: Parameters<typeof createChannelOwnershipTransfer>[0] = {
       channelId,
@@ -174,9 +168,7 @@ export async function handleChannelTransfersRespondPost(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const transfer = await respondToChannelTransfer({
       transferId,
@@ -207,9 +199,7 @@ export async function handleChannelTransfersCancelPost(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const transfer = await cancelChannelTransfer({
       transferId,

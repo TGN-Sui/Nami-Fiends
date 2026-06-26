@@ -3,9 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ProjectionRegistry } from '../projection-registry.js';
 import { buildLinkedProfile } from '../services/linked-profile.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -76,9 +74,7 @@ export async function handleLinkedProfileSync(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const linked = await buildLinkedProfile(registry, owner, { verifiedRequest: true });
 

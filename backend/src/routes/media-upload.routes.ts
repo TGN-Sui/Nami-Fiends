@@ -7,9 +7,7 @@ import {
   saveStudioLogoUpload,
 } from '../services/media-upload.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -52,14 +50,12 @@ export async function handleAvatarUploadPost(
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const result = await saveAvatarUpload({ owner, contentType, dataBase64 });
     sendJson(response, 201, result);
@@ -89,14 +85,12 @@ export async function handleChannelCoverUploadPost(
     const channelId = typeof body.channelId === 'string' ? body.channelId : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x') || !channelId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const result = await saveChannelCoverUpload({ owner, channelId, contentType, dataBase64 });
     sendJson(response, 201, result);
@@ -126,14 +120,12 @@ export async function handleStudioLogoUploadPost(
     const studioId = typeof body.studioId === 'string' ? body.studioId : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x') || !studioId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const result = await saveStudioLogoUpload({ owner, studioId, contentType, dataBase64 });
     sendJson(response, 201, result);

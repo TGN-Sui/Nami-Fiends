@@ -6,9 +6,7 @@ import {
 } from '../services/chat-overlay-rewards.service.js';
 import { isOfficialOwnerAddress } from '../services/officials-auth.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -64,8 +62,6 @@ export async function handleChatOverlayRewardsSync(
   try {
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
       return;
@@ -76,7 +72,7 @@ export async function handleChatOverlayRewardsSync(
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const rewards = Array.isArray(body.rewards) ? body.rewards : [];
     const catalog = await syncChatOverlayRewardsCatalog({ owner, rewards });

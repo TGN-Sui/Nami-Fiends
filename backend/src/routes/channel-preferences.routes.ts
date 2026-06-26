@@ -5,9 +5,7 @@ import {
   upsertChannelPreferences,
 } from '../services/channel-preferences.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -70,9 +68,7 @@ export async function handleChannelPreferencesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const patch: Parameters<typeof upsertChannelPreferences>[0] = {
       channelId,

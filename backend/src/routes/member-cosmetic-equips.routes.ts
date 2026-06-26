@@ -5,9 +5,7 @@ import {
   syncMemberCosmeticEquip,
 } from '../services/member-cosmetic-equips.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -66,14 +64,12 @@ export async function handleMemberCosmeticEquipSync(
     const memberId = typeof body.memberId === 'string' ? body.memberId : '';
     const chatOverlayDisplay =
       typeof body.chatOverlayDisplay === 'string' ? body.chatOverlayDisplay : '';
-    const walletAuth = readWalletAuthFromBody(body);
-
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
       return;
     }
 
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const equips = await syncMemberCosmeticEquip({ memberId, chatOverlayDisplay });
     sendJson(response, 200, { equips });

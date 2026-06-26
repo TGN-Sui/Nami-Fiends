@@ -6,9 +6,7 @@ import {
   upsertChatFavorites,
 } from '../services/chat-favorites.service.js';
 import {
-  assertWalletAuth,
-  readWalletAuthFromBody,
-  type WalletAuthPayload,
+  assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
 import { markChatRoomRead, summarizeChatUnread } from '../services/chat-read-state.service.js';
 
@@ -100,9 +98,7 @@ export async function handleChatFavoritesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     const favorites = await upsertChatFavorites({
       owner,
@@ -173,9 +169,7 @@ export async function handleChatRoomRead(
       return;
     }
 
-    const walletAuth = readWalletAuthFromBody(body);
-
-    await assertWalletAuth(owner, walletAuth);
+    await assertWalletAuthFromBody(owner, body);
 
     await markChatRoomRead(owner, roomId);
 
