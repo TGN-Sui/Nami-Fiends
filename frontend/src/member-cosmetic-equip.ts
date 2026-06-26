@@ -1,16 +1,14 @@
 import { SELF_MEMBER_ID } from './member-access.js';
+import { enqueueEquippedChatOverlaySync } from './member-cosmetic-equip-retry-queue.js';
 import {
   readSelfProfileEdits,
   saveSelfProfileEdits,
   type SelfProfileEdits,
 } from './member-profile-store.js';
-import {
-  setLocalEquippedChatOverlay,
-  syncEquippedChatOverlayToServer,
-} from './member-cosmetic-equips-store.js';
+import { setLocalEquippedChatOverlay } from './member-cosmetic-equips-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 
-/** Persist self chat overlay equip locally and sync off-chain to the receiving server. */
+/** Persist self chat overlay equip locally and queue off-chain server sync. */
 export function saveEquippedChatOverlay(overlayId: string, profileEdits?: SelfProfileEdits): void {
   const trimmed = overlayId.trim();
   const edits = profileEdits ?? readSelfProfileEdits();
@@ -20,6 +18,5 @@ export function saveEquippedChatOverlay(overlayId: string, profileEdits?: SelfPr
     chatOverlayDisplay: trimmed,
   });
   setLocalEquippedChatOverlay(SELF_MEMBER_ID, trimmed);
-
-  void syncEquippedChatOverlayToServer(SELF_MEMBER_ID, trimmed, readResolvedProtocolOwner());
+  enqueueEquippedChatOverlaySync(SELF_MEMBER_ID, trimmed, readResolvedProtocolOwner());
 }

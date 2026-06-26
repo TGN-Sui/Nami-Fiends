@@ -6,6 +6,7 @@ export type ChatBorderSliceInsets = {
 };
 
 export const CHAT_BORDER_ART_CANVAS_PX = '384 × 384 px';
+export const CHAT_BORDER_ART_CANVAS_SIZE = 384;
 
 export const CHAT_BORDER_ART_SLICE_DEFAULTS: ChatBorderSliceInsets = {
   top: 56,

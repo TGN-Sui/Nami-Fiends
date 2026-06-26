@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
+import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
 import {
   resolveChatOverlayForMember,
@@ -30,6 +31,16 @@ export function ChatMessageBubble(props: {
       : overlay
         ? ' ' + overlay.className
         : '');
+
+  if (presentation?.hasCustomArt && presentation.renderMode === 'nine-slice-animated') {
+    return (
+      <div className="message-bubble-shell">
+        <ChatBorderArtFrame className={className} presentation={presentation}>
+          {props.children}
+        </ChatBorderArtFrame>
+      </div>
+    );
+  }
 
   const style: CSSProperties | undefined = presentation?.hasCustomArt
     ? presentation.style

@@ -20822,6 +20822,84 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   max-width: 100%;
 }
 
+.message-bubble.has-chat-animated-border-art {
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.chat-border-art-tile {
+  display: block;
+  pointer-events: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+.chat-border-art-center {
+  grid-area: 2 / 2;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nami-toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 12050;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.nami-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(117, 215, 255, 0.22);
+  background: rgba(8, 16, 28, 0.94);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  color: #e8f7ff;
+  pointer-events: auto;
+}
+
+.nami-toast p {
+  margin: 0;
+  flex: 1;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.nami-toast.is-tone-success {
+  border-color: rgba(67, 245, 167, 0.35);
+}
+
+.nami-toast.is-tone-error {
+  border-color: rgba(255, 120, 120, 0.42);
+}
+
+.nami-toast-dismiss {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+  padding: 0;
+}
+
+.nami-toast-dismiss:hover {
+  opacity: 1;
+}
+
 .message-bubble.has-chat-overlay-border {
   border-width: 2px;
   border-style: solid;

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import {
+  CHAT_BORDER_ART_CANVAS_SIZE,
   CHAT_BORDER_ART_SLICE_DEFAULTS,
   CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS,
   type ChatBorderSliceInsets,
@@ -8,11 +9,20 @@ import {
 } from './chat-border-art-specs.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
 
+export type ChatBorderTileId = 'nw' | 'n' | 'ne' | 'w' | 'e' | 'sw' | 's' | 'se';
+
+export type ChatBorderRenderMode = 'border-image' | 'nine-slice-animated';
+
 export type ChatBorderPresentation = {
   className: string;
   style: CSSProperties;
   hasCustomArt: boolean;
   artUrl: string | null;
+  renderMode: ChatBorderRenderMode;
+  sliceInsets: ChatBorderSliceInsets;
+  displayWidths: ChatBorderSliceInsets;
+  canvasSize: number;
+  tileStyles: Partial<Record<ChatBorderTileId, CSSProperties>>;
 };
 
 export function resolveChatBorderArtUrl(reward: OfficialChatOverlayReward): string | null {
@@ -23,12 +33,92 @@ export function resolveChatBorderArtUrl(reward: OfficialChatOverlayReward): stri
   return reward.staticArtUrl ?? reward.animatedArtUrl ?? null;
 }
 
+export function usesAnimatedChatBorderRendering(reward: OfficialChatOverlayReward): boolean {
+  return reward.motion === 'premium-loop' && Boolean(reward.animatedArtUrl?.trim());
+}
+
 export function borderImageSliceValue(insets: ChatBorderSliceInsets): string {
   return insets.top + ' ' + insets.right + ' ' + insets.bottom + ' ' + insets.left + ' fill';
 }
 
 export function borderWidthValue(insets: ChatBorderSliceInsets): string {
   return insets.top + 'px ' + insets.right + 'px ' + insets.bottom + 'px ' + insets.left + 'px';
+}
+
+function tileBackground(artUrl: string, canvasSize: number): Pick<CSSProperties, 'backgroundImage' | 'backgroundSize'> {
+  return {
+    backgroundImage: 'url(' + artUrl + ')',
+    backgroundSize: canvasSize + 'px ' + canvasSize + 'px',
+  };
+}
+
+export function buildChatBorderTileStyles(input: {
+  artUrl: string;
+  sliceInsets: ChatBorderSliceInsets;
+  displayWidths: ChatBorderSliceInsets;
+  canvasSize?: number;
+}): Record<ChatBorderTileId, CSSProperties> {
+  const canvasSize = input.canvasSize ?? CHAT_BORDER_ART_CANVAS_SIZE;
+  const slice = input.sliceInsets;
+  const display = input.displayWidths;
+  const background = tileBackground(input.artUrl, canvasSize);
+  const rightOffset = -(canvasSize - slice.right);
+  const bottomOffset = -(canvasSize - slice.bottom);
+
+  return {
+    nw: {
+      ...background,
+      width: display.left + 'px',
+      height: display.top + 'px',
+      backgroundPosition: '0 0',
+      backgroundRepeat: 'no-repeat',
+    },
+    n: {
+      ...background,
+      height: display.top + 'px',
+      backgroundPosition: '-' + slice.left + 'px 0',
+      backgroundRepeat: 'repeat-x',
+    },
+    ne: {
+      ...background,
+      width: display.right + 'px',
+      height: display.top + 'px',
+      backgroundPosition: rightOffset + 'px 0',
+      backgroundRepeat: 'no-repeat',
+    },
+    w: {
+      ...background,
+      width: display.left + 'px',
+      backgroundPosition: '0 -' + slice.top + 'px',
+      backgroundRepeat: 'repeat-y',
+    },
+    e: {
+      ...background,
+      width: display.right + 'px',
+      backgroundPosition: rightOffset + 'px -' + slice.top + 'px',
+      backgroundRepeat: 'repeat-y',
+    },
+    sw: {
+      ...background,
+      width: display.left + 'px',
+      height: display.bottom + 'px',
+      backgroundPosition: '0 ' + bottomOffset + 'px',
+      backgroundRepeat: 'no-repeat',
+    },
+    s: {
+      ...background,
+      height: display.bottom + 'px',
+      backgroundPosition: '-' + slice.left + 'px ' + bottomOffset + 'px',
+      backgroundRepeat: 'repeat-x',
+    },
+    se: {
+      ...background,
+      width: display.right + 'px',
+      height: display.bottom + 'px',
+      backgroundPosition: rightOffset + 'px ' + bottomOffset + 'px',
+      backgroundRepeat: 'no-repeat',
+    },
+  };
 }
 
 export function buildChatBorderPresentation(
@@ -43,6 +133,11 @@ export function buildChatBorderPresentation(
       style: {},
       hasCustomArt: false,
       artUrl: null,
+      renderMode: 'border-image',
+      sliceInsets: { ...CHAT_BORDER_ART_SLICE_DEFAULTS },
+      displayWidths: { ...CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS },
+      canvasSize: CHAT_BORDER_ART_CANVAS_SIZE,
+      tileStyles: {},
     };
   }
 
@@ -54,6 +149,30 @@ export function buildChatBorderPresentation(
     reward.displayWidths,
     CHAT_BORDER_DISPLAY_WIDTH_DEFAULTS
   );
+  const tileStyles = buildChatBorderTileStyles({
+    artUrl,
+    sliceInsets,
+    displayWidths,
+  });
+
+  if (usesAnimatedChatBorderRendering(reward)) {
+    return {
+      className: 'has-chat-custom-border-art has-chat-animated-border-art',
+      style: {
+        gridTemplateColumns:
+          displayWidths.left + 'px 1fr ' + displayWidths.right + 'px',
+        gridTemplateRows:
+          displayWidths.top + 'px 1fr ' + displayWidths.bottom + 'px',
+      },
+      hasCustomArt: true,
+      artUrl,
+      renderMode: 'nine-slice-animated',
+      sliceInsets,
+      displayWidths,
+      canvasSize: CHAT_BORDER_ART_CANVAS_SIZE,
+      tileStyles,
+    };
+  }
 
   return {
     className: 'has-chat-custom-border-art',
@@ -69,5 +188,10 @@ export function buildChatBorderPresentation(
     },
     hasCustomArt: true,
     artUrl,
+    renderMode: 'border-image',
+    sliceInsets,
+    displayWidths,
+    canvasSize: CHAT_BORDER_ART_CANVAS_SIZE,
+    tileStyles,
   };
 }

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { processEquippedChatOverlaySyncQueue } from './member-cosmetic-equip-retry-queue.js';
 import { isMemberCosmeticEquipsApiAvailable } from './member-cosmetic-equips-api.js';
 import {
   hydrateMemberCosmeticEquipsFromServer,
@@ -71,6 +72,7 @@ function onBroadcastEquipChange(): void {
 function onVisibilityChange(): void {
   if (!document.hidden) {
     void refreshMemberCosmeticEquipsFromServer();
+    void processEquippedChatOverlaySyncQueue();
   }
 }
 
@@ -125,6 +127,7 @@ export function startMemberCosmeticEquipsPolling(): () => void {
 
     pollHandle = setInterval(() => {
       void refreshMemberCosmeticEquipsFromServer();
+      void processEquippedChatOverlaySyncQueue();
     }, POLL_INTERVAL_MS);
   }
 

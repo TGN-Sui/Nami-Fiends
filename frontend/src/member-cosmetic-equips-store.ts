@@ -1,14 +1,28 @@
 import { useSyncExternalStore } from 'react';
 
+import type { MemberCosmeticEquipSyncError } from './member-cosmetic-equip-sync-errors.js';
 import {
   fetchMemberCosmeticEquips,
   isMemberCosmeticEquipsApiAvailable,
+  MemberCosmeticEquipsApiError,
   syncMemberCosmeticEquipToBackend,
 } from './member-cosmetic-equips-api.js';
 import { SELF_MEMBER_ID } from './member-access.js';
 import { readSelfProfileEdits } from './member-profile-store.js';
 
 export const MEMBER_COSMETIC_EQUIPS_STORAGE_KEY = 'nami.member.cosmetic-equips';
+
+export type MemberCosmeticEquipSyncResult =
+  | { ok: true }
+  | { ok: false; error: MemberCosmeticEquipSyncError };
+
+function mapEquipSyncError(error: unknown): MemberCosmeticEquipSyncError {
+  if (error instanceof MemberCosmeticEquipsApiError) {
+    return error.code;
+  }
+
+  return 'request_failed';
+}
 
 let cachedEquips: Record<string, string> | null = null;
 let cachedUpdatedAtMs = 0;
@@ -153,11 +167,13 @@ export async function syncEquippedChatOverlayToServer(
   memberId: string,
   overlayId: string,
   owner: string | null = equipSyncOwner
-): Promise<boolean> {
-  setLocalEquippedChatOverlay(memberId, overlayId);
+): Promise<MemberCosmeticEquipSyncResult> {
+  if (!isMemberCosmeticEquipsApiAvailable()) {
+    return { ok: false, error: 'api_unavailable' };
+  }
 
-  if (!isMemberCosmeticEquipsApiAvailable() || !owner?.startsWith('0x')) {
-    return false;
+  if (!owner?.startsWith('0x')) {
+    return { ok: false, error: 'no_owner' };
   }
 
   try {
@@ -171,9 +187,9 @@ export async function syncEquippedChatOverlayToServer(
       projection.equips ?? {},
       typeof projection.updatedAtMs === 'number' ? projection.updatedAtMs : Date.now()
     );
-    return true;
-  } catch {
-    return false;
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: mapEquipSyncError(error) };
   }
 }
 

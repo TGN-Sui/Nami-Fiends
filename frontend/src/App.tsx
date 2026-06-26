@@ -84,6 +84,7 @@ import { HubEntryOrchestrator } from './HubEntryOrchestrator.js';
 import { SuperBannerOverlay } from './SuperBannerOverlay.js';
 import { TutorialOverlay } from './TutorialOverlay.js';
 import { ChannelBannerNotificationOverlay } from './ChannelBannerNotificationOverlay.js';
+import { NamiToastStack } from './NamiToastStack.js';
 import { ChannelBannerReminderBar } from './ChannelBannerReminderBar.js';
 
 import { EventCardActionBar } from './EventCardActionBar.js';
@@ -5951,6 +5952,7 @@ if (activePage === 'userProfile') {
       ) : null}
       {showPlatformShell ? <GameApprovalWelcomeOverlay /> : null}
       {showPlatformShell ? <ChannelTransferClaimModal /> : null}
+      <NamiToastStack />
     </main>
   );
 }

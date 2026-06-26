@@ -13,6 +13,7 @@ import {
   validateChatBorderAnimatedArt,
   validateChatBorderStaticArt,
 } from './chat-border-art-upload.js';
+import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
 import {
   chatOverlayRewardsSyncErrorMessage,
@@ -525,17 +526,27 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
             <div className="officials-reward-studio-preview">
               <p>Border preview</p>
               <div className="officials-reward-studio-preview-bubble">
-                <div
-                  className={
-                    'message-bubble ' +
-                    (previewPresentation?.hasCustomArt
-                      ? previewPresentation.className
-                      : overlayRewardClassName(activeDraft))
-                  }
-                  style={previewPresentation?.hasCustomArt ? previewPresentation.style : undefined}
-                >
-                  Member message preview scales with width and height.
-                </div>
+                {previewPresentation?.hasCustomArt &&
+                previewPresentation.renderMode === 'nine-slice-animated' ? (
+                  <ChatBorderArtFrame
+                    className={'message-bubble ' + previewPresentation.className}
+                    presentation={previewPresentation}
+                  >
+                    Member message preview scales with width and height.
+                  </ChatBorderArtFrame>
+                ) : (
+                  <div
+                    className={
+                      'message-bubble ' +
+                      (previewPresentation?.hasCustomArt
+                        ? previewPresentation.className
+                        : overlayRewardClassName(activeDraft))
+                    }
+                    style={previewPresentation?.hasCustomArt ? previewPresentation.style : undefined}
+                  >
+                    Member message preview scales with width and height.
+                  </div>
+                )}
               </div>
             </div>
 
