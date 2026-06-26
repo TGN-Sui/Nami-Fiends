@@ -86,6 +86,17 @@ describe('chat-overlay-rewards', () => {
     resetMemberCosmeticEquipsForTests();
   });
 
+  it('blocks unlocks for Black Passport signal members', () => {
+    const catalog = readOfficialChatOverlayRewards();
+    const verifiedReward = catalog.find((reward) => reward.condition.type === 'verified')!;
+    const blackSignalMember = {
+      ...verifiedPro,
+      signal: 'Black' as const,
+    };
+
+    expect(overlayRewardUnlockedForMember(blackSignalMember, verifiedReward)).toBe(false);
+  });
+
   it('unlocks rewards from tier, verification, and official grant conditions', () => {
     const catalog = readOfficialChatOverlayRewards();
     const verifiedReward = catalog.find((reward) => reward.condition.type === 'verified')!;

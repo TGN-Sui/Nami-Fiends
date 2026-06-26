@@ -89,6 +89,14 @@ export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSy
     return equipSyncAuthHint();
   }
 
+  if (error === 'overlay_not_found') {
+    return 'That chat border is no longer in the reward catalog. Pick another border or clear your equip.';
+  }
+
+  if (error === 'overlay_disabled') {
+    return 'That chat border reward is disabled. Pick another border or clear your equip.';
+  }
+
   if (error === 'wallet_auth_required' || error === 'wallet_auth_invalid') {
     const owner = readWalletAuthOwner();
     const { source } = readWalletAuthContext();

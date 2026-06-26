@@ -159,6 +159,20 @@ describe('member-cosmetic-equip-retry-queue', () => {
     expect(queue.readPendingEquippedChatOverlaySync()).toBeNull();
   });
 
+  it('does not retry catalog validation failures', async () => {
+    syncEquippedChatOverlayToServer.mockResolvedValue({ ok: false, error: 'overlay_not_found' });
+
+    const queue = await import('./member-cosmetic-equip-retry-queue.js');
+
+    queue.enqueueEquippedChatOverlaySync('m1', 'overlay-missing', '0xabc');
+    await queue.processEquippedChatOverlaySyncQueue();
+    await vi.advanceTimersByTimeAsync(60_000);
+    await queue.processEquippedChatOverlaySyncQueue();
+
+    expect(syncEquippedChatOverlayToServer).toHaveBeenCalledTimes(1);
+    expect(queue.readPendingEquippedChatOverlaySync()).toBeNull();
+  });
+
   it('retries after auth becomes ready and clears prior user-initiated flag on owner refresh', async () => {
     syncEquippedChatOverlayToServer
       .mockResolvedValueOnce({ ok: false, error: 'wallet_auth_unavailable' })

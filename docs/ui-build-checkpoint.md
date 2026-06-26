@@ -236,6 +236,22 @@ Membership checkout, subscription state, avatar/cover/logo uploads, streaming pr
 | UI-D26.3 | Complete | Nine discovery categories + `GET /api/discovery/categories`; Settings panel tabs. |
 | UI-D26.4 | Complete | Reputation-weighted boosts, conduct/squad/profile signals, boost anomaly penalty. |
 
+## Chat Border Art (off-chain slices)
+
+Incremental off-chain Border Art work (distinct from Test-Launch Polish slices above).
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| BA-1 | Complete | Server catalog + CDN border art upload (`chat-overlay-rewards.*`). |
+| BA-2 | Complete | Off-chain member equip projection (`member-cosmetic-equips.*`). |
+| BA-3 | Complete | Live equip sync + grant picker UI. |
+| BA-4 | Complete | App-wide equip polling + cross-tab broadcast. |
+| BA-5 | Complete | Equip sync error toasts. |
+| BA-6 | Complete | Optimistic equip retry queue. |
+| BA-7 | Complete | Animated 9-slice border rendering. |
+| BA-8 | Complete | Testnet catalog bootstrap + hydrate guards (`34ca625`). |
+| BA-9 | Complete | Equip validation — client unlock gate, Black signal block, server catalog checks. |
+
 ## Phase 8 — Launch Ops (UI-C27)
 
 | Slice | Status | Result |

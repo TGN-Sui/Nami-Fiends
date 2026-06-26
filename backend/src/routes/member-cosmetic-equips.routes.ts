@@ -81,7 +81,12 @@ export async function handleMemberCosmeticEquipSync(
       return;
     }
 
-    if (message === 'invalid_member_id' || message === 'invalid_overlay_id') {
+    if (
+      message === 'invalid_member_id' ||
+      message === 'invalid_overlay_id' ||
+      message === 'overlay_not_found' ||
+      message === 'overlay_disabled'
+    ) {
       sendJson(response, 400, { error: message });
       return;
     }

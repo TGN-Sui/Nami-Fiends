@@ -802,25 +802,35 @@ Bold or thin top framing keeps message text aligned because display top padding 
 | Static | PNG, JPG, WebP | 2 MB |
 | Animated | GIF, animated WebP | 4 MB |
 
-## Reward catalog flow
+## Reward catalog flow (testnet, off-chain)
 
 ```text
 Official owner (Settings → Advanced → Border Art)
   → OfficialsRewardStudioPanel
     → define unlock condition
     → upload static/animated art + slice insets
-    → save to official-chat-overlay-rewards-store (local catalog, MVP)
+    → wallet-signed POST /api/chat-overlay-rewards/sync
+    → chat-overlay-rewards projection (server catalog + CDN art URLs)
+
+Client bootstrap:
+  official-chat-overlay-rewards-store (local defaults)
+    → hydrate from GET /api/chat-overlay-rewards on test launch
+    → empty server catalog falls back to four default presets (Slice 8)
 
 Member earns unlock when condition matches:
   verified | tier-min | official-grant (member id list)
+  Black Passport signal blocks unlock and equip
 
 Member equips overlay:
-  Profile edit or Channel chat → Chat Style rail
-    → chatOverlayDisplay = reward id (local profile edits)
+  Profile edit, Settings, or Channel chat → Chat Style rail
+    → saveEquippedChatOverlay() validates unlock client-side
+    → chatOverlayDisplay + member-cosmetic-equips local cache
+    → wallet-signed POST /api/member-cosmetics/equips/sync
+    → member-cosmetic-equips projection (live cross-tab sync)
 
 Chat render:
   ChatMessageBubble
-    → resolveEquippedChatOverlayReward()
+    → resolveEquippedChatOverlayReward() (equip cache + unlock filter)
     → buildChatBorderPresentation() when art URLs exist
     → CSS fallback classes when art is null (signal-glow, wave-frame, …)
 ```
@@ -834,17 +844,26 @@ Chat render:
 | Pulse Ring | `pulse-ring` | premium-loop | Elite tier minimum |
 | Genesis Spark | `genesis-spark` | premium-loop | Official grant list |
 
-## Key frontend modules
+## Key modules
 
 ```text
-chat-border-art-specs.ts        — canvas + slice constants
-chat-border-art-upload.ts       — file validation + data URL reads
-official-chat-overlay-rewards-store.ts — owner-editable catalog
-chat-overlay-rewards.ts         — unlock + equip resolution
-chat-border-rendering.ts        — border-image presentation builder
-ChatMessageBubble.tsx           — chat surface wrapper (all chat UIs)
-OfficialsRewardStudioPanel.tsx  — owner Border Art studio
-ChatOverlayEquipPicker.tsx      — member equip UI
+Frontend
+  chat-border-art-specs.ts              — canvas + slice constants
+  chat-border-art-upload.ts             — file validation + data URL reads
+  official-chat-overlay-rewards-store.ts — catalog cache + default presets
+  chat-overlay-rewards-sync.ts          — server catalog hydrate
+  chat-overlay-rewards.ts               — unlock + equip resolution
+  member-cosmetic-equip.ts              — validated equip save + sync enqueue
+  member-cosmetic-equips-store.ts       — equip projection cache
+  member-cosmetic-equip-retry-queue.ts  — optimistic sync + error toasts
+  chat-border-rendering.ts              — border-image presentation builder
+  ChatMessageBubble.tsx                 — chat surface wrapper (all chat UIs)
+  OfficialsRewardStudioPanel.tsx        — owner Border Art studio
+  ChatOverlayEquipPicker.tsx            — member equip UI
+
+Backend (test launch)
+  chat-overlay-rewards.service.ts       — catalog projection + CDN uploads
+  member-cosmetic-equips.service.ts     — equip projection + catalog validation
 ```
 
 ## Scaling rules

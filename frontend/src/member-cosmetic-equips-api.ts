@@ -17,6 +17,8 @@ export type MemberCosmeticEquipsApiErrorCode =
   | 'wallet_auth_unavailable'
   | 'wallet_auth_required'
   | 'wallet_auth_invalid'
+  | 'overlay_not_found'
+  | 'overlay_disabled'
   | 'request_failed';
 
 export class MemberCosmeticEquipsApiError extends Error {
@@ -66,6 +68,22 @@ function mapResponseError(status: number, body: Record<string, unknown>): Member
       'wallet_auth_invalid',
       status,
       'Wallet signature was rejected. Reconnect zkLogin or your wallet extension, then try again.'
+    );
+  }
+
+  if (error === 'overlay_not_found') {
+    return new MemberCosmeticEquipsApiError(
+      'overlay_not_found',
+      status,
+      'That chat border is no longer in the reward catalog.'
+    );
+  }
+
+  if (error === 'overlay_disabled') {
+    return new MemberCosmeticEquipsApiError(
+      'overlay_disabled',
+      status,
+      'That chat border reward is disabled and cannot be equipped.'
     );
   }
 

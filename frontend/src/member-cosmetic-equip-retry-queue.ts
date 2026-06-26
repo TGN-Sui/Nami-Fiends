@@ -47,6 +47,10 @@ function resolveEquipSyncOwner(preferredOwner: string | null = null): string | n
 }
 
 function isRetryableError(error: MemberCosmeticEquipSyncError): boolean {
+  if (error === 'overlay_not_found' || error === 'overlay_disabled') {
+    return false;
+  }
+
   return (
     error === 'no_owner' ||
     error === 'request_failed' ||

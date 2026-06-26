@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { getChatOverlayRewardsCatalog } from './chat-overlay-rewards.service.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type MemberCosmeticEquipsProjection = {
@@ -48,6 +49,23 @@ function normalizeOverlayId(overlayId: string): string {
   }
 
   return trimmed;
+}
+
+async function assertOverlayEquipAllowed(overlayId: string): Promise<void> {
+  if (!overlayId) {
+    return;
+  }
+
+  const catalog = await getChatOverlayRewardsCatalog();
+  const reward = catalog.rewards.find((entry) => entry.id === overlayId);
+
+  if (!reward) {
+    throw new Error('overlay_not_found');
+  }
+
+  if (!reward.enabled) {
+    throw new Error('overlay_disabled');
+  }
 }
 
 function sanitizeEquips(value: unknown): Record<string, string> {
@@ -120,6 +138,9 @@ export async function syncMemberCosmeticEquip(input: {
   }
 
   const overlayId = normalizeOverlayId(input.chatOverlayDisplay);
+
+  await assertOverlayEquipAllowed(overlayId);
+
   const projection = await readProjection();
   const nextEquips = { ...projection.equips };
 

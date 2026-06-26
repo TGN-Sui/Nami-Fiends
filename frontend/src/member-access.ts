@@ -155,7 +155,7 @@ export function canManageTemporaryGlobalChats(member: NamiMember = getSelfMember
 }
 
 export function canEditProfileCosmetics(member: NamiMember = getSelfMember()): boolean {
-  return isMemberVerified(member);
+  return isMemberVerified(member) && member.signal !== 'Black';
 }
 
 export function canPurchaseOrClaimMembership(member: NamiMember = getSelfMember()): boolean {
