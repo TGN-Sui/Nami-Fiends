@@ -48,7 +48,7 @@ export type OfficialChatOverlayReward = {
 
 const STORAGE_KEY = 'nami.official.chat-overlay-rewards';
 
-const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
+export const DEFAULT_OFFICIAL_CHAT_OVERLAY_REWARDS: OfficialChatOverlayReward[] = [
   {
     id: 'overlay-signal-glow',
     name: 'Signal Glow',
@@ -110,6 +110,12 @@ const DEFAULT_REWARDS: OfficialChatOverlayReward[] = [
     updatedAtMs: 0,
   },
 ];
+
+const DEFAULT_REWARDS = DEFAULT_OFFICIAL_CHAT_OVERLAY_REWARDS;
+
+export function readDefaultOfficialChatOverlayRewards(): OfficialChatOverlayReward[] {
+  return DEFAULT_REWARDS.map((reward) => ({ ...reward }));
+}
 
 let cachedRewards: OfficialChatOverlayReward[] | null = null;
 
@@ -248,12 +254,13 @@ export function saveOfficialChatOverlayRewards(
       })
     )
     .filter((entry): entry is OfficialChatOverlayReward => entry !== null);
+  const resolved = next.length > 0 ? next : readDefaultOfficialChatOverlayRewards();
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  cachedRewards = next;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(resolved));
+  cachedRewards = resolved;
   dispatchChange();
 
-  return next;
+  return resolved;
 }
 
 export function upsertOfficialChatOverlayReward(

@@ -6,6 +6,7 @@ import {
   syncChatOverlayRewardsCatalog,
 } from './chat-overlay-rewards-api.js';
 import {
+  readOfficialChatOverlayRewards,
   saveOfficialChatOverlayRewards,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
@@ -67,6 +68,23 @@ export async function hydrateChatOverlayRewardsFromServer(): Promise<boolean> {
     const catalog = await fetchChatOverlayRewardsCatalog();
 
     if (!Array.isArray(catalog.rewards)) {
+      return false;
+    }
+
+    if (catalog.rewards.length === 0) {
+      return false;
+    }
+
+    const localUpdatedAtMs = Math.max(
+      0,
+      ...readOfficialChatOverlayRewards().map((reward) => reward.updatedAtMs)
+    );
+    const serverUpdatedAtMs =
+      typeof catalog.updatedAtMs === 'number' && Number.isFinite(catalog.updatedAtMs)
+        ? catalog.updatedAtMs
+        : 0;
+
+    if (serverUpdatedAtMs > 0 && serverUpdatedAtMs <= localUpdatedAtMs) {
       return false;
     }
 

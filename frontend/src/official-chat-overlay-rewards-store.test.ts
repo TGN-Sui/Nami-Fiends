@@ -59,6 +59,15 @@ describe('official-chat-overlay-rewards-store', () => {
     expect(new Set(rewards.map((reward) => reward.borderStyle)).size).toBeGreaterThan(1);
   });
 
+  it('falls back to default presets when an empty catalog is saved', () => {
+    saveOfficialChatOverlayRewards([]);
+
+    const rewards = readOfficialChatOverlayRewards();
+
+    expect(rewards.length).toBe(4);
+    expect(rewards.some((reward) => reward.id === 'overlay-signal-glow')).toBe(true);
+  });
+
   it('upserts and persists official reward studio entries', () => {
     const saved = upsertOfficialChatOverlayReward({
       id: 'overlay-test-custom',

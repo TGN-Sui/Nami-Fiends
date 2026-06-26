@@ -61,6 +61,71 @@ function emptyProjection(): ChatOverlayRewardsProjection {
   };
 }
 
+export function buildDefaultChatOverlayRewards(now = Date.now()): OfficialChatOverlayReward[] {
+  return [
+    {
+      id: 'overlay-signal-glow',
+      name: 'Signal Glow',
+      description: 'Verified members earn a soft cyan glow on chat bubbles.',
+      borderStyle: 'signal-glow',
+      motion: 'static',
+      accent: 'cyan',
+      staticArtUrl: null,
+      animatedArtUrl: null,
+      artSliceInsets: { ...DEFAULT_SLICE },
+      displayWidths: { ...DEFAULT_DISPLAY },
+      condition: { type: 'verified' },
+      enabled: true,
+      updatedAtMs: now,
+    },
+    {
+      id: 'overlay-wave-frame',
+      name: 'Wave Frame',
+      description: 'Pro members unlock a gradient wave frame around chat bubbles.',
+      borderStyle: 'wave-frame',
+      motion: 'static',
+      accent: 'violet',
+      staticArtUrl: null,
+      animatedArtUrl: null,
+      artSliceInsets: { ...DEFAULT_SLICE },
+      displayWidths: { ...DEFAULT_DISPLAY },
+      condition: { type: 'tier-min', tier: 'Pro' },
+      enabled: true,
+      updatedAtMs: now,
+    },
+    {
+      id: 'overlay-pulse-ring',
+      name: 'Pulse Ring',
+      description: 'Elite members get a premium looping ring highlight.',
+      borderStyle: 'pulse-ring',
+      motion: 'premium-loop',
+      accent: 'gold',
+      staticArtUrl: null,
+      animatedArtUrl: null,
+      artSliceInsets: { ...DEFAULT_SLICE },
+      displayWidths: { ...DEFAULT_DISPLAY },
+      condition: { type: 'tier-min', tier: 'Elite' },
+      enabled: true,
+      updatedAtMs: now,
+    },
+    {
+      id: 'overlay-genesis-spark',
+      name: 'Genesis Spark',
+      description: 'Official grant overlay for launch partners and event winners.',
+      borderStyle: 'genesis-spark',
+      motion: 'premium-loop',
+      accent: 'mint',
+      staticArtUrl: null,
+      animatedArtUrl: null,
+      artSliceInsets: { ...DEFAULT_SLICE },
+      displayWidths: { ...DEFAULT_DISPLAY },
+      condition: { type: 'official-grant', memberIds: [] },
+      enabled: true,
+      updatedAtMs: now,
+    },
+  ];
+}
+
 function safeRewardId(rewardId: string): string | null {
   const trimmed = rewardId.trim();
 
@@ -190,11 +255,22 @@ function sanitizeRewards(value: unknown): OfficialChatOverlayReward[] {
 
 async function readProjection(): Promise<ChatOverlayRewardsProjection> {
   const stored = await readJsonFile<ChatOverlayRewardsProjection>(PROJECTION_PATH, emptyProjection());
+  const rewards = sanitizeRewards(stored.rewards);
 
-  return {
-    rewards: sanitizeRewards(stored.rewards),
-    updatedAtMs: typeof stored.updatedAtMs === 'number' ? stored.updatedAtMs : Date.now(),
+  if (rewards.length > 0) {
+    return {
+      rewards,
+      updatedAtMs: typeof stored.updatedAtMs === 'number' ? stored.updatedAtMs : Date.now(),
+    };
+  }
+
+  const seeded: ChatOverlayRewardsProjection = {
+    rewards: buildDefaultChatOverlayRewards(),
+    updatedAtMs: Date.now(),
   };
+
+  await writeProjection(seeded);
+  return seeded;
 }
 
 async function writeProjection(projection: ChatOverlayRewardsProjection): Promise<void> {
