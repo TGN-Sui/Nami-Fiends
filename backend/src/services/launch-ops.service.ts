@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { isWalrusBorderArtConfigured } from '../walrus-config.js';
 import {
   buildChannelDiscoveryRankings,
   buildGuildDiscoveryRankings,
@@ -34,6 +35,15 @@ export interface LaunchOpsPaymentReadiness {
   paypal_checkout_enabled: boolean;
 }
 
+export interface LaunchOpsWalrusBorderArtReadiness {
+  configured: boolean;
+  network: string | null;
+  aggregator_url: string;
+  publisher_url: string;
+  border_art_required: boolean;
+  storage_epochs: number;
+}
+
 export interface LaunchOpsExitGates {
   core_policy_ready: boolean;
   card_checkout_ready: boolean;
@@ -49,6 +59,7 @@ export interface LaunchOpsSummary {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;
@@ -132,6 +143,14 @@ export async function buildLaunchOpsSummary(
     pendingActions.push('Assign AdminCap backup holder (see docs/admincap-custody.md).');
   }
 
+  const walrusBorderArt = config.walrus;
+
+  if (!isWalrusBorderArtConfigured(walrusBorderArt)) {
+    pendingActions.push(
+      'Set NAMI_WALRUS_NETWORK=testnet (or explicit aggregator/publisher URLs) on Render for Walrus border art.',
+    );
+  }
+
   pendingActions.push('Legal review of privacy draft before mainnet (human step).');
 
   return {
@@ -148,6 +167,14 @@ export async function buildLaunchOpsSummary(
       crypto_checkout_enabled: publicPayment.cryptoEnabled,
       card_checkout_enabled: publicPayment.cardEnabled,
       paypal_checkout_enabled: publicPayment.paypalEnabled,
+    },
+    walrus_border_art: {
+      configured: isWalrusBorderArtConfigured(walrusBorderArt),
+      network: walrusBorderArt.network,
+      aggregator_url: walrusBorderArt.aggregatorUrl,
+      publisher_url: walrusBorderArt.publisherUrl,
+      border_art_required: walrusBorderArt.borderArtRequired,
+      storage_epochs: walrusBorderArt.storageEpochs,
     },
     exit_gates: {
       core_policy_ready: corePolicyReady,

@@ -74,8 +74,9 @@ node scripts/verify-testnet-ready.mjs
 **Render (backend receiving server)**
 
 1. Connect repo → use `render.yaml` or create a Web Service with root build/start commands from that file.
-2. Set env from `backend/.env.testnet.example` + your `deployments/testnet/latest.json` package IDs.
-3. Copy the public service URL (e.g. `https://nami-backend.onrender.com`).
+2. Set env from `backend/.env.testnet.example` + your `deployments/testnet/latest.json` package IDs (or paste `deployments/testnet/render.env` after `node scripts/sync-deploy-env.mjs`).
+3. **Walrus border art (BA-14.1):** ensure `NAMI_WALRUS_NETWORK=testnet` is set on Render (`render.yaml` includes Mysten testnet aggregator/publisher defaults). No signer key required on testnet.
+4. Copy the public service URL (e.g. `https://nami-backend.onrender.com`).
 
 **Vercel (frontend)**
 

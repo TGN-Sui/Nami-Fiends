@@ -261,6 +261,17 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
       } else {
         warn('live PayPal configured', 'Set PAYPAL_* secrets on Render');
       }
+
+      const walrus = summary?.walrus_border_art;
+
+      if (walrus?.configured) {
+        pass('Walrus border art configured', walrus.network ?? 'custom endpoints');
+      } else {
+        warn(
+          'Walrus border art configured',
+          'Set NAMI_WALRUS_NETWORK=testnet on Render (see render.yaml)',
+        );
+      }
     } else {
       fail('launch ops summary API', 'HTTP ' + launchSummary.status);
     }

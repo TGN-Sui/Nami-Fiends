@@ -74,3 +74,12 @@ services:
         sync: false
       - key: NAMI_TRANSFER_PORTAL_URL
         value: 'https://nami-fiends.vercel.app'
+      # Border art — Walrus Quilt (BA-14.1). Mysten testnet publisher is public; no signer key required.
+      - key: NAMI_WALRUS_NETWORK
+        value: testnet
+      - key: NAMI_WALRUS_AGGREGATOR_URL
+        value: 'https://aggregator.walrus-testnet.walrus.space'
+      - key: NAMI_WALRUS_PUBLISHER_URL
+        value: 'https://publisher.walrus-testnet.walrus.space'
+      - key: NAMI_WALRUS_STORAGE_EPOCHS
+        value: '5'

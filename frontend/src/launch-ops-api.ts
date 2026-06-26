@@ -18,6 +18,15 @@ export type LaunchOpsPaymentReadiness = {
   paypal_checkout_enabled: boolean;
 };
 
+export type LaunchOpsWalrusBorderArtReadiness = {
+  configured: boolean;
+  network: string | null;
+  aggregator_url: string;
+  publisher_url: string;
+  border_art_required: boolean;
+  storage_epochs: number;
+};
+
 export type LaunchOpsExitGates = {
   core_policy_ready: boolean;
   card_checkout_ready: boolean;
@@ -33,6 +42,7 @@ export type LaunchOpsSummary = {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;

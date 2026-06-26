@@ -123,6 +123,26 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
           </section>
 
           <section className="launch-ops-card">
+            <h3>Walrus border art</h3>
+            <ul className="protocol-timeline-list">
+              <li className="protocol-timeline-item">
+                Quilt publisher{' '}
+                <strong>{summary.walrus_border_art.configured ? 'configured' : 'missing'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Network <strong>{summary.walrus_border_art.network ?? 'unset'}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Storage epochs <strong>{summary.walrus_border_art.storage_epochs}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Render fallback blocked{' '}
+                <strong>{summary.walrus_border_art.border_art_required ? 'yes' : 'no'}</strong>
+              </li>
+            </ul>
+          </section>
+
+          <section className="launch-ops-card">
             <h3>Payment readiness</h3>
             <ul className="protocol-timeline-list">
               <li className="protocol-timeline-item">

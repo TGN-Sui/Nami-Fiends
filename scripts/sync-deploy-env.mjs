@@ -264,6 +264,12 @@ const renderEnv = formatEnvBlock([
   'PAYPAL_CLIENT_ID=',
   'PAYPAL_CLIENT_SECRET=',
   'NAMI_PAYPAL_MODE=sandbox',
+  '',
+  '# Border art — Walrus Quilt (BA-14.1)',
+  'NAMI_WALRUS_NETWORK=testnet',
+  'NAMI_WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space',
+  'NAMI_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space',
+  'NAMI_WALRUS_STORAGE_EPOCHS=5',
 ]);
 
 const vercelEnv = formatEnvBlock([
@@ -341,6 +347,11 @@ if (hasFlag('--apply-local')) {
     'PAYPAL_CLIENT_ID=',
     'PAYPAL_CLIENT_SECRET=',
     'NAMI_PAYPAL_MODE=sandbox',
+    '',
+    'NAMI_WALRUS_NETWORK=testnet',
+    'NAMI_WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space',
+    'NAMI_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space',
+    'NAMI_WALRUS_STORAGE_EPOCHS=5',
   ]);
 
   const frontendEnv = formatEnvBlock([
