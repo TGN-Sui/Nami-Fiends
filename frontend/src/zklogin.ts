@@ -60,6 +60,16 @@ export function isZkLoginConfigured(): boolean {
   return readClientId() !== null;
 }
 
+export function canZkLoginSignForOwner(owner: string | null | undefined): boolean {
+  const session = getZkLoginSession();
+
+  return Boolean(
+    owner?.startsWith('0x') &&
+      session?.ephemeralSecretKey &&
+      session.address.toLowerCase() === owner.toLowerCase()
+  );
+}
+
 export function getZkLoginSession(): ZkLoginSession | null {
   if (typeof window === 'undefined') {
     return null;

@@ -152,6 +152,35 @@ describe('wallet-auth', () => {
     expect(signer).toHaveBeenCalledTimes(1);
   });
 
+  it('allows equip sync signatures for zkLogin without an email member session', async () => {
+    const { hasActiveMemberSession } = await import('./member-session-store.js');
+
+    vi.mocked(hasActiveMemberSession).mockReturnValue(false);
+
+    const signer = vi.fn(async () => ({
+      signature: 'sig-zk-equip',
+      timestampMs: Date.now(),
+      signerAddress: '0xephemeral',
+    }));
+
+    registerWalletAuthSigner(signer);
+    setWalletAuthContext({
+      owner: TEST_OWNER,
+      source: 'zklogin',
+      memberVerified: false,
+    });
+
+    expect(canPromptEquipSyncSignature(TEST_OWNER)).toBe(true);
+
+    const payload = await createEquipSyncAuthPayload(TEST_OWNER);
+
+    expect(payload).toEqual({
+      signature: 'sig-zk-equip',
+      timestampMs: expect.any(Number),
+      signerAddress: '0xephemeral',
+    });
+  });
+
   it('never prompts for unverified members even with a connected wallet', async () => {
     const signer = vi.fn(async () => ({
       signature: 'sig',

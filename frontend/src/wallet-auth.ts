@@ -1,4 +1,3 @@
-import { hasActiveMemberSession } from './member-session-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
 
@@ -39,6 +38,10 @@ export function buildWalletAuthMessage(owner: string, timestampMs: number): stri
 }
 
 export function registerWalletAuthSigner(signer: WalletAuthSigner | null): void {
+  if (signer !== walletAuthSigner) {
+    clearAuthCache();
+  }
+
   walletAuthSigner = signer;
 }
 
@@ -120,11 +123,8 @@ export function canPromptEquipSyncSignature(owner?: string): boolean {
     return false;
   }
 
-  if (isOfficialOwner(resolvedOwner) || authContext.memberVerified) {
-    return true;
-  }
-
-  return hasActiveMemberSession();
+  // Equip sync only needs a live signer for the active protocol owner.
+  return true;
 }
 
 async function createSignedAuthPayload(

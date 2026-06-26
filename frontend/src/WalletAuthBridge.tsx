@@ -1,6 +1,6 @@
 import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
 import { isMemberVerified } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
@@ -13,11 +13,38 @@ import {
 } from './wallet-auth.js';
 import { getZkLoginSession } from './zklogin.js';
 
+function useZkLoginSessionRevision(): number {
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    function bumpRevision(): void {
+      setRevision((value) => value + 1);
+    }
+
+    function onStorage(event: StorageEvent): void {
+      if (event.key === 'nami.zklogin.session') {
+        bumpRevision();
+      }
+    }
+
+    window.addEventListener('nami-zklogin-session-ready', bumpRevision);
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('nami-zklogin-session-ready', bumpRevision);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  return revision;
+}
+
 export function WalletAuthBridge(): ReactElement | null {
   const { owner, source } = useProtocolOwner();
   const walletAccount = useCurrentAccount();
   const selfMember = useSelfMember();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const zkLoginSessionRevision = useZkLoginSessionRevision();
 
   useEffect(() => {
     setWalletAuthContext({
@@ -92,7 +119,14 @@ export function WalletAuthBridge(): ReactElement | null {
     return () => {
       registerWalletAuthSigner(null);
     };
-  }, [owner, source, selfMember, signPersonalMessage, walletAccount?.address]);
+  }, [
+    owner,
+    source,
+    selfMember,
+    signPersonalMessage,
+    walletAccount?.address,
+    zkLoginSessionRevision,
+  ]);
 
   return null;
 }

@@ -4,6 +4,7 @@ import {
   readWalletAuthContext,
   readWalletAuthOwner,
 } from './wallet-auth.js';
+import { canZkLoginSignForOwner } from './zklogin.js';
 
 export type MemberCosmeticEquipSyncError =
   | MemberCosmeticEquipsApiErrorCode
@@ -30,10 +31,18 @@ function equipSyncAuthHint(): string {
 
   if (!hasWalletAuthSigner()) {
     if (source === 'zklogin') {
+      if (!canZkLoginSignForOwner(owner)) {
+        return (
+          'Border equipped locally. Sign out, sign in with Google again to refresh zkLogin signing for ' +
+          address +
+          ', then equip the border.'
+        );
+      }
+
       return (
-        'Border equipped locally. Finish Google zkLogin for ' +
+        'Border equipped locally. Wait a moment for zkLogin sign-in to finish for ' +
         address +
-        ', wait a moment for sign-in to finish, then equip again.'
+        ', then equip again.'
       );
     }
 
@@ -52,7 +61,15 @@ function equipSyncAuthHint(): string {
     );
   }
 
-  return 'Border equipped locally. Re-authorize account sign-in in Settings, then equip again.';
+  if (source === 'zklogin') {
+    return (
+      'Border equipped locally. zkLogin signing is not ready for ' +
+      address +
+      '. Sign out, sign in with Google again, then equip the border.'
+    );
+  }
+
+  return 'Border equipped locally. Reconnect your wallet or zkLogin in Settings, then equip again.';
 }
 
 export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSyncError): string {
