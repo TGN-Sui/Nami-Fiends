@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  canPromptEquipSyncSignature,
   canPromptWalletSignature,
   createWalletAuthPayload,
   registerWalletAuthSigner,
@@ -17,6 +18,10 @@ vi.mock('./protocol-env.js', () => ({
 
 vi.mock('./nami-capabilities.js', () => ({
   isOfficialOwner: (owner: string | null) => owner?.toLowerCase() === OFFICIAL_OWNER.toLowerCase(),
+}));
+
+vi.mock('./member-session-store.js', () => ({
+  hasActiveMemberSession: vi.fn(() => true),
 }));
 
 import { readWalletAuthRequired } from './protocol-env.js';
@@ -119,6 +124,23 @@ describe('wallet-auth', () => {
       timestampMs: expect.any(Number),
     });
     expect(canPromptWalletSignature(OFFICIAL_OWNER)).toBe(true);
+  });
+
+  it('allows equip sync signatures for signed-in members before passport verification', async () => {
+    const signer = vi.fn(async () => ({
+      signature: 'sig-equip',
+      timestampMs: Date.now(),
+    }));
+
+    registerWalletAuthSigner(signer);
+    setWalletAuthContext({
+      owner: TEST_OWNER,
+      source: 'wallet',
+      memberVerified: false,
+    });
+
+    expect(canPromptEquipSyncSignature(TEST_OWNER)).toBe(true);
+    expect(canPromptWalletSignature(TEST_OWNER)).toBe(false);
   });
 
   it('never prompts for unverified members even with a connected wallet', async () => {

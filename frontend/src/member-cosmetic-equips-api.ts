@@ -1,7 +1,7 @@
 import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js';
 import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import {
-  canPromptWalletSignature,
+  canPromptEquipSyncSignature,
   createWalletAuthPayload,
   readWalletAuthOwner,
 } from './wallet-auth.js';
@@ -132,7 +132,7 @@ async function resolveWalletAuthForSync(owner: string) {
     return null;
   }
 
-  if (!canPromptWalletSignature(owner)) {
+  if (!canPromptEquipSyncSignature(owner)) {
     throw new MemberCosmeticEquipsApiError(
       'wallet_auth_unavailable',
       0,

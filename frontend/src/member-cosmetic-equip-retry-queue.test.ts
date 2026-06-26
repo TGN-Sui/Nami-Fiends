@@ -4,12 +4,18 @@ const syncEquippedChatOverlayToServer = vi.fn();
 
 vi.mock('./member-cosmetic-equips-store.js', () => ({
   syncEquippedChatOverlayToServer: (...args: unknown[]) => syncEquippedChatOverlayToServer(...args),
+  readMemberCosmeticEquipSyncOwner: () => null,
+  readEquippedChatOverlayIdForMember: () => '',
 }));
 
 const pushNamiToast = vi.fn();
 
 vi.mock('./nami-toast-store.js', () => ({
   pushNamiToast: (...args: unknown[]) => pushNamiToast(...args),
+}));
+
+vi.mock('./protocol-owner-resolve.js', () => ({
+  readResolvedProtocolOwner: () => null,
 }));
 
 describe('member-cosmetic-equip-retry-queue', () => {
@@ -58,8 +64,8 @@ describe('member-cosmetic-equip-retry-queue', () => {
     expect(queue.readPendingEquippedChatOverlaySync()).toBeNull();
   });
 
-  it('shows a local-only toast when no wallet owner is available', async () => {
-    syncEquippedChatOverlayToServer.mockResolvedValueOnce({ ok: false, error: 'no_owner' });
+  it('keeps retrying when no wallet owner is available yet', async () => {
+    syncEquippedChatOverlayToServer.mockResolvedValue({ ok: false, error: 'no_owner' });
 
     const queue = await import('./member-cosmetic-equip-retry-queue.js');
 
@@ -70,6 +76,24 @@ describe('member-cosmetic-equip-retry-queue', () => {
       expect.stringContaining('Connect your wallet'),
       'error'
     );
+    expect(queue.readPendingEquippedChatOverlaySync()).not.toBeNull();
+  });
+
+  it('retries immediately after a wallet owner becomes available', async () => {
+    syncEquippedChatOverlayToServer
+      .mockResolvedValueOnce({ ok: false, error: 'no_owner' })
+      .mockResolvedValueOnce({ ok: true });
+
+    const queue = await import('./member-cosmetic-equip-retry-queue.js');
+
+    queue.enqueueEquippedChatOverlaySync('m1', 'overlay-wave-frame', null);
+    await queue.processEquippedChatOverlaySyncQueue();
+
+    queue.refreshEquippedChatOverlaySyncOwner('0xabc');
+    await queue.processEquippedChatOverlaySyncQueue();
+
+    expect(syncEquippedChatOverlayToServer).toHaveBeenCalledTimes(2);
+    expect(syncEquippedChatOverlayToServer.mock.calls[1]?.[2]).toBe('0xabc');
     expect(queue.readPendingEquippedChatOverlaySync()).toBeNull();
   });
 });

@@ -1,3 +1,4 @@
+import { hasActiveMemberSession } from './member-session-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
 
@@ -87,6 +88,41 @@ export function canPromptWalletSignature(owner?: string): boolean {
   }
 
   return walletAuthSigner !== null;
+}
+
+/** Border equip sync can authorize any signed-in member with a live wallet signer. */
+export function canPromptEquipSyncSignature(owner?: string): boolean {
+  if (!readWalletAuthRequired()) {
+    return true;
+  }
+
+  const resolvedOwner = owner ?? authContext.owner;
+
+  if (!resolvedOwner?.startsWith('0x')) {
+    return false;
+  }
+
+  if (resolvedOwner.toLowerCase() !== authContext.owner?.toLowerCase()) {
+    return false;
+  }
+
+  if (
+    authContext.source !== 'wallet' &&
+    authContext.source !== 'zklogin' &&
+    authContext.source !== 'linked'
+  ) {
+    return false;
+  }
+
+  if (!walletAuthSigner) {
+    return false;
+  }
+
+  if (isOfficialOwner(resolvedOwner) || authContext.memberVerified) {
+    return true;
+  }
+
+  return hasActiveMemberSession();
 }
 
 export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {

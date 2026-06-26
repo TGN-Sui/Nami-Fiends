@@ -12,12 +12,6 @@ import {
 } from './wallet-auth.js';
 import { getZkLoginSession } from './zklogin.js';
 
-const EMPTY_AUTH_CONTEXT = {
-  owner: null,
-  source: null,
-  memberVerified: false,
-} as const;
-
 export function WalletAuthBridge(): ReactElement | null {
   const { owner, source } = useProtocolOwner();
   const walletAccount = useCurrentAccount();
@@ -31,11 +25,12 @@ export function WalletAuthBridge(): ReactElement | null {
       memberVerified: isMemberVerified(selfMember),
     });
 
-    const walletConnected =
-      source === 'wallet' ||
-      (walletAccount?.address &&
+    const extensionMatchesOwner = Boolean(
+      walletAccount?.address &&
         owner &&
-        walletAccount.address.toLowerCase() === owner.toLowerCase());
+        walletAccount.address.toLowerCase() === owner.toLowerCase()
+    );
+    const walletConnected = source === 'wallet' || (source === 'linked' && extensionMatchesOwner) || extensionMatchesOwner;
 
     if (walletConnected) {
       registerWalletAuthSigner(async (signOwner) => {
@@ -52,7 +47,6 @@ export function WalletAuthBridge(): ReactElement | null {
 
       return () => {
         registerWalletAuthSigner(null);
-        setWalletAuthContext(EMPTY_AUTH_CONTEXT);
       };
     }
 
@@ -80,7 +74,6 @@ export function WalletAuthBridge(): ReactElement | null {
 
       return () => {
         registerWalletAuthSigner(null);
-        setWalletAuthContext(EMPTY_AUTH_CONTEXT);
       };
     }
 
@@ -88,7 +81,6 @@ export function WalletAuthBridge(): ReactElement | null {
 
     return () => {
       registerWalletAuthSigner(null);
-      setWalletAuthContext(EMPTY_AUTH_CONTEXT);
     };
   }, [owner, source, selfMember, signPersonalMessage, walletAccount?.address]);
 

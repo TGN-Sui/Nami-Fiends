@@ -37,6 +37,10 @@ export function setMemberCosmeticEquipSyncOwner(owner: string | null): void {
   equipSyncOwner = owner?.startsWith('0x') ? owner : null;
 }
 
+export function readMemberCosmeticEquipSyncOwner(): string | null {
+  return equipSyncOwner;
+}
+
 function readLocalEquips(): Record<string, string> {
   if (cachedEquips) {
     return cachedEquips;

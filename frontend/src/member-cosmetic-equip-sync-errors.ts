@@ -19,7 +19,7 @@ export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSy
   }
 
   if (error === 'wallet_auth_unavailable') {
-    return 'Could not authorize border equip sync. Reconnect zkLogin or your wallet, then try again.';
+    return 'Border equipped locally. Finish account sign-in in Settings, then equip again to authorize server sync.';
   }
 
   if (error === 'wallet_auth_required' || error === 'wallet_auth_invalid') {
