@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  alignZkLoginRedirectWithPageOrigin,
   isPlaceholderZkLoginValue,
   normalizeZkLoginRedirectUrl,
   validateZkLoginEnv,
@@ -19,6 +20,27 @@ describe('zklogin-config', () => {
   it('normalizes redirect URLs with trailing slash', () => {
     expect(normalizeZkLoginRedirectUrl('https://app.example.com')).toBe('https://app.example.com/');
     expect(normalizeZkLoginRedirectUrl('https://app.example.com/')).toBe('https://app.example.com/');
+  });
+
+  it('aligns http redirect env with an https page origin', () => {
+    expect(
+      alignZkLoginRedirectWithPageOrigin(
+        'http://nami-fiends.vercel.app/',
+        'https://nami-fiends.vercel.app/settings'
+      )
+    ).toBe('https://nami-fiends.vercel.app/');
+  });
+
+  it('flags http redirect URIs on public hosts', () => {
+    const issues = validateZkLoginEnv({
+      clientId: '885352607900-cnbkebbo23ejlbabgvooshre535204qs.apps.googleusercontent.com',
+      redirectUrl: 'http://nami-fiends.vercel.app/',
+      saltUrl: 'https://salt.api.mystenlabs.com/get_salt',
+      configured: true,
+      testLaunch: true,
+    });
+
+    expect(issues.some((issue) => issue.code === 'redirect_http_on_public_origin')).toBe(true);
   });
 
   it('flags missing client ID on test launch', () => {

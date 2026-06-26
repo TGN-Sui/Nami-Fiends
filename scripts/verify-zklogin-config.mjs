@@ -103,6 +103,19 @@ if (!frontendEnv) {
       } else {
         fail('redirect URI protocol');
       }
+
+      if (
+        parsed.protocol === 'http:' &&
+        parsed.hostname !== 'localhost' &&
+        parsed.hostname !== '127.0.0.1'
+      ) {
+        fail(
+          'redirect URI uses https on public deploys',
+          'Use https:// for Vercel/public origins — http:// splits zkLogin localStorage'
+        );
+      } else if (parsed.protocol === 'https:') {
+        pass('redirect URI uses https on public deploys');
+      }
     } catch {
       fail('redirect URI parseable');
     }
