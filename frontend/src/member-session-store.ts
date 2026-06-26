@@ -8,6 +8,7 @@ import {
   validatePasswordSetup,
   verifyMemberPasswordCredential,
 } from './member-credential-store.js';
+import { safeLocalStorageSetItem } from './local-storage-safe.js';
 import { computePlayerScoreFromDraft, type PlayerScoreTier } from './player-score.js';
 
 const SESSION_KEY = 'nami.member.session';
@@ -112,11 +113,7 @@ function upsertMemberAccountRegistry(session: MemberSession): void {
     ...(existing?.avatarUrl && !session.avatarUrl ? { avatarUrl: existing.avatarUrl } : {}),
   };
 
-  try {
-    window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
-  } catch {
-    // Ignore storage failures in restricted environments.
-  }
+  safeLocalStorageSetItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
 
   void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
     syncRegisteredMemberAccountToServer(registry[email]!).catch(() => {
@@ -345,9 +342,13 @@ export function readMemberSession(): MemberSession | null {
 }
 
 export function saveMemberSession(session: MemberSession): void {
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  upsertMemberAccountRegistry(session);
-  invalidateSessionCache();
+  const saved = safeLocalStorageSetItem(SESSION_KEY, JSON.stringify(session));
+
+  if (saved) {
+    upsertMemberAccountRegistry(session);
+  }
+
+  cachedSession = session;
   window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
 }
 

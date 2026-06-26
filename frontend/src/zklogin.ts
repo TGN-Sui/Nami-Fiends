@@ -7,6 +7,7 @@ import {
   jwtToAddress,
 } from '@mysten/sui/zklogin';
 
+import { safeLocalStorageSetItem } from './local-storage-safe.js';
 import { getConfiguredNetwork } from './nami.js';
 import { readZkLoginEnvConfig } from './zklogin-config.js';
 
@@ -112,7 +113,12 @@ export function clearZkLoginSession(): void {
 }
 
 function saveSession(session: ZkLoginSession, fromOAuthReturn = false): void {
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  if (!safeLocalStorageSetItem(SESSION_KEY, JSON.stringify(session))) {
+    throw new Error(
+      'Browser storage is full. Clear site data for nami-fiends.vercel.app or remove old chat caches, then sign in again.'
+    );
+  }
+
   window.localStorage.removeItem(PENDING_KEY);
 
   if (fromOAuthReturn) {
@@ -178,7 +184,11 @@ export async function startZkLoginFlow(): Promise<void> {
     network: getConfiguredNetwork(),
   };
 
-  window.localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+  if (!safeLocalStorageSetItem(PENDING_KEY, JSON.stringify(pending))) {
+    throw new Error(
+      'Browser storage is full. Clear site data for this site, then try Google sign-in again.'
+    );
+  }
 
   const params = new URLSearchParams({
     client_id: clientId,
