@@ -201,6 +201,32 @@ describe('wallet-auth', () => {
     expect(canPromptWalletSignature(TEST_OWNER)).toBe(false);
   });
 
+  it('always mints a fresh zkLogin signature with signerAddress', async () => {
+    const signer = vi.fn(async () => ({
+      signature: 'sig-zk-catalog',
+      timestampMs: Date.now(),
+      signerAddress: '0xephemeral',
+    }));
+
+    registerWalletAuthSigner(signer);
+    setWalletAuthContext({
+      owner: OFFICIAL_OWNER,
+      source: 'zklogin',
+      memberVerified: false,
+    });
+
+    const first = await createWalletAuthPayload(OFFICIAL_OWNER);
+    const second = await createWalletAuthPayload(OFFICIAL_OWNER);
+
+    expect(first).toEqual({
+      signature: 'sig-zk-catalog',
+      timestampMs: expect.any(Number),
+      signerAddress: '0xephemeral',
+    });
+    expect(second?.signature).toBe('sig-zk-catalog');
+    expect(signer).toHaveBeenCalledTimes(2);
+  });
+
   it('prompts once for verified wallet users and reuses the cached signature', async () => {
     const signer = vi.fn(async () => ({
       signature: 'sig-1',

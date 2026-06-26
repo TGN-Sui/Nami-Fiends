@@ -3,7 +3,7 @@ import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
 import {
   canPromptWalletSignature,
-  createWalletAuthPayload,
+  createCatalogSyncAuthPayload,
   readWalletAuthOwner,
 } from './wallet-auth.js';
 
@@ -179,7 +179,7 @@ async function resolveWalletAuthForSync(owner: string) {
   }
 
   try {
-    const auth = await createWalletAuthPayload(owner);
+    const auth = await createCatalogSyncAuthPayload(owner);
 
     if (!auth?.signature || !Number.isFinite(auth.timestampMs)) {
       throw new ChatOverlayRewardsApiError(

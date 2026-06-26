@@ -169,8 +169,30 @@ async function createSignedAuthPayload(
   return signPromise;
 }
 
+function shouldBypassWalletAuthCache(): boolean {
+  // zkLogin signs with an ephemeral key; the backend must receive signerAddress every time.
+  return authContext.source === 'zklogin';
+}
+
 export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired() || !canPromptWalletSignature(owner) || !walletAuthSigner) {
+    return null;
+  }
+
+  if (shouldBypassWalletAuthCache()) {
+    return walletAuthSigner(owner);
+  }
+
   return createSignedAuthPayload(owner, canPromptWalletSignature);
+}
+
+export async function createCatalogSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired() || !canPromptWalletSignature(owner) || !walletAuthSigner) {
+    return null;
+  }
+
+  // Border art catalog saves can include large data URLs — always mint a fresh zkLogin signature.
+  return walletAuthSigner(owner);
 }
 
 export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
