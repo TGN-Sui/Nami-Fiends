@@ -38,6 +38,15 @@ function minimalSummary(overrides: Partial<LaunchOpsSummary> = {}): LaunchOpsSum
       card_checkout_enabled: false,
       paypal_checkout_enabled: false,
     },
+    walrus_sites: {
+      configured: false,
+      site_object_id: null,
+      network: 'testnet',
+      storage_epochs: null,
+      last_deploy_ms: null,
+      portal_note: 'Not deployed',
+      ws_resources_present: true,
+    },
     walrus_border_art: {
       configured: true,
       network: 'testnet',

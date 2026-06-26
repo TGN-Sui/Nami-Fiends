@@ -92,6 +92,15 @@ node scripts/migrate-border-art-to-walrus.mjs
 
 **BA-14.4 attestation (post-hackathon):** keep `NAMI_CATALOG_ATTEST_ENABLED=false` until the submitted Move package is upgraded with `chat_overlay_catalog.move`.
 
+**Phase 9.1 Walrus Sites (optional before hackathon):**
+
+```bash
+node scripts/deploy-walrus-sites.mjs --dry-run
+node scripts/deploy-walrus-sites.mjs --epochs 5 --context testnet
+```
+
+See [walrus-sites-deploy.md](./walrus-sites-deploy.md). Set `NAMI_WALRUS_SITE_OBJECT_ID` on Render after first deploy.
+
 ---
 
 ## 4. Deploy (Vercel + Render)

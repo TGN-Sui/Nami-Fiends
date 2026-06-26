@@ -27,10 +27,6 @@ function rejectionReason(input: {
   owner: string;
   auth: ReturnType<typeof readWalletAuthFromBody>;
 }): string | null {
-  if (!walletAuthConfig.requireSignature) {
-    return null;
-  }
-
   if (!input.auth.signature?.trim()) {
     return 'missing_signature';
   }

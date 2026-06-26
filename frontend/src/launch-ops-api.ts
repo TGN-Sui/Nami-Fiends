@@ -18,6 +18,16 @@ export type LaunchOpsPaymentReadiness = {
   paypal_checkout_enabled: boolean;
 };
 
+export type LaunchOpsWalrusSitesReadiness = {
+  configured: boolean;
+  site_object_id: string | null;
+  network: string | null;
+  storage_epochs: number | string | null;
+  last_deploy_ms: number | null;
+  portal_note: string;
+  ws_resources_present: boolean;
+};
+
 export type LaunchOpsWalrusBorderArtReadiness = {
   configured: boolean;
   network: string | null;
@@ -48,6 +58,7 @@ export type LaunchOpsSummary = {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_sites: LaunchOpsWalrusSitesReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];

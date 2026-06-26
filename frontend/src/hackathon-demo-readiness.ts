@@ -102,6 +102,17 @@ export function buildHackathonReadinessChecks(
   });
 
   checks.push({
+    id: 'walrus-sites',
+    label: 'Walrus Sites SPA (Phase 9.1)',
+    status: summary?.walrus_sites?.configured ? 'ready' : 'warn',
+    detail: summary?.walrus_sites?.configured
+      ? 'Static host on Walrus Sites — object ' +
+        (summary.walrus_sites.site_object_id?.slice(0, 12) ?? '') +
+        '…'
+      : 'Vercel still hosts the SPA — run scripts/deploy-walrus-sites.mjs when site-builder is ready.',
+  });
+
+  checks.push({
     id: 'walrus',
     label: 'Walrus border art',
     status: summary?.walrus_border_art.configured ? 'ready' : 'warn',

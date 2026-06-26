@@ -6,6 +6,7 @@ import {
 } from './discovery.service.js';
 import { isCatalogAttestationEnabled } from './chat-overlay-catalog-attestation.service.js';
 import { readBorderArtCatalogQuiltSnapshot } from './chat-overlay-rewards.service.js';
+import { buildWalrusSitesReadiness } from './walrus-sites.service.js';
 import { getOfficialsSubmissions } from './officials-submissions.service.js';
 import { paymentConfig } from '../payment-config.js';
 import { getPublicPaymentConfig } from './membership-payments.service.js';
@@ -35,6 +36,16 @@ export interface LaunchOpsPaymentReadiness {
   crypto_checkout_enabled: boolean;
   card_checkout_enabled: boolean;
   paypal_checkout_enabled: boolean;
+}
+
+export interface LaunchOpsWalrusSitesReadiness {
+  configured: boolean;
+  site_object_id: string | null;
+  network: string | null;
+  storage_epochs: number | string | null;
+  last_deploy_ms: number | null;
+  portal_note: string;
+  ws_resources_present: boolean;
 }
 
 export interface LaunchOpsWalrusBorderArtReadiness {
@@ -67,6 +78,7 @@ export interface LaunchOpsSummary {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_sites: LaunchOpsWalrusSitesReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];
@@ -166,6 +178,14 @@ export async function buildLaunchOpsSummary(
     );
   }
 
+  const walrusSites = buildWalrusSitesReadiness();
+
+  if (!walrusSites.configured) {
+    pendingActions.push(
+      'Phase 9.1: deploy static SPA to Walrus Sites (node scripts/deploy-walrus-sites.mjs) and set NAMI_WALRUS_SITE_OBJECT_ID.',
+    );
+  }
+
   pendingActions.push('Legal review of privacy draft before mainnet (human step).');
 
   return {
@@ -183,6 +203,7 @@ export async function buildLaunchOpsSummary(
       card_checkout_enabled: publicPayment.cardEnabled,
       paypal_checkout_enabled: publicPayment.paypalEnabled,
     },
+    walrus_sites: walrusSites,
     walrus_border_art: {
       configured: isWalrusBorderArtConfigured(walrusBorderArt),
       network: walrusBorderArt.network,

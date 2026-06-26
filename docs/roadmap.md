@@ -996,7 +996,7 @@ zkLogin redirect URIs registered for production portal domains
 Status:
 
 ```text
-Planned
+In progress — ws-resources.json, prepare/deploy scripts, Launch Ops card (docs/walrus-sites-deploy.md)
 ```
 
 Scope:

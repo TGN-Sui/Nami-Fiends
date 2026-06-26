@@ -122,6 +122,44 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
             ) : null}
           </section>
 
+          {summary.walrus_sites ? (
+            <section className="launch-ops-card">
+              <h3>Walrus Sites (SPA)</h3>
+              <ul className="protocol-timeline-list">
+                <li className="protocol-timeline-item">
+                  Site deployed <strong>{summary.walrus_sites.configured ? 'yes' : 'no'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  ws-resources.json{' '}
+                  <strong>{summary.walrus_sites.ws_resources_present ? 'present' : 'missing'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Site object{' '}
+                  <strong>
+                    {summary.walrus_sites.site_object_id
+                      ? summary.walrus_sites.site_object_id.slice(0, 12) + '…'
+                      : 'none'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Network <strong>{summary.walrus_sites.network ?? 'unset'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Storage epochs <strong>{summary.walrus_sites.storage_epochs ?? '—'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Last deploy{' '}
+                  <strong>
+                    {summary.walrus_sites.last_deploy_ms
+                      ? new Date(summary.walrus_sites.last_deploy_ms).toLocaleString()
+                      : 'never'}
+                  </strong>
+                </li>
+              </ul>
+              <p className="protocol-hint">{summary.walrus_sites.portal_note}</p>
+            </section>
+          ) : null}
+
           <section className="launch-ops-card">
             <h3>Walrus border art</h3>
             <ul className="protocol-timeline-list">

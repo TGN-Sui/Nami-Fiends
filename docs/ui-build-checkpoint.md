@@ -274,9 +274,18 @@ Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `
 
 Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **297** unit tests passing; `node scripts/verify-testnet-ready.mjs` — all checks green.
 
+## Phase 9.1 — Walrus Sites (in progress)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| 9.1.1 | Complete | `frontend/ws-resources.json` SPA routes + asset cache headers |
+| 9.1.2 | Complete | `scripts/prepare-walrus-sites-dist.mjs` + `scripts/deploy-walrus-sites.mjs` |
+| 9.1.3 | Complete | Launch Ops `walrus_sites` card + `walrus-sites.service.ts` projection |
+| 9.1.4 | Ops | First testnet `site-builder deploy` + portal URL + zkLogin redirect update |
+
 **Recommended next lane:**
 
-1. Set Render payment secrets (treasury, Stripe, PayPal) — verify script warns until green.
-2. Assign AdminCap backup holder + legal review of privacy draft (Phase 8.4).
-3. Phase 9.1 Walrus Sites frontend hosting once Phase 8 exit criteria are met.
+1. Run `node scripts/deploy-walrus-sites.mjs --dry-run` then deploy when site-builder is installed.
+2. Set Render payment secrets (treasury, Stripe, PayPal) — verify script warns until green.
+3. Phase 9.2 Seal privacy proofs after Walrus Sites cutover or parallel ops.
 

@@ -189,6 +189,10 @@ export function HackathonDemoPanel(props: {
         <p className="protocol-hint">
           Full pre-demo gate: <code>node scripts/hackathon-demo-ready.mjs</code>
         </p>
+        <p className="protocol-hint">
+          Phase 9.1 Walrus Sites: <code>node scripts/deploy-walrus-sites.mjs --dry-run</code> — see{' '}
+          <code>docs/walrus-sites-deploy.md</code>
+        </p>
       </section>
     </article>
   );
