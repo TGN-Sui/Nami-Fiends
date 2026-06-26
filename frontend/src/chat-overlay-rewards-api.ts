@@ -1,11 +1,7 @@
 import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js';
 import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
-import {
-  canPromptWalletSignature,
-  createCatalogSyncAuthPayload,
-  readWalletAuthOwner,
-} from './wallet-auth.js';
+import { createCatalogSyncAuthPayload, readWalletAuthOwner } from './wallet-auth.js';
 
 export type ChatOverlayRewardsCatalog = {
   rewards: OfficialChatOverlayReward[];
@@ -174,14 +170,6 @@ export async function fetchChatOverlayRewardsCatalog(): Promise<ChatOverlayRewar
 async function resolveWalletAuthForSync(owner: string) {
   if (!readWalletAuthRequired()) {
     return null;
-  }
-
-  if (!canPromptWalletSignature(owner)) {
-    throw new ChatOverlayRewardsApiError(
-      'wallet_auth_unavailable',
-      0,
-      'Reconnect zkLogin or your official owner wallet to authorize border art uploads, then save again.'
-    );
   }
 
   try {

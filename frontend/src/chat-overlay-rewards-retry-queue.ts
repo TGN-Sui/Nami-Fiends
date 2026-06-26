@@ -7,7 +7,11 @@ import { isChatOverlayRewardsApiAvailable } from './chat-overlay-rewards-api.js'
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
 import { pushNamiToast } from './nami-toast-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
-import { hasWalletAuthSigner, readWalletAuthOwner } from './wallet-auth.js';
+import {
+  canSignWalletAuthWithZkLogin,
+  hasWalletAuthSigner,
+  readWalletAuthOwner,
+} from './wallet-auth.js';
 import { readWalletAuthRequired } from './protocol-env.js';
 
 const RETRY_DELAYS_MS = [2000, 5000, 12000, 30000];
@@ -63,7 +67,9 @@ function isRetryableError(error: ChatOverlayRewardsSyncError): boolean {
 }
 
 function isCatalogSyncAuthReady(owner: string | null): boolean {
-  return Boolean(owner?.startsWith('0x') && hasWalletAuthSigner());
+  return Boolean(
+    owner?.startsWith('0x') && (canSignWalletAuthWithZkLogin(owner) || hasWalletAuthSigner())
+  );
 }
 
 function shouldDeferForAuthReadiness(owner: string | null): boolean {
