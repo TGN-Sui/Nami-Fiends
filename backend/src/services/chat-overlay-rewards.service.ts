@@ -1,7 +1,12 @@
+import { assertBorderArtCanvasDimensions } from '../border-art-image-dimensions.js';
 import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
-import { saveBorderArtUpload } from './media-upload.service.js';
+import {
+  publishChatOverlayCatalogAttestation,
+  type ChatOverlayCatalogAttestation,
+} from './chat-overlay-catalog-attestation.service.js';
+import { readUploadedMediaFile, saveBorderArtUpload } from './media-upload.service.js';
 import {
   isWalrusBorderArtEnabled,
   publishBorderArtQuilt,
@@ -45,6 +50,7 @@ export type OfficialChatOverlayReward = {
 export type ChatOverlayRewardsProjection = {
   rewards: OfficialChatOverlayReward[];
   updatedAtMs: number;
+  catalogAttestation?: ChatOverlayCatalogAttestation | null;
 };
 
 const PROJECTION_PATH = `${config.dataDir}/projections/chat-overlay-rewards.json`;
@@ -82,6 +88,51 @@ function emptyProjection(): ChatOverlayRewardsProjection {
   return {
     rewards: [],
     updatedAtMs: Date.now(),
+    catalogAttestation: null,
+  };
+}
+
+function normalizeCatalogAttestation(value: unknown): ChatOverlayCatalogAttestation | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const quiltBlobId = typeof record.quiltBlobId === 'string' ? record.quiltBlobId.trim() : '';
+  const contentRootHash =
+    typeof record.contentRootHash === 'string' ? record.contentRootHash.trim() : '';
+  const catalogVersionMs =
+    typeof record.catalogVersionMs === 'number' && Number.isFinite(record.catalogVersionMs)
+      ? record.catalogVersionMs
+      : null;
+  const patchCount =
+    typeof record.patchCount === 'number' && Number.isFinite(record.patchCount)
+      ? record.patchCount
+      : null;
+  const publishedAtMs =
+    typeof record.publishedAtMs === 'number' && Number.isFinite(record.publishedAtMs)
+      ? record.publishedAtMs
+      : Date.now();
+  const status =
+    record.status === 'on-chain' ||
+    record.status === 'pending-package' ||
+    record.status === 'skipped'
+      ? record.status
+      : null;
+
+  if (!quiltBlobId || !contentRootHash || catalogVersionMs === null || patchCount === null || !status) {
+    return null;
+  }
+
+  return {
+    quiltBlobId,
+    catalogVersionMs,
+    contentRootHash,
+    patchCount,
+    txDigest: typeof record.txDigest === 'string' ? record.txDigest : null,
+    publishedAtMs,
+    status,
+    ...(typeof record.detail === 'string' ? { detail: record.detail } : {}),
   };
 }
 
@@ -337,6 +388,7 @@ async function readProjection(): Promise<ChatOverlayRewardsProjection> {
     return {
       rewards,
       updatedAtMs: typeof stored.updatedAtMs === 'number' ? stored.updatedAtMs : Date.now(),
+      catalogAttestation: normalizeCatalogAttestation(stored.catalogAttestation),
     };
   }
 
@@ -353,6 +405,7 @@ async function writeProjection(projection: ChatOverlayRewardsProjection): Promis
   await writeJsonFile(PROJECTION_PATH, {
     rewards: projection.rewards,
     updatedAtMs: Date.now(),
+    ...(projection.catalogAttestation ? { catalogAttestation: projection.catalogAttestation } : {}),
   });
 }
 
@@ -422,6 +475,8 @@ function prepareArtSlot(input: {
     throw new Error('invalid_file_size');
   }
 
+  assertBorderArtCanvasDimensions(decoded.bytes, decoded.contentType);
+
   if (isWalrusBorderArtEnabled() || config.walrus.borderArtRequired) {
     return {
       url: null,
@@ -480,6 +535,242 @@ export async function getChatOverlayRewardsCatalog(): Promise<ChatOverlayRewards
   return readProjection();
 }
 
+export type BorderArtCatalogQuiltSnapshot = {
+  quiltBlobId: string | null;
+  catalogVersionMs: number | null;
+  patchCount: number;
+  lastPublishMs: number | null;
+  attestationStatus: ChatOverlayCatalogAttestation['status'] | null;
+  attestationTxDigest: string | null;
+};
+
+export async function readBorderArtCatalogQuiltSnapshot(): Promise<BorderArtCatalogQuiltSnapshot> {
+  const projection = await readProjection();
+  let quiltBlobId: string | null = null;
+  let catalogVersionMs: number | null = null;
+  let patchCount = 0;
+  let lastPublishMs: number | null =
+    typeof projection.updatedAtMs === 'number' ? projection.updatedAtMs : null;
+
+  for (const reward of projection.rewards) {
+    for (const ref of [reward.staticArtRef, reward.animatedArtRef]) {
+      if (!ref?.patchId) {
+        continue;
+      }
+
+      patchCount += 1;
+
+      if (catalogVersionMs === null || ref.catalogVersionMs >= catalogVersionMs) {
+        catalogVersionMs = ref.catalogVersionMs;
+        quiltBlobId = ref.quiltBlobId;
+      }
+    }
+  }
+
+  const attestation = normalizeCatalogAttestation(projection.catalogAttestation);
+
+  return {
+    quiltBlobId,
+    catalogVersionMs,
+    patchCount,
+    lastPublishMs,
+    attestationStatus: attestation?.status ?? null,
+    attestationTxDigest: attestation?.txDigest ?? null,
+  };
+}
+
+const LEGACY_BORDER_ART_URL_PATTERN =
+  /\/api\/media\/files\/(0x[a-f0-9]+)\/([^/?#]+)/i;
+
+export function isLegacyRenderBorderArtUrl(url: string | null | undefined): boolean {
+  if (!url?.trim()) {
+    return false;
+  }
+
+  const trimmed = url.trim();
+
+  return (
+    LEGACY_BORDER_ART_URL_PATTERN.test(trimmed) && /border-art-/i.test(trimmed)
+  );
+}
+
+function bytesToDataUrl(contentType: string, bytes: Buffer): string {
+  return 'data:' + contentType + ';base64,' + bytes.toString('base64');
+}
+
+export async function loadLegacyBorderArtBytes(
+  url: string
+): Promise<{ contentType: string; bytes: Buffer } | null> {
+  const trimmed = url.trim();
+  const match = trimmed.match(LEGACY_BORDER_ART_URL_PATTERN);
+
+  if (match?.[1] && match[2]) {
+    const file = await readUploadedMediaFile(match[1], decodeURIComponent(match[2]));
+
+    if (file) {
+      return {
+        contentType: file.contentType,
+        bytes: file.buffer,
+      };
+    }
+  }
+
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(trimmed);
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const contentType = response.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream';
+
+    return {
+      contentType,
+      bytes,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type BorderArtMigrationSlotReport = {
+  rewardId: string;
+  artKind: 'static' | 'animated';
+  status: 'skipped' | 'migrated' | 'missing' | 'failed';
+  detail?: string;
+};
+
+export type BorderArtMigrationReport = {
+  owner: string;
+  catalogVersionMs: number;
+  migratedCount: number;
+  slots: BorderArtMigrationSlotReport[];
+};
+
+export async function migrateChatOverlayRewardsToWalrus(
+  owner: string
+): Promise<{ catalog: ChatOverlayRewardsProjection; report: BorderArtMigrationReport }> {
+  if (!owner.startsWith('0x')) {
+    throw new Error('invalid_owner');
+  }
+
+  if (!isWalrusBorderArtEnabled()) {
+    throw new Error('walrus_not_configured');
+  }
+
+  const projection = await readProjection();
+  const catalogVersionMs = Date.now();
+  const slots: BorderArtMigrationSlotReport[] = [];
+  const rewardsForSync: OfficialChatOverlayReward[] = [];
+
+  for (const reward of projection.rewards) {
+    const nextReward: OfficialChatOverlayReward = { ...reward };
+
+    for (const artKind of ['static', 'animated'] as const) {
+      const ref = artKind === 'static' ? reward.staticArtRef : reward.animatedArtRef;
+      const url = artKind === 'static' ? reward.staticArtUrl : reward.animatedArtUrl;
+
+      if (ref?.patchId) {
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'skipped',
+          detail: 'already on Walrus',
+        });
+        continue;
+      }
+
+      if (!url?.trim()) {
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'skipped',
+          detail: 'no art',
+        });
+        continue;
+      }
+
+      if (isWalrusAggregatorUrl(url)) {
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'skipped',
+          detail: 'aggregator URL already set',
+        });
+        continue;
+      }
+
+      const loaded = await loadLegacyBorderArtBytes(url);
+
+      if (!loaded || loaded.bytes.byteLength === 0) {
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'missing',
+          detail: 'could not load legacy bytes',
+        });
+        continue;
+      }
+
+      try {
+        assertBorderArtCanvasDimensions(loaded.bytes, loaded.contentType);
+        const dataUrl = bytesToDataUrl(loaded.contentType, loaded.bytes);
+
+        if (artKind === 'static') {
+          nextReward.staticArtUrl = dataUrl;
+        } else {
+          nextReward.animatedArtUrl = dataUrl;
+        }
+
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'migrated',
+        });
+      } catch (error) {
+        slots.push({
+          rewardId: reward.id,
+          artKind,
+          status: 'failed',
+          detail: error instanceof Error ? error.message : 'invalid_art_dimensions',
+        });
+      }
+    }
+
+    rewardsForSync.push(nextReward);
+  }
+
+  const catalog = await syncChatOverlayRewardsCatalog({
+    owner,
+    rewards: rewardsForSync,
+  });
+
+  return {
+    catalog,
+    report: {
+      owner,
+      catalogVersionMs,
+      migratedCount: slots.filter((slot) => slot.status === 'migrated').length,
+      slots,
+    },
+  };
+}
+
+function isWalrusAggregatorUrl(url: string): boolean {
+  const trimmed = url.trim();
+
+  return (
+    /\/v1\/blobs\/by-quilt-patch-id\//i.test(trimmed) ||
+    /aggregator\.walrus/i.test(trimmed) ||
+    /\.walrus\.space/i.test(trimmed)
+  );
+}
+
 export async function syncChatOverlayRewardsCatalog(input: {
   owner: string;
   rewards: unknown[];
@@ -531,6 +822,7 @@ export async function syncChatOverlayRewardsCatalog(input: {
   }
 
   const publishedByKey = new Map<string, { url: string; ref: WalrusQuiltPatchRef }>();
+  let publishedQuiltBlobId: string | null = null;
 
   if (stagedPatches.length > 0) {
     if (config.walrus.borderArtRequired && !isWalrusBorderArtEnabled()) {
@@ -539,6 +831,7 @@ export async function syncChatOverlayRewardsCatalog(input: {
 
     if (isWalrusBorderArtEnabled()) {
       const publishResult = await publishBorderArtQuilt(stagedPatches, config.walrus);
+      publishedQuiltBlobId = publishResult.quiltBlobId;
 
       for (const patch of publishResult.patches) {
         publishedByKey.set(patchKey(patch.rewardId, patch.artKind), {
@@ -577,9 +870,21 @@ export async function syncChatOverlayRewardsCatalog(input: {
     });
   }
 
+  let catalogAttestation = existingProjection.catalogAttestation ?? null;
+
+  if (publishedQuiltBlobId) {
+    catalogAttestation = await publishChatOverlayCatalogAttestation({
+      owner: input.owner,
+      catalogVersionMs,
+      quiltBlobId: publishedQuiltBlobId,
+      rewards: resolvedRewards,
+    });
+  }
+
   const projection: ChatOverlayRewardsProjection = {
     rewards: resolvedRewards,
     updatedAtMs: Date.now(),
+    catalogAttestation,
   };
 
   await writeProjection(projection);

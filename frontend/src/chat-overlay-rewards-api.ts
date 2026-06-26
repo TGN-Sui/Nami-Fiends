@@ -2,10 +2,23 @@ import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js'
 import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
 import { createCatalogSyncAuthPayload, readWalletAuthOwner } from './wallet-auth.js';
+import { canZkLoginSignForOwner } from './zklogin.js';
+
+export type ChatOverlayCatalogAttestation = {
+  quiltBlobId: string;
+  catalogVersionMs: number;
+  contentRootHash: string;
+  patchCount: number;
+  txDigest: string | null;
+  publishedAtMs: number;
+  status: 'on-chain' | 'pending-package' | 'skipped';
+  detail?: string;
+};
 
 export type ChatOverlayRewardsCatalog = {
   rewards: OfficialChatOverlayReward[];
   updatedAtMs: number;
+  catalogAttestation?: ChatOverlayCatalogAttestation | null;
 };
 
 export type ChatOverlayRewardsApiErrorCode =
@@ -89,6 +102,14 @@ function mapResponseError(status: number, body: Record<string, unknown>): ChatOv
       'invalid_file_size',
       status,
       'One of the border art files is too large for the receiving server. Upload a smaller image.'
+    );
+  }
+
+  if (message.includes('invalid_art_dimensions')) {
+    return new ChatOverlayRewardsApiError(
+      'invalid_art_value',
+      status,
+      'Border art must be exactly 384×384 px. Re-export your 9-patch frame, then upload again.'
     );
   }
 
@@ -176,6 +197,14 @@ async function resolveWalletAuthForSync(owner: string) {
     const auth = await createCatalogSyncAuthPayload(owner);
 
     if (!auth?.signature || !Number.isFinite(auth.timestampMs)) {
+      throw new ChatOverlayRewardsApiError(
+        'wallet_auth_unavailable',
+        0,
+        'Reconnect zkLogin or your official owner wallet to authorize border art uploads, then save again.'
+      );
+    }
+
+    if (canZkLoginSignForOwner(owner) && !auth.signerAddress) {
       throw new ChatOverlayRewardsApiError(
         'wallet_auth_unavailable',
         0,

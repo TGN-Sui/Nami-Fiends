@@ -67,6 +67,31 @@ Verify readiness:
 node scripts/verify-testnet-ready.mjs
 ```
 
+**Hackathon demo gate (BA-14 + testnet):**
+
+```bash
+node scripts/hackathon-demo-ready.mjs
+```
+
+Runs testnet env checks plus live Walrus border-art smoke. For bytes proof without browser zkLogin:
+
+```bash
+npx --prefix backend tsx scripts/smoke-border-art-walrus-local.mjs
+```
+
+In-app: official owner → Settings → **Hackathon demo**. See [mvp-demo-flow.md](./mvp-demo-flow.md).
+
+**BA-14.2 migration (optional before `NAMI_WALRUS_BORDER_ART_REQUIRED=true`):**
+
+```bash
+node scripts/migrate-border-art-to-walrus.mjs --dry-run
+node scripts/migrate-border-art-to-walrus.mjs
+```
+
+**Walrus quilt epoch renewal:** extend the catalog quilt blob before epochs expire (`walrus extend --blob-id {quiltBlobId}`). Launch Ops shows quilt blob id, patch count, and last publish ms.
+
+**BA-14.4 attestation (post-hackathon):** keep `NAMI_CATALOG_ATTEST_ENABLED=false` until the submitted Move package is upgraded with `chat_overlay_catalog.move`.
+
 ---
 
 ## 4. Deploy (Vercel + Render)

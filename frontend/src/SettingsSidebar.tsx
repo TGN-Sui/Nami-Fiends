@@ -64,7 +64,7 @@ function SettingsSidebarGroup(props: {
               className={
                 'settings-sidebar-item' +
                 (props.activeNav === item.id ? ' is-active-settings-nav' : '') +
-                (item.id === 'owner-border-art' ? ' is-featured-owner-nav' : '')
+                (item.id === 'owner-demo' ? ' is-featured-owner-nav' : '')
               }
               onClick={() => props.onSelect(item.id)}
               type="button"

@@ -88,7 +88,11 @@ export async function handleChatOverlayRewardsSync(
       return;
     }
 
-    if (message === 'invalid_art_value' || message === 'invalid_file_size') {
+    if (
+      message === 'invalid_art_value' ||
+      message === 'invalid_file_size' ||
+      message === 'invalid_art_dimensions'
+    ) {
       sendJson(response, 400, {
         error: 'chat_overlay_rewards_sync_failed',
         message,

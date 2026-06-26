@@ -46,6 +46,7 @@ import {
   type UserSurfaceRole,
 } from './surface-preferences.js';
 import { DemoPerspectivePanel } from './DemoPerspectivePanel.js';
+import { HackathonDemoPanel } from './HackathonDemoPanel.js';
 import { UserSuggestionsSettingsPanel } from './UserSuggestionsSettingsPanel.js';
 import { useDemoPerspective } from './demo-perspective-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
@@ -286,7 +287,7 @@ export function SettingsScreen(props: {
 
   useEffect(() => {
     function handleOwnerUnlocked(): void {
-      setActiveNav(consumeSettingsNavFocus() ?? 'owner-border-art');
+      setActiveNav(consumeSettingsNavFocus() ?? 'owner-demo');
     }
 
     window.addEventListener('nami-settings-owner-unlocked', handleOwnerUnlocked);
@@ -335,11 +336,26 @@ export function SettingsScreen(props: {
 
         {isOwnerDashboard ? (
           <article className="panel settings-home-status-card is-owner-highlight-card">
+            <span className="mini-badge">Hackathon</span>
+            <h3>Demo walkthrough</h3>
+            <p>Readiness checks and judge shortcuts for the Sui x Walrus MVP.</p>
+            <button
+              className="nami-surface-button is-primary-surface-button"
+              onClick={() => setActiveNav('owner-demo')}
+              type="button"
+            >
+              Open demo console
+            </button>
+          </article>
+        ) : null}
+
+        {isOwnerDashboard ? (
+          <article className="panel settings-home-status-card">
             <span className="mini-badge">Owner</span>
             <h3>Border Art studio</h3>
             <p>Upload chat border cosmetics and define who unlocks each reward.</p>
             <button
-              className="nami-surface-button is-primary-surface-button"
+              className="profile-secondary-link"
               onClick={() => setActiveNav('owner-border-art')}
               type="button"
             >
@@ -512,6 +528,16 @@ export function SettingsScreen(props: {
             />
             <OwnerTicketReviewPanel />
           </div>
+        );
+
+      case 'owner-demo':
+        return renderOwnerWorkspace(
+          'owner-demo',
+          <HackathonDemoPanel
+            embedded
+            onNavigate={props.onNavigate}
+            onOpenSettingsNav={setActiveNav}
+          />
         );
 
       case 'owner-border-art':

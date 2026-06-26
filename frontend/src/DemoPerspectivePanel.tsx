@@ -41,7 +41,7 @@ export function DemoPerspectivePanel(props: {
     const preset = applyDemoPerspective(perspectiveId);
 
     if (preset.id === 'nami-official-owner') {
-      requestSettingsNav('owner-border-art');
+      requestSettingsNav('owner-demo');
     }
 
     props.onPerspectiveApplied?.(preset.landingPage, preset.channelId);
@@ -54,7 +54,7 @@ export function DemoPerspectivePanel(props: {
 
   function handleRestoreOwner(): void {
     restoreOwnerDemoPerspective();
-    requestSettingsNav('owner-border-art');
+    requestSettingsNav('owner-demo');
     props.onPerspectiveApplied?.('settings');
     props.onNavigate?.('settings');
   }

@@ -10,8 +10,8 @@ import {
 } from './chat-border-art-specs.js';
 import {
   readChatBorderArtDataUrl,
-  validateChatBorderAnimatedArt,
-  validateChatBorderStaticArt,
+  validateChatBorderAnimatedArtUpload,
+  validateChatBorderStaticArtUpload,
 } from './chat-border-art-upload.js';
 import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
@@ -137,7 +137,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
       return;
     }
 
-    const validationError = validateChatBorderStaticArt(file);
+    const validationError = await validateChatBorderStaticArtUpload(file);
 
     if (validationError) {
       setUploadError(validationError);
@@ -156,7 +156,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
       return;
     }
 
-    const validationError = validateChatBorderAnimatedArt(file);
+    const validationError = await validateChatBorderAnimatedArtUpload(file);
 
     if (validationError) {
       setUploadError(validationError);

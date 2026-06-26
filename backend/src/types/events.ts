@@ -415,6 +415,14 @@ export interface CosmeticEquipped {
   cosmetic_code: number;
 }
 
+export interface ChatOverlayCatalogPublished {
+  official_owner: string;
+  catalog_version_ms: number;
+  quilt_blob_id: string;
+  content_root_hash: string;
+  patch_count: number;
+}
+
 // =============================================================================
 // RECOVERY (recently hardened - double resolution prevention)
 // =============================================================================
@@ -488,6 +496,7 @@ export type NamiEventData =
   | CosmeticUnlocked
   | CosmeticLoadoutCreated
   | CosmeticEquipped
+  | ChatOverlayCatalogPublished
   | RecoveryRequested
   | RecoveryResolved;
 

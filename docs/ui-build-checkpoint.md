@@ -256,7 +256,9 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-12 | Complete | Equip picker border previews + equips store as single source of truth. |
 | BA-13 | Complete | Official grant picker uses member directory roster (fixture fallback preserved). |
 | BA-14.1 | Complete | Walrus quilt publisher + projection `*ArtRef` + `resolveBorderArtUrl()` (Render fallback when Walrus unset). |
-| BA-14.2+ | Planned | Migration script, `NAMI_WALRUS_BORDER_ART_REQUIRED`, integrity checks — see [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md). |
+| BA-14.2 | Complete | Migration script, `NAMI_WALRUS_BORDER_ART_REQUIRED`, Launch Ops Walrus card, hackathon demo console. |
+| BA-14.3 | Complete | 384×384 upload enforcement + testnet `contentHash` warn. |
+| BA-14.4 | Code complete (deferred) | Move + PTB wired; `NAMI_CATALOG_ATTEST_ENABLED=false` for frozen hackathon package. |
 
 ## Phase 8 — Launch Ops (UI-C27)
 

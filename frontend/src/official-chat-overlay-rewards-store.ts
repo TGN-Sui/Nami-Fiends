@@ -6,6 +6,7 @@ import {
   normalizeChatBorderSliceInsets,
   type ChatBorderSliceInsets,
 } from './chat-border-art-specs.js';
+import type { ChatOverlayCatalogAttestation } from './chat-overlay-rewards-api.js';
 import {
   normalizeWalrusQuiltPatchRef,
   type WalrusQuiltPatchRef,
@@ -126,10 +127,40 @@ export function readDefaultOfficialChatOverlayRewards(): OfficialChatOverlayRewa
 }
 
 let cachedRewards: OfficialChatOverlayReward[] | null = null;
+let catalogAttestation: ChatOverlayCatalogAttestation | null = null;
 
 function dispatchChange(): void {
   cachedRewards = null;
   window.dispatchEvent(new CustomEvent('nami-official-chat-overlay-rewards-changed'));
+}
+
+function dispatchAttestationChange(): void {
+  window.dispatchEvent(new CustomEvent('nami-chat-overlay-catalog-attestation-changed'));
+}
+
+export function readChatOverlayCatalogAttestation(): ChatOverlayCatalogAttestation | null {
+  return catalogAttestation;
+}
+
+export function saveChatOverlayCatalogAttestation(
+  attestation: ChatOverlayCatalogAttestation | null
+): void {
+  catalogAttestation = attestation;
+  dispatchAttestationChange();
+}
+
+export function useChatOverlayCatalogAttestation(): ChatOverlayCatalogAttestation | null {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener('nami-chat-overlay-catalog-attestation-changed', onStoreChange);
+
+      return () => {
+        window.removeEventListener('nami-chat-overlay-catalog-attestation-changed', onStoreChange);
+      };
+    },
+    () => readChatOverlayCatalogAttestation(),
+    () => null
+  );
 }
 
 function normalizeBorderStyle(

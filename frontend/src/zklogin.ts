@@ -61,13 +61,23 @@ export function isZkLoginConfigured(): boolean {
   return readClientId() !== null;
 }
 
+export function isZkLoginSessionSignable(
+  session: ZkLoginSession | null = getZkLoginSession()
+): boolean {
+  return Boolean(
+    session?.address?.startsWith('0x') &&
+      typeof session.ephemeralSecretKey === 'string' &&
+      session.ephemeralSecretKey.trim() !== ''
+  );
+}
+
 export function canZkLoginSignForOwner(owner: string | null | undefined): boolean {
   const session = getZkLoginSession();
 
   return Boolean(
     owner?.startsWith('0x') &&
-      session?.ephemeralSecretKey &&
-      session.address.toLowerCase() === owner.toLowerCase()
+      isZkLoginSessionSignable(session) &&
+      session!.address.toLowerCase() === owner.toLowerCase()
   );
 }
 
@@ -110,6 +120,30 @@ export function clearZkLoginSession(): void {
 
   window.localStorage.removeItem(SESSION_KEY);
   window.localStorage.removeItem(PENDING_KEY);
+}
+
+function clearOAuthHashFromUrl(): void {
+  const cleanUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+  window.history.replaceState({}, document.title, cleanUrl);
+}
+
+/**
+ * Drop sessions that only have an address but no ephemeral signing key.
+ * Returns the signable session when one remains.
+ */
+export function reconcileZkLoginSessionOnLoad(): ZkLoginSession | null {
+  const session = getZkLoginSession();
+
+  if (!session) {
+    return null;
+  }
+
+  if (isZkLoginSessionSignable(session)) {
+    return session;
+  }
+
+  clearZkLoginSession();
+  return null;
 }
 
 function saveSession(session: ZkLoginSession, fromOAuthReturn = false): void {
@@ -220,7 +254,20 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
   const pendingRaw = window.localStorage.getItem(PENDING_KEY);
 
   if (pendingRaw === null) {
-    return getZkLoginSession();
+    window.sessionStorage.setItem(
+      'nami.zklogin.last-error',
+      'zkLogin sign-in state was lost during redirect. Start sign-in again from this tab.'
+    );
+    clearOAuthHashFromUrl();
+
+    const existing = getZkLoginSession();
+
+    if (!isZkLoginSessionSignable(existing)) {
+      clearZkLoginSession();
+      return null;
+    }
+
+    return existing;
   }
 
   try {
@@ -238,8 +285,7 @@ export async function completeZkLoginFromRedirect(): Promise<ZkLoginSession | nu
 
     saveSession(session, true);
 
-    const cleanUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-    window.history.replaceState({}, document.title, cleanUrl);
+    clearOAuthHashFromUrl();
 
     return session;
   } catch (error) {

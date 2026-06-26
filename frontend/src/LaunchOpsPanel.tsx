@@ -139,6 +139,37 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
                 Render fallback blocked{' '}
                 <strong>{summary.walrus_border_art.border_art_required ? 'yes' : 'no'}</strong>
               </li>
+              <li className="protocol-timeline-item">
+                Catalog quilt blob{' '}
+                <strong>
+                  {summary.walrus_border_art.catalog_quilt_blob_id
+                    ? summary.walrus_border_art.catalog_quilt_blob_id.slice(0, 12) + '…'
+                    : 'none'}
+                </strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Catalog patches <strong>{summary.walrus_border_art.catalog_patch_count}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Last publish{' '}
+                <strong>
+                  {summary.walrus_border_art.catalog_last_publish_ms
+                    ? new Date(summary.walrus_border_art.catalog_last_publish_ms).toLocaleString()
+                    : 'never'}
+                </strong>
+              </li>
+              <li className="protocol-timeline-item">
+                On-chain attestation{' '}
+                <strong>{summary.walrus_border_art.catalog_attestation_status ?? 'none'}</strong>
+              </li>
+              {summary.walrus_border_art.catalog_attestation_tx_digest ? (
+                <li className="protocol-timeline-item">
+                  Attest tx{' '}
+                  <strong>
+                    {summary.walrus_border_art.catalog_attestation_tx_digest.slice(0, 12)}…
+                  </strong>
+                </li>
+              ) : null}
             </ul>
           </section>
 

@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import { mkdir } from 'node:fs/promises';
 
+import { assertBorderArtCanvasDimensions } from '../border-art-image-dimensions.js';
 import { config } from '../config.js';
 import { paymentConfig } from '../payment-config.js';
 
@@ -238,6 +239,10 @@ export type BorderArtUploadInput = {
 export async function saveBorderArtUpload(
   input: BorderArtUploadInput
 ): Promise<{ url: string; filename: string }> {
+  if (config.walrus.borderArtRequired) {
+    throw new Error('border_art_render_writes_disabled');
+  }
+
   if (!input.owner.startsWith('0x') || !input.rewardId.trim()) {
     throw new Error('invalid_payload');
   }
@@ -255,6 +260,8 @@ export async function saveBorderArtUpload(
   if (buffer.byteLength === 0 || buffer.byteLength > maxBytes) {
     throw new Error('invalid_file_size');
   }
+
+  assertBorderArtCanvasDimensions(buffer, input.contentType);
 
   const owner = normalizeOwner(input.owner);
   const dir = ownerUploadDir(owner);

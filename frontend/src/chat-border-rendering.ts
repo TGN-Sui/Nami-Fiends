@@ -32,6 +32,61 @@ export type ChatBorderPresentation = {
   tileStyles: Partial<Record<ChatBorderTileId, CSSProperties>>;
 };
 
+const verifiedBorderArtHashes = new Set<string>();
+const warnedBorderArtHashes = new Set<string>();
+
+async function sha256HexFromBytes(bytes: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export function scheduleBorderArtIntegrityCheck(
+  ref: WalrusQuiltPatchRef,
+  url: string
+): void {
+  if (import.meta.env.VITE_NAMI_TEST_LAUNCH !== 'true' || typeof window === 'undefined') {
+    return;
+  }
+
+  const warnKey = ref.patchId + ':' + ref.contentHash;
+
+  if (verifiedBorderArtHashes.has(warnKey) || warnedBorderArtHashes.has(warnKey)) {
+    return;
+  }
+
+  void fetch(url)
+    .then(async (response) => {
+      if (!response.ok) {
+        return;
+      }
+
+      const bytes = await response.arrayBuffer();
+      const actualHash = await sha256HexFromBytes(bytes);
+
+      if (actualHash === ref.contentHash) {
+        verifiedBorderArtHashes.add(warnKey);
+        return;
+      }
+
+      warnedBorderArtHashes.add(warnKey);
+      console.warn(
+        '[nami-border-art] Walrus patch hash mismatch for',
+        ref.rewardId,
+        ref.artKind,
+        'expected',
+        ref.contentHash,
+        'got',
+        actualHash
+      );
+    })
+    .catch(() => {
+      // Best-effort integrity probe on testnet only.
+    });
+}
+
 export function resolveBorderArtUrl(
   reward: OfficialChatOverlayReward,
   kind: 'static' | 'animated'
@@ -40,7 +95,9 @@ export function resolveBorderArtUrl(
     kind === 'static' ? reward.staticArtRef : reward.animatedArtRef;
 
   if (ref?.patchId) {
-    return buildBorderArtUrlFromRef(ref);
+    const url = buildBorderArtUrlFromRef(ref);
+    scheduleBorderArtIntegrityCheck(ref, url);
+    return url;
   }
 
   const url = kind === 'static' ? reward.staticArtUrl : reward.animatedArtUrl;

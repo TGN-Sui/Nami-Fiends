@@ -8,6 +8,7 @@ export type SettingsNavId =
   | 'feeds'
   | 'feedback'
   | 'owner-platform'
+  | 'owner-demo'
   | 'owner-border-art'
   | 'owner-visual-assets'
   | 'owner-emojis'
@@ -28,6 +29,7 @@ export type SettingsSection =
   | 'advanced';
 
 export type OwnerAdvancedTabId =
+  | 'demo'
   | 'assets'
   | 'emojis'
   | 'borders'
@@ -49,6 +51,7 @@ const NAV_IDS: ReadonlySet<string> = new Set([
   'feeds',
   'feedback',
   'owner-platform',
+  'owner-demo',
   'owner-border-art',
   'owner-visual-assets',
   'owner-emojis',
@@ -70,6 +73,7 @@ const LEGACY_SECTION_TO_NAV: Record<string, SettingsNavId> = {
 };
 
 const LEGACY_TAB_TO_NAV: Record<OwnerAdvancedTabId, SettingsNavId> = {
+  demo: 'owner-demo',
   assets: 'owner-visual-assets',
   emojis: 'owner-emojis',
   borders: 'owner-border-art',
@@ -194,6 +198,12 @@ export const OWNER_CONSOLE_GROUP: SettingsNavGroup = {
   id: 'owner-console',
   label: 'Owner console',
   items: [
+    {
+      id: 'owner-demo',
+      label: 'Hackathon demo',
+      hint: 'Judge walkthrough, readiness checks, and shortcuts',
+      ownerOnly: true,
+    },
     {
       id: 'owner-border-art',
       label: 'Border Art',

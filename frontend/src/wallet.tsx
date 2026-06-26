@@ -35,7 +35,9 @@ import {
   completeZkLoginFromRedirect,
   getZkLoginSession,
   isZkLoginConfigured,
+  isZkLoginSessionSignable,
   readZkLoginLastError,
+  reconcileZkLoginSessionOnLoad,
   startZkLoginFlow,
   type ZkLoginSession,
 } from './zklogin.js';
@@ -60,7 +62,11 @@ export function NamiWalletProvider(props: { children: ReactNode }): ReactElement
   const network = getConfiguredNetwork() as keyof typeof networkConfig;
 
   useEffect(() => {
-    void clearZkLoginSessionIfExpired().then(() => completeZkLoginFromRedirect());
+    reconcileZkLoginSessionOnLoad();
+    void clearZkLoginSessionIfExpired().then(() => {
+      reconcileZkLoginSessionOnLoad();
+      return completeZkLoginFromRedirect();
+    });
   }, []);
 
   return (
@@ -146,12 +152,19 @@ export function ZkLoginConnectControl(): ReactElement {
   if (session) {
     const memberLinked = hasActiveMemberSession();
     const officialOwner = isOfficialOwner(session.address);
+    const signingReady = isZkLoginSessionSignable(session);
 
     return (
       <div className="zklogin-connect">
         <p className="zklogin-connect-status">
           Google wallet connected · {session.address.slice(0, 10)}…
         </p>
+        {!signingReady ? (
+          <p className="onboarding-field-error zklogin-connect-error">
+            zkLogin signing key is missing on this device. Sign out, then sign in with Google again
+            from this same tab before saving border art or other wallet-signed actions.
+          </p>
+        ) : null}
         {!memberLinked && !officialOwner ? (
           <p className="zklogin-connect-hint">
             Complete gamer signup or log in with email to link your Nami passport to this wallet.

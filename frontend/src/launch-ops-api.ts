@@ -25,6 +25,12 @@ export type LaunchOpsWalrusBorderArtReadiness = {
   publisher_url: string;
   border_art_required: boolean;
   storage_epochs: number;
+  catalog_quilt_blob_id: string | null;
+  catalog_version_ms: number | null;
+  catalog_patch_count: number;
+  catalog_last_publish_ms: number | null;
+  catalog_attestation_status: string | null;
+  catalog_attestation_tx_digest: string | null;
 };
 
 export type LaunchOpsExitGates = {

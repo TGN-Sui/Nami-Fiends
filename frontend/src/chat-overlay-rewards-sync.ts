@@ -8,6 +8,7 @@ import {
 import {
   readOfficialChatOverlayRewards,
   saveOfficialChatOverlayRewards,
+  saveChatOverlayCatalogAttestation,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
 
@@ -45,7 +46,7 @@ export function chatOverlayRewardsSyncErrorMessage(error: ChatOverlayRewardsSync
   }
 
   if (error === 'invalid_art_value') {
-    return 'One of the border art slots still points at local-only media. Re-upload that art, then save again.';
+    return 'Border art must be exactly 384×384 px, or re-upload art that is not local-only, then save again.';
   }
 
   if (error === 'quilt_publish_failed') {
@@ -93,6 +94,7 @@ export async function hydrateChatOverlayRewardsFromServer(): Promise<boolean> {
     }
 
     saveOfficialChatOverlayRewards(catalog.rewards);
+    saveChatOverlayCatalogAttestation(catalog.catalogAttestation ?? null);
     return true;
   } catch {
     return false;
@@ -120,6 +122,7 @@ export async function syncChatOverlayRewardsToServer(
     const catalog = await syncChatOverlayRewardsCatalog(rewards, owner);
     const syncedRewards = catalog.rewards ?? [];
     saveOfficialChatOverlayRewards(syncedRewards);
+    saveChatOverlayCatalogAttestation(catalog.catalogAttestation ?? null);
     lastSyncError = null;
     return { ok: true, rewards: syncedRewards };
   } catch (error) {

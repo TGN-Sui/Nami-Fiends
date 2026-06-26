@@ -1,5 +1,6 @@
 import { useState, type ReactElement } from 'react';
 
+import { HackathonDemoPanel } from './HackathonDemoPanel.js';
 import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
@@ -16,6 +17,11 @@ import type { NamiChannel } from './uiMockData.js';
 import { useProtocolOwner } from './wallet.js';
 
 const ADVANCED_TABS = [
+  {
+    id: 'demo',
+    label: 'Hackathon demo',
+    hint: 'Judge walkthrough, readiness checks, and Walrus BA-14 status.',
+  },
   {
     id: 'assets',
     label: 'Visual Assets',
@@ -59,7 +65,7 @@ export function NamiOwnerAdvancedPanel(props: {
 }): ReactElement | null {
   const { owner } = useProtocolOwner();
   const [activeTab, setActiveTab] = useState<OwnerAdvancedTabId>(
-    () => consumeOwnerAdvancedTabFocus() ?? 'assets'
+    () => consumeOwnerAdvancedTabFocus() ?? 'demo'
   );
 
   if (!isOfficialOwner(owner)) {
@@ -101,6 +107,7 @@ export function NamiOwnerAdvancedPanel(props: {
       <p className="nami-owner-advanced-tab-hint">{activeTabMeta.hint}</p>
 
       <div className="nami-owner-advanced-body">
+        {activeTab === 'demo' ? <HackathonDemoPanel embedded /> : null}
         {activeTab === 'assets' ? (
           <NamiOwnerAssetEditPanel embedded onEnterEditMode={props.onEnterEditMode} />
         ) : null}
