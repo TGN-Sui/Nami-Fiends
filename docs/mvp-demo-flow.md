@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the presentable hackathon demo flow for Nami Chat.
+This document describes the presentable hackathon demo flow for Nami.
 
 The goal is to show that Nami is more than a chat app: it is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol with Walrus-backed media (BA-14).
 

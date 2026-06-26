@@ -6,6 +6,7 @@ import {
 } from './discovery.service.js';
 import { isCatalogAttestationEnabled } from './chat-overlay-catalog-attestation.service.js';
 import { readBorderArtCatalogQuiltSnapshot } from './chat-overlay-rewards.service.js';
+import { readSealPrivacyReadiness, type SealPrivacyReadiness } from './seal-privacy.service.js';
 import { buildWalrusSitesReadiness } from './walrus-sites.service.js';
 import { getOfficialsSubmissions } from './officials-submissions.service.js';
 import { paymentConfig } from '../payment-config.js';
@@ -79,6 +80,7 @@ export interface LaunchOpsSummary {
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
   walrus_sites: LaunchOpsWalrusSitesReadiness;
+  seal_privacy: SealPrivacyReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];
@@ -179,6 +181,15 @@ export async function buildLaunchOpsSummary(
   }
 
   const walrusSites = buildWalrusSitesReadiness();
+  const sealPrivacy = await readSealPrivacyReadiness();
+
+  if (!sealPrivacy.enabled) {
+    pendingActions.push(
+      'Phase 9.2: enable Seal privacy lane (NAMI_SEAL_PRIVACY_ENABLED + NAMI_SEAL_EVIDENCE_KEY) for encrypted appeal/moderation evidence.',
+    );
+  } else if (!sealPrivacy.key_configured) {
+    pendingActions.push('Set NAMI_SEAL_EVIDENCE_KEY on Render for Seal privacy envelopes.');
+  }
 
   if (!walrusSites.configured) {
     pendingActions.push(
@@ -204,6 +215,7 @@ export async function buildLaunchOpsSummary(
       paypal_checkout_enabled: publicPayment.paypalEnabled,
     },
     walrus_sites: walrusSites,
+    seal_privacy: sealPrivacy,
     walrus_border_art: {
       configured: isWalrusBorderArtConfigured(walrusBorderArt),
       network: walrusBorderArt.network,

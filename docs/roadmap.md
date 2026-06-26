@@ -1038,7 +1038,7 @@ Walrus Sites docs: site-builder deploy, ws-resources.json routes, wal.app portal
 Status:
 
 ```text
-Planned — evaluate as Sui privacy primitives mature
+In progress — nami-seal-v1-dev envelopes + /api/privacy/evidence/* + Launch Ops card (docs/seal-privacy.md)
 ```
 
 Goal:

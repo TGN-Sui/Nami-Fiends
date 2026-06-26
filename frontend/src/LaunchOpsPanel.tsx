@@ -122,6 +122,27 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
             ) : null}
           </section>
 
+          {summary.seal_privacy ? (
+            <section className="launch-ops-card">
+              <h3>Seal privacy (Phase 9.2)</h3>
+              <ul className="protocol-timeline-list">
+                <li className="protocol-timeline-item">
+                  Lane enabled <strong>{summary.seal_privacy.enabled ? 'yes' : 'no'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Evidence key <strong>{summary.seal_privacy.key_configured ? 'configured' : 'missing'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Sealed packets <strong>{summary.seal_privacy.sealed_count}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Policies in use <strong>{summary.seal_privacy.policies_in_use.length}</strong>
+                </li>
+              </ul>
+              <p className="protocol-hint">{summary.seal_privacy.stack_note}</p>
+            </section>
+          ) : null}
+
           {summary.walrus_sites ? (
             <section className="launch-ops-card">
               <h3>Walrus Sites (SPA)</h3>

@@ -1,6 +1,6 @@
-# Nami Chat
+# Nami
 
-Nami Chat is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol.
+Nami is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol.
 
 Nami is designed for gamers, developers, channels, squads, guilds, creators, and future game-connected communities.
 

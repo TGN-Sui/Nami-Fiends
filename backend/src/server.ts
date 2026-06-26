@@ -120,6 +120,13 @@ import {
   handleWalletAuthProbeOptions,
   handleWalletAuthProbePost,
 } from './routes/wallet-auth-probe.routes.js';
+import {
+  handleSealEvidenceListPost,
+  handleSealEvidenceOpenPost,
+  handleSealEvidenceSealPost,
+  handleSealPrivacyOptions,
+  handleSealPrivacyStatusGet,
+} from './routes/seal-privacy.routes.js';
 import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
 
@@ -941,6 +948,36 @@ const routes: Route[] = [
       const summary = await buildLaunchOpsSummary(registry);
       sendJson(response, 200, summary);
     },
+  },
+  {
+    method: 'OPTIONS',
+    pattern: /^\/api\/privacy\/.*$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealPrivacyOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/privacy\/status$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealPrivacyStatusGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/seal$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceSealPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/list$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceListPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/open$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceOpenPost(request, response),
   },
   {
     method: ['OPTIONS', 'POST'],

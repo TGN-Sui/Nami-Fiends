@@ -283,6 +283,14 @@ Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test
 | 9.1.3 | Complete | Launch Ops `walrus_sites` card + `walrus-sites.service.ts` projection |
 | 9.1.4 | Ops | First testnet `site-builder deploy` + portal URL + zkLogin redirect update |
 
+## Phase 9.2 — Seal privacy (in progress)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| 9.2.1 | Complete | `nami-seal-v1-dev` envelopes, `/api/privacy/evidence/*`, Launch Ops card |
+| 9.2.2 | Planned | Mysten Seal policy ids + Walrus ciphertext blobs |
+| 9.2.3 | Planned | Officials / jury UI for sealed appeal evidence |
+
 **Recommended next lane:**
 
 1. Run `node scripts/deploy-walrus-sites.mjs --dry-run` then deploy when site-builder is installed.

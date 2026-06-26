@@ -211,7 +211,7 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
       onClick={() => toggleCollapsed(false)}
       type="button"
     >
-      <span className="genre-chat-pinned-tab-label">Nami Chat</span>
+      <span className="genre-chat-pinned-tab-label">Nami</span>
       <strong>{favoriteRoomTabLabel(activeChat.id, selfMember)}</strong>
       {totalUnread > 0 ? <em>{totalUnread} new</em> : <em>Tap to open</em>}
     </button>

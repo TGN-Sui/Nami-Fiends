@@ -38,6 +38,13 @@ function minimalSummary(overrides: Partial<LaunchOpsSummary> = {}): LaunchOpsSum
       card_checkout_enabled: false,
       paypal_checkout_enabled: false,
     },
+    seal_privacy: {
+      enabled: false,
+      key_configured: false,
+      sealed_count: 0,
+      policies_in_use: [],
+      stack_note: 'disabled',
+    },
     walrus_sites: {
       configured: false,
       site_object_id: null,

@@ -1,6 +1,6 @@
 # Nami Vision v1.1
 
-Related docs: [roadmap.md](./roadmap.md) · [sui-layer.md](./sui-layer.md) · [architecture.md](./architecture.md) · [mvp-demo-flow.md](./mvp-demo-flow.md) · [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md)
+Related docs: [branding.md](./branding.md) · [roadmap.md](./roadmap.md) · [sui-layer.md](./sui-layer.md) · [architecture.md](./architecture.md) · [mvp-demo-flow.md](./mvp-demo-flow.md) · [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md)
 
 ---
 
@@ -17,6 +17,8 @@ Nami is not a wallet, a launcher, or a handheld — though it should run inside 
 Nami is infrastructure that allows games, communities, studios, creators, and players to connect through a shared identity and communication layer.
 
 Nami is designed to integrate into any game, website, launcher, platform, or application regardless of blockchain or ecosystem. The **Sui stack** is Nami's primary trust and storage foundation; hosts may live anywhere players already are.
+
+**Naming:** User-facing titles and future domains use **Nami** only (not "Nami Chat"). See [branding.md](./branding.md).
 
 ---
 

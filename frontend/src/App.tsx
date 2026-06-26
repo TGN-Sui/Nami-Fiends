@@ -3009,7 +3009,7 @@ function MemberProfileScreen(props: {
       targetId: props.member.id,
       targetName: props.member.name,
       reason: 'Member profile report',
-      channelName: 'Nami Chat'
+      channelName: 'Nami'
     });
 
     setReportQueued(true);
