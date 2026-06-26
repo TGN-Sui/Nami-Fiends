@@ -1,5 +1,6 @@
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
+import { canZkLoginSignForOwner } from './zklogin.js';
 
 export type WalletAuthPayload = {
   signature: string;
@@ -169,9 +170,9 @@ async function createSignedAuthPayload(
   return signPromise;
 }
 
-function shouldBypassWalletAuthCache(): boolean {
+function shouldBypassWalletAuthCache(owner: string): boolean {
   // zkLogin signs with an ephemeral key; the backend must receive signerAddress every time.
-  return authContext.source === 'zklogin';
+  return authContext.source === 'zklogin' || canZkLoginSignForOwner(owner);
 }
 
 export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
@@ -179,7 +180,7 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
     return null;
   }
 
-  if (shouldBypassWalletAuthCache()) {
+  if (shouldBypassWalletAuthCache(owner)) {
     return walletAuthSigner(owner);
   }
 
@@ -191,8 +192,15 @@ export async function createCatalogSyncAuthPayload(owner: string): Promise<Walle
     return null;
   }
 
-  // Border art catalog saves can include large data URLs — always mint a fresh zkLogin signature.
-  return walletAuthSigner(owner);
+  const auth = await walletAuthSigner(owner);
+
+  if (canZkLoginSignForOwner(owner) && !auth.signerAddress?.startsWith('0x')) {
+    throw new Error(
+      'Reconnect zkLogin to authorize border art uploads. Your Google session is missing signing keys.'
+    );
+  }
+
+  return auth;
 }
 
 export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {

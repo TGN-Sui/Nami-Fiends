@@ -36,6 +36,10 @@ async function assertOfficialsWalletAuth(
     owner,
     signature: auth.signature,
     timestampMs: auth.timestampMs,
+    signerAddress:
+      typeof auth.signerAddress === 'string' && auth.signerAddress.startsWith('0x')
+        ? auth.signerAddress
+        : undefined,
   });
 
   if (!verified) {

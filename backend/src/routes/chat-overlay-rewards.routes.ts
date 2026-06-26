@@ -80,8 +80,11 @@ export async function handleChatOverlayRewardsSync(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not sync chat overlay rewards.';
 
-    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
-      sendJson(response, 401, { error: message });
+    if (message === 'wallet_auth_required' || message.startsWith('wallet_auth_invalid')) {
+      sendJson(response, 401, {
+        error: 'wallet_auth_invalid',
+        message,
+      });
       return;
     }
 

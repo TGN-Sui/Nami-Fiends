@@ -116,6 +116,10 @@ import {
   listDiscoveryChannelCategories,
 } from './services/discovery.service.js';
 import { buildLaunchOpsSummary } from './services/launch-ops.service.js';
+import {
+  handleWalletAuthProbeOptions,
+  handleWalletAuthProbePost,
+} from './routes/wallet-auth-probe.routes.js';
 import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
 
@@ -936,6 +940,19 @@ const routes: Route[] = [
     handler: async (registry, _request, response) => {
       const summary = await buildLaunchOpsSummary(registry);
       sendJson(response, 200, summary);
+    },
+  },
+  {
+    method: ['OPTIONS', 'POST'],
+    pattern: /^\/api\/ops\/wallet-auth-probe$/,
+    paramNames: [],
+    handler: (_registry, request, response) => {
+      if (request.method === 'OPTIONS') {
+        handleWalletAuthProbeOptions(request, response);
+        return;
+      }
+
+      return handleWalletAuthProbePost(request, response);
     },
   },
   {

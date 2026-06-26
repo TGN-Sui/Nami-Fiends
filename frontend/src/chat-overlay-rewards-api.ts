@@ -66,12 +66,18 @@ function mapResponseError(status: number, body: Record<string, unknown>): ChatOv
     );
   }
 
-  if (error === 'wallet_auth_invalid') {
-    return new ChatOverlayRewardsApiError(
-      'wallet_auth_invalid',
-      status,
-      'Wallet signature was rejected. Reconnect zkLogin or your wallet extension, then save again.'
-    );
+  if (error === 'wallet_auth_invalid' || message.startsWith('wallet_auth_invalid')) {
+    const reason = message.includes(':') ? message.split(':').slice(1).join(':') : '';
+    const detail =
+      reason === 'missing_signer_address'
+        ? 'zkLogin signature was missing signer metadata. Disconnect any Sui wallet extension, sign out of zkLogin, sign in with Google again, then save.'
+        : reason === 'timestamp_skew'
+          ? 'Wallet signature expired. Save again immediately after signing in.'
+          : reason === 'signature_mismatch'
+            ? 'A different wallet may be signing than the official owner address. Disconnect browser wallet extensions and use zkLogin only.'
+            : 'Wallet signature was rejected. Disconnect any Sui wallet extension, reconnect zkLogin, then save again.';
+
+    return new ChatOverlayRewardsApiError('wallet_auth_invalid', status, detail);
   }
 
   if (error === 'official_owner_required') {

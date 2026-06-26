@@ -46,6 +46,14 @@ export function resolveProtocolOwnerState(): ResolvedProtocolOwner {
   }
 
   if (officialOwner) {
+    if (
+      zkOwner &&
+      zkOwner.toLowerCase() === officialOwner.toLowerCase() &&
+      canZkLoginSignForOwner(zkOwner)
+    ) {
+      return { owner: zkOwner, source: 'zklogin' };
+    }
+
     const officialMatch = candidates.find(
       (candidate) => candidate.owner?.toLowerCase() === officialOwner.toLowerCase(),
     );

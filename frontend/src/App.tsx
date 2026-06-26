@@ -5926,7 +5926,7 @@ if (activePage === 'userProfile') {
         <HubEntryOrchestrator activePage={activePage} owner={protocolOwner} />
       ) : null}
       {showPlatformShell ? <MembershipPaymentReturnHandler /> : null}
-      {activePage !== 'entry' ? <WalletAuthBridge /> : null}
+      <WalletAuthBridge />
       {activePage !== 'entry' ? <MemberSessionSync /> : null}
       {showPlatformShell ? (
         <EventLivePopup
