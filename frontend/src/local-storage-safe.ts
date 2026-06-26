@@ -70,6 +70,38 @@ export function estimateLocalStorageBytes(): number {
   return total * 2;
 }
 
+export function compactOversizedMemberAccountsRegistry(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const raw = window.localStorage.getItem('nami.member.accounts');
+
+  if (!raw || raw.length < 256 * 1024) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Record<string, { avatarUrl?: string } & Record<string, unknown>>;
+    let changed = false;
+
+    for (const account of Object.values(parsed)) {
+      if (typeof account.avatarUrl === 'string' && account.avatarUrl.startsWith('data:')) {
+        delete account.avatarUrl;
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      return false;
+    }
+
+    return safeLocalStorageSetItem('nami.member.accounts', JSON.stringify(parsed));
+  } catch {
+    return false;
+  }
+}
+
 export function pruneLocalStorageForQuota(minBytesToFree = 256 * 1024): string[] {
   if (typeof window === 'undefined') {
     return [];
@@ -89,6 +121,8 @@ export function pruneLocalStorageForQuota(minBytesToFree = 256 * 1024): string[]
     removed.push(key);
     freedChars += key.length + value.length;
   }
+
+  compactOversizedMemberAccountsRegistry();
 
   for (const key of PRUNABLE_EXACT_KEYS) {
     if (freedChars * 2 >= minBytesToFree) {

@@ -42,6 +42,68 @@ function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/** Inline upload avatars belong in nami.self.avatar — not the multi-account registry. */
+function shouldPersistAvatarUrlInRegistry(avatarUrl: string): boolean {
+  const trimmed = avatarUrl.trim();
+
+  if (!trimmed || trimmed.startsWith('data:') || trimmed.length > 2048) {
+    return false;
+  }
+
+  return trimmed.startsWith('https://') || trimmed.startsWith('http://');
+}
+
+export function compactMemberSessionForRegistry(session: MemberSession): MemberSession {
+  if (!session.avatarUrl || shouldPersistAvatarUrlInRegistry(session.avatarUrl)) {
+    return session;
+  }
+
+  const { avatarUrl: _removed, ...rest } = session;
+
+  return rest;
+}
+
+function compactMemberAccountsRegistry(
+  registry: Record<string, MemberSession>
+): Record<string, MemberSession> {
+  return Object.fromEntries(
+    Object.entries(registry).map(([email, account]) => [
+      email,
+      compactMemberSessionForRegistry(account),
+    ])
+  );
+}
+
+function writeMemberAccountsRegistry(registry: Record<string, MemberSession>): boolean {
+  return safeLocalStorageSetItem(
+    ACCOUNTS_REGISTRY_KEY,
+    JSON.stringify(compactMemberAccountsRegistry(registry))
+  );
+}
+
+export function repairMemberAccountsRegistryStorage(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const raw = window.localStorage.getItem(ACCOUNTS_REGISTRY_KEY);
+
+  if (!raw) {
+    return false;
+  }
+
+  const registry = readMemberAccountsRegistry();
+  const compacted = compactMemberAccountsRegistry(registry);
+  const nextRaw = JSON.stringify(compacted);
+
+  if (nextRaw.length >= raw.length) {
+    return false;
+  }
+
+  writeMemberAccountsRegistry(compacted);
+  return true;
+}
+
 function readMemberAccountsRegistry(): Record<string, MemberSession> {
   try {
     const stored = window.localStorage.getItem(ACCOUNTS_REGISTRY_KEY);
@@ -91,7 +153,9 @@ function readMemberAccountsRegistry(): Record<string, MemberSession> {
                     : Date.now(),
               signedUpAtMs:
                 typeof snapshot.signedUpAtMs === 'number' ? snapshot.signedUpAtMs : Date.now(),
-              ...(typeof snapshot.avatarUrl === 'string' && snapshot.avatarUrl.trim() !== ''
+              ...(typeof snapshot.avatarUrl === 'string' &&
+              snapshot.avatarUrl.trim() !== '' &&
+              shouldPersistAvatarUrlInRegistry(snapshot.avatarUrl)
                 ? { avatarUrl: snapshot.avatarUrl.trim() }
                 : {}),
             } satisfies MemberSession,
@@ -108,12 +172,14 @@ function upsertMemberAccountRegistry(session: MemberSession): void {
   const registry = readMemberAccountsRegistry();
   const email = normalizeEmail(session.email);
   const existing = registry[email];
-  registry[email] = {
+  registry[email] = compactMemberSessionForRegistry({
     ...session,
-    ...(existing?.avatarUrl && !session.avatarUrl ? { avatarUrl: existing.avatarUrl } : {}),
-  };
+    ...(existing?.avatarUrl && !session.avatarUrl && shouldPersistAvatarUrlInRegistry(existing.avatarUrl)
+      ? { avatarUrl: existing.avatarUrl }
+      : {}),
+  });
 
-  safeLocalStorageSetItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
+  writeMemberAccountsRegistry(registry);
 
   void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
     syncRegisteredMemberAccountToServer(registry[email]!).catch(() => {
@@ -131,17 +197,16 @@ export function updateRegisteredMemberAvatarUrl(email: string, avatarUrl: string
     return;
   }
 
-  const next: MemberSession = avatarUrl
-    ? { ...existing, avatarUrl: avatarUrl.trim() }
-    : (({ avatarUrl: _removed, ...rest }) => rest)(existing);
+  const next = compactMemberSessionForRegistry(
+    avatarUrl && shouldPersistAvatarUrlInRegistry(avatarUrl)
+      ? { ...existing, avatarUrl: avatarUrl.trim() }
+      : (({ avatarUrl: _removed, ...rest }) => rest)(existing)
+  );
 
   registry[normalizedEmail] = next;
 
-  try {
-    window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
+  if (writeMemberAccountsRegistry(registry)) {
     window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
-  } catch {
-    // Ignore storage failures in restricted environments.
   }
 
   void import('./officials-submissions-api.js').then(({ syncRegisteredMemberAccountToServer }) => {
@@ -152,6 +217,18 @@ export function updateRegisteredMemberAvatarUrl(email: string, avatarUrl: string
 }
 
 export function readRegisteredMemberAvatarUrl(memberId: string): string | null {
+  if (memberId === 'm1') {
+    try {
+      const selfAvatar = window.localStorage.getItem('nami.self.avatar')?.trim();
+
+      if (selfAvatar) {
+        return selfAvatar;
+      }
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }
+
   for (const account of Object.values(readMemberAccountsRegistry())) {
     const id =
       readMemberSession() && normalizeEmail(readMemberSession()!.email) === normalizeEmail(account.email)
@@ -225,19 +302,20 @@ export function mergeRegisteredMemberAccountsFromServer(accounts: MemberSession[
             ? account.signedUpAtMs
             : Date.now(),
       signedUpAtMs: typeof account.signedUpAtMs === 'number' ? account.signedUpAtMs : Date.now(),
-      ...(typeof account.avatarUrl === 'string' && account.avatarUrl.trim() !== ''
+      ...(typeof account.avatarUrl === 'string' &&
+      account.avatarUrl.trim() !== '' &&
+      shouldPersistAvatarUrlInRegistry(account.avatarUrl)
         ? { avatarUrl: account.avatarUrl.trim() }
-        : existing?.avatarUrl
+        : existing?.avatarUrl && shouldPersistAvatarUrlInRegistry(existing.avatarUrl)
           ? { avatarUrl: existing.avatarUrl }
           : {}),
     };
+
+    registry[email] = compactMemberSessionForRegistry(registry[email]!);
   }
 
-  try {
-    window.localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
+  if (writeMemberAccountsRegistry(registry)) {
     window.dispatchEvent(new CustomEvent('nami-member-session-changed'));
-  } catch {
-    // Ignore storage failures in restricted environments.
   }
 }
 
