@@ -160,12 +160,24 @@ function routeMethods(method: HttpMethod | HttpMethod[]): HttpMethod[] {
   return Array.isArray(method) ? method : [method];
 }
 
+function applyCorsHeaders(response: ServerResponse): void {
+  response.setHeader('access-control-allow-origin', '*');
+  response.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+  response.setHeader(
+    'access-control-allow-headers',
+    'Content-Type, X-Nami-Officials-Sync, Stripe-Signature'
+  );
+}
+
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
   const payload = `${JSON.stringify(body, null, 2)}\n`;
 
   response.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
     'content-length': Buffer.byteLength(payload),
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'access-control-allow-headers': 'Content-Type, X-Nami-Officials-Sync, Stripe-Signature',
   });
   response.end(payload);
 }
@@ -1481,6 +1493,8 @@ export function startReadOnlyServer(
 ): void {
   const server = createServer((request, response) => {
     void (async () => {
+      applyCorsHeaders(response);
+
       const method = request.method ?? 'GET';
 
       if (method === 'OPTIONS') {
