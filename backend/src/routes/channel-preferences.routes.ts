@@ -6,6 +6,7 @@ import {
 } from '../services/channel-preferences.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -40,27 +41,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
-}
-
 export async function handleChannelPreferencesGet(
   _request: IncomingMessage,
   response: ServerResponse,
@@ -90,12 +70,13 @@ export async function handleChannelPreferencesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const patch: Parameters<typeof upsertChannelPreferences>[0] = {

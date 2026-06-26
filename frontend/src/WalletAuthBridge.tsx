@@ -69,6 +69,7 @@ export function WalletAuthBridge(): ReactElement | null {
         }
 
         const keypair = Ed25519Keypair.fromSecretKey(session.ephemeralSecretKey);
+        const signerAddress = keypair.getPublicKey().toSuiAddress();
         const timestampMs = Date.now();
         const message = buildWalletAuthMessage(signOwner, timestampMs);
         const { signature } = await keypair.signPersonalMessage(new TextEncoder().encode(message));
@@ -76,6 +77,7 @@ export function WalletAuthBridge(): ReactElement | null {
         return {
           signature,
           timestampMs,
+          signerAddress,
         };
       });
       notifyEquipSyncAuthReady();

@@ -7,6 +7,7 @@ import {
 } from '../services/chat-favorites.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 import { markChatRoomRead, summarizeChatUnread } from '../services/chat-read-state.service.js';
@@ -40,27 +41,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   }
 
   return JSON.parse(raw) as JsonRecord;
-}
-
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
 }
 
 export async function handleChatFavoritesGet(
@@ -120,12 +100,13 @@ export async function handleChatFavoritesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const favorites = await upsertChatFavorites({
@@ -197,12 +178,13 @@ export async function handleChatRoomRead(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     await markChatRoomRead(owner, roomId);

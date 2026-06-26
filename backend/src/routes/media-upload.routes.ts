@@ -8,6 +8,7 @@ import {
 } from '../services/media-upload.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -42,27 +43,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
-}
-
 export async function handleAvatarUploadPost(
   request: IncomingMessage,
   response: ServerResponse
@@ -72,7 +52,7 @@ export async function handleAvatarUploadPost(
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
@@ -83,6 +63,7 @@ export async function handleAvatarUploadPost(
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const result = await saveAvatarUpload({ owner, contentType, dataBase64 });
@@ -113,7 +94,7 @@ export async function handleChannelCoverUploadPost(
     const channelId = typeof body.channelId === 'string' ? body.channelId : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     if (!owner.startsWith('0x') || !channelId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
@@ -124,6 +105,7 @@ export async function handleChannelCoverUploadPost(
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const result = await saveChannelCoverUpload({ owner, channelId, contentType, dataBase64 });
@@ -154,7 +136,7 @@ export async function handleStudioLogoUploadPost(
     const studioId = typeof body.studioId === 'string' ? body.studioId : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
     const dataBase64 = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     if (!owner.startsWith('0x') || !studioId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
@@ -165,6 +147,7 @@ export async function handleStudioLogoUploadPost(
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const result = await saveStudioLogoUpload({ owner, studioId, contentType, dataBase64 });

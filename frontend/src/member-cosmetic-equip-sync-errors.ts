@@ -73,6 +73,14 @@ export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSy
   }
 
   if (error === 'wallet_auth_required' || error === 'wallet_auth_invalid') {
+    const { source } = readWalletAuthContext();
+
+    if (source === 'zklogin') {
+      return (
+        'Wallet signature was rejected for your zkLogin session. Sign out, sign in with Google again, then equip the border.'
+      );
+    }
+
     return 'Wallet signature was rejected. Reconnect zkLogin or your wallet, then equip again.';
   }
 

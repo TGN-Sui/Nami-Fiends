@@ -7,6 +7,7 @@ import {
 } from '../services/member-preferences.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -62,27 +63,6 @@ export async function handleMemberPreferencesGet(
   });
 }
 
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
-}
-
 export async function handleMemberPreferencesUpsert(
   request: IncomingMessage,
   response: ServerResponse
@@ -96,12 +76,13 @@ export async function handleMemberPreferencesUpsert(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const patch: Parameters<typeof upsertMemberPreferences>[0] = { owner };

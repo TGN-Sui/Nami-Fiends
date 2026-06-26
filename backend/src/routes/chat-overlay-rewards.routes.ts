@@ -7,6 +7,7 @@ import {
 import { isOfficialOwnerAddress } from '../services/officials-auth.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -41,27 +42,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
-}
-
 export function handleChatOverlayRewardsOptions(
   _request: IncomingMessage,
   response: ServerResponse
@@ -84,7 +64,7 @@ export async function handleChatOverlayRewardsSync(
   try {
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
@@ -100,6 +80,7 @@ export async function handleChatOverlayRewardsSync(
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const rewards = Array.isArray(body.rewards) ? body.rewards : [];

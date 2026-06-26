@@ -9,6 +9,7 @@ import {
 } from '../services/channel-transfers.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -41,27 +42,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   }
 
   return JSON.parse(raw) as JsonRecord;
-}
-
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
 }
 
 function mapTransferError(error: unknown): { status: number; code: string } {
@@ -110,12 +90,13 @@ export async function handleChannelTransfersPendingPost(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const query: Parameters<typeof listPendingChannelTransfersForRecipient>[0] = {
@@ -152,12 +133,13 @@ export async function handleChannelTransfersCreatePost(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const createInput: Parameters<typeof createChannelOwnershipTransfer>[0] = {
@@ -202,12 +184,13 @@ export async function handleChannelTransfersRespondPost(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const transfer = await respondToChannelTransfer({
@@ -239,12 +222,13 @@ export async function handleChannelTransfersCancelPost(
       return;
     }
 
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     await assertWalletAuth(owner, {
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const transfer = await cancelChannelTransfer({

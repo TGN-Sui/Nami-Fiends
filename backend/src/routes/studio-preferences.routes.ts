@@ -6,6 +6,7 @@ import {
 } from '../services/studio-preferences.service.js';
 import {
   assertWalletAuth,
+  readWalletAuthFromBody,
   type WalletAuthPayload,
 } from '../services/wallet-auth.service.js';
 
@@ -40,27 +41,6 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
-function readWalletAuth(body: JsonRecord): Partial<WalletAuthPayload> {
-  const auth = body.auth;
-
-  if (typeof auth !== 'object' || auth === null) {
-    return {};
-  }
-
-  const record = auth as JsonRecord;
-  const patch: Partial<WalletAuthPayload> = {};
-
-  if (typeof record.signature === 'string') {
-    patch.signature = record.signature;
-  }
-
-  if (typeof record.timestampMs === 'number') {
-    patch.timestampMs = record.timestampMs;
-  }
-
-  return patch;
-}
-
 export async function handleStudioPreferencesGet(
   _request: IncomingMessage,
   response: ServerResponse,
@@ -84,7 +64,7 @@ export async function handleStudioPreferencesUpsert(
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const studioId = typeof body.studioId === 'string' ? body.studioId : '';
-    const walletAuth = readWalletAuth(body);
+    const walletAuth = readWalletAuthFromBody(body);
 
     if (!owner.startsWith('0x') || !studioId.trim()) {
       sendJson(response, 400, { error: 'invalid_payload' });
@@ -95,6 +75,7 @@ export async function handleStudioPreferencesUpsert(
       owner,
       signature: walletAuth.signature ?? '',
       timestampMs: walletAuth.timestampMs ?? 0,
+      signerAddress: walletAuth.signerAddress,
     });
 
     const patch: Parameters<typeof upsertStudioPreferences>[0] = {

@@ -23,7 +23,28 @@ export type WalletAuthPayload = {
   owner: string;
   timestampMs: number;
   signature: string;
+  /** Ephemeral zkLogin signer address when the signature is not from the owner key. */
+  signerAddress?: string;
 };
+
+async function verifySignatureForAddress(
+  bytes: Uint8Array,
+  signature: string,
+  address: string
+): Promise<boolean> {
+  if (!address.startsWith('0x')) {
+    return false;
+  }
+
+  try {
+    await verifyPersonalMessageSignature(bytes, signature, {
+      address,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function verifyWalletAuthPayload(payload: WalletAuthPayload): Promise<boolean> {
   if (!payload.owner.startsWith('0x')) {
@@ -47,14 +68,45 @@ export async function verifyWalletAuthPayload(payload: WalletAuthPayload): Promi
   const message = buildWalletAuthMessage(payload.owner, payload.timestampMs);
   const bytes = new TextEncoder().encode(message);
 
-  try {
-    await verifyPersonalMessageSignature(bytes, payload.signature, {
-      address: payload.owner,
-    });
+  if (await verifySignatureForAddress(bytes, payload.signature, payload.owner)) {
     return true;
-  } catch {
-    return false;
   }
+
+  const signerAddress = payload.signerAddress?.trim();
+
+  if (
+    signerAddress?.startsWith('0x') &&
+    signerAddress.toLowerCase() !== payload.owner.toLowerCase()
+  ) {
+    return verifySignatureForAddress(bytes, payload.signature, signerAddress);
+  }
+
+  return false;
+}
+
+export function readWalletAuthFromBody(body: Record<string, unknown>): Partial<WalletAuthPayload> {
+  const auth = body.auth;
+
+  if (typeof auth !== 'object' || auth === null) {
+    return {};
+  }
+
+  const record = auth as Record<string, unknown>;
+  const patch: Partial<WalletAuthPayload> = {};
+
+  if (typeof record.signature === 'string') {
+    patch.signature = record.signature;
+  }
+
+  if (typeof record.timestampMs === 'number') {
+    patch.timestampMs = record.timestampMs;
+  }
+
+  if (typeof record.signerAddress === 'string' && record.signerAddress.startsWith('0x')) {
+    patch.signerAddress = record.signerAddress;
+  }
+
+  return patch;
 }
 
 export async function assertWalletAuth(
@@ -77,6 +129,7 @@ export async function assertWalletAuth(
     owner,
     signature: auth.signature,
     timestampMs: auth.timestampMs,
+    signerAddress: auth.signerAddress,
   });
 
   if (!verified) {

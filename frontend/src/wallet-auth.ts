@@ -5,6 +5,8 @@ import { readWalletAuthRequired } from './protocol-env.js';
 export type WalletAuthPayload = {
   signature: string;
   timestampMs: number;
+  /** Ephemeral zkLogin signer address when the signature is not from the owner key. */
+  signerAddress?: string;
 };
 
 export type WalletAuthOwnerSource = 'wallet' | 'zklogin' | 'linked' | 'demo' | null;
