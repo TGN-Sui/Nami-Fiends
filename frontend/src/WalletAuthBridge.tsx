@@ -65,25 +65,6 @@ export function WalletAuthBridge(): ReactElement | null {
         zkSession.address.toLowerCase() === owner.toLowerCase()
     );
 
-    if (extensionMatchesOwner) {
-      registerWalletAuthSigner(async (signOwner) => {
-        const timestampMs = Date.now();
-        const message = buildWalletAuthMessage(signOwner, timestampMs);
-        const bytes = new TextEncoder().encode(message);
-        const result = await signPersonalMessage({ message: bytes });
-
-        return {
-          signature: result.signature,
-          timestampMs,
-        };
-      });
-      notifyEquipSyncAuthReady();
-
-      return () => {
-        registerWalletAuthSigner(null);
-      };
-    }
-
     if (zkSessionMatchesOwner) {
       registerWalletAuthSigner(async (signOwner) => {
         const session = getZkLoginSession();
@@ -105,6 +86,25 @@ export function WalletAuthBridge(): ReactElement | null {
           signature,
           timestampMs,
           signerAddress,
+        };
+      });
+      notifyEquipSyncAuthReady();
+
+      return () => {
+        registerWalletAuthSigner(null);
+      };
+    }
+
+    if (extensionMatchesOwner) {
+      registerWalletAuthSigner(async (signOwner) => {
+        const timestampMs = Date.now();
+        const message = buildWalletAuthMessage(signOwner, timestampMs);
+        const bytes = new TextEncoder().encode(message);
+        const result = await signPersonalMessage({ message: bytes });
+
+        return {
+          signature: result.signature,
+          timestampMs,
         };
       });
       notifyEquipSyncAuthReady();

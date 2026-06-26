@@ -5,6 +5,7 @@ import {
   createEquipSyncAuthPayload,
   readWalletAuthOwner,
 } from './wallet-auth.js';
+import { canZkLoginSignForOwner } from './zklogin.js';
 
 export type MemberCosmeticEquipsProjection = {
   equips: Record<string, string>;
@@ -143,6 +144,14 @@ async function resolveWalletAuthForSync(owner: string) {
   const auth = await createEquipSyncAuthPayload(owner);
 
   if (!auth?.signature || !Number.isFinite(auth.timestampMs)) {
+    throw new MemberCosmeticEquipsApiError(
+      'wallet_auth_unavailable',
+      0,
+      'Reconnect zkLogin or your wallet to save chat border equips.'
+    );
+  }
+
+  if (canZkLoginSignForOwner(owner) && !auth.signerAddress) {
     throw new MemberCosmeticEquipsApiError(
       'wallet_auth_unavailable',
       0,

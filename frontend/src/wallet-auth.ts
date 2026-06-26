@@ -174,7 +174,12 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
 }
 
 export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
-  return createSignedAuthPayload(owner, canPromptEquipSyncSignature);
+  if (!readWalletAuthRequired() || !canPromptEquipSyncSignature(owner) || !walletAuthSigner) {
+    return null;
+  }
+
+  // Always mint a fresh signature for equip sync so zkLogin signerAddress is never skipped.
+  return walletAuthSigner(owner);
 }
 
 export function readWalletAuthOwner(): string | null {

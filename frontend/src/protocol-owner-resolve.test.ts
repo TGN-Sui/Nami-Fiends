@@ -22,8 +22,14 @@ vi.mock('./protocol-owner-snapshot.js', () => ({
   readLastWalletOwner: vi.fn(() => null),
 }));
 
+const { getZkLoginSessionMock, canZkLoginSignForOwnerMock } = vi.hoisted(() => ({
+  getZkLoginSessionMock: vi.fn(() => null),
+  canZkLoginSignForOwnerMock: vi.fn(() => false),
+}));
+
 vi.mock('./zklogin.js', () => ({
-  getZkLoginSession: vi.fn(() => null),
+  getZkLoginSession: getZkLoginSessionMock,
+  canZkLoginSignForOwner: canZkLoginSignForOwnerMock,
 }));
 
 vi.mock('./member-session-store.js', () => ({
@@ -38,13 +44,15 @@ vi.mock('./member-auth-link-store.js', () => ({
 }));
 
 import { readLastWalletOwner } from './protocol-owner-snapshot.js';
-import { getZkLoginSession } from './zklogin.js';
 import { resolveProtocolOwnerState } from './protocol-owner-resolve.js';
 
 const readLastWalletOwnerMock = vi.mocked(readLastWalletOwner);
-const getZkLoginSessionMock = vi.mocked(getZkLoginSession);
 
 describe('protocol-owner-resolve', () => {
+  beforeEach(() => {
+    canZkLoginSignForOwnerMock.mockReturnValue(false);
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -78,9 +86,31 @@ describe('protocol-owner-resolve', () => {
       provider: 'google',
       createdAtMs: Date.now(),
     });
+    canZkLoginSignForOwnerMock.mockReturnValue(false);
 
     expect(resolveProtocolOwnerState()).toEqual({
       owner: zkOwner,
+      source: 'zklogin',
+    });
+  });
+
+  it('prefers zkLogin over a connected wallet on the same address when signing is ready', () => {
+    const sharedOwner = '0xsharedwallet';
+
+    readLastWalletOwnerMock.mockReturnValue(sharedOwner);
+    getZkLoginSessionMock.mockReturnValue({
+      address: sharedOwner,
+      maxEpoch: 1,
+      provider: 'google',
+      createdAtMs: Date.now(),
+      ephemeralSecretKey: 'ephemeral-secret',
+    });
+    canZkLoginSignForOwnerMock.mockImplementation(
+      (owner) => owner?.toLowerCase() === sharedOwner.toLowerCase()
+    );
+
+    expect(resolveProtocolOwnerState()).toEqual({
+      owner: sharedOwner,
       source: 'zklogin',
     });
   });

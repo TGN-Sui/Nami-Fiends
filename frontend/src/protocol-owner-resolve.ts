@@ -4,7 +4,7 @@ import { readLinkedWalletAddressForEmail } from './member-auth-link-store.js';
 import { readMemberSession } from './member-session-store.js';
 import { readDemoOwner, readOfficialOwner } from './protocol-env.js';
 import { readLastWalletOwner } from './protocol-owner-snapshot.js';
-import { getZkLoginSession } from './zklogin.js';
+import { canZkLoginSignForOwner, getZkLoginSession } from './zklogin.js';
 
 export type ResolvedProtocolOwnerSource = 'wallet' | 'zklogin' | 'linked' | 'demo' | null;
 
@@ -59,6 +59,10 @@ export function resolveProtocolOwnerState(): ResolvedProtocolOwner {
     if (!isOfficialOwner(walletOwner)) {
       return { owner: zkOwner, source: 'zklogin' };
     }
+  }
+
+  if (isTestLaunchMode() && zkOwner && canZkLoginSignForOwner(zkOwner)) {
+    return { owner: zkOwner, source: 'zklogin' };
   }
 
   return candidates[0] ?? { owner: null, source: null };
