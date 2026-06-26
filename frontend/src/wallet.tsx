@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { isOfficialOwner } from './nami-capabilities.js';
 import { hasActiveMemberSession } from './member-session-store.js';
 import { setLastWalletOwner } from './protocol-owner-snapshot.js';
 import { getConfiguredNetwork } from './nami.js';
@@ -144,18 +145,35 @@ export function ZkLoginConnectControl(): ReactElement {
 
   if (session) {
     const memberLinked = hasActiveMemberSession();
+    const officialOwner = isOfficialOwner(session.address);
 
     return (
       <div className="zklogin-connect">
         <p className="zklogin-connect-status">
           Google wallet connected · {session.address.slice(0, 10)}…
         </p>
-        {!memberLinked ? (
+        {!memberLinked && !officialOwner ? (
           <p className="zklogin-connect-hint">
             Complete gamer signup or log in with email to link your Nami passport to this wallet.
           </p>
         ) : null}
+        {officialOwner ? (
+          <p className="zklogin-connect-hint">
+            Official owner wallet ready. Continue into Nami or sign out to switch Google accounts.
+          </p>
+        ) : null}
         <div className="zklogin-connect-action">
+          {officialOwner ? (
+            <button
+              className="onboarding-primary-btn"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('nami-request-enter-hub'));
+              }}
+              type="button"
+            >
+              Enter Nami Hub
+            </button>
+          ) : null}
           <button
             className="onboarding-secondary-btn"
             onClick={() => {

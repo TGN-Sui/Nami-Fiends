@@ -83,13 +83,21 @@ export function EntryLoginPanel(props: {
   }, [owner, source]);
 
   useEffect(() => {
-    if (!owner || source !== 'zklogin' || zkDiscoveryPending) {
+    const zkSession = getZkLoginSession();
+    const zkOwner = zkSession?.address ?? null;
+    const officialOwner = isOfficialOwner(zkOwner);
+
+    if (!zkOwner) {
       return;
     }
 
-    const restored = restoreMemberSessionAfterZkLogin(owner);
+    if (!officialOwner && (source !== 'zklogin' || zkDiscoveryPending)) {
+      return;
+    }
 
-    if (!restored && !isOfficialOwner(owner)) {
+    const restored = restoreMemberSessionAfterZkLogin(zkOwner);
+
+    if (!restored && !officialOwner) {
       if (zkPassportDiscovery) {
         const nodename = zkPassportDiscovery.anchor.nodename ?? 'passport';
 

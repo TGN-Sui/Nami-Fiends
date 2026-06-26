@@ -5500,34 +5500,43 @@ export function App(): ReactElement {
   }
 
   useEffect(() => {
-    function handleZkLoginOAuthReturn(): void {
-      if (!consumeZkLoginOAuthReturn()) {
-        return;
-      }
-
+    function tryEnterHubAfterZkLogin(requireOAuthReturn = false): void {
       const zkSession = getZkLoginSession();
 
-      if (!zkSession) {
+      if (!zkSession?.address) {
         return;
       }
 
       const restored = restoreMemberSessionAfterZkLogin(zkSession.address);
+      const officialOwner = isOfficialOwner(zkSession.address);
 
-      if (restored || isOfficialOwner(zkSession.address)) {
-        clearSignedOut();
-        enterNamiHub();
+      if (!restored && !officialOwner) {
+        return;
       }
+
+      if (requireOAuthReturn && !consumeZkLoginOAuthReturn()) {
+        return;
+      }
+
+      clearSignedOut();
+      enterNamiHub();
     }
 
     function onZkLoginReady(): void {
-      handleZkLoginOAuthReturn();
+      tryEnterHubAfterZkLogin(true);
+    }
+
+    function onRequestEnterHub(): void {
+      tryEnterHubAfterZkLogin(false);
     }
 
     window.addEventListener('nami-zklogin-session-ready', onZkLoginReady);
-    handleZkLoginOAuthReturn();
+    window.addEventListener('nami-request-enter-hub', onRequestEnterHub);
+    tryEnterHubAfterZkLogin(true);
 
     return () => {
       window.removeEventListener('nami-zklogin-session-ready', onZkLoginReady);
+      window.removeEventListener('nami-request-enter-hub', onRequestEnterHub);
     };
   }, []);
 
