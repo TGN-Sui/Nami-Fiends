@@ -106,45 +106,6 @@ Nami currently includes:
 
 ---
 
-## Owner Dashboard
-
-The Nami Official owner account uses Settings as its own **Owner Dashboard**.
-
-When the connected wallet matches `VITE_NAMI_OFFICIAL_OWNER`, the owner sees:
-
-* **Owner Dashboard** header instead of generic Settings
-* Overview cards for passport labels, submitted tickets, and the advanced platform console
-* The same account, membership, feeds, safety, and appearance controls as before
-
-### Owner Passport Labels
-
-The official owner passport does **not** use player scores, reputation ranks, or membership tiers for display.
-
-Instead, the owner passport uses editable **Nami Passport Labels**:
-
-```text
-Primary label   = Nami CEO
-Secondary label = Nami Fiend
-```
-
-These labels are stored locally in the owner account settings and shown on the owner passport card.
-They are cosmetic owner titles only and do not replace on-chain Passport state for other users.
-
-### Submitted Ticket Review
-
-Submitted tickets can be approved or denied from the owner **Account** settings section.
-
-Current ticket types:
-
-```text
-Partner Carousel promotion tickets
-Nodename / passport claim tickets
-```
-
-Partner carousel submissions always enter review after checkout.
-The owner can approve or deny them from Account settings or the Security console.
-
----
 
 ## Membership Tiers
 
@@ -263,25 +224,6 @@ This is intentional until the recovery security model is mature.
 
 ---
 
-## Build and Test
-
-From the Move package:
-
-```bash
-cd contracts/nami
-sui move build
-sui move test
-```
-
-Expected current result:
-
-```text
-55 tests passing
-0 warnings
-```
-
----
-
 ## Documentation
 
 Full index: **[docs/README.md](docs/README.md)**
@@ -309,16 +251,6 @@ docs/badge-system.md
 docs/landing-page.md
 ```
 
----
-
-## MVP Progress
-
-```text
-Nami Presentable MVP Progress
-
-[████████████████░░░░] ~82%
-```
-
 Current breakdown:
 
 ```text
@@ -334,14 +266,10 @@ zkLogin production flow:                    Dev placeholder; production path pen
 
 ## Next Development Targets
 
-Recommended next phases:
 
 ```text
-Backend event indexer (Phase 2)
-Real frontend protocol wiring + MVP screens (Phase 3)
-SDK read helpers for Guilds, Titles, Cosmetics, Recovery, Appeals, Jury, etc. (Phase 4)
-zkLogin production flow (Phase 5)
-Testnet deployment scripts
+Chat sync across all platforms.
+Build extensions.
 ```
 
 ---
@@ -407,7 +335,4 @@ Advanced        Platforms, indexed data, security console
 
 Settings use a unified draft with **Save settings** / **Discard** in a sticky footer. Media uploads persist across refresh via IndexedDB (`channel-media-persistence.ts`).
 
-### Wallet and $GOON (first exposure in Settings)
-
-Landing and Enter Nami onboarding avoid wallet copy. Sui wallet connect lives in **Settings → Account**. **Buy Goon** appears on member profiles when a wallet is connected. Live-stream and profile gifting remain on the Phase 7.1 roadmap.
-
+Landing and Enter Nami onboarding avoid wallet copy. Sui wallet connect lives in **Settings → Account**. 
