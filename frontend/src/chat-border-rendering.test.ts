@@ -5,6 +5,7 @@ import {
   borderWidthValue,
   buildChatBorderPresentation,
   buildChatBorderTileStyles,
+  resolveBorderArtUrl,
   resolveChatBorderArtUrl,
   usesAnimatedChatBorderRendering,
 } from './chat-border-rendering.js';
@@ -44,6 +45,28 @@ describe('chat-border-rendering', () => {
     });
 
     expect(resolveChatBorderArtUrl(reward)).toBe('https://cdn.example.com/animated.gif');
+  });
+
+  it('prefers Walrus quilt refs over legacy render URLs', () => {
+    const reward = sampleReward({
+      staticArtUrl: 'https://nami-backend.example/api/media/files/0xabc/border-art.png',
+      staticArtRef: {
+        kind: 'walrus-quilt-patch',
+        quiltBlobId: 'quilt-blob-123',
+        patchId: 'quilt-blob-123PATCH001',
+        aggregatorBase: 'https://aggregator.walrus-testnet.walrus.space',
+        contentHash: 'abc123',
+        contentType: 'image/png',
+        rewardId: 'overlay-test',
+        artKind: 'static',
+        catalogVersionMs: 1,
+      },
+    });
+
+    expect(resolveBorderArtUrl(reward, 'static')).toBe(
+      'https://aggregator.walrus-testnet.walrus.space/v1/blobs/by-quilt-patch-id/quilt-blob-123PATCH001'
+    );
+    expect(buildChatBorderPresentation(reward, 'message-bubble').artUrl).toContain('by-quilt-patch-id');
   });
 
   it('builds border-image presentation when art URLs exist', () => {

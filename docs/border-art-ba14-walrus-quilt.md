@@ -1,6 +1,6 @@
 # BA-14 — Border Art on Walrus Quilt (Draft Design)
 
-Status: **Draft** — design only, not implemented  
+Status: **BA-14.1 implemented** — quilt publisher + projection refs + client resolve (Render fallback when Walrus unset)  
 Owner: Border Art / Platform ops lane  
 Aligns with: Phase 9 Sui stack priority (Walrus > web2 disk), BA-1–13 complete
 

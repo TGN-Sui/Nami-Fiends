@@ -20,6 +20,7 @@ export type ChatOverlayRewardsApiErrorCode =
   | 'official_owner_required'
   | 'invalid_file_size'
   | 'invalid_art_value'
+  | 'quilt_publish_failed'
   | 'request_failed';
 
 export class ChatOverlayRewardsApiError extends Error {
@@ -94,6 +95,14 @@ function mapResponseError(status: number, body: Record<string, unknown>): ChatOv
       'invalid_art_value',
       status,
       'One of the border art slots still points at local-only media. Re-upload that art, then save again.'
+    );
+  }
+
+  if (error === 'quilt_publish_failed' || message.includes('quilt_publish_failed')) {
+    return new ChatOverlayRewardsApiError(
+      'quilt_publish_failed',
+      status,
+      'Walrus quilt publish failed. Your border art is saved locally — try saving again in a moment.'
     );
   }
 

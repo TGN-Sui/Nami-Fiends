@@ -2,6 +2,15 @@ import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 import { saveBorderArtUpload } from './media-upload.service.js';
+import {
+  isWalrusBorderArtEnabled,
+  publishBorderArtQuilt,
+  sha256Hex,
+  type BorderArtQuiltPatchInput,
+  type WalrusQuiltPatchRef,
+} from './walrus-quilt-publisher.service.js';
+
+export type { WalrusQuiltPatchRef } from './walrus-quilt-publisher.service.js';
 
 export type ChatOverlayUnlockCondition =
   | { type: 'tier-min'; tier: 'Adventurer' | 'Pro' | 'Elite' }
@@ -24,6 +33,8 @@ export type OfficialChatOverlayReward = {
   accent: 'cyan' | 'gold' | 'violet' | 'mint';
   staticArtUrl: string | null;
   animatedArtUrl: string | null;
+  staticArtRef?: WalrusQuiltPatchRef | null;
+  animatedArtRef?: WalrusQuiltPatchRef | null;
   artSliceInsets: ChatBorderSliceInsets;
   displayWidths: ChatBorderSliceInsets;
   condition: ChatOverlayUnlockCondition;
@@ -52,6 +63,19 @@ const DEFAULT_DISPLAY: ChatBorderSliceInsets = {
   right: 16,
   bottom: 12,
   left: 16,
+};
+
+type ArtSlotDraft = {
+  url: string | null;
+  ref: WalrusQuiltPatchRef | null;
+  stagedPatch: BorderArtQuiltPatchInput | null;
+  renderUpload: {
+    owner: string;
+    rewardId: string;
+    artKind: 'static' | 'animated';
+    contentType: string;
+    dataBase64: string;
+  } | null;
 };
 
 function emptyProjection(): ChatOverlayRewardsProjection {
@@ -134,6 +158,56 @@ function safeRewardId(rewardId: string): string | null {
   }
 
   return trimmed;
+}
+
+function normalizeWalrusQuiltPatchRef(value: unknown): WalrusQuiltPatchRef | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if (record.kind !== 'walrus-quilt-patch') {
+    return null;
+  }
+
+  const quiltBlobId = typeof record.quiltBlobId === 'string' ? record.quiltBlobId.trim() : '';
+  const patchId = typeof record.patchId === 'string' ? record.patchId.trim() : '';
+  const aggregatorBase =
+    typeof record.aggregatorBase === 'string' ? record.aggregatorBase.trim() : '';
+  const contentHash = typeof record.contentHash === 'string' ? record.contentHash.trim() : '';
+  const contentType = typeof record.contentType === 'string' ? record.contentType.trim() : '';
+  const rewardId = typeof record.rewardId === 'string' ? record.rewardId.trim() : '';
+  const artKind = record.artKind === 'animated' ? 'animated' : record.artKind === 'static' ? 'static' : null;
+  const catalogVersionMs =
+    typeof record.catalogVersionMs === 'number' && Number.isFinite(record.catalogVersionMs)
+      ? record.catalogVersionMs
+      : null;
+
+  if (
+    !quiltBlobId ||
+    !patchId ||
+    !aggregatorBase ||
+    !contentHash ||
+    !contentType ||
+    !rewardId ||
+    !artKind ||
+    catalogVersionMs === null
+  ) {
+    return null;
+  }
+
+  return {
+    kind: 'walrus-quilt-patch',
+    quiltBlobId,
+    patchId,
+    aggregatorBase,
+    contentHash,
+    contentType,
+    rewardId,
+    artKind,
+    catalogVersionMs,
+  };
 }
 
 function normalizeSliceInsets(
@@ -231,6 +305,8 @@ function normalizeReward(value: unknown): OfficialChatOverlayReward | null {
       typeof record.animatedArtUrl === 'string' && record.animatedArtUrl.trim()
         ? record.animatedArtUrl.trim()
         : null,
+    staticArtRef: normalizeWalrusQuiltPatchRef(record.staticArtRef),
+    animatedArtRef: normalizeWalrusQuiltPatchRef(record.animatedArtRef),
     artSliceInsets: normalizeSliceInsets(record.artSliceInsets, DEFAULT_SLICE),
     displayWidths: normalizeSliceInsets(record.displayWidths, DEFAULT_DISPLAY),
     condition: normalizeCondition(record.condition),
@@ -280,43 +356,124 @@ async function writeProjection(projection: ChatOverlayRewardsProjection): Promis
   });
 }
 
-async function resolveArtUrl(
-  owner: string,
-  rewardId: string,
-  artKind: 'static' | 'animated',
-  value: string | null
-): Promise<string | null> {
-  if (!value) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed;
-  }
-
-  const match = trimmed.match(DATA_URL_PATTERN);
+function decodeDataUrl(value: string): { contentType: string; bytes: Buffer } | null {
+  const match = value.trim().match(DATA_URL_PATTERN);
   const contentType = match?.[1];
   const dataBase64 = match?.[2];
 
   if (!contentType || !dataBase64) {
+    return null;
+  }
+
+  return {
+    contentType,
+    bytes: Buffer.from(dataBase64, 'base64'),
+  };
+}
+
+function prepareArtSlot(input: {
+  owner: string;
+  rewardId: string;
+  artKind: 'static' | 'animated';
+  value: string | null;
+  existingUrl: string | null;
+  existingRef: WalrusQuiltPatchRef | null;
+  catalogVersionMs: number;
+}): ArtSlotDraft {
+  if (!input.value) {
+    return {
+      url: null,
+      ref: null,
+      stagedPatch: null,
+      renderUpload: null,
+    };
+  }
+
+  const trimmed = input.value.trim();
+
+  if (!trimmed) {
+    return {
+      url: null,
+      ref: null,
+      stagedPatch: null,
+      renderUpload: null,
+    };
+  }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    const preserveRef =
+      input.existingUrl?.trim() === trimmed && input.existingRef ? input.existingRef : input.existingRef;
+
+    return {
+      url: trimmed,
+      ref: preserveRef ?? null,
+      stagedPatch: null,
+      renderUpload: null,
+    };
+  }
+
+  const decoded = decodeDataUrl(trimmed);
+
+  if (!decoded) {
     throw new Error('invalid_art_value');
   }
 
-  const uploaded = await saveBorderArtUpload({
-    owner,
-    rewardId,
-    artKind,
-    contentType,
-    dataBase64,
-  });
+  if (decoded.bytes.byteLength === 0) {
+    throw new Error('invalid_file_size');
+  }
 
-  return uploaded.url;
+  if (isWalrusBorderArtEnabled() || config.walrus.borderArtRequired) {
+    return {
+      url: null,
+      ref: null,
+      stagedPatch: {
+        rewardId: input.rewardId,
+        artKind: input.artKind,
+        contentType: decoded.contentType,
+        bytes: decoded.bytes,
+        contentHash: sha256Hex(decoded.bytes),
+        owner: input.owner,
+        catalogVersionMs: input.catalogVersionMs,
+      },
+      renderUpload: null,
+    };
+  }
+
+  return {
+    url: null,
+    ref: null,
+    stagedPatch: null,
+    renderUpload: {
+      owner: input.owner,
+      rewardId: input.rewardId,
+      artKind: input.artKind,
+      contentType: decoded.contentType,
+      dataBase64: decoded.bytes.toString('base64'),
+    },
+  };
+}
+
+function patchKey(rewardId: string, artKind: 'static' | 'animated'): string {
+  return rewardId + ':' + artKind;
+}
+
+async function finalizeArtSlot(draft: ArtSlotDraft): Promise<{
+  url: string | null;
+  ref: WalrusQuiltPatchRef | null;
+}> {
+  if (draft.renderUpload) {
+    const uploaded = await saveBorderArtUpload(draft.renderUpload);
+
+    return {
+      url: uploaded.url,
+      ref: null,
+    };
+  }
+
+  return {
+    url: draft.url,
+    ref: draft.ref,
+  };
 }
 
 export async function getChatOverlayRewardsCatalog(): Promise<ChatOverlayRewardsProjection> {
@@ -327,19 +484,95 @@ export async function syncChatOverlayRewardsCatalog(input: {
   owner: string;
   rewards: unknown[];
 }): Promise<ChatOverlayRewardsProjection> {
+  const existingProjection = await readProjection();
+  const existingById = new Map(existingProjection.rewards.map((reward) => [reward.id, reward]));
   const normalized = sanitizeRewards(input.rewards);
-  const resolvedRewards: OfficialChatOverlayReward[] = [];
+  const catalogVersionMs = Date.now();
+
+  const drafts: Array<{
+    reward: OfficialChatOverlayReward;
+    staticDraft: ArtSlotDraft;
+    animatedDraft: ArtSlotDraft;
+  }> = [];
+
+  const stagedPatches: BorderArtQuiltPatchInput[] = [];
 
   for (const reward of normalized) {
+    const existing = existingById.get(reward.id);
+
+    const staticDraft = prepareArtSlot({
+      owner: input.owner,
+      rewardId: reward.id,
+      artKind: 'static',
+      value: reward.staticArtUrl,
+      existingUrl: existing?.staticArtUrl ?? null,
+      existingRef: reward.staticArtRef ?? existing?.staticArtRef ?? null,
+      catalogVersionMs,
+    });
+    const animatedDraft = prepareArtSlot({
+      owner: input.owner,
+      rewardId: reward.id,
+      artKind: 'animated',
+      value: reward.animatedArtUrl,
+      existingUrl: existing?.animatedArtUrl ?? null,
+      existingRef: reward.animatedArtRef ?? existing?.animatedArtRef ?? null,
+      catalogVersionMs,
+    });
+
+    if (staticDraft.stagedPatch) {
+      stagedPatches.push(staticDraft.stagedPatch);
+    }
+
+    if (animatedDraft.stagedPatch) {
+      stagedPatches.push(animatedDraft.stagedPatch);
+    }
+
+    drafts.push({ reward, staticDraft, animatedDraft });
+  }
+
+  const publishedByKey = new Map<string, { url: string; ref: WalrusQuiltPatchRef }>();
+
+  if (stagedPatches.length > 0) {
+    if (config.walrus.borderArtRequired && !isWalrusBorderArtEnabled()) {
+      throw new Error('quilt_publish_failed');
+    }
+
+    if (isWalrusBorderArtEnabled()) {
+      const publishResult = await publishBorderArtQuilt(stagedPatches, config.walrus);
+
+      for (const patch of publishResult.patches) {
+        publishedByKey.set(patchKey(patch.rewardId, patch.artKind), {
+          url: patch.aggregatorUrl,
+          ref: patch.ref,
+        });
+      }
+    }
+  }
+
+  const resolvedRewards: OfficialChatOverlayReward[] = [];
+
+  for (const entry of drafts) {
+    const staticResolved = entry.staticDraft.stagedPatch
+      ? (publishedByKey.get(patchKey(entry.reward.id, 'static')) ?? null)
+      : await finalizeArtSlot(entry.staticDraft);
+    const animatedResolved = entry.animatedDraft.stagedPatch
+      ? (publishedByKey.get(patchKey(entry.reward.id, 'animated')) ?? null)
+      : await finalizeArtSlot(entry.animatedDraft);
+
+    if (entry.staticDraft.stagedPatch && !staticResolved) {
+      throw new Error('quilt_publish_failed');
+    }
+
+    if (entry.animatedDraft.stagedPatch && !animatedResolved) {
+      throw new Error('quilt_publish_failed');
+    }
+
     resolvedRewards.push({
-      ...reward,
-      staticArtUrl: await resolveArtUrl(input.owner, reward.id, 'static', reward.staticArtUrl),
-      animatedArtUrl: await resolveArtUrl(
-        input.owner,
-        reward.id,
-        'animated',
-        reward.animatedArtUrl
-      ),
+      ...entry.reward,
+      staticArtUrl: staticResolved?.url ?? null,
+      animatedArtUrl: animatedResolved?.url ?? null,
+      staticArtRef: staticResolved?.ref ?? null,
+      animatedArtRef: animatedResolved?.ref ?? null,
       updatedAtMs: Date.now(),
     });
   }

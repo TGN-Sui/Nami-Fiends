@@ -44,6 +44,12 @@ describe('chatOverlayRewardsSyncErrorMessage', () => {
 
     expect(chatOverlayRewardsSyncErrorMessage('invalid_art_value')).toContain('Re-upload');
   });
+
+  it('maps quilt publish failures to retry guidance', async () => {
+    const { chatOverlayRewardsSyncErrorMessage } = await import('./chat-overlay-rewards-sync.js');
+
+    expect(chatOverlayRewardsSyncErrorMessage('quilt_publish_failed')).toContain('Walrus quilt publish failed');
+  });
 });
 
 describe('hydrateChatOverlayRewardsFromServer', () => {

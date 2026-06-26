@@ -255,7 +255,8 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-11 | Complete | Owner catalog save retry queue + error toasts (mirror equip sync). |
 | BA-12 | Complete | Equip picker border previews + equips store as single source of truth. |
 | BA-13 | Complete | Official grant picker uses member directory roster (fixture fallback preserved). |
-| BA-14 | Draft | Walrus Quilt border art storage — see [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md). |
+| BA-14.1 | Complete | Walrus quilt publisher + projection `*ArtRef` + `resolveBorderArtUrl()` (Render fallback when Walrus unset). |
+| BA-14.2+ | Planned | Migration script, `NAMI_WALRUS_BORDER_ART_REQUIRED`, integrity checks — see [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md). |
 
 ## Phase 8 — Launch Ops (UI-C27)
 

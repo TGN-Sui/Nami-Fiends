@@ -93,6 +93,14 @@ export async function handleChatOverlayRewardsSync(
       return;
     }
 
+    if (message === 'quilt_publish_failed') {
+      sendJson(response, 502, {
+        error: 'quilt_publish_failed',
+        message,
+      });
+      return;
+    }
+
     sendJson(response, 400, {
       error: 'chat_overlay_rewards_sync_failed',
       message,

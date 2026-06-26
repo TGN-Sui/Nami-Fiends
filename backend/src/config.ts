@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 
+import { readWalrusBorderArtConfig } from './walrus-config.js';
+
 dotenv.config();
 
 export type NamiNetwork = 'devnet' | 'testnet' | 'mainnet' | 'localnet';
@@ -79,7 +81,11 @@ export const config = {
   )
     .trim()
     .replace(/\/$/, ''),
-} as const;
+
+  get walrus() {
+    return readWalrusBorderArtConfig();
+  },
+};
 
 export function assertRuntimeConfig(): void {
   if (config.packageId.trim() === '') {

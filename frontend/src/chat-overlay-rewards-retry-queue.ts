@@ -55,6 +55,7 @@ function isRetryableError(error: ChatOverlayRewardsSyncError): boolean {
   return (
     error === 'no_owner' ||
     error === 'request_failed' ||
+    error === 'quilt_publish_failed' ||
     error === 'wallet_auth_unavailable' ||
     error === 'wallet_auth_required' ||
     error === 'wallet_auth_invalid'

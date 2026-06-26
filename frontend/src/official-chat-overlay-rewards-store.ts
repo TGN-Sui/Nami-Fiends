@@ -6,6 +6,12 @@ import {
   normalizeChatBorderSliceInsets,
   type ChatBorderSliceInsets,
 } from './chat-border-art-specs.js';
+import {
+  normalizeWalrusQuiltPatchRef,
+  type WalrusQuiltPatchRef,
+} from './walrus-quilt-patch-ref.js';
+
+export type { WalrusQuiltPatchRef } from './walrus-quilt-patch-ref.js';
 
 export const CHAT_OVERLAY_BORDER_STYLES = [
   'signal-glow',
@@ -39,6 +45,8 @@ export type OfficialChatOverlayReward = {
   accent: 'cyan' | 'gold' | 'violet' | 'mint';
   staticArtUrl: string | null;
   animatedArtUrl: string | null;
+  staticArtRef?: WalrusQuiltPatchRef | null;
+  animatedArtRef?: WalrusQuiltPatchRef | null;
   artSliceInsets: ChatBorderSliceInsets;
   displayWidths: ChatBorderSliceInsets;
   condition: ChatOverlayUnlockCondition;
@@ -197,6 +205,8 @@ function normalizeReward(value: Partial<OfficialChatOverlayReward>): OfficialCha
       typeof value.animatedArtUrl === 'string' && value.animatedArtUrl.trim()
         ? value.animatedArtUrl
         : null,
+    staticArtRef: normalizeWalrusQuiltPatchRef(value.staticArtRef),
+    animatedArtRef: normalizeWalrusQuiltPatchRef(value.animatedArtRef),
     artSliceInsets: normalizeChatBorderSliceInsets(
       value.artSliceInsets,
       CHAT_BORDER_ART_SLICE_DEFAULTS

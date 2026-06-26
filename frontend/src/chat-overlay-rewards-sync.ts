@@ -48,6 +48,10 @@ export function chatOverlayRewardsSyncErrorMessage(error: ChatOverlayRewardsSync
     return 'One of the border art slots still points at local-only media. Re-upload that art, then save again.';
   }
 
+  if (error === 'quilt_publish_failed') {
+    return 'Walrus quilt publish failed. Your border art is saved locally — try saving again in a moment.';
+  }
+
   return 'Could not sync border art to the receiving server. Check your connection and try again.';
 }
 

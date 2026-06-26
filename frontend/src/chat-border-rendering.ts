@@ -8,6 +8,13 @@ import {
   normalizeChatBorderSliceInsets,
 } from './chat-border-art-specs.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
+import {
+  buildBorderArtUrlFromRef,
+  isWalrusAggregatorUrl,
+  type WalrusQuiltPatchRef,
+} from './walrus-quilt-patch-ref.js';
+
+export { buildAggregatorPatchUrl, buildBorderArtUrlFromRef } from './walrus-quilt-patch-ref.js';
 
 export type ChatBorderTileId = 'nw' | 'n' | 'ne' | 'w' | 'e' | 'sw' | 's' | 'se';
 
@@ -25,16 +32,42 @@ export type ChatBorderPresentation = {
   tileStyles: Partial<Record<ChatBorderTileId, CSSProperties>>;
 };
 
-export function resolveChatBorderArtUrl(reward: OfficialChatOverlayReward): string | null {
-  if (reward.motion === 'premium-loop' && reward.animatedArtUrl) {
-    return reward.animatedArtUrl;
+export function resolveBorderArtUrl(
+  reward: OfficialChatOverlayReward,
+  kind: 'static' | 'animated'
+): string | null {
+  const ref: WalrusQuiltPatchRef | null | undefined =
+    kind === 'static' ? reward.staticArtRef : reward.animatedArtRef;
+
+  if (ref?.patchId) {
+    return buildBorderArtUrlFromRef(ref);
   }
 
-  return reward.staticArtUrl ?? reward.animatedArtUrl ?? null;
+  const url = kind === 'static' ? reward.staticArtUrl : reward.animatedArtUrl;
+
+  if (!url?.trim()) {
+    return null;
+  }
+
+  const trimmed = url.trim();
+
+  if (isWalrusAggregatorUrl(trimmed)) {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
+export function resolveChatBorderArtUrl(reward: OfficialChatOverlayReward): string | null {
+  if (reward.motion === 'premium-loop') {
+    return resolveBorderArtUrl(reward, 'animated') ?? resolveBorderArtUrl(reward, 'static');
+  }
+
+  return resolveBorderArtUrl(reward, 'static') ?? resolveBorderArtUrl(reward, 'animated');
 }
 
 export function usesAnimatedChatBorderRendering(reward: OfficialChatOverlayReward): boolean {
-  return reward.motion === 'premium-loop' && Boolean(reward.animatedArtUrl?.trim());
+  return reward.motion === 'premium-loop' && Boolean(resolveBorderArtUrl(reward, 'animated'));
 }
 
 export function borderImageSliceValue(insets: ChatBorderSliceInsets): string {
