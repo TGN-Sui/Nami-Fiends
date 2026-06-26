@@ -87,7 +87,7 @@ import {
 } from './global-chat-rooms-store.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
-import { useChatCosmeticLiveSync } from './use-chat-cosmetic-live-sync.js';
+
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
 import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
@@ -156,7 +156,6 @@ export function GlobalChatRoomView(props: {
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
-  useChatCosmeticLiveSync();
   const chatTimeTarget = useMemo(
     () => ({
       chatId: props.chat.id,

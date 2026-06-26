@@ -852,6 +852,8 @@ Frontend
   chat-border-art-upload.ts             — file validation + data URL reads
   official-chat-overlay-rewards-store.ts — catalog cache + default presets
   chat-overlay-rewards-sync.ts          — server catalog hydrate
+  chat-overlay-catalog-sync.ts          — app-wide catalog polling + cross-tab
+  chat-overlay-rewards-retry-queue.ts   — owner catalog save retry + toasts
   chat-overlay-rewards.ts               — unlock + equip resolution
   member-cosmetic-equip.ts              — validated equip save + sync enqueue
   member-cosmetic-equips-store.ts       — equip projection cache

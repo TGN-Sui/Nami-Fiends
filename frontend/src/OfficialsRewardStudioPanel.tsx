@@ -15,9 +15,7 @@ import {
 } from './chat-border-art-upload.js';
 import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
-import {
-  chatOverlayRewardsSyncErrorMessage,
-} from './chat-overlay-rewards-sync.js';
+import { enqueueChatOverlayCatalogSync } from './chat-overlay-rewards-retry-queue.js';
 import {
   CHAT_OVERLAY_BORDER_STYLES,
   readOfficialChatOverlayRewards,
@@ -30,7 +28,7 @@ import {
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
 import { isChatOverlayRewardsApiAvailable } from './chat-overlay-rewards-api.js';
-import { syncChatOverlayRewardsToServer } from './chat-overlay-rewards-sync.js';
+
 import { overlayRewardClassName } from './chat-overlay-rewards.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { members } from './uiMockData.js';
@@ -159,23 +157,17 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
     setUploadError(null);
   }
 
-  async function syncCatalogToServer(
+  function queueCatalogServerSync(
     nextRewards: OfficialChatOverlayReward[],
     successMessage: string
-  ): Promise<void> {
+  ): void {
     if (!isChatOverlayRewardsApiAvailable()) {
       setNotice(successMessage + ' Saved locally on this browser.');
       return;
     }
 
-    const result = await syncChatOverlayRewardsToServer(nextRewards, owner);
-
-    if (!result.ok) {
-      setNotice(chatOverlayRewardsSyncErrorMessage(result.error));
-      return;
-    }
-
-    setNotice(successMessage + ' Synced to the receiving server.');
+    setNotice(successMessage + ' Syncing to the receiving server…');
+    enqueueChatOverlayCatalogSync(nextRewards, owner, { userInitiated: true });
   }
 
   async function handleSave(): Promise<void> {
@@ -189,7 +181,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
       const saved = upsertOfficialChatOverlayReward(activeDraft);
       setSelectedId(saved.id);
       setDraft({ ...saved });
-      await syncCatalogToServer(
+      queueCatalogServerSync(
         readOfficialChatOverlayRewards(),
         'Saved "' + saved.name + '" to the border art reward catalog.'
       );
@@ -219,7 +211,7 @@ export function OfficialsRewardStudioPanel(props: { embedded?: boolean } = {}): 
 
       setSelectedId(next?.id ?? '');
       setDraft(next ? { ...next } : null);
-      await syncCatalogToServer(remaining, 'Removed border reward from the catalog.');
+      queueCatalogServerSync(remaining, 'Removed border reward from the catalog.');
     } finally {
       setIsSaving(false);
     }

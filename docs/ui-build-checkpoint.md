@@ -251,6 +251,8 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-7 | Complete | Animated 9-slice border rendering. |
 | BA-8 | Complete | Testnet catalog bootstrap + hydrate guards (`34ca625`). |
 | BA-9 | Complete | Equip validation — client unlock gate, Black signal block, server catalog checks. |
+| BA-10 | Complete | App-wide catalog sync — polling, cross-tab, focus refresh (`useChatOverlayCatalogAppSync`). |
+| BA-11 | Complete | Owner catalog save retry queue + error toasts (mirror equip sync). |
 
 ## Phase 8 — Launch Ops (UI-C27)
 

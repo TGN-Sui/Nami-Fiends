@@ -46,7 +46,7 @@ export type OfficialChatOverlayReward = {
   updatedAtMs: number;
 };
 
-const STORAGE_KEY = 'nami.official.chat-overlay-rewards';
+export const OFFICIAL_CHAT_OVERLAY_REWARDS_STORAGE_KEY = 'nami.official.chat-overlay-rewards';
 
 export const DEFAULT_OFFICIAL_CHAT_OVERLAY_REWARDS: OfficialChatOverlayReward[] = [
   {
@@ -217,7 +217,7 @@ export function readOfficialChatOverlayRewards(): OfficialChatOverlayReward[] {
   }
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(OFFICIAL_CHAT_OVERLAY_REWARDS_STORAGE_KEY);
 
     if (!stored) {
       cachedRewards = DEFAULT_REWARDS.map((reward) => ({ ...reward }));
@@ -256,7 +256,7 @@ export function saveOfficialChatOverlayRewards(
     .filter((entry): entry is OfficialChatOverlayReward => entry !== null);
   const resolved = next.length > 0 ? next : readDefaultOfficialChatOverlayRewards();
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(resolved));
+  window.localStorage.setItem(OFFICIAL_CHAT_OVERLAY_REWARDS_STORAGE_KEY, JSON.stringify(resolved));
   cachedRewards = resolved;
   dispatchChange();
 
@@ -309,11 +309,15 @@ export function useOfficialChatOverlayRewards(): OfficialChatOverlayReward[] {
   return useSyncExternalStore(subscribe, readOfficialChatOverlayRewards, readOfficialChatOverlayRewards);
 }
 
+export function invalidateOfficialChatOverlayRewardsCache(): void {
+  cachedRewards = null;
+}
+
 export function resetOfficialChatOverlayRewardsForTests(): void {
   cachedRewards = null;
 
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(OFFICIAL_CHAT_OVERLAY_REWARDS_STORAGE_KEY);
   } catch {
     // Ignore restricted storage environments.
   }

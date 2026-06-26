@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from 're
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
-import { useChatCosmeticLiveSync } from './use-chat-cosmetic-live-sync.js';
+
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 
 import {
@@ -190,7 +190,6 @@ function GuildChatPanel(props: {
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
-  useChatCosmeticLiveSync();
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
   const guildMembers = useMemo(() => guildRosterMembers(props.guild), [props.guild]);

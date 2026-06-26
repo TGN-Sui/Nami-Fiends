@@ -4,6 +4,7 @@ import { linkMemberSessionAuth } from './member-auth-link-store.js';
 import { readMemberSession } from './member-session-store.js';
 import { hydrateLinkedMember } from './linked-member-sync.js';
 import { refreshEquippedChatOverlaySyncOwner } from './member-cosmetic-equip-retry-queue.js';
+import { refreshChatOverlayCatalogSyncOwner } from './chat-overlay-rewards-retry-queue.js';
 import {
   hydrateMemberSessionPreferences,
   setSessionPreferencesSyncOwner,
@@ -16,6 +17,7 @@ export function MemberSessionSync(): ReactElement | null {
   useEffect(() => {
     setSessionPreferencesSyncOwner(owner);
     refreshEquippedChatOverlaySyncOwner(owner);
+    refreshChatOverlayCatalogSyncOwner(owner);
 
     if (!owner?.startsWith('0x')) {
       return;

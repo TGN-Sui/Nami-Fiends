@@ -214,6 +214,7 @@ import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { DemoPerspectiveBar } from './DemoPerspectiveBar.js';
 import { restoreOwnerDemoPerspective, useDemoPerspective } from './demo-perspective-store.js';
 import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
+import { useChatOverlayCatalogAppSync } from './use-chat-overlay-catalog-app-sync.js';
 import { useMemberCosmeticEquipsAppSync } from './use-member-cosmetic-equips-app-sync.js';
 import { ensureChatOverlayRewardsHydrated } from './official-chat-overlay-rewards-store.js';
 import { ensureOwnerAssetsHydrated, ownerAssetNavSlotId } from './nami-owner-assets-store.js';
@@ -273,7 +274,7 @@ import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
-import { useChatCosmeticLiveSync } from './use-chat-cosmetic-live-sync.js';
+
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
 import { releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 import { ApprovalRequestActions } from './ApprovalRequestActions.js';
@@ -4717,7 +4718,6 @@ function MessageLogScreen(props: {
 }): ReactElement {
   const { paused, resumeCount, viewportRef, messageStackRef } = useChatViewportPause();
   const storeSignal = usePausedMessagesStoreSignal(paused);
-  useChatCosmeticLiveSync();
   const computeThreadMessages = useCallback(() => {
     const activeThread = readMessageThreads().find((thread) => thread.memberId === props.member.id);
 
@@ -5197,6 +5197,7 @@ export function App(): ReactElement {
   const disconnectWallet = useWalletDisconnect();
   useDemoPerspective();
   useMemberCosmeticEquipsAppSync();
+  useChatOverlayCatalogAppSync();
 
   useEffect(() => {
     if (isDemoSimulationEnabled() || canUseDashboardPerspectives(readResolvedProtocolOwner())) {
