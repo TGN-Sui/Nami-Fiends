@@ -6,7 +6,7 @@ Nami is designed for gamers, developers, channels, squads, guilds, creators, and
 
 The goal is not only to build a chat app.
 
-The goal is to build a portable gamer identity and trust layer.
+The goal is to build a portable gamer identity and trust layer with the help of the sui stack.
 
 ---
 
