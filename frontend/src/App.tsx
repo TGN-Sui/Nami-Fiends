@@ -213,7 +213,7 @@ import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { DemoPerspectiveBar } from './DemoPerspectiveBar.js';
 import { restoreOwnerDemoPerspective, useDemoPerspective } from './demo-perspective-store.js';
 import { NamiOwnerEditModeBar } from './NamiOwnerEditModeBar.js';
-import { hydrateMemberCosmeticEquipsFromServer } from './member-cosmetic-equips-store.js';
+import { useMemberCosmeticEquipsAppSync } from './use-member-cosmetic-equips-app-sync.js';
 import { ensureChatOverlayRewardsHydrated } from './official-chat-overlay-rewards-store.js';
 import { ensureOwnerAssetsHydrated, ownerAssetNavSlotId } from './nami-owner-assets-store.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
@@ -5195,6 +5195,7 @@ export function App(): ReactElement {
   const { owner: protocolOwner } = useProtocolOwner();
   const disconnectWallet = useWalletDisconnect();
   useDemoPerspective();
+  useMemberCosmeticEquipsAppSync();
 
   useEffect(() => {
     if (isDemoSimulationEnabled() || canUseDashboardPerspectives(readResolvedProtocolOwner())) {
@@ -5236,7 +5237,6 @@ export function App(): ReactElement {
   useEffect(() => {
     void ensureOwnerAssetsHydrated();
     void ensureChatOverlayRewardsHydrated();
-    void hydrateMemberCosmeticEquipsFromServer();
   }, []);
 
   function profileReturnLabel(page: NamiPage): string {

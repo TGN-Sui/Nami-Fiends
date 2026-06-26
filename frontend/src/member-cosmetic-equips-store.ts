@@ -8,7 +8,7 @@ import {
 import { SELF_MEMBER_ID } from './member-access.js';
 import { readSelfProfileEdits } from './member-profile-store.js';
 
-const STORAGE_KEY = 'nami.member.cosmetic-equips';
+export const MEMBER_COSMETIC_EQUIPS_STORAGE_KEY = 'nami.member.cosmetic-equips';
 
 let cachedEquips: Record<string, string> | null = null;
 let cachedUpdatedAtMs = 0;
@@ -29,7 +29,7 @@ function readLocalEquips(): Record<string, string> {
   }
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(MEMBER_COSMETIC_EQUIPS_STORAGE_KEY);
 
     if (!stored) {
       cachedEquips = {};
@@ -67,7 +67,7 @@ function writeLocalEquips(equips: Record<string, string>, updatedAtMs = Date.now
   cachedEquips = { ...equips };
   cachedUpdatedAtMs = updatedAtMs;
   window.localStorage.setItem(
-    STORAGE_KEY,
+    MEMBER_COSMETIC_EQUIPS_STORAGE_KEY,
     JSON.stringify({ equips: cachedEquips, updatedAtMs: cachedUpdatedAtMs })
   );
   dispatchChange();
@@ -75,6 +75,17 @@ function writeLocalEquips(equips: Record<string, string>, updatedAtMs = Date.now
 
 export function readLocalEquipsForSync(): Record<string, string> {
   return readLocalEquips();
+}
+
+export function readMemberCosmeticEquipsUpdatedAtMs(): number {
+  readLocalEquips();
+
+  return cachedUpdatedAtMs;
+}
+
+/** Drop in-memory equip cache so the next read reflects localStorage (e.g. another tab). */
+export function invalidateMemberCosmeticEquipsCache(): void {
+  cachedEquips = null;
 }
 
 export function readEquippedChatOverlayIdForMember(memberId: string): string {
@@ -193,7 +204,7 @@ export function resetMemberCosmeticEquipsForTests(): void {
   equipSyncOwner = null;
 
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(MEMBER_COSMETIC_EQUIPS_STORAGE_KEY);
   } catch {
     // Ignore restricted storage environments.
   }
