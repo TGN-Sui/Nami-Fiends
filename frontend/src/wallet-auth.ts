@@ -187,6 +187,14 @@ export function hasWalletAuthSigner(): boolean {
   return walletAuthSigner !== null;
 }
 
+export function isEquipSyncAuthReady(owner?: string): boolean {
+  if (!readWalletAuthRequired()) {
+    return true;
+  }
+
+  return canPromptEquipSyncSignature(owner);
+}
+
 export function resetWalletAuthStateForTests(): void {
   walletAuthSigner = null;
   authContext = {

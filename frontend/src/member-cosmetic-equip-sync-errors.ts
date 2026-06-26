@@ -18,19 +18,37 @@ function shortenOwnerAddress(owner: string): string {
   return owner.slice(0, 8) + '…' + owner.slice(-4);
 }
 
-function linkedWalletAuthHint(): string {
+function equipSyncAuthHint(): string {
   const owner = readWalletAuthOwner();
   const { source } = readWalletAuthContext();
 
-  if (source !== 'linked' || !owner?.startsWith('0x')) {
-    return 'Finish account sign-in in Settings, then equip again to authorize server sync.';
+  if (!owner?.startsWith('0x')) {
+    return 'Border equipped locally. Connect your wallet or zkLogin to sync to the server.';
   }
 
+  const address = shortenOwnerAddress(owner);
+
   if (!hasWalletAuthSigner()) {
+    if (source === 'zklogin') {
+      return (
+        'Border equipped locally. Finish Google zkLogin for ' +
+        address +
+        ', wait a moment for sign-in to finish, then equip again.'
+      );
+    }
+
+    if (source === 'linked') {
+      return (
+        'Border equipped locally. Connect the Sui wallet extension using your linked address (' +
+        address +
+        '), or sign in with Google zkLogin on that same wallet, then equip again.'
+      );
+    }
+
     return (
-      'Border equipped locally. Connect the Sui wallet extension using your linked address (' +
-      shortenOwnerAddress(owner) +
-      '), or sign in with Google zkLogin on that same wallet, then equip again.'
+      'Border equipped locally. Connect your wallet or zkLogin for ' +
+      address +
+      ', then equip again.'
     );
   }
 
@@ -51,7 +69,7 @@ export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSy
   }
 
   if (error === 'wallet_auth_unavailable') {
-    return linkedWalletAuthHint();
+    return equipSyncAuthHint();
   }
 
   if (error === 'wallet_auth_required' || error === 'wallet_auth_invalid') {

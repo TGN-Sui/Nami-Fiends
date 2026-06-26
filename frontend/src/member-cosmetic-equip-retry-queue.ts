@@ -11,8 +11,11 @@ import {
 } from './member-cosmetic-equips-store.js';
 import { readResolvedProtocolOwner } from './protocol-owner-resolve.js';
 import { pushNamiToast } from './nami-toast-store.js';
+import { isEquipSyncAuthReady } from './wallet-auth.js';
+import { readWalletAuthRequired } from './protocol-env.js';
 
 const RETRY_DELAYS_MS = [2000, 5000, 12000, 30000];
+const AUTH_READY_DEFER_MS = 400;
 const MAX_ATTEMPTS = 6;
 
 type PendingEquipSync = {
@@ -23,6 +26,7 @@ type PendingEquipSync = {
   nextRetryAtMs: number;
   lastError: MemberCosmeticEquipSyncError | null;
   toastShown: boolean;
+  userInitiated: boolean;
 };
 
 let pendingSync: PendingEquipSync | null = null;
@@ -52,6 +56,10 @@ function isRetryableError(error: MemberCosmeticEquipSyncError): boolean {
   );
 }
 
+function shouldDeferForAuthReadiness(owner: string | null): boolean {
+  return Boolean(owner?.startsWith('0x') && readWalletAuthRequired() && !isEquipSyncAuthReady(owner));
+}
+
 function notifyEquipSyncOutcome(
   result: MemberCosmeticEquipSyncResult,
   pending: PendingEquipSync
@@ -61,6 +69,10 @@ function notifyEquipSyncOutcome(
       pushNamiToast('Chat border equip synced to the server.', 'success');
     }
 
+    return;
+  }
+
+  if (!pending.userInitiated) {
     return;
   }
 
@@ -86,7 +98,8 @@ export function readPendingEquippedChatOverlaySync(): PendingEquipSync | null {
 export function enqueueEquippedChatOverlaySync(
   memberId: string,
   overlayId: string,
-  owner: string | null
+  owner: string | null,
+  options?: { userInitiated?: boolean }
 ): void {
   pendingSync = {
     memberId,
@@ -96,7 +109,24 @@ export function enqueueEquippedChatOverlaySync(
     nextRetryAtMs: Date.now(),
     lastError: null,
     toastShown: false,
+    userInitiated: options?.userInitiated ?? true,
   };
+
+  void processEquippedChatOverlaySyncQueue();
+}
+
+/** Called after WalletAuthBridge registers a live signer. */
+export function notifyEquipSyncAuthReady(): void {
+  if (!pendingSync) {
+    return;
+  }
+
+  pendingSync.nextRetryAtMs = Date.now();
+
+  if (pendingSync.lastError === 'wallet_auth_unavailable') {
+    pendingSync.attempts = 0;
+    pendingSync.toastShown = false;
+  }
 
   void processEquippedChatOverlaySyncQueue();
 }
@@ -112,6 +142,7 @@ export function refreshEquippedChatOverlaySyncOwner(owner: string | null): void 
   if (pendingSync) {
     pendingSync.owner = resolvedOwner;
     pendingSync.nextRetryAtMs = Date.now();
+    pendingSync.userInitiated = false;
 
     if (pendingSync.lastError === 'no_owner' || pendingSync.lastError === 'wallet_auth_unavailable') {
       pendingSync.attempts = 0;
@@ -128,7 +159,9 @@ export function refreshEquippedChatOverlaySyncOwner(owner: string | null): void 
     return;
   }
 
-  enqueueEquippedChatOverlaySync(SELF_MEMBER_ID, equippedOverlayId, resolvedOwner);
+  enqueueEquippedChatOverlaySync(SELF_MEMBER_ID, equippedOverlayId, resolvedOwner, {
+    userInitiated: false,
+  });
 }
 
 export async function processEquippedChatOverlaySyncQueue(): Promise<boolean> {
@@ -146,6 +179,12 @@ export async function processEquippedChatOverlaySyncQueue(): Promise<boolean> {
   try {
     const owner = resolveEquipSyncOwner(job.owner);
     job.owner = owner;
+
+    if (shouldDeferForAuthReadiness(owner)) {
+      job.nextRetryAtMs = Date.now() + AUTH_READY_DEFER_MS;
+      pendingSync = job;
+      return false;
+    }
 
     const result = await syncEquippedChatOverlayToServer(job.memberId, job.overlayId, owner);
 

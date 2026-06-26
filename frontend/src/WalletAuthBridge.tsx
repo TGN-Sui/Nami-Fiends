@@ -4,6 +4,7 @@ import { useEffect, type ReactElement } from 'react';
 
 import { isMemberVerified } from './member-access.js';
 import { useSelfMember } from './member-avatar-store.js';
+import { notifyEquipSyncAuthReady } from './member-cosmetic-equip-retry-queue.js';
 import { useProtocolOwner } from './wallet.js';
 import {
   buildWalletAuthMessage,
@@ -49,6 +50,7 @@ export function WalletAuthBridge(): ReactElement | null {
           timestampMs,
         };
       });
+      notifyEquipSyncAuthReady();
 
       return () => {
         registerWalletAuthSigner(null);
@@ -76,6 +78,7 @@ export function WalletAuthBridge(): ReactElement | null {
           timestampMs,
         };
       });
+      notifyEquipSyncAuthReady();
 
       return () => {
         registerWalletAuthSigner(null);
