@@ -92,12 +92,7 @@ export async function handleChannelTransfersPendingPost(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const query: Parameters<typeof listPendingChannelTransfersForRecipient>[0] = {
       owner,
@@ -135,12 +130,7 @@ export async function handleChannelTransfersCreatePost(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const createInput: Parameters<typeof createChannelOwnershipTransfer>[0] = {
       channelId,
@@ -186,12 +176,7 @@ export async function handleChannelTransfersRespondPost(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const transfer = await respondToChannelTransfer({
       transferId,
@@ -224,12 +209,7 @@ export async function handleChannelTransfersCancelPost(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const transfer = await cancelChannelTransfer({
       transferId,

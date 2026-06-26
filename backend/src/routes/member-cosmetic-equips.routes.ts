@@ -73,12 +73,7 @@ export async function handleMemberCosmeticEquipSync(
       return;
     }
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const equips = await syncMemberCosmeticEquip({ memberId, chatOverlayDisplay });
     sendJson(response, 200, { equips });

@@ -125,12 +125,17 @@ export async function assertWalletAuth(
     throw new Error('wallet_auth_required');
   }
 
-  const verified = await verifyWalletAuthPayload({
+  const verifyPayload: WalletAuthPayload = {
     owner,
     signature: auth.signature,
     timestampMs: auth.timestampMs,
-    signerAddress: auth.signerAddress,
-  });
+  };
+
+  if (auth.signerAddress !== undefined) {
+    verifyPayload.signerAddress = auth.signerAddress;
+  }
+
+  const verified = await verifyWalletAuthPayload(verifyPayload);
 
   if (!verified) {
     throw new Error('wallet_auth_invalid');

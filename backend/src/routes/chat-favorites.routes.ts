@@ -102,12 +102,7 @@ export async function handleChatFavoritesUpsert(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const favorites = await upsertChatFavorites({
       owner,
@@ -180,12 +175,7 @@ export async function handleChatRoomRead(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     await markChatRoomRead(owner, roomId);
 

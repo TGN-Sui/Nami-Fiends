@@ -72,12 +72,7 @@ export async function handleChannelPreferencesUpsert(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const patch: Parameters<typeof upsertChannelPreferences>[0] = {
       channelId,

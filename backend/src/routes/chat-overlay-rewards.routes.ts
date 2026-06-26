@@ -76,12 +76,7 @@ export async function handleChatOverlayRewardsSync(
       return;
     }
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const rewards = Array.isArray(body.rewards) ? body.rewards : [];
     const catalog = await syncChatOverlayRewardsCatalog({ owner, rewards });

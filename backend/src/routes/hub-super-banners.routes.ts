@@ -64,12 +64,7 @@ export async function handleHubSuperBannersPublishPost(
 
     const walletAuth = readWalletAuthFromBody(body);
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const campaign = await publishHubSuperBanner({
       channelId: typeof body.channelId === 'string' ? body.channelId : '',

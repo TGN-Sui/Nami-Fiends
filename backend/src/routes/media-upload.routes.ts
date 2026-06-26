@@ -59,12 +59,7 @@ export async function handleAvatarUploadPost(
       return;
     }
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const result = await saveAvatarUpload({ owner, contentType, dataBase64 });
     sendJson(response, 201, result);
@@ -101,12 +96,7 @@ export async function handleChannelCoverUploadPost(
       return;
     }
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const result = await saveChannelCoverUpload({ owner, channelId, contentType, dataBase64 });
     sendJson(response, 201, result);
@@ -143,12 +133,7 @@ export async function handleStudioLogoUploadPost(
       return;
     }
 
-    await assertWalletAuth(owner, {
-      owner,
-      signature: walletAuth.signature ?? '',
-      timestampMs: walletAuth.timestampMs ?? 0,
-      signerAddress: walletAuth.signerAddress,
-    });
+    await assertWalletAuth(owner, walletAuth);
 
     const result = await saveStudioLogoUpload({ owner, studioId, contentType, dataBase64 });
     sendJson(response, 201, result);
