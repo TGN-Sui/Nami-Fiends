@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   canPromptEquipSyncSignature,
   canPromptWalletSignature,
+  createEquipSyncAuthPayload,
   createWalletAuthPayload,
   registerWalletAuthSigner,
   resetWalletAuthStateForTests,
@@ -141,6 +142,14 @@ describe('wallet-auth', () => {
 
     expect(canPromptEquipSyncSignature(TEST_OWNER)).toBe(true);
     expect(canPromptWalletSignature(TEST_OWNER)).toBe(false);
+
+    const payload = await createEquipSyncAuthPayload(TEST_OWNER);
+
+    expect(payload).toEqual({
+      signature: 'sig-equip',
+      timestampMs: expect.any(Number),
+    });
+    expect(signer).toHaveBeenCalledTimes(1);
   });
 
   it('never prompts for unverified members even with a connected wallet', async () => {

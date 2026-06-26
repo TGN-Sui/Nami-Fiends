@@ -1,9 +1,41 @@
 import type { MemberCosmeticEquipsApiErrorCode } from './member-cosmetic-equips-api.js';
+import {
+  hasWalletAuthSigner,
+  readWalletAuthContext,
+  readWalletAuthOwner,
+} from './wallet-auth.js';
 
 export type MemberCosmeticEquipSyncError =
   | MemberCosmeticEquipsApiErrorCode
   | 'no_owner'
   | 'api_unavailable';
+
+function shortenOwnerAddress(owner: string): string {
+  if (owner.length <= 12) {
+    return owner;
+  }
+
+  return owner.slice(0, 8) + '…' + owner.slice(-4);
+}
+
+function linkedWalletAuthHint(): string {
+  const owner = readWalletAuthOwner();
+  const { source } = readWalletAuthContext();
+
+  if (source !== 'linked' || !owner?.startsWith('0x')) {
+    return 'Finish account sign-in in Settings, then equip again to authorize server sync.';
+  }
+
+  if (!hasWalletAuthSigner()) {
+    return (
+      'Border equipped locally. Connect the Sui wallet extension using your linked address (' +
+      shortenOwnerAddress(owner) +
+      '), or sign in with Google zkLogin on that same wallet, then equip again.'
+    );
+  }
+
+  return 'Border equipped locally. Re-authorize account sign-in in Settings, then equip again.';
+}
 
 export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSyncError): string {
   if (error === 'api_unavailable') {
@@ -19,7 +51,7 @@ export function memberCosmeticEquipSyncErrorMessage(error: MemberCosmeticEquipSy
   }
 
   if (error === 'wallet_auth_unavailable') {
-    return 'Border equipped locally. Finish account sign-in in Settings, then equip again to authorize server sync.';
+    return linkedWalletAuthHint();
   }
 
   if (error === 'wallet_auth_required' || error === 'wallet_auth_invalid') {

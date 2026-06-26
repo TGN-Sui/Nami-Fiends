@@ -30,9 +30,14 @@ export function WalletAuthBridge(): ReactElement | null {
         owner &&
         walletAccount.address.toLowerCase() === owner.toLowerCase()
     );
-    const walletConnected = source === 'wallet' || (source === 'linked' && extensionMatchesOwner) || extensionMatchesOwner;
+    const zkSession = getZkLoginSession();
+    const zkSessionMatchesOwner = Boolean(
+      owner &&
+        zkSession?.ephemeralSecretKey &&
+        zkSession.address.toLowerCase() === owner.toLowerCase()
+    );
 
-    if (walletConnected) {
+    if (extensionMatchesOwner) {
       registerWalletAuthSigner(async (signOwner) => {
         const timestampMs = Date.now();
         const message = buildWalletAuthMessage(signOwner, timestampMs);
@@ -50,7 +55,7 @@ export function WalletAuthBridge(): ReactElement | null {
       };
     }
 
-    if (source === 'zklogin' && owner) {
+    if (zkSessionMatchesOwner) {
       registerWalletAuthSigner(async (signOwner) => {
         const session = getZkLoginSession();
 

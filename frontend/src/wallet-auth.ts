@@ -125,8 +125,11 @@ export function canPromptEquipSyncSignature(owner?: string): boolean {
   return hasActiveMemberSession();
 }
 
-export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
-  if (!readWalletAuthRequired() || !canPromptWalletSignature(owner) || !walletAuthSigner) {
+async function createSignedAuthPayload(
+  owner: string,
+  canSign: (owner?: string) => boolean
+): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired() || !canSign(owner) || !walletAuthSigner) {
     return null;
   }
 
@@ -164,8 +167,24 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
   return signPromise;
 }
 
+export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
+  return createSignedAuthPayload(owner, canPromptWalletSignature);
+}
+
+export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
+  return createSignedAuthPayload(owner, canPromptEquipSyncSignature);
+}
+
 export function readWalletAuthOwner(): string | null {
   return authContext.owner;
+}
+
+export function readWalletAuthContext(): WalletAuthContext {
+  return authContext;
+}
+
+export function hasWalletAuthSigner(): boolean {
+  return walletAuthSigner !== null;
 }
 
 export function resetWalletAuthStateForTests(): void {

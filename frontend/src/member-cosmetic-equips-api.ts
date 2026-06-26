@@ -2,7 +2,7 @@ import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js'
 import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import {
   canPromptEquipSyncSignature,
-  createWalletAuthPayload,
+  createEquipSyncAuthPayload,
   readWalletAuthOwner,
 } from './wallet-auth.js';
 
@@ -140,7 +140,7 @@ async function resolveWalletAuthForSync(owner: string) {
     );
   }
 
-  const auth = await createWalletAuthPayload(owner);
+  const auth = await createEquipSyncAuthPayload(owner);
 
   if (!auth?.signature || !Number.isFinite(auth.timestampMs)) {
     throw new MemberCosmeticEquipsApiError(
