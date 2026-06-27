@@ -5,6 +5,7 @@ type ProfilePassportCarouselProps = {
   badgeBookView: ReactNode;
   activeSlide: 'passport' | 'badges';
   passportLayout?: 'vertical' | 'horizontal';
+  leadRail?: ReactNode;
   sideRail?: ReactNode;
   toolbar?: ReactNode;
 };
@@ -19,6 +20,12 @@ export function ProfilePassportCarousel(props: ProfilePassportCarouselProps): Re
       }
     >
       <div className="profile-passport-carousel-layout">
+        {props.leadRail ? (
+          <aside className="profile-passport-carousel-lead-rail">
+            <div className="profile-passport-carousel-lead-rail-inner">{props.leadRail}</div>
+          </aside>
+        ) : null}
+
         <div className="profile-passport-carousel-main">
           {props.toolbar ? (
             <div className="profile-passport-carousel-toolbar">{props.toolbar}</div>

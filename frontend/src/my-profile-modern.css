@@ -175,39 +175,142 @@
   font-size: 1.35rem;
 }
 
-.visitor-profile-passport-controls {
-  display: grid;
-  gap: 14px;
+.visitor-profile-passport-stage {
   width: 100%;
-  max-width: 920px;
+  max-width: 980px;
   margin-inline: auto;
 }
 
-.visitor-profile-passport-controls-primary,
-.visitor-profile-passport-controls-secondary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: start;
   justify-content: center;
+  gap: clamp(12px, 2vw, 24px);
+  width: 100%;
 }
 
-.visitor-profile-passport-controls-secondary {
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb, var(--nami-theme-accent) 16%, transparent);
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-layout {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+}
+
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-main {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-main,
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-viewport,
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-slide.is-active-profile-slide {
+  width: 100%;
+  max-width: 100%;
+}
+
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-badge-book-layout
+  .profile-passport-carousel-main,
+.visitor-profile-modern
+  .visitor-profile-passport-stage
+  .profile-passport-carousel.is-badge-book-layout
+  .profile-passport-carousel-viewport {
+  width: 100%;
+  max-width: min(100%, 630px);
+  margin-inline: auto;
+}
+
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-lead-rail,
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-rail {
+  justify-content: flex-start;
+  align-self: start;
+  margin-top: 0;
+}
+
+.visitor-profile-passport-lead-rail,
+.profile-passport-carousel-lead-rail-inner {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 132px;
+}
+
+.visitor-profile-passport-layout-switch {
+  width: 100%;
+}
+
+.visitor-profile-passport-view-tabs {
+  width: 100%;
+}
+
+.visitor-profile-passport-side-rail,
+.profile-passport-carousel-side-rail {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  width: min(100%, 168px);
+  min-width: 148px;
 }
 
 .visitor-profile-passport-safety-group {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 8px;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+}
+
+.visitor-profile-passport-safety-group .preference-button,
+.visitor-profile-passport-safety-group .visitor-profile-safety-button {
+  width: 100%;
+  min-height: 38px;
 }
 
 .visitor-profile-message-button,
-.visitor-profile-safety-button {
+.visitor-profile-safety-button,
+.visitor-profile-share-passport-button {
+  width: 100%;
+  min-height: 40px;
+}
+
+.visitor-profile-passport-side-rail .share-passport-button-wrap {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.visitor-profile-passport-side-rail .share-passport-notice {
+  font-size: 0.72rem;
+  color: var(--nami-frost-text);
+  text-align: center;
+}
+
+.member-audience-subchannel-chat-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: center;
+}
+
+.member-audience-subchannel-chat-head-copy {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.member-audience-subchannel-chat-head .member-audience-lounge-expand {
+  flex: 0 0 auto;
+  margin-left: auto;
   min-height: 38px;
 }
 
@@ -909,17 +1012,27 @@ body.has-audience-lounge-open {
     max-height: 180px;
   }
 
-  .visitor-profile-passport-controls-secondary {
-    flex-direction: column;
-    align-items: stretch;
+  .visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
   }
 
-  .visitor-profile-passport-safety-group {
-    justify-content: flex-start;
-  }
-
-  .visitor-profile-message-button {
+  .visitor-profile-passport-lead-rail,
+  .visitor-profile-passport-side-rail,
+  .profile-passport-carousel-lead-rail,
+  .profile-passport-carousel-rail {
     width: 100%;
+    min-width: 0;
+  }
+
+  .visitor-profile-passport-lead-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .visitor-profile-passport-layout-switch,
+  .visitor-profile-passport-view-tabs {
+    grid-column: span 1;
   }
 
   .member-audience-inline-lounge-head {
@@ -927,8 +1040,9 @@ body.has-audience-lounge-open {
     align-items: stretch;
   }
 
-  .member-audience-lounge-expand {
+  .member-audience-subchannel-chat-head .member-audience-lounge-expand {
     width: 100%;
+    margin-left: 0;
   }
 
   .member-audience-inline-lounge-layout {

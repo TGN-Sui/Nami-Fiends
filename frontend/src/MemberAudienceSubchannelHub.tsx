@@ -62,18 +62,10 @@ export function MemberAudienceSubchannelHub(props: {
           <div className="profile-panel-heading">
             <h2>Audience lounge</h2>
             <p>
-              Chat in {props.member.name}&apos;s channels here. Expand the immersive lounge to watch live
-              feeds while you chat.
+              Chat in {props.member.name}&apos;s channels here. Open the immersive lounge from the chat
+              header to watch live feeds alongside the room.
             </p>
           </div>
-
-          <button
-            className="nami-surface-button is-primary-surface-button member-audience-lounge-expand"
-            onClick={openImmersiveLounge}
-            type="button"
-          >
-            {props.isStreamingOnline ? 'Expand live lounge' : 'Expand lounge'}
-          </button>
         </div>
 
         <div className="member-audience-subchannel-hub-layout member-audience-inline-lounge-layout">
@@ -119,19 +111,27 @@ export function MemberAudienceSubchannelHub(props: {
                   <span className="member-audience-subchannel-sidebar-hash">
                     {isLiveChatSelected ? '●' : '#'}
                   </span>
-                  <div>
+                  <div className="member-audience-subchannel-chat-head-copy">
                     <strong>{chatRoom.title}</strong>
                     <p className="protocol-hint">
                       {isLiveChatSelected
-                        ? 'Community chat for ' + props.member.name + '. Expand the lounge to watch the stream.'
+                        ? 'Community chat for ' + props.member.name + '.'
                         : 'Audience room for ' + props.member.name + '.'}
                     </p>
                   </div>
+                  <button
+                    className="nami-surface-button is-primary-surface-button member-audience-lounge-expand"
+                    onClick={openImmersiveLounge}
+                    type="button"
+                  >
+                    {props.isStreamingOnline ? 'Open live lounge' : 'Open lounge'}
+                  </button>
                 </header>
 
                 <GlobalChatRoomView
                   chat={chatRoom}
                   compact
+                  disableExpand
                   onOpenMember={props.onOpenMember ?? (() => {})}
                   showCompactHead={false}
                   {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}

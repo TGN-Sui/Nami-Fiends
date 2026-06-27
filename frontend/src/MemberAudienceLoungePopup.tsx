@@ -399,6 +399,7 @@ export function MemberAudienceLoungePopup(props: {
                   <GlobalChatRoomView
                     chat={chatRoom}
                     compact
+                    disableExpand
                     onOpenMember={handleOpenMember}
                     showCompactHead={false}
                     {...(mergedTagHandlers ? { tagHandlers: mergedTagHandlers } : {})}
