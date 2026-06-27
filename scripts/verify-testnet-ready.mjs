@@ -161,6 +161,18 @@ if (!backendEnv) {
     warn('NAMI_PAYMENT_TREASURY_ADDRESS configured', 'Set treasury wallet for crypto + $GOON tips');
   }
 
+  if (!isPlaceholder(backendEnv.NAMI_ADMIN_CAP_BACKUP_HOLDER)) {
+    pass('NAMI_ADMIN_CAP_BACKUP_HOLDER configured');
+  } else {
+    warn('NAMI_ADMIN_CAP_BACKUP_HOLDER configured', 'Set backup holder wallet on Render');
+  }
+
+  if (backendEnv.NAMI_CARD_CHECKOUT_ENABLED === 'false' || !backendEnv.NAMI_CARD_CHECKOUT_ENABLED) {
+    pass('NAMI_CARD_CHECKOUT_ENABLED=false');
+  } else {
+    warn('NAMI_CARD_CHECKOUT_ENABLED=false', 'Card checkout should stay off for $0 testnet beta');
+  }
+
   if (
     !isPlaceholder(backendEnv.STRIPE_SECRET_KEY) &&
     !isPlaceholder(backendEnv.STRIPE_PUBLISHABLE_KEY)
@@ -278,6 +290,14 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
   } catch (error) {
     fail('receiving server reachable', error instanceof Error ? error.message : 'fetch failed');
   }
+}
+
+const walrusPrepScript = path.join(rootDir, 'scripts', 'verify-walrus-sites-prep.mjs');
+
+if (fs.existsSync(walrusPrepScript)) {
+  pass('verify-walrus-sites-prep.mjs present');
+} else {
+  fail('verify-walrus-sites-prep.mjs present');
 }
 
 console.log('');

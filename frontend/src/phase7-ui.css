@@ -8608,14 +8608,15 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   flex: 0 0 auto;
   align-self: center;
   height: auto;
-  min-height: 22px;
-  padding: 0 8px;
+  min-height: 34px;
+  min-width: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid rgba(120, 190, 255, 0.18);
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
-  font-size: 0.74rem;
-  line-height: 1.2;
+  font-size: 0.82rem;
+  line-height: 1.25;
   white-space: nowrap;
 }
 

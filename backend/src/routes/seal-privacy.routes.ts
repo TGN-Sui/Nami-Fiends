@@ -5,6 +5,7 @@ import {
   listSealedEvidenceMetadata,
   openSealedEvidencePacket,
   publicSealedEvidenceRef,
+  readSealPrivacyReadiness,
   SEAL_EVIDENCE_POLICIES,
   sealEvidencePacket,
   type SealEvidencePolicy,
@@ -95,11 +96,16 @@ export async function handleSealPrivacyStatusGet(
   _request: IncomingMessage,
   response: ServerResponse
 ): Promise<void> {
+  const readiness = await readSealPrivacyReadiness();
+
   sendJson(response, 200, {
-    enabled: isSealPrivacyEnabled(),
+    enabled: readiness.enabled,
     policies: [...SEAL_EVIDENCE_POLICIES],
+    policies_registered: readiness.policies_registered,
+    migration_stage: readiness.migration_stage,
+    migration_next_step: readiness.migration_next_step,
     seal_version: 'nami-seal-v1-dev',
-    mysten_seal_migration: 'Phase 9.2.x — replace dev envelope with Mysten Seal policy decryption.',
+    mysten_seal_migration: readiness.stack_note,
   });
 }
 

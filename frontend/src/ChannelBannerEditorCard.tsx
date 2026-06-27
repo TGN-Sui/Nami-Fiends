@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent, type ReactElement } from 'react';
 
 import { BannerShoutoutBadge } from './BannerShoutoutBadge.js';
 import { ChannelBannerOwnerPreviewOverlay } from './ChannelBannerOwnerPreviewOverlay.js';
-import { resolveBannerShoutoutMember } from './channel-banner-shoutout.js';
+import { formatMemberAtTag, resolveBannerShoutoutMember } from './channel-banner-shoutout.js';
 import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
 import {
   publishChannelBannerAlertForOwner,
@@ -177,7 +177,7 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
             </label>
 
             <label className="channel-banner-editor-field">
-              <span>Member shoutout</span>
+              <span>Member shoutout (@user tag)</span>
               <select
                 onChange={(event) => {
                   const nextMemberId = event.target.value || null;
@@ -189,7 +189,7 @@ export function ChannelBannerEditorCard(props: { channel: NamiChannel }): ReactE
                 <option value="">No tagged member</option>
                 {shoutoutCandidates.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
+                    {formatMemberAtTag(member.name)}
                   </option>
                 ))}
               </select>

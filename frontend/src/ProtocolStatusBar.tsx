@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 
+import { TestnetBetaLegalNotice } from './TestnetBetaLegalNotice.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import {
   readOfficialChatOverlayRewards,
@@ -36,19 +37,22 @@ export function ProtocolStatusBar(props: ProtocolStatusBarProps = {}): ReactElem
   const showWalrusBadge = officialView && walrusCatalogLive && !showOnChainBadge;
 
   return (
-    <div className={rootClassName}>
-      <span className="mini-badge">{connection.badge}</span>
-      {showOnChainBadge ? (
-        <span className="mini-badge protocol-status-bar-catalog-verified">
-          Catalog verified on-chain
-        </span>
-      ) : null}
-      {showWalrusBadge ? (
-        <span className="mini-badge protocol-status-bar-catalog-walrus">
-          Border art catalog on Walrus
-        </span>
-      ) : null}
-      <p>{connection.detail}</p>
-    </div>
+    <>
+      <div className={rootClassName}>
+        <span className="mini-badge">{connection.badge}</span>
+        {showOnChainBadge ? (
+          <span className="mini-badge protocol-status-bar-catalog-verified">
+            Catalog verified on-chain
+          </span>
+        ) : null}
+        {showWalrusBadge ? (
+          <span className="mini-badge protocol-status-bar-catalog-walrus">
+            Border art catalog on Walrus
+          </span>
+        ) : null}
+        <p>{connection.detail}</p>
+      </div>
+      <TestnetBetaLegalNotice />
+    </>
   );
 }

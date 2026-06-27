@@ -14879,7 +14879,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .protocol-status-bar.is-protocol-site-footer {
   position: fixed;
-  bottom: 14px;
+  bottom: 92px;
   left: 50%;
   z-index: 110;
   width: min(520px, calc(100vw - 32px));
@@ -14887,6 +14887,266 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateX(-50%);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
+}
+
+.testnet-beta-legal-notice {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  z-index: 110;
+  display: grid;
+  gap: 0.45rem;
+  width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 196, 120, 0.28);
+  border-radius: 12px;
+  background: rgba(24, 18, 8, 0.88);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.testnet-beta-legal-notice p {
+  margin: 0;
+  color: rgba(255, 232, 198, 0.9);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.testnet-beta-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.testnet-beta-legal-link {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(255, 196, 120, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 232, 198, 0.95);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.testnet-beta-legal-link:hover,
+.testnet-beta-legal-link:focus-visible {
+  border-color: rgba(255, 196, 120, 0.65);
+  background: rgba(255, 196, 120, 0.12);
+}
+
+.testnet-legal-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 8, 16, 0.72);
+}
+
+.testnet-legal-overlay {
+  width: min(640px, 100%);
+  max-height: min(80vh, 720px);
+  overflow: auto;
+}
+
+.testnet-legal-overlay-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.testnet-legal-overlay-head h2 {
+  margin: 0.35rem 0 0.2rem;
+}
+
+.testnet-legal-overlay-head p {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.78);
+  font-size: 0.9rem;
+}
+
+.testnet-legal-overlay-close {
+  flex: 0 0 auto;
+}
+
+.testnet-legal-overlay-section + .testnet-legal-overlay-section {
+  margin-top: 14px;
+}
+
+.testnet-legal-overlay-section h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.testnet-legal-overlay-section p {
+  margin: 0;
+  color: rgba(220, 236, 255, 0.86);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.hub-featured-placement-strip {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(8, 24, 40, 0.55);
+}
+
+.hub-featured-placement-strip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hub-featured-placement-strip-head h2 {
+  margin: 0.35rem 0 0.2rem;
+}
+
+.hub-featured-placement-strip-head p {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.78);
+  font-size: 0.88rem;
+}
+
+.hub-featured-placement-status-pill {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.hub-featured-placement-status-pill.is-auction-open-pill {
+  border: 1px solid rgba(90, 220, 170, 0.45);
+  background: rgba(90, 220, 170, 0.12);
+}
+
+.hub-featured-placement-status-pill.is-auction-closed-pill {
+  border: 1px solid rgba(120, 190, 255, 0.35);
+  background: rgba(120, 190, 255, 0.1);
+}
+
+.hub-featured-placement-winners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hub-featured-placement-winner-chip {
+  display: inline-grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(120, 190, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+}
+
+.hub-featured-placement-carousel-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.hub-featured-placement-carousel-dot {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.hub-featured-placement-carousel-dot.is-active-showcase-dot {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.hub-featured-placement-active-label {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.82);
+  font-size: 0.86rem;
+}
+
+.global-chats-hub-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.global-chats-hub-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
+.global-chats-hub-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.global-chats-hub-filter {
+  min-height: 34px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.82rem;
+}
+
+.global-chats-hub-filter.is-active-hub-chat-filter {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.global-chats-hub-room-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.global-chats-hub-room-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+  font-size: 0.82rem;
+}
+
+.global-chats-hub-room-chip.is-active-hub-room-chip {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.global-chats-hub-room-chip-end {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
 }
 
 .passport-screen-layout {
@@ -15049,6 +15309,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 34px;
+  min-width: 44px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
 }
 
 .nami-favorited-chat-room-tab.has-chat-unread {

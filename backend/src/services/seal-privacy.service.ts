@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { config } from '../config.js';
 import { isOfficialOwnerAddress } from './officials-auth.service.js';
+import { listSealPolicyDefinitions, sealPolicyMigrationSummary } from './seal-policy-registry.js';
 
 export type SealEvidencePolicy =
   | 'appeal_evidence'
@@ -36,6 +37,9 @@ export type SealPrivacyReadiness = {
   key_configured: boolean;
   sealed_count: number;
   policies_in_use: SealEvidencePolicy[];
+  policies_registered: number;
+  migration_stage: string;
+  migration_next_step: string;
   stack_note: string;
 };
 
@@ -264,12 +268,16 @@ export async function listSealedEvidenceMetadata(readerOwner: string): Promise<
 export function buildSealPrivacyReadiness(store?: SealedEvidenceStore): SealPrivacyReadiness {
   const records = store ? Object.values(store) : [];
   const policies = [...new Set(records.map((record) => record.policy))];
+  const migration = sealPolicyMigrationSummary();
 
   return {
     enabled: isSealPrivacyEnabled(),
     key_configured: readSealKey() !== null,
     sealed_count: records.length,
     policies_in_use: policies,
+    policies_registered: listSealPolicyDefinitions().length,
+    migration_stage: migration.stage,
+    migration_next_step: migration.next_step,
     stack_note:
       'nami-seal-v1-dev envelopes on disk — migrate to Mysten Seal policy IDs + Walrus blobs in 9.2.x.',
   };

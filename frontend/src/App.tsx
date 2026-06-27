@@ -269,6 +269,13 @@ import {
 } from './gamehub-preferences.js';
 import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import { HubFeaturedPlacementStrip } from './HubFeaturedPlacementStrip.js';
+import {
+  formatHubFeaturedBannerLabel,
+  resolveAuctionWinnerChannels,
+  resolveFeaturedShowcaseChannels,
+  resolveHubFeaturedBannerContext,
+} from './hub-featured-showcase.js';
 import type { ChatExpandControl } from './ChatWindowExpandable.js';
 import { useFeaturedPlacementAuctionStatus } from './featured-placement-auction-store.js';
 import { UniversalCalendarLauncher } from './UniversalCalendarLauncher.js';
@@ -1266,28 +1273,16 @@ function NamiHub(props: {
     );
   }
 
-  const hubFeaturedChannel = hubFeaturedChannelId ? resolveDirectoryChannel(hubFeaturedChannelId) : null;
-  const auctionWinnerChannelIds =
-    auctionStatus.isOpen || auctionStatus.winners.length === 0
-      ? []
-      : auctionStatus.winners.map((winner) => winner.channelId);
-  const auctionWinnerChannels = auctionWinnerChannelIds
-    .map((channelId) => resolveDirectoryChannel(channelId))
-    .filter((channel): channel is NamiChannel => Boolean(channel));
-  const reservedFeaturedIds = new Set([
-    ...auctionWinnerChannels.map((channel) => channel.id),
-    ...(hubFeaturedChannel ? [hubFeaturedChannel.id] : []),
-  ]);
-  const featuredShowcaseChannels =
-    auctionWinnerChannels.length > 0 || directoryChannels.length > 0 || hubFeaturedChannel
-      ? [
-          ...auctionWinnerChannels,
-          ...(hubFeaturedChannel ? [hubFeaturedChannel] : []),
-          ...directoryChannels
-            .filter((channel) => !reservedFeaturedIds.has(channel.id))
-            .slice(0, Math.max(0, 8 - auctionWinnerChannels.length)),
-        ]
-      : [props.selectedChannel];
+  const hubFeaturedChannel = hubFeaturedChannelId
+    ? (resolveDirectoryChannel(hubFeaturedChannelId) ?? null)
+    : null;
+  const auctionWinnerChannels = resolveAuctionWinnerChannels(auctionStatus, resolveDirectoryChannel);
+  const featuredShowcaseChannels = resolveFeaturedShowcaseChannels({
+    auctionWinnerChannels,
+    hubFeaturedChannel,
+    directoryChannels,
+    fallbackChannel: props.selectedChannel,
+  });
   const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
   const [hoveredShowcaseChannelId, setHoveredShowcaseChannelId] = useState<string | null>(null);
 
@@ -1323,6 +1318,13 @@ function NamiHub(props: {
     activeFeaturedChannel.id,
     activePartnerTicket,
   );
+  const activeFeaturedBannerContext = resolveHubFeaturedBannerContext({
+    channelId: activeFeaturedChannel.id,
+    auctionStatus,
+    hubFeaturedChannelId,
+    hasPartnerCarousel: Boolean(partnerCarouselChannel),
+  });
+  const activeFeaturedBannerLabel = formatHubFeaturedBannerLabel(activeFeaturedBannerContext);
 
   const sortedGrowthChannels = [...uniqueDirectoryChannels].sort((left, right) => {
     const leftScore =
@@ -1471,17 +1473,20 @@ function NamiHub(props: {
         ) : null}
         {partnerBannerCover ? <span aria-hidden="true" className="nami-hub-banner-scrim" /> : null}
         <div className="nami-hub-banner-copy">
-          <span>
-            {partnerCarouselChannel
-              ? 'Featured Partner Banner Carousel'
-              : hubFeaturedChannel
-                ? 'Hub Featured Game'
-                : 'Featured Partner Banner Carousel'}
-          </span>
+          <span>{activeFeaturedBannerLabel}</span>
           <strong>{partnerBannerTitle}</strong>
           <small>{partnerBannerDescription}</small>
         </div>
       </button>
+
+      <HubFeaturedPlacementStrip
+        activeBannerContext={activeFeaturedBannerContext}
+        activeChannelId={activeFeaturedChannel.id}
+        auctionStatus={auctionStatus}
+        onSelectChannel={openFeaturedChannel}
+        onSelectShowcaseIndex={setActiveShowcaseIndex}
+        showcaseChannels={featuredShowcaseChannels}
+      />
 
       <section className="nami-hub-lower-grid">
         <article className="panel community-growth-panel">
