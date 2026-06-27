@@ -153,6 +153,7 @@ export function GlobalChatRoomView(props: {
   onChatExpandedChange?: (expanded: boolean) => void;
   onChatEscape?: () => boolean | void;
   onModerationDelete?: () => void;
+  disableExpand?: boolean;
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
@@ -420,6 +421,7 @@ export function GlobalChatRoomView(props: {
         {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
         {...(props.onChatExpandedChange ? { onExpandedChange: props.onChatExpandedChange } : {})}
         {...(props.onChatEscape ? { onEscape: props.onChatEscape } : {})}
+        {...(props.disableExpand ? { disableExpand: true } : {})}
       >
         {chatWindowBody}
       </ChatWindowExpandable>

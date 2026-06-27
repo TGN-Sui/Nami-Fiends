@@ -119,6 +119,22 @@ export function MemberAudienceLoungePopup(props: {
       return;
     }
 
+    revealMemberTwitchFeed(watchingMember.id);
+
+    const embeds = readEmbeddedFeedLinks('member', watchingMember.id);
+
+    embeds.forEach((embed, index) => {
+      if (embed.live || index === 0) {
+        saveEmbedCollapsed('member', embedCardKey(embed, index), false, watchingMember.id);
+      }
+    });
+  }, [props.open, watchingMember.id]);
+
+  useEffect(() => {
+    if (!props.open) {
+      return;
+    }
+
     document.body.classList.add('has-audience-lounge-open');
 
     return () => {
@@ -344,13 +360,21 @@ export function MemberAudienceLoungePopup(props: {
                   <div className="audience-lounge-live-player-shell">
                     <SocialEmbedPlayer embed={watchingLiveFeed} featured surface="member" />
                   </div>
-                ) : (
+                ) : readEmbeddedFeedLinks('member', watchingMember.id).length > 0 ? (
                   <EmbeddedSocialPanel
                     feedOwnerMemberId={watchingMember.id}
                     showFeedToggle={false}
                     surface="member"
                     title={watchingMember.name + ' Feed'}
                   />
+                ) : (
+                  <div className="audience-lounge-feed-empty">
+                    <strong>No live stream right now</strong>
+                    <p className="protocol-hint">
+                      {watchingMember.name} is not broadcasting. Chat below stays open — click a live avatar to
+                      tune into someone else&apos;s feed.
+                    </p>
+                  </div>
                 )}
               </div>
             </section>
@@ -375,7 +399,7 @@ export function MemberAudienceLoungePopup(props: {
                   <GlobalChatRoomView
                     chat={chatRoom}
                     compact
-                    hubLayout
+                    disableExpand
                     onOpenMember={handleOpenMember}
                     showCompactHead={false}
                     {...(mergedTagHandlers ? { tagHandlers: mergedTagHandlers } : {})}

@@ -11,9 +11,21 @@ type ChatWindowExpandableProps = {
   expandedHeading?: ReactNode;
   onExpandedChange?: (expanded: boolean) => void;
   onEscape?: () => boolean | void;
+  /** When true, the chat fills its host with no Expand overlay (e.g. audience lounge popup). */
+  disableExpand?: boolean;
 };
 
-export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactElement {
+function ChatWindowStatic(props: { className?: string; children: ReactNode }): ReactElement {
+  return (
+    <div className="chat-window-expand-host is-chat-expand-disabled">
+      <article className={'chat-window chat-window-buildout' + (props.className ? ' ' + props.className : '')}>
+        {props.children}
+      </article>
+    </div>
+  );
+}
+
+function ChatWindowExpandableInner(props: ChatWindowExpandableProps): ReactElement {
   const [expanded, setExpanded] = useState(false);
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -112,4 +124,16 @@ export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactEle
       </ExpandedChatOverlay>
     </>
   );
+}
+
+export function ChatWindowExpandable(props: ChatWindowExpandableProps): ReactElement {
+  if (props.disableExpand) {
+    return (
+      <ChatWindowStatic {...(props.className ? { className: props.className } : {})}>
+        {props.children}
+      </ChatWindowStatic>
+    );
+  }
+
+  return <ChatWindowExpandableInner {...props} />;
 }
