@@ -1,6 +1,7 @@
-import { useMemo, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { readInterestedEventIds, useEventsStore, type StoredEvent } from './events-store.js';
+import { ViewerTimezoneClock } from './ViewerTimezoneClock.js';
 import {
   buildCalendarProjection,
   buildMonthCalendarGrid,
@@ -10,6 +11,7 @@ import {
   formatMonthYearLabel,
   groupEventsByDayKey,
   resolveDayEventTones,
+  viewerTodayDayKey,
   type CalendarEventTone,
   type CalendarScope,
   type MonthCalendarCell,
@@ -65,12 +67,30 @@ export function MonthCalendarGrid(props: {
     () => buildMonthCalendarGrid(props.year, props.monthIndex, props.timezone),
     [props.monthIndex, props.timezone, props.year]
   );
+  const [todayKey, setTodayKey] = useState(() => viewerTodayDayKey(props.timezone));
+
+  useEffect(() => {
+    setTodayKey(viewerTodayDayKey(props.timezone));
+
+    const timer = window.setInterval(() => {
+      setTodayKey(viewerTodayDayKey(props.timezone));
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, [props.timezone]);
 
   return (
     <section className="month-calendar-grid-panel">
       <header className="month-calendar-grid-head">
-        <h3>{formatMonthYearLabel(props.year, props.monthIndex, props.timezone)}</h3>
-        <p>{projection.length} active day{projection.length === 1 ? '' : 's'} in this view</p>
+        <div className="month-calendar-grid-head-copy">
+          <h3>{formatMonthYearLabel(props.year, props.monthIndex, props.timezone)}</h3>
+          <p>{projection.length} active day{projection.length === 1 ? '' : 's'} in this view</p>
+        </div>
+        <ViewerTimezoneClock
+          className="is-month-calendar-clock"
+          label={'Now · ' + props.timezone}
+          timezone={props.timezone}
+        />
       </header>
 
       <div className="month-calendar-weekday-row" aria-hidden="true">
@@ -87,8 +107,10 @@ export function MonthCalendarGrid(props: {
             cell={cell}
             events={cell.dayKey ? (eventsByDay.get(cell.dayKey) ?? []) : []}
             interestedIds={interestedIds}
+            isToday={cell.dayKey === todayKey}
             key={cell.dayKey ?? 'pad-' + index}
             onSelect={props.onDaySelect}
+            timezone={props.timezone}
           />
         ))}
       </div>
@@ -112,7 +134,9 @@ function MonthCalendarDayCell(props: {
   cell: MonthCalendarCell;
   events: StoredEvent[];
   interestedIds: ReadonlySet<string>;
+  isToday: boolean;
   onSelect: (dayKey: string, events: StoredEvent[]) => void;
+  timezone: string;
 }): ReactElement {
   if (!props.cell.inMonth || !props.cell.dayKey || props.cell.dayNumber === null) {
     return <div aria-hidden="true" className="month-calendar-cell is-outside-month" role="gridcell" />;
@@ -123,8 +147,11 @@ function MonthCalendarDayCell(props: {
 
   return (
     <button
+      aria-current={props.isToday ? 'date' : undefined}
       className={
-        'month-calendar-cell' + (hasEvents ? ' has-calendar-events' : ' is-empty-calendar-day')
+        'month-calendar-cell' +
+        (props.isToday ? ' is-viewer-today' : '') +
+        (hasEvents ? ' has-calendar-events' : ' is-empty-calendar-day')
       }
       onClick={() => {
         if (hasEvents) {
@@ -132,9 +159,11 @@ function MonthCalendarDayCell(props: {
         }
       }}
       role="gridcell"
+      title={props.isToday ? 'Today in ' + props.timezone : undefined}
       type="button"
     >
       <span className="month-calendar-day-number">{props.cell.dayNumber}</span>
+      {props.isToday ? <span className="month-calendar-today-pill">Today</span> : null}
       {hasEvents ? (
         <span className="month-calendar-day-tones" aria-hidden="true">
           {tones.map((tone) => (

@@ -342,3 +342,25 @@ export function currentViewerMonth(timezone: string): { year: number; monthIndex
 
   return { year, monthIndex };
 }
+
+export function viewerTodayDayKey(timezone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+export function formatViewerCurrentTime(timezone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: timezone,
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }).format(now);
+}
+
+export function isViewerToday(dayKey: string, timezone: string, now = new Date()): boolean {
+  return dayKey === viewerTodayDayKey(timezone, now);
+}

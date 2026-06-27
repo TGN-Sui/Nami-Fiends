@@ -9,6 +9,9 @@ import {
   filterUpcomingUniversalCalendarEvents,
   groupUniversalCalendarEvents,
   resolveDayEventTones,
+  viewerTodayDayKey,
+  formatViewerCurrentTime,
+  isViewerToday,
 } from './universal-calendar.js';
 
 function makeEvent(overrides: Partial<StoredEvent> & Pick<StoredEvent, 'id' | 'title' | 'source'>): StoredEvent {
@@ -130,5 +133,15 @@ describe('universal-calendar', () => {
     );
 
     expect(tones).toEqual(['official', 'channel']);
+  });
+
+  it('resolves today in the viewer timezone and formats live clock copy', () => {
+    const now = new Date('2026-06-27T18:30:00.000Z');
+    const todayKey = viewerTodayDayKey('UTC', now);
+
+    expect(todayKey).toBe('2026-06-27');
+    expect(isViewerToday('2026-06-27', 'UTC', now)).toBe(true);
+    expect(isViewerToday('2026-06-26', 'UTC', now)).toBe(false);
+    expect(formatViewerCurrentTime('UTC', now)).toMatch(/6:30/);
   });
 });

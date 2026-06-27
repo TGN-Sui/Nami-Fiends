@@ -13,6 +13,7 @@ import {
   type StoredEvent,
 } from './events-store.js';
 import { openUniversalCalendarOverlay } from './universal-calendar-overlay-store.js';
+import { ViewerTimezoneClock } from './ViewerTimezoneClock.js';
 import {
   buildCalendarProjection,
   currentViewerMonth,
@@ -131,7 +132,10 @@ export function UniversalCalendarPanel(props: {
                 : 'Official Nami and published game channel events only. Guild and member watches stay on personal calendars.'}
           </p>
           {layout !== 'compact' ? (
-            <small className="event-timezone-note">Your timezone: {timezone}</small>
+            <div className="universal-calendar-timezone-now">
+              <small className="event-timezone-note">Your timezone: {timezone}</small>
+              <ViewerTimezoneClock label="Current time" timezone={timezone} />
+            </div>
           ) : null}
         </div>
 
