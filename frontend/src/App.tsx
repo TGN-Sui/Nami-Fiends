@@ -271,7 +271,10 @@ import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.j
 import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
 import type { ChatExpandControl } from './ChatWindowExpandable.js';
 import { useFeaturedPlacementAuctionStatus } from './featured-placement-auction-store.js';
+import { UniversalCalendarLauncher } from './UniversalCalendarLauncher.js';
+import { UniversalCalendarOverlay } from './UniversalCalendarOverlay.js';
 import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
+import { openUniversalCalendarOverlay } from './universal-calendar-overlay-store.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
@@ -4505,13 +4508,14 @@ function EventsScreen(props: {
   return (
     <>
       <header className="page-title">
-        <p>Official Nami, channel, and guild schedules in one discovery view</p>
-        <h1>Universal Calendar</h1>
+        <p>Universal discovery plus guild and watched events you mark Interested</p>
+        <h1>My Calendar</h1>
       </header>
 
       <UniversalCalendarPanel
         onOpenChannel={props.onOpenChannel}
         onViewEvent={props.onViewEvent}
+        scope="personal"
       />
     </>
   );
@@ -4754,17 +4758,6 @@ export function App(): ReactElement {
       return;
     }
 
-    if (page === 'events' && isGameChannelOwner()) {
-      const ownedChannel = resolveOwnedGameChannel();
-
-      if (ownedChannel) {
-        setSelectedChannel(ownedChannel);
-        setContextReturnPage((returnPage) => (activePage === 'channelEvents' ? returnPage : activePage));
-        setActivePage('channelEvents');
-        return;
-      }
-    }
-
     if (page === 'chat') {
       if (activePage !== 'channelProfile') {
         setContextReturnPage(activePage);
@@ -4951,7 +4944,7 @@ export function App(): ReactElement {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
-          onOpenCalendar={() => setActivePage('events')}
+          onOpenCalendar={() => openUniversalCalendarOverlay()}
           onViewEvent={(event) => {
             setSelectedEvent(event);
             setActivePage('eventDetail');
@@ -5178,7 +5171,7 @@ if (activePage === 'userProfile') {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
-          onOpenCalendar={() => setActivePage('events')}
+          onOpenCalendar={() => openUniversalCalendarOverlay()}
           onViewEvent={(event) => {
             setSelectedEvent(event);
             setActivePage('eventDetail');
@@ -5281,6 +5274,11 @@ if (activePage === 'userProfile') {
         ) : null}
         {showPlatformShell ? <ChannelBannerReminderBar /> : null}
         {showPlatformShell ? (
+          <div className="platform-top-calendar-launcher-row">
+            <UniversalCalendarLauncher />
+          </div>
+        ) : null}
+        {showPlatformShell ? (
           <MemberFeedOfficialAlertBanner onOpenSafetyCenter={() => setActivePage('safetyCenter')} />
         ) : null}
         {activePage === 'settings' ? (
@@ -5298,6 +5296,15 @@ if (activePage === 'userProfile') {
       {showPlatformShell ? <IgniteRadioDock /> : null}
       {showPlatformShell && !isGameChannelOwner() ? <MembershipUpgradeOverlay /> : null}
       {showPlatformShell ? <SuperBannerOverlay /> : null}
+      {showPlatformShell ? (
+        <UniversalCalendarOverlay
+          onOpenChannel={(channel) => openChannelProfile(channel)}
+          onViewEvent={(event) => {
+            setSelectedEvent(event);
+            setActivePage('eventDetail');
+          }}
+        />
+      ) : null}
       {showPlatformShell ? <TutorialOverlay /> : null}
       {showPlatformShell ? (
         <HubEntryOrchestrator activePage={activePage} owner={protocolOwner} />

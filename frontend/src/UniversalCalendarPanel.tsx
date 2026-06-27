@@ -1,105 +1,142 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
+import { CalendarDayEventsPopup } from './CalendarDayEventsPopup.js';
+import { MonthCalendarGrid } from './MonthCalendarGrid.js';
+import { CalendarEventCards } from './CalendarEventCards.js';
 import {
-  eventImportanceClass,
-  formatEventTimeInTimezone,
+  getPersonalCalendarEvents,
   getUniversalCalendarEvents,
-  isEventLive,
-  isEventStartingSoon,
+  readInterestedEventIds,
   readViewerTimezone,
   saveViewerTimezone,
   useEventsStore,
+  type StoredEvent,
 } from './events-store.js';
-import { EventInterestedButton } from './EventInterestedButton.js';
+import { openUniversalCalendarOverlay } from './universal-calendar-overlay-store.js';
 import {
-  buildUniversalCalendarProjection,
+  buildCalendarProjection,
+  currentViewerMonth,
+  type CalendarScope,
+  type PersonalCalendarFilter,
   type UniversalCalendarFilter,
 } from './universal-calendar.js';
-import type { StoredEvent } from './events-store.js';
-import { channels, type NamiChannel } from './uiMockData.js';
+import type { NamiChannel } from './uiMockData.js';
 
-const CALENDAR_FILTERS: Array<{ id: UniversalCalendarFilter; label: string }> = [
+const UNIVERSAL_FILTERS: Array<{ id: UniversalCalendarFilter; label: string }> = [
   { id: 'all', label: 'All events' },
-  { id: 'subscribed', label: 'Subscribed' },
+  { id: 'official', label: 'Official' },
+  { id: 'channel', label: 'Channel' },
+];
+
+const PERSONAL_FILTERS: Array<{ id: PersonalCalendarFilter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'universal', label: 'Universal' },
+  { id: 'watched', label: 'Watched' },
   { id: 'official', label: 'Official' },
   { id: 'channel', label: 'Channel' },
   { id: 'guild', label: 'Guild' },
+  { id: 'subscribed', label: 'Subscribed' },
 ];
-
-function calendarEventStatusLabel(event: StoredEvent): string {
-  if (isEventLive(event)) {
-    return 'Live now';
-  }
-
-  if (isEventStartingSoon(event)) {
-    return 'Starting soon';
-  }
-
-  return event.status;
-}
-
-function resolveChannelForEvent(event: StoredEvent): NamiChannel | undefined {
-  if (!event.channelId) {
-    return undefined;
-  }
-
-  return channels.find((channel) => channel.id === event.channelId);
-}
 
 export function UniversalCalendarPanel(props: {
   compact?: boolean;
+  layout?: 'page' | 'overlay' | 'compact';
   onOpenCalendar?: () => void;
   onOpenChannel?: (channel: NamiChannel) => void;
   onViewEvent: (event: StoredEvent) => void;
+  scope?: CalendarScope;
 }): ReactElement {
+  const scope = props.scope ?? 'universal';
+  const layout = props.layout ?? (props.compact ? 'compact' : 'page');
   const { revision } = useEventsStore();
-  const [filter, setFilter] = useState<UniversalCalendarFilter>('all');
-  const [upcomingOnly, setUpcomingOnly] = useState(true);
+  const [filter, setFilter] = useState<UniversalCalendarFilter | PersonalCalendarFilter>('all');
+  const [upcomingOnly, setUpcomingOnly] = useState(layout !== 'compact');
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<StoredEvent[]>([]);
   const timezone = readViewerTimezone();
+  const viewerMonth = currentViewerMonth(timezone);
+  const [monthIndex, setMonthIndex] = useState(viewerMonth.monthIndex);
+  const [year, setYear] = useState(viewerMonth.year);
 
-  const catalogEvents = useMemo(() => getUniversalCalendarEvents(), [revision]);
-
-  const dayGroups = useMemo(() => {
-    const projection = buildUniversalCalendarProjection(catalogEvents, filter, timezone, {
-      upcomingOnly,
-    });
-
-    if (!props.compact) {
-      return projection;
+  const catalogEvents = useMemo(() => {
+    if (scope === 'personal') {
+      return getPersonalCalendarEvents();
     }
 
-    const compactEvents = projection.flatMap((group) => group.events).slice(0, 4);
+    return getUniversalCalendarEvents();
+  }, [revision, scope]);
 
-    if (compactEvents.length === 0) {
+  const filters = scope === 'personal' ? PERSONAL_FILTERS : UNIVERSAL_FILTERS;
+
+  const interestedIds = useMemo(() => new Set(readInterestedEventIds()), [revision]);
+
+  const compactEvents = useMemo(() => {
+    if (layout !== 'compact') {
       return [];
     }
 
-    return buildUniversalCalendarProjection(compactEvents, 'all', timezone, {
-      upcomingOnly: false,
+    const projection = buildCalendarProjection(catalogEvents, scope, 'all', timezone, interestedIds, {
+      upcomingOnly: true,
     });
-  }, [catalogEvents, filter, props.compact, revision, timezone, upcomingOnly]);
 
-  const visibleEventCount = dayGroups.reduce((total, group) => total + group.events.length, 0);
+    return projection.flatMap((group) => group.events).slice(0, 4);
+  }, [catalogEvents, interestedIds, layout, scope, timezone]);
+
+  const visibleEventCount = useMemo(() => {
+    if (layout === 'compact') {
+      return compactEvents.length;
+    }
+
+    const projection = buildCalendarProjection(catalogEvents, scope, filter, timezone, interestedIds, {
+      upcomingOnly,
+    });
+
+    return projection.reduce((total, group) => total + group.events.length, 0);
+  }, [catalogEvents, compactEvents.length, filter, interestedIds, layout, scope, timezone, upcomingOnly]);
+
+  function shiftMonth(delta: number): void {
+    const next = new Date(year, monthIndex + delta, 1);
+    setYear(next.getFullYear());
+    setMonthIndex(next.getMonth());
+  }
+
+  function handleDaySelect(dayKey: string, events: StoredEvent[]): void {
+    setSelectedDayKey(dayKey);
+    setSelectedDayEvents(events);
+  }
 
   return (
     <section
-      className={'universal-calendar-panel' + (props.compact ? ' is-compact-universal-calendar' : '')}
+      className={
+        'universal-calendar-panel' +
+        (layout === 'compact' ? ' is-compact-universal-calendar' : '') +
+        (layout === 'overlay' ? ' is-overlay-universal-calendar' : '') +
+        (scope === 'personal' ? ' is-personal-calendar' : ' is-universal-discovery-calendar')
+      }
     >
       <header className="universal-calendar-head">
         <div className="universal-calendar-head-copy">
-          <h2>{props.compact ? 'Upcoming events' : 'Universal calendar'}</h2>
+          <h2>
+            {layout === 'compact'
+              ? 'Upcoming events'
+              : scope === 'personal'
+                ? 'My calendar'
+                : 'Universal calendar'}
+          </h2>
           <p>
-            {props.compact
-              ? 'Cross-community schedule from official Nami, channels, and guilds.'
-              : 'Aggregated owner and official events across Nami, grouped by day in ' + timezone + '.'}
+            {layout === 'compact'
+              ? 'Official Nami and game channel owner schedules.'
+              : scope === 'personal'
+                ? 'Universal discovery plus events you watch. Mark Interested to add guild or member events to your calendar.'
+                : 'Official Nami and published game channel events only. Guild and member watches stay on personal calendars.'}
           </p>
-          {!props.compact ? (
+          {layout !== 'compact' ? (
             <small className="event-timezone-note">Your timezone: {timezone}</small>
           ) : null}
         </div>
 
-        <div className="universal-calendar-head-controls">
-          {!props.compact ? (
+        {layout !== 'compact' ? (
+          <div className="universal-calendar-head-controls">
             <label className="event-timezone-field universal-calendar-timezone-field">
               <span>Event timezone</span>
               <input
@@ -109,15 +146,14 @@ export function UniversalCalendarPanel(props: {
                 value={timezone}
               />
             </label>
-          ) : null}
 
-          {!props.compact ? (
             <div className="universal-calendar-filters" role="tablist" aria-label="Calendar filters">
-              {CALENDAR_FILTERS.map((entry) => (
+              {filters.map((entry) => (
                 <button
                   aria-selected={filter === entry.id}
                   className={
-                    'universal-calendar-filter' + (filter === entry.id ? ' is-active-calendar-filter' : '')
+                    'universal-calendar-filter' +
+                    (filter === entry.id ? ' is-active-calendar-filter' : '')
                   }
                   key={entry.id}
                   onClick={() => setFilter(entry.id)}
@@ -128,9 +164,7 @@ export function UniversalCalendarPanel(props: {
                 </button>
               ))}
             </div>
-          ) : null}
 
-          {!props.compact ? (
             <label className="universal-calendar-upcoming-toggle">
               <input
                 checked={upcomingOnly}
@@ -139,84 +173,85 @@ export function UniversalCalendarPanel(props: {
               />
               <span>Upcoming and live only</span>
             </label>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </header>
 
-      {visibleEventCount === 0 ? (
-        <p className="protocol-hint universal-calendar-empty">
-          No events match this calendar view. Try another filter or turn off upcoming-only.
-        </p>
-      ) : (
-        <div className="universal-calendar-day-groups">
-          {dayGroups.map((group) => (
-            <section className="universal-calendar-day-group" key={group.dayKey}>
-              <h3>{group.dayLabel}</h3>
-              <div className="universal-calendar-day-events">
-                {group.events.map((event) => {
-                  const linkedChannel = resolveChannelForEvent(event);
-
-                  return (
-                    <article
-                      className={'universal-calendar-event-card panel' + eventImportanceClass(event)}
-                      key={event.id}
-                    >
-                      <div className="universal-calendar-event-top">
-                        <span className="mini-badge">{event.source}</span>
-                        <span className="universal-calendar-event-status-pill">
-                          {calendarEventStatusLabel(event)}
-                        </span>
-                      </div>
-
-                      <div className="universal-calendar-event-copy">
-                        <strong>{event.title}</strong>
-                        <time dateTime={event.startsAtUtc}>
-                          {formatEventTimeInTimezone(event.startsAtUtc, timezone)}
-                        </time>
-                        <p>{event.description}</p>
-                        <small>
-                          {event.channelName ? event.channelName : null}
-                          {event.channelName && event.guildName ? ' · ' : null}
-                          {event.guildName ? event.guildName : null}
-                          {!event.channelName && !event.guildName ? event.seats : null}
-                        </small>
-                      </div>
-
-                      <div className="universal-calendar-event-actions">
-                        <EventInterestedButton eventId={event.id} />
-                        {linkedChannel && props.onOpenChannel ? (
-                          <button
-                            className="nami-surface-button"
-                            onClick={() => props.onOpenChannel?.(linkedChannel)}
-                            type="button"
-                          >
-                            Open channel
-                          </button>
-                        ) : null}
-                        <button
-                          className="secondary-action"
-                          onClick={() => props.onViewEvent(event)}
-                          type="button"
-                        >
-                          View event
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
-
-      {props.compact && props.onOpenCalendar ? (
-        <div className="universal-calendar-compact-footer">
-          <button className="nami-surface-button is-primary-surface-button" onClick={props.onOpenCalendar} type="button">
-            Open full calendar
+      {layout !== 'compact' ? (
+        <div className="universal-calendar-month-nav">
+          <button className="nami-surface-button" onClick={() => shiftMonth(-1)} type="button">
+            Previous month
+          </button>
+          <button
+            className="nami-surface-button"
+            onClick={() => {
+              const current = currentViewerMonth(timezone);
+              setYear(current.year);
+              setMonthIndex(current.monthIndex);
+            }}
+            type="button"
+          >
+            Today
+          </button>
+          <button className="nami-surface-button" onClick={() => shiftMonth(1)} type="button">
+            Next month
           </button>
         </div>
       ) : null}
+
+      {layout === 'compact' ? null : (
+        <MonthCalendarGrid
+          events={catalogEvents}
+          filter={filter}
+          monthIndex={monthIndex}
+          onDaySelect={handleDaySelect}
+          scope={scope}
+          timezone={timezone}
+          upcomingOnly={upcomingOnly}
+          year={year}
+        />
+      )}
+
+      {layout === 'compact' && compactEvents.length > 0 ? (
+        <CalendarEventCards
+          events={compactEvents}
+          onViewEvent={props.onViewEvent}
+          timezone={timezone}
+          {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+        />
+      ) : null}
+
+      {visibleEventCount === 0 ? (
+        <p className="protocol-hint universal-calendar-empty">
+          {layout === 'compact'
+            ? 'No upcoming universal events right now.'
+            : 'No events match this calendar view. Try another filter, another month, or turn off upcoming-only.'}
+        </p>
+      ) : null}
+
+      {layout === 'compact' && props.onOpenCalendar ? (
+        <div className="universal-calendar-compact-footer">
+          <button
+            className="nami-surface-button is-primary-surface-button"
+            onClick={() => openUniversalCalendarOverlay()}
+            type="button"
+          >
+            Open universal calendar
+          </button>
+        </div>
+      ) : null}
+
+      <CalendarDayEventsPopup
+        dayKey={selectedDayKey}
+        events={selectedDayEvents}
+        onClose={() => {
+          setSelectedDayKey(null);
+          setSelectedDayEvents([]);
+        }}
+        onViewEvent={props.onViewEvent}
+        timezone={timezone}
+        {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+      />
     </section>
   );
 }

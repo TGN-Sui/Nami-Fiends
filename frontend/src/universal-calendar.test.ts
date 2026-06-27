@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { StoredEvent } from './events-store.js';
 import {
+  buildMonthCalendarGrid,
   buildUniversalCalendarProjection,
+  filterPersonalCalendarEvents,
   filterUniversalCalendarEvents,
   filterUpcomingUniversalCalendarEvents,
   groupUniversalCalendarEvents,
+  resolveDayEventTones,
 } from './universal-calendar.js';
 
 function makeEvent(overrides: Partial<StoredEvent> & Pick<StoredEvent, 'id' | 'title' | 'source'>): StoredEvent {
@@ -51,7 +54,7 @@ const sampleEvents: StoredEvent[] = [
 const timezone = 'UTC';
 
 describe('universal-calendar', () => {
-  it('filters events by source and subscription state', () => {
+  it('filters universal events by official and channel only', () => {
     expect(filterUniversalCalendarEvents(sampleEvents, 'all')).toHaveLength(3);
     expect(filterUniversalCalendarEvents(sampleEvents, 'official').map((event) => event.id)).toEqual([
       'official-a',
@@ -59,13 +62,17 @@ describe('universal-calendar', () => {
     expect(filterUniversalCalendarEvents(sampleEvents, 'channel').map((event) => event.id)).toEqual([
       'channel-b',
     ]);
-    expect(filterUniversalCalendarEvents(sampleEvents, 'guild').map((event) => event.id)).toEqual([
-      'guild-c',
-    ]);
-    expect(filterUniversalCalendarEvents(sampleEvents, 'subscribed').map((event) => event.id)).toEqual([
-      'official-a',
-      'guild-c',
-    ]);
+  });
+
+  it('filters personal watched events separately from universal catalog', () => {
+    const interested = new Set(['guild-c']);
+
+    expect(
+      filterPersonalCalendarEvents(sampleEvents, 'watched', interested).map((event) => event.id)
+    ).toEqual(['guild-c']);
+    expect(
+      filterPersonalCalendarEvents(sampleEvents, 'universal', interested).map((event) => event.id)
+    ).toEqual(['official-a', 'channel-b']);
   });
 
   it('groups events by day in the viewer timezone and sorts within each day', () => {
@@ -79,11 +86,10 @@ describe('universal-calendar', () => {
   });
 
   it('builds a filtered day-group projection for the calendar panel', () => {
-    const projection = buildUniversalCalendarProjection(sampleEvents, 'subscribed', timezone);
+    const projection = buildUniversalCalendarProjection(sampleEvents, 'official', timezone);
 
-    expect(projection).toHaveLength(2);
+    expect(projection).toHaveLength(1);
     expect(projection[0]?.events.map((event) => event.id)).toEqual(['official-a']);
-    expect(projection[1]?.events.map((event) => event.id)).toEqual(['guild-c']);
     expect(projection[0]?.dayLabel.length).toBeGreaterThan(0);
   });
 
@@ -107,5 +113,22 @@ describe('universal-calendar', () => {
     );
 
     expect(futureOnly.map((event) => event.id)).toEqual(['future']);
+  });
+
+  it('builds a month grid with leading padding cells', () => {
+    const cells = buildMonthCalendarGrid(2026, 5, timezone);
+    const inMonth = cells.filter((cell) => cell.inMonth);
+
+    expect(inMonth).toHaveLength(30);
+    expect(cells.length % 7).toBe(0);
+  });
+
+  it('resolves multiple source tones for a single day', () => {
+    const tones = resolveDayEventTones(
+      [sampleEvents[0] as StoredEvent, sampleEvents[1] as StoredEvent],
+      new Set()
+    );
+
+    expect(tones).toEqual(['official', 'channel']);
   });
 });

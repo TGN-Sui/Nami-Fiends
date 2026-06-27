@@ -323,8 +323,33 @@ export function withViewerSubscriptionFlags(
   return { ...event, subscribed };
 }
 
-export function getUniversalCalendarEvents(memberId = getSelfMember().id): StoredEvent[] {
-  return getAllCatalogEvents().map((event) => withViewerSubscriptionFlags(event, memberId));
+export function isUniversalCatalogEvent(event: StoredEvent): boolean {
+  return event.source === 'official' || event.source === 'channel';
+}
+
+export function getUniversalCalendarEvents(): StoredEvent[] {
+  return getAllCatalogEvents().filter(isUniversalCatalogEvent);
+}
+
+export function getPersonalCalendarEvents(memberId = getSelfMember().id): StoredEvent[] {
+  const interestedIds = new Set(readInterestedEventIds(memberId));
+  const merged = new Map<string, StoredEvent>();
+
+  for (const event of getUniversalCalendarEvents()) {
+    merged.set(event.id, withViewerSubscriptionFlags(event, memberId));
+  }
+
+  for (const event of getAllCatalogEvents()) {
+    if (!interestedIds.has(event.id)) {
+      continue;
+    }
+
+    merged.set(event.id, withViewerSubscriptionFlags(event, memberId));
+  }
+
+  return [...merged.values()].sort(
+    (left, right) => new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime()
+  );
 }
 
 export function getAllCatalogEvents(): StoredEvent[] {
