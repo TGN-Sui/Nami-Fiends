@@ -145,67 +145,70 @@ export function MyProfileScreen(props: {
         </section>
       ) : (
         <>
-          <header className="my-profile-passport-heading">
-            <p className="my-profile-eyebrow">My Profile</p>
-            <h1>{profileMember.name}</h1>
-          </header>
+          <section className="my-profile-passport-anchor is-passport-anchor-bare">
+            <div className="my-profile-passport-toolbar">
+              <p className="my-profile-eyebrow">My Profile</p>
 
-          <section className="my-profile-passport-anchor is-passport-anchor-bare my-profile-passport-stage">
+              <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
+                {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+                  <button
+                    className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
+                    key={layout}
+                    onClick={() => chooseProfileCardLayout(layout)}
+                    type="button"
+                  >
+                    {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="profile-passport-carousel-actions"
+                role="tablist"
+                aria-label="Passport card views"
+              >
+                <button
+                  aria-selected={profileCarouselSlide === 'passport'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('passport')}
+                  role="tab"
+                  type="button"
+                >
+                  Passport
+                </button>
+                <button
+                  aria-selected={profileCarouselSlide === 'badges'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('badges')}
+                  role="tab"
+                  type="button"
+                >
+                  Badge Book
+                </button>
+              </div>
+
+              <div className="my-profile-passport-side-actions">
+                <SharePassportButton member={profileMember} />
+                <button
+                  aria-pressed={viewAsGuest}
+                  className={'nami-surface-button my-profile-guest-toggle' + (viewAsGuest ? ' is-active-view' : '')}
+                  onClick={() => setViewAsGuest(true)}
+                  type="button"
+                >
+                  Preview as guest
+                </button>
+              </div>
+            </div>
+
             <ProfilePassportCarousel
               activeSlide={profileCarouselSlide}
               badgeBookView={<BadgeCollectorsBook key={profileMember.id} member={profileMember} />}
-              leadRail={
-                <div className="my-profile-passport-lead-rail">
-                  <div
-                    aria-label="Passport layout"
-                    className="nami-profile-layout-switch nami-profile-stable-layout-switch my-profile-passport-layout-switch"
-                    role="group"
-                  >
-                    {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
-                      <button
-                        aria-pressed={profileCardLayout === layout}
-                        className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
-                        key={layout}
-                        onClick={() => chooseProfileCardLayout(layout)}
-                        type="button"
-                      >
-                        {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div
-                    className="profile-passport-carousel-actions my-profile-passport-view-tabs"
-                    role="tablist"
-                    aria-label="Passport card views"
-                  >
-                    <button
-                      aria-selected={profileCarouselSlide === 'passport'}
-                      className={
-                        'nami-surface-button profile-passport-view-tab' +
-                        (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
-                      }
-                      onClick={() => setProfileCarouselSlide('passport')}
-                      role="tab"
-                      type="button"
-                    >
-                      Passport
-                    </button>
-                    <button
-                      aria-selected={profileCarouselSlide === 'badges'}
-                      className={
-                        'nami-surface-button profile-passport-view-tab' +
-                        (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
-                      }
-                      onClick={() => setProfileCarouselSlide('badges')}
-                      role="tab"
-                      type="button"
-                    >
-                      Badge Book
-                    </button>
-                  </div>
-                </div>
-              }
               passportLayout={profileCardLayout}
               passportView={
                 <TcgFoilPassportCard
@@ -215,29 +218,6 @@ export function MyProfileScreen(props: {
                   playerScore={profilePlayerScore?.total ?? null}
                   pokesReceived={pokesReceived}
                 />
-              }
-              sideRail={
-                <div className="my-profile-passport-side-rail">
-                  <SharePassportButton
-                    className="my-profile-share-passport-button"
-                    member={profileMember}
-                  />
-                  <button
-                    aria-pressed={viewAsGuest}
-                    className={'nami-surface-button my-profile-guest-toggle' + (viewAsGuest ? ' is-active-view' : '')}
-                    onClick={() => setViewAsGuest(true)}
-                    type="button"
-                  >
-                    Preview as guest
-                  </button>
-                  <button
-                    className="nami-surface-button"
-                    onClick={scrollToEditPanel}
-                    type="button"
-                  >
-                    Edit profile
-                  </button>
-                </div>
               }
             />
           </section>
