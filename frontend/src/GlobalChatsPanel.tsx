@@ -154,6 +154,7 @@ export function GlobalChatRoomView(props: {
   onChatEscape?: () => boolean | void;
   onModerationDelete?: () => void;
   disableExpand?: boolean;
+  detachedLiveFeed?: boolean;
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
@@ -415,10 +416,14 @@ export function GlobalChatRoomView(props: {
 
       <ChatWindowExpandable
         {...(props.chat.kind === 'genre' ? { className: 'chat-theme-ocean' } : {})}
-        {...(props.expandedAside ? { expandedAside: props.expandedAside } : {})}
-        {...(props.renderExpandedAside ? { renderExpandedAside: props.renderExpandedAside } : {})}
-        {...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {})}
-        {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
+        {...(props.detachedLiveFeed
+          ? {}
+          : {
+              ...(props.expandedAside ? { expandedAside: props.expandedAside } : {}),
+              ...(props.renderExpandedAside ? { renderExpandedAside: props.renderExpandedAside } : {}),
+              ...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {}),
+              ...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {}),
+            })}
         {...(props.onChatExpandedChange ? { onExpandedChange: props.onChatExpandedChange } : {})}
         {...(props.onChatEscape ? { onEscape: props.onChatEscape } : {})}
         {...(props.disableExpand ? { disableExpand: true } : {})}
@@ -429,8 +434,38 @@ export function GlobalChatRoomView(props: {
   );
 }
 
-export function GenreChatRoomPanel(props: {
+export function GenreLoungeRoomTabs(props: {
   activeChatId: string;
+  onSelectChat: (chatId: string) => void;
+  className?: string;
+}): ReactElement {
+  return (
+    <div
+      className={'genre-chat-pinned-room-row' + (props.className ? ' ' + props.className : '')}
+      role="tablist"
+      aria-label="Genre chat rooms"
+    >
+      {genreOfficialChats.map((chat) => (
+        <button
+          aria-selected={chat.id === props.activeChatId}
+          className={
+            'genre-chat-pinned-room-tab' + (chat.id === props.activeChatId ? ' is-active-genre-room' : '')
+          }
+          key={chat.id}
+          onClick={() => props.onSelectChat(chat.id)}
+          role="tab"
+          type="button"
+        >
+          {chat.title}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function GenreLoungeSplitLayout(props: {
+  activeChatId: string;
+  onSelectChat: (chatId: string) => void;
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
   compact?: boolean;
@@ -439,12 +474,46 @@ export function GenreChatRoomPanel(props: {
     genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
 
   return (
-    <GlobalChatRoomView
-      chat={activeChat}
-      key={activeChat.id}
+    <div className={'genre-lounge-split-layout' + (props.compact ? ' is-compact-genre-lounge-split' : '')}>
+      <aside aria-label="Genre lounge live feed" className="genre-lounge-live-feed-panel">
+        <header className="genre-lounge-live-feed-head">
+          <span className="mini-badge">Live feed</span>
+          <strong>{activeChat.title}</strong>
+        </header>
+        <div className="genre-lounge-live-feed-body">
+          <GenreChatBroadcastAside chat={activeChat} isExpanded={true} />
+        </div>
+      </aside>
+
+      <div className="genre-lounge-chat-column">
+        <GenreLoungeRoomTabs activeChatId={activeChat.id} onSelectChat={props.onSelectChat} />
+        <GlobalChatRoomView
+          chat={activeChat}
+          detachedLiveFeed
+          disableExpand
+          key={activeChat.id}
+          onOpenMember={props.onOpenMember}
+          showCompactHead={false}
+          {...(props.compact === true ? { compact: true } : {})}
+          {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function GenreChatRoomPanel(props: {
+  activeChatId: string;
+  onActiveChatIdChange?: (chatId: string) => void;
+  onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
+  compact?: boolean;
+}): ReactElement {
+  return (
+    <GenreLoungeSplitLayout
+      activeChatId={props.activeChatId}
+      onSelectChat={(chatId) => props.onActiveChatIdChange?.(chatId)}
       onOpenMember={props.onOpenMember}
-        {...genreChatExpandProps(activeChat, { compact: false })}
-        showCompactHead={false}
       {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       {...(props.compact ? { compact: true } : {})}
     />
@@ -862,30 +931,11 @@ export function PinnedGenreChatDock(props: {
         </div>
       </header>
 
-      <div className="genre-chat-pinned-room-row" role="tablist" aria-label="Genre chat rooms">
-        {genreOfficialChats.map((chat) => (
-          <button
-            aria-selected={chat.id === activeChat.id}
-            className={
-              'genre-chat-pinned-room-tab' + (chat.id === activeChat.id ? ' is-active-genre-room' : '')
-            }
-            key={chat.id}
-            onClick={() => props.onSelectChat(chat.id)}
-            role="tab"
-            type="button"
-          >
-            {chat.title}
-          </button>
-        ))}
-      </div>
-
-      <GlobalChatRoomView
-        chat={activeChat}
+      <GenreLoungeSplitLayout
+        activeChatId={activeChat.id}
         compact
-        key={activeChat.id}
         onOpenMember={props.onOpenMember}
-        {...genreChatExpandProps(activeChat, { compact: true })}
-        showCompactHead={false}
+        onSelectChat={props.onSelectChat}
         {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       />
 

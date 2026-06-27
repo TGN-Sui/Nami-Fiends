@@ -2401,7 +2401,7 @@ function GameHub(props: {
               <div className="gamehub-genre-chats-inline-head">
                 <div>
                   <h3>Genre Chats</h3>
-                  <p>Normal panel view with full-width readable chat.</p>
+                  <p>Live feed on the left, lounge tabs and chat on the right.</p>
                 </div>
                 <button
                   className="nami-surface-button is-primary-surface-button"
@@ -2417,25 +2417,9 @@ function GameHub(props: {
                 </button>
               </div>
 
-              <div className="genre-chat-pinned-room-row" role="tablist" aria-label="Genre chat rooms">
-                {genreOfficialChats.map((chat) => (
-                  <button
-                    aria-selected={chat.id === activeGenreChatId}
-                    className={
-                      'genre-chat-pinned-room-tab' + (chat.id === activeGenreChatId ? ' is-active-genre-room' : '')
-                    }
-                    key={chat.id}
-                    onClick={() => setActiveGenreChatId(chat.id)}
-                    role="tab"
-                    type="button"
-                  >
-                    {chat.title}
-                  </button>
-                ))}
-              </div>
-
               <GenreChatRoomPanel
                 activeChatId={activeGenreChatId}
+                onActiveChatIdChange={setActiveGenreChatId}
                 onOpenMember={props.onOpenMember}
                 tagHandlers={props.tagHandlers}
               />

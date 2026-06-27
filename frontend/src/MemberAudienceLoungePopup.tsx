@@ -371,7 +371,7 @@ export function MemberAudienceLoungePopup(props: {
                   <div className="audience-lounge-feed-empty">
                     <strong>No live stream right now</strong>
                     <p className="protocol-hint">
-                      {watchingMember.name} is not broadcasting. Chat below stays open — click a live avatar to
+                      {watchingMember.name} is not broadcasting. Chat stays open on the right — click a live avatar to
                       tune into someone else&apos;s feed.
                     </p>
                   </div>
@@ -390,7 +390,7 @@ export function MemberAudienceLoungePopup(props: {
                       <strong>{chatRoom.title}</strong>
                       <p className="protocol-hint">
                         {isLiveChatSelected
-                          ? 'Everyone chats here while the lounge feed plays above.'
+                          ? 'Everyone chats here while the lounge feed plays on the left.'
                           : 'Audience room for ' + props.hostMember.name + '.'}
                       </p>
                     </div>
