@@ -11935,12 +11935,46 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   overflow: hidden;
 }
 
-.gamehub-genre-chats-inline-panel .genre-lounge-split-layout {
+.genre-lounge-inline-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+  max-height: min(56vh, 560px);
+  border-radius: 16px;
+  border: 1px solid rgba(90, 220, 170, 0.22);
+  background: rgba(8, 15, 27, 0.82);
+  overflow: hidden;
+}
+
+.genre-lounge-inline-layout .genre-chat-pinned-room-row {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  border-bottom: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.genre-lounge-inline-layout .global-chat-room-pane {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.genre-lounge-inline-layout .global-chat-room-pane.has-genre-presence-sidebar {
+  min-height: 0;
+  height: 100%;
+}
+
+.gamehub-genre-chats-inline-panel .genre-lounge-inline-layout {
   min-height: min(56vh, 560px);
 }
 
-.gamehub-genre-chats-inline-panel .genre-lounge-chat-column .global-message-stack {
+.gamehub-genre-chats-inline-panel .genre-lounge-inline-layout .global-message-stack {
   min-height: 120px;
+  max-height: min(32vh, 320px);
+}
+
+.gamehub-genre-chats-inline-panel .genre-lounge-inline-layout .global-chat-room-pane.has-genre-presence-sidebar {
+  max-height: min(48vh, 480px);
 }
 
 .gamehub-genre-chats-inline-head {

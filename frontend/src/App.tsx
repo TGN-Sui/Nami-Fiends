@@ -2401,7 +2401,7 @@ function GameHub(props: {
               <div className="gamehub-genre-chats-inline-head">
                 <div>
                   <h3>Genre Chats</h3>
-                  <p>Live feed on the left, lounge tabs and chat on the right.</p>
+                  <p>Genre tabs on top, active members on the left, and chat on the right.</p>
                 </div>
                 <button
                   className="nami-surface-button is-primary-surface-button"

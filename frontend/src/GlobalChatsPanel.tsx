@@ -517,6 +517,30 @@ export function GenreLoungeRoomTabs(props: {
   );
 }
 
+export function GenreLoungeInlineLayout(props: {
+  activeChatId: string;
+  onSelectChat: (chatId: string) => void;
+  onOpenMember: (member: NamiMember) => void;
+  tagHandlers?: TagNavigationHandlers;
+}): ReactElement {
+  const activeChat =
+    genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
+
+  return (
+    <div className="genre-lounge-inline-layout">
+      <GenreLoungeRoomTabs activeChatId={activeChat.id} onSelectChat={props.onSelectChat} />
+      <GlobalChatRoomView
+        chat={activeChat}
+        disableExpand
+        key={activeChat.id}
+        onOpenMember={props.onOpenMember}
+        showCompactHead={false}
+        {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+      />
+    </div>
+  );
+}
+
 export function GenreLoungeSplitLayout(props: {
   activeChatId: string;
   onSelectChat: (chatId: string) => void;
@@ -574,13 +598,28 @@ export function GenreChatRoomPanel(props: {
   tagHandlers?: TagNavigationHandlers;
   compact?: boolean;
 }): ReactElement {
+  const selectChat = (chatId: string): void => {
+    props.onActiveChatIdChange?.(chatId);
+  };
+
+  if (props.compact) {
+    return (
+      <GenreLoungeSplitLayout
+        activeChatId={props.activeChatId}
+        compact
+        onOpenMember={props.onOpenMember}
+        onSelectChat={selectChat}
+        {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+      />
+    );
+  }
+
   return (
-    <GenreLoungeSplitLayout
+    <GenreLoungeInlineLayout
       activeChatId={props.activeChatId}
-      onSelectChat={(chatId) => props.onActiveChatIdChange?.(chatId)}
       onOpenMember={props.onOpenMember}
+      onSelectChat={selectChat}
       {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
-      {...(props.compact ? { compact: true } : {})}
     />
   );
 }
