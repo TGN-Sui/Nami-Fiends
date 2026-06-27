@@ -8624,20 +8624,18 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   background: rgba(90, 220, 170, 0.14);
 }
 
-.genre-chat-pinned-dock .genre-lounge-chat-stack {
+.genre-chat-pinned-dock .genre-lounge-split-layout {
   min-height: 0;
   height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.55fr);
 }
 
-.genre-chat-pinned-dock .genre-lounge-chat-stack .genre-chat-pinned-room-row {
-  flex: 0 0 auto;
-  flex-wrap: nowrap;
-  align-items: center;
-  min-height: 0;
-  max-height: none;
+.genre-chat-pinned-dock .genre-lounge-live-feed-panel {
+  padding: 8px;
+}
+
+.genre-chat-pinned-dock .genre-lounge-live-feed-head strong {
+  font-size: 0.78rem;
 }
 
 .genre-chat-pinned-dock .global-chat-room-pane {
@@ -11776,6 +11774,134 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   gap: 12px;
 }
 
+.genre-lounge-split-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 14px;
+  align-items: stretch;
+  min-height: 460px;
+  min-width: 0;
+}
+
+.genre-lounge-split-layout.is-compact-genre-lounge-split {
+  min-height: 0;
+  height: 100%;
+  gap: 0;
+}
+
+.genre-lounge-live-feed-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 215, 255, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(117, 215, 255, 0.12), transparent 42%),
+    rgba(5, 9, 15, 0.92);
+}
+
+.genre-lounge-split-layout.is-compact-genre-lounge-split .genre-lounge-live-feed-panel {
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+}
+
+.genre-lounge-live-feed-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.genre-lounge-live-feed-head strong {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.genre-lounge-live-feed-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.genre-lounge-live-feed-body > .genre-chat-expanded-broadcast,
+.genre-lounge-live-feed-body > .expanded-chat-member-aside,
+.genre-lounge-live-feed-body > .expanded-chat-member-passport-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+.genre-lounge-chat-column {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(90, 220, 170, 0.22);
+  background: rgba(8, 15, 27, 0.82);
+  overflow: hidden;
+}
+
+.genre-lounge-split-layout.is-compact-genre-lounge-split .genre-lounge-chat-column {
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+}
+
+.genre-lounge-chat-column .genre-chat-pinned-room-row {
+  border-bottom: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.genre-lounge-chat-column .global-chat-room-pane {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.genre-lounge-chat-column .global-chat-room-pane.is-compact-global-chat {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.genre-lounge-chat-column .chat-window-expand-host,
+.genre-lounge-chat-column .chat-window {
+  min-height: 0;
+  height: 100%;
+}
+
+.genre-lounge-chat-column .global-chat-conversation {
+  min-height: 0;
+  height: 100%;
+}
+
+.genre-lounge-chat-column .global-message-stack {
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+@media (max-width: 960px) {
+  .genre-lounge-split-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(220px, 0.95fr) minmax(320px, 1.05fr);
+    min-height: 0;
+  }
+
+  .genre-lounge-live-feed-panel {
+    grid-row: 1;
+  }
+
+  .genre-lounge-chat-column {
+    grid-row: 2;
+  }
+}
+
 .genre-lounge-chat-stack {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -11809,13 +11935,12 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   overflow: hidden;
 }
 
-.gamehub-genre-chats-inline-panel .genre-lounge-chat-stack .global-message-stack {
-  min-height: 120px;
-  max-height: min(32vh, 320px);
+.gamehub-genre-chats-inline-panel .genre-lounge-split-layout {
+  min-height: min(56vh, 560px);
 }
 
-.gamehub-genre-chats-inline-panel .genre-lounge-chat-stack .global-chat-room-pane.has-genre-presence-sidebar {
-  max-height: min(48vh, 480px);
+.gamehub-genre-chats-inline-panel .genre-lounge-chat-column .global-message-stack {
+  min-height: 120px;
 }
 
 .gamehub-genre-chats-inline-head {
