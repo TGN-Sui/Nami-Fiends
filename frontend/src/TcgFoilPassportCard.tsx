@@ -117,6 +117,7 @@ type TcgFoilPassportCardProps = {
   layout?: 'vertical' | 'horizontal';
   onOpenPassport?: () => void;
   playerScore?: number | null;
+  pokesReceived?: number | null;
   children?: ReactNode;
 };
 
@@ -532,6 +533,14 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div>
               <span>Arcade Bubbles</span>
               <strong>{arcadeBubbleStats.totalBubblesPopped.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Pokes received</span>
+              <strong>
+                {typeof props.pokesReceived === 'number'
+                  ? props.pokesReceived.toLocaleString()
+                  : '—'}
+              </strong>
             </div>
             <div>
               <span>Verification</span>

@@ -1,12 +1,15 @@
-import { useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
+import { usePokeReceivedCount } from './chat-poke-store.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
 import { MemberAudienceSubchannelsPanel } from './MemberAudienceSubchannelsPanel.js';
-import { MemberProfileShowcase } from './MemberProfileShowcase.js';
+import {
+  MemberProfileShowcase,
+  type ShowcaseTab,
+} from './MemberProfileShowcase.js';
 import { MemberPublicPinnedChat } from './MemberPublicPinnedChat.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
-import { PokeReceivedBadge } from './PokeReceivedBadge.js';
 import { ProfileEditPanel } from './ProfileEditPanel.js';
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
 import { ProtocolStatusBar } from './ProtocolStatusBar.js';
@@ -16,6 +19,11 @@ import {
   memberProfileExclusiveBadgeLabel,
   isFiendMember,
 } from './channel-surface.js';
+import { memberFeatureTier } from './member-access.js';
+import {
+  maxAudienceSubchannelsForMember,
+  readMemberAudienceSubchannels,
+} from './member-audience-subchannels-store.js';
 import { canShowMemberPublicChat } from './member-public-chat.js';
 import { useProfileGroupAffiliations } from './use-profile-group-affiliations.js';
 import {
@@ -42,14 +50,34 @@ import type { NamiGuildRecord, NamiSquadRecord } from './nami-affiliations.js';
 import type { NamiChannel, NamiMember, NamiPage } from './uiMockData.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
 
-type MyProfileTab = 'overview' | 'audience' | 'identity' | 'edit';
+/**
+ * Gamer-profile navigation pattern (Steam / Xbox / Discord inspired):
+ * identity + passport anchor at top, one tab row, content below.
+ */
+type MyProfileSection = 'home' | 'activity' | 'social' | 'customize';
 
-const MY_PROFILE_TABS: Array<{ id: MyProfileTab; label: string; hint: string }> = [
-  { id: 'overview', label: 'Overview', hint: 'Activity & feeds' },
-  { id: 'audience', label: 'Audience', hint: 'Subchannels & voice' },
-  { id: 'identity', label: 'Identity', hint: 'Passport & badges' },
-  { id: 'edit', label: 'Edit', hint: 'Profile settings' },
+const MY_PROFILE_SECTIONS: Array<{ id: MyProfileSection; label: string; hint: string }> = [
+  { id: 'home', label: 'Home', hint: 'Chats & highlights' },
+  { id: 'activity', label: 'Activity', hint: 'Time & boosts' },
+  { id: 'social', label: 'Social', hint: 'Groups & audience' },
+  { id: 'customize', label: 'Customize', hint: 'Edit profile' },
 ];
+
+function sectionToShowcaseTab(section: MyProfileSection): ShowcaseTab | null {
+  if (section === 'home') {
+    return 'overview';
+  }
+
+  if (section === 'activity') {
+    return 'activity';
+  }
+
+  if (section === 'social') {
+    return 'groups';
+  }
+
+  return null;
+}
 
 export function MyProfileScreen(props: {
   onOpenGuild?: (guild: NamiGuildRecord) => void;
@@ -61,9 +89,10 @@ export function MyProfileScreen(props: {
 } = {}): ReactElement {
   const profileMember = useSelfMember();
   const profilePlayerScore = usePlayerScoreSnapshot();
+  const pokesReceived = usePokeReceivedCount(profileMember.id);
   const selfStreamingOnline = useMemberStreamingOnline(profileMember.id);
   const profileEdits = useSelfProfileEdits();
-  const [activeTab, setActiveTab] = useState<MyProfileTab>('overview');
+  const [activeSection, setActiveSection] = useState<MyProfileSection>('home');
   const [profileCarouselSlide, setProfileCarouselSlide] = useState<'passport' | 'badges'>('passport');
   const [viewAsGuest, setViewAsGuest] = useState(false);
   const [profileCardLayout, setProfileCardLayout] = useState<ProfileCardLayout>(() =>
@@ -71,8 +100,49 @@ export function MyProfileScreen(props: {
   );
   const memberFeedEnabled = readEmbeddedFeedEnabled('member', profileMember.id);
   const mySubscriptions = useSubscribedChannels();
+  const audienceChannels = readMemberAudienceSubchannels(profileMember.id);
+  const audienceLimit = maxAudienceSubchannelsForMember(profileMember);
 
   const { guildAffiliations, squadAffiliations } = useProfileGroupAffiliations(profileMember.id);
+
+  const heroAnalytics = useMemo(
+    () => [
+      {
+        label: 'Guilds',
+        value: String(guildAffiliations.length),
+        hint: 'Standing groups',
+      },
+      {
+        label: 'Squads',
+        value: String(squadAffiliations.length),
+        hint: 'Active squads',
+      },
+      {
+        label: 'Audience rooms',
+        value: audienceChannels.length + '/' + audienceLimit,
+        hint: memberFeatureTier(profileMember) + ' tier cap',
+      },
+      {
+        label: 'Subscriptions',
+        value: String(mySubscriptions.length),
+        hint: 'Followed channels',
+      },
+      {
+        label: 'Live',
+        value: selfStreamingOnline ? 'ON' : 'OFF',
+        hint: selfStreamingOnline ? 'Stream surface active' : 'Offline',
+      },
+    ],
+    [
+      audienceChannels.length,
+      audienceLimit,
+      guildAffiliations.length,
+      mySubscriptions.length,
+      profileMember,
+      selfStreamingOnline,
+      squadAffiliations.length,
+    ]
+  );
 
   function chooseProfileCardLayout(layout: ProfileCardLayout): void {
     setProfileCardLayout(layout);
@@ -80,6 +150,7 @@ export function MyProfileScreen(props: {
   }
 
   function scrollToEditPanel(): void {
+    setActiveSection('customize');
     requestProfileEditFocus();
     window.requestAnimationFrame(() => {
       document.getElementById(PROFILE_EDIT_PANEL_ID)?.scrollIntoView({
@@ -88,6 +159,8 @@ export function MyProfileScreen(props: {
       });
     });
   }
+
+  const showcaseTab = sectionToShowcaseTab(activeSection);
 
   return (
     <div className="my-profile-modern">
@@ -110,14 +183,19 @@ export function MyProfileScreen(props: {
               ) : null}
             </h1>
             <p className="my-profile-status-line">
-              {profileEdits.dailyStatus.trim() || 'Set a daily status in Edit → Profile.'}
+              {profileEdits.dailyStatus.trim() || 'Set your daily status in Customize.'}
             </p>
-            {profileEdits.bio.trim() ? <p className="my-profile-bio-line">{profileEdits.bio}</p> : null}
+            {profileEdits.bio.trim() ? (
+              <p className="my-profile-bio-line">{profileEdits.bio}</p>
+            ) : (
+              <p className="my-profile-bio-line is-placeholder-bio">
+                Add a short bio so visitors know what you play and stream.
+              </p>
+            )}
           </div>
         </div>
 
         <div className="my-profile-hero-side">
-          <PokeReceivedBadge memberId={profileMember.id} />
           {!viewAsGuest ? <SharePassportButton member={profileMember} /> : null}
           <button
             aria-pressed={viewAsGuest}
@@ -129,6 +207,18 @@ export function MyProfileScreen(props: {
           </button>
         </div>
       </header>
+
+      {!viewAsGuest ? (
+        <section aria-label="Community and audience analytics" className="my-profile-hero-analytics">
+          {heroAnalytics.map((metric) => (
+            <div className="my-profile-analytics-card" key={metric.label}>
+              <span className="my-profile-analytics-label">{metric.label}</span>
+              <strong className="my-profile-analytics-value">{metric.value}</strong>
+              <span className="my-profile-analytics-hint">{metric.hint}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       {viewAsGuest ? (
         <section className="my-profile-guest-shell">
@@ -158,147 +248,157 @@ export function MyProfileScreen(props: {
         </section>
       ) : (
         <>
+          <section className="my-profile-passport-anchor">
+            <div className="my-profile-passport-toolbar">
+              <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
+                {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+                  <button
+                    className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
+                    key={layout}
+                    onClick={() => chooseProfileCardLayout(layout)}
+                    type="button"
+                  >
+                    {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="profile-passport-carousel-actions"
+                role="tablist"
+                aria-label="Passport card views"
+              >
+                <button
+                  aria-selected={profileCarouselSlide === 'passport'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('passport')}
+                  role="tab"
+                  type="button"
+                >
+                  Passport
+                </button>
+                <button
+                  aria-selected={profileCarouselSlide === 'badges'}
+                  className={
+                    'nami-surface-button profile-passport-view-tab' +
+                    (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
+                  }
+                  onClick={() => setProfileCarouselSlide('badges')}
+                  role="tab"
+                  type="button"
+                >
+                  Badge Book
+                </button>
+              </div>
+            </div>
+
+            <ProfilePassportCarousel
+              activeSlide={profileCarouselSlide}
+              badgeBookView={<BadgeCollectorsBook key={profileMember.id} member={profileMember} />}
+              passportLayout={profileCardLayout}
+              passportView={
+                <TcgFoilPassportCard
+                  layout={profileCardLayout}
+                  member={profileMember}
+                  onOpenPassport={() => props.onNavigate?.('passport')}
+                  playerScore={profilePlayerScore?.total ?? null}
+                  pokesReceived={pokesReceived}
+                />
+              }
+            />
+          </section>
+
           <nav aria-label="My profile sections" className="my-profile-tab-nav" role="tablist">
-            {MY_PROFILE_TABS.map((tab) => (
+            {MY_PROFILE_SECTIONS.map((section) => (
               <button
-                aria-selected={activeTab === tab.id}
-                className={'my-profile-tab' + (activeTab === tab.id ? ' is-active' : '')}
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                aria-selected={activeSection === section.id}
+                className={'my-profile-tab' + (activeSection === section.id ? ' is-active' : '')}
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
                 role="tab"
                 type="button"
               >
-                <strong>{tab.label}</strong>
-                <span>{tab.hint}</span>
+                <strong>{section.label}</strong>
+                <span>{section.hint}</span>
               </button>
             ))}
           </nav>
 
-          {activeTab === 'overview' ? (
-            <section className="my-profile-tab-panel">
-              <MemberProfileShowcase
-                guildAffiliations={guildAffiliations}
-                isStreamingOnline={selfStreamingOnline}
-                member={profileMember}
-                mode="self"
-                squadAffiliations={squadAffiliations}
-                subscriptions={mySubscriptions}
-                onEditPhoto={scrollToEditPanel}
-                onOpenFullProfileEditor={scrollToEditPanel}
-                {...(props.onNavigate ? { onNavigate: props.onNavigate } : {})}
-                {...(props.onOpenProfile ? { onOpenChannel: props.onOpenProfile } : {})}
-                {...(props.onOpenGuild ? { onOpenGuild: props.onOpenGuild } : {})}
-                {...(props.onOpenSquad ? { onOpenSquad: props.onOpenSquad } : {})}
-                belowShowcase={
-                  <>
-                    <details className="panel member-profile-collapsible-panel" open={selfStreamingOnline}>
-                      <summary>
-                        <strong>Member Feed</strong>
-                        <small>Live & social embeds</small>
-                      </summary>
-                      <EmbeddedSocialPanel
-                        feedOwnerMemberId={profileMember.id}
-                        onOpenFeedSettings={() => {
-                          requestSettingsSection('feeds');
-                          props.onNavigate?.('settings');
-                        }}
-                        showFeedSettings
-                        surface="member"
-                        title="Member Feed"
-                      />
-                    </details>
-                    <details className="panel member-profile-collapsible-panel">
-                      <summary>
-                        <strong>Membership</strong>
-                        <small>Plans and upgrades</small>
-                      </summary>
-                      <MembershipAccessCard />
-                    </details>
-                  </>
-                }
-              />
-            </section>
-          ) : null}
-
-          {activeTab === 'audience' ? (
-            <section className="my-profile-tab-panel">
-              <MemberAudienceSubchannelsPanel editable member={profileMember} />
-            </section>
-          ) : null}
-
-          {activeTab === 'identity' ? (
-            <section className="my-profile-tab-panel my-profile-identity-panel">
-              <div className="nami-profile-view-toolbar nami-profile-view-toolbar-stable">
-                <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-layout">
-                  <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
-                    {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
-                      <button
-                        className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
-                        key={layout}
-                        onClick={() => chooseProfileCardLayout(layout)}
-                        type="button"
-                      >
-                        {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="nami-profile-toolbar-slot nami-profile-toolbar-slot-tabs">
-                  <div
-                    className="profile-passport-carousel-actions"
-                    role="tablist"
-                    aria-label="Profile card views"
-                  >
-                    <button
-                      aria-selected={profileCarouselSlide === 'passport'}
-                      className={
-                        'nami-surface-button profile-passport-view-tab' +
-                        (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
-                      }
-                      onClick={() => setProfileCarouselSlide('passport')}
-                      role="tab"
-                      type="button"
-                    >
-                      Passport
-                    </button>
-                    <button
-                      aria-selected={profileCarouselSlide === 'badges'}
-                      className={
-                        'nami-surface-button profile-passport-view-tab' +
-                        (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
-                      }
-                      onClick={() => setProfileCarouselSlide('badges')}
-                      role="tab"
-                      type="button"
-                    >
-                      Badge Book
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <ProfilePassportCarousel
-                activeSlide={profileCarouselSlide}
-                badgeBookView={<BadgeCollectorsBook key={profileMember.id} member={profileMember} />}
-                passportLayout={profileCardLayout}
-                passportView={
-                  <TcgFoilPassportCard
-                    layout={profileCardLayout}
-                    member={profileMember}
-                    onOpenPassport={() => props.onNavigate?.('passport')}
-                    playerScore={profilePlayerScore?.total ?? null}
-                  />
-                }
-              />
-            </section>
-          ) : null}
-
-          {activeTab === 'edit' ? (
+          {activeSection === 'customize' ? (
             <section className="my-profile-tab-panel">
               <ProfileEditPanel />
+              <article className="panel member-profile-collapsible-panel">
+                <div className="profile-panel-heading">
+                  <h2>Membership</h2>
+                  <p>Plans, upgrades, and tier limits for audience rooms.</p>
+                </div>
+                <MembershipAccessCard />
+              </article>
             </section>
-          ) : null}
+          ) : (
+            <section className="my-profile-tab-panel">
+              {showcaseTab ? (
+                <MemberProfileShowcase
+                  activeSection={showcaseTab}
+                  guildAffiliations={guildAffiliations}
+                  hideHeroMetrics
+                  hideIdentityToolbar
+                  hideTabNav
+                  isStreamingOnline={selfStreamingOnline}
+                  member={profileMember}
+                  mode="self"
+                  squadAffiliations={squadAffiliations}
+                  subscriptions={mySubscriptions}
+                  onEditPhoto={scrollToEditPanel}
+                  onOpenFullProfileEditor={scrollToEditPanel}
+                  onSectionChange={(section) => {
+                    if (section === 'overview') {
+                      setActiveSection('home');
+                    } else if (section === 'activity') {
+                      setActiveSection('activity');
+                    } else {
+                      setActiveSection('social');
+                    }
+                  }}
+                  {...(props.onNavigate ? { onNavigate: props.onNavigate } : {})}
+                  {...(props.onOpenProfile ? { onOpenChannel: props.onOpenProfile } : {})}
+                  {...(props.onOpenGuild ? { onOpenGuild: props.onOpenGuild } : {})}
+                  {...(props.onOpenSquad ? { onOpenSquad: props.onOpenSquad } : {})}
+                  belowShowcase={
+                    <>
+                      {activeSection === 'social' ? (
+                        <MemberAudienceSubchannelsPanel editable member={profileMember} />
+                      ) : null}
+                      {activeSection === 'home' ? (
+                        <details
+                          className="panel member-profile-collapsible-panel"
+                          open={selfStreamingOnline}
+                        >
+                          <summary>
+                            <strong>Member Feed</strong>
+                            <small>Live & social embeds</small>
+                          </summary>
+                          <EmbeddedSocialPanel
+                            feedOwnerMemberId={profileMember.id}
+                            onOpenFeedSettings={() => {
+                              requestSettingsSection('feeds');
+                              props.onNavigate?.('settings');
+                            }}
+                            showFeedSettings
+                            surface="member"
+                            title="Member Feed"
+                          />
+                        </details>
+                      ) : null}
+                    </>
+                  }
+                />
+              ) : null}
+            </section>
+          )}
         </>
       )}
 

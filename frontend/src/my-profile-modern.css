@@ -56,6 +56,53 @@
   align-content: start;
 }
 
+.my-profile-hero-analytics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.my-profile-analytics-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--nami-theme-panel) 90%, transparent);
+}
+
+.my-profile-analytics-label,
+.my-profile-analytics-hint {
+  font-size: 0.72rem;
+  color: var(--nami-frost-text);
+}
+
+.my-profile-analytics-value {
+  font-size: 1.1rem;
+}
+
+.my-profile-bio-line.is-placeholder-bio {
+  font-style: italic;
+  opacity: 0.82;
+}
+
+.my-profile-passport-anchor {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 24%, transparent);
+  background: var(--nami-theme-panel);
+}
+
+.my-profile-passport-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .my-profile-tab-nav {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -90,13 +137,6 @@
 .my-profile-tab-panel {
   display: grid;
   gap: 18px;
-}
-
-.my-profile-identity-panel {
-  padding: 18px;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 20%, transparent);
-  background: var(--nami-theme-panel);
 }
 
 .poke-received-badge {
@@ -259,6 +299,10 @@
 
   .my-profile-hero-side {
     justify-items: start;
+  }
+
+  .my-profile-hero-analytics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .my-profile-tab-nav {

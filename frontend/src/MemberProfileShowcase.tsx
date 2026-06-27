@@ -21,7 +21,7 @@ import { squadCapacityDisplay, useSquadRosterStore } from './squad-roster-store.
 import type { NamiGuildRecord, NamiSquadRecord } from './nami-affiliations.js';
 import type { NamiChannel, NamiMember, NamiPage } from './uiMockData.js';
 
-type ShowcaseTab = 'overview' | 'activity' | 'groups';
+export type ShowcaseTab = 'overview' | 'activity' | 'groups';
 
 const SHOWCASE_TABS: Array<{ id: ShowcaseTab; label: string; hint: string }> = [
   { id: 'overview', label: 'Overview', hint: 'Chats & badges' },
@@ -76,12 +76,27 @@ export function MemberProfileShowcase(props: {
   subscriptions?: NamiChannel[];
   belowShowcase?: ReactNode;
   safetyPanel?: ReactNode;
+  /** Parent-controlled tab — hides internal tab nav when set with hideTabNav. */
+  activeSection?: ShowcaseTab;
+  hideTabNav?: boolean;
+  hideHeroMetrics?: boolean;
+  hideIdentityToolbar?: boolean;
+  onSectionChange?: (section: ShowcaseTab) => void;
 }): ReactElement {
   const selfProfileEdits = useSelfProfileEdits();
   const equippedChatOverlayId = useSelfEquippedChatOverlayId();
   const chatTimeVersion = useMemberChatTimeVersion();
   useSquadRosterStore();
-  const [activeTab, setActiveTab] = useState<ShowcaseTab>('overview');
+  const [internalTab, setInternalTab] = useState<ShowcaseTab>('overview');
+  const activeTab = props.activeSection ?? internalTab;
+
+  function selectTab(nextTab: ShowcaseTab): void {
+    if (props.activeSection === undefined) {
+      setInternalTab(nextTab);
+    }
+
+    props.onSectionChange?.(nextTab);
+  }
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [progressTick, setProgressTick] = useState(() => Date.now());
   const isSelf = props.mode === 'self' || isSelfMember(props.member.id);
@@ -118,7 +133,7 @@ export function MemberProfileShowcase(props: {
 
   return (
     <section className="member-profile-showcase member-profile-showcase-tabbed" aria-label={props.member.name + ' activity showcase'}>
-      {isSelf && props.onEditPhoto && props.onOpenFullProfileEditor ? (
+      {!props.hideIdentityToolbar && isSelf && props.onEditPhoto && props.onOpenFullProfileEditor ? (
         <MemberProfileIdentityToolbar
           onEditPhoto={props.onEditPhoto}
           onEditStatus={() => setStatusEditorOpen(true)}
@@ -126,6 +141,7 @@ export function MemberProfileShowcase(props: {
         />
       ) : null}
 
+      {!props.hideHeroMetrics ? (
       <article className="panel member-showcase-status-panel">
         <div className="member-showcase-status-hero">
           <div className="member-showcase-status-copy">
@@ -192,14 +208,16 @@ export function MemberProfileShowcase(props: {
           </div>
         </div>
       </article>
+      ) : null}
 
+      {!props.hideTabNav ? (
       <nav aria-label="Profile showcase sections" className="member-showcase-tab-nav" role="tablist">
         {SHOWCASE_TABS.map((tab) => (
           <button
             aria-selected={activeTab === tab.id}
             className={'member-showcase-tab' + (activeTab === tab.id ? ' is-active-showcase-tab' : '')}
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => selectTab(tab.id)}
             role="tab"
             type="button"
           >
@@ -208,6 +226,7 @@ export function MemberProfileShowcase(props: {
           </button>
         ))}
       </nav>
+      ) : null}
 
       <div className="member-showcase-tab-panel panel" role="tabpanel">
         {activeTab === 'overview' ? (
@@ -250,7 +269,7 @@ export function MemberProfileShowcase(props: {
                 {hiddenChatCount > 0 ? (
                   <button
                     className="member-showcase-chat-card is-more-chat-card"
-                    onClick={() => setActiveTab('activity')}
+                    onClick={() => selectTab('activity')}
                     type="button"
                   >
                     <strong>+{hiddenChatCount} more chats</strong>
