@@ -4,6 +4,7 @@ import type { StoredEvent } from './events-store.js';
 import {
   buildUniversalCalendarProjection,
   filterUniversalCalendarEvents,
+  filterUpcomingUniversalCalendarEvents,
   groupUniversalCalendarEvents,
 } from './universal-calendar.js';
 
@@ -47,6 +48,8 @@ const sampleEvents: StoredEvent[] = [
   }),
 ];
 
+const timezone = 'UTC';
+
 describe('universal-calendar', () => {
   it('filters events by source and subscription state', () => {
     expect(filterUniversalCalendarEvents(sampleEvents, 'all')).toHaveLength(3);
@@ -56,14 +59,17 @@ describe('universal-calendar', () => {
     expect(filterUniversalCalendarEvents(sampleEvents, 'channel').map((event) => event.id)).toEqual([
       'channel-b',
     ]);
+    expect(filterUniversalCalendarEvents(sampleEvents, 'guild').map((event) => event.id)).toEqual([
+      'guild-c',
+    ]);
     expect(filterUniversalCalendarEvents(sampleEvents, 'subscribed').map((event) => event.id)).toEqual([
       'official-a',
       'guild-c',
     ]);
   });
 
-  it('groups events by day and sorts within each day', () => {
-    const groups = groupUniversalCalendarEvents(sampleEvents);
+  it('groups events by day in the viewer timezone and sorts within each day', () => {
+    const groups = groupUniversalCalendarEvents(sampleEvents, timezone);
 
     expect(groups).toHaveLength(2);
     expect(groups[0]?.dayKey).toBe('2026-06-25');
@@ -73,11 +79,33 @@ describe('universal-calendar', () => {
   });
 
   it('builds a filtered day-group projection for the calendar panel', () => {
-    const projection = buildUniversalCalendarProjection(sampleEvents, 'subscribed');
+    const projection = buildUniversalCalendarProjection(sampleEvents, 'subscribed', timezone);
 
     expect(projection).toHaveLength(2);
     expect(projection[0]?.events.map((event) => event.id)).toEqual(['official-a']);
     expect(projection[1]?.events.map((event) => event.id)).toEqual(['guild-c']);
     expect(projection[0]?.dayLabel.length).toBeGreaterThan(0);
+  });
+
+  it('can limit to upcoming and live events', () => {
+    const futureOnly = filterUpcomingUniversalCalendarEvents(
+      [
+        makeEvent({
+          id: 'past',
+          title: 'Past',
+          source: 'official',
+          startsAtUtc: '2020-01-01T12:00:00.000Z',
+        }),
+        makeEvent({
+          id: 'future',
+          title: 'Future',
+          source: 'official',
+          startsAtUtc: '2099-01-01T12:00:00.000Z',
+        }),
+      ],
+      'UTC'
+    );
+
+    expect(futureOnly.map((event) => event.id)).toEqual(['future']);
   });
 });

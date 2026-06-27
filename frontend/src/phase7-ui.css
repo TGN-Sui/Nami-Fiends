@@ -21889,6 +21889,170 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   gap: 10px;
 }
 
+.universal-calendar-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.universal-calendar-head {
+  display: grid;
+  gap: 14px;
+}
+
+.universal-calendar-head-copy h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.universal-calendar-head-copy p {
+  margin: 6px 0 0;
+  color: rgba(190, 210, 235, 0.82);
+}
+
+.universal-calendar-head-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.universal-calendar-timezone-field {
+  max-width: 320px;
+}
+
+.universal-calendar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.universal-calendar-filter {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 190, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.8rem;
+}
+
+.universal-calendar-filter.is-active-calendar-filter {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.universal-calendar-upcoming-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: rgba(190, 210, 235, 0.88);
+}
+
+.universal-calendar-day-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.universal-calendar-day-group h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.universal-calendar-day-events {
+  display: grid;
+  gap: 12px;
+}
+
+.universal-calendar-event-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.universal-calendar-event-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.universal-calendar-event-status-pill {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(159, 255, 210, 0.92);
+}
+
+.universal-calendar-event-copy {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.universal-calendar-event-copy strong {
+  font-size: 1.05rem;
+}
+
+.universal-calendar-event-copy time {
+  font-size: 0.84rem;
+  color: rgba(159, 181, 202, 0.92);
+}
+
+.universal-calendar-event-copy p {
+  margin: 0;
+  color: rgba(159, 181, 202, 0.92);
+  line-height: 1.45;
+}
+
+.universal-calendar-event-copy small {
+  color: rgba(159, 181, 202, 0.78);
+}
+
+.universal-calendar-event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 148px;
+}
+
+.universal-calendar-event-actions .nami-surface-button,
+.universal-calendar-event-actions .secondary-action {
+  width: 100%;
+  min-height: 38px;
+}
+
+.universal-calendar-empty {
+  margin: 0;
+}
+
+.is-compact-universal-calendar {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.is-compact-universal-calendar .universal-calendar-head-copy h2 {
+  font-size: 1rem;
+}
+
+.is-compact-universal-calendar .universal-calendar-day-group h3 {
+  font-size: 0.92rem;
+}
+
+.universal-calendar-compact-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nami-hub-events-panel .is-compact-universal-calendar .universal-calendar-event-card {
+  background: rgba(8, 15, 27, 0.55);
+}
+
 @media (max-width: 900px) {
   .officials-reward-studio-layout {
     grid-template-columns: 1fr;

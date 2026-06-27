@@ -1227,6 +1227,7 @@ function NamiHub(props: {
   onOpenMember: (member: (typeof members)[number]) => void;
   onOpenOwnedPartnerTicket?: () => void;
   onViewEvent: (event: StoredEvent) => void;
+  onOpenCalendar?: () => void;
   onNavigateToSettings?: () => void;
   tagHandlers: TagNavigationHandlers;
 }): ReactElement {
@@ -1765,7 +1766,11 @@ function NamiHub(props: {
         showCountToggle
       />
 
-      <HubEventsPanel onViewEvent={props.onViewEvent} />
+      <HubEventsPanel
+        {...(props.onOpenCalendar ? { onOpenCalendar: props.onOpenCalendar } : {})}
+        onOpenChannel={props.onOpenProfile}
+        onViewEvent={props.onViewEvent}
+      />
 
       <HubGlobalChatsSection onOpenMember={props.onOpenMember} tagHandlers={props.tagHandlers} />
     </>
@@ -4500,8 +4505,8 @@ function EventsScreen(props: {
   return (
     <>
       <header className="page-title">
-        <p>Subscribed channel and guild activity</p>
-        <h1>My Events</h1>
+        <p>Official Nami, channel, and guild schedules in one discovery view</p>
+        <h1>Universal Calendar</h1>
       </header>
 
       <UniversalCalendarPanel
@@ -4946,6 +4951,7 @@ export function App(): ReactElement {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
+          onOpenCalendar={() => setActivePage('events')}
           onViewEvent={(event) => {
             setSelectedEvent(event);
             setActivePage('eventDetail');
@@ -5172,6 +5178,7 @@ if (activePage === 'userProfile') {
           onOpenProfile={openChannelProfile}
           onOpenMember={openMemberProfile}
           onNavigateToSettings={() => setActivePage('settings')}
+          onOpenCalendar={() => setActivePage('events')}
           onViewEvent={(event) => {
             setSelectedEvent(event);
             setActivePage('eventDetail');

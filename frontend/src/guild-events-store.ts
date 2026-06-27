@@ -127,6 +127,17 @@ export function getGuildEvents(guildId: string): StoredGuildEvent[] {
   return readGuildEventsMap()[guildId] ?? [];
 }
 
+export function listAllGuildEvents(): StoredGuildEvent[] {
+  return Object.values(readGuildEventsMap())
+    .flat()
+    .sort((left, right) => {
+      const leftTime = left.startsAtUtc ? new Date(left.startsAtUtc).getTime() : 0;
+      const rightTime = right.startsAtUtc ? new Date(right.startsAtUtc).getTime() : 0;
+
+      return leftTime - rightTime;
+    });
+}
+
 export function canEditGuildEvent(
   guildId: string,
   _event: StoredGuildEvent,

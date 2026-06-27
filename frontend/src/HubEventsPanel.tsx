@@ -19,6 +19,8 @@ import {
   type StoredEvent,
 } from './events-store.js';
 import { useSelfMember } from './member-avatar-store.js';
+import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
+import type { NamiChannel } from './uiMockData.js';
 
 function officialEventStatusLabel(event: StoredEvent): string {
   if (isEventLive(event)) {
@@ -33,6 +35,8 @@ function officialEventStatusLabel(event: StoredEvent): string {
 }
 
 export function HubEventsPanel(props: {
+  onOpenCalendar?: () => void;
+  onOpenChannel?: (channel: NamiChannel) => void;
   onViewEvent: (event: StoredEvent) => void;
 }): ReactElement {
   const { revision: eventsRevision } = useEventsStore();
@@ -236,6 +240,13 @@ export function HubEventsPanel(props: {
       {!canManageOfficial ? (
         <p className="protocol-hint">Official Nami events can only be created or edited by Nami officials.</p>
       ) : null}
+
+      <UniversalCalendarPanel
+        compact
+        {...(props.onOpenCalendar ? { onOpenCalendar: props.onOpenCalendar } : {})}
+        {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+        onViewEvent={props.onViewEvent}
+      />
 
       {isDemoSimulationEnabled() ? (
         <div className="event-demo-sim-actions">
