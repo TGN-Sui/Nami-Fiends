@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { App } from './App.js';
+import { bootstrapTestLaunchLoungeMocks } from './fixtures/test-launch-lounge-mocks.js';
 import { ensureGenesisLocalDataOnTestLaunch } from './genesis-member.js';
 import { bootstrapOfficialsSubmissionsHydration } from './officials-submissions-sync.js';
 import './partner-banner-submission-store.js';
@@ -18,6 +19,7 @@ import './nami-pixel-ui.css';
 
 
 ensureGenesisLocalDataOnTestLaunch();
+bootstrapTestLaunchLoungeMocks();
 initNamiSoundscape();
 
 void import('./channel-media-persistence.js').then(({ bootstrapChannelMediaPersistence }) => {

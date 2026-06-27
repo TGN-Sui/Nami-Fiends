@@ -1,3 +1,4 @@
+import { shouldUseTestLaunchLoungeMocks } from './app-config.js';
 import { defaultSocialEmbeds, type GlobalChatRoom, type SocialEmbed } from './global-chats.js';
 import { members, type NamiMember } from './uiMockData.js';
 
@@ -68,7 +69,11 @@ function buildPreviewBroadcast(chat: GlobalChatRoom, member: NamiMember): GenreC
  * Tagged stream discovery for genre lounges. Returns broadcasts whose stream tags
  * match the lounge title (e.g. #Shooter). Not implemented yet.
  */
-export function resolveTaggedGenreBroadcasts(_chat: GlobalChatRoom): GenreChatBroadcast[] {
+export function resolveTaggedGenreBroadcasts(chat: GlobalChatRoom): GenreChatBroadcast[] {
+  if (shouldUseTestLaunchLoungeMocks()) {
+    return previewGenreBroadcastsForChat(chat);
+  }
+
   return [];
 }
 

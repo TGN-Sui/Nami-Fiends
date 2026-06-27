@@ -94,6 +94,21 @@ export function isTestLaunchMode(config: AppConfig = readAppConfig()): boolean {
   return config.testLaunch;
 }
 
+/** Temporary lounge layout QA roster on testnet — disable with VITE_NAMI_LOUNGE_LAYOUT_MOCKS=false. */
+export function shouldUseTestLaunchLoungeMocks(config: AppConfig = readAppConfig()): boolean {
+  if (!isTestLaunchMode(config)) {
+    return false;
+  }
+
+  const value = import.meta.env.VITE_NAMI_LOUNGE_LAYOUT_MOCKS;
+
+  if (value === undefined || value === '') {
+    return true;
+  }
+
+  return value.toLowerCase() === 'true' || value === '1';
+}
+
 /** Auto-populate local message/event/chat stores on first load (dev demo only). */
 export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): boolean {
   if (isTestLaunchMode(config)) {
