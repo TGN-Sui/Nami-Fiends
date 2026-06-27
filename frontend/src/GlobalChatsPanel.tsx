@@ -88,7 +88,7 @@ import {
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 
-import { ChatWindowExpandable } from './ChatWindowExpandable.js';
+import { ChatWindowExpandable, type ChatExpandControl } from './ChatWindowExpandable.js';
 import { GenreChatBroadcastAside } from './GenreChatBroadcastAside.js';
 import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
@@ -156,6 +156,8 @@ export function GlobalChatRoomView(props: {
   onModerationDelete?: () => void;
   disableExpand?: boolean;
   detachedLiveFeed?: boolean;
+  hideExpandToggle?: boolean;
+  onRegisterExpandControl?: (control: ChatExpandControl | null) => void;
 }): ReactElement {
   const [chatExpanded, setChatExpanded] = useState(false);
   const memberFocus = useExpandedChatMemberFocus({
@@ -369,6 +371,8 @@ export function GlobalChatRoomView(props: {
       onExpandedChange={handleChatExpandedChange}
       onEscape={handleChatEscape}
       {...(props.disableExpand ? { disableExpand: true } : {})}
+      {...(props.hideExpandToggle ? { hideExpandToggle: true } : {})}
+      {...(props.onRegisterExpandControl ? { onRegisterExpandControl: props.onRegisterExpandControl } : {})}
     >
       {chatWindowBody}
     </ChatWindowExpandable>
@@ -522,6 +526,7 @@ export function GenreLoungeInlineLayout(props: {
   onSelectChat: (chatId: string) => void;
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
+  onExpandControlReady?: (control: ChatExpandControl | null) => void;
 }): ReactElement {
   const activeChat =
     genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
@@ -531,10 +536,14 @@ export function GenreLoungeInlineLayout(props: {
       <GenreLoungeRoomTabs activeChatId={activeChat.id} onSelectChat={props.onSelectChat} />
       <GlobalChatRoomView
         chat={activeChat}
-        disableExpand
+        hideExpandToggle
         key={activeChat.id}
         onOpenMember={props.onOpenMember}
         showCompactHead={false}
+        {...genreChatExpandProps(activeChat)}
+        {...(props.onExpandControlReady
+          ? { onRegisterExpandControl: props.onExpandControlReady }
+          : {})}
         {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       />
     </div>
@@ -597,6 +606,7 @@ export function GenreChatRoomPanel(props: {
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
   compact?: boolean;
+  onExpandControlReady?: (control: ChatExpandControl | null) => void;
 }): ReactElement {
   const selectChat = (chatId: string): void => {
     props.onActiveChatIdChange?.(chatId);
@@ -619,6 +629,7 @@ export function GenreChatRoomPanel(props: {
       activeChatId={props.activeChatId}
       onOpenMember={props.onOpenMember}
       onSelectChat={selectChat}
+      {...(props.onExpandControlReady ? { onExpandControlReady: props.onExpandControlReady } : {})}
       {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
     />
   );

@@ -264,76 +264,82 @@ export function NamiFavoritedChatDock(props: NamiFavoritedChatDockProps): ReactE
         </div>
       </header>
 
-      {manageOpen ? (
-        <section className="nami-favorited-chat-manage-panel">
-          <p className="protocol-hint">
-            Pin up to two genre lounges plus your public live chat. Picking a third genre swaps one out.
-          </p>
-          <ul className="nami-favorited-chat-manage-list">
-            {genreOfficialChats.map((chat) => {
-              const favorited = favorites.roomIds.includes(chat.id);
-
-              return (
-                <li key={chat.id}>
-                  <label className="nami-favorited-chat-manage-option">
-                    <input
-                      checked={favorited}
-                      onChange={() => handleGenreToggle(chat.id)}
-                      type="checkbox"
-                    />
-                    <span>{chat.title}</span>
-                  </label>
-                </li>
-              );
-            })}
-            <li>
-              <span className="nami-favorited-chat-manage-locked">My Chat (always pinned)</span>
-            </li>
-          </ul>
-          {manageStatus ? <p className="protocol-hint">{manageStatus}</p> : null}
-        </section>
-      ) : null}
-
       <div
-        className="genre-chat-pinned-room-row nami-favorited-chat-tab-row"
-        role="tablist"
-        aria-label="Favorited chat rooms"
+        className={
+          'nami-favorited-chat-dock-body' + (manageOpen ? ' is-showing-room-manage' : '')
+        }
       >
-        {favorites.roomIds.map((roomId) => {
-          const unread = unreadMap[roomId] ?? 0;
-          const label = favoriteRoomTabLabel(roomId, selfMember);
+        {manageOpen ? (
+          <section className="nami-favorited-chat-manage-panel">
+            <p className="protocol-hint">
+              Pin up to two genre lounges plus your public live chat. Picking a third genre swaps one out.
+            </p>
+            <ul className="nami-favorited-chat-manage-list">
+              {genreOfficialChats.map((chat) => {
+                const favorited = favorites.roomIds.includes(chat.id);
 
-          return (
-            <button
-              aria-selected={roomId === activeChat.id}
-              className={
-                'genre-chat-pinned-room-tab nami-favorited-chat-room-tab' +
-                (roomId === activeChat.id ? ' is-active-genre-room' : '') +
-                (unread > 0 ? ' has-chat-unread' : '')
-              }
-              key={roomId}
-              onClick={() => selectRoom(roomId)}
-              role="tab"
-              type="button"
-            >
-              <span>{label}</span>
-              {unread > 0 ? <em className="nami-favorited-chat-unread-badge">{unread}</em> : null}
-            </button>
-          );
-        })}
+                return (
+                  <li key={chat.id}>
+                    <label className="nami-favorited-chat-manage-option">
+                      <input
+                        checked={favorited}
+                        onChange={() => handleGenreToggle(chat.id)}
+                        type="checkbox"
+                      />
+                      <span>{chat.title}</span>
+                    </label>
+                  </li>
+                );
+              })}
+              <li>
+                <span className="nami-favorited-chat-manage-locked">My Chat (always pinned)</span>
+              </li>
+            </ul>
+            {manageStatus ? <p className="protocol-hint">{manageStatus}</p> : null}
+          </section>
+        ) : null}
+
+        <div
+          className="genre-chat-pinned-room-row nami-favorited-chat-tab-row"
+          role="tablist"
+          aria-label="Favorited chat rooms"
+        >
+          {favorites.roomIds.map((roomId) => {
+            const unread = unreadMap[roomId] ?? 0;
+            const label = favoriteRoomTabLabel(roomId, selfMember);
+
+            return (
+              <button
+                aria-selected={roomId === activeChat.id}
+                className={
+                  'genre-chat-pinned-room-tab nami-favorited-chat-room-tab' +
+                  (roomId === activeChat.id ? ' is-active-genre-room' : '') +
+                  (unread > 0 ? ' has-chat-unread' : '')
+                }
+                key={roomId}
+                onClick={() => selectRoom(roomId)}
+                role="tab"
+                type="button"
+              >
+                <span>{label}</span>
+                {unread > 0 ? <em className="nami-favorited-chat-unread-badge">{unread}</em> : null}
+              </button>
+            );
+          })}
+        </div>
+
+        <GlobalChatRoomView
+          chat={activeChat}
+          compact
+          key={activeChat.id}
+          onOpenMember={props.onOpenMember}
+          {...(isGenreChatRoomId(activeChat.id)
+            ? genreChatExpandProps(activeChat, { compact: true })
+            : {})}
+          showCompactHead={false}
+          {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+        />
       </div>
-
-      <GlobalChatRoomView
-        chat={activeChat}
-        compact
-        key={activeChat.id}
-        onOpenMember={props.onOpenMember}
-        {...(isGenreChatRoomId(activeChat.id)
-          ? genreChatExpandProps(activeChat, { compact: true })
-          : {})}
-        showCompactHead={false}
-        {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
-      />
 
       <button
         aria-label="Resize favorited chat dock"

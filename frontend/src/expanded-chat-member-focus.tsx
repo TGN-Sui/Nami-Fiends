@@ -64,7 +64,7 @@ export function ExpandedChatMemberLivePanel(props: {
         ) : null}
       </header>
       <div className="expanded-chat-member-live-shell">
-        <SocialEmbedPlayer embed={liveFeed} featured surface="member" />
+        <SocialEmbedPlayer embed={liveFeed} featured surface="member" key={props.member.id} />
       </div>
     </div>
   );

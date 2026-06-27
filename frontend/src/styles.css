@@ -14997,9 +14997,31 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin-top: 1rem;
 }
 
+.nami-favorited-chat-dock-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nami-favorited-chat-dock-body.is-showing-room-manage {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.nami-favorited-chat-dock-body .nami-favorited-chat-tab-row {
+  min-height: 0;
+}
+
+.nami-favorited-chat-dock-body > .global-chat-room-pane {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .nami-favorited-chat-manage-panel {
   padding: 0.65rem 0.75rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: min(42vh, 280px);
+  overflow-y: auto;
 }
 
 .nami-favorited-chat-manage-list {

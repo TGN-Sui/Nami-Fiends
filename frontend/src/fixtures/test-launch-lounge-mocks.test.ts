@@ -38,7 +38,7 @@ describe('test-launch-lounge-mocks', () => {
 
     expect(streaming.m8).toBe(true);
     expect(streaming.m16).toBe(true);
-    expect(window.localStorage.getItem('nami.test-launch.lounge-mocks-v2')).toBe('done');
-    expect(window.localStorage.getItem('nami.embedded-feed.links.member.m8')).toContain('twitch');
+    expect(window.localStorage.getItem('nami.test-launch.lounge-mocks-v3')).toBe('done');
+    expect(window.localStorage.getItem('nami.embedded-feed.links.member.m8')).toContain('twitch.tv/');
   });
 });

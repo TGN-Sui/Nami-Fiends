@@ -269,6 +269,7 @@ import {
 } from './gamehub-preferences.js';
 import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { GenreChatRoomPanel, HubGlobalChatsSection } from './GlobalChatsPanel.js';
+import type { ChatExpandControl } from './ChatWindowExpandable.js';
 import { useFeaturedPlacementAuctionStatus } from './featured-placement-auction-store.js';
 import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
@@ -1818,6 +1819,7 @@ function GameHub(props: {
   const [activeGenreChatId, setActiveGenreChatId] = useState(genreOfficialChats[0]!.id);
   const [genreDockCollapsed, setGenreDockCollapsed] = useState(() => readGenreChatDockCollapsed());
   const [genreDockPinned, setGenreDockPinned] = useState(() => readGenreChatDockPinned());
+  const genreInlineExpandRef = useRef<ChatExpandControl | null>(null);
 
   useEffect(() => {
     releaseExpandedChatScrollLock();
@@ -2403,23 +2405,35 @@ function GameHub(props: {
                   <h3>Genre Chats</h3>
                   <p>Genre tabs on top, active members on the left, and chat on the right.</p>
                 </div>
-                <button
-                  className="nami-surface-button is-primary-surface-button"
-                  onClick={() => {
-                    setGenreDockPinned(true);
-                    saveGenreChatDockPinned(true);
-                    setGenreDockCollapsed(false);
-                    saveGenreChatDockCollapsed(false);
-                  }}
-                  type="button"
-                >
-                  Pin chat dock
-                </button>
+                <div className="gamehub-genre-chats-inline-actions">
+                  <button
+                    className="nami-surface-button"
+                    onClick={() => genreInlineExpandRef.current?.open()}
+                    type="button"
+                  >
+                    Expand
+                  </button>
+                  <button
+                    className="nami-surface-button is-primary-surface-button"
+                    onClick={() => {
+                      setGenreDockPinned(true);
+                      saveGenreChatDockPinned(true);
+                      setGenreDockCollapsed(false);
+                      saveGenreChatDockCollapsed(false);
+                    }}
+                    type="button"
+                  >
+                    Pin chat dock
+                  </button>
+                </div>
               </div>
 
               <GenreChatRoomPanel
                 activeChatId={activeGenreChatId}
                 onActiveChatIdChange={setActiveGenreChatId}
+                onExpandControlReady={(control) => {
+                  genreInlineExpandRef.current = control;
+                }}
                 onOpenMember={props.onOpenMember}
                 tagHandlers={props.tagHandlers}
               />

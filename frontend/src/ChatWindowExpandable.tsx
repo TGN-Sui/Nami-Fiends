@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState, type ReactElement, type React
 
 import { ExpandedChatOverlay, releaseExpandedChatScrollLock } from './ExpandedChatOverlay.js';
 
+export type ChatExpandControl = {
+  open: () => void;
+  close: () => void;
+};
+
 type ChatWindowExpandableProps = {
   className?: string;
   children: ReactNode;
@@ -13,6 +18,9 @@ type ChatWindowExpandableProps = {
   onEscape?: () => boolean | void;
   /** When true, the chat fills its host with no Expand overlay (e.g. audience lounge popup). */
   disableExpand?: boolean;
+  /** Hide the inline Expand button while keeping overlay expand available. */
+  hideExpandToggle?: boolean;
+  onRegisterExpandControl?: (control: ChatExpandControl | null) => void;
 };
 
 function ChatWindowStatic(props: { className?: string; children: ReactNode }): ReactElement {
@@ -36,20 +44,31 @@ function ChatWindowExpandableInner(props: ChatWindowExpandableProps): ReactEleme
     props.onExpandedChange?.(false);
   }, [props.onExpandedChange]);
 
-  function openExpanded(): void {
+  const openExpanded = useCallback((): void => {
     if (hostRef.current) {
       setPlaceholderHeight(hostRef.current.offsetHeight);
     }
 
     setExpanded(true);
     props.onExpandedChange?.(true);
-  }
+  }, [props.onExpandedChange]);
 
   useEffect(() => {
     return () => {
       releaseExpandedChatScrollLock();
     };
   }, []);
+
+  useEffect(() => {
+    props.onRegisterExpandControl?.({
+      open: openExpanded,
+      close: closeExpanded,
+    });
+
+    return () => {
+      props.onRegisterExpandControl?.(null);
+    };
+  }, [closeExpanded, openExpanded, props.onRegisterExpandControl]);
 
   const articleClass =
     'chat-window chat-window-buildout' +
@@ -99,13 +118,15 @@ function ChatWindowExpandableInner(props: ChatWindowExpandableProps): ReactEleme
       {!expanded ? (
         <div className="chat-window-expand-host" ref={hostRef}>
           <article className={'chat-window chat-window-buildout' + (props.className ? ' ' + props.className : '')}>
-            <button
-              className="nami-surface-button chat-window-expand-toggle"
-              onClick={openExpanded}
-              type="button"
-            >
-              Expand
-            </button>
+            {props.hideExpandToggle ? null : (
+              <button
+                className="nami-surface-button chat-window-expand-toggle"
+                onClick={openExpanded}
+                type="button"
+              >
+                Expand
+              </button>
+            )}
             {props.children}
           </article>
         </div>

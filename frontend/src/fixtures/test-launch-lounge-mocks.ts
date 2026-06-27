@@ -7,7 +7,7 @@ import type { NamiMember } from '../domain/types.js';
 import { members as seedMembers } from './seed-data.js';
 import { createShellSelfMember } from './shell-catalog.js';
 
-const LOUNGE_MOCKS_BOOTSTRAP_KEY = 'nami.test-launch.lounge-mocks-v2';
+const LOUNGE_MOCKS_BOOTSTRAP_KEY = 'nami.test-launch.lounge-mocks-v3';
 const STREAMING_STATUS_KEY = 'nami.member.streaming-online';
 
 /** Curated roster — varied tiers and conduct signals for lounge layout QA. */
@@ -54,11 +54,13 @@ export function resolveMembersForCatalog(selfMember: NamiMember = createShellSel
 }
 
 function twitchEmbedForMember(member: NamiMember) {
+  const channel = member.name.toLowerCase().replace(/[^a-z0-9]/g, '') || member.id;
+
   return {
     platform: 'twitch' as const,
     title: member.name + ' · layout test stream',
-    handle: member.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-    previewUrl: 'https://www.twitch.tv/twitch',
+    handle: channel,
+    previewUrl: 'https://www.twitch.tv/' + channel,
     live: true,
   };
 }
