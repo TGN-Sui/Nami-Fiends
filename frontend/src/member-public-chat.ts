@@ -1,6 +1,7 @@
 import { readEmbeddedFeedLinks } from './embedded-feed-preferences.js';
 import type { GlobalChatRoom, SocialEmbed } from './global-chats.js';
 import { isMemberVerified } from './member-access.js';
+import { isMemberStreamingOnline } from './member-online-store.js';
 import type { NamiMember } from './uiMockData.js';
 
 /** Reserved nodename prefix for passport claims (displayed as @fiend). */
@@ -40,6 +41,15 @@ export function memberLiveBroadcastEmbed(memberId: string): SocialEmbed | undefi
     embeds.find((embed) => embed.platform === 'twitch' && embed.live) ??
     embeds.find((embed) => embed.platform === 'twitch')
   );
+}
+
+/** Live Twitch (or primary stream embed) when the member is marked streaming online. */
+export function memberWatchableLiveFeed(memberId: string): SocialEmbed | undefined {
+  if (!isMemberStreamingOnline(memberId)) {
+    return undefined;
+  }
+
+  return memberLiveBroadcastEmbed(memberId);
 }
 
 export function nodenameSuffixFromFull(value: string): string {

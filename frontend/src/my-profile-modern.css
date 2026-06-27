@@ -102,6 +102,55 @@
   background: transparent;
 }
 
+.my-profile-modern .profile-passport-carousel {
+  width: 100%;
+}
+
+.my-profile-modern .profile-passport-carousel-main {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  align-items: center;
+}
+
+.my-profile-modern .profile-passport-carousel-viewport {
+  width: min(100%, 360px);
+  margin-inline: auto;
+}
+
+.my-profile-modern
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-layout {
+  display: block;
+  width: 100%;
+}
+
+.my-profile-modern
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-main,
+.my-profile-modern
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-viewport,
+.my-profile-modern
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-slide.is-active-profile-slide {
+  width: min(100%, 760px);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.my-profile-modern .profile-passport-carousel-slide.is-active-profile-slide {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.my-profile-modern .profile-passport-carousel .tcg-foil-passport-shell,
+.my-profile-modern .profile-passport-carousel .nami-profile-card-shell {
+  margin-inline: auto;
+  margin-bottom: 0;
+}
+
 .my-profile-passport-side-actions {
   display: flex;
   flex-wrap: wrap;
@@ -257,6 +306,9 @@
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
 }
 
 .my-profile-tab-nav {
@@ -448,6 +500,187 @@
   color: var(--nami-frost-text);
 }
 
+.member-audience-lounge-launcher-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--nami-theme-bg) 45%, transparent);
+}
+
+.member-audience-lounge-launcher-copy {
+  display: grid;
+  gap: 6px;
+  min-width: min(100%, 320px);
+  flex: 1 1 320px;
+}
+
+.member-audience-lounge-channel-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-audience-lounge-channel-preview-item {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--nami-theme-panel) 88%, transparent);
+  color: var(--nami-theme-text);
+  cursor: pointer;
+}
+
+.audience-lounge-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.audience-lounge-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, #02060d 72%, transparent);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.audience-lounge-popup {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0;
+  width: min(1280px, 100%);
+  height: min(88vh, 920px);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 35%, transparent);
+  background: var(--nami-theme-panel);
+  box-shadow: 0 28px 80px color-mix(in srgb, #000 45%, transparent);
+  overflow: hidden;
+}
+
+.audience-lounge-popup-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
+}
+
+.audience-lounge-popup-head strong {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.audience-lounge-popup-body {
+  display: grid;
+  grid-template-columns: minmax(200px, 220px) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.audience-lounge-channel-rail {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 10px;
+  padding: 12px;
+  border-right: 1px solid color-mix(in srgb, var(--nami-theme-accent) 16%, transparent);
+  background: color-mix(in srgb, var(--nami-theme-bg) 68%, transparent);
+  min-height: 0;
+}
+
+.audience-lounge-channel-rail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.audience-lounge-stage {
+  display: grid;
+  grid-template-rows: minmax(220px, 1.1fr) minmax(260px, 1fr);
+  min-height: 0;
+}
+
+.audience-lounge-feed-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--nami-theme-bg) 42%, transparent);
+}
+
+.audience-lounge-feed-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.audience-lounge-feed-host {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.audience-lounge-feed-avatar {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+}
+
+.audience-lounge-feed-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 16px 16px;
+}
+
+.audience-lounge-live-player-shell {
+  min-height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.audience-lounge-live-player-shell .embedded-social-player.is-featured-embed-player {
+  min-height: 220px;
+  max-height: 360px;
+}
+
+.audience-lounge-chat-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.audience-lounge-chat-pane .global-chat-room-pane.is-hub-global-chat {
+  min-height: 0;
+}
+
+.audience-lounge-status {
+  padding: 0 18px 12px;
+}
+
+body.has-audience-lounge-open {
+  overflow: hidden;
+}
+
 @media (max-width: 900px) {
   .my-profile-hero {
     grid-template-columns: 1fr;
@@ -477,5 +710,23 @@
   .member-audience-subchannel-sidebar {
     border-right: none;
     border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
+  }
+
+  .audience-lounge-popup {
+    height: min(94vh, 920px);
+  }
+
+  .audience-lounge-popup-body {
+    grid-template-columns: 1fr;
+  }
+
+  .audience-lounge-channel-rail {
+    border-right: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 16%, transparent);
+    max-height: 180px;
+  }
+
+  .audience-lounge-stage {
+    grid-template-rows: minmax(180px, 0.9fr) minmax(240px, 1.1fr);
   }
 }
