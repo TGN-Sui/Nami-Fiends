@@ -10,6 +10,7 @@ import { NamiThemeProvider } from './theme.js';
 import { NamiWalletProvider } from './wallet.js';
 import './styles.css';
 import './phase7-ui.css';
+import './my-profile-modern.css';
 import './nami-light-theme.css';
 import './nami-dark-theme.css';
 import './nami-custom-theme.css';

@@ -38,6 +38,7 @@ import {
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { resolveChatEmojisForChannel, useChannelCustomEmojis } from './channel-custom-emojis-store.js';
+import { ChatPokeButton } from './ChatPokeButton.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 
 import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
@@ -205,22 +206,27 @@ export function ChannelProfileChatSection(props: {
             const preference = readMemberPreference(member.id);
 
             return (
-              <button
+              <div
                 className={
-                  'chat-member-card' +
+                  'chat-member-card-wrap' +
                   chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
               >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>
-                  {preference.muted ? 'Muted' : memberPassportTierLabel(member, connectedOwner)}
-                </span>
-              </button>
+                <button
+                  className={'chat-member-card' + chatMemberCardTierClass(member)}
+                  onClick={() => props.onOpenMember(member)}
+                  type="button"
+                >
+                  <UniformMemberAvatar member={member} />
+                  <strong>{member.name}</strong>
+                  <span>
+                    {preference.muted ? 'Muted' : memberPassportTierLabel(member, connectedOwner)}
+                  </span>
+                </button>
+                <ChatPokeButton compact target={member} />
+              </div>
             );
           })}
 
@@ -228,20 +234,25 @@ export function ChannelProfileChatSection(props: {
             const preference = readMemberPreference(member.id);
 
             return (
-              <button
+              <div
                 className={
-                  'chat-member-card is-offline' +
+                  'chat-member-card-wrap is-offline' +
                   chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
               >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>{preference.muted ? 'Muted' : 'Offline'}</span>
-              </button>
+                <button
+                  className={'chat-member-card is-offline' + chatMemberCardTierClass(member)}
+                  onClick={() => props.onOpenMember(member)}
+                  type="button"
+                >
+                  <UniformMemberAvatar member={member} />
+                  <strong>{member.name}</strong>
+                  <span>{preference.muted ? 'Muted' : 'Offline'}</span>
+                </button>
+                <ChatPokeButton compact target={member} />
+              </div>
             );
           })}
         </div>

@@ -56,19 +56,29 @@ function normalizeLinkRecord(entry: unknown): VerifiedPlatformLinkRecord | null 
     return null;
   }
 
-  return {
+  const normalized: VerifiedPlatformLinkRecord = {
     platformId: record.platformId,
     linkedAtMs: typeof record.linkedAtMs === 'number' ? record.linkedAtMs : Date.now(),
     verified: record.verified === true,
-    platformUserId: typeof record.platformUserId === 'string' ? record.platformUserId : undefined,
-    accountCreatedAtMs:
-      typeof record.accountCreatedAtMs === 'number' ? record.accountCreatedAtMs : undefined,
-    scoreEligible: typeof record.scoreEligible === 'boolean' ? record.scoreEligible : undefined,
-    hasPostPassportActivity:
-      typeof record.hasPostPassportActivity === 'boolean'
-        ? record.hasPostPassportActivity
-        : undefined,
   };
+
+  if (typeof record.platformUserId === 'string') {
+    normalized.platformUserId = record.platformUserId;
+  }
+
+  if (typeof record.accountCreatedAtMs === 'number') {
+    normalized.accountCreatedAtMs = record.accountCreatedAtMs;
+  }
+
+  if (typeof record.scoreEligible === 'boolean') {
+    normalized.scoreEligible = record.scoreEligible;
+  }
+
+  if (typeof record.hasPostPassportActivity === 'boolean') {
+    normalized.hasPostPassportActivity = record.hasPostPassportActivity;
+  }
+
+  return normalized;
 }
 
 function migrateLegacyLinks(parsed: { linked?: unknown; links?: unknown }): VerifiedPlatformLinkRecord[] {
