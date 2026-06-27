@@ -175,13 +175,27 @@
   font-size: 1.35rem;
 }
 
-.visitor-profile-passport-stage {
+.visitor-profile-passport-stage,
+.my-profile-passport-stage {
   width: 100%;
   max-width: 980px;
   margin-inline: auto;
 }
 
-.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout {
+.my-profile-passport-heading {
+  display: grid;
+  gap: 4px;
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.my-profile-passport-heading h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout,
+.my-profile-modern .my-profile-passport-stage .profile-passport-carousel-layout {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
   align-items: start;
@@ -193,12 +207,17 @@
 .visitor-profile-modern
   .visitor-profile-passport-stage
   .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-layout,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
   .profile-passport-carousel-layout {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
 }
 
-.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-main {
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-main,
+.my-profile-modern .my-profile-passport-stage .profile-passport-carousel-main {
   width: 100%;
   max-width: none;
   margin-inline: 0;
@@ -215,6 +234,18 @@
 .visitor-profile-modern
   .visitor-profile-passport-stage
   .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-slide.is-active-profile-slide,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-main,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
+  .profile-passport-carousel-viewport,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-horizontal-passport-layout
   .profile-passport-carousel-slide.is-active-profile-slide {
   width: 100%;
   max-width: 100%;
@@ -227,6 +258,14 @@
 .visitor-profile-modern
   .visitor-profile-passport-stage
   .profile-passport-carousel.is-badge-book-layout
+  .profile-passport-carousel-viewport,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-badge-book-layout
+  .profile-passport-carousel-main,
+.my-profile-modern
+  .my-profile-passport-stage
+  .profile-passport-carousel.is-badge-book-layout
   .profile-passport-carousel-viewport {
   width: 100%;
   max-width: min(100%, 630px);
@@ -234,13 +273,16 @@
 }
 
 .visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-lead-rail,
-.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-rail {
+.visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-rail,
+.my-profile-modern .my-profile-passport-stage .profile-passport-carousel-lead-rail,
+.my-profile-modern .my-profile-passport-stage .profile-passport-carousel-rail {
   justify-content: flex-start;
   align-self: start;
   margin-top: 0;
 }
 
 .visitor-profile-passport-lead-rail,
+.my-profile-passport-lead-rail,
 .profile-passport-carousel-lead-rail-inner {
   display: grid;
   gap: 10px;
@@ -248,15 +290,18 @@
   min-width: 132px;
 }
 
-.visitor-profile-passport-layout-switch {
+.visitor-profile-passport-layout-switch,
+.my-profile-passport-layout-switch {
   width: 100%;
 }
 
-.visitor-profile-passport-view-tabs {
+.visitor-profile-passport-view-tabs,
+.my-profile-passport-view-tabs {
   width: 100%;
 }
 
 .visitor-profile-passport-side-rail,
+.my-profile-passport-side-rail,
 .profile-passport-carousel-side-rail {
   display: grid;
   gap: 10px;
@@ -279,7 +324,9 @@
 
 .visitor-profile-message-button,
 .visitor-profile-safety-button,
-.visitor-profile-share-passport-button {
+.visitor-profile-share-passport-button,
+.my-profile-share-passport-button,
+.my-profile-passport-side-rail .nami-surface-button {
   width: 100%;
   min-height: 40px;
 }
@@ -1061,26 +1108,32 @@ body.has-audience-lounge-open {
     max-height: 180px;
   }
 
-  .visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout {
+  .visitor-profile-modern .visitor-profile-passport-stage .profile-passport-carousel-layout,
+  .my-profile-modern .my-profile-passport-stage .profile-passport-carousel-layout {
     grid-template-columns: 1fr;
     justify-items: stretch;
   }
 
   .visitor-profile-passport-lead-rail,
   .visitor-profile-passport-side-rail,
+  .my-profile-passport-lead-rail,
+  .my-profile-passport-side-rail,
   .profile-passport-carousel-lead-rail,
   .profile-passport-carousel-rail {
     width: 100%;
     min-width: 0;
   }
 
-  .visitor-profile-passport-lead-rail {
+  .visitor-profile-passport-lead-rail,
+  .my-profile-passport-lead-rail {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
   }
 
   .visitor-profile-passport-layout-switch,
-  .visitor-profile-passport-view-tabs {
+  .visitor-profile-passport-view-tabs,
+  .my-profile-passport-layout-switch,
+  .my-profile-passport-view-tabs {
     grid-column: span 1;
   }
 
