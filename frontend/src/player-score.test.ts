@@ -30,6 +30,7 @@ describe('player score', () => {
         platform: 'pc',
       },
       linkedPlatforms: ['steam', 'epic'],
+      scoreEligiblePlatforms: ['steam', 'epic'],
       xVerified: true,
       walletLinked: true,
       walletSource: 'wallet',
@@ -54,6 +55,7 @@ describe('player score', () => {
         platform: 'pc',
       },
       linkedPlatforms: ['steam', 'epic', 'xbox', 'playstation', 'riot', 'nintendo', 'itch', 'discord'],
+      scoreEligiblePlatforms: ['steam', 'epic', 'xbox', 'playstation', 'riot', 'nintendo', 'itch', 'discord'],
       xVerified: true,
       walletLinked: true,
       walletSource: 'wallet',
@@ -68,5 +70,29 @@ describe('player score', () => {
     expect(breakdown.categories[2]?.points).toBeLessThanOrEqual(20);
     expect(breakdown.categories[3]?.points).toBeLessThanOrEqual(10);
     expect(breakdown.total).toBeLessThanOrEqual(100);
+  });
+
+  it('does not award game proof points for linked but unverified platforms', () => {
+    const breakdown = computePlayerScore({
+      displayName: 'River',
+      email: 'river@example.com',
+      quizAnswers: {
+        play_style: 'coop',
+        social: 'friends',
+        platform: 'pc',
+      },
+      linkedPlatforms: ['steam', 'epic', 'playstation'],
+      scoreEligiblePlatforms: [],
+      xVerified: false,
+      walletLinked: true,
+      walletSource: 'wallet',
+      claimApproved: false,
+      hasOnChainPassport: false,
+      moderationClear: true,
+      guildStandingVerified: false,
+    });
+
+    expect(breakdown.categories[1]?.points).toBe(0);
+    expect(breakdown.suggestions.some((entry) => /pending API verification/i.test(entry))).toBe(true);
   });
 });

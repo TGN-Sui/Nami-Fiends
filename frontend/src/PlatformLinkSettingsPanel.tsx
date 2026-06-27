@@ -43,12 +43,12 @@ const PLATFORM_LINKS: PlatformLinkEntry[] = [
   {
     id: 'steam',
     label: 'Steam',
-    hint: 'Library, achievements, and hours sync for future badge mints.',
+    hint: 'OAuth verification required — unverified or brand-new accounts do not raise Player Score.',
   },
   {
     id: 'epic',
     label: 'Epic Games',
-    hint: 'Permanent link — game library and achievements stay on your passport.',
+    hint: 'Permanent after OAuth — score only counts once API confirms account history.',
   },
   {
     id: 'xbox',

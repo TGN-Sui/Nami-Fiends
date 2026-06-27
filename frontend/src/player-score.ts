@@ -31,6 +31,8 @@ export type PlayerScoreInput = {
   email: string;
   quizAnswers: Record<string, string>;
   linkedPlatforms: string[];
+  /** Platforms that passed OAuth/API eligibility checks. Defaults to linkedPlatforms. */
+  scoreEligiblePlatforms?: string[];
   xVerified: boolean;
   walletLinked: boolean;
   walletSource: 'wallet' | 'zklogin' | 'demo' | null;
@@ -171,7 +173,10 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
     discord: 5,
   };
 
-  for (const platformId of input.linkedPlatforms) {
+  const scorePlatforms =
+    input.scoreEligiblePlatforms ?? input.linkedPlatforms;
+
+  for (const platformId of scorePlatforms) {
     const points = platformWeights[platformId] ?? 5;
 
     gameProof += points;
@@ -183,17 +188,17 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
     });
   }
 
-  if (input.linkedPlatforms.length >= 2) {
+  if (scorePlatforms.length >= 2) {
     gameProof += 4;
     boosters.push({
       id: 'multi-platform',
-      label: 'Multiple game platforms linked',
+      label: 'Multiple score-eligible platforms linked',
       points: 4,
       category: 'gameProof',
     });
   }
 
-  if (input.linkedPlatforms.includes('steam')) {
+  if (scorePlatforms.includes('steam')) {
     gameProof += 4;
     boosters.push({
       id: 'steam-library',
@@ -204,7 +209,13 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
   }
 
   if (gameProof === 0) {
-    suggestions.push('Link Steam or Epic in Settings for up to +12 Player Score.');
+    if (input.linkedPlatforms.length > 0 && scorePlatforms.length === 0) {
+      suggestions.push(
+        'Platform links are pending API verification — new accounts cannot raise Player Score until history is confirmed.'
+      );
+    } else {
+      suggestions.push('Link and verify Steam or Epic in Settings for up to +12 Player Score.');
+    }
   }
 
   gameProof = clampScore(gameProof, 30);
@@ -239,11 +250,11 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
     });
   }
 
-  if (input.linkedPlatforms.length > 0 || input.xVerified) {
+  if (scorePlatforms.length > 0 || input.xVerified) {
     community += 2;
     boosters.push({
       id: 'social-proof',
-      label: 'External gamer identity linked',
+      label: 'Verified external gamer identity linked',
       points: 2,
       category: 'community',
     });
@@ -261,11 +272,11 @@ export function computePlayerScore(input: PlayerScoreInput): PlayerScoreBreakdow
     });
   }
 
-  if (input.linkedPlatforms.length > 0) {
+  if (scorePlatforms.length > 0) {
     technical += 3;
     boosters.push({
       id: 'platform-consent',
-      label: 'Platform read permissions granted',
+      label: 'Verified platform read permissions granted',
       points: 3,
       category: 'technical',
     });
