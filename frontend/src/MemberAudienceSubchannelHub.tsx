@@ -1,7 +1,9 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { MemberAudienceLoungePopup } from './MemberAudienceLoungePopup.js';
+import { GlobalChatRoomView } from './GlobalChatsPanel.js';
 import {
+  audienceSubchannelChatRoom,
   countCustomAudienceSubchannels,
   LIVE_CHAT_SLUG,
   maxAudienceSubchannelsForMember,
@@ -24,77 +26,127 @@ export function MemberAudienceSubchannelHub(props: {
   const tier = memberFeatureTier(props.member);
   const customCount = countCustomAudienceSubchannels(props.member.id);
   const [loungeOpen, setLoungeOpen] = useState(false);
-  const [launchChannelId, setLaunchChannelId] = useState(() => memberPublicChatId(props.member.id));
+  const [selectedChannelId, setSelectedChannelId] = useState(
+    () => memberPublicChatId(props.member.id)
+  );
 
   const liveChannel = useMemo(
     () => channels.find((entry) => entry.kind === 'live-chat' || entry.slug === LIVE_CHAT_SLUG) ?? channels[0],
     [channels]
   );
 
-  function openLounge(channelId?: string): void {
-    setLaunchChannelId(channelId ?? liveChannel?.id ?? memberPublicChatId(props.member.id));
+  const selectedChannel = useMemo(
+    () => channels.find((entry) => entry.id === selectedChannelId) ?? channels[0] ?? null,
+    [channels, selectedChannelId]
+  );
+
+  const chatRoom = selectedChannel ? audienceSubchannelChatRoom(selectedChannel, props.member) : null;
+
+  const isLiveChatSelected =
+    selectedChannel?.kind === 'live-chat' || selectedChannel?.slug === LIVE_CHAT_SLUG;
+
+  useEffect(() => {
+    if (!channels.some((entry) => entry.id === selectedChannelId)) {
+      setSelectedChannelId(channels[0]?.id ?? memberPublicChatId(props.member.id));
+    }
+  }, [channels, selectedChannelId]);
+
+  function openImmersiveLounge(): void {
     setLoungeOpen(true);
   }
 
   return (
     <>
-      <article className="panel member-audience-subchannel-hub member-audience-lounge-launcher">
-        <div className="profile-panel-heading">
-          <h2>Audience lounge</h2>
-          <p>
-            Immersive chat + live feed popup. {tier} members can run Live Chat plus up to {limit} custom channels.
-          </p>
-        </div>
-
-        <div className="member-audience-lounge-launcher-card">
-          <div className="member-audience-lounge-launcher-copy">
-            <span className="mini-badge">
-              {channels.length} channels · {customCount}/{limit} custom
-            </span>
-            <strong>{props.member.name}&apos;s lounge</strong>
-            <p className="protocol-hint">
-              Open the popup to chat with the community, watch {props.member.name}&apos;s stream, and tune into any
-              other live member in the room by clicking their avatar.
+      <article className="panel member-audience-subchannel-hub member-audience-inline-lounge">
+        <div className="member-audience-inline-lounge-head">
+          <div className="profile-panel-heading">
+            <h2>Audience lounge</h2>
+            <p>
+              Chat in {props.member.name}&apos;s channels here. Expand the immersive lounge to watch live
+              feeds while you chat.
             </p>
           </div>
 
-          <div className="member-audience-lounge-launcher-actions">
-            <button
-              className="nami-surface-button is-primary-surface-button member-audience-lounge-open"
-              onClick={() => openLounge(liveChannel?.id)}
-              type="button"
-            >
-              {props.isStreamingOnline ? 'Open live lounge' : 'Open audience lounge'}
-            </button>
-          </div>
+          <button
+            className="nami-surface-button is-primary-surface-button member-audience-lounge-expand"
+            onClick={openImmersiveLounge}
+            type="button"
+          >
+            {props.isStreamingOnline ? 'Expand live lounge' : 'Expand lounge'}
+          </button>
         </div>
 
-        <ul className="member-audience-lounge-channel-preview">
-          {channels.map((channel) => {
-            const isLive = channel.kind === 'live-chat' || channel.slug === LIVE_CHAT_SLUG;
+        <div className="member-audience-subchannel-hub-layout member-audience-inline-lounge-layout">
+          <aside aria-label="Audience channels" className="member-audience-subchannel-sidebar">
+            <div className="member-audience-subchannel-sidebar-head">
+              <span className="mini-badge">
+                {channels.length} channels · {customCount}/{limit} custom
+              </span>
+              <span className="protocol-hint">{tier} tier</span>
+            </div>
 
-            return (
-              <li key={channel.id}>
-                <button
-                  className="member-audience-lounge-channel-preview-item"
-                  onClick={() => openLounge(channel.id)}
-                  type="button"
-                >
-                  <span className="member-audience-subchannel-sidebar-hash">{isLive ? '●' : '#'}</span>
-                  <span>{channel.title}</span>
-                  {isLive && props.isStreamingOnline ? (
-                    <span className="mini-badge member-audience-live-pill">Live</span>
-                  ) : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+            <ul className="member-audience-subchannel-sidebar-list">
+              {channels.map((channel) => {
+                const isLive = channel.kind === 'live-chat' || channel.slug === LIVE_CHAT_SLUG;
+
+                return (
+                  <li key={channel.id}>
+                    <button
+                      aria-current={selectedChannel?.id === channel.id ? 'true' : undefined}
+                      className={
+                        'member-audience-subchannel-sidebar-item' +
+                        (selectedChannel?.id === channel.id ? ' is-active' : '')
+                      }
+                      onClick={() => setSelectedChannelId(channel.id)}
+                      type="button"
+                    >
+                      <span className="member-audience-subchannel-sidebar-hash">{isLive ? '●' : '#'}</span>
+                      <span className="member-audience-subchannel-sidebar-title">{channel.title}</span>
+                      {isLive && props.isStreamingOnline ? (
+                        <span className="mini-badge member-audience-live-pill">Live</span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+
+          <div className="member-audience-subchannel-chat-pane member-audience-inline-chat-pane">
+            {chatRoom ? (
+              <>
+                <header className="member-audience-subchannel-chat-head">
+                  <span className="member-audience-subchannel-sidebar-hash">
+                    {isLiveChatSelected ? '●' : '#'}
+                  </span>
+                  <div>
+                    <strong>{chatRoom.title}</strong>
+                    <p className="protocol-hint">
+                      {isLiveChatSelected
+                        ? 'Community chat for ' + props.member.name + '. Expand the lounge to watch the stream.'
+                        : 'Audience room for ' + props.member.name + '.'}
+                    </p>
+                  </div>
+                </header>
+
+                <GlobalChatRoomView
+                  chat={chatRoom}
+                  compact
+                  onOpenMember={props.onOpenMember ?? (() => {})}
+                  showCompactHead={false}
+                  {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+                />
+              </>
+            ) : (
+              <p className="protocol-hint member-audience-inline-empty">Select a channel to start chatting.</p>
+            )}
+          </div>
+        </div>
       </article>
 
       <MemberAudienceLoungePopup
         hostMember={props.member}
-        initialChannelId={launchChannelId}
+        initialChannelId={selectedChannelId}
         onClose={() => setLoungeOpen(false)}
         open={loungeOpen}
         {...(props.editable ? { editable: true } : {})}

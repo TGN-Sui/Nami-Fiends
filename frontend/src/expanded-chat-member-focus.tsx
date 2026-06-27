@@ -85,23 +85,25 @@ export function ExpandedChatMemberPassportPanel(props: {
       aria-label={props.member.name + ' passport preview'}
       className={
         'expanded-chat-member-aside is-passport-preview' +
-        (props.layout === 'horizontal' ? ' is-horizontal-passport-peek-mode' : '')
+        (props.layout === 'horizontal'
+          ? ' is-horizontal-passport-peek-mode is-horizontal-passport-layout'
+          : '')
       }
     >
-      <div className="expanded-chat-member-passport-toolbar member-public-chat-passport-peek-toolbar">
+      <div className="expanded-chat-member-passport-toolbar">
         <div
-          className="member-public-chat-passport-peek-toolbar-copy"
+          className="expanded-chat-member-passport-toolbar-title"
           title={props.hint ?? 'Only you can see this passport while expanded chat stays open.'}
         >
           <span className="mini-badge">Passport</span>
           <strong>{props.member.name}</strong>
-          <span className="member-public-chat-passport-peek-hint">Only you</span>
+          <span className="expanded-chat-member-passport-private-hint">Only you</span>
         </div>
 
-        <div className="member-public-chat-passport-peek-toolbar-actions">
+        <div className="expanded-chat-member-passport-toolbar-actions">
           <div
             aria-label="Passport layout"
-            className="nami-profile-layout-switch member-public-chat-passport-layout-switch"
+            className="nami-profile-layout-switch expanded-chat-member-passport-layout-switch"
             role="group"
           >
             {(['vertical', 'horizontal'] as PassportPeekLayout[]).map((layout) => (
@@ -118,7 +120,7 @@ export function ExpandedChatMemberPassportPanel(props: {
           </div>
 
           <button
-            className="nami-surface-button member-public-chat-passport-peek-profile"
+            className="nami-surface-button expanded-chat-member-passport-profile"
             onClick={props.onOpenProfile}
             type="button"
           >
@@ -127,7 +129,7 @@ export function ExpandedChatMemberPassportPanel(props: {
 
           <button
             aria-label={'Close ' + props.member.name + ' passport preview'}
-            className="profile-secondary-link member-public-chat-passport-peek-close"
+            className="nami-surface-button expanded-chat-member-passport-back"
             onClick={props.onClear}
             type="button"
           >

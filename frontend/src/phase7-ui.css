@@ -5393,6 +5393,15 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 }
 
 @media (max-width: 960px) {
+  .expanded-chat-member-passport-toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .expanded-chat-member-passport-profile,
+  .expanded-chat-member-passport-back {
+    width: 100%;
+  }
+
   .chat-window-expand-split-layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(220px, 0.95fr) minmax(320px, 1.05fr);
@@ -5531,6 +5540,59 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 
 .expanded-chat-member-passport-toolbar {
   flex: 0 0 auto;
+  display: grid;
+  gap: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(120, 190, 255, 0.14);
+}
+
+.expanded-chat-member-passport-toolbar-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.expanded-chat-member-passport-toolbar-title strong {
+  font-size: 0.92rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.expanded-chat-member-passport-private-hint {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: rgba(220, 190, 200, 0.72);
+}
+
+.expanded-chat-member-passport-toolbar-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.expanded-chat-member-passport-layout-switch {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 3px;
+  gap: 4px;
+}
+
+.expanded-chat-member-passport-layout-switch button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+}
+
+.expanded-chat-member-passport-profile,
+.expanded-chat-member-passport-back {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  white-space: nowrap;
 }
 
 .expanded-chat-member-passport-scroll {
@@ -5587,6 +5649,94 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   max-width: none;
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 4px;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .tcg-passport-horizontal-identity {
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: start;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .tcg-passport-horizontal-identity
+  .tcg-passport-avatar-stack {
+  width: 76px;
+  min-width: 76px;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .tcg-passport-horizontal-identity
+  .nami-profile-card-avatar {
+  width: 76px !important;
+  height: 76px !important;
+  min-width: 76px;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .tcg-passport-horizontal-identity
+  .member-avatar-live-shell {
+  width: 76px;
+  height: 76px;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .nami-profile-card-nameplate {
+  align-self: start;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .nami-profile-card-nameplate
+  h2 {
+  font-size: 1rem;
+  margin: 0 0 4px;
+  line-height: 1.15;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .nami-profile-card-nameplate
+  p {
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.expanded-chat-member-aside.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card.is-horizontal-passport-peek
+  .is-horizontal-tcg-passport
+  .nami-profile-card-frame-horizontal {
+  grid-template-areas:
+    'header header'
+    'identity stats'
+    'details details' !important;
+  grid-template-columns: minmax(0, 1fr) minmax(88px, 108px) !important;
+  gap: 8px 10px;
+  padding: 10px 12px;
+}
+
+.chat-window-expand-split-layout:has(.expanded-chat-member-aside.is-horizontal-passport-layout) {
+  grid-template-columns: minmax(300px, 1.08fr) minmax(340px, 0.92fr);
 }
 
 .expanded-chat-member-passport-bio {

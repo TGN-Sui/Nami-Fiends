@@ -175,12 +175,107 @@
   font-size: 1.35rem;
 }
 
-.visitor-profile-passport-actions {
+.visitor-profile-passport-controls {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.visitor-profile-passport-controls-primary,
+.visitor-profile-passport-controls-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.visitor-profile-passport-controls-secondary {
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--nami-theme-accent) 16%, transparent);
+}
+
+.visitor-profile-passport-safety-group {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-left: auto;
+  justify-content: center;
+}
+
+.visitor-profile-message-button,
+.visitor-profile-safety-button {
+  min-height: 38px;
+}
+
+.member-audience-inline-lounge {
+  display: grid;
+  gap: 14px;
+}
+
+.member-audience-inline-lounge-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.member-audience-inline-lounge-head .profile-panel-heading {
+  flex: 1 1 280px;
+  margin: 0;
+}
+
+.member-audience-lounge-expand {
+  flex: 0 0 auto;
+  min-height: 40px;
+}
+
+.member-audience-inline-lounge-layout {
+  min-height: min(52vh, 520px);
+}
+
+.member-audience-inline-chat-pane .global-chat-room-pane {
+  min-height: 0;
+  height: 100%;
+}
+
+.member-audience-inline-chat-pane .global-chat-room-pane.is-compact-global-chat {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+}
+
+.member-audience-inline-chat-pane .chat-window-expand-host {
+  min-height: 0;
+  height: 100%;
+}
+
+.member-audience-inline-chat-pane .global-chat-conversation {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-audience-inline-chat-pane .global-message-stack,
+.member-audience-inline-chat-pane .message-stack.global-message-stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.member-audience-inline-chat-pane .global-chat-composer-bar {
+  flex-shrink: 0;
+}
+
+.member-audience-inline-empty {
+  padding: 24px 16px;
 }
 
 .member-audience-subchannel-hub {
@@ -564,8 +659,8 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0;
-  width: min(1280px, 100%);
-  height: min(88vh, 920px);
+  width: min(1440px, calc(100vw - 24px));
+  height: min(90vh, 940px);
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 35%, transparent);
   background: var(--nami-theme-panel);
@@ -613,7 +708,7 @@
 
 .audience-lounge-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
   min-height: 0;
   overflow: hidden;
 }
@@ -763,6 +858,12 @@ body.has-audience-lounge-open {
   overflow: hidden;
 }
 
+@media (max-width: 1100px) {
+  .audience-lounge-stage {
+    grid-template-columns: minmax(0, 0.88fr) minmax(300px, 1.12fr);
+  }
+}
+
 @media (max-width: 900px) {
   .my-profile-hero {
     grid-template-columns: 1fr;
@@ -808,9 +909,35 @@ body.has-audience-lounge-open {
     max-height: 180px;
   }
 
+  .visitor-profile-passport-controls-secondary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .visitor-profile-passport-safety-group {
+    justify-content: flex-start;
+  }
+
+  .visitor-profile-message-button {
+    width: 100%;
+  }
+
+  .member-audience-inline-lounge-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .member-audience-lounge-expand {
+    width: 100%;
+  }
+
+  .member-audience-inline-lounge-layout {
+    min-height: min(58vh, 560px);
+  }
+
   .audience-lounge-stage {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(220px, 0.95fr) minmax(280px, 1.05fr);
+    grid-template-rows: minmax(180px, 0.82fr) minmax(300px, 1.18fr);
   }
 
   .audience-lounge-feed-pane {
@@ -819,6 +946,16 @@ body.has-audience-lounge-open {
   }
 
   .audience-lounge-chat-pane {
-    min-height: 220px;
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 600px) {
+  .member-audience-inline-lounge-layout {
+    min-height: min(64vh, 620px);
+  }
+
+  .member-audience-subchannel-sidebar {
+    max-height: 160px;
   }
 }

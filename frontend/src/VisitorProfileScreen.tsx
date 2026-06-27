@@ -11,7 +11,6 @@ import {
   MemberProfileShowcase,
   type ShowcaseTab,
 } from './MemberProfileShowcase.js';
-import { MemberStreamingLiveDot } from './member-avatar.js';
 import { PokeReceivedBadge } from './PokeReceivedBadge.js';
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
 import { SharePassportButton } from './SharePassportButton.js';
@@ -189,90 +188,90 @@ export function VisitorProfileScreen(props: {
         </div>
       </header>
 
-      {isStreamingOnline ? (
-        <div className="member-streaming-live-banner" role="status">
-          <MemberStreamingLiveDot className="is-banner-streaming-dot" memberId={props.member.id} />
-          <div>
-            <strong>{props.member.name} is live</strong>
-            <p>Open the Live Chat channel under Social to join the stream chat.</p>
-          </div>
-        </div>
-      ) : null}
-
       <section className="my-profile-passport-anchor is-passport-anchor-bare">
-        <div className="my-profile-passport-toolbar">
-          <div className="nami-profile-layout-switch nami-profile-stable-layout-switch">
-            {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+        <div className="my-profile-passport-toolbar visitor-profile-passport-controls">
+          <div className="visitor-profile-passport-controls-primary">
+            <div
+              aria-label="Passport layout"
+              className="nami-profile-layout-switch nami-profile-stable-layout-switch"
+              role="group"
+            >
+              {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
+                <button
+                  aria-pressed={profileCardLayout === layout}
+                  className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
+                  key={layout}
+                  onClick={() => chooseProfileCardLayout(layout)}
+                  type="button"
+                >
+                  {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                </button>
+              ))}
+            </div>
+
+            <div className="profile-passport-carousel-actions" role="tablist" aria-label="Passport card views">
               <button
-                className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
-                key={layout}
-                onClick={() => chooseProfileCardLayout(layout)}
+                aria-selected={profileCarouselSlide === 'passport'}
+                className={
+                  'nami-surface-button profile-passport-view-tab' +
+                  (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
+                }
+                onClick={() => setProfileCarouselSlide('passport')}
+                role="tab"
                 type="button"
               >
-                {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
+                Passport
               </button>
-            ))}
+              <button
+                aria-selected={profileCarouselSlide === 'badges'}
+                className={
+                  'nami-surface-button profile-passport-view-tab' +
+                  (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
+                }
+                onClick={() => setProfileCarouselSlide('badges')}
+                role="tab"
+                type="button"
+              >
+                Badge Book
+              </button>
+            </div>
           </div>
 
-          <div className="profile-passport-carousel-actions" role="tablist" aria-label="Passport card views">
-            <button
-              aria-selected={profileCarouselSlide === 'passport'}
-              className={
-                'nami-surface-button profile-passport-view-tab' +
-                (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
-              }
-              onClick={() => setProfileCarouselSlide('passport')}
-              role="tab"
-              type="button"
-            >
-              Passport
-            </button>
-            <button
-              aria-selected={profileCarouselSlide === 'badges'}
-              className={
-                'nami-surface-button profile-passport-view-tab' +
-                (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
-              }
-              onClick={() => setProfileCarouselSlide('badges')}
-              role="tab"
-              type="button"
-            >
-              Badge Book
-            </button>
-          </div>
-
-          <div className="visitor-profile-passport-actions">
-            <button
-              className={isMuted ? 'preference-button is-muted-active' : 'preference-button'}
-              onClick={() => savePreference(!isMuted, isBlocked)}
-              type="button"
-            >
-              {isMuted ? 'Muted' : 'Mute'}
-            </button>
-            <button
-              className={
-                isBlocked ? 'preference-button is-blocked-active' : 'preference-button danger-preference'
-              }
-              onClick={() => savePreference(isMuted, !isBlocked)}
-              type="button"
-            >
-              {isBlocked ? 'Blocked' : 'Block'}
-            </button>
-            {canReport ? (
-              <button className="preference-button report-preference" onClick={reportMember} type="button">
-                Report
+          <div className="visitor-profile-passport-controls-secondary">
+            <div className="visitor-profile-passport-safety-group" role="group" aria-label="Profile safety actions">
+              <button
+                className={isMuted ? 'preference-button is-muted-active' : 'preference-button'}
+                onClick={() => savePreference(!isMuted, isBlocked)}
+                type="button"
+              >
+                {isMuted ? 'Muted' : 'Mute'}
               </button>
-            ) : null}
-            <button
-              className="nami-surface-button"
-              onClick={() => props.onNavigate('safetyCenter')}
-              type="button"
-            >
-              Safety
-            </button>
+              <button
+                className={
+                  isBlocked ? 'preference-button is-blocked-active' : 'preference-button danger-preference'
+                }
+                onClick={() => savePreference(isMuted, !isBlocked)}
+                type="button"
+              >
+                {isBlocked ? 'Blocked' : 'Block'}
+              </button>
+              {canReport ? (
+                <button className="preference-button report-preference" onClick={reportMember} type="button">
+                  Report
+                </button>
+              ) : null}
+              <button
+                className="nami-surface-button visitor-profile-safety-button"
+                onClick={() => props.onNavigate('safetyCenter')}
+                type="button"
+              >
+                Safety
+              </button>
+            </div>
+
             {canMessage ? (
               <button
-                className="nami-surface-button is-primary-surface-button"
+                className="nami-surface-button is-primary-surface-button visitor-profile-message-button"
                 onClick={() => props.onOpenThread(props.member.id)}
                 type="button"
               >
