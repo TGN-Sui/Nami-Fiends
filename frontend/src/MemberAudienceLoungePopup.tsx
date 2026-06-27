@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -7,6 +7,12 @@ import {
   saveEmbedCollapsed,
 } from './embedded-feed-preferences.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
+import {
+  ExpandedChatMemberPassportPanel,
+  revealMemberTwitchFeed,
+  useExpandedChatMemberFocus,
+  type PassportPeekLayout,
+} from './expanded-chat-member-focus.js';
 import { GlobalChatRoomView } from './GlobalChatsPanel.js';
 import { withMemberAvatar } from './member-avatar-store.js';
 import {
@@ -33,17 +39,6 @@ import { SocialEmbedPlayer } from './SocialEmbedPlayer.js';
 import { UniformMemberAvatar } from './member-avatar.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, type NamiMember } from './uiMockData.js';
-
-function revealMemberTwitchFeed(memberId: string): void {
-  const embeds = readEmbeddedFeedLinks('member', memberId);
-  const twitchIndex = embeds.findIndex((embed) => embed.platform === 'twitch');
-
-  if (twitchIndex < 0) {
-    return;
-  }
-
-  saveEmbedCollapsed('member', embedCardKey(embeds[twitchIndex]!, twitchIndex), false, memberId);
-}
 
 function resolveMember(memberId: string): NamiMember | undefined {
   const member = members.find((entry) => entry.id === memberId);
@@ -74,6 +69,13 @@ export function MemberAudienceLoungePopup(props: {
   const [status, setStatus] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
+  const [passportPeekLayout, setPassportPeekLayout] = useState<PassportPeekLayout>('vertical');
+
+  const memberFocus = useExpandedChatMemberFocus({
+    active: props.open,
+    onOpenMember: (member) => props.onOpenMember?.(member),
+    ...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {}),
+  });
 
   const selectedChannel = useMemo(
     () => channels.find((entry) => entry.id === selectedChannelId) ?? channels[0] ?? null,
@@ -84,6 +86,16 @@ export function MemberAudienceLoungePopup(props: {
     () => resolveMember(watchingMemberId) ?? props.hostMember,
     [props.hostMember, watchingMemberId]
   );
+
+  const passportPreviewMember = useMemo(() => {
+    if (!memberFocus.focusedMember || memberWatchableLiveFeed(memberFocus.focusedMember.id)) {
+      return null;
+    }
+
+    return memberFocus.focusedMember;
+  }, [memberFocus.focusedMember]);
+
+  const feedHeaderMember = passportPreviewMember ?? watchingMember;
 
   const watchingStreamingOnline = useMemberStreamingOnline(watchingMember.id);
   const watchingLiveFeed = useMemo(
@@ -112,7 +124,18 @@ export function MemberAudienceLoungePopup(props: {
     }
 
     setWatchingMemberId(props.hostMember.id);
+    setPassportPeekLayout('vertical');
   }, [props.hostMember.id, props.open]);
+
+  useEffect(() => {
+    if (!props.open || !memberFocus.focusedMember) {
+      return;
+    }
+
+    if (memberWatchableLiveFeed(memberFocus.focusedMember.id)) {
+      setWatchingMemberId(memberFocus.focusedMember.id);
+    }
+  }, [memberFocus.focusedMember, props.open]);
 
   useEffect(() => {
     if (!props.open) {
@@ -141,49 +164,6 @@ export function MemberAudienceLoungePopup(props: {
       document.body.classList.remove('has-audience-lounge-open');
     };
   }, [props.open]);
-
-  const handleOpenMember = useCallback(
-    (member: NamiMember): void => {
-      const hydrated = withMemberProfile(withMemberAvatar(member));
-
-      if (memberWatchableLiveFeed(hydrated.id)) {
-        setWatchingMemberId(hydrated.id);
-        revealMemberTwitchFeed(hydrated.id);
-        return;
-      }
-
-      props.onOpenMember?.(hydrated);
-    },
-    [props.onOpenMember]
-  );
-
-  const mergedTagHandlers = useMemo((): TagNavigationHandlers | undefined => {
-    if (!props.tagHandlers) {
-      return {
-        onOpenMember: (memberId) => {
-          const member = resolveMember(memberId);
-
-          if (member) {
-            handleOpenMember(member);
-          }
-        },
-      };
-    }
-
-    return {
-      ...props.tagHandlers,
-      onOpenMember: (memberId) => {
-        const member = resolveMember(memberId);
-
-        if (member && memberWatchableLiveFeed(member.id)) {
-          handleOpenMember(member);
-          return;
-        }
-
-        props.tagHandlers?.onOpenMember?.(memberId);
-      },
-    };
-  }, [handleOpenMember, props.tagHandlers]);
 
   function handleCreate(): void {
     const result = createAudienceSubchannel(props.hostMember);
@@ -331,23 +311,39 @@ export function MemberAudienceLoungePopup(props: {
             <section aria-label="Live member feed" className="audience-lounge-feed-pane">
               <header className="audience-lounge-feed-head">
                 <div className="audience-lounge-feed-host">
-                  <UniformMemberAvatar className="audience-lounge-feed-avatar" member={watchingMember} />
+                  <UniformMemberAvatar
+                    className="chat-member-avatar audience-lounge-feed-avatar"
+                    member={feedHeaderMember}
+                  />
                   <div>
-                    <strong>{watchingMember.name}</strong>
+                    <strong>{feedHeaderMember.name}</strong>
                     <p className="protocol-hint">
-                      {watchingLiveFeed
-                        ? 'Live now — synced with chat'
-                        : isMemberStreamingOnline(watchingMember.id)
-                          ? 'Live without a linked stream embed'
-                          : 'Member feed'}
+                      {passportPreviewMember
+                        ? 'Passport preview — only you can see this'
+                        : watchingLiveFeed
+                          ? 'Live now — synced with chat'
+                          : isMemberStreamingOnline(watchingMember.id)
+                            ? 'Live without a linked stream embed'
+                            : 'Member feed'}
                     </p>
                   </div>
                 </div>
 
-                {watchingMember.id !== props.hostMember.id ? (
+                {passportPreviewMember ? (
                   <button
                     className="nami-surface-button"
-                    onClick={() => setWatchingMemberId(props.hostMember.id)}
+                    onClick={memberFocus.clearFocus}
+                    type="button"
+                  >
+                    Back to feed
+                  </button>
+                ) : watchingMember.id !== props.hostMember.id ? (
+                  <button
+                    className="nami-surface-button"
+                    onClick={() => {
+                      memberFocus.clearFocus();
+                      setWatchingMemberId(props.hostMember.id);
+                    }}
                     type="button"
                   >
                     Back to {props.hostMember.name}
@@ -356,7 +352,18 @@ export function MemberAudienceLoungePopup(props: {
               </header>
 
               <div className="audience-lounge-feed-body">
-                {watchingLiveFeed ? (
+                {passportPreviewMember ? (
+                  <div className="audience-lounge-feed-passport-preview">
+                    <ExpandedChatMemberPassportPanel
+                      layout={passportPeekLayout}
+                      member={passportPreviewMember}
+                      onClear={memberFocus.clearFocus}
+                      onLayoutChange={setPassportPeekLayout}
+                      onOpenProfile={() => props.onOpenMember?.(passportPreviewMember)}
+                      hint="Only you can see this passport while the lounge stays open."
+                    />
+                  </div>
+                ) : watchingLiveFeed ? (
                   <div className="audience-lounge-live-player-shell">
                     <SocialEmbedPlayer embed={watchingLiveFeed} featured surface="member" />
                   </div>
@@ -371,8 +378,8 @@ export function MemberAudienceLoungePopup(props: {
                   <div className="audience-lounge-feed-empty">
                     <strong>No live stream right now</strong>
                     <p className="protocol-hint">
-                      {watchingMember.name} is not broadcasting. Chat stays open on the right — click a live avatar to
-                      tune into someone else&apos;s feed.
+                      {watchingMember.name} is not broadcasting. Click a live avatar to tune into a stream, or click a
+                      non-live member to preview their passport.
                     </p>
                   </div>
                 )}
@@ -400,9 +407,11 @@ export function MemberAudienceLoungePopup(props: {
                     chat={chatRoom}
                     compact
                     disableExpand
-                    onOpenMember={handleOpenMember}
+                    onOpenMember={memberFocus.handleOpenMember}
                     showCompactHead={false}
-                    {...(mergedTagHandlers ? { tagHandlers: mergedTagHandlers } : {})}
+                    {...(memberFocus.mergedTagHandlers
+                      ? { tagHandlers: memberFocus.mergedTagHandlers }
+                      : {})}
                   />
                 </>
               ) : (

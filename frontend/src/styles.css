@@ -13635,6 +13635,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar,
 .message-avatar,
+.audience-lounge-feed-avatar,
 .member-dot,
 .member-spotlight-avatar,
 .spotlight-member-avatar,
@@ -13647,7 +13648,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 .chat-member-avatar,
-.message-avatar {
+.message-avatar,
+.audience-lounge-feed-avatar {
   overflow: visible;
 }
 
@@ -13662,6 +13664,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar::before,
 .message-avatar::before,
+.audience-lounge-feed-avatar::before,
 .member-dot::before,
 .member-spotlight-avatar::before,
 .spotlight-member-avatar::before,
@@ -13685,6 +13688,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image,
 .message-avatar.has-member-avatar-image,
+.audience-lounge-feed-avatar.has-member-avatar-image,
 .member-dot.has-member-avatar-image,
 .member-spotlight-avatar.has-member-avatar-image,
 .spotlight-member-avatar.has-member-avatar-image,
@@ -13700,6 +13704,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image::before,
 .message-avatar.has-member-avatar-image::before,
+.audience-lounge-feed-avatar.has-member-avatar-image::before,
 .member-dot.has-member-avatar-image::before,
 .member-spotlight-avatar.has-member-avatar-image::before,
 .spotlight-member-avatar.has-member-avatar-image::before,
@@ -13712,6 +13717,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image:hover::before,
 .message-avatar.has-member-avatar-image:hover::before,
+.audience-lounge-feed-avatar.has-member-avatar-image:hover::before,
 .member-dot.has-member-avatar-image:hover::before,
 .member-spotlight-avatar.has-member-avatar-image:hover::before,
 .spotlight-member-avatar.has-member-avatar-image:hover::before,
@@ -13724,6 +13730,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image > *,
 .message-avatar.has-member-avatar-image > *,
+.audience-lounge-feed-avatar.has-member-avatar-image > *,
 .member-dot.has-member-avatar-image > *,
 .member-spotlight-avatar.has-member-avatar-image > *,
 .spotlight-member-avatar.has-member-avatar-image > *,
@@ -13807,6 +13814,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-spotlight-avatar.has-member-avatar-image::before,
 .chat-member-avatar.has-member-avatar-image::before,
 .message-avatar.has-member-avatar-image::before,
+.audience-lounge-feed-avatar.has-member-avatar-image::before,
 .member-dot.has-member-avatar-image::before,
 .sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image::before {
   opacity: 1 !important;

@@ -338,12 +338,16 @@
 }
 
 .member-audience-inline-lounge-layout {
-  min-height: min(52vh, 520px);
+  min-height: min(48vh, 460px);
+  max-height: min(56vh, 540px);
+  height: min(52vh, 500px);
+  overflow: hidden;
 }
 
 .member-audience-inline-chat-pane .global-chat-room-pane {
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 .member-audience-inline-chat-pane .global-chat-room-pane.is-compact-global-chat {
@@ -351,11 +355,35 @@
   grid-template-rows: minmax(0, 1fr);
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
-.member-audience-inline-chat-pane .chat-window-expand-host {
+.member-audience-inline-chat-pane .chat-window-expand-host.is-chat-expand-disabled {
   min-height: 0;
   height: 100%;
+  display: grid;
+  overflow: hidden;
+}
+
+.member-audience-inline-chat-pane .chat-window-expand-host.is-chat-expand-disabled .chat-window,
+.member-audience-inline-chat-pane .chat-window-expand-host.is-chat-expand-disabled .chat-window-buildout {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.member-audience-inline-chat-pane .chat-window-expand-host.is-chat-expand-disabled .chat-window {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  box-sizing: border-box;
+}
+
+.member-audience-inline-chat-pane .chat-window-expand-host.is-chat-expand-disabled .chat-window-buildout {
+  display: flex;
+  flex-direction: column;
 }
 
 .member-audience-inline-chat-pane .global-chat-conversation {
@@ -370,6 +398,8 @@
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
+  height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -840,10 +870,29 @@
   min-width: 0;
 }
 
+.audience-lounge-feed-host .member-avatar-live-shell {
+  flex: 0 0 auto;
+}
+
 .audience-lounge-feed-avatar {
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   flex: 0 0 auto;
+  border-radius: 12px;
+}
+
+.audience-lounge-feed-passport-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.audience-lounge-feed-passport-preview .expanded-chat-member-aside.is-passport-preview {
+  min-height: min(100%, 560px);
 }
 
 .audience-lounge-feed-body {
