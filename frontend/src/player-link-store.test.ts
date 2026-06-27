@@ -62,4 +62,13 @@ describe('player-link-store', () => {
     expect(unlinkPlayerPlatform('steam')).toBe(true);
     expect(isPlayerPlatformLinked('steam')).toBe(false);
   });
+
+  it('returns a stable linked-platform snapshot for external-store reads', async () => {
+    const { readLinkedPlayerPlatforms } = await import('./player-link-store.js');
+
+    const first = readLinkedPlayerPlatforms();
+    const second = readLinkedPlayerPlatforms();
+
+    expect(first).toBe(second);
+  });
 });

@@ -1,7 +1,10 @@
 import type { ReactElement } from 'react';
 
 import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
-import type { FeaturedAuctionStatus } from './featured-placement-auction-store.js';
+import {
+  canViewFeaturedPlacementAuctionPanel,
+  type FeaturedAuctionStatus,
+} from './featured-placement-auction-store.js';
 import { formatHubFeaturedBannerLabel, type HubFeaturedBannerContext } from './hub-featured-showcase.js';
 import type { NamiChannel } from './uiMockData.js';
 
@@ -14,6 +17,7 @@ export function HubFeaturedPlacementStrip(props: {
   onSelectShowcaseIndex: (index: number) => void;
 }): ReactElement {
   const hasAuctionWinners = !props.auctionStatus.isOpen && props.auctionStatus.winners.length > 0;
+  const canViewAuction = canViewFeaturedPlacementAuctionPanel();
 
   return (
     <section className="hub-featured-placement-strip">
@@ -22,21 +26,27 @@ export function HubFeaturedPlacementStrip(props: {
           <span className="mini-badge">Discovery placement</span>
           <h2>Featured showcase</h2>
           <p>
-            {props.auctionStatus.isOpen
-              ? 'Auction bids close at ' + props.auctionStatus.closesAtLabel + '. Open-pool winners fill this carousel after close.'
-              : hasAuctionWinners
-                ? 'Closed auction winners lead the Hub carousel, then paid hub-featured and discovery fill-ins.'
-                : 'Paid hub-featured slots and discovery rankings rotate here.'}
+            {canViewAuction
+              ? props.auctionStatus.isOpen
+                ? 'Auction bids close at ' +
+                  props.auctionStatus.closesAtLabel +
+                  '. Open-pool winners fill this carousel after close.'
+                : hasAuctionWinners
+                  ? 'Closed auction winners lead the Hub carousel, then paid hub-featured and discovery fill-ins.'
+                  : 'Paid hub-featured slots and discovery rankings rotate here.'
+              : 'Featured channels and discovery rankings rotate here.'}
           </p>
         </div>
-        <span
-          className={
-            'hub-featured-placement-status-pill' +
-            (props.auctionStatus.isOpen ? ' is-auction-open-pill' : ' is-auction-closed-pill')
-          }
-        >
-          {props.auctionStatus.isOpen ? 'Bidding open' : 'Auction closed'}
-        </span>
+        {canViewAuction ? (
+          <span
+            className={
+              'hub-featured-placement-status-pill' +
+              (props.auctionStatus.isOpen ? ' is-auction-open-pill' : ' is-auction-closed-pill')
+            }
+          >
+            {props.auctionStatus.isOpen ? 'Bidding open' : 'Auction closed'}
+          </span>
+        ) : null}
       </div>
 
       {hasAuctionWinners ? (

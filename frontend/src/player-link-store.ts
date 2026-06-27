@@ -31,9 +31,12 @@ const PLATFORM_IDS: ReadonlySet<string> = new Set([
 ]);
 
 let cachedLinks: VerifiedPlatformLinkRecord[] | undefined;
+let cachedPlatformIds: PlayerLinkPlatform[] | undefined;
+const EMPTY_LINKED_PLATFORMS: PlayerLinkPlatform[] = [];
 
 function invalidateCache(): void {
   cachedLinks = undefined;
+  cachedPlatformIds = undefined;
 }
 
 function emitChange(): void {
@@ -126,7 +129,19 @@ export function readPlayerPlatformLinks(): VerifiedPlatformLinkRecord[] {
 }
 
 export function readLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
-  return readPlayerPlatformLinks().map((entry) => entry.platformId);
+  if (cachedPlatformIds) {
+    return cachedPlatformIds;
+  }
+
+  const links = readPlayerPlatformLinks();
+
+  if (links.length === 0) {
+    cachedPlatformIds = EMPTY_LINKED_PLATFORMS;
+    return cachedPlatformIds;
+  }
+
+  cachedPlatformIds = links.map((entry) => entry.platformId);
+  return cachedPlatformIds;
 }
 
 export function isPlayerPlatformLinked(platformId: PlayerLinkPlatform): boolean {
@@ -210,7 +225,7 @@ function subscribe(onStoreChange: () => void): () => void {
 }
 
 export function useLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
-  return useSyncExternalStore(subscribe, readLinkedPlayerPlatforms, () => []);
+  return useSyncExternalStore(subscribe, readLinkedPlayerPlatforms, () => EMPTY_LINKED_PLATFORMS);
 }
 
 export function usePlayerPlatformLinks(): VerifiedPlatformLinkRecord[] {

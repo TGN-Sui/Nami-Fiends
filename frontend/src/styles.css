@@ -14879,7 +14879,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .protocol-status-bar.is-protocol-site-footer {
   position: fixed;
-  bottom: 92px;
+  bottom: 14px;
   left: 50%;
   z-index: 110;
   width: min(520px, calc(100vw - 32px));
@@ -14887,6 +14887,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateX(-50%);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
+}
+
+.nami-app:has(.testnet-beta-legal-notice) .protocol-status-bar.is-protocol-site-footer {
+  bottom: 92px;
 }
 
 .testnet-beta-legal-notice {
@@ -14905,6 +14909,29 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   background: rgba(24, 18, 8, 0.88);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
+}
+
+.testnet-beta-legal-notice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.testnet-beta-legal-dismiss {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(255, 196, 120, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 232, 198, 0.88);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.testnet-beta-legal-dismiss:hover,
+.testnet-beta-legal-dismiss:focus-visible {
+  border-color: rgba(255, 196, 120, 0.55);
+  background: rgba(255, 196, 120, 0.1);
 }
 
 .testnet-beta-legal-notice p {
