@@ -39,6 +39,7 @@ import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { resolveChatEmojisForChannel, useChannelCustomEmojis } from './channel-custom-emojis-store.js';
 import { ChatPokeButton } from './ChatPokeButton.js';
+import { useExpandedChatMemberFocus } from './expanded-chat-member-focus.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 
 import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
@@ -129,6 +130,12 @@ export function ChannelProfileChatSection(props: {
     return channelPresenceMembers.filter((member) => !readMemberPreference(member.id).blocked);
   }, [channelPresenceMembers, preferencesVersion]);
   const [chatDraft, setChatDraft] = useState('');
+  const [chatExpanded, setChatExpanded] = useState(false);
+  const memberFocus = useExpandedChatMemberFocus({
+    active: chatExpanded,
+    onOpenMember: props.onOpenMember,
+    tagHandlers: props.tagHandlers,
+  });
   const canSend = canSendChatMessages();
 
   const resolveChatMessageMember = useCallback((message: ChatMessage): NamiMember | undefined => {
@@ -260,7 +267,15 @@ export function ChannelProfileChatSection(props: {
 
       <section className="chat-shell chat-shell-buildout channel-profile-chat-shell">
         <div className="chat-layout chat-layout-buildout">
-          <ChatWindowExpandable className="chat-theme-channel-brand">
+          <ChatWindowExpandable
+            className="chat-theme-channel-brand"
+            onEscape={memberFocus.handleChatEscape}
+            onExpandedChange={(expanded) => {
+              setChatExpanded(expanded);
+              memberFocus.handleExpandedChange(expanded);
+            }}
+            renderExpandedAside={memberFocus.renderExpandedAside}
+          >
             <div className="chat-window-heading">
               <div>
                 <h2>{props.channel.name} Main Chat</h2>
@@ -294,7 +309,7 @@ export function ChannelProfileChatSection(props: {
                   >
                     <UniformMemberAvatarButton
                       member={member}
-                      onClick={() => props.onOpenMember(member)}
+                      onClick={() => memberFocus.handleOpenMember(member)}
                       signal={message.signal}
                     />
 
@@ -302,7 +317,7 @@ export function ChannelProfileChatSection(props: {
                       <div className="message-meta">
                         <button
                           className={'message-author-button signal-text-' + message.signal.toLowerCase()}
-                          onClick={() => props.onOpenMember(member)}
+                          onClick={() => memberFocus.handleOpenMember(member)}
                           type="button"
                         >
                           {message.author}
@@ -325,7 +340,7 @@ export function ChannelProfileChatSection(props: {
                         <TaggedMessageBody
                           body={message.body}
                           customEmojis={channelEmojis}
-                          handlers={props.tagHandlers}
+                          handlers={memberFocus.mergedTagHandlers ?? props.tagHandlers}
                           {...(adultLanguageMode === 'censor'
                             ? { transformText: censorAdultLanguage }
                             : {})}

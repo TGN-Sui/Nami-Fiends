@@ -94,6 +94,7 @@ import { hasTaggedGenreBroadcasts } from './genre-chat-broadcasts.js';
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { useChannelEmojiLibraryVersion } from './channel-custom-emojis-store.js';
 import { readChannelEmojisForGenreLounge } from './channel-genre-emoji-scope.js';
+import { useExpandedChatMemberFocus } from './expanded-chat-member-focus.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 import { members, type NamiMember } from './uiMockData.js';
 
@@ -155,6 +156,36 @@ export function GlobalChatRoomView(props: {
   onModerationDelete?: () => void;
   disableExpand?: boolean;
 }): ReactElement {
+  const [chatExpanded, setChatExpanded] = useState(false);
+  const memberFocus = useExpandedChatMemberFocus({
+    active: chatExpanded && props.disableExpand !== true,
+    onOpenMember: props.onOpenMember,
+    ...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {}),
+    renderDefaultAside: () => {
+      if (props.renderExpandedAside) {
+        return props.renderExpandedAside();
+      }
+
+      return props.expandedAside ?? null;
+    },
+  });
+  const handleChatExpandedChange = useCallback(
+    (expanded: boolean): void => {
+      setChatExpanded(expanded);
+      memberFocus.handleExpandedChange(expanded);
+      props.onChatExpandedChange?.(expanded);
+    },
+    [memberFocus.handleExpandedChange, props.onChatExpandedChange]
+  );
+  const handleChatEscape = useCallback((): boolean | void => {
+    if (memberFocus.handleChatEscape()) {
+      return true;
+    }
+
+    return props.onChatEscape?.();
+  }, [memberFocus.handleChatEscape, props.onChatEscape]);
+  const openMember = props.disableExpand === true ? props.onOpenMember : memberFocus.handleOpenMember;
+  const tagHandlers = props.disableExpand === true ? props.tagHandlers : memberFocus.mergedTagHandlers;
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
   const chatTimeTarget = useMemo(
@@ -235,7 +266,7 @@ export function GlobalChatRoomView(props: {
               {member ? (
                 <UniformMemberAvatarButton
                   member={member}
-                  onClick={() => props.onOpenMember(member)}
+                  onClick={() => openMember(member)}
                   signal={message.signal}
                 />
               ) : (
@@ -246,7 +277,7 @@ export function GlobalChatRoomView(props: {
                 <div className="message-meta">
                   <button
                     className={'message-author-button signal-text-' + message.signal.toLowerCase()}
-                    onClick={() => member && props.onOpenMember(member)}
+                    onClick={() => member && openMember(member)}
                     type="button"
                   >
                     {authorLabel}
@@ -258,7 +289,7 @@ export function GlobalChatRoomView(props: {
                   <TaggedMessageBody
                     body={message.body}
                     {...(genreEmojis.length > 0 ? { customEmojis: genreEmojis } : {})}
-                    {...(props.tagHandlers ? { handlers: props.tagHandlers } : {})}
+                    {...(tagHandlers ? { handlers: tagHandlers } : {})}
                   />
                 </p>
               </ChatMessageBubble>
@@ -401,7 +432,7 @@ export function GlobalChatRoomView(props: {
               <button
                 className={'chat-member-card' + chatMemberCardTierClass(member)}
                 key={member.id}
-                onClick={() => props.onOpenMember(member)}
+                onClick={() => openMember(member)}
                 type="button"
               >
                 <UniformMemberAvatar member={member} />
@@ -415,16 +446,11 @@ export function GlobalChatRoomView(props: {
 
       <ChatWindowExpandable
         {...(props.chat.kind === 'genre' ? { className: 'chat-theme-ocean' } : {})}
-        {...(props.detachedLiveFeed
-          ? {}
-          : {
-              ...(props.expandedAside ? { expandedAside: props.expandedAside } : {}),
-              ...(props.renderExpandedAside ? { renderExpandedAside: props.renderExpandedAside } : {}),
-              ...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {}),
-              ...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {}),
-            })}
-        {...(props.onChatExpandedChange ? { onExpandedChange: props.onChatExpandedChange } : {})}
-        {...(props.onChatEscape ? { onEscape: props.onChatEscape } : {})}
+        {...(props.disableExpand !== true ? { renderExpandedAside: memberFocus.renderExpandedAside } : {})}
+        {...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {})}
+        {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
+        onExpandedChange={handleChatExpandedChange}
+        onEscape={handleChatEscape}
         {...(props.disableExpand ? { disableExpand: true } : {})}
       >
         {chatWindowBody}

@@ -5460,6 +5460,76 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   min-height: 0;
 }
 
+.expanded-chat-member-aside {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.expanded-chat-member-aside.is-empty {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: rgba(214, 232, 255, 0.82);
+}
+
+.expanded-chat-member-aside.is-empty strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.expanded-chat-member-aside.is-empty .protocol-hint {
+  margin: 0;
+  max-width: 22ch;
+}
+
+.expanded-chat-member-aside-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.expanded-chat-member-aside-head strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.expanded-chat-member-aside-head small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(198, 214, 236, 0.78);
+  font-size: 0.78rem;
+}
+
+.expanded-chat-member-live-shell {
+  min-height: 0;
+  display: grid;
+}
+
+.expanded-chat-member-aside.is-live-feed
+  .embedded-social-player.is-featured-embed-player:not(.is-x-post-embed-player) {
+  max-height: none;
+  height: 100%;
+  min-height: 0;
+}
+
+.expanded-chat-member-aside.is-passport-preview {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.expanded-chat-member-aside.is-passport-preview .member-public-chat-passport-peek-card {
+  min-height: 0;
+  overflow: auto;
+}
+
 .profile-passport-carousel-layout {
   display: flex;
   align-items: flex-start;
