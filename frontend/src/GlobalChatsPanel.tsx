@@ -336,13 +336,43 @@ export function GlobalChatRoomView(props: {
   );
 
   const useHubLayout = props.hubLayout === true;
+  const useGenreSidebarPresence =
+    props.chat.kind === 'genre' && props.compact !== true && !useHubLayout;
+
+  const presenceMemberCards = visibleMembers.map((member) => (
+    <button
+      className={'chat-member-card' + chatMemberCardTierClass(member)}
+      key={member.id}
+      onClick={() => openMember(member)}
+      type="button"
+    >
+      <UniformMemberAvatar member={member} />
+      <strong>{member.name}</strong>
+      <span>{memberPassportTierLabel(member, connectedOwner)}</span>
+    </button>
+  ));
+
+  const chatExpandable = (
+    <ChatWindowExpandable
+      {...(props.chat.kind === 'genre' ? { className: 'chat-theme-ocean' } : {})}
+      {...(props.disableExpand !== true ? { renderExpandedAside: memberFocus.renderExpandedAside } : {})}
+      {...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {})}
+      {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
+      onExpandedChange={handleChatExpandedChange}
+      onEscape={handleChatEscape}
+      {...(props.disableExpand ? { disableExpand: true } : {})}
+    >
+      {chatWindowBody}
+    </ChatWindowExpandable>
+  );
 
   return (
     <div
       className={
         'global-chat-room-pane' +
         (props.compact ? ' is-compact-global-chat' : '') +
-        (useHubLayout ? ' is-hub-global-chat' : '')
+        (useHubLayout ? ' is-hub-global-chat' : '') +
+        (useGenreSidebarPresence ? ' has-genre-presence-sidebar' : '')
       }
       ref={viewportRef}
     >
@@ -391,7 +421,7 @@ export function GlobalChatRoomView(props: {
             ) : null}
           </div>
         ) : null
-      ) : useHubLayout ? null : (
+      ) : useHubLayout || useGenreSidebarPresence ? null : (
         <div className="chat-presence-rail is-hub-chat-presence-rail">
           <div className="chat-presence-channel is-hub-chat-presence-channel">
             <div className="global-chat-presence-copy is-centered-hub-chat-heading">
@@ -427,34 +457,25 @@ export function GlobalChatRoomView(props: {
             ) : null}
           </div>
 
-          <div className="chat-member-strip">
-            {visibleMembers.map((member) => (
-              <button
-                className={'chat-member-card' + chatMemberCardTierClass(member)}
-                key={member.id}
-                onClick={() => openMember(member)}
-                type="button"
-              >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>{memberPassportTierLabel(member, connectedOwner)}</span>
-              </button>
-            ))}
-          </div>
+          <div className="chat-member-strip">{presenceMemberCards}</div>
         </div>
       )}
 
-      <ChatWindowExpandable
-        {...(props.chat.kind === 'genre' ? { className: 'chat-theme-ocean' } : {})}
-        {...(props.disableExpand !== true ? { renderExpandedAside: memberFocus.renderExpandedAside } : {})}
-        {...(props.expandedChatNotice ? { expandedNotice: props.expandedChatNotice } : {})}
-        {...(props.expandedChatHeading ? { expandedHeading: props.expandedChatHeading } : {})}
-        onExpandedChange={handleChatExpandedChange}
-        onEscape={handleChatEscape}
-        {...(props.disableExpand ? { disableExpand: true } : {})}
-      >
-        {chatWindowBody}
-      </ChatWindowExpandable>
+      {useGenreSidebarPresence ? (
+        <>
+          <aside aria-label="Active lounge members" className="genre-lounge-presence-sidebar">
+            <header className="genre-lounge-presence-sidebar-head">
+              {presenceKindLabel ? <span className="mini-badge">{presenceKindLabel}</span> : null}
+              <strong>{liveStats.membersInside.toLocaleString()} inside</strong>
+              <p>{presenceMeta}</p>
+            </header>
+            <div className="genre-lounge-presence-member-list">{presenceMemberCards}</div>
+          </aside>
+          <div className="genre-lounge-chat-main">{chatExpandable}</div>
+        </>
+      ) : (
+        chatExpandable
+      )}
     </div>
   );
 }

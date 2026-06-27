@@ -1,6 +1,11 @@
 import type { ReactElement } from 'react';
 
-import { parseCustomEmojiSegments, type NamiCustomEmoji } from './nami-custom-emojis-store.js';
+import { mergeQualifiedChatEmojis } from './chat-composer-emojis.js';
+import {
+  parseCustomEmojiSegments,
+  useNamiCustomEmojis,
+  type NamiCustomEmoji,
+} from './nami-custom-emojis-store.js';
 import { parseTaggedMessage } from './nami-tag-registry.js';
 
 export type TagNavigationHandlers = {
@@ -50,8 +55,10 @@ function renderTextWithEmojis(
 }
 
 export function TaggedMessageBody(props: TaggedMessageBodyProps): ReactElement {
+  useNamiCustomEmojis();
   const segments = parseTaggedMessage(props.body);
   const handlers = props.handlers ?? {};
+  const chatEmojis = mergeQualifiedChatEmojis(props.customEmojis ?? []);
 
   return (
     <span className="nami-tagged-message-body">
@@ -61,7 +68,7 @@ export function TaggedMessageBody(props: TaggedMessageBodyProps): ReactElement {
 
           return (
             <span key={'text-' + index}>
-              {renderTextWithEmojis(value, 'tag-text-' + index, props.customEmojis)}
+              {renderTextWithEmojis(value, 'tag-text-' + index, chatEmojis)}
             </span>
           );
         }

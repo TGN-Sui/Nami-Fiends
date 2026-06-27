@@ -7,7 +7,7 @@ import {
 } from './embedded-feed-preferences.js';
 import { withMemberAvatar } from './member-avatar-store.js';
 import { memberWatchableLiveFeed } from './member-public-chat.js';
-import { withMemberProfile } from './member-profile-store.js';
+import { resolveMemberPublicBio, withMemberProfile } from './member-profile-store.js';
 import { SocialEmbedPlayer } from './SocialEmbedPlayer.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
@@ -78,15 +78,17 @@ export function ExpandedChatMemberPassportPanel(props: {
   onClear: () => void;
   hint?: string;
 }): ReactElement {
+  const memberBio = resolveMemberPublicBio(props.member);
+
   return (
     <section
       aria-label={props.member.name + ' passport preview'}
       className={
-        'expanded-chat-member-aside is-passport-preview member-public-chat-passport-peek' +
+        'expanded-chat-member-aside is-passport-preview' +
         (props.layout === 'horizontal' ? ' is-horizontal-passport-peek-mode' : '')
       }
     >
-      <div className="member-public-chat-passport-peek-toolbar">
+      <div className="expanded-chat-member-passport-toolbar member-public-chat-passport-peek-toolbar">
         <div
           className="member-public-chat-passport-peek-toolbar-copy"
           title={props.hint ?? 'Only you can see this passport while expanded chat stays open.'}
@@ -134,13 +136,20 @@ export function ExpandedChatMemberPassportPanel(props: {
         </div>
       </div>
 
-      <div
-        className={
-          'member-public-chat-passport-peek-card' +
-          (props.layout === 'horizontal' ? ' is-horizontal-passport-peek' : '')
-        }
-      >
-        <TcgFoilPassportCard layout={props.layout} member={props.member} />
+      <div className="expanded-chat-member-passport-scroll">
+        <div
+          className={
+            'expanded-chat-member-passport-card member-public-chat-passport-peek-card' +
+            (props.layout === 'horizontal' ? ' is-horizontal-passport-peek' : '')
+          }
+        >
+          <TcgFoilPassportCard layout={props.layout} member={props.member} />
+        </div>
+
+        <div className="expanded-chat-member-passport-bio">
+          <span className="mini-badge">Bio</span>
+          <p>{memberBio}</p>
+        </div>
       </div>
     </section>
   );

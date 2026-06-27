@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
+import { mergeQualifiedChatEmojis } from './chat-composer-emojis.js';
 import { emojiShortcodeToken, useNamiCustomEmojis, type NamiCustomEmoji } from './nami-custom-emojis-store.js';
 
 type ChatEmojiPickerProps = {
@@ -10,8 +11,8 @@ type ChatEmojiPickerProps = {
 };
 
 export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | null {
-  const platformEmojis = useNamiCustomEmojis();
-  const emojis = props.emojis ?? platformEmojis;
+  useNamiCustomEmojis();
+  const emojis = mergeQualifiedChatEmojis(props.emojis ?? []);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 

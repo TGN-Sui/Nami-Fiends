@@ -5521,13 +5521,173 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 }
 
 .expanded-chat-member-aside.is-passport-preview {
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
-.expanded-chat-member-aside.is-passport-preview .member-public-chat-passport-peek-card {
+.expanded-chat-member-passport-toolbar {
+  flex: 0 0 auto;
+}
+
+.expanded-chat-member-passport-scroll {
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 2px 8px;
+}
+
+.expanded-chat-member-passport-card {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 300px;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.expanded-chat-member-aside.is-passport-preview:not(.is-horizontal-passport-peek-mode)
+  .expanded-chat-member-passport-card
+  .nami-profile-card-shell {
+  width: 100%;
+  max-width: 300px;
+  margin-inline: auto;
+}
+
+.expanded-chat-member-aside.is-passport-preview:not(.is-horizontal-passport-peek-mode)
+  .expanded-chat-member-passport-card
+  .nami-profile-card-avatar {
+  width: 112px;
+  height: 112px;
+  margin-inline: auto;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.expanded-chat-member-aside.is-passport-preview .nami-profile-card-avatar .uniform-member-avatar,
+.expanded-chat-member-aside.is-passport-preview .nami-profile-card-avatar .uniform-member-avatar-image,
+.expanded-chat-member-aside.is-passport-preview .nami-profile-card-avatar .member-avatar-live-shell {
+  width: 100%;
+  height: 100%;
+}
+
+.expanded-chat-member-aside.is-passport-preview .nami-profile-card-avatar .uniform-member-avatar-image {
+  object-fit: cover;
+}
+
+.expanded-chat-member-aside.is-passport-preview.is-horizontal-passport-peek-mode
+  .expanded-chat-member-passport-card {
+  max-width: none;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.expanded-chat-member-passport-bio {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  background: rgba(8, 14, 24, 0.78);
+}
+
+.expanded-chat-member-passport-bio .mini-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.expanded-chat-member-passport-bio p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(210, 228, 248, 0.92);
+  white-space: pre-wrap;
+}
+
+.global-chat-room-pane.has-genre-presence-sidebar {
+  display: grid;
+  grid-template-columns: minmax(108px, 128px) minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.genre-lounge-presence-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid rgba(120, 190, 255, 0.14);
+  background: rgba(6, 12, 22, 0.72);
+}
+
+.genre-lounge-presence-sidebar-head {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 4px;
+  padding: 10px 8px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(120, 190, 255, 0.1);
+}
+
+.genre-lounge-presence-sidebar-head strong {
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.genre-lounge-presence-sidebar-head p {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.25;
+  color: rgba(188, 210, 235, 0.72);
+}
+
+.genre-lounge-presence-member-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 6px 10px;
+}
+
+.genre-lounge-presence-member-list .chat-member-card {
+  min-width: 0;
+  width: 100%;
+  padding: 8px 4px;
+  gap: 5px;
+}
+
+.genre-lounge-presence-member-list .chat-member-card strong,
+.genre-lounge-presence-member-list .chat-member-card span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.64rem;
+}
+
+.genre-lounge-presence-member-list .chat-member-card strong {
+  font-size: 0.68rem;
+}
+
+.genre-lounge-chat-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.genre-lounge-chat-stack .global-chat-room-pane.has-genre-presence-sidebar {
+  min-height: 0;
+  height: 100%;
 }
 
 .profile-passport-carousel-layout {
@@ -11414,7 +11574,11 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 .gamehub-genre-chats-inline-panel .genre-lounge-chat-stack .global-message-stack {
   min-height: 120px;
-  max-height: min(38vh, 380px);
+  max-height: min(32vh, 320px);
+}
+
+.gamehub-genre-chats-inline-panel .genre-lounge-chat-stack .global-chat-room-pane.has-genre-presence-sidebar {
+  max-height: min(48vh, 480px);
 }
 
 .gamehub-genre-chats-inline-head {
