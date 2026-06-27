@@ -154,7 +154,6 @@ export function GlobalChatRoomView(props: {
   onChatEscape?: () => boolean | void;
   onModerationDelete?: () => void;
   disableExpand?: boolean;
-  detachedLiveFeed?: boolean;
 }): ReactElement {
   const selfMember = useSelfMember();
   const connectedOwner = readSignedInOwner();
@@ -463,9 +462,9 @@ export function GenreLoungeRoomTabs(props: {
   );
 }
 
-export function GenreLoungeSplitLayout(props: {
+export function GenreChatRoomPanel(props: {
   activeChatId: string;
-  onSelectChat: (chatId: string) => void;
+  onActiveChatIdChange?: (chatId: string) => void;
   onOpenMember: (member: NamiMember) => void;
   tagHandlers?: TagNavigationHandlers;
   compact?: boolean;
@@ -474,49 +473,21 @@ export function GenreLoungeSplitLayout(props: {
     genreOfficialChats.find((chat) => chat.id === props.activeChatId) ?? genreOfficialChats[0]!;
 
   return (
-    <div className={'genre-lounge-split-layout' + (props.compact ? ' is-compact-genre-lounge-split' : '')}>
-      <aside aria-label="Genre lounge live feed" className="genre-lounge-live-feed-panel">
-        <header className="genre-lounge-live-feed-head">
-          <span className="mini-badge">Live feed</span>
-          <strong>{activeChat.title}</strong>
-        </header>
-        <div className="genre-lounge-live-feed-body">
-          <GenreChatBroadcastAside chat={activeChat} isExpanded={true} />
-        </div>
-      </aside>
-
-      <div className="genre-lounge-chat-column">
-        <GenreLoungeRoomTabs activeChatId={activeChat.id} onSelectChat={props.onSelectChat} />
-        <GlobalChatRoomView
-          chat={activeChat}
-          detachedLiveFeed
-          disableExpand
-          key={activeChat.id}
-          onOpenMember={props.onOpenMember}
-          showCompactHead={false}
-          {...(props.compact === true ? { compact: true } : {})}
-          {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
-        />
-      </div>
+    <div className={'genre-lounge-chat-stack' + (props.compact ? ' is-compact-genre-lounge-chat' : '')}>
+      <GenreLoungeRoomTabs
+        activeChatId={activeChat.id}
+        onSelectChat={(chatId) => props.onActiveChatIdChange?.(chatId)}
+      />
+      <GlobalChatRoomView
+        chat={activeChat}
+        key={activeChat.id}
+        onOpenMember={props.onOpenMember}
+        showCompactHead={false}
+        {...genreChatExpandProps(activeChat, { compact: props.compact === true })}
+        {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
+        {...(props.compact ? { compact: true } : {})}
+      />
     </div>
-  );
-}
-
-export function GenreChatRoomPanel(props: {
-  activeChatId: string;
-  onActiveChatIdChange?: (chatId: string) => void;
-  onOpenMember: (member: NamiMember) => void;
-  tagHandlers?: TagNavigationHandlers;
-  compact?: boolean;
-}): ReactElement {
-  return (
-    <GenreLoungeSplitLayout
-      activeChatId={props.activeChatId}
-      onSelectChat={(chatId) => props.onActiveChatIdChange?.(chatId)}
-      onOpenMember={props.onOpenMember}
-      {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
-      {...(props.compact ? { compact: true } : {})}
-    />
   );
 }
 
@@ -931,11 +902,11 @@ export function PinnedGenreChatDock(props: {
         </div>
       </header>
 
-      <GenreLoungeSplitLayout
+      <GenreChatRoomPanel
         activeChatId={activeChat.id}
         compact
+        onActiveChatIdChange={props.onSelectChat}
         onOpenMember={props.onOpenMember}
-        onSelectChat={props.onSelectChat}
         {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
       />
 

@@ -357,7 +357,7 @@ export function ChannelProfileChatSection(props: {
                   ? 'Message ' + props.channel.name + ' · ' + tagSuggestionHint()
                   : 'Sign in and verify to send messages'
               }
-              sendButtonClassName=""
+              sendButtonClassName="channel-chat-send-button"
               value={chatDraft}
             />
           </ChatWindowExpandable>
