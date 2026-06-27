@@ -142,7 +142,9 @@ export async function buildLaunchOpsSummary(
   const publicPayment = getPublicPaymentConfig();
   const corePolicyReady =
     config.testLaunch && !paymentConfig.allowMockProviders && config.officialOwner.trim() !== '';
-  const cardCheckoutReady = publicPayment.cardEnabled && publicPayment.stripePublishableKey !== null;
+  const cardCheckoutReady =
+    !paymentConfig.cardCheckoutEnabled ||
+    (publicPayment.cardEnabled && publicPayment.stripePublishableKey !== null);
   const cryptoCheckoutReady = publicPayment.cryptoEnabled;
 
   const pendingActions: string[] = [];
@@ -153,7 +155,7 @@ export async function buildLaunchOpsSummary(
     );
   }
 
-  if (!publicPayment.stripePublishableKey) {
+  if (paymentConfig.cardCheckoutEnabled && !publicPayment.stripePublishableKey) {
     pendingActions.push('Set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, and STRIPE_WEBHOOK_SECRET on Render.');
   }
 

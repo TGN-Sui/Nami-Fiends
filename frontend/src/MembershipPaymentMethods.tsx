@@ -1,5 +1,7 @@
 import { useState, type ReactElement } from 'react';
 
+import { resolveVisibleCheckoutRails } from './membership-checkout-visibility.js';
+import type { PublicPaymentConfig } from './membership-payments-api.js';
 import {
   MEMBERSHIP_CHECKOUT_RAILS,
   MEMBERSHIP_CRYPTO_ASSETS,
@@ -12,11 +14,14 @@ type MembershipPaymentMethodsProps = {
   selectedCryptoAsset: MembershipCryptoAsset | null;
   onSelectRail: (rail: MembershipCheckoutRail) => void;
   onSelectCryptoAsset: (asset: MembershipCryptoAsset) => void;
+  paymentConfig?: PublicPaymentConfig | null;
   compact?: boolean;
 };
 
 export function MembershipPaymentMethods(props: MembershipPaymentMethodsProps): ReactElement {
   const [otherExpanded, setOtherExpanded] = useState(props.selectedRail === 'other');
+  const visibleRails = new Set(resolveVisibleCheckoutRails(props.paymentConfig));
+  const checkoutRails = MEMBERSHIP_CHECKOUT_RAILS.filter((rail) => visibleRails.has(rail.id));
 
   function handleRailSelect(rail: MembershipCheckoutRail): void {
     props.onSelectRail(rail);
@@ -43,11 +48,15 @@ export function MembershipPaymentMethods(props: MembershipPaymentMethodsProps): 
       <div className="membership-payment-methods-heading">
         <span className="mini-badge">Checkout</span>
         <strong>Payment method</strong>
-        <p>Credit/debit card and PayPal settle on Nami servers. Other opens SUI, USDC, or $GOON wallet pay.</p>
+        <p>
+          {visibleRails.has('card') || visibleRails.has('paypal')
+            ? 'Card and PayPal settle on Nami servers. Other opens SUI, USDC, or $GOON wallet pay.'
+            : 'Pay with SUI, USDC on Sui, or $GOON from your connected wallet to the treasury address.'}
+        </p>
       </div>
 
       <div className="membership-payment-method-grid is-three-rail-grid">
-        {MEMBERSHIP_CHECKOUT_RAILS.map((rail) => {
+        {checkoutRails.map((rail) => {
           const selected = props.selectedRail === rail.id;
 
           return (

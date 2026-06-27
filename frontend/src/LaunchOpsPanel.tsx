@@ -100,7 +100,13 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
               </li>
               <li className="protocol-timeline-item">
                 Card checkout (Stripe){' '}
-                <strong>{summary.exit_gates.card_checkout_ready ? 'ready' : 'blocked'}</strong>
+                <strong>
+                  {!summary.payment_readiness.card_checkout_enabled
+                    ? 'disabled'
+                    : summary.exit_gates.card_checkout_ready
+                      ? 'ready'
+                      : 'blocked'}
+                </strong>
               </li>
               <li className="protocol-timeline-item">
                 Crypto checkout (treasury){' '}

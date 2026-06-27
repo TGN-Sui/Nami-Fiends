@@ -1,6 +1,11 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { getSelfMember } from './member-access.js';
+import {
+  defaultCheckoutRail,
+  membershipCheckoutMethodsSummary,
+  resolveVisibleCheckoutRails,
+} from './membership-checkout-visibility.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
 import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipOnChainFulfillmentCard } from './MembershipOnChainFulfillmentCard.js';
@@ -27,6 +32,7 @@ import {
   complimentaryMembershipStatusLabel,
   hasComplimentaryMembershipAccess,
 } from './official-membership-access.js';
+import { usePublicPaymentConfig } from './use-public-payment-config.js';
 import { useProtocolOwner } from './wallet.js';
 
 const TIER_RANK: Record<PaidMembershipTier, number> = {
@@ -36,13 +42,14 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 };
 
 export function MembershipPlansPanel(): ReactElement {
+  const paymentConfig = usePublicPaymentConfig();
   const { owner } = useProtocolOwner();
   const complimentaryAccess = hasComplimentaryMembershipAccess(owner);
   const canPurchaseMembership = canPurchasePaidMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
-    planState.pendingCheckoutRail ?? 'card'
+    planState.pendingCheckoutRail ?? defaultCheckoutRail(paymentConfig)
   );
   const [cryptoAsset, setCryptoAsset] = useState<MembershipCryptoAsset | null>(
     planState.pendingCryptoAsset ?? null
@@ -54,6 +61,14 @@ export function MembershipPlansPanel(): ReactElement {
 
   const activePlan = membershipPlanForTier(effectiveMemberTier(planState));
   const pendingPlan = planState.pendingTier ? membershipPlanForTier(planState.pendingTier) : null;
+
+  useEffect(() => {
+    const visible = resolveVisibleCheckoutRails(paymentConfig);
+
+    if (!visible.includes(checkoutRail)) {
+      setCheckoutRail(defaultCheckoutRail(paymentConfig));
+    }
+  }, [checkoutRail, paymentConfig]);
 
   const statusLabel = useMemo(() => {
     if (planState.status === 'pending-upgrade') {
@@ -173,9 +188,9 @@ export function MembershipPlansPanel(): ReactElement {
           <span className="mini-badge">Membership Plans</span>
           <h2>Upgrade your Nami access</h2>
           <p>
-            Pay with Credit/debit card, PayPal, or Other (SUI, USDC on Sui, $GOON). Adventurer is $3
-            USDC/month — or claimable free with verified X.com. Card and PayPal settle on Nami
-            servers; crypto sends to treasury via wallet signature.
+            Pay with {membershipCheckoutMethodsSummary(paymentConfig)}. Adventurer is $3 USDC/month —
+            or claimable free with verified X.com. Fiat rails settle on Nami servers; crypto sends to
+            treasury via wallet signature.
           </p>
         </div>
 
@@ -197,6 +212,7 @@ export function MembershipPlansPanel(): ReactElement {
       <MembershipPaymentMethods
         onSelectCryptoAsset={setCryptoAsset}
         onSelectRail={setCheckoutRail}
+        paymentConfig={paymentConfig}
         selectedCryptoAsset={cryptoAsset}
         selectedRail={checkoutRail}
       />

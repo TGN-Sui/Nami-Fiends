@@ -31,7 +31,12 @@ nodenameRegistryId: 0x68e1b656a5fbb5534577f64321fb466512e8534da8749821b085ac8687
 
 ## Backup holder
 
-Designate one **backup holder** (co-founder or trusted ops lead) before public URL:
+**Named testnet backup (2026-06-27)**
+
+| Role | Wallet | Contact |
+|------|--------|---------|
+| Primary owner | `NAMI_OFFICIAL_OWNER` (FIEND zkLogin) | `robbier640@gmail.com` |
+| Trusted ops backup | `0x258608d20931e37c9eb3ded2aa05c20d27ae9570efd86b56080b5b062d9caca1` | `ailed.orozco53@gmail.com` |
 
 | Responsibility | Primary | Backup |
 |----------------|---------|--------|
@@ -41,10 +46,11 @@ Designate one **backup holder** (co-founder or trusted ops lead) before public U
 
 **Backup setup checklist**
 
-When a backup holder is named, set on Render (optional env, clears Launch Ops warning):
+Set on Render (clears Launch Ops warning):
 
 ```text
-NAMI_ADMIN_CAP_BACKUP_HOLDER=0xBACKUP_WALLET_ADDRESS
+NAMI_ADMIN_CAP_BACKUP_HOLDER=0x258608d20931e37c9eb3ded2aa05c20d27ae9570efd86b56080b5b062d9caca1
+NAMI_ADMIN_CAP_BACKUP_HOLDER_EMAIL=ailed.orozco53@gmail.com
 ```
 
 ```text
