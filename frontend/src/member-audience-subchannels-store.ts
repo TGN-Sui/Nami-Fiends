@@ -1,14 +1,22 @@
 import { useSyncExternalStore } from 'react';
 
-import { memberFeatureTier } from './member-access.js';
+import type { GlobalChatRoom } from './global-chats.js';
+import { isMemberVerified, memberFeatureTier } from './member-access.js';
+import { memberPublicChatId, memberPublicChatRoom } from './member-public-chat.js';
 import type { NamiMember } from './uiMockData.js';
 
 const STORAGE_KEY = 'nami.member.audience-subchannels';
+
+export const LIVE_CHAT_SLUG = 'live-chat';
+export const LIVE_CHAT_DEFAULT_TITLE = 'Live Chat';
+
+export type AudienceSubchannelKind = 'live-chat' | 'custom';
 
 export type AudienceSubchannel = {
   id: string;
   slug: string;
   title: string;
+  kind: AudienceSubchannelKind;
   voiceChatEnabled: boolean;
   createdAtMs: number;
   updatedAtMs: number;
@@ -21,6 +29,11 @@ export type MemberAudienceSubchannelsState = {
 };
 
 let cachedByHost = new Map<string, MemberAudienceSubchannelsState>();
+
+/** Test-only: clears in-memory cache between vitest cases. */
+export function resetAudienceSubchannelsStoreForTests(): void {
+  cachedByHost.clear();
+}
 
 function defaultTitle(index: number): string {
   return 'Audience room ' + (index + 1);
@@ -56,12 +69,96 @@ export function maxAudienceSubchannelsForMember(member: NamiMember): number {
   return maxAudienceSubchannelsForTier(memberFeatureTier(member));
 }
 
-function roomId(hostMemberId: string, slug: string): string {
+function customRoomId(hostMemberId: string, slug: string): string {
   return 'member-audience-' + hostMemberId + '-' + slug;
 }
 
 export function audienceSubchannelRoomId(channel: AudienceSubchannel, hostMemberId: string): string {
-  return roomId(hostMemberId, channel.slug);
+  if (channel.kind === 'live-chat' || channel.slug === LIVE_CHAT_SLUG) {
+    return memberPublicChatId(hostMemberId);
+  }
+
+  return customRoomId(hostMemberId, channel.slug);
+}
+
+function buildDefaultLiveChatChannel(hostMemberId: string): AudienceSubchannel {
+  const now = Date.now();
+
+  return {
+    id: memberPublicChatId(hostMemberId),
+    slug: LIVE_CHAT_SLUG,
+    title: LIVE_CHAT_DEFAULT_TITLE,
+    kind: 'live-chat',
+    voiceChatEnabled: false,
+    createdAtMs: now,
+    updatedAtMs: now,
+  };
+}
+
+function isLiveChatChannel(channel: AudienceSubchannel): boolean {
+  return channel.kind === 'live-chat' || channel.slug === LIVE_CHAT_SLUG;
+}
+
+function normalizeStoredChannel(
+  entry: Partial<AudienceSubchannel>,
+  hostMemberId: string
+): AudienceSubchannel | null {
+  if (typeof entry?.slug !== 'string' || typeof entry.title !== 'string') {
+    return null;
+  }
+
+  const live = isLiveChatChannel(entry as AudienceSubchannel);
+  const now = Date.now();
+
+  return {
+    id: live ? memberPublicChatId(hostMemberId) : customRoomId(hostMemberId, entry.slug),
+    slug: live ? LIVE_CHAT_SLUG : entry.slug,
+    title: entry.title.trim() || (live ? LIVE_CHAT_DEFAULT_TITLE : defaultTitle(0)),
+    kind: live ? 'live-chat' : 'custom',
+    voiceChatEnabled: entry.voiceChatEnabled === true,
+    createdAtMs: typeof entry.createdAtMs === 'number' ? entry.createdAtMs : now,
+    updatedAtMs: typeof entry.updatedAtMs === 'number' ? entry.updatedAtMs : now,
+  };
+}
+
+function normalizeChannels(hostMemberId: string, channels: AudienceSubchannel[]): AudienceSubchannel[] {
+  const custom = channels.filter((entry) => !isLiveChatChannel(entry));
+  const storedLive = channels.find((entry) => isLiveChatChannel(entry));
+  const live = storedLive
+    ? {
+        ...storedLive,
+        id: memberPublicChatId(hostMemberId),
+        slug: LIVE_CHAT_SLUG,
+        kind: 'live-chat' as const,
+      }
+    : buildDefaultLiveChatChannel(hostMemberId);
+
+  return [live, ...custom];
+}
+
+export function countCustomAudienceSubchannels(hostMemberId: string): number {
+  return readMemberAudienceSubchannels(hostMemberId).filter((entry) => entry.kind === 'custom').length;
+}
+
+export function audienceSubchannelChatRoom(
+  channel: AudienceSubchannel,
+  hostMember: NamiMember
+): GlobalChatRoom {
+  if (channel.kind === 'live-chat' || channel.slug === LIVE_CHAT_SLUG) {
+    return memberPublicChatRoom(hostMember);
+  }
+
+  return {
+    id: audienceSubchannelRoomId(channel, hostMember.id),
+    title: channel.title,
+    kind: 'temporary',
+    createdBy: hostMember.name,
+    creatorVerified: isMemberVerified(hostMember),
+    activeMembers: 12 + hostMember.id.charCodeAt(1) % 24,
+    voiceEnabled: channel.voiceChatEnabled,
+    isOfficial: false,
+    closesOnExit: false,
+  };
 }
 
 function readAllStates(): Record<string, MemberAudienceSubchannelsState> {
@@ -95,27 +192,18 @@ export function readMemberAudienceSubchannels(hostMemberId: string): AudienceSub
   const states = readAllStates();
   const state = states[hostMemberId];
 
-  if (!state || !Array.isArray(state.channels)) {
-    cachedByHost.set(hostMemberId, {
-      hostMemberId,
-      channels: [],
-      updatedAtMs: Date.now(),
-    });
-    return [];
-  }
-
-  const channels = state.channels.filter(
-    (entry): entry is AudienceSubchannel =>
-      typeof entry?.id === 'string' &&
-      typeof entry.slug === 'string' &&
-      typeof entry.title === 'string' &&
-      typeof entry.voiceChatEnabled === 'boolean'
-  );
+  const rawChannels = state?.channels;
+  const parsedChannels = Array.isArray(rawChannels)
+    ? rawChannels
+        .map((entry) => normalizeStoredChannel(entry, hostMemberId))
+        .filter((entry): entry is AudienceSubchannel => entry !== null)
+    : [];
+  const channels = normalizeChannels(hostMemberId, parsedChannels);
 
   cachedByHost.set(hostMemberId, {
     hostMemberId,
     channels,
-    updatedAtMs: state.updatedAtMs ?? Date.now(),
+    updatedAtMs: state?.updatedAtMs ?? Date.now(),
   });
 
   return channels;
@@ -135,9 +223,9 @@ function persistChannels(hostMemberId: string, channels: AudienceSubchannel[]): 
 
 export function canCreateAudienceSubchannel(member: NamiMember): boolean {
   const limit = maxAudienceSubchannelsForMember(member);
-  const existing = readMemberAudienceSubchannels(member.id).length;
+  const existing = countCustomAudienceSubchannels(member.id);
 
-  return existing < limit;
+  return limit > 0 && existing < limit;
 }
 
 export type AudienceSubchannelMutationResult =
@@ -155,25 +243,27 @@ export function createAudienceSubchannel(
   }
 
   const channels = readMemberAudienceSubchannels(member.id);
+  const customChannels = channels.filter((entry) => entry.kind === 'custom');
 
-  if (channels.length >= limit) {
+  if (customChannels.length >= limit) {
     return {
       ok: false,
       reason: 'You have reached your audience subchannel limit (' + limit + ').',
     };
   }
 
-  const nextTitle = title.trim() || defaultTitle(channels.length);
+  const nextTitle = title.trim() || defaultTitle(customChannels.length);
   const baseSlug = slugifyTitle(nextTitle);
   const slug = channels.some((entry) => entry.slug === baseSlug)
-    ? baseSlug + '-' + (channels.length + 1)
+    ? baseSlug + '-' + (customChannels.length + 1)
     : baseSlug;
   const now = Date.now();
 
   const channel: AudienceSubchannel = {
-    id: roomId(member.id, slug),
+    id: customRoomId(member.id, slug),
     slug,
     title: nextTitle,
+    kind: 'custom',
     voiceChatEnabled: false,
     createdAtMs: now,
     updatedAtMs: now,
@@ -254,12 +344,13 @@ export function setAudienceSubchannelVoiceEnabled(
 
 export function removeAudienceSubchannel(hostMemberId: string, channelId: string): boolean {
   const channels = readMemberAudienceSubchannels(hostMemberId);
-  const next = channels.filter((entry) => entry.id !== channelId);
+  const target = channels.find((entry) => entry.id === channelId);
 
-  if (next.length === channels.length) {
+  if (!target || target.kind === 'live-chat') {
     return false;
   }
 
+  const next = channels.filter((entry) => entry.id !== channelId);
   persistChannels(hostMemberId, next);
   return true;
 }

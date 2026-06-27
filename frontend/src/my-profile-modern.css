@@ -95,6 +95,162 @@
   background: var(--nami-theme-panel);
 }
 
+.my-profile-passport-anchor.is-passport-anchor-bare {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.my-profile-passport-side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.my-profile-passport-toolbar.is-guest-toolbar {
+  justify-content: space-between;
+}
+
+.visitor-profile-modern .visitor-profile-topbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.visitor-profile-topbar-copy h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.visitor-profile-passport-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.member-audience-subchannel-hub {
+  display: grid;
+  gap: 16px;
+}
+
+.member-audience-subchannel-hub-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: 0;
+  min-height: 420px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--nami-theme-accent) 22%, transparent);
+  overflow: hidden;
+}
+
+.member-audience-subchannel-sidebar {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--nami-theme-bg) 72%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
+}
+
+.member-audience-subchannel-sidebar-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 14%, transparent);
+}
+
+.member-audience-subchannel-sidebar-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-content: start;
+  overflow-y: auto;
+}
+
+.member-audience-subchannel-sidebar-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--nami-frost-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-audience-subchannel-sidebar-item:hover,
+.member-audience-subchannel-sidebar-item.is-active {
+  background: color-mix(in srgb, var(--nami-theme-accent) 16%, transparent);
+  color: var(--nami-theme-text);
+}
+
+.member-audience-subchannel-sidebar-hash {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.member-audience-subchannel-sidebar-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-audience-live-pill {
+  font-size: 0.62rem;
+}
+
+.member-audience-voice-pill {
+  font-size: 0.75rem;
+}
+
+.member-audience-subchannel-add {
+  width: 100%;
+  justify-content: center;
+}
+
+.member-audience-subchannel-sidebar-manage {
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--nami-theme-accent) 14%, transparent);
+}
+
+.member-audience-subchannel-chat-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  background: color-mix(in srgb, var(--nami-theme-panel) 92%, transparent);
+}
+
+.member-audience-subchannel-chat-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 14%, transparent);
+}
+
+.member-audience-subchannel-chat-head strong {
+  display: block;
+}
+
+.member-audience-subchannel-chat-head .protocol-hint {
+  margin: 4px 0 0;
+}
+
 .my-profile-passport-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -307,5 +463,19 @@
 
   .my-profile-tab-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .visitor-profile-modern .visitor-profile-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .member-audience-subchannel-hub-layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .member-audience-subchannel-sidebar {
+    border-right: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
   }
 }

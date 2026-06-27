@@ -1,18 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  audienceSubchannelRoomId,
   canCreateAudienceSubchannel,
+  countCustomAudienceSubchannels,
   createAudienceSubchannel,
+  LIVE_CHAT_SLUG,
   maxAudienceSubchannelsForTier,
   readMemberAudienceSubchannels,
+  removeAudienceSubchannel,
   renameAudienceSubchannel,
+  resetAudienceSubchannelsStoreForTests,
   setAudienceSubchannelVoiceEnabled,
 } from './member-audience-subchannels-store.js';
+import { memberPublicChatId } from './member-public-chat.js';
 import type { NamiMember } from './uiMockData.js';
 
 function member(tier: NamiMember['tier']): NamiMember {
   return {
-    id: 'm1',
+    id: 'm9',
     name: 'River',
     avatarSeed: 'river',
     signal: 'Green',
@@ -49,6 +55,8 @@ function createLocalStorageMock(): Storage {
 describe('member audience subchannels', () => {
   beforeEach(() => {
     const localStorage = createLocalStorageMock();
+    localStorage.clear();
+    resetAudienceSubchannelsStoreForTests();
     vi.stubGlobal('localStorage', localStorage);
     vi.stubGlobal('window', {
       localStorage,
@@ -65,28 +73,49 @@ describe('member audience subchannels', () => {
     expect(maxAudienceSubchannelsForTier('NPC')).toBe(0);
   });
 
-  it('creates editable titled subchannels with voice toggle', () => {
-    createAudienceSubchannel(member('Pro'), 'Coaches');
-    const channels = readMemberAudienceSubchannels('m1');
+  it('always includes a default Live Chat subchannel', () => {
+    const channels = readMemberAudienceSubchannels('m9');
 
     expect(channels).toHaveLength(1);
-    expect(channels[0]?.title).toBe('Coaches');
+    expect(channels[0]?.slug).toBe(LIVE_CHAT_SLUG);
+    expect(channels[0]?.kind).toBe('live-chat');
+    expect(channels[0]?.title).toBe('Live Chat');
+    expect(audienceSubchannelRoomId(channels[0]!, 'm9')).toBe(memberPublicChatId('m9'));
+  });
 
-    renameAudienceSubchannel('m1', channels[0]!.id, 'VIP Coaches');
-    setAudienceSubchannelVoiceEnabled('m1', channels[0]!.id, true);
+  it('creates editable titled subchannels with voice toggle', () => {
+    createAudienceSubchannel(member('Pro'), 'Coaches');
+    const channels = readMemberAudienceSubchannels('m9');
 
-    const updated = readMemberAudienceSubchannels('m1')[0];
+    expect(channels).toHaveLength(2);
+    expect(channels[1]?.title).toBe('Coaches');
+    expect(channels[1]?.kind).toBe('custom');
+    expect(countCustomAudienceSubchannels('m9')).toBe(1);
+
+    renameAudienceSubchannel('m9', channels[1]!.id, 'VIP Coaches');
+    setAudienceSubchannelVoiceEnabled('m9', channels[1]!.id, true);
+
+    const updated = readMemberAudienceSubchannels('m9')[1];
 
     expect(updated?.title).toBe('VIP Coaches');
     expect(updated?.voiceChatEnabled).toBe(true);
   });
 
-  it('enforces the pro tier cap', () => {
+  it('enforces the pro tier cap for custom channels only', () => {
     createAudienceSubchannel(member('Pro'), 'One');
     createAudienceSubchannel(member('Pro'), 'Two');
     createAudienceSubchannel(member('Pro'), 'Three');
 
     expect(canCreateAudienceSubchannel(member('Pro'))).toBe(false);
     expect(createAudienceSubchannel(member('Pro'), 'Four').ok).toBe(false);
+    expect(readMemberAudienceSubchannels('m9')).toHaveLength(4);
+    expect(countCustomAudienceSubchannels('m9')).toBe(3);
+  });
+
+  it('cannot remove the default Live Chat subchannel', () => {
+    const live = readMemberAudienceSubchannels('m9')[0]!;
+
+    expect(removeAudienceSubchannel('m9', live.id)).toBe(false);
+    expect(readMemberAudienceSubchannels('m9')).toHaveLength(1);
   });
 });
