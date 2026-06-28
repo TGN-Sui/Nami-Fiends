@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { ArcadeBackgroundMedia } from './ArcadeBackgroundMedia.js';
+import { ArcadeMusicPlayer } from './ArcadeMusicPlayer.js';
 import { ArcadeBubbleGame, type ArcadeBubbleGameSummary } from './ArcadeBubbleGame.js';
 import { arcadeBubbleModeLabel, type ArcadeBubbleMode } from './arcade-bubble-game.js';
 import {
@@ -59,6 +60,19 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
   const startCabinet = useCallback((): void => {
     playArcadeMenuSelectSfx();
     setCabinetStarted(true);
+  }, []);
+
+  const returnToTitle = useCallback((): void => {
+    playArcadeMenuSelectSfx();
+    setCabinetStarted(false);
+    setMenuReady(false);
+    setFlow({
+      phase: 'menu',
+      selectedIndex: 0,
+      mode: null,
+      result: null,
+      lastSummary: null,
+    });
   }, []);
 
   const moveSelection = useCallback(
@@ -210,6 +224,31 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cabinetStarted, flow.phase, launchSelectedGame, moveSelection, startCabinet, startMode]);
+
+  function renderExitMenu(): ReactElement {
+    return (
+      <nav aria-label="Leave arcade" className="arcade-screen-exit-menu">
+        <span className="arcade-screen-exit-label">EXIT TO</span>
+        <button className="arcade-screen-exit-button" onClick={returnToTitle} type="button">
+          Title Screen
+        </button>
+        <button
+          className="arcade-screen-exit-button"
+          onClick={() => _props.onExitToHub('hub')}
+          type="button"
+        >
+          Nami Hub
+        </button>
+        <button
+          className="arcade-screen-exit-button"
+          onClick={() => _props.onExitToHub('gamehub')}
+          type="button"
+        >
+          Game Hub
+        </button>
+      </nav>
+    );
+  }
 
   function renderModeSelect(): ReactElement {
     return (
@@ -431,46 +470,33 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
           </div>
         </aside>
 
-        <nav aria-label="Leave arcade" className="arcade-screen-exit-menu">
-          <span className="arcade-screen-exit-label">EXIT TO</span>
-          <button
-            className="arcade-screen-exit-button"
-            onClick={() => _props.onExitToHub('hub')}
-            type="button"
-          >
-            Nami Hub
-          </button>
-          <button
-            className="arcade-screen-exit-button"
-            onClick={() => _props.onExitToHub('gamehub')}
-            type="button"
-          >
-            Game Hub
-          </button>
-        </nav>
+        {renderExitMenu()}
       </>
     );
   }
 
-  if (!cabinetStarted) {
-    return (
-      <div className="arcade-screen arcade-screen-attract">
-        <div className="arcade-screen-attract-stage">
-          <h1 className="arcade-screen-attract-title">ARCADE</h1>
-          <button
-            aria-label="Press start to open the arcade cabinet"
-            className="arcade-press-start-button"
-            onClick={startCabinet}
-            type="button"
-          >
-            <span className="arcade-press-start-label">PRESS START</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const playLobbyMusic = flow.phase !== 'playing';
+  const activeGameId = flow.phase === 'playing' ? selectedGame.id : null;
 
   return (
+    <>
+      <ArcadeMusicPlayer activeGameId={activeGameId} playLobbyMusic={playLobbyMusic} />
+
+      {!cabinetStarted ? (
+        <div className="arcade-screen arcade-screen-attract">
+          <div className="arcade-screen-attract-stage">
+            <h1 className="arcade-screen-attract-title">ARCADE</h1>
+            <button
+              aria-label="Press start to open the arcade cabinet"
+              className="arcade-press-start-button"
+              onClick={startCabinet}
+              type="button"
+            >
+              <span className="arcade-press-start-label">PRESS START</span>
+            </button>
+          </div>
+        </div>
+      ) : (
     <div className={'arcade-screen' + (isGameActive ? ' is-arcade-game-active' : '')}>
       <div className={'nami-arcade-box' + (isGameActive ? ' is-arcade-game-active' : '')}>
         <div className="nami-arcade-box-bezel">
@@ -511,5 +537,7 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 }

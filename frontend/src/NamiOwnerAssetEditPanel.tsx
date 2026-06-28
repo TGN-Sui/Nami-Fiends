@@ -9,6 +9,15 @@ import {
   resolveArcadeBackgroundMedia,
   validateArcadeBackgroundFile,
 } from './arcade-background-store.js';
+import { isArcadeMusicSlotId } from './arcade-music.js';
+import {
+  arcadeMusicAcceptAttribute,
+  clearArcadeMusicMedia,
+  isArcadeMusicMediaRef,
+  prepareArcadeMusicUpload,
+  resolveArcadeMusicUrl,
+  validateArcadeMusicFile,
+} from './arcade-music-store.js';
 import { ARCADE_STAGE_BACKGROUND_SLOT_ID } from './arcade-stage-background.js';
 import {
   arcadeStageBackgroundAcceptAttribute,
@@ -62,7 +71,9 @@ export function NamiOwnerAssetEditPanel(props: {
           ? arcadeBackgroundAcceptAttribute()
           : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
             ? arcadeStageBackgroundAcceptAttribute()
-            : 'image/png,image/jpeg,image/webp,image/gif';
+            : isArcadeMusicSlotId(slotId)
+              ? arcadeMusicAcceptAttribute()
+              : 'image/png,image/jpeg,image/webp,image/gif';
     }
 
     fileInputRef.current?.click();
@@ -84,7 +95,9 @@ export function NamiOwnerAssetEditPanel(props: {
         ? validateArcadeBackgroundFile(file)
         : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
           ? validateArcadeStageBackgroundFile(file)
-          : validateOwnerAssetFile(file, slot?.category ?? 'brand');
+          : isArcadeMusicSlotId(slotId)
+            ? validateArcadeMusicFile(file)
+            : validateOwnerAssetFile(file, slot?.category ?? 'brand');
 
     if (validationError) {
       window.alert(validationError);
@@ -97,7 +110,9 @@ export function NamiOwnerAssetEditPanel(props: {
           ? await prepareArcadeBackgroundUpload(file)
           : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
             ? await prepareArcadeStageBackgroundUpload(file)
-            : await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
+            : isArcadeMusicSlotId(slotId)
+              ? await prepareArcadeMusicUpload(slotId, file)
+              : await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
 
       if (editMode.active) {
         setOwnerAssetDraft(slotId, storedAsset);
@@ -154,8 +169,8 @@ export function NamiOwnerAssetEditPanel(props: {
         </button>
         <p className="protocol-hint">
           Accepted formats: {OWNER_ASSET_ACCEPTED_FORMATS}, plus MP4 or WebM for Arcade backgrounds
-          (in-cabinet and full-page stage). Images are optimized automatically on upload. Save
-          before returning to Owner Dashboard.
+          (in-cabinet and full-page stage), and MP3 for Arcade lobby and per-game music. Images are
+          optimized automatically on upload. Save before returning to Owner Dashboard.
         </p>
       </div>
 
@@ -168,10 +183,13 @@ export function NamiOwnerAssetEditPanel(props: {
               : slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID
                 ? resolveArcadeStageBackgroundMedia(storedValue)
                 : null;
+          const musicPreviewUrl = isArcadeMusicSlotId(slot.id)
+            ? resolveArcadeMusicUrl(storedValue)
+            : null;
           const previewUrl =
             arcadeMedia?.kind === 'video' || arcadeMedia?.kind === 'image'
               ? arcadeMedia.url
-              : storedValue;
+              : musicPreviewUrl ?? storedValue;
           const isVideoPreview =
             storedValue !== null &&
             (slot.id === ARCADE_BACKGROUND_SLOT_ID
@@ -179,6 +197,10 @@ export function NamiOwnerAssetEditPanel(props: {
               : slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID
                 ? isArcadeStageBackgroundVideoRef(storedValue)
                 : false);
+          const isMusicPreview =
+            storedValue !== null &&
+            isArcadeMusicSlotId(slot.id) &&
+            (isArcadeMusicMediaRef(storedValue) || Boolean(musicPreviewUrl));
 
           return (
             <article className="nami-owner-asset-card" key={slot.id}>
@@ -200,6 +222,13 @@ export function NamiOwnerAssetEditPanel(props: {
                     preload="metadata"
                     src={previewUrl}
                   />
+                ) : isMusicPreview && previewUrl ? (
+                  <span className="nami-owner-asset-card-audio-preview">
+                    <span aria-hidden="true" className="nami-owner-asset-card-audio-glyph">
+                      ♫
+                    </span>
+                    <audio controls preload="metadata" src={previewUrl} />
+                  </span>
                 ) : previewUrl ? (
                   <img alt="" className="nami-owner-asset-card-preview" src={previewUrl} />
                 ) : (
@@ -225,6 +254,10 @@ export function NamiOwnerAssetEditPanel(props: {
                             await clearArcadeStageBackgroundMedia();
                           }
 
+                          if (isArcadeMusicSlotId(slot.id)) {
+                            await clearArcadeMusicMedia(slot.id);
+                          }
+
                           return;
                         }
 
@@ -234,6 +267,10 @@ export function NamiOwnerAssetEditPanel(props: {
 
                         if (slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID) {
                           await clearArcadeStageBackgroundMedia();
+                        }
+
+                        if (isArcadeMusicSlotId(slot.id)) {
+                          await clearArcadeMusicMedia(slot.id);
                         }
 
                         const saveError = await clearOwnerAsset(slot.id, owner);
@@ -255,7 +292,7 @@ export function NamiOwnerAssetEditPanel(props: {
       </div>
 
       <input
-        accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
+        accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp3,.mp3"
         className="owner-editable-image-input"
         onChange={(event) => {
           void handleFileChange(event);

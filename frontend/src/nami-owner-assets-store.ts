@@ -86,6 +86,19 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
       'Full-page backdrop behind the arcade cabinet on the Arcade route (where the platform grid used to be). Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
   },
   {
+    id: 'arcade-lobby-music',
+    label: 'Arcade lobby music',
+    category: 'scene',
+    hint:
+      'MP3 loop for the title screen and cabinet game select. Pauses when a run starts and resumes when players return to game selection.',
+  },
+  {
+    id: 'arcade-game-music-nami-bubble-pop',
+    label: 'Bubble Pop game music',
+    category: 'scene',
+    hint: 'MP3 loop for Nami Bubble Pop gameplay. Replaces lobby music during an active run.',
+  },
+  {
     id: 'sidebar-nav-userProfile',
     label: 'Profile nav icon',
     category: 'button',

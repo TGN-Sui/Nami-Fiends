@@ -9943,6 +9943,25 @@ body.is-nami-demo-perspective.is-nami-owner-edit-mode .nami-app {
   opacity: 0.72;
 }
 
+.nami-owner-asset-card-audio-preview {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: 100%;
+  padding: 8px 6px;
+}
+
+.nami-owner-asset-card-audio-glyph {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: rgba(255, 211, 110, 0.92);
+}
+
+.nami-owner-asset-card-audio-preview audio {
+  width: min(100%, 220px);
+  height: 28px;
+}
+
 .nami-owner-asset-card-copy {
   display: grid;
   gap: 4px;
