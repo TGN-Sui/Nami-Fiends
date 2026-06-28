@@ -177,8 +177,8 @@ button {
   margin: 0 auto;
 }
 
-.main-stage:has(.protocol-status-bar) {
-  padding-bottom: 72px;
+.main-stage:has(.protocol-status-bar):not(:has(.settings-screen-layout)) {
+  padding-bottom: 88px;
 }
 
 .page-title {
@@ -14877,9 +14877,9 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   background: rgba(8, 24, 40, 0.72);
 }
 
-.protocol-status-bar.is-protocol-site-footer {
+.protocol-status-bar.is-protocol-site-footer:not(.is-settings-protocol-footer) {
   position: fixed;
-  bottom: 14px;
+  bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   left: 50%;
   z-index: 110;
   width: min(520px, calc(100vw - 32px));
@@ -14887,6 +14887,16 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateX(-50%);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0.35rem;
+}
+
+.protocol-status-bar.is-protocol-site-footer:not(.is-settings-protocol-footer) p {
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .nami-app:has(.testnet-beta-legal-notice) .protocol-status-bar.is-protocol-site-footer {

@@ -284,6 +284,17 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
           'Set NAMI_WALRUS_NETWORK=testnet on Render (see render.yaml)',
         );
       }
+
+      const walrusSites = summary?.walrus_sites;
+
+      if (walrusSites?.configured && walrusSites?.site_object_id) {
+        pass('Walrus Sites configured', walrusSites.site_object_id);
+      } else {
+        warn(
+          'Walrus Sites configured',
+          'Run node scripts/deploy-walrus-sites.mjs and set NAMI_WALRUS_SITE_OBJECT_ID on Render',
+        );
+      }
     } else {
       fail('launch ops summary API', 'HTTP ' + launchSummary.status);
     }

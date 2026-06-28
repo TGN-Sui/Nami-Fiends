@@ -16,6 +16,31 @@ Local Move changes (Phase 1 membership expiration, admin caps, etc.) are validat
 
 Continue indexing and frontend/SDK work against the pinned package in `deployments/testnet/latest.json`.
 
+## Local testnet (recommended for day-to-day dev)
+
+Full step-by-step: **[docs/local-testnet-dev.md](../docs/local-testnet-dev.md)**
+
+Quick start after `git pull origin main`:
+
+```bash
+npm --prefix sdk install && npm --prefix sdk run build
+npm --prefix backend install && npm --prefix frontend install
+
+node scripts/sync-testnet-env.mjs \
+  --indexer-url http://127.0.0.1:8787 \
+  --official-owner 0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca \
+  --official-owner-email robbier640@gmail.com \
+  --zklogin-origin http://localhost:5173/
+
+npm --prefix backend run dev
+# second terminal:
+npm --prefix frontend run dev
+```
+
+Open **http://localhost:5173/** — register `http://localhost:5173/` in Google OAuth redirect URIs ([testnet-zklogin.md](../docs/testnet-zklogin.md)).
+
+---
+
 ## Testnet workflow
 
 ```bash

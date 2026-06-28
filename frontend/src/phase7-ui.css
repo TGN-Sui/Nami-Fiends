@@ -11084,8 +11084,17 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
 .main-stage:has(.settings-screen-layout) {
   overflow: hidden;
   align-self: stretch;
-  height: calc(100vh - 148px);
-  max-height: calc(100vh - 148px);
+  --nami-settings-chrome-offset: calc(
+    148px + var(--nami-demo-perspective-bar-height, 0px) + var(--nami-owner-edit-bar-height, 0px)
+  );
+  --nami-settings-viewport-slack: 16px;
+  height: calc(100vh - var(--nami-settings-chrome-offset) - var(--nami-settings-viewport-slack));
+  max-height: calc(100vh - var(--nami-settings-chrome-offset) - var(--nami-settings-viewport-slack));
+  margin-bottom: var(--nami-settings-viewport-slack);
+  padding-bottom: 0;
+}
+
+.main-stage:has(.settings-screen-layout):has(.protocol-status-bar) {
   padding-bottom: 0;
 }
 
@@ -11100,7 +11109,7 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   position: relative;
   z-index: 12;
   color: #eef7ff;
-  padding: 8px 4px 12px;
+  padding: 8px 4px 20px;
   overflow: hidden;
   background: rgba(5, 9, 15, 0.94);
   border: 1px solid rgba(117, 215, 255, 0.14);
@@ -11208,12 +11217,28 @@ body.is-nami-owner-edit-mode .badge-book-slot.is-empty-slot .owner-editable-imag
   background: rgba(24, 111, 255, 0.06);
 }
 
-.settings-screen-layout .protocol-status-bar.is-protocol-site-footer {
+.settings-screen-layout .protocol-status-bar.is-protocol-site-footer,
+.settings-screen-layout .protocol-status-bar.is-settings-protocol-footer {
   position: static;
   transform: none;
   left: auto;
+  bottom: auto;
+  z-index: 1;
   width: 100%;
-  margin-top: 8px;
+  max-width: none;
+  margin-top: 4px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0.35rem;
+}
+
+.settings-screen-layout .protocol-status-bar.is-settings-protocol-footer p {
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .crypto-community-bubble {
@@ -14087,6 +14112,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
   gap: 20px;
   align-items: stretch;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -14225,6 +14251,7 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .settings-workspace {
   min-width: 0;
   min-height: 0;
+  height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
@@ -14256,8 +14283,12 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 .settings-workspace-body {
   min-width: 0;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding-right: 4px;
+  padding-bottom: 28px;
+  scroll-padding-bottom: 24px;
 }
 
 .settings-workspace-stack {
@@ -14299,11 +14330,17 @@ button.uniform-member-avatar.is-nami-rainbow-foil-border::after {
 @media (max-width: 960px) {
   .settings-master-detail-body {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .settings-sidebar {
     position: static;
-    max-height: none;
+    max-height: min(38vh, 280px);
+    height: auto;
+  }
+
+  .settings-workspace {
+    min-height: 0;
   }
 }
 
@@ -22129,10 +22166,15 @@ html.is-nami-arcade-surface .nami-landing-grid-spotlight {
   font-size: 0.78rem;
 }
 
+.settings-workspace-body .officials-reward-studio-panel {
+  min-height: 0;
+}
+
 .officials-reward-studio-layout {
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  min-height: 0;
 }
 
 .officials-reward-studio-list ul {

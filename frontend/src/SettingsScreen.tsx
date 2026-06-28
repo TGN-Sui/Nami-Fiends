@@ -618,7 +618,7 @@ export function SettingsScreen(props: {
         </section>
       </div>
 
-      <ProtocolStatusBar />
+      <ProtocolStatusBar className="is-settings-protocol-footer" />
     </div>
   );
 }

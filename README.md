@@ -10,6 +10,12 @@ The goal is to build a portable gamer identity and trust layer with the help of 
 
 ---
 
+## Local testnet (latest code)
+
+Pull `main`, sync env, run backend + frontend on localhost — **[docs/local-testnet-dev.md](docs/local-testnet-dev.md)**.
+
+---
+
 ## Current Status
 
 ```text
