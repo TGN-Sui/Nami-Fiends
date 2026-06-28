@@ -455,27 +455,16 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
   if (!cabinetStarted) {
     return (
       <div className="arcade-screen arcade-screen-attract">
-        <div className="arcade-screen-attract-viewport">
-          <ArcadeBackgroundMedia />
-
-          <div aria-hidden="true" className="arcade-screen-atmosphere">
-            <div className="arcade-screen-rain" />
-            <div className="arcade-screen-fog" />
-            <div className="arcade-screen-scanlines" />
-            <div className="arcade-screen-vignette" />
-          </div>
-
-          <div className="arcade-screen-attract-stage">
-            <h1 className="arcade-screen-attract-title">ARCADE</h1>
-            <button
-              aria-label="Press start to open the arcade cabinet"
-              className="arcade-press-start-button"
-              onClick={startCabinet}
-              type="button"
-            >
-              <span className="arcade-press-start-label">PRESS START</span>
-            </button>
-          </div>
+        <div className="arcade-screen-attract-stage">
+          <h1 className="arcade-screen-attract-title">ARCADE</h1>
+          <button
+            aria-label="Press start to open the arcade cabinet"
+            className="arcade-press-start-button"
+            onClick={startCabinet}
+            type="button"
+          >
+            <span className="arcade-press-start-label">PRESS START</span>
+          </button>
         </div>
       </div>
     );
