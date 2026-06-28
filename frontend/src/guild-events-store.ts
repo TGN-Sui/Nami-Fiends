@@ -87,11 +87,19 @@ function readGuildEventsMap(): Record<string, StoredGuildEvent[]> {
 
     const parsed = JSON.parse(stored);
 
-    return typeof parsed === 'object' && parsed !== null
-      ? (parsed as Record<string, StoredGuildEvent[]>)
-      : shouldAutoSeedLocalData()
-        ? seedGuildEvents()
-        : emptyGuildEventsMap();
+    if (typeof parsed !== 'object' || parsed === null) {
+      return shouldAutoSeedLocalData() ? seedGuildEvents() : emptyGuildEventsMap();
+    }
+
+    const eventsMap = parsed as Record<string, StoredGuildEvent[]>;
+
+    if (Object.keys(eventsMap).length === 0 && shouldAutoSeedLocalData()) {
+      const seeded = seedGuildEvents();
+      window.localStorage.setItem(EVENTS_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+
+    return eventsMap;
   } catch {
     return shouldAutoSeedLocalData() ? seedGuildEvents() : emptyGuildEventsMap();
   }

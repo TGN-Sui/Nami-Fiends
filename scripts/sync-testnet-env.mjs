@@ -222,6 +222,9 @@ VITE_NAMI_TEST_LAUNCH=true
 VITE_NAMI_DEV_FIXTURES=false
 VITE_NAMI_REQUIRE_WALLET_AUTH=true
 
+# Local dev: showcase chats/events/calendar auto-enable when indexer is localhost (see app-config isLocalDevEnvironment).
+# Optional override: VITE_NAMI_LOCAL_DEV=true
+
 # Do not set VITE_NAMI_DEMO_OWNER on official testnet builds
 
 VITE_ZKLOGIN_CLIENT_ID=${zkloginClientId}

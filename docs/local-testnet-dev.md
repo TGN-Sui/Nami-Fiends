@@ -85,6 +85,26 @@ npm --prefix frontend run dev
 
 Open **http://localhost:5173/**
 
+### Chats, events, and calendar (local showcase)
+
+Public test launch (`VITE_NAMI_TEST_LAUNCH=true`) ships with **empty** discovery on remote deploys. Locally, Nami auto-detects `VITE_NAMI_INDEXER_URL=http://127.0.0.1:8787` and enables **local dev showcase**:
+
+- Game Hub channels and member spotlight (showcase catalog)
+- Seeded hub events and guild events (calendar + My Events)
+- Full global chat lounges (not only Official Nami Global)
+- Lounge layout mocks for genre/member pickers
+
+If surfaces stay empty after upgrading, hard-refresh once or clear stale browser storage:
+
+```javascript
+// DevTools console — optional reset
+localStorage.removeItem('nami.user.stored-events');
+localStorage.removeItem('nami.deleted-event-ids');
+location.reload();
+```
+
+Force off showcase (empty public-style UI on localhost): set `VITE_NAMI_LOCAL_DEV=false` in `frontend/.env.local`.
+
 ---
 
 ## 6. Owner tools and border art (local)
@@ -148,6 +168,7 @@ Outputs: `deployments/testnet/render.env`, `deployments/testnet/vercel.env` (pas
 | Border art not on server | Check Network for `chat-overlay-rewards/sync` → 200; run smoke script above. |
 | `EADDRINUSE` on 8787 | Stop other backend instances or change `NAMI_HTTP_PORT` in `backend/.env`. |
 | Owner console hidden | Set `VITE_NAMI_OFFICIAL_OWNER` to your zkLogin address, restart `npm run dev`. |
+| Empty chats / events / calendar | Confirm `VITE_NAMI_INDEXER_URL=http://127.0.0.1:8787`; restart frontend; clear `nami.user.stored-events` if needed. |
 
 ---
 
