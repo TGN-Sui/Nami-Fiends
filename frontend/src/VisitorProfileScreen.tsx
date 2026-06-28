@@ -13,6 +13,7 @@ import {
 } from './MemberProfileShowcase.js';
 import { usePokeReceivedCount } from './chat-poke-store.js';
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
+import { ProfilePassportViewToolbar } from './ProfilePassportViewToolbar.js';
 import { SharePassportButton } from './SharePassportButton.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import {
@@ -191,57 +192,13 @@ export function VisitorProfileScreen(props: {
         <ProfilePassportCarousel
           activeSlide={profileCarouselSlide}
           badgeBookView={<BadgeCollectorsBook key={props.member.id} member={props.member} />}
-          leadRail={
-            <div className="visitor-profile-passport-lead-rail">
-              <div
-                aria-label="Passport layout"
-                className="nami-profile-layout-switch nami-profile-stable-layout-switch visitor-profile-passport-layout-switch"
-                role="group"
-              >
-                {(['vertical', 'horizontal'] as ProfileCardLayout[]).map((layout) => (
-                  <button
-                    aria-pressed={profileCardLayout === layout}
-                    className={profileCardLayout === layout ? 'is-selected-profile-layout' : ''}
-                    key={layout}
-                    onClick={() => chooseProfileCardLayout(layout)}
-                    type="button"
-                  >
-                    {layout === 'vertical' ? 'Vertical' : 'Horizontal'}
-                  </button>
-                ))}
-              </div>
-
-              <div
-                className="profile-passport-carousel-actions visitor-profile-passport-view-tabs"
-                role="tablist"
-                aria-label="Passport card views"
-              >
-                <button
-                  aria-selected={profileCarouselSlide === 'passport'}
-                  className={
-                    'nami-surface-button profile-passport-view-tab' +
-                    (profileCarouselSlide === 'passport' ? ' is-active-view' : '')
-                  }
-                  onClick={() => setProfileCarouselSlide('passport')}
-                  role="tab"
-                  type="button"
-                >
-                  Passport
-                </button>
-                <button
-                  aria-selected={profileCarouselSlide === 'badges'}
-                  className={
-                    'nami-surface-button profile-passport-view-tab' +
-                    (profileCarouselSlide === 'badges' ? ' is-active-view' : '')
-                  }
-                  onClick={() => setProfileCarouselSlide('badges')}
-                  role="tab"
-                  type="button"
-                >
-                  Badge Book
-                </button>
-              </div>
-            </div>
+          toolbar={
+            <ProfilePassportViewToolbar
+              activeSlide={profileCarouselSlide}
+              onLayoutChange={chooseProfileCardLayout}
+              onSlideChange={setProfileCarouselSlide}
+              profileCardLayout={profileCardLayout}
+            />
           }
           passportLayout={profileCardLayout}
           passportView={
