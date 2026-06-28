@@ -28,7 +28,10 @@ function createLocalStorageMock(): Storage {
 import {
   ARCADE_BUBBLE_GAME_DURATION_MS,
   ARCADE_BUBBLE_GAME_ID,
+  GOON_POP_BUBBLE_LABELS,
   arcadeBubbleGameConfig,
+  arcadeBubbleModeLabel,
+  formatGoonPopG,
   spawnArcadeBubble,
 } from './arcade-bubble-game.js';
 import {
@@ -69,6 +72,14 @@ describe('arcade-bubble-game', () => {
     expect(bubble.lifetimeMs).toBeGreaterThanOrEqual(7_500);
     expect(bubble.lifetimeMs).toBeLessThanOrEqual(16_500);
     expect([1, 2]).toContain(bubble.points);
+    expect(GOON_POP_BUBBLE_LABELS).toContain(bubble.label);
+  });
+
+  it('uses Goon Pop run labels and G formatting', () => {
+    expect(arcadeBubbleModeLabel('normal')).toBe('Alley Run');
+    expect(arcadeBubbleModeLabel('hard')).toBe('Heat Run');
+    expect(formatGoonPopG(2)).toBe('2 G');
+    expect(formatGoonPopG(2, true)).toBe('+2 G');
   });
 });
 

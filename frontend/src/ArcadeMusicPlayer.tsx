@@ -1,14 +1,18 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 
+import { useArcadeAudioPreferences } from './arcade-audio-store.js';
 import { arcadeGameMusicSlotId, ARCADE_LOBBY_MUSIC_SLOT_ID } from './arcade-music.js';
 import { resolveArcadeMusicUrl } from './arcade-music-store.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import { resolveOwnerAssetUrl } from './nami-owner-edit-mode-store.js';
 import { useNamiOwnerAssets } from './nami-owner-assets-store.js';
 
+const ARCADE_LOBBY_DUCK_GAIN = 0.22;
+
 type ArcadeMusicPlayerProps = {
   activeGameId: string | null;
   playLobbyMusic: boolean;
+  duckLobbyMusic?: boolean;
 };
 
 async function playLoop(audio: HTMLAudioElement, url: string): Promise<void> {
@@ -35,7 +39,21 @@ function pauseAndReset(audio: HTMLAudioElement): void {
   }
 }
 
+function applyArcadeAudioLevels(
+  lobbyAudio: HTMLAudioElement,
+  gameAudio: HTMLAudioElement,
+  volume: number,
+  muted: boolean,
+  duckLobbyMusic: boolean,
+): void {
+  lobbyAudio.volume = muted ? 0 : volume * (duckLobbyMusic ? ARCADE_LOBBY_DUCK_GAIN : 1);
+  lobbyAudio.muted = muted;
+  gameAudio.volume = volume;
+  gameAudio.muted = muted;
+}
+
 export function ArcadeMusicPlayer(props: ArcadeMusicPlayerProps): ReactElement {
+  const audioPreferences = useArcadeAudioPreferences();
   const persistedAssets = useNamiOwnerAssets();
   const mediaVersion = useChannelOwnerMediaVersion();
   const lobbyAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -59,6 +77,14 @@ export function ArcadeMusicPlayer(props: ArcadeMusicPlayerProps): ReactElement {
       return;
     }
 
+    applyArcadeAudioLevels(
+      lobbyAudio,
+      gameAudio,
+      audioPreferences.volume,
+      audioPreferences.muted,
+      Boolean(props.duckLobbyMusic),
+    );
+
     if (props.activeGameId && gameMusicUrl) {
       pauseAndReset(lobbyAudio);
       void playLoop(gameAudio, gameMusicUrl);
@@ -79,6 +105,9 @@ export function ArcadeMusicPlayer(props: ArcadeMusicPlayerProps): ReactElement {
     lobbyMusicUrl,
     gameMusicUrl,
     mediaVersion,
+    audioPreferences.volume,
+    audioPreferences.muted,
+    props.duckLobbyMusic,
   ]);
 
   useEffect(() => {

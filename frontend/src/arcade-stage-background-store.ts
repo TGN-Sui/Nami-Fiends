@@ -18,7 +18,7 @@ export const ARCADE_STAGE_BACKGROUND_VIDEO_ACCEPTED_LABEL = 'MP4 or WebM';
 export const ARCADE_STAGE_BACKGROUND_VIDEO_ACCEPTED_TYPES = new Set(['video/mp4', 'video/webm']);
 export const ARCADE_STAGE_BACKGROUND_VIDEO_MAX_BYTES = 48 * 1024 * 1024;
 
-export type ArcadeStageBackgroundMediaKind = 'default' | 'image' | 'video';
+export type ArcadeStageBackgroundMediaKind = 'default' | 'image' | 'video' | 'loading';
 
 export type ArcadeStageBackgroundMedia = {
   kind: ArcadeStageBackgroundMediaKind;

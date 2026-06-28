@@ -48,6 +48,28 @@ Prints the `site-builder deploy` command without uploading.
 
 ---
 
+## Helper scripts (Windows + cross-platform)
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/verify-walrus-sites-ready.mjs` | Prerequisite check (config, CLIs, projection, optional `--build`) |
+| `scripts/setup-walrus-sites-config.mjs` | Copy example `sites-config.yaml` to user config path |
+| `scripts/install-walrus-clis.ps1` | Install Walrus + site-builder on Windows |
+| `scripts/start-walrus-portal.ps1` | Run local testnet Walrus Sites portal |
+| `scripts/apply-walrus-sites-cutover.mjs` | Sync deploy metadata into env / projection after deploy |
+| `scripts/walrus-sites-config-path.mjs` | Shared config + projection path helpers (imported by deploy scripts) |
+
+Quick readiness check:
+
+```bash
+node scripts/verify-walrus-sites-ready.mjs
+node scripts/verify-walrus-sites-ready.mjs --build
+```
+
+Last testnet deploy metadata (when present): `deployments/testnet/walrus-sites-deploy.json`.
+
+---
+
 ## Deploy (testnet)
 
 ```bash

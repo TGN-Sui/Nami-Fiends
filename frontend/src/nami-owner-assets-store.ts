@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import { readArcadeCabinetOwnerAssetSlots } from './arcade-cabinets.js';
+
 import { isOfficialOwner } from './nami-capabilities.js';
 import { isPlatformOwnerAssetsApiAvailable } from './platform-owner-assets-api.js';
 import {
@@ -40,7 +42,7 @@ export type OwnerAssetSlot = {
   hint: string;
 };
 
-export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
+const CORE_OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
   {
     id: 'sidebar-official-logo',
     label: 'Official Nami logo',
@@ -94,9 +96,9 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
   },
   {
     id: 'arcade-game-music-nami-bubble-pop',
-    label: 'Bubble Pop game music',
+    label: 'Goon Pop game music',
     category: 'scene',
-    hint: 'MP3 loop for Nami Bubble Pop gameplay. Replaces lobby music during an active run.',
+    hint: 'MP3 loop for Goon Pop gameplay. Replaces lobby music during an active run.',
   },
   {
     id: 'sidebar-nav-userProfile',
@@ -226,6 +228,20 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
   },
 ];
 
+let cachedOwnerAssetSlots: OwnerAssetSlot[] | null = null;
+
+export function readOwnerAssetSlots(): OwnerAssetSlot[] {
+  if (cachedOwnerAssetSlots) {
+    return cachedOwnerAssetSlots;
+  }
+
+  cachedOwnerAssetSlots = [...CORE_OWNER_ASSET_SLOTS, ...readArcadeCabinetOwnerAssetSlots()];
+  return cachedOwnerAssetSlots;
+}
+
+/** @deprecated Use readOwnerAssetSlots() so cabinet media slots can load lazily. */
+export const OWNER_ASSET_SLOTS = CORE_OWNER_ASSET_SLOTS;
+
 export type OwnerAssetMap = Record<string, string>;
 
 const listeners = new Set<() => void>();
@@ -280,7 +296,7 @@ export function ownerAssetBadgeSlotId(badgeName: string): string {
 }
 
 export function readOwnerAssetSlot(slotId: string): OwnerAssetSlot | undefined {
-  return OWNER_ASSET_SLOTS.find((slot) => slot.id === slotId);
+  return readOwnerAssetSlots().find((slot) => slot.id === slotId);
 }
 
 export function validateOwnerAssetFile(

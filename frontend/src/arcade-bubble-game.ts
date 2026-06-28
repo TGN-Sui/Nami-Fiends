@@ -46,7 +46,16 @@ export type ArcadeBubbleEntity = {
   lastClickAt: number;
 };
 
-const BUBBLE_LABELS = ['POP', 'BLIP', 'ORB', 'FIZZ', 'GLOW', 'RISE', 'DRIFT', 'PEARL'] as const;
+export const GOON_POP_BUBBLE_LABELS = [
+  'G',
+  'CREW',
+  'HEAT',
+  'GHOST',
+  'GLOW',
+  'COIN',
+  'DRIFT',
+  'RISE',
+] as const;
 
 export function arcadeBubbleGameConfig(mode: ArcadeBubbleMode): ArcadeBubbleGameConfig {
   if (mode === 'hard') {
@@ -81,11 +90,13 @@ export function arcadeBubbleGameConfig(mode: ArcadeBubbleMode): ArcadeBubbleGame
 }
 
 export function arcadeBubbleModeLabel(mode: ArcadeBubbleMode): string {
-  return mode === 'hard' ? 'Hard Mode' : 'Normal Mode';
+  return mode === 'hard' ? 'Heat Run' : 'Alley Run';
 }
 
+export { formatArcadeG, formatArcadeG as formatGoonPopG } from './arcade-score.js';
+
 function randomBubbleLabel(): string {
-  return BUBBLE_LABELS[Math.floor(Math.random() * BUBBLE_LABELS.length)]!;
+  return GOON_POP_BUBBLE_LABELS[Math.floor(Math.random() * GOON_POP_BUBBLE_LABELS.length)]!;
 }
 
 function randomLifetimeMs(config: ArcadeBubbleGameConfig): number {

@@ -16,6 +16,8 @@ const PRUNABLE_EXACT_KEYS = new Set([
   'nami.user.goon-activity',
   'nami.arcade.bubble-leaderboard',
   'nami.arcade.bubble-passport-stats',
+  'nami.arcade.alley-push-leaderboard',
+  'nami.arcade.alley-push-passport-stats',
   'nami.genre-chat.weekly-activity',
   'nami.test-launch.genesis-data-v1',
 ]);

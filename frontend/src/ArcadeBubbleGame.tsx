@@ -16,6 +16,7 @@ import {
   arcadeBubbleGameConfig,
   arcadeBubbleIdSignature,
   arcadeBubbleLifeProgress,
+  formatGoonPopG,
   spawnArcadeBubble,
   type ArcadeBubbleEntity,
   type ArcadeBubbleMode,
@@ -39,6 +40,8 @@ export type ArcadeBubbleGameSummary = {
 type ArcadeBubbleGameProps = {
   mode: ArcadeBubbleMode;
   memberId?: string;
+  cabinetAccent: string;
+  cabinetGlow: string;
   onComplete: (summary: ArcadeBubbleGameSummary) => void;
   onForfeit?: () => void;
 };
@@ -408,12 +411,17 @@ export function ArcadeBubbleGame(props: ArcadeBubbleGameProps): ReactElement {
   void bubbleRevision;
   const now = performance.now();
 
+  const accentStyle = {
+    '--arcade-bubble-accent': props.cabinetAccent,
+    '--arcade-bubble-glow': props.cabinetGlow,
+  } as CSSProperties;
+
   return (
-    <div className="arcade-bubble-game">
+    <div className="arcade-bubble-game" style={accentStyle}>
       <div className="arcade-bubble-game-hud">
         <div className="arcade-bubble-game-hud-stats">
           <div className="arcade-bubble-game-hud-block">
-            <span>Score</span>
+            <span>G</span>
             <strong>{score}</strong>
           </div>
           <div className="arcade-bubble-game-hud-block">
@@ -423,7 +431,7 @@ export function ArcadeBubbleGame(props: ArcadeBubbleGameProps): ReactElement {
             </strong>
           </div>
           <div className="arcade-bubble-game-hud-block">
-            <span>Popped</span>
+            <span>Ghosted</span>
             <strong>{popped}</strong>
           </div>
         </div>
@@ -446,13 +454,13 @@ export function ArcadeBubbleGame(props: ArcadeBubbleGameProps): ReactElement {
             <button
               aria-label={
                 bubble.label +
-                ' bubble worth ' +
-                bubble.points +
-                ' points. ' +
+                ' glow worth ' +
+                formatGoonPopG(bubble.points) +
+                '. ' +
                 bubble.popClicks +
                 ' of ' +
                 bubble.popClicksRequired +
-                ' taps.'
+                ' hits.'
               }
               className={
                 'arcade-bubble-game-bubble' +
@@ -495,10 +503,10 @@ export function ArcadeBubbleGame(props: ArcadeBubbleGameProps): ReactElement {
               <strong>{bubble.label}</strong>
               <small>
                 {isPopping
-                  ? '+' + bubble.points
+                  ? formatGoonPopG(bubble.points, true)
                   : bubble.popClicks > 0
                     ? bubble.popClicks + ' / ' + bubble.popClicksRequired
-                    : '+' + bubble.points}
+                    : formatGoonPopG(bubble.points, true)}
               </small>
             </button>
           );

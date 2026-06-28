@@ -1,3 +1,5 @@
+import { readArcadeAudioPreferences } from './arcade-audio-store.js';
+
 type SfxKind = 'button' | 'bubble' | 'chat';
 
 type TonePatch = {
@@ -318,6 +320,26 @@ function playPatchSet(patches: TonePatch[][], intensity = 1): void {
   }
 }
 
+function readArcadeSfxIntensityScale(): number {
+  const preferences = readArcadeAudioPreferences();
+
+  if (preferences.muted) {
+    return 0;
+  }
+
+  return preferences.volume;
+}
+
+function playArcadePatchSet(patches: TonePatch[][], intensity = 1): void {
+  const arcadeScale = readArcadeSfxIntensityScale();
+
+  if (arcadeScale <= 0) {
+    return;
+  }
+
+  playPatchSet(patches, intensity * arcadeScale);
+}
+
 function shouldThrottle(lastAt: number, throttleMs: number): boolean {
   const now = performance.now();
 
@@ -384,14 +406,20 @@ export function playChatSendSfx(): void {
 }
 
 export function playArcadeGameStartSfx(): void {
-  playPatchSet(ARCADE_GAME_START_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_START_PATCHES);
 }
 
 export function playArcadeBubbleChargeSfx(progress = 0.5): void {
+  const arcadeScale = readArcadeSfxIntensityScale();
+
+  if (arcadeScale <= 0) {
+    return;
+  }
+
   const patches = pickRandomPatch(ARCADE_BUBBLE_CHARGE_PATCHES).map((patch) => ({
     ...patch,
     frequency: patch.frequency + progress * 80,
-    gainPeak: patch.gainPeak + progress * 0.01,
+    gainPeak: (patch.gainPeak + progress * 0.01) * arcadeScale,
   }));
 
   for (const patch of patches) {
@@ -400,23 +428,23 @@ export function playArcadeBubbleChargeSfx(progress = 0.5): void {
 }
 
 export function playArcadeBubblePopSfx(size: 'small' | 'big' = 'small'): void {
-  playPatchSet(size === 'big' ? ARCADE_BUBBLE_BIG_POP_PATCHES : ARCADE_BUBBLE_SMALL_POP_PATCHES);
+  playArcadePatchSet(size === 'big' ? ARCADE_BUBBLE_BIG_POP_PATCHES : ARCADE_BUBBLE_SMALL_POP_PATCHES);
 }
 
 export function playArcadeGameTickSfx(): void {
-  playPatchSet(ARCADE_GAME_TICK_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_TICK_PATCHES);
 }
 
 export function playArcadeGameOverSfx(): void {
-  playPatchSet(ARCADE_GAME_OVER_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_OVER_PATCHES);
 }
 
 export function playArcadeScoreRevealSfx(): void {
-  playPatchSet(ARCADE_SCORE_REVEAL_PATCHES);
+  playArcadePatchSet(ARCADE_SCORE_REVEAL_PATCHES);
 }
 
 export function playArcadeMenuSelectSfx(): void {
-  playPatchSet(ARCADE_MENU_SELECT_PATCHES);
+  playArcadePatchSet(ARCADE_MENU_SELECT_PATCHES);
 }
 
 export function playSfx(kind: SfxKind): void {

@@ -1,5 +1,14 @@
 import { useRef, type ChangeEvent, type ReactElement } from 'react';
 
+import { isArcadeCabinetMediaSlotId, parseArcadeCabinetMediaSlotId } from './arcade-cabinet-media.js';
+import {
+  arcadeCabinetMediaAcceptAttribute,
+  clearArcadeCabinetMedia,
+  isArcadeCabinetMediaVideoRef,
+  prepareArcadeCabinetMediaUpload,
+  resolveArcadeCabinetMedia,
+  validateArcadeCabinetMediaFile,
+} from './arcade-cabinet-media-store.js';
 import { ARCADE_BACKGROUND_SLOT_ID } from './arcade-background.js';
 import {
   arcadeBackgroundAcceptAttribute,
@@ -31,7 +40,7 @@ import { isOfficialOwner } from './nami-capabilities.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import {
   OWNER_ASSET_ACCEPTED_FORMATS,
-  OWNER_ASSET_SLOTS,
+  readOwnerAssetSlots,
   clearOwnerAsset,
   ownerAssetSaveErrorMessage,
   prepareOwnerAssetImage,
@@ -71,9 +80,11 @@ export function NamiOwnerAssetEditPanel(props: {
           ? arcadeBackgroundAcceptAttribute()
           : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
             ? arcadeStageBackgroundAcceptAttribute()
-            : isArcadeMusicSlotId(slotId)
-              ? arcadeMusicAcceptAttribute()
-              : 'image/png,image/jpeg,image/webp,image/gif';
+            : isArcadeCabinetMediaSlotId(slotId)
+              ? arcadeCabinetMediaAcceptAttribute(slotId)
+              : isArcadeMusicSlotId(slotId)
+                ? arcadeMusicAcceptAttribute()
+                : 'image/png,image/jpeg,image/webp,image/gif';
     }
 
     fileInputRef.current?.click();
@@ -89,15 +100,17 @@ export function NamiOwnerAssetEditPanel(props: {
       return;
     }
 
-    const slot = OWNER_ASSET_SLOTS.find((entry) => entry.id === slotId);
+    const slot = readOwnerAssetSlots().find((entry) => entry.id === slotId);
     const validationError =
       slotId === ARCADE_BACKGROUND_SLOT_ID
         ? validateArcadeBackgroundFile(file)
         : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
           ? validateArcadeStageBackgroundFile(file)
-          : isArcadeMusicSlotId(slotId)
-            ? validateArcadeMusicFile(file)
-            : validateOwnerAssetFile(file, slot?.category ?? 'brand');
+          : isArcadeCabinetMediaSlotId(slotId)
+            ? validateArcadeCabinetMediaFile(slotId, file)
+            : isArcadeMusicSlotId(slotId)
+              ? validateArcadeMusicFile(file)
+              : validateOwnerAssetFile(file, slot?.category ?? 'brand');
 
     if (validationError) {
       window.alert(validationError);
@@ -110,9 +123,11 @@ export function NamiOwnerAssetEditPanel(props: {
           ? await prepareArcadeBackgroundUpload(file)
           : slotId === ARCADE_STAGE_BACKGROUND_SLOT_ID
             ? await prepareArcadeStageBackgroundUpload(file)
-            : isArcadeMusicSlotId(slotId)
-              ? await prepareArcadeMusicUpload(slotId, file)
-              : await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
+            : isArcadeCabinetMediaSlotId(slotId)
+              ? await prepareArcadeCabinetMediaUpload(slotId, file)
+              : isArcadeMusicSlotId(slotId)
+                ? await prepareArcadeMusicUpload(slotId, file)
+                : await prepareOwnerAssetImage(file, slot?.category ?? 'brand');
 
       if (editMode.active) {
         setOwnerAssetDraft(slotId, storedAsset);
@@ -175,14 +190,21 @@ export function NamiOwnerAssetEditPanel(props: {
       </div>
 
       <div className="nami-owner-asset-catalog nami-owner-advanced-scroll-region">
-        {OWNER_ASSET_SLOTS.map((slot) => {
+        {readOwnerAssetSlots().map((slot) => {
           const storedValue = resolveOwnerAssetUrl(slot.id, persistedAssets);
+          const cabinetParsed = parseArcadeCabinetMediaSlotId(slot.id);
           const arcadeMedia =
             slot.id === ARCADE_BACKGROUND_SLOT_ID
               ? resolveArcadeBackgroundMedia(storedValue)
               : slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID
                 ? resolveArcadeStageBackgroundMedia(storedValue)
-                : null;
+                : cabinetParsed
+                  ? resolveArcadeCabinetMedia(
+                      cabinetParsed.cabinetId,
+                      cabinetParsed.kind,
+                      storedValue,
+                    )
+                  : null;
           const musicPreviewUrl = isArcadeMusicSlotId(slot.id)
             ? resolveArcadeMusicUrl(storedValue)
             : null;
@@ -196,7 +218,10 @@ export function NamiOwnerAssetEditPanel(props: {
               ? isArcadeBackgroundVideoRef(storedValue)
               : slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID
                 ? isArcadeStageBackgroundVideoRef(storedValue)
-                : false);
+                : isArcadeCabinetMediaSlotId(slot.id)
+                  ? isArcadeCabinetMediaVideoRef(slot.id, storedValue) ||
+                    arcadeMedia?.kind === 'video'
+                  : false);
           const isMusicPreview =
             storedValue !== null &&
             isArcadeMusicSlotId(slot.id) &&
@@ -254,6 +279,10 @@ export function NamiOwnerAssetEditPanel(props: {
                             await clearArcadeStageBackgroundMedia();
                           }
 
+                          if (isArcadeCabinetMediaSlotId(slot.id)) {
+                            await clearArcadeCabinetMedia(slot.id);
+                          }
+
                           if (isArcadeMusicSlotId(slot.id)) {
                             await clearArcadeMusicMedia(slot.id);
                           }
@@ -267,6 +296,10 @@ export function NamiOwnerAssetEditPanel(props: {
 
                         if (slot.id === ARCADE_STAGE_BACKGROUND_SLOT_ID) {
                           await clearArcadeStageBackgroundMedia();
+                        }
+
+                        if (isArcadeCabinetMediaSlotId(slot.id)) {
+                          await clearArcadeCabinetMedia(slot.id);
                         }
 
                         if (isArcadeMusicSlotId(slot.id)) {

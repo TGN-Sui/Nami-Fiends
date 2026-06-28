@@ -1,168 +1,207 @@
-import { useCallback, useEffect, useState, type CSSProperties, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactElement } from 'react';
 
 import { ArcadeBackgroundMedia } from './ArcadeBackgroundMedia.js';
-import { ArcadeMusicPlayer } from './ArcadeMusicPlayer.js';
-import { ArcadeBubbleGame, type ArcadeBubbleGameSummary } from './ArcadeBubbleGame.js';
-import { arcadeBubbleModeLabel, type ArcadeBubbleMode } from './arcade-bubble-game.js';
+import { ArcadeAudioControls } from './ArcadeAudioControls.js';
+import { ArcadeCabinetIntro } from './ArcadeCabinetIntro.js';
 import {
-  readArcadeBubbleLeaderboard,
-  recordArcadeBubbleGameResult,
-  useArcadeBubbleGameVersion,
-  type ArcadeBubbleGameResult,
-} from './arcade-bubble-game-store.js';
+  ARCADE_CABINET_SELECT_COLUMNS,
+  ArcadeCabinetSelect,
+} from './ArcadeCabinetSelect.js';
+import {
+  ArcadeCabinetPlaySession,
+  type ArcadeCabinetPlayPhase,
+} from './ArcadeCabinetPlaySession.js';
+import { ArcadeMusicPlayer } from './ArcadeMusicPlayer.js';
+import {
+  canEnterArcadeCabinet,
+  readArcadeCabinetsForMember,
+  type ArcadeCabinetView,
+} from './arcade-cabinets.js';
+import {
+  arcadeCabinetStageFitStyle,
+  readArcadeCabinetStageFit,
+} from './arcade-cabinet-stage-fit.js';
+import {
+  clearArcadeSession,
+  setArcadeStageCabinetId,
+  useArcadeStageCabinetId,
+} from './arcade-session-store.js';
 import type { HubDestinationPage } from './domain/hub-destinations.js';
 import { SELF_MEMBER_ID, getSelfMember } from './member-access.js';
 import { resolveMemberDisplayName } from './member-display-name-store.js';
-import {
-  readOfficialNamiArcadeGames,
-  type NamiArcadeGame,
-} from './nami-arcade-games.js';
-import {
-  playArcadeGameOverSfx,
-  playArcadeMenuSelectSfx,
-  playArcadeScoreRevealSfx,
-} from './nami-sfx.js';
+import { playArcadeMenuSelectSfx } from './nami-sfx.js';
 
 type ArcadeScreenProps = {
   onExitToHub: (page: Extract<HubDestinationPage, 'hub' | 'gamehub'>) => void;
 };
 
-type ArcadePhase = 'menu' | 'mode-select' | 'playing' | 'results';
+type ArcadeScreenPhase = 'attract' | 'cabinet-select' | 'cabinet-intro' | 'cabinet-active';
 
-type ArcadeFlowState = {
-  phase: ArcadePhase;
-  selectedIndex: number;
-  mode: ArcadeBubbleMode | null;
-  result: ArcadeBubbleGameResult | null;
-  lastSummary: ArcadeBubbleGameSummary | null;
-};
+type ArcadeCabinetMenuPhase = 'menu' | 'play';
 
-export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
-  void _props;
-  const games = readOfficialNamiArcadeGames();
-  useArcadeBubbleGameVersion();
-  const [cabinetStarted, setCabinetStarted] = useState(false);
-  const [menuReady, setMenuReady] = useState(false);
-  const [playSession, setPlaySession] = useState(0);
-  const [flow, setFlow] = useState<ArcadeFlowState>({
-    phase: 'menu',
-    selectedIndex: 0,
-    mode: null,
-    result: null,
-    lastSummary: null,
-  });
-
-  const selectedGame = games[flow.selectedIndex] ?? games[0]!;
-  const isGameActive = flow.phase === 'playing' || flow.phase === 'results';
+export function ArcadeScreen(props: ArcadeScreenProps): ReactElement {
   const member = getSelfMember();
+  const cabinets = useMemo(() => readArcadeCabinetsForMember(member), [member.tier]);
+
+  const [screenPhase, setScreenPhase] = useState<ArcadeScreenPhase>('attract');
+  const [selectedCabinetIndex, setSelectedCabinetIndex] = useState(0);
+  const [activeCabinetId, setActiveCabinetId] = useState<string | null>(null);
+  const [pendingCabinetId, setPendingCabinetId] = useState<string | null>(null);
+  const [skipCabinetIntro, setSkipCabinetIntro] = useState(false);
+  const [menuReady, setMenuReady] = useState(false);
+  const [cabinetMenuPhase, setCabinetMenuPhase] = useState<ArcadeCabinetMenuPhase>('menu');
+  const [cabinetPlayPhase, setCabinetPlayPhase] = useState<ArcadeCabinetPlayPhase>('mode-select');
+
+  const selectedCabinet = cabinets[selectedCabinetIndex] ?? cabinets[0]!;
+  const activeCabinet =
+    cabinets.find((cabinet) => cabinet.id === activeCabinetId) ?? selectedCabinet;
+  const pendingCabinet =
+    cabinets.find((cabinet) => cabinet.id === pendingCabinetId) ?? null;
+
+  const isGameActive =
+    screenPhase === 'cabinet-active' &&
+    cabinetMenuPhase === 'play' &&
+    (cabinetPlayPhase === 'playing' || cabinetPlayPhase === 'results');
   const displayName = resolveMemberDisplayName(SELF_MEMBER_ID, member.name);
 
-  const startCabinet = useCallback((): void => {
-    playArcadeMenuSelectSfx();
-    setCabinetStarted(true);
+  const resetGameFlow = useCallback((): void => {
+    setCabinetMenuPhase('menu');
+    setCabinetPlayPhase('mode-select');
   }, []);
 
   const returnToTitle = useCallback((): void => {
     playArcadeMenuSelectSfx();
-    setCabinetStarted(false);
+    clearArcadeSession();
+    setScreenPhase('attract');
+    setActiveCabinetId(null);
+    setPendingCabinetId(null);
+    setSkipCabinetIntro(false);
     setMenuReady(false);
-    setFlow({
-      phase: 'menu',
-      selectedIndex: 0,
-      mode: null,
-      result: null,
-      lastSummary: null,
-    });
-  }, []);
+    setSelectedCabinetIndex(0);
+    resetGameFlow();
+  }, [resetGameFlow]);
 
-  const moveSelection = useCallback(
-    (delta: number): void => {
-      if (flow.phase !== 'menu') {
+  const openCabinetSelect = useCallback(
+    (options?: { skipIntro?: boolean }): void => {
+      playArcadeMenuSelectSfx();
+      setSkipCabinetIntro(Boolean(options?.skipIntro));
+      setScreenPhase('cabinet-select');
+      setMenuReady(false);
+      resetGameFlow();
+    },
+    [resetGameFlow],
+  );
+
+  const startArcadeSession = useCallback((): void => {
+    playArcadeMenuSelectSfx();
+    clearArcadeSession();
+    setActiveCabinetId(null);
+    setPendingCabinetId(null);
+    setSkipCabinetIntro(false);
+    setSelectedCabinetIndex(0);
+    resetGameFlow();
+    setScreenPhase('cabinet-select');
+  }, [resetGameFlow]);
+
+  const activateCabinet = useCallback(
+    (cabinet: ArcadeCabinetView, playIntro: boolean): void => {
+      if (!canEnterArcadeCabinet(cabinet)) {
         return;
       }
 
-      playArcadeMenuSelectSfx();
-      setFlow((current) => {
-        const next = current.selectedIndex + delta;
+      if (playIntro) {
+        setPendingCabinetId(cabinet.id);
+        setScreenPhase('cabinet-intro');
+        return;
+      }
 
-        if (next < 0) {
-          return { ...current, selectedIndex: games.length - 1 };
-        }
-
-        if (next >= games.length) {
-          return { ...current, selectedIndex: 0 };
-        }
-
-        return { ...current, selectedIndex: next };
-      });
+      setActiveCabinetId(cabinet.id);
+      setArcadeStageCabinetId(cabinet.id);
+      setScreenPhase('cabinet-active');
+      resetGameFlow();
     },
-    [flow.phase, games.length],
+    [resetGameFlow],
   );
 
-  const launchSelectedGame = useCallback((): void => {
-    if (selectedGame.status !== 'live') {
+  const confirmCabinetSelection = useCallback((): void => {
+    const cabinet = cabinets[selectedCabinetIndex];
+
+    if (!cabinet || !canEnterArcadeCabinet(cabinet)) {
       return;
     }
 
     playArcadeMenuSelectSfx();
-    setFlow((current) => ({
-      ...current,
-      phase: 'mode-select',
-      mode: null,
-      result: null,
-      lastSummary: null,
-    }));
-  }, [selectedGame.status]);
+    activateCabinet(cabinet, !skipCabinetIntro);
+    setSkipCabinetIntro(false);
+  }, [activateCabinet, cabinets, selectedCabinetIndex, skipCabinetIntro]);
 
-  const startMode = useCallback((mode: ArcadeBubbleMode): void => {
-    playArcadeMenuSelectSfx();
-    setPlaySession((session) => session + 1);
-    setFlow((current) => ({
-      ...current,
-      phase: 'playing',
-      mode,
-      result: null,
-      lastSummary: null,
-    }));
-  }, []);
+  const handleCabinetIntroComplete = useCallback((): void => {
+    if (!pendingCabinetId) {
+      setScreenPhase('cabinet-select');
+      return;
+    }
 
-  const handleGameForfeit = useCallback(() => {
-    setFlow((current) => ({
-      ...current,
-      phase: 'mode-select',
-      mode: null,
-      result: null,
-      lastSummary: null,
-    }));
-  }, []);
+    setActiveCabinetId(pendingCabinetId);
+    setArcadeStageCabinetId(pendingCabinetId);
+    setPendingCabinetId(null);
+    setScreenPhase('cabinet-active');
+    resetGameFlow();
+  }, [pendingCabinetId, resetGameFlow]);
 
-  const handleGameComplete = useCallback(
-    (summary: ArcadeBubbleGameSummary) => {
-      playArcadeGameOverSfx();
+  const moveCabinetSelection = useCallback(
+    (direction: 'up' | 'down' | 'left' | 'right'): void => {
+      if (screenPhase !== 'cabinet-select') {
+        return;
+      }
 
-      const result = recordArcadeBubbleGameResult({
-        memberId: SELF_MEMBER_ID,
-        displayName,
-        mode: summary.mode,
-        score: summary.score,
-        bubblesPopped: summary.bubblesPopped,
+      playArcadeMenuSelectSfx();
+      setSelectedCabinetIndex((current) => {
+        const columns = ARCADE_CABINET_SELECT_COLUMNS;
+        const count = cabinets.length;
+        let next = current;
+
+        if (direction === 'left') {
+          next = current - 1;
+        }
+
+        if (direction === 'right') {
+          next = current + 1;
+        }
+
+        if (direction === 'up') {
+          next = current - columns;
+        }
+
+        if (direction === 'down') {
+          next = current + columns;
+        }
+
+        if (next < 0) {
+          return count - 1;
+        }
+
+        if (next >= count) {
+          return 0;
+        }
+
+        return next;
       });
-
-      playArcadeScoreRevealSfx();
-
-      setFlow((current) => ({
-        ...current,
-        phase: 'results',
-        mode: summary.mode,
-        result,
-        lastSummary: summary,
-      }));
     },
-    [displayName],
+    [cabinets.length, screenPhase],
   );
 
+  const launchActiveCabinet = useCallback((): void => {
+    if (!canEnterArcadeCabinet(activeCabinet)) {
+      return;
+    }
+
+    playArcadeMenuSelectSfx();
+    setCabinetMenuPhase('play');
+    setCabinetPlayPhase('mode-select');
+  }, [activeCabinet]);
+
   useEffect(() => {
-    if (!cabinetStarted) {
+    if (screenPhase !== 'cabinet-active') {
       setMenuReady(false);
       return;
     }
@@ -170,52 +209,81 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
     const timer = window.setTimeout(() => setMenuReady(true), 480);
 
     return () => window.clearTimeout(timer);
-  }, [cabinetStarted]);
+  }, [screenPhase, activeCabinetId]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
-      if (!cabinetStarted) {
+      if (screenPhase === 'attract') {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          startCabinet();
+          startArcadeSession();
         }
 
         return;
       }
 
-      if (flow.phase === 'menu') {
+      if (screenPhase === 'cabinet-select') {
         if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
           event.preventDefault();
-          moveSelection(-1);
+          moveCabinetSelection('up');
         }
 
         if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
           event.preventDefault();
-          moveSelection(1);
+          moveCabinetSelection('down');
+        }
+
+        if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+          event.preventDefault();
+          moveCabinetSelection('left');
+        }
+
+        if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+          event.preventDefault();
+          moveCabinetSelection('right');
         }
 
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          launchSelectedGame();
-        }
-
-        return;
-      }
-
-      if (flow.phase === 'mode-select') {
-        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
-          event.preventDefault();
-          startMode('normal');
-        }
-
-        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
-          event.preventDefault();
-          startMode('hard');
+          confirmCabinetSelection();
         }
 
         if (event.key === 'Escape') {
           event.preventDefault();
-          setFlow((current) => ({ ...current, phase: 'menu', mode: null }));
+          returnToTitle();
+        }
+
+        return;
+      }
+
+      if (screenPhase === 'cabinet-intro') {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          setPendingCabinetId(null);
+          clearArcadeSession();
+          setScreenPhase('cabinet-select');
+        }
+
+        return;
+      }
+
+      if (screenPhase !== 'cabinet-active') {
+        return;
+      }
+
+      if (cabinetMenuPhase === 'menu') {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          launchActiveCabinet();
+        }
+
+        return;
+      }
+
+      if (cabinetPlayPhase === 'mode-select') {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          resetGameFlow();
         }
       }
     }
@@ -223,25 +291,42 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cabinetStarted, flow.phase, launchSelectedGame, moveSelection, startCabinet, startMode]);
+  }, [
+    cabinetMenuPhase,
+    cabinetPlayPhase,
+    confirmCabinetSelection,
+    launchActiveCabinet,
+    moveCabinetSelection,
+    resetGameFlow,
+    returnToTitle,
+    screenPhase,
+    startArcadeSession,
+  ]);
 
   function renderExitMenu(): ReactElement {
     return (
       <nav aria-label="Leave arcade" className="arcade-screen-exit-menu">
         <span className="arcade-screen-exit-label">EXIT TO</span>
+        <button
+          className="arcade-screen-exit-button"
+          onClick={() => openCabinetSelect({ skipIntro: true })}
+          type="button"
+        >
+          Change Machine
+        </button>
         <button className="arcade-screen-exit-button" onClick={returnToTitle} type="button">
           Title Screen
         </button>
         <button
           className="arcade-screen-exit-button"
-          onClick={() => _props.onExitToHub('hub')}
+          onClick={() => props.onExitToHub('hub')}
           type="button"
         >
           Nami Hub
         </button>
         <button
           className="arcade-screen-exit-button"
-          onClick={() => _props.onExitToHub('gamehub')}
+          onClick={() => props.onExitToHub('gamehub')}
           type="button"
         >
           Game Hub
@@ -250,219 +335,59 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
     );
   }
 
-  function renderModeSelect(): ReactElement {
-    return (
-      <section aria-label="Select bubble game mode" className="arcade-bubble-mode-select panel">
-        <header className="arcade-bubble-mode-select-head">
-          <span>Nami Bubble Pop</span>
-          <span>60 SEC RUN</span>
-        </header>
-
-        <div className="arcade-bubble-mode-select-copy">
-          <h2>Choose your lane</h2>
-          <p>
-            Normal mode uses landing-page bubble physics with quicker small pops. Hard mode raises
-            minimum speed and requires more taps per bubble.
-          </p>
-        </div>
-
-        <div className="arcade-bubble-mode-select-actions">
-          <button className="arcade-bubble-mode-button" onClick={() => startMode('normal')} type="button">
-            <strong>Normal Mode</strong>
-            <small>Small 1 tap · Big 3 taps · +1 / +2 points</small>
-          </button>
-          <button className="arcade-bubble-mode-button is-hard-mode" onClick={() => startMode('hard')} type="button">
-            <strong>Hard Mode</strong>
-            <small>Small 2 taps · Big 4 taps · faster rise</small>
-          </button>
-        </div>
-
-        <footer className="arcade-bubble-mode-select-foot">
-          <button
-            className="arcade-screen-exit-button"
-            onClick={() => setFlow((current) => ({ ...current, phase: 'menu', mode: null }))}
-            type="button"
-          >
-            Back to menu
-          </button>
-        </footer>
-      </section>
-    );
-  }
-
-  function renderResults(): ReactElement | null {
-    if (!flow.result || !flow.mode || !flow.lastSummary) {
-      return null;
-    }
-
-    const leaderboard = readArcadeBubbleLeaderboard(flow.mode);
-
-    return (
-      <section aria-label="Bubble game results" className="arcade-bubble-results panel">
-        <header className="arcade-bubble-results-head">
-          <span>Run complete</span>
-          <span>{arcadeBubbleModeLabel(flow.mode)}</span>
-        </header>
-
-        <div className="arcade-bubble-results-score">
-          <span>Final score</span>
-          <strong>{flow.result.score}</strong>
-          <p>
-            {flow.result.bubblesPopped} bubbles popped · Leaderboard #{flow.result.rank}
-            {flow.result.isPersonalBest ? ' · New personal best' : ''}
-          </p>
-        </div>
-
-        <ol className="arcade-bubble-results-leaderboard">
-          {leaderboard.map((entry, index) => (
-            <li
-              className={
-                entry.memberId === SELF_MEMBER_ID && entry.score === flow.result?.score
-                  ? 'is-current-player'
-                  : ''
-              }
-              key={entry.id}
-            >
-              <span>#{index + 1}</span>
-              <strong>{entry.displayName}</strong>
-              <span>{entry.score}</span>
-            </li>
-          ))}
-          {leaderboard.length === 0 ? (
-            <li className="arcade-bubble-results-empty">No runs recorded yet — yours is first.</li>
-          ) : null}
-        </ol>
-
-        <div className="arcade-bubble-results-actions">
-          <button
-            className="arcade-screen-play-button"
-            onClick={() => {
-              if (flow.mode) {
-                startMode(flow.mode);
-              }
-            }}
-            type="button"
-          >
-            Try again
-          </button>
-          <button
-            className="arcade-screen-exit-button"
-            onClick={() =>
-              setFlow((current) => ({
-                ...current,
-                phase: 'mode-select',
-                result: null,
-                lastSummary: null,
-              }))
-            }
-            type="button"
-          >
-            Different mode
-          </button>
-          <button
-            className="arcade-screen-exit-button"
-            onClick={() =>
-              setFlow({
-                phase: 'menu',
-                selectedIndex: 0,
-                mode: null,
-                result: null,
-                lastSummary: null,
-              })
-            }
-            type="button"
-          >
-            Back to menu
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  function renderMenu(game: NamiArcadeGame): ReactElement {
+  function renderCabinetLobby(cabinet: ArcadeCabinetView): ReactElement {
     return (
       <>
         <header className="arcade-screen-marquee">
-          <p className="arcade-screen-marquee-kicker">Official Nami Cabinets</p>
-          <h1 className="arcade-screen-marquee-title">NAMI ARCADE</h1>
-          <p className="arcade-screen-marquee-subtitle">
-            Down the alley · Cyber district · Insert coin
-          </p>
+          <p className="arcade-screen-marquee-kicker">GoonSquad Cabinet</p>
+          <h1 className="arcade-screen-marquee-title">{cabinet.title.toUpperCase()}</h1>
+          <p className="arcade-screen-marquee-subtitle">{cabinet.tagline}</p>
         </header>
 
-        <section aria-label="Arcade game select" className="arcade-screen-menu panel">
+        <section aria-label="Cabinet lobby" className="arcade-screen-menu panel">
           <div className="arcade-screen-menu-head">
-            <span>SELECT GAME</span>
+            <span>READY PLAYER</span>
             <span className="arcade-screen-menu-credit">CREDIT 01</span>
           </div>
 
-          <ol className="arcade-screen-menu-list">
-            {games.map((entry, index) => {
-              const isSelected = index === flow.selectedIndex;
-
-              return (
-                <li key={entry.id}>
-                  <button
-                    aria-pressed={isSelected}
-                    className={
-                      'arcade-screen-menu-item' +
-                      (isSelected ? ' is-selected' : '') +
-                      (entry.status === 'coming-soon' ? ' is-offline' : '')
-                    }
-                    onClick={() => {
-                      playArcadeMenuSelectSfx();
-                      setFlow((current) => ({ ...current, selectedIndex: index }));
-                    }}
-                    type="button"
-                  >
-                    <span aria-hidden="true" className="arcade-screen-menu-cursor">
-                      {isSelected ? '►' : ' '}
-                    </span>
-                    <span className="arcade-screen-menu-title">{entry.title}</span>
-                    <span className="arcade-screen-menu-genre">{entry.genre}</span>
-                    <span className="arcade-screen-menu-status">
-                      {entry.status === 'coming-soon' ? 'OFFLINE' : 'LIVE'}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
+          <div className="arcade-screen-cabinet-lobby-copy">
+            <p>{cabinet.releaseLabel}</p>
+            <p>{cabinet.genre}</p>
+          </div>
 
           <footer className="arcade-screen-menu-foot">
-            <span>↑↓ MOVE</span>
             <span>ENTER PLAY</span>
-            <span>© NAMI OFFICIAL</span>
+            <span>CHANGE MACHINE</span>
+            <span>© GOONIE LABS</span>
           </footer>
         </section>
 
         <aside
-          aria-label={game.title + ' cabinet preview'}
+          aria-label={cabinet.title + ' cabinet preview'}
           className="arcade-screen-cabinet-card"
           style={
             {
-              '--arcade-cabinet-accent': game.cabinetAccent,
-              '--arcade-cabinet-glow': game.cabinetGlow,
+              '--arcade-cabinet-accent': cabinet.cabinetAccent,
+              '--arcade-cabinet-glow': cabinet.cabinetGlow,
             } as CSSProperties
           }
         >
           <div className="arcade-screen-cabinet-top">
-            <span className="arcade-screen-cabinet-badge">Official Cabinet</span>
-            <strong>{game.title}</strong>
-            <p>{game.tagline}</p>
+            <span className="arcade-screen-cabinet-badge">Tier {cabinet.cabinetTier} Cabinet</span>
+            <strong>{cabinet.title}</strong>
+            <p>{cabinet.tagline}</p>
           </div>
 
           <div className="arcade-screen-cabinet-screen">
             <span className="arcade-screen-cabinet-screen-label">HI-SCORE</span>
-            <strong>{game.highScoreLabel}</strong>
-            <small>{game.releaseLabel}</small>
+            <strong>{cabinet.highScoreLabel}</strong>
+            <small>{cabinet.releaseLabel}</small>
           </div>
 
           <div className="arcade-screen-cabinet-controls">
             <button
               className="arcade-screen-play-button"
-              disabled={game.status === 'coming-soon'}
-              onClick={launchSelectedGame}
+              onClick={launchActiveCabinet}
               type="button"
             >
               Insert coin
@@ -475,69 +400,121 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
     );
   }
 
-  const playLobbyMusic = flow.phase !== 'playing';
-  const activeGameId = flow.phase === 'playing' ? selectedGame.id : null;
+  const stageCabinetId = useArcadeStageCabinetId();
+  const isCabinetStageFit = screenPhase === 'cabinet-active' && stageCabinetId !== null;
+  const cabinetStageFit = useMemo(
+    () => readArcadeCabinetStageFit(stageCabinetId),
+    [stageCabinetId],
+  );
+  const cabinetStageFitCss = useMemo(
+    () => arcadeCabinetStageFitStyle(cabinetStageFit) as CSSProperties,
+    [cabinetStageFit],
+  );
+
+  const playLobbyMusic =
+    screenPhase !== 'cabinet-active' ||
+    cabinetMenuPhase !== 'play' ||
+    cabinetPlayPhase !== 'playing';
+  const duckLobbyMusic = screenPhase === 'cabinet-intro';
+  const activeGameId =
+    screenPhase === 'cabinet-active' &&
+    cabinetMenuPhase === 'play' &&
+    cabinetPlayPhase === 'playing'
+      ? activeCabinet.gameId
+      : null;
 
   return (
     <>
-      <ArcadeMusicPlayer activeGameId={activeGameId} playLobbyMusic={playLobbyMusic} />
+      <ArcadeAudioControls />
+      <ArcadeMusicPlayer
+        activeGameId={activeGameId}
+        duckLobbyMusic={duckLobbyMusic}
+        playLobbyMusic={playLobbyMusic}
+      />
 
-      {!cabinetStarted ? (
+      {screenPhase === 'attract' ? (
         <div className="arcade-screen arcade-screen-attract">
           <div className="arcade-screen-attract-stage">
             <h1 className="arcade-screen-attract-title">ARCADE</h1>
             <button
-              aria-label="Press start to open the arcade cabinet"
+              aria-label="Press start to open the arcade cabinet select"
               className="arcade-press-start-button"
-              onClick={startCabinet}
+              onClick={startArcadeSession}
               type="button"
             >
               <span className="arcade-press-start-label">PRESS START</span>
             </button>
           </div>
         </div>
-      ) : (
-    <div className={'arcade-screen' + (isGameActive ? ' is-arcade-game-active' : '')}>
-      <div className={'nami-arcade-box' + (isGameActive ? ' is-arcade-game-active' : '')}>
-        <div className="nami-arcade-box-bezel">
-          <div className="nami-arcade-box-viewport">
-            <ArcadeBackgroundMedia />
+      ) : null}
 
-            {flow.phase === 'menu' ? (
-              <div aria-hidden="true" className="arcade-screen-atmosphere">
-                <div className="arcade-screen-rain" />
-                <div className="arcade-screen-fog" />
-                <div className="arcade-screen-scanlines" />
-                <div className="arcade-screen-vignette" />
+      {screenPhase === 'cabinet-select' ? (
+        <ArcadeCabinetSelect
+          cabinets={cabinets}
+          onConfirmSelection={confirmCabinetSelection}
+          onExitToHub={props.onExitToHub}
+          onReturnToTitle={returnToTitle}
+          onSelectIndex={setSelectedCabinetIndex}
+          selectedIndex={selectedCabinetIndex}
+        />
+      ) : null}
+
+      {screenPhase === 'cabinet-intro' && pendingCabinet ? (
+        <ArcadeCabinetIntro
+          cabinetId={pendingCabinet.id}
+          cabinetTitle={pendingCabinet.title}
+          onComplete={handleCabinetIntroComplete}
+        />
+      ) : null}
+
+      {screenPhase === 'cabinet-active' ? (
+        <div
+          className={
+            'arcade-screen' +
+            (isGameActive ? ' is-arcade-game-active' : '') +
+            (isCabinetStageFit ? ' is-cabinet-stage-fit' : '') +
+            (isCabinetStageFit && cabinetStageFit.hideBezel ? ' is-cabinet-stage-fit-bezelless' : '')
+          }
+          style={isCabinetStageFit ? cabinetStageFitCss : undefined}
+        >
+          <div className={'nami-arcade-box' + (isGameActive ? ' is-arcade-game-active' : '')}>
+            <div className="nami-arcade-box-bezel">
+              <div className="nami-arcade-box-viewport">
+                <ArcadeBackgroundMedia cabinetId={activeCabinet.id} />
+
+                {cabinetMenuPhase === 'menu' && !isCabinetStageFit ? (
+                  <div aria-hidden="true" className="arcade-screen-atmosphere">
+                    <div className="arcade-screen-rain" />
+                    <div className="arcade-screen-fog" />
+                    <div className="arcade-screen-scanlines" />
+                    <div className="arcade-screen-vignette" />
+                  </div>
+                ) : null}
+
+                <div
+                  className={
+                    'arcade-screen-shell' +
+                    (menuReady ? ' is-menu-ready' : '') +
+                    (cabinetPlayPhase === 'playing' ? ' is-cabinet-game-playing' : '') +
+                    (cabinetPlayPhase === 'results' ? ' is-cabinet-game-results' : '') +
+                    (cabinetPlayPhase === 'mode-select' ? ' is-cabinet-game-mode-select' : '')
+                  }
+                >
+                  {cabinetMenuPhase === 'menu' ? renderCabinetLobby(activeCabinet) : null}
+                  {cabinetMenuPhase === 'play' ? (
+                    <ArcadeCabinetPlaySession
+                      cabinet={activeCabinet}
+                      displayName={displayName}
+                      onBackToMenu={resetGameFlow}
+                      onPhaseChange={setCabinetPlayPhase}
+                    />
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-
-            <div
-              className={
-                'arcade-screen-shell' +
-                (menuReady ? ' is-menu-ready' : '') +
-                (flow.phase === 'playing' ? ' is-bubble-game-playing' : '') +
-                (flow.phase === 'results' ? ' is-bubble-game-results' : '') +
-                (flow.phase === 'mode-select' ? ' is-bubble-game-mode-select' : '')
-              }
-            >
-              {flow.phase === 'menu' ? renderMenu(selectedGame) : null}
-              {flow.phase === 'mode-select' ? renderModeSelect() : null}
-              {flow.phase === 'playing' && flow.mode ? (
-                <ArcadeBubbleGame
-                  key={flow.mode + '-' + playSession}
-                  mode={flow.mode}
-                  onComplete={handleGameComplete}
-                  onForfeit={handleGameForfeit}
-                />
-              ) : null}
-              {flow.phase === 'results' ? renderResults() : null}
             </div>
           </div>
         </div>
-      </div>
-    </div>
-      )}
+      ) : null}
     </>
   );
 }

@@ -106,11 +106,13 @@ node scripts/migrate-border-art-to-walrus.mjs
 **Phase 9.1 Walrus Sites (optional before hackathon):**
 
 ```bash
+node scripts/verify-walrus-sites-ready.mjs
+node scripts/verify-walrus-sites-ready.mjs --build
 node scripts/deploy-walrus-sites.mjs --dry-run
 node scripts/deploy-walrus-sites.mjs --epochs 5 --context testnet
 ```
 
-See [walrus-sites-deploy.md](./walrus-sites-deploy.md). Set `NAMI_WALRUS_SITE_OBJECT_ID` on Render after first deploy.
+See [walrus-sites-deploy.md](./walrus-sites-deploy.md). Set `NAMI_WALRUS_SITE_OBJECT_ID` on Render after first deploy. Deploy metadata: `deployments/testnet/walrus-sites-deploy.json`.
 
 ---
 
