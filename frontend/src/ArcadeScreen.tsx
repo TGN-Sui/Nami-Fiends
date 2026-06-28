@@ -40,6 +40,7 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
   void _props;
   const games = readOfficialNamiArcadeGames();
   useArcadeBubbleGameVersion();
+  const [cabinetStarted, setCabinetStarted] = useState(false);
   const [menuReady, setMenuReady] = useState(false);
   const [playSession, setPlaySession] = useState(0);
   const [flow, setFlow] = useState<ArcadeFlowState>({
@@ -54,6 +55,11 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
   const isGameActive = flow.phase === 'playing' || flow.phase === 'results';
   const member = getSelfMember();
   const displayName = resolveMemberDisplayName(SELF_MEMBER_ID, member.name);
+
+  const startCabinet = useCallback((): void => {
+    playArcadeMenuSelectSfx();
+    setCabinetStarted(true);
+  }, []);
 
   const moveSelection = useCallback(
     (delta: number): void => {
@@ -142,13 +148,27 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
   );
 
   useEffect(() => {
+    if (!cabinetStarted) {
+      setMenuReady(false);
+      return;
+    }
+
     const timer = window.setTimeout(() => setMenuReady(true), 480);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [cabinetStarted]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
+      if (!cabinetStarted) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          startCabinet();
+        }
+
+        return;
+      }
+
       if (flow.phase === 'menu') {
         if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
           event.preventDefault();
@@ -189,7 +209,7 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [flow.phase, launchSelectedGame, moveSelection, startMode]);
+  }, [cabinetStarted, flow.phase, launchSelectedGame, moveSelection, startCabinet, startMode]);
 
   function renderModeSelect(): ReactElement {
     return (
@@ -429,6 +449,35 @@ export function ArcadeScreen(_props: ArcadeScreenProps): ReactElement {
           </button>
         </nav>
       </>
+    );
+  }
+
+  if (!cabinetStarted) {
+    return (
+      <div className="arcade-screen arcade-screen-attract">
+        <div className="arcade-screen-attract-viewport">
+          <ArcadeBackgroundMedia />
+
+          <div aria-hidden="true" className="arcade-screen-atmosphere">
+            <div className="arcade-screen-rain" />
+            <div className="arcade-screen-fog" />
+            <div className="arcade-screen-scanlines" />
+            <div className="arcade-screen-vignette" />
+          </div>
+
+          <div className="arcade-screen-attract-stage">
+            <h1 className="arcade-screen-attract-title">ARCADE</h1>
+            <button
+              aria-label="Press start to open the arcade cabinet"
+              className="arcade-press-start-button"
+              onClick={startCabinet}
+              type="button"
+            >
+              <span className="arcade-press-start-label">PRESS START</span>
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
