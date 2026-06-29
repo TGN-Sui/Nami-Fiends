@@ -103,6 +103,29 @@ type GlobalChatsPanelProps = {
   tagHandlers?: TagNavigationHandlers;
 };
 
+export function hubGlobalChatExpandProps(chat: GlobalChatRoom): {
+  renderExpandedAside?: () => ReactElement;
+  expandedChatNotice?: ReactElement;
+  expandedChatHeading?: ReactElement;
+} {
+  if (chat.kind === 'genre') {
+    return genreChatExpandProps(chat);
+  }
+
+  const liveStats = resolveGlobalChatLiveStats(chat);
+
+  return {
+    expandedChatHeading: (
+      <div className="chat-window-expanded-heading-copy is-centered-hub-chat-heading">
+        <h2>{chat.title}</h2>
+        <p>
+          {globalChatSurfaceLabel(chat)} · {liveStats.membersInside.toLocaleString()} inside
+        </p>
+      </div>
+    ),
+  };
+}
+
 export function genreChatExpandProps(
   chat: GlobalChatRoom,
   options?: { compact?: boolean }
@@ -247,9 +270,11 @@ export function GlobalChatRoomView(props: {
     setDraft('');
   }
 
+  const useHubLayout = props.hubLayout === true;
+
   const chatWindowBody = (
     <>
-      {!props.compact && props.chat.kind !== 'genre' ? (
+      {!props.compact && props.chat.kind !== 'genre' && !useHubLayout ? (
         <div className="chat-window-heading">
           <div>
             <h2>{props.chat.title}</h2>
@@ -338,7 +363,6 @@ export function GlobalChatRoomView(props: {
     </>
   );
 
-  const useHubLayout = props.hubLayout === true;
   const useGenreSidebarPresence =
     props.chat.kind === 'genre' &&
     props.compact !== true &&
@@ -914,6 +938,7 @@ export function HubGlobalChatsSection(props: GlobalChatsPanelProps): ReactElemen
           key={activeChat.id}
           onModerationDelete={() => ownerDeleteChat(activeChat)}
           onOpenMember={props.onOpenMember}
+          {...hubGlobalChatExpandProps(activeChat)}
           {...(props.tagHandlers ? { tagHandlers: props.tagHandlers } : {})}
         />
       </div>

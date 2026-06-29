@@ -2494,7 +2494,7 @@ button {
     color 180ms ease;
 }
 
-button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button) {
+button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button):not(.global-chats-hub-room-chip):not(.global-chats-hub-room-chip-end) {
   transform: translateY(-2px) scale(1.025);
   border-color: rgba(117, 215, 255, 0.58);
   box-shadow:
@@ -2502,7 +2502,7 @@ button:hover:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):
     0 14px 30px rgba(0, 0, 0, 0.24);
 }
 
-button:active:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button) {
+button:active:not(:disabled):not(.gamehub-channel-tile):not(.gamehub-swipe-card):not(.gamehub-swipe-cover-card):not(.gamehub-cover-card):not(.gamehub-tcg-card):not(.crypto-community-bubble):not(.sidebar-hub-triangle-button):not(.global-chats-hub-room-chip):not(.global-chats-hub-room-chip-end) {
   transform: translateY(0) scale(0.985);
 }
 
@@ -15097,6 +15097,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .global-chats-hub-toolbar {
   display: grid;
   gap: 10px;
+  overflow: visible;
 }
 
 .global-chats-hub-filters {
@@ -15125,12 +15126,22 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  overflow-y: visible;
+  padding: 4px 2px 8px;
+}
+
+.global-chats-hub-room-chip-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  max-width: min(260px, 100%);
+  overflow: visible;
 }
 
 .global-chats-hub-room-chip {
   display: grid;
   gap: 2px;
+  flex: 1 1 auto;
   min-height: 44px;
   min-width: 120px;
   padding: 8px 12px;
@@ -15142,15 +15153,90 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   font-size: 0.82rem;
 }
 
+.global-chats-hub-room-chip-wrap:has(.global-chats-hub-room-chip-end) .global-chats-hub-room-chip {
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+}
+
+.global-chats-hub-room-chip-kind {
+  color: rgba(159, 255, 210, 0.82);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.global-chats-hub-room-chip strong,
+.global-chats-hub-room-chip span,
+.global-chats-hub-room-chip small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-chats-hub-room-chip:hover,
+.global-chats-hub-room-chip:focus-visible {
+  border-color: rgba(117, 215, 255, 0.42);
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .global-chats-hub-room-chip.is-active-hub-room-chip {
   border-color: rgba(90, 220, 170, 0.55);
   background: rgba(90, 220, 170, 0.14);
 }
 
+.global-chats-hub-room-chip.is-active-hub-room-chip:hover,
+.global-chats-hub-room-chip.is-active-hub-room-chip:focus-visible {
+  border-color: rgba(90, 220, 170, 0.68);
+  background: rgba(90, 220, 170, 0.18);
+}
+
+.global-chats-hub-room-chip-wrap:has(.global-chats-hub-room-chip-end)
+  .global-chats-hub-room-chip.is-active-hub-room-chip {
+  border-right: 0;
+}
+
 .global-chats-hub-room-chip-end {
-  min-height: 34px;
-  padding: 6px 10px;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: stretch;
+  min-height: 44px;
+  min-width: 52px;
+  padding: 8px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.global-chats-hub-room-chip-end:last-child {
+  border-radius: 0 12px 12px 0;
+}
+
+.global-chats-hub-room-chip-end + .global-chats-hub-room-chip-end {
+  border-left: 0;
+}
+
+.global-chats-hub-room-chip-end:not(.is-owner-delete):hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(120, 190, 255, 0.34);
+}
+
+.global-chats-hub-room-chip-end.is-owner-delete {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.32);
+}
+
+.global-chats-hub-room-chip-end.is-owner-delete:hover {
+  background: rgba(185, 28, 28, 0.42);
+  color: #fff;
 }
 
 .passport-screen-layout {
