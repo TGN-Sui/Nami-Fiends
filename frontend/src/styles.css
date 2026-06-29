@@ -5884,7 +5884,7 @@ button:disabled {
 }
 
 .nami-profile-card-header strong {
-  color: var(--nami-frost-text);
+  color: var(--nami-passport-card-frost, var(--nami-frost-text));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.75rem;

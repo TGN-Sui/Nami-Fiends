@@ -398,6 +398,134 @@
   --nami-bubble-rank: #8a5c08;
 }
 
+/* Light mode — dark TCG passport foil keeps light copy */
+[data-nami-theme='light'] .tcg-foil-passport-frame,
+[data-nami-theme='light'] .tcg-foil-passport-shell .nami-profile-card-frame,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-shell .nami-profile-card-frame {
+  --nami-passport-card-text: #f0f7ff;
+  --nami-passport-card-heading: #f5fbff;
+  --nami-passport-card-muted: #c5d9ea;
+  --nami-passport-card-subtle: #9fb5ca;
+  --nami-passport-card-frost: #d4e8f7;
+  color: var(--nami-passport-card-text);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-header strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-header strong {
+  color: var(--nami-passport-card-frost);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-tier-chip-editable strong,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-nameplate h2,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-heading,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-tier-chip-editable strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-nameplate h2,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-heading {
+  color: var(--nami-passport-card-heading);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-nameplate p,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-stats span,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-details span,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-passport-surface p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-nameplate p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-stats span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-details span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-passport-surface p {
+  color: var(--nami-passport-card-muted);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-stats strong,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-details strong,
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-passport-surface strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-stats strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-details strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-passport-surface strong {
+  color: var(--nami-passport-card-text);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-profile-card-header .mini-badge,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-header-mark-editable .mini-badge,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-profile-card-header .mini-badge,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-header-mark-editable .mini-badge {
+  color: var(--nami-passport-card-frost);
+  border: 1px solid rgba(117, 215, 255, 0.34);
+  background: rgba(117, 215, 255, 0.14);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .protocol-hint,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-cooldown,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-notice,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-availability,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-field span,
+[data-nami-theme='light'] .tcg-foil-passport-frame .member-preference-strip-label,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .protocol-hint,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-cooldown,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-notice,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-availability,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-field span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .member-preference-strip-label {
+  color: var(--nami-passport-card-muted);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .player-star-score-value,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .player-star-score-value {
+  color: rgba(223, 236, 250, 0.92);
+}
+
+[data-nami-theme='light'] .tcg-foil-passport-frame .nami-surface-button,
+[data-nami-theme='light'] .tcg-foil-passport-frame .profile-secondary-link,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-name-history-button,
+[data-nami-theme='light'] .tcg-foil-passport-frame .passport-display-name-edit-button,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .nami-surface-button,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .profile-secondary-link,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-name-history-button,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .tcg-foil-passport-frame .passport-display-name-edit-button {
+  color: var(--nami-passport-card-text);
+  border-color: rgba(117, 215, 255, 0.34);
+  background: rgba(5, 9, 15, 0.42);
+}
+
+/* Light mode — passport panels on pale page surfaces */
+[data-nami-theme='light'] .passport-detail-grid span,
+[data-nami-theme='light'] .passport-wallet-grid span,
+[data-nami-theme='light'] .passport-mini-grid span,
+[data-nami-theme='light'] .passport-hero-card p,
+[data-nami-theme='light'] .profile-passport-inline-card p,
+[data-nami-theme='light'] .passport-privacy-card p,
+[data-nami-theme='light'] .passport-proof-card p,
+[data-nami-theme='light'] .passport-access-card span,
+[data-nami-theme='light'] .passport-access-card p,
+[data-nami-theme='light'] .passport-access-title-row span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-detail-grid span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-wallet-grid span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-mini-grid span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-hero-card p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .profile-passport-inline-card p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-privacy-card p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-proof-card p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-access-card span,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-access-card p,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-access-title-row span {
+  color: var(--nami-theme-muted);
+}
+
+[data-nami-theme='light'] .passport-detail-grid strong,
+[data-nami-theme='light'] .passport-wallet-grid strong,
+[data-nami-theme='light'] .passport-mini-grid strong,
+[data-nami-theme='light'] .profile-passport-inline-card strong,
+[data-nami-theme='light'] .passport-access-title-row strong,
+[data-nami-theme='light'] .passport-privacy-card h3,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-detail-grid strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-wallet-grid strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-mini-grid strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .profile-passport-inline-card strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-access-title-row strong,
+[data-nami-theme='custom'][data-nami-theme-light='true'] .passport-privacy-card h3 {
+  color: var(--nami-theme-text);
+}
+
 [data-nami-theme='light'] .crypto-community-bubble strong,
 [data-nami-theme='custom'][data-nami-theme-light='true'] .crypto-community-bubble strong {
   color: var(--nami-bubble-title);
