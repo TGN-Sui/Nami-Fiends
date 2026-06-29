@@ -24,21 +24,29 @@ export function RewardLockInPrompt(props: {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [evidenceId, setEvidenceId] = useState<string | null>(null);
 
-  if (!owner) {
+  const resolvedOwner = owner;
+
+  if (!resolvedOwner) {
     return null;
   }
 
   async function handleLockIn(): Promise<void> {
+    const ownerAddress = resolvedOwner;
+
+    if (!ownerAddress) {
+      return;
+    }
+
     setWorking(true);
     setErrorMessage(null);
 
     try {
       const sealed = await sealEvidencePacket({
-        owner,
+        owner: ownerAddress,
         policy: 'reward_escrow',
         plaintext: buildRewardEscrowPlaintext({
           reward: props.reward,
-          owner,
+          owner: ownerAddress,
         }),
         relatedId: props.relatedId ?? props.reward.id,
       });
