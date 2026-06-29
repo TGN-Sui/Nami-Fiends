@@ -8794,7 +8794,7 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
 }
 
 [data-nami-ui='glass'] .sidebar-brand:not(.sidebar-hub-swap):not(.sidebar-brand-home):hover,
-[data-nami-ui='glass'] .sidebar-nav button:hover,
+[data-nami-ui='glass'] .sidebar-nav > button:hover,
 [data-nami-ui='glass'] .sidebar-toggle:hover,
 [data-nami-ui='glass'] .action-row button:hover,
 [data-nami-ui='glass'] .filter-row button:hover,
@@ -12281,7 +12281,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 }
 
 [data-nami-ui='glass'] .sidebar-brand,
-[data-nami-ui='glass'] .sidebar-nav button,
+[data-nami-ui='glass'] .sidebar-nav > button,
 [data-nami-ui='glass'] .sidebar-toggle,
 [data-nami-ui='glass'] .sidebar-radio-toggle,
 [data-nami-ui='glass'] .nami-surface-button,
@@ -12334,7 +12334,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 [data-nami-ui='glass'] :is(
   .sidebar-brand,
-  .sidebar-nav button,
+  .sidebar-nav > button,
   .sidebar-toggle,
   .sidebar-radio-toggle,
   .nami-surface-button,
@@ -12378,7 +12378,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 [data-nami-ui='glass'] :is(
   .sidebar-brand,
-  .sidebar-nav button,
+  .sidebar-nav > button,
   .sidebar-toggle,
   .sidebar-radio-toggle,
   .nami-surface-button,
@@ -12424,7 +12424,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 [data-nami-ui='glass'] :is(
   .sidebar-brand,
-  .sidebar-nav button,
+  .sidebar-nav > button,
   .sidebar-toggle,
   .sidebar-radio-toggle,
   .nami-surface-button,
@@ -12483,7 +12483,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'] .nami-surface-button.is-active-view,
 [data-nami-ui='glass'] .tab-row button.is-active-tab,
 [data-nami-ui='glass'] .filter-row button.is-active-filter,
-[data-nami-ui='glass'] .sidebar-nav button.is-active {
+[data-nami-ui='glass'] .sidebar-nav > button.is-active {
   background:
     linear-gradient(135deg, rgba(67, 245, 167, 0.34), rgba(117, 215, 255, 0.22)),
     rgba(255, 255, 255, 0.16);
@@ -12503,7 +12503,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'][data-nami-theme='dark'] .event-interested-button.is-active-view,
 [data-nami-ui='glass'][data-nami-theme='dark'] .tab-row button.is-active-tab,
 [data-nami-ui='glass'][data-nami-theme='dark'] .filter-row button.is-active-filter,
-[data-nami-ui='glass'][data-nami-theme='dark'] .sidebar-nav button.is-active,
+[data-nami-ui='glass'][data-nami-theme='dark'] .sidebar-nav > button.is-active,
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .nami-surface-button.is-primary-surface-button,
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .nami-surface-button.is-active-filter,
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .nami-surface-button.is-active-view,
@@ -12513,7 +12513,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .event-interested-button.is-active-view,
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .tab-row button.is-active-tab,
 [data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .filter-row button.is-active-filter,
-[data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .sidebar-nav button.is-active {
+[data-nami-ui='glass'][data-nami-theme='custom']:not([data-nami-theme-light]) .sidebar-nav > button.is-active {
   background:
     linear-gradient(180deg, var(--nami-theme-accent-medium), rgba(255, 255, 255, 0.04)),
     color-mix(in srgb, var(--nami-theme-panel) 88%, #000000);
@@ -12534,7 +12534,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'][data-nami-theme='light'] .event-interested-button.is-active-view,
 [data-nami-ui='glass'][data-nami-theme='light'] .tab-row button.is-active-tab,
 [data-nami-ui='glass'][data-nami-theme='light'] .filter-row button.is-active-filter,
-[data-nami-ui='glass'][data-nami-theme='light'] .sidebar-nav button.is-active,
+[data-nami-ui='glass'][data-nami-theme='light'] .sidebar-nav > button.is-active,
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .nami-surface-button.is-primary-surface-button,
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .nami-surface-button.is-active-filter,
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .nami-surface-button.is-active-view,
@@ -12544,7 +12544,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .event-interested-button.is-active-view,
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .tab-row button.is-active-tab,
 [data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .filter-row button.is-active-filter,
-[data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .sidebar-nav button.is-active {
+[data-nami-ui='glass'][data-nami-theme='custom'][data-nami-theme-light='true'] .sidebar-nav > button.is-active {
   background: linear-gradient(135deg, var(--nami-theme-accent-strong), var(--nami-theme-active-bg));
   color: var(--nami-theme-active-text);
   border-color: var(--nami-theme-accent-border);
@@ -12659,7 +12659,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 @media (prefers-reduced-motion: reduce) {
   [data-nami-ui='glass'] :is(
     .sidebar-brand,
-    .sidebar-nav button,
+    .sidebar-nav > button,
     .sidebar-toggle,
     .sidebar-radio-toggle,
     .nami-surface-button,
@@ -12692,7 +12692,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   ):hover:not(:disabled),
   [data-nami-ui='glass'] :is(
     .sidebar-brand,
-    .sidebar-nav button,
+    .sidebar-nav > button,
     .sidebar-toggle,
     .sidebar-radio-toggle,
     .nami-surface-button,
@@ -22151,8 +22151,9 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 }
 
 [data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
-[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover:not(:disabled),
 [data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:focus-visible,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:active:not(:disabled),
 [data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active,
 [data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
 [data-nami-theme='light'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
@@ -22163,11 +22164,24 @@ button.uniform-member-avatar.is-fiend-rainbow::after,
 [data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button,
 [data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button:hover,
 [data-nami-theme='custom'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active {
+  position: absolute !important;
+  transform: translate(-50%, 0) !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  transition:
+    top var(--sidebar-rail-shift-duration) var(--sidebar-rail-scale-ease),
+    left var(--sidebar-rail-shift-duration) var(--sidebar-rail-scale-ease),
+    color var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease),
+    filter var(--sidebar-rail-scale-duration) var(--sidebar-rail-scale-ease);
+}
+
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active,
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active:hover:not(:disabled),
+[data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-destinations > button.sidebar-hub-triangle-button.is-active:focus-visible {
+  z-index: 4;
 }
 
 [data-nami-ui='glass'] .sidebar.is-icon-rail .sidebar-hub-triangle-button .nav-icon,
