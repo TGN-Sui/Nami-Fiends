@@ -270,6 +270,10 @@ const renderEnv = formatEnvBlock([
   'NAMI_WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space',
   'NAMI_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space',
   'NAMI_WALRUS_STORAGE_EPOCHS=5',
+  '',
+  '# Phase 9.2 — Seal privacy (paste key from scripts/enable-seal-privacy.mjs)',
+  'NAMI_SEAL_PRIVACY_ENABLED=true',
+  'NAMI_SEAL_EVIDENCE_KEY=',
 ]);
 
 const vercelEnv = formatEnvBlock([

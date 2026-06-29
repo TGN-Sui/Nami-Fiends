@@ -10,13 +10,15 @@ export type SealEvidencePolicy =
   | 'appeal_evidence'
   | 'moderation_packet'
   | 'recovery_attachment'
-  | 'verification_proof';
+  | 'verification_proof'
+  | 'reward_escrow';
 
 export const SEAL_EVIDENCE_POLICIES: ReadonlySet<SealEvidencePolicy> = new Set([
   'appeal_evidence',
   'moderation_packet',
   'recovery_attachment',
   'verification_proof',
+  'reward_escrow',
 ]);
 
 export type SealedEvidenceRecord = {

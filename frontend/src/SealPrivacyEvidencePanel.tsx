@@ -22,6 +22,7 @@ const POLICY_LABELS: Record<SealEvidencePolicy, string> = {
   moderation_packet: 'Moderation packet',
   recovery_attachment: 'Recovery attachment',
   verification_proof: 'Verification proof',
+  reward_escrow: 'Reward escrow',
 };
 
 export function SealPrivacyEvidencePanel(): ReactElement {
@@ -45,7 +46,9 @@ export function SealPrivacyEvidencePanel(): ReactElement {
     () =>
       official
         ? SEAL_EVIDENCE_POLICIES
-        : SEAL_EVIDENCE_POLICIES.filter((entry) => entry !== 'moderation_packet'),
+        : SEAL_EVIDENCE_POLICIES.filter(
+            (entry) => entry !== 'moderation_packet' && entry !== 'reward_escrow'
+          ),
     [official]
   );
 

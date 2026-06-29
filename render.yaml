@@ -92,3 +92,8 @@ services:
         value: testnet
       - key: NAMI_WALRUS_SITE_EPOCHS
         value: '5'
+      # Phase 9.2 — Seal privacy envelopes (generate: node scripts/enable-seal-privacy.mjs)
+      - key: NAMI_SEAL_PRIVACY_ENABLED
+        value: 'true'
+      - key: NAMI_SEAL_EVIDENCE_KEY
+        sync: false

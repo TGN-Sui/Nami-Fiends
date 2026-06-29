@@ -1,5 +1,6 @@
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
+import { isEnokiSigningPreferred } from './enoki-config.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
 import { canZkLoginSignForOwner, getZkLoginSession } from './zklogin.js';
@@ -98,6 +99,11 @@ function clearAuthCache(): void {
   cachedAtMs = 0;
   inFlightSign = null;
   inFlightOwner = null;
+}
+
+/** Enoki can sponsor member-facing auth once VITE_ENOKI_API_KEY is configured. */
+export function prefersEnokiSponsoredAuth(): boolean {
+  return isEnokiSigningPreferred();
 }
 
 export function canPromptWalletSignature(owner?: string): boolean {

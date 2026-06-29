@@ -7,10 +7,10 @@ import {
 } from './seal-policy-registry.js';
 
 describe('seal-policy-registry', () => {
-  it('registers all four evidence policies for 9.2.2 groundwork', () => {
+  it('registers all five evidence policies for 9.2.2 groundwork', () => {
     const policies = listSealPolicyDefinitions();
 
-    assert.equal(policies.length, 4);
+    assert.equal(policies.length, 5);
     assert.ok(policies.every((entry) => entry.walrus_blob_prefix.startsWith('seal/')));
   });
 

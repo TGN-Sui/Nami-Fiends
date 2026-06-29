@@ -5,6 +5,7 @@ terminals/
 # Generated deploy env (run scripts/sync-deploy-env.mjs)
 deployments/testnet/render.env
 deployments/testnet/vercel.env
+deployments/testnet/seal-evidence-key.txt
 deployments/testnet/deploy-urls.json
 
 agent-tools/

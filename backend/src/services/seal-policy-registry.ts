@@ -46,6 +46,15 @@ export const SEAL_POLICY_REGISTRY: Record<SealEvidencePolicy, SealPolicyDefiniti
     walrus_blob_prefix: 'seal/verification/',
     migration_stage: 'dev-envelope',
   },
+  reward_escrow: {
+    policy: 'reward_escrow',
+    label: 'Reward escrow',
+    description:
+      'Gamer-locked event gifts and cosmetics — sealed until unlock condition is met or manually transferred.',
+    mysten_policy_id: null,
+    walrus_blob_prefix: 'seal/reward/',
+    migration_stage: 'dev-envelope',
+  },
 };
 
 export function listSealPolicyDefinitions(): SealPolicyDefinition[] {

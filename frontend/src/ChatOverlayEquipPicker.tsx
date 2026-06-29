@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 
 import { ChatBorderArtFrame } from './ChatBorderArtFrame.js';
 import { buildChatBorderPresentation } from './chat-border-rendering.js';
@@ -11,6 +11,8 @@ import {
   useOfficialChatOverlayRewards,
   type OfficialChatOverlayReward,
 } from './official-chat-overlay-rewards-store.js';
+import { RewardLockInPrompt } from './RewardLockInPrompt.js';
+import { listPendingRewardEscrowIds, saveRewardEscrowEvidenceId } from './reward-escrow-store.js';
 import type { NamiMember } from './uiMockData.js';
 
 function ChatOverlayEquipPreview(props: {
@@ -60,6 +62,17 @@ export function ChatOverlayEquipPicker(props: {
 }): ReactElement {
   const catalog = useOfficialChatOverlayRewards();
   const unlocked = unlockedChatOverlayRewardsForMember(props.member, catalog);
+  const [dismissedLockRewardId, setDismissedLockRewardId] = useState<string | null>(null);
+
+  const lockCandidate = useMemo(() => {
+    const grantRewards = unlocked.filter((reward) => reward.condition.type === 'official-grant');
+    const pendingIds = listPendingRewardEscrowIds(grantRewards.map((reward) => reward.id));
+
+    return grantRewards.find((reward) => pendingIds.includes(reward.id)) ?? null;
+  }, [unlocked]);
+
+  const showLockPrompt =
+    lockCandidate !== null && dismissedLockRewardId !== lockCandidate.id;
 
   if (unlocked.length === 0) {
     return (
@@ -70,7 +83,19 @@ export function ChatOverlayEquipPicker(props: {
   }
 
   return (
-    <div className="chat-overlay-equip-grid" role="list">
+    <>
+      {showLockPrompt && lockCandidate ? (
+        <RewardLockInPrompt
+          onDismiss={() => setDismissedLockRewardId(lockCandidate.id)}
+          onLocked={(evidenceId) => {
+            saveRewardEscrowEvidenceId(lockCandidate.id, evidenceId);
+            setDismissedLockRewardId(lockCandidate.id);
+          }}
+          reward={lockCandidate}
+        />
+      ) : null}
+
+      <div className="chat-overlay-equip-grid" role="list">
       <button
         aria-pressed={!props.selectedOverlayId}
         className={
@@ -103,7 +128,8 @@ export function ChatOverlayEquipPicker(props: {
           </small>
         </button>
       ))}
-    </div>
+      </div>
+    </>
   );
 }
 
