@@ -1,7 +1,6 @@
 import { useMemo, type ReactElement } from 'react';
 
 import { PassportHoverDetail } from './PassportHoverDetail.js';
-import { UniversalCalendarLauncher } from './UniversalCalendarLauncher.js';
 import {
   profileGenreOptions,
   profilePlatformOptions,
@@ -81,9 +80,12 @@ export function MemberPreferenceStrip(props: {
       preferences.preferredGenres.includes(genre)
     );
 
+    if (selectedPlatforms.length === 0 && selectedGenres.length === 0) {
+      return <></>;
+    }
+
     return (
       <div className="member-preference-strip is-passport-horizontal-preference-strip is-passport-indicator-strip">
-        {selectedPlatforms.length > 0 || selectedGenres.length > 0 ? (
         <div
           aria-label="Preferred platforms and genre lounges"
           className="member-preference-indicator-tabs is-passport-preference-icons"
@@ -118,8 +120,6 @@ export function MemberPreferenceStrip(props: {
             </PassportHoverDetail>
           ))}
         </div>
-        ) : null}
-        <UniversalCalendarLauncher />
       </div>
     );
   }
