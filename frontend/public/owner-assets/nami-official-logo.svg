@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nami">
+  <defs>
+    <linearGradient id="namiLogoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8fe8ff"/>
+      <stop offset="1" stop-color="#1f9f8d"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="28" fill="url(#namiLogoGrad)" opacity="0.95"/>
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#dffcff" stroke-width="2" opacity="0.55"/>
+  <path d="M20 44V20l10 16 10-16v24" fill="none" stroke="#041018" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

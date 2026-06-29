@@ -26,7 +26,7 @@ import { PassportClaimSettingsPanel } from './PassportClaimSettingsPanel.js';
 import { PlatformLinkSettingsPanel } from './PlatformLinkSettingsPanel.js';
 import { TagNotificationsPanel } from './TagNotificationsPanel.js';
 import { countBlockedMembers, countMutedMembers } from './member-preference-store.js';
-import { ProtocolStatusBar } from './ProtocolStatusBar.js';
+
 import { readSafetyReportCount } from './safety-report-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
@@ -625,7 +625,6 @@ export function SettingsScreen(props: {
         </section>
       </div>
 
-      <ProtocolStatusBar className="is-settings-protocol-footer" />
     </div>
   );
 }

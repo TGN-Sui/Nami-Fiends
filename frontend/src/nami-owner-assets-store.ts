@@ -6,6 +6,7 @@ import {
   readArcadeCabinetOwnerAssetSlots,
 } from './arcade-cabinets.js';
 
+import { readBundledOwnerAssetUrl } from './bundled-owner-assets.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { isPlatformOwnerAssetsApiAvailable } from './platform-owner-assets-api.js';
 import {
@@ -31,12 +32,16 @@ export { validateOwnerAssetFile } from './owner-asset-validation.js';
 
 export async function ensureOwnerAssetsHydrated(): Promise<void> {
   await hydrateOwnerAssetsPersistence();
+  await hydratePlatformOwnerAssetsFromServer();
+  emit();
+}
 
-  const hydratedFromServer = await hydratePlatformOwnerAssetsFromServer();
-
-  if (hydratedFromServer) {
-    emit();
-  }
+/** Pull the latest official artwork from the receiving server for all testers. */
+export async function refreshOwnerAssetsFromServer(): Promise<boolean> {
+  await hydrateOwnerAssetsPersistence();
+  const changed = await hydratePlatformOwnerAssetsFromServer();
+  emit();
+  return changed;
 }
 
 export type OwnerAssetSlot = {
@@ -342,7 +347,7 @@ export function readAllOwnerAssets(): OwnerAssetMap {
 }
 
 export function readOwnerAsset(slotId: string): string | null {
-  return readAssets()[slotId] ?? null;
+  return readAssets()[slotId] ?? readBundledOwnerAssetUrl(slotId);
 }
 
 export function ownerAssetNavSlotId(page: string): string {

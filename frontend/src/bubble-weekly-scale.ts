@@ -31,3 +31,15 @@ export function genreBubbleScaleFromWeeklyChatters(activeChatters: number): numb
 export function genreBubbleBaseRadiusFromWeeklyChatters(activeChatters: number): number {
   return 26 + Math.min(18, Math.round(Math.max(0, activeChatters) / 8));
 }
+
+const GENRE_BUBBLE_BOARD_REFERENCE_WIDTH_PX = 1160;
+
+/** Shrink genre bubble radii on narrow boards — radii are pixel-absolute while layout is responsive. */
+export function resolveGenreBubbleBoardScale(baseScale: number, boardWidthPx: number): number {
+  const widthFactor = Math.min(
+    1,
+    Math.max(0.35, boardWidthPx / GENRE_BUBBLE_BOARD_REFERENCE_WIDTH_PX),
+  );
+
+  return baseScale * widthFactor;
+}

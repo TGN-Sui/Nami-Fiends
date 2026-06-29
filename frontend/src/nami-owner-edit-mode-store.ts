@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { readBundledOwnerAssetUrl } from './bundled-owner-assets.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import {
   ownerAssetSaveErrorMessage,
@@ -53,7 +54,7 @@ export function resolveOwnerAssetUrl(
     return snapshot.drafts[slotId] ?? null;
   }
 
-  return persistedAssets[slotId] ?? null;
+  return persistedAssets[slotId] ?? readBundledOwnerAssetUrl(slotId);
 }
 
 export function prepareOwnerDashboardReturn(): void {

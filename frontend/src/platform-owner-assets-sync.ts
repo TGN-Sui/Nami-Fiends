@@ -1,6 +1,6 @@
 import type { OwnerAssetMap } from './nami-owner-assets-store.js';
 import { prepareOwnerAssetsForServerSync } from './owner-asset-sync-prep.js';
-import { persistOwnerAssets } from './owner-assets-persistence.js';
+import { persistOwnerAssets, readPersistedOwnerAssets } from './owner-assets-persistence.js';
 import {
   fetchPlatformOwnerAssets,
   isPlatformOwnerAssetsApiAvailable,
@@ -83,12 +83,13 @@ export async function hydratePlatformOwnerAssetsFromServer(): Promise<boolean> {
   try {
     const projection = await fetchPlatformOwnerAssets();
     const serverAssets = readSyncedAssetMap(projection);
+    const localAssets = readPersistedOwnerAssets();
 
-    if (Object.keys(serverAssets).length === 0) {
+    if (Object.keys(serverAssets).length === 0 && Object.keys(localAssets).length === 0) {
       return false;
     }
 
-    await persistOwnerAssets(serverAssets);
+    await persistOwnerAssets({ ...localAssets, ...serverAssets });
     return true;
   } catch {
     return false;

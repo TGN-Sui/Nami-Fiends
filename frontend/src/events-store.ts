@@ -17,7 +17,7 @@ import {
   subscribedUserEvents,
   type NamiEvent,
 } from './events-data.js';
-import { listAllGuildEvents } from './guild-events-store.js';
+import { canEditGuildEvent, listAllGuildEvents } from './guild-events-store.js';
 import { guildsForMember } from './nami-affiliations.js';
 import { readSubscribedChannelIds } from './subscriptions-store.js';
 import { channels, members, type NamiChannel } from './uiMockData.js';
@@ -868,6 +868,26 @@ export function canEditChannelEvent(event: StoredEvent): boolean {
   return canManageChannelEvents(event.channelId);
 }
 
+/** Nami owner, game channel owner, or guild master may attach rewards to their events. */
+export function canAttachEventRewards(
+  event: StoredEvent,
+  memberId = getSelfMember().id
+): boolean {
+  if (event.source === 'official') {
+    return canEditOfficialEvent(members.find((member) => member.id === memberId) ?? getSelfMember());
+  }
+
+  if (event.source === 'channel' && event.channelId) {
+    return canManageChannelEvents(event.channelId);
+  }
+
+  if (event.source === 'guild' && event.guildId && event.createdAt && event.createdByMemberId) {
+    return canEditGuildEvent(event.guildId, event, memberId);
+  }
+
+  return false;
+}
+
 export function createChannelEvent(
   channel: NamiChannel,
   input: {
@@ -876,6 +896,7 @@ export function createChannelEvent(
     body: string;
     startsAtUtc: string;
     durationMinutes?: number;
+    rewards?: StoredEvent['rewards'];
   },
   createdByMemberId = getSelfMember().id
 ): StoredEvent {
@@ -900,6 +921,7 @@ export function createChannelEvent(
     durationMinutes: input.durationMinutes ?? 120,
     createdAt: new Date().toISOString(),
     createdByMemberId,
+    ...(input.rewards?.length ? { rewards: input.rewards } : {}),
     ...(hiddenUntilChannelApproval ? { hiddenUntilChannelApproval: true } : {}),
   };
 
@@ -920,7 +942,15 @@ export function updateStoredEvent(
   patch: Partial<
     Pick<
       StoredEvent,
-      'title' | 'description' | 'body' | 'dateLabel' | 'status' | 'seats' | 'startsAtUtc' | 'durationMinutes'
+      | 'title'
+      | 'description'
+      | 'body'
+      | 'dateLabel'
+      | 'status'
+      | 'seats'
+      | 'startsAtUtc'
+      | 'durationMinutes'
+      | 'rewards'
     >
   >,
   editorMemberId = getSelfMember().id
@@ -967,6 +997,7 @@ export function createOfficialEvent(
     body: string;
     startsAtUtc: string;
     durationMinutes?: number;
+    rewards?: StoredEvent['rewards'];
   },
   createdByMemberId = getSelfMember().id
 ): StoredEvent | null {
@@ -987,6 +1018,7 @@ export function createOfficialEvent(
     durationMinutes: input.durationMinutes ?? 120,
     createdAt: new Date().toISOString(),
     createdByMemberId,
+    ...(input.rewards?.length ? { rewards: input.rewards } : {}),
   };
 
   const map = readCatalogEventsMap();

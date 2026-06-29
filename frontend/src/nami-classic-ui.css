@@ -1,0 +1,130 @@
+/* Classic shell — flat, opaque section backdrops and card panels (loads last). */
+
+[data-nami-ui='classic'] .settings-screen-layout,
+[data-nami-ui='classic'] .profile-section-shell {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+[data-nami-ui='classic'] .settings-screen-layout,
+[data-nami-ui='classic'] .profile-section-shell,
+[data-nami-ui='classic'] .channel-profile-section-shell,
+[data-nami-ui='classic'] .hub-featured-placement-strip,
+[data-nami-ui='classic'] .gamehub-discovery-panel {
+  background: var(--nami-theme-section-surface, var(--nami-theme-panel));
+  border: 1px solid var(--nami-theme-border);
+  box-shadow: 0 4px 14px var(--nami-theme-shadow);
+  color: var(--nami-theme-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-nami-ui='classic'] .panel,
+[data-nami-ui='classic'] .chat-shell,
+[data-nami-ui='classic'] .feature-rail,
+[data-nami-ui='classic'] .member-rail,
+[data-nami-ui='classic'] .account-card,
+[data-nami-ui='classic'] .fixed-card,
+[data-nami-ui='classic'] .chat-window,
+[data-nami-ui='classic'] .chat-side-panel,
+[data-nami-ui='classic'] .channel-browser,
+[data-nami-ui='classic'] .community-showcase,
+[data-nami-ui='classic'] .profile-hero-panel,
+[data-nami-ui='classic'] .member-profile-hero,
+[data-nami-ui='classic'] .passport-hero-card-refined,
+[data-nami-ui='classic'] .chat-rail-collapsible-panel,
+[data-nami-ui='classic'] .ignite-radio-dock,
+[data-nami-ui='classic'] .nami-season-progress,
+[data-nami-ui='classic'] .nami-pinned-profile-stack {
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
+  border: 1px solid var(--nami-theme-border-strong);
+  box-shadow: 0 5px 14px var(--nami-theme-shadow);
+  color: var(--nami-theme-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-nami-ui='classic'] .settings-screen-layout .panel,
+[data-nami-ui='classic'] .settings-screen-layout article.panel,
+[data-nami-ui='classic'] .settings-screen-layout section.panel,
+[data-nami-ui='classic'] .profile-section-shell > .panel,
+[data-nami-ui='classic'] .hub-featured-placement-strip .featured-placement-auction-panel,
+[data-nami-ui='classic'] .gamehub-discovery-channel-card,
+[data-nami-ui='classic'] .gamehub-discovery-rank-row,
+[data-nami-ui='classic'] .gamehub-placement-preview,
+[data-nami-ui='classic'] .featured-placement-auction-meta-card,
+[data-nami-ui='classic'] .embedded-social-card,
+[data-nami-ui='classic'] .discovery-card,
+[data-nami-ui='classic'] .module-card,
+[data-nami-ui='classic'] .member-spotlight-card,
+[data-nami-ui='classic'] .gamehub-feature-card {
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
+  border: 1px solid var(--nami-theme-border-strong);
+  box-shadow: 0 4px 12px var(--nami-theme-shadow);
+  color: var(--nami-theme-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-nami-ui='classic'] .hub-featured-placement-winner-chip,
+[data-nami-ui='classic'] .hub-featured-placement-carousel-dot,
+[data-nami-ui='classic'] .featured-placement-auction-pool-option,
+[data-nami-ui='classic'] .settings-screen-layout .settings-toggle-list span,
+[data-nami-ui='classic'] .featured-placement-auction-standings li,
+[data-nami-ui='classic'] .featured-placement-auction-winners li {
+  border: 1px solid var(--nami-theme-border);
+  background: var(--nami-theme-surface-raised, rgba(255, 255, 255, 0.06));
+  color: var(--nami-theme-text);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-nami-ui='classic'] .hub-featured-placement-carousel-dot.is-active-showcase-dot,
+[data-nami-ui='classic'] .featured-placement-auction-pool-option.is-active-pool {
+  border-color: var(--nami-theme-border-strong);
+  background: color-mix(in srgb, var(--nami-theme-accent) 14%, var(--nami-theme-surface-raised));
+}
+
+[data-nami-ui='classic'] .profile-section-drag-bar {
+  background: color-mix(in srgb, var(--nami-theme-accent) 11%, var(--nami-theme-section-surface));
+  border-color: var(--nami-theme-border);
+}
+
+[data-nami-ui='classic'] .panel:hover,
+[data-nami-ui='classic'] .gamehub-discovery-channel-card:hover,
+[data-nami-ui='classic'] .gamehub-discovery-rank-row:hover,
+[data-nami-ui='classic'] .gamehub-placement-preview:hover,
+[data-nami-ui='classic'] .discovery-card:hover,
+[data-nami-ui='classic'] .module-card:hover,
+[data-nami-ui='classic'] .gamehub-feature-card:hover {
+  border-color: var(--nami-theme-border-strong);
+  box-shadow: 0 6px 16px var(--nami-theme-shadow);
+}
+
+[data-nami-ui='classic'] :is(
+  .settings-screen-layout,
+  .panel,
+  .chat-shell,
+  .hub-featured-placement-strip,
+  .gamehub-discovery-panel,
+  .gamehub-discovery-channel-card,
+  .gamehub-discovery-rank-row,
+  .gamehub-placement-preview,
+  .featured-placement-auction-panel,
+  .featured-placement-auction-meta-card
+)::before,
+[data-nami-ui='classic'] :is(
+  .settings-screen-layout,
+  .panel,
+  .chat-shell,
+  .hub-featured-placement-strip,
+  .gamehub-discovery-panel,
+  .gamehub-discovery-channel-card,
+  .gamehub-discovery-rank-row,
+  .gamehub-placement-preview,
+  .featured-placement-auction-panel,
+  .featured-placement-auction-meta-card
+)::after {
+  content: none !important;
+  display: none !important;
+}

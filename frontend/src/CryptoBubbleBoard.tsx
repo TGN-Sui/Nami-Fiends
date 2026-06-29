@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 
+import { resolveGenreBubbleBoardScale } from './bubble-weekly-scale.js';
 import { channelRainbowBorderClass } from './channel-surface.js';
 import { playBubbleCollisionSfx, playBubbleMotionSfx } from './nami-sfx.js';
 import { type BubbleLeaderboardSize } from './events-store.js';
@@ -474,7 +475,13 @@ export function CryptoBubbleBoard(props: {
   showCountToggle?: boolean;
   onMaxEntriesChange?: (size: BubbleLeaderboardSize) => void;
 }): ReactElement {
-  const bubbleScale = props.bubbleScale ?? 1;
+  const requestedBubbleScale = props.bubbleScale ?? 1;
+  const isGenreBubbleBoard = props.boardClassName?.includes('is-genre-bubble-board') ?? false;
+  const [boardWidthPx, setBoardWidthPx] = useState(1);
+  const bubbleScale =
+    isGenreBubbleBoard
+      ? resolveGenreBubbleBoardScale(requestedBubbleScale, boardWidthPx)
+      : requestedBubbleScale;
   const maxEntries = props.maxEntries ?? props.entries.length;
   const visibleEntries = props.entries.slice(0, maxEntries);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -570,17 +577,22 @@ export function CryptoBubbleBoard(props: {
         return;
       }
 
-      boardSizeRef.current = {
-        width: Math.max(entry.contentRect.width, 1),
-        height: Math.max(entry.contentRect.height, 1),
-      };
+      const width = Math.max(entry.contentRect.width, 1);
+      const height = Math.max(entry.contentRect.height, 1);
+
+      boardSizeRef.current = { width, height };
+      setBoardWidthPx((current) => (current === width ? current : width));
     });
 
     observer.observe(board);
+    const initialWidth = Math.max(board.clientWidth, 1);
+    const initialHeight = Math.max(board.clientHeight, 1);
+
     boardSizeRef.current = {
-      width: Math.max(board.clientWidth, 1),
-      height: Math.max(board.clientHeight, 1),
+      width: initialWidth,
+      height: initialHeight,
     };
+    setBoardWidthPx(initialWidth);
 
     return () => observer.disconnect();
   }, [entriesSignature]);

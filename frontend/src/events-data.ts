@@ -1,3 +1,7 @@
+import {
+  normalizeEventRewardAttachment,
+  type EventRewardAttachment,
+} from './event-reward-attachments.js';
 import { channels, type NamiChannel } from './uiMockData.js';
 
 export type NamiEventSource = 'official' | 'channel' | 'guild';
@@ -19,6 +23,8 @@ export type NamiEvent = {
   startsAtUtc?: string;
   durationMinutes?: number;
   createdByMemberId?: string;
+  /** Optional rewards attached by Nami owner, game channel owner, or guild owner. */
+  rewards?: EventRewardAttachment[];
 };
 
 export const officialNamiHubEvents: NamiEvent[] = [
@@ -33,6 +39,20 @@ export const officialNamiHubEvents: NamiEvent[] = [
     seats: 'Unlimited',
     source: 'official',
     subscribed: true,
+    rewards: [
+      normalizeEventRewardAttachment(
+        { kind: 'badge', label: 'Festival Badge', catalogRef: 'badge-launch-festival' },
+        'nami-launch-festival'
+      ),
+      normalizeEventRewardAttachment(
+        {
+          kind: 'link',
+          label: 'Festival claim page',
+          linkUrl: 'https://nami.social/festival-claim',
+        },
+        'nami-launch-festival'
+      ),
+    ],
   },
   {
     id: 'nami-creator-showcase',
@@ -62,6 +82,20 @@ export const subscribedUserEvents: NamiEvent[] = [
     channelId: 'fiends',
     channelName: 'FIENDS',
     subscribed: true,
+    rewards: [
+      normalizeEventRewardAttachment(
+        {
+          kind: 'description',
+          label: 'Winner perks',
+          description: 'Top 8 receive priority queue placement and channel flair for the season.',
+        },
+        'fiends-tournament'
+      ),
+      normalizeEventRewardAttachment(
+        { kind: 'move-object', label: 'Trophy object', objectId: '0xfiends-trophy-demo' },
+        'fiends-tournament'
+      ),
+    ],
   },
   {
     id: 'walrus-guild-run',
@@ -146,5 +180,11 @@ export const guildOwnerEvents: NamiEvent[] = [
     source: 'guild',
     guildId: 'wave-raiders',
     guildName: 'Wave Raiders',
+    rewards: [
+      normalizeEventRewardAttachment(
+        { kind: 'cosmetic', label: 'Raid Spark Frame', catalogRef: 'overlay-raid-spark' },
+        'guild-cosmetic-drop'
+      ),
+    ],
   },
 ];

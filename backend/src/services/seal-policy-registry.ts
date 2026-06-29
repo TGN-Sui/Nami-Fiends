@@ -50,7 +50,7 @@ export const SEAL_POLICY_REGISTRY: Record<SealEvidencePolicy, SealPolicyDefiniti
     policy: 'reward_escrow',
     label: 'Reward escrow',
     description:
-      'Gamer-locked event gifts and cosmetics — sealed until unlock condition is met or manually transferred.',
+      'Event-attached cosmetics and badges only — Nami owner seals the host attachment, then gamers lock in until the event condition is met or they gift manually.',
     mysten_policy_id: null,
     walrus_blob_prefix: 'seal/reward/',
     migration_stage: 'dev-envelope',

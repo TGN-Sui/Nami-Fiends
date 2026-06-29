@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   gameBubbleScaleFromBoostPower,
   genreBubbleScaleFromWeeklyChatters,
+  resolveGenreBubbleBoardScale,
 } from './bubble-weekly-scale.js';
 
 describe('bubble-weekly-scale', () => {
@@ -20,5 +21,11 @@ describe('bubble-weekly-scale', () => {
     expect(genreBubbleScaleFromWeeklyChatters(0)).toBe(1);
     expect(genreBubbleScaleFromWeeklyChatters(5)).toBeCloseTo(1.06, 4);
     expect(genreBubbleScaleFromWeeklyChatters(10_000)).toBeCloseTo(1.4, 4);
+  });
+
+  it('shrinks genre bubble scale on narrow boards', () => {
+    expect(resolveGenreBubbleBoardScale(1.28, 1160)).toBeCloseTo(1.28, 4);
+    expect(resolveGenreBubbleBoardScale(1.28, 390)).toBeCloseTo(0.448, 3);
+    expect(resolveGenreBubbleBoardScale(1.28, 500)).toBeCloseTo(0.5517, 3);
   });
 });

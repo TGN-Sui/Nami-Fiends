@@ -164,7 +164,8 @@ export function canEditGuildEvent(
 export function createGuildEvent(
   guild: NamiGuildRecord,
   title: string,
-  createdByMemberId = getSelfMember().id
+  createdByMemberId = getSelfMember().id,
+  rewards?: StoredGuildEvent['rewards']
 ): StoredGuildEvent | null {
   const selfMember = getSelfMember();
 
@@ -192,6 +193,7 @@ export function createGuildEvent(
     guildName: guild.name,
     createdAt: new Date().toISOString(),
     createdByMemberId,
+    ...(rewards?.length ? { rewards } : {}),
   };
 
   const eventsMap = readGuildEventsMap();
@@ -209,7 +211,12 @@ export function createGuildEvent(
 export function updateGuildEvent(
   guildId: string,
   eventId: string,
-  patch: Partial<Pick<StoredGuildEvent, 'title' | 'description' | 'body' | 'dateLabel' | 'status' | 'seats'>>,
+  patch: Partial<
+    Pick<
+      StoredGuildEvent,
+      'title' | 'description' | 'body' | 'dateLabel' | 'status' | 'seats' | 'rewards'
+    >
+  >,
   editorMemberId = getSelfMember().id
 ): StoredGuildEvent | null {
   const eventsMap = readGuildEventsMap();

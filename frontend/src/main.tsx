@@ -16,6 +16,7 @@ import './nami-light-theme.css';
 import './nami-dark-theme.css';
 import './nami-custom-theme.css';
 import './nami-pixel-ui.css';
+import './nami-classic-ui.css';
 
 
 ensureGenesisLocalDataOnTestLaunch();

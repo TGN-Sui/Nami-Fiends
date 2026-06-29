@@ -12,7 +12,7 @@ import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { ProfileEditPanel } from './ProfileEditPanel.js';
 import { ProfilePassportCarousel } from './ProfilePassportCarousel.js';
 import { ProfilePassportViewToolbar } from './ProfilePassportViewToolbar.js';
-import { ProtocolStatusBar } from './ProtocolStatusBar.js';
+
 import { SharePassportButton } from './SharePassportButton.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import {
@@ -284,7 +284,6 @@ export function MyProfileScreen(props: {
         </>
       )}
 
-      <ProtocolStatusBar />
     </div>
   );
 }

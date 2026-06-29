@@ -76,26 +76,38 @@
   color: #a1a1aa;
 }
 
-[data-nami-theme='dark'] .nami-pinned-profile-stack,
-[data-nami-theme='dark'] .panel,
-[data-nami-theme='dark'] .chat-shell,
-[data-nami-theme='dark'] .member-rail,
-[data-nami-theme='dark'] .feature-rail,
-[data-nami-theme='dark'] .chat-window,
-[data-nami-theme='dark'] .chat-side-panel,
-[data-nami-theme='dark'] .channel-browser,
-[data-nami-theme='dark'] .community-showcase,
-[data-nami-theme='dark'] .profile-hero-panel,
-[data-nami-theme='dark'] .member-profile-hero,
-[data-nami-theme='dark'] .passport-hero-card-refined,
+[data-nami-theme='dark'] .settings-screen-layout,
+[data-nami-theme='dark'] .hub-featured-placement-strip,
 [data-nami-theme='dark'] .gamehub-discovery-panel,
-[data-nami-theme='dark'] .chat-rail-collapsible-panel,
-[data-nami-theme='dark'] .ignite-radio-dock,
-[data-nami-theme='dark'] .nami-season-progress {
-  background: var(--nami-theme-panel);
+[data-nami-theme='dark'] .profile-section-shell,
+[data-nami-theme='dark'] .channel-profile-section-shell {
+  background: var(--nami-theme-section-surface, var(--nami-theme-panel));
+  color: var(--nami-theme-text);
+  border-color: var(--nami-theme-border);
+  box-shadow: 0 10px 26px var(--nami-theme-shadow);
+}
+
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .nami-pinned-profile-stack,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .panel,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .chat-shell,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .member-rail,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .feature-rail,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .chat-window,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .chat-side-panel,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .channel-browser,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .community-showcase,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .profile-hero-panel,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .member-profile-hero,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .passport-hero-card-refined,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .chat-rail-collapsible-panel,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .ignite-radio-dock,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .nami-season-progress {
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
   color: var(--nami-theme-text);
   border-color: var(--nami-theme-border-strong);
-  box-shadow: 0 12px 28px var(--nami-theme-shadow);
+  box-shadow:
+    inset 0 1px 0 var(--nami-theme-card-inset-highlight, rgba(255, 255, 255, 0.06)),
+    0 12px 28px var(--nami-theme-shadow);
 }
 
 [data-nami-theme='dark'] .page-title p,
@@ -147,12 +159,19 @@
 [data-nami-theme='dark'] .messages-thread-row,
 [data-nami-theme='dark'] .discovery-card,
 [data-nami-theme='dark'] .module-card,
-[data-nami-theme='dark'] .embedded-social-card,
-[data-nami-theme='dark'] .gamehub-discovery-channel-card,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .embedded-social-card,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .gamehub-discovery-channel-card,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .gamehub-discovery-rank-row,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .gamehub-placement-preview,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .hub-featured-placement-strip .featured-placement-auction-panel,
+[data-nami-theme='dark']:not([data-nami-ui='classic']) .featured-placement-auction-meta-card,
 [data-nami-theme='dark'] .settings-appearance-option {
-  color: var(--nami-theme-nav-text);
-  background: var(--nami-theme-surface-raised);
-  border-color: var(--nami-theme-border);
+  color: var(--nami-theme-text);
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
+  border-color: var(--nami-theme-border-strong);
+  box-shadow:
+    inset 0 1px 0 var(--nami-theme-card-inset-highlight, rgba(255, 255, 255, 0.06)),
+    0 8px 20px var(--nami-theme-shadow);
 }
 
 [data-nami-theme='dark'] .message-bubble p {
@@ -210,7 +229,7 @@
 
 [data-nami-theme='dark'] .settings-screen-layout {
   color: var(--nami-theme-text);
-  background: var(--nami-theme-panel);
+  background: var(--nami-theme-section-surface, var(--nami-theme-panel));
   border-color: var(--nami-theme-border-strong);
   box-shadow: 0 16px 36px var(--nami-theme-shadow);
 }
@@ -218,9 +237,12 @@
 [data-nami-theme='dark'] .settings-screen-layout .panel,
 [data-nami-theme='dark'] .settings-screen-layout article.panel,
 [data-nami-theme='dark'] .settings-screen-layout section.panel {
-  background: var(--nami-theme-surface-raised);
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
   color: var(--nami-theme-text);
-  border-color: var(--nami-theme-border);
+  border-color: var(--nami-theme-border-strong);
+  box-shadow:
+    inset 0 1px 0 var(--nami-theme-card-inset-highlight, rgba(255, 255, 255, 0.06)),
+    0 12px 28px var(--nami-theme-shadow);
 }
 
 [data-nami-theme='dark'] .settings-screen-layout .settings-toggle-list span {
@@ -266,6 +288,7 @@
 [data-nami-theme='dark'][data-nami-ui='glass'] .settings-screen-layout,
 [data-nami-theme='dark'][data-nami-ui='glass'] .ignite-radio-dock,
 [data-nami-theme='dark'][data-nami-ui='glass'] .nami-season-progress,
+[data-nami-theme='dark'][data-nami-ui='glass'] .hub-featured-placement-strip,
 [data-nami-theme='dark'][data-nami-ui='glass'] .gamehub-discovery-panel,
 [data-nami-theme='dark'][data-nami-ui='glass'] .genre-chat-pinned-dock,
 [data-nami-theme='dark'][data-nami-ui='glass'] .chat-rail-collapsible-panel,

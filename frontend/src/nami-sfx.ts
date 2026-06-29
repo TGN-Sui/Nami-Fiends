@@ -205,6 +205,31 @@ const ARCADE_STASH_BULLET_HIT_PATCHES: TonePatch[][] = [
   [{ frequency: 520, durationMs: 36, type: 'square', gainPeak: 0.028, frequencyEnd: 360, filterFreq: 1100 }],
 ];
 
+const GAMEHUB_DECK_FLIP_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 118, durationMs: 88, type: 'triangle', gainPeak: 0.042, frequencyEnd: 72, filterFreq: 320 },
+    { frequency: 248, durationMs: 56, type: 'sine', gainPeak: 0.024, delayMs: 22, filterFreq: 720 },
+    { frequency: 420, durationMs: 34, type: 'triangle', gainPeak: 0.014, delayMs: 44, filterFreq: 1200 },
+  ],
+  [
+    { frequency: 104, durationMs: 92, type: 'sine', gainPeak: 0.04, frequencyEnd: 64 },
+    { frequency: 196, durationMs: 62, type: 'triangle', gainPeak: 0.022, delayMs: 26, filterFreq: 560 },
+  ],
+];
+
+const GAMEHUB_DECK_RESHUFFLE_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 160, durationMs: 44, type: 'triangle', gainPeak: 0.034, frequencyEnd: 220 },
+    { frequency: 220, durationMs: 40, type: 'sine', gainPeak: 0.028, delayMs: 30 },
+    { frequency: 280, durationMs: 38, type: 'triangle', gainPeak: 0.024, delayMs: 58 },
+    { frequency: 340, durationMs: 36, type: 'sine', gainPeak: 0.02, delayMs: 86 },
+    { frequency: 400, durationMs: 48, type: 'triangle', gainPeak: 0.026, delayMs: 118, frequencyEnd: 520 },
+  ],
+];
+
+const GAMEHUB_DECK_FLIP_THROTTLE_MS = 120;
+let lastGameHubDeckFlipSfxAt = 0;
+
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') {
     return null;
@@ -507,6 +532,22 @@ export function playArcadeDropWindowBuzzerSfx(): void {
 
 export function playArcadeStashBulletHitSfx(): void {
   playArcadePatchSet(ARCADE_STASH_BULLET_HIT_PATCHES, 0.9);
+}
+
+export function playGameHubDeckFlipSfx(direction: 'next' | 'previous' = 'next'): void {
+  if (shouldThrottle(lastGameHubDeckFlipSfxAt, GAMEHUB_DECK_FLIP_THROTTLE_MS)) {
+    return;
+  }
+
+  lastGameHubDeckFlipSfxAt = performance.now();
+  playPatchSet(GAMEHUB_DECK_FLIP_PATCHES, direction === 'previous' ? 0.92 : 1);
+  playNoiseBurst(18, 0.0065 * SFX_MASTER_GAIN, direction === 'previous' ? 480 : 620);
+}
+
+export function playGameHubDeckReshuffleSfx(): void {
+  playPatchSet(GAMEHUB_DECK_RESHUFFLE_PATCHES, 1.05);
+  playNoiseBurst(28, 0.0085 * SFX_MASTER_GAIN, 380);
+  playNoiseBurst(22, 0.0055 * SFX_MASTER_GAIN, 820);
 }
 
 export function playSfx(kind: SfxKind): void {

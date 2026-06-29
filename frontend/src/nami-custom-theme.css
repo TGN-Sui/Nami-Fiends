@@ -14,6 +14,7 @@
 [data-nami-theme='custom'] .member-profile-hero,
 [data-nami-theme='custom'] .passport-hero-card-refined,
 [data-nami-theme='custom'] .gamehub-discovery-panel,
+[data-nami-theme='custom'] .hub-featured-placement-strip,
 [data-nami-theme='custom'] .chat-rail-collapsible-panel,
 [data-nami-theme='custom'] .settings-screen-layout,
 [data-nami-theme='custom'] .ignite-radio-dock,
@@ -162,11 +163,18 @@
 [data-nami-theme='custom'] .messages-thread-row,
 [data-nami-theme='custom'] .embedded-social-card,
 [data-nami-theme='custom'] .gamehub-discovery-channel-card,
+[data-nami-theme='custom'] .gamehub-discovery-rank-row,
+[data-nami-theme='custom'] .gamehub-placement-preview,
+[data-nami-theme='custom'] .hub-featured-placement-strip .featured-placement-auction-panel,
+[data-nami-theme='custom'] .featured-placement-auction-meta-card,
 [data-nami-theme='custom'] .discovery-card,
 [data-nami-theme='custom'] .module-card {
-  background: var(--nami-theme-surface-raised);
-  border-color: var(--nami-theme-border);
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
+  border-color: var(--nami-theme-border-strong);
   color: var(--nami-theme-text);
+  box-shadow:
+    inset 0 1px 0 var(--nami-theme-card-inset-highlight, rgba(255, 255, 255, 0.08)),
+    0 8px 20px var(--nami-theme-shadow);
 }
 
 [data-nami-theme='custom'] .settings-screen-layout .panel,

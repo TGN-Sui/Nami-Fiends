@@ -104,8 +104,10 @@ import {
   useBubbleLeaderboardSize,
   formatLiveEventInterestedLabel,
   useEventsStore,
+  useEventsStoreRevision,
   eventImportanceClass,
 } from './events-store.js';
+import { EventRewardAttachmentsPanel } from './EventRewardAttachmentsPanel.js';
 import { HubEventsPanel } from './HubEventsPanel.js';
 import { CryptoBubbleBoard } from './CryptoBubbleBoard.js';
 import { EntryPage } from './EntryPage.js';
@@ -218,6 +220,8 @@ import { useChatOverlayCatalogAppSync } from './use-chat-overlay-catalog-app-syn
 import { useMemberCosmeticEquipsAppSync } from './use-member-cosmetic-equips-app-sync.js';
 import { ensureChatOverlayRewardsHydrated } from './official-chat-overlay-rewards-store.js';
 import { ensureOwnerAssetsHydrated, ownerAssetNavSlotId } from './nami-owner-assets-store.js';
+import { MobileBottomNav } from './MobileBottomNav.js';
+import { usePlatformOwnerAssetsAppSync } from './use-platform-owner-assets-app-sync.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { requestSettingsSection, SettingsScreen } from './SettingsScreen.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
@@ -292,6 +296,7 @@ import { ApprovalRequestActions } from './ApprovalRequestActions.js';
 import { useGameCardTilt } from './game-card-tilt.js';
 import { orbTiltHandlers } from './orb-tilt.js';
 import { GameHubChannelTile } from './GameHubChannelTile.js';
+import { GameHubSwipeDeck } from './GameHubSwipeDeck.js';
 import { GameHubInlineCoverUpload } from './GameHubInlineCoverUpload.js';
 import { useHorizontalScrollStrip } from './useHorizontalScrollStrip.js';
 import { pendingApprovalsForMember } from './approval-requests-store.js';
@@ -376,7 +381,7 @@ import {
   saveMemberPreference,
   useMemberPreferencesVersion,
 } from './member-preference-store.js';
-import { ProtocolStatusBar } from './ProtocolStatusBar.js';
+import { TestnetBetaLegalNotice } from './TestnetBetaLegalNotice.js';
 import {
   clearSafetyActions,
   clearSafetyReports,
@@ -1866,9 +1871,7 @@ function GameHub(props: {
   const [selectedBrowserFilter, setSelectedBrowserFilter] = useState<GameHubBrowserFilter>('All');
 
   const [browserViewMode, setBrowserViewMode] = useState<'tiles' | 'swipe'>('tiles');
-  const [swipeIndex, setSwipeIndex] = useState(0);
   const tileStripRef = useHorizontalScrollStrip<HTMLDivElement>();
-  const swipeCardTilt = useGameCardTilt();
 
   function openGenreBubbleChannel(channel: NamiChannel): void {
     const genreChat = genreOfficialChats.find((chat) => chat.id === channel.id);
@@ -1897,13 +1900,6 @@ function GameHub(props: {
     return buildGameHubBrowserDeckEntries(filteredBrowserChannels, selectedBrowserFilter);
   }, [filteredBrowserChannels, selectedBrowserFilter]);
 
-  const activeSwipeChannel =
-    randomizedBrowserEntries[swipeIndex % Math.max(1, randomizedBrowserEntries.length)]?.channel ??
-    props.selectedChannel;
-
-  useEffect(() => {
-    swipeCardTilt.resetTilt();
-  }, [activeSwipeChannel.id, swipeCardTilt.resetTilt]);
   const showGameHubBoostAction = canShowChannelBoostAction(selfMember, props.selectedChannel.id);
   const selectedChannelBoostPower = getChannelBoostPower(props.selectedChannel.id);
 
@@ -1941,38 +1937,6 @@ function GameHub(props: {
         ' left this cycle.'
     );
   }
-  const nextSwipeChannel =
-    randomizedBrowserEntries.length > 1
-      ? randomizedBrowserEntries[(swipeIndex + 1) % randomizedBrowserEntries.length]!.channel
-      : activeSwipeChannel;
-  const thirdSwipeChannel =
-    randomizedBrowserEntries.length > 2
-      ? randomizedBrowserEntries[(swipeIndex + 2) % randomizedBrowserEntries.length]!.channel
-      : nextSwipeChannel;
-  const activeSwipeDeveloper = channelDeveloper(activeSwipeChannel);
-
-  useEffect(() => {
-    setSwipeIndex(0);
-  }, [selectedBrowserFilter, browserViewMode]);
-
-  useEffect(() => {
-    if (randomizedBrowserEntries.length === 0) {
-      setSwipeIndex(0);
-      return;
-    }
-
-    setSwipeIndex((value) => value % randomizedBrowserEntries.length);
-  }, [randomizedBrowserEntries]);
-
-  function moveSwipeDeck(direction: 'previous' | 'next'): void {
-    if (randomizedBrowserEntries.length === 0) return;
-
-    setSwipeIndex((value) => {
-      const nextValue = direction === 'previous' ? value - 1 : value + 1;
-      return (nextValue + randomizedBrowserEntries.length) % randomizedBrowserEntries.length;
-    });
-  }
-
   function persistInterestModules(nextModules: GameHubInterestModule[]): void {
     setInterestModules(nextModules);
     saveGameHubInterestModules(nextModules);
@@ -2268,130 +2232,12 @@ function GameHub(props: {
             </div>
           </div>
         ) : (
-          <section className="gamehub-swipe-stage" aria-label="Swipe deck channel browser">
-            <div className="gamehub-swipe-copy channel-profile-about-intro" key={activeSwipeChannel.id}>
-              <h2>About {activeSwipeChannel.name}</h2>
-              <p>{activeSwipeChannel.tagline}</p>
-              <strong className="gamehub-swipe-deck-counter">
-                {randomizedBrowserEntries.length === 0
-                  ? '0 / 0'
-                  : (swipeIndex + 1).toLocaleString() + ' / ' + randomizedBrowserEntries.length.toLocaleString()}
-              </strong>
-            </div>
-
-            <div className="gamehub-swipe-deck-column">
-            <div className="gamehub-swipe-deck">
-              <div className="gamehub-swipe-shadow-card is-third">
-                <strong>{thirdSwipeChannel.name}</strong>
-              </div>
-              <div className="gamehub-swipe-shadow-card is-second">
-                <strong>{nextSwipeChannel.name}</strong>
-              </div>
-
-              <button
-                key={activeSwipeChannel.id}
-                aria-label={'Open ' + activeSwipeChannel.name + ' profile'}
-                className={
-                  'gamehub-swipe-card gamehub-swipe-cover-card is-swipe-card-open is-verified-foil ' +
-                  gameVerificationClass(activeSwipeChannel) +
-                  (swipeCardTilt.tiltClassName ? ' ' + swipeCardTilt.tiltClassName : '')
-                }
-                onClick={() => props.onOpenProfile(activeSwipeChannel)}
-                onPointerEnter={swipeCardTilt.tiltHandlers.onPointerEnter}
-                onPointerLeave={swipeCardTilt.tiltHandlers.onPointerLeave}
-                onPointerMove={swipeCardTilt.tiltHandlers.onPointerMove}
-                style={
-                  {
-                    '--game-card-brand': getStoredChannelBrandTheme(activeSwipeChannel.id).primary,
-                    '--game-card-brand-soft': getStoredChannelBrandTheme(activeSwipeChannel.id).secondary,
-                    ...swipeCardTilt.tiltStyle,
-                  } as CSSProperties
-                }
-                type="button"
-              >
-                <div
-                    className={'gamehub-swipe-cover-art' + (resolveChannelCoverUrl(activeSwipeChannel) ? ' has-game-cover-image' : '')}
-                    aria-hidden="true"
-                    style={gameCoverAssetVariables(activeSwipeChannel)}
-                  >
-                  <span>{activeSwipeChannel.name.slice(0, 2).toUpperCase()}</span>
-                </div>
-
-                {canEditChannelCover(activeSwipeChannel.id) ? (
-                  <GameHubInlineCoverUpload
-                    channel={activeSwipeChannel}
-                    className="is-swipe-deck-upload"
-                    label="Upload swipe deck cover"
-                  />
-                ) : null}
-
-                <div className="gamehub-swipe-cover-overlay">
-                  <div className="gamehub-swipe-card-top">
-                    <span
-                      className={'gamehub-dev-logo ' + developerVerificationClass(activeSwipeDeveloper)}
-                      title={activeSwipeDeveloper.name + ' · ' + activeSwipeDeveloper.proofStatus}
-                    >
-                      {activeSwipeDeveloper.logoSeed}
-                    </span>
-
-                    <span className="gamehub-cover-icons">
-                      <i
-                        className={'gamehub-proof-icon ' + gameVerificationClass(activeSwipeChannel)}
-                        title={gameVerificationBadgeLabel(activeSwipeChannel)}
-                      >
-                        {gameVerificationShortLabel(activeSwipeChannel)}
-                      </i>
-                      <i
-                        className={'gamehub-studio-proof-icon ' + developerVerificationClass(activeSwipeDeveloper)}
-                        title={activeSwipeDeveloper.proofStatus}
-                      >
-                        {developerShortProofLabel(activeSwipeDeveloper)}
-                      </i>
-
-                    </span>
-                  </div>
-
-                  <div className="gamehub-swipe-card-copy">
-                    <div className="gamehub-swipe-taxonomy-row">
-                      <span className="gamehub-swipe-surface-label">
-                        <i aria-hidden="true">▣</i>
-                        Game
-                      </span>
-                      <i className={gameVerificationClass(activeSwipeChannel)}>
-                        {gameVerificationShortLabel(activeSwipeChannel)}
-                      </i>
-                      <em>{developerShortProofLabel(activeSwipeDeveloper)}</em>
-                    </div>
-
-                    <h3>{activeSwipeChannel.name}</h3>
-                    <p>{activeSwipeChannel.genre} · {activeSwipeChannel.platforms.join(' / ')}</p>
-                  </div>
-
-                  <div className="gamehub-swipe-meta">
-                    <span>{activeSwipeChannel.subscribers.toLocaleString()}</span>
-                    <span>{activeSwipeChannel.handle}</span>
-                    <span>{gameVerificationBadgeLabel(activeSwipeChannel)}</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            <div className="gamehub-swipe-actions">
-              <button
-                aria-label="Previous card"
-                className="gamehub-swipe-arrow-button is-swipe-previous"
-                onClick={() => moveSwipeDeck('previous')}
-                type="button"
-              />
-              <button
-                aria-label="Next card"
-                className="gamehub-swipe-arrow-button is-swipe-next"
-                onClick={() => moveSwipeDeck('next')}
-                type="button"
-              />
-            </div>
-            </div>
-          </section>
+          <GameHubSwipeDeck
+            canEditChannelCover={canEditChannelCover}
+            entries={randomizedBrowserEntries}
+            fallbackChannel={props.selectedChannel}
+            onOpenProfile={props.onOpenProfile}
+          />
         )}
 
         <div className="gamehub-genre-chats-under-browser" id="gamehub-genre">
@@ -3889,7 +3735,6 @@ function PassportScreen(props: {
       <PassportTimelinePanel timeline={passportView?.timeline ?? null} />
       </div>
 
-      <ProtocolStatusBar />
     </>
   );
 }
@@ -3967,8 +3812,6 @@ function GuildsScreen(props: {
 
   return (
     <>
-      <ProtocolStatusBar />
-
       <MyGuildHomeScreen
         guildLiveQueryEnabled={guildLiveQueryEnabled}
         guildLoadState={guildLoadState}
@@ -4209,32 +4052,34 @@ function MessageLogScreen(props: {
 function EventDetailScreen(props: {
   event: StoredEvent;
   onNavigate: (page: NamiPage) => void;
+  onEventUpdated?: (event: StoredEvent) => void;
 }): ReactElement {
-  useEventsStore();
-  const localSchedule = formatEventTimeInTimezone(props.event.startsAtUtc, readViewerTimezone());
+  useEventsStoreRevision();
+  const event = getEventById(props.event.id) ?? props.event;
+  const localSchedule = formatEventTimeInTimezone(event.startsAtUtc, readViewerTimezone());
 
   return (
     <>
       <header className="page-title">
         <p>Event details</p>
-        <h1>{props.event.title}</h1>
+        <h1>{event.title}</h1>
       </header>
 
-      <article className={'panel event-detail-page' + eventImportanceClass(props.event)}>
-        <span className="mini-badge">{props.event.status}</span>
-        <h2>{props.event.title}</h2>
-        <p className="event-detail-description">{props.event.description}</p>
-        <div className="event-detail-body">{props.event.body}</div>
+      <article className={'panel event-detail-page' + eventImportanceClass(event)}>
+        <span className="mini-badge">{event.status}</span>
+        <h2>{event.title}</h2>
+        <p className="event-detail-description">{event.description}</p>
+        <div className="event-detail-body">{event.body}</div>
         <div className="channel-event-meta-row">
           <span>{localSchedule}</span>
-          <strong>{formatLiveEventInterestedLabel(props.event.id, props.event.seats)}</strong>
+          <strong>{formatLiveEventInterestedLabel(event.id, event.seats)}</strong>
         </div>
         <p className="event-timezone-note">Shown in your timezone ({readViewerTimezone()}).</p>
-        <EventInterestedButton eventId={props.event.id} />
+        <EventInterestedButton eventId={event.id} />
         <label className="event-timezone-field">
           <span>Adjust timezone</span>
           <input
-            onChange={(event) => saveViewerTimezone(event.target.value)}
+            onChange={(input) => saveViewerTimezone(input.target.value)}
             placeholder="America/Los_Angeles"
             type="text"
             value={readViewerTimezone()}
@@ -4244,6 +4089,11 @@ function EventDetailScreen(props: {
           Back to Nami Hub
         </button>
       </article>
+
+      <EventRewardAttachmentsPanel
+        event={event}
+        {...(props.onEventUpdated ? { onEventUpdated: props.onEventUpdated } : {})}
+      />
     </>
   );
 }
@@ -4608,6 +4458,8 @@ export function App(): ReactElement {
     () => namiSquads[0] ?? createShellSquad()
   );
   const [squadShowInviteOnOpen, setSquadShowInviteOnOpen] = useState(false);
+
+  usePlatformOwnerAssetsAppSync();
 
   useEffect(() => {
     void ensureOwnerAssetsHydrated();
@@ -5167,7 +5019,13 @@ if (activePage === 'userProfile') {
     }
 
     if (activePage === 'eventDetail' && selectedEvent) {
-      return <EventDetailScreen event={selectedEvent} onNavigate={navigateFromCurrentPage} />;
+      return (
+        <EventDetailScreen
+          event={selectedEvent}
+          onEventUpdated={setSelectedEvent}
+          onNavigate={navigateFromCurrentPage}
+        />
+      );
     }
 
     return <NamiHub
@@ -5243,6 +5101,14 @@ if (activePage === 'userProfile') {
       {showSidebar ? (
         <>
           <Sidebar
+            activePage={activePage}
+            guildEventUnreadCount={guildEventsStore.unreadCount}
+            messageUnreadCount={messageUnreadCount}
+            onNavigateHubDestination={navigateHubDestination}
+            onNavigate={navigateFromCurrentPage}
+            onOpenOwnedChannel={() => openOwnedGameChannelProfile(null)}
+          />
+          <MobileBottomNav
             activePage={activePage}
             guildEventUnreadCount={guildEventsStore.unreadCount}
             messageUnreadCount={messageUnreadCount}
@@ -5343,6 +5209,7 @@ if (activePage === 'userProfile') {
       {showPlatformShell ? <GameApprovalWelcomeOverlay /> : null}
       {showPlatformShell ? <ChannelTransferClaimModal /> : null}
       <NamiToastStack />
+      {showPlatformShell ? <TestnetBetaLegalNotice /> : null}
     </main>
   );
 }

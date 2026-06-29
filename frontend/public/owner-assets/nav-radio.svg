@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Radio">
+  <circle cx="32" cy="36" r="14" fill="#123247" stroke="#8fe8ff" stroke-width="3"/>
+  <circle cx="32" cy="36" r="5" fill="#1f9f8d"/>
+  <path d="M20 20c8-8 16-8 24 0" fill="none" stroke="#8fe8ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 14c12-12 24-12 36 0" fill="none" stroke="#8fe8ff" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+</svg>

@@ -25,10 +25,15 @@ const EMBED_HEIGHT_PX = 120;
 const DEFAULT_TOP_PX = 148;
 const DEFAULT_RIGHT_PX = 28;
 
+function mobileBottomNavReservePx(): number {
+  return window.innerWidth <= 760 ? 76 : 0;
+}
+
 function clampDockPosition(position: IgniteRadioPosition, collapsed: boolean): IgniteRadioPosition {
   const dockHeight = collapsed ? DOCK_COLLAPSED_HEIGHT_PX : DOCK_EXPANDED_HEIGHT_PX;
+  const bottomReserve = mobileBottomNavReservePx();
   const maxX = Math.max(12, window.innerWidth - DOCK_WIDTH_PX - 12);
-  const maxY = Math.max(12, window.innerHeight - dockHeight - 12);
+  const maxY = Math.max(12, window.innerHeight - dockHeight - 12 - bottomReserve);
 
   return {
     x: Math.min(Math.max(12, position.x), maxX),

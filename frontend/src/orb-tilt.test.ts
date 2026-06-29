@@ -32,15 +32,15 @@ function mockOrbButton(): HTMLElement {
 }
 
 describe('orb-tilt', () => {
-  it('sets tilt and glare vars while tilting', () => {
+  it('sets glare vars while hovering', () => {
     const element = mockOrbButton();
 
     applyOrbTilt(element, 36, 12);
 
     expect(element.classList.contains('is-orb-tilting')).toBe(true);
-    expect(element.style.getPropertyValue('--orb-tilt-x')).toBe('2.25deg');
-    expect(element.style.getPropertyValue('--orb-tilt-y')).toBe('2.00deg');
-    expect(element.style.getPropertyValue('--orb-glare-opacity')).toBe('0.92');
+    expect(element.style.getPropertyValue('--orb-glare-x')).toBe('75.00%');
+    expect(element.style.getPropertyValue('--orb-glare-y')).toBe('25.00%');
+    expect(element.style.getPropertyValue('--orb-glare-opacity')).toBe('0.84');
 
     resetOrbTilt(element);
 

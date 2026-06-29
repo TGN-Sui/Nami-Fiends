@@ -73,13 +73,53 @@ const LIGHT_SEMANTIC_TOKENS = {
   navIcon: '#1a6fd4',
 } as const;
 
+type NamiSurfaceLayers = {
+  section: string;
+  card: string;
+  cardInsetHighlight: string;
+};
+
+const DEFAULT_CLASSIC_SURFACES: NamiSurfaceLayers = {
+  section: '#03070d',
+  card: '#0d141f',
+  cardInsetHighlight: 'transparent',
+};
+
+const DARK_MODE_SURFACES: NamiSurfaceLayers = {
+  section: '#040404',
+  card: '#121214',
+  cardInsetHighlight: 'transparent',
+};
+
+const LIGHT_MODE_SURFACES: NamiSurfaceLayers = {
+  section: '#9eabb8',
+  card: '#bcc6d2',
+  cardInsetHighlight: 'transparent',
+};
+
+export function surfaceLayersForMode(mode: NamiThemeMode): NamiSurfaceLayers | null {
+  if (mode === 'default') {
+    return DEFAULT_CLASSIC_SURFACES;
+  }
+
+  if (mode === 'dark') {
+    return DARK_MODE_SURFACES;
+  }
+
+  if (mode === 'light') {
+    return LIGHT_MODE_SURFACES;
+  }
+
+  return null;
+}
+
 const DEFAULT_SEMANTIC_TOKENS = {
   muted: 'rgba(190, 210, 235, 0.86)',
   subtle: '#9fb5ca',
-  border: 'rgba(117, 215, 255, 0.16)',
-  borderStrong: 'rgba(117, 215, 255, 0.28)',
-  surfaceRaised: 'rgba(255, 255, 255, 0.06)',
-  shadow: 'rgba(0, 0, 0, 0.22)',
+  border: 'rgba(117, 215, 255, 0.14)',
+  borderStrong: 'rgba(117, 215, 255, 0.26)',
+  surfaceRaised: 'rgba(255, 255, 255, 0.09)',
+  shadow: 'rgba(0, 0, 0, 0.28)',
   navText: '#84d9ff',
   navIcon: '#75d7ff',
 } as const;
@@ -87,10 +127,10 @@ const DEFAULT_SEMANTIC_TOKENS = {
 const DARK_MODE_SEMANTIC_TOKENS = {
   muted: '#c4c4cc',
   subtle: '#a1a1aa',
-  border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(255, 255, 255, 0.16)',
-  surfaceRaised: '#1a1a1a',
-  shadow: 'rgba(0, 0, 0, 0.48)',
+  border: 'rgba(255, 255, 255, 0.09)',
+  borderStrong: 'rgba(255, 255, 255, 0.15)',
+  surfaceRaised: '#222222',
+  shadow: 'rgba(0, 0, 0, 0.52)',
   navText: '#d4d4d8',
   navIcon: '#a1a1aa',
 } as const;
@@ -452,9 +492,20 @@ function applyThemeToDocument(
     delete root.dataset.namiThemeLight;
   }
   root.style.colorScheme = lightScheme ? 'light' : 'dark';
+  const surfaces = surfaceLayersForMode(mode);
+
   root.style.setProperty('--nami-theme-bg', colors.background);
-  root.style.setProperty('--nami-theme-panel', colors.panel);
+  root.style.setProperty('--nami-theme-panel', surfaces ? surfaces.card : colors.panel);
   root.style.setProperty('--nami-theme-accent', colors.accent);
+  if (surfaces) {
+    root.style.setProperty('--nami-theme-section-surface', surfaces.section);
+    root.style.setProperty('--nami-theme-card-surface', surfaces.card);
+    root.style.setProperty('--nami-theme-card-inset-highlight', surfaces.cardInsetHighlight);
+  } else {
+    root.style.removeProperty('--nami-theme-section-surface');
+    root.style.removeProperty('--nami-theme-card-surface');
+    root.style.removeProperty('--nami-theme-card-inset-highlight');
+  }
   root.style.setProperty('--nami-theme-text', colors.text);
   root.style.setProperty('--nami-theme-muted', semantic.muted);
   root.style.setProperty('--nami-theme-subtle', semantic.subtle);
@@ -660,6 +711,20 @@ function ThemeModePreview({
   customColors: NamiCustomThemeColors;
 }): ReactElement {
   const colors = option === 'custom' ? customColors : PRESETS[option as Exclude<NamiThemeMode, 'custom'>];
+  const surfaces = surfaceLayersForMode(option);
+
+  if (surfaces) {
+    return (
+      <span
+        aria-hidden="true"
+        className="settings-appearance-mode-preview settings-appearance-mode-preview-layered"
+        style={{ background: surfaces.section }}
+      >
+        <span style={{ background: surfaces.card }} />
+        <span style={{ backgroundColor: colors.accent }} />
+      </span>
+    );
+  }
 
   return (
     <span className="settings-appearance-mode-preview" aria-hidden="true">

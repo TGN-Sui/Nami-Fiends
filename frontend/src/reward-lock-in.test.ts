@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildRewardEscrowPlaintext,
+  eventRewardLockInHeadline,
+  eventRewardSealedHeadline,
   parseRewardEscrowPlaintext,
   rewardLockInHeadline,
 } from './reward-lock-in.js';
@@ -27,5 +29,7 @@ describe('reward-lock-in', () => {
 
   it('uses gamer-friendly lock-in copy', () => {
     expect(rewardLockInHeadline('Wave Frame')).toBe('Lock in Wave Frame?');
+    expect(eventRewardSealedHeadline()).toBe('Reward Sealed');
+    expect(eventRewardLockInHeadline('Genesis Spark')).toBe('Reward Sealed');
   });
 });
