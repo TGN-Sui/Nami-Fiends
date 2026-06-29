@@ -177,8 +177,8 @@ button {
   margin: 0 auto;
 }
 
-.main-stage:has(.protocol-status-bar) {
-  padding-bottom: 72px;
+.main-stage:has(.protocol-status-bar):not(:has(.settings-screen-layout)) {
+  padding-bottom: 88px;
 }
 
 .page-title {
@@ -13635,6 +13635,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar,
 .message-avatar,
+.audience-lounge-feed-avatar,
 .member-dot,
 .member-spotlight-avatar,
 .spotlight-member-avatar,
@@ -13647,7 +13648,8 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 }
 
 .chat-member-avatar,
-.message-avatar {
+.message-avatar,
+.audience-lounge-feed-avatar {
   overflow: visible;
 }
 
@@ -13662,6 +13664,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar::before,
 .message-avatar::before,
+.audience-lounge-feed-avatar::before,
 .member-dot::before,
 .member-spotlight-avatar::before,
 .spotlight-member-avatar::before,
@@ -13685,6 +13688,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image,
 .message-avatar.has-member-avatar-image,
+.audience-lounge-feed-avatar.has-member-avatar-image,
 .member-dot.has-member-avatar-image,
 .member-spotlight-avatar.has-member-avatar-image,
 .spotlight-member-avatar.has-member-avatar-image,
@@ -13700,6 +13704,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image::before,
 .message-avatar.has-member-avatar-image::before,
+.audience-lounge-feed-avatar.has-member-avatar-image::before,
 .member-dot.has-member-avatar-image::before,
 .member-spotlight-avatar.has-member-avatar-image::before,
 .spotlight-member-avatar.has-member-avatar-image::before,
@@ -13712,6 +13717,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image:hover::before,
 .message-avatar.has-member-avatar-image:hover::before,
+.audience-lounge-feed-avatar.has-member-avatar-image:hover::before,
 .member-dot.has-member-avatar-image:hover::before,
 .member-spotlight-avatar.has-member-avatar-image:hover::before,
 .spotlight-member-avatar.has-member-avatar-image:hover::before,
@@ -13724,6 +13730,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 
 .chat-member-avatar.has-member-avatar-image > *,
 .message-avatar.has-member-avatar-image > *,
+.audience-lounge-feed-avatar.has-member-avatar-image > *,
 .member-dot.has-member-avatar-image > *,
 .member-spotlight-avatar.has-member-avatar-image > *,
 .spotlight-member-avatar.has-member-avatar-image > *,
@@ -13807,6 +13814,7 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .member-spotlight-avatar.has-member-avatar-image::before,
 .chat-member-avatar.has-member-avatar-image::before,
 .message-avatar.has-member-avatar-image::before,
+.audience-lounge-feed-avatar.has-member-avatar-image::before,
 .member-dot.has-member-avatar-image::before,
 .sidebar-player-avatar.uniform-member-avatar.has-member-avatar-image::before {
   opacity: 1 !important;
@@ -14869,9 +14877,9 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   background: rgba(8, 24, 40, 0.72);
 }
 
-.protocol-status-bar.is-protocol-site-footer {
+.protocol-status-bar.is-protocol-site-footer:not(.is-settings-protocol-footer) {
   position: fixed;
-  bottom: 14px;
+  bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   left: 50%;
   z-index: 110;
   width: min(520px, calc(100vw - 32px));
@@ -14879,6 +14887,303 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   transform: translateX(-50%);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0.35rem;
+}
+
+.protocol-status-bar.is-protocol-site-footer:not(.is-settings-protocol-footer) p {
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.nami-app:has(.testnet-beta-legal-notice) .protocol-status-bar.is-protocol-site-footer {
+  bottom: 92px;
+}
+
+.testnet-beta-legal-notice {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  z-index: 110;
+  display: grid;
+  gap: 0.45rem;
+  width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 196, 120, 0.28);
+  border-radius: 12px;
+  background: rgba(24, 18, 8, 0.88);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.testnet-beta-legal-notice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.testnet-beta-legal-dismiss {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(255, 196, 120, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 232, 198, 0.88);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.testnet-beta-legal-dismiss:hover,
+.testnet-beta-legal-dismiss:focus-visible {
+  border-color: rgba(255, 196, 120, 0.55);
+  background: rgba(255, 196, 120, 0.1);
+}
+
+.testnet-beta-legal-notice p {
+  margin: 0;
+  color: rgba(255, 232, 198, 0.9);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.testnet-beta-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.testnet-beta-legal-link {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(255, 196, 120, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 232, 198, 0.95);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.testnet-beta-legal-link:hover,
+.testnet-beta-legal-link:focus-visible {
+  border-color: rgba(255, 196, 120, 0.65);
+  background: rgba(255, 196, 120, 0.12);
+}
+
+.testnet-legal-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 8, 16, 0.72);
+}
+
+.testnet-legal-overlay {
+  width: min(640px, 100%);
+  max-height: min(80vh, 720px);
+  overflow: auto;
+}
+
+.testnet-legal-overlay-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.testnet-legal-overlay-head h2 {
+  margin: 0.35rem 0 0.2rem;
+}
+
+.testnet-legal-overlay-head p {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.78);
+  font-size: 0.9rem;
+}
+
+.testnet-legal-overlay-close {
+  flex: 0 0 auto;
+}
+
+.testnet-legal-overlay-section + .testnet-legal-overlay-section {
+  margin-top: 14px;
+}
+
+.testnet-legal-overlay-section h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.testnet-legal-overlay-section p {
+  margin: 0;
+  color: rgba(220, 236, 255, 0.86);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.hub-featured-placement-strip {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(8, 24, 40, 0.55);
+}
+
+.hub-featured-placement-strip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hub-featured-placement-strip-head h2 {
+  margin: 0.35rem 0 0.2rem;
+}
+
+.hub-featured-placement-strip-head p {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.78);
+  font-size: 0.88rem;
+}
+
+.hub-featured-placement-status-pill {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.hub-featured-placement-status-pill.is-auction-open-pill {
+  border: 1px solid rgba(90, 220, 170, 0.45);
+  background: rgba(90, 220, 170, 0.12);
+}
+
+.hub-featured-placement-status-pill.is-auction-closed-pill {
+  border: 1px solid rgba(120, 190, 255, 0.35);
+  background: rgba(120, 190, 255, 0.1);
+}
+
+.hub-featured-placement-winners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hub-featured-placement-winner-chip {
+  display: inline-grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(120, 190, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+}
+
+.hub-featured-placement-carousel-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.hub-featured-placement-carousel-dot {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.hub-featured-placement-carousel-dot.is-active-showcase-dot {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.hub-featured-placement-active-label {
+  margin: 0;
+  color: rgba(190, 214, 240, 0.82);
+  font-size: 0.86rem;
+}
+
+.global-chats-hub-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.global-chats-hub-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
+.global-chats-hub-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.global-chats-hub-filter {
+  min-height: 34px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.82rem;
+}
+
+.global-chats-hub-filter.is-active-hub-chat-filter {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.global-chats-hub-room-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.global-chats-hub-room-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+  font-size: 0.82rem;
+}
+
+.global-chats-hub-room-chip.is-active-hub-room-chip {
+  border-color: rgba(90, 220, 170, 0.55);
+  background: rgba(90, 220, 170, 0.14);
+}
+
+.global-chats-hub-room-chip-end {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
 }
 
 .passport-screen-layout {
@@ -14989,9 +15294,31 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   margin-top: 1rem;
 }
 
+.nami-favorited-chat-dock-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nami-favorited-chat-dock-body.is-showing-room-manage {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.nami-favorited-chat-dock-body .nami-favorited-chat-tab-row {
+  min-height: 0;
+}
+
+.nami-favorited-chat-dock-body > .global-chat-room-pane {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .nami-favorited-chat-manage-panel {
   padding: 0.65rem 0.75rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: min(42vh, 280px);
+  overflow-y: auto;
 }
 
 .nami-favorited-chat-manage-list {
@@ -15019,6 +15346,10 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 34px;
+  min-width: 44px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
 }
 
 .nami-favorited-chat-room-tab.has-chat-unread {
@@ -15048,6 +15379,162 @@ section.gamehub-browser .gamehub-discovery-card .card-meta-row {
 .launch-ops-card h3 {
   margin: 0 0 0.5rem;
   font-size: 0.92rem;
+}
+
+.hackathon-demo-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hackathon-demo-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 170, 255, 0.22);
+  background: rgba(8, 14, 28, 0.55);
+}
+
+.hackathon-demo-score-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.hackathon-demo-score {
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hackathon-demo-score.is-ready {
+  background: rgba(52, 211, 153, 0.2);
+  color: #9ef5d2;
+}
+
+.hackathon-demo-score.is-warn {
+  background: rgba(249, 115, 22, 0.2);
+  color: #ffd0a8;
+}
+
+.hackathon-demo-score.is-blocked {
+  background: rgba(225, 29, 72, 0.2);
+  color: #ffb8c9;
+}
+
+.hackathon-demo-section h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+}
+
+.hackathon-demo-check-list,
+.hackathon-demo-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hackathon-demo-check {
+  border-radius: 10px;
+  border: 1px solid rgba(120, 170, 255, 0.18);
+  background: rgba(6, 12, 24, 0.45);
+  padding: 0.65rem 0.75rem;
+}
+
+.hackathon-demo-check-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.hackathon-demo-check-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hackathon-demo-check.is-ready .hackathon-demo-check-status {
+  color: #9ef5d2;
+}
+
+.hackathon-demo-check.is-warn .hackathon-demo-check-status {
+  color: #ffd0a8;
+}
+
+.hackathon-demo-check.is-blocked .hackathon-demo-check-status {
+  color: #ffb8c9;
+}
+
+.hackathon-demo-check p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(180, 205, 235, 0.82);
+}
+
+.hackathon-demo-step {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 170, 255, 0.18);
+  background: rgba(6, 12, 24, 0.45);
+  padding: 0.65rem 0.75rem;
+}
+
+.hackathon-demo-step-copy {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.hackathon-demo-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.18);
+  color: #d8f4ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.hackathon-demo-step p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(180, 205, 235, 0.82);
+}
+
+.hackathon-demo-step-action {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.hackathon-demo-command {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(4, 10, 20, 0.75);
+  border: 1px solid rgba(120, 170, 255, 0.16);
+  font-size: 0.78rem;
+  color: #d8f4ff;
+  overflow-x: auto;
+}
+
+.hackathon-demo-ops-note code {
+  font-size: 0.78rem;
 }
 
 .protocol-discovery-category-tabs {

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * Local integration smoke: catalog sync publishes a tiny PNG to Walrus Quilt.
- * Requires Mysten testnet publisher reachability (no Render needed).
+ * Requires Mysten testnet publisher reachability (no Render or zkLogin needed).
+ *
+ * Usage:
+ *   npx --prefix backend tsx scripts/smoke-border-art-walrus-local.mjs
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +18,7 @@ process.env.NAMI_WALRUS_PUBLISHER_URL = 'https://publisher.walrus-testnet.walrus
 process.env.NAMI_WALRUS_STORAGE_EPOCHS = '1';
 process.env.NAMI_DATA_DIR = path.join(rootDir, 'data');
 process.env.NAMI_REQUIRE_WALLET_AUTH = 'false';
+process.env.NAMI_BORDER_ART_RELAX_DIMENSIONS = 'true';
 process.env.NAMI_NETWORK = 'testnet';
 process.env.NAMI_PACKAGE_ID = '0x74f2e6f200d7a814390b89e2e8a1c7d09fb49968a4362c8ab56e100e9573665f';
 process.env.NAMI_OFFICIAL_OWNER =

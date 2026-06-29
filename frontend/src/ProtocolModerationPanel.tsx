@@ -30,6 +30,11 @@ export function ProtocolModerationPanel(): ReactElement {
         loadingMessage="Loading moderation projections…"
       />
 
+      <p className="protocol-hint">
+        Private appeal evidence uses the Seal privacy lane (<code>/api/privacy/evidence/seal</code>)
+        when <code>NAMI_SEAL_PRIVACY_ENABLED</code> is on — see Launch Ops.
+      </p>
+
       <div className="protocol-moderation-grid">
         <section>
           <h3>Open Appeals ({appeals.length})</h3>

@@ -1,3 +1,4 @@
+import { safeLocalStorageSetItem } from './local-storage-safe.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readOfficialOwnerEmail } from './protocol-env.js';
 import type { MemberSession } from './member-session-store.js';
@@ -75,7 +76,7 @@ function readAuthLinkIndex(): MemberAuthLinkIndex {
 }
 
 function writeAuthLinkIndex(index: MemberAuthLinkIndex): void {
-  window.localStorage.setItem(LINKS_KEY, JSON.stringify(index));
+  safeLocalStorageSetItem(LINKS_KEY, JSON.stringify(index));
   window.dispatchEvent(new CustomEvent('nami-member-auth-links-changed'));
 }
 

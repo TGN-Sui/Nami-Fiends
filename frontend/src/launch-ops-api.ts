@@ -18,6 +18,24 @@ export type LaunchOpsPaymentReadiness = {
   paypal_checkout_enabled: boolean;
 };
 
+export type LaunchOpsSealPrivacyReadiness = {
+  enabled: boolean;
+  key_configured: boolean;
+  sealed_count: number;
+  policies_in_use: string[];
+  stack_note: string;
+};
+
+export type LaunchOpsWalrusSitesReadiness = {
+  configured: boolean;
+  site_object_id: string | null;
+  network: string | null;
+  storage_epochs: number | string | null;
+  last_deploy_ms: number | null;
+  portal_note: string;
+  ws_resources_present: boolean;
+};
+
 export type LaunchOpsWalrusBorderArtReadiness = {
   configured: boolean;
   network: string | null;
@@ -25,6 +43,12 @@ export type LaunchOpsWalrusBorderArtReadiness = {
   publisher_url: string;
   border_art_required: boolean;
   storage_epochs: number;
+  catalog_quilt_blob_id: string | null;
+  catalog_version_ms: number | null;
+  catalog_patch_count: number;
+  catalog_last_publish_ms: number | null;
+  catalog_attestation_status: string | null;
+  catalog_attestation_tx_digest: string | null;
 };
 
 export type LaunchOpsExitGates = {
@@ -42,6 +66,8 @@ export type LaunchOpsSummary = {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_sites: LaunchOpsWalrusSitesReadiness;
+  seal_privacy: LaunchOpsSealPrivacyReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];

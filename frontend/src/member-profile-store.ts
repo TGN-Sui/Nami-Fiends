@@ -147,6 +147,40 @@ export function readMemberProfilePreferences(memberId: string): MemberProfilePre
   return seededMemberPreferences(memberId);
 }
 
+const MEMBER_BIO_TEMPLATES = [
+  'Looking for a raid crew tonight — ping me in LFG.',
+  'Badge hunting this week. Happy to trade channel tips.',
+  'Streaming later, but still replying between matches.',
+  'Building a new squad comp — open to theorycraft.',
+  'Quiet grind day. Catch me in genre lounges.',
+  'Event prep mode — see you in the FIENDS channel.',
+] as const;
+
+function memberBioSeed(memberId: string): number {
+  return memberId.split('').reduce((total, character) => total + character.charCodeAt(0), 0);
+}
+
+export function resolveMemberPublicBio(member: NamiMember): string {
+  if (member.id === SELF_MEMBER_ID) {
+    const edits = readSelfProfileEdits();
+    const bio = edits.bio.trim();
+
+    if (bio) {
+      return bio;
+    }
+
+    const dailyStatus = edits.dailyStatus.trim();
+
+    if (dailyStatus) {
+      return dailyStatus;
+    }
+  }
+
+  const seed = memberBioSeed(member.id);
+
+  return MEMBER_BIO_TEMPLATES[seed % MEMBER_BIO_TEMPLATES.length]!;
+}
+
 export function withMemberProfile(member: NamiMember): NamiMember {
   if (member.id !== SELF_MEMBER_ID) {
     return member;

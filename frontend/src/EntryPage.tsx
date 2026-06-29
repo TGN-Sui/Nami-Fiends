@@ -22,7 +22,7 @@ import {
   useMemberSession,
 } from './member-session-store.js';
 import { isOfficialOwner } from './nami-capabilities.js';
-import { getZkLoginSession } from './zklogin.js';
+import { getZkLoginSession, type ZkLoginSession } from './zklogin.js';
 import { OwnerEditableImage } from './OwnerEditableImage.js';
 import { GameChannelClaimPanel } from './GameChannelClaimPanel.js';
 import { GameOnboardingPanel } from './GameOnboardingPanel.js';
@@ -351,6 +351,7 @@ export function EntryPage(props: {
   signedOutNotice?: boolean;
 }): ReactElement {
   const session = useMemberSession();
+  const [zkSession, setZkSession] = useState<ZkLoginSession | null>(() => getZkLoginSession());
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [onboardingRole, setOnboardingRole] = useState<OnboardingRole | null>(null);
@@ -370,8 +371,21 @@ export function EntryPage(props: {
   }
 
   useEffect(() => {
-    const zkSession = getZkLoginSession();
+    function refreshZkSession(): void {
+      setZkSession(getZkLoginSession());
+    }
 
+    refreshZkSession();
+    window.addEventListener('nami-zklogin-session-ready', refreshZkSession);
+    window.addEventListener('storage', refreshZkSession);
+
+    return () => {
+      window.removeEventListener('nami-zklogin-session-ready', refreshZkSession);
+      window.removeEventListener('storage', refreshZkSession);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!zkSession) {
       return;
     }
@@ -381,7 +395,7 @@ export function EntryPage(props: {
     if (restored || isOfficialOwner(zkSession.address)) {
       clearSignedOut();
     }
-  }, []);
+  }, [zkSession?.address]);
 
   function handleRoleSelection(role: OnboardingRole): void {
     setOnboardingRole(role);
@@ -586,17 +600,24 @@ export function EntryPage(props: {
     );
   }
 
-  if (hasActiveMemberSession() && session) {
+  const officialZkSession =
+    zkSession && isOfficialOwner(zkSession.address) ? zkSession : null;
+
+  if ((hasActiveMemberSession() && session) || officialZkSession) {
+    const displayName = session
+      ? resolveMemberDisplayName('m1', session.displayName)
+      : 'FIEND';
+    const lead = session
+      ? `You are signed up as ${session.email}. Claim your passport nodename and link platforms anytime from Settings.`
+      : `Official owner wallet connected (${officialZkSession?.address.slice(0, 10)}…). Enter the hub to manage Border Art and platform ops.`;
+
     return (
       <>
         <section className="nami-entry-page panel nami-entry-returning">
           <div className="nami-entry-hero">
             <span className="mini-badge">Welcome back</span>
-            <h1>Hi, {resolveMemberDisplayName('m1', session.displayName)}</h1>
-            <p>
-              You are signed up as {session.email}. Claim your passport nodename and link platforms
-              anytime from Settings.
-            </p>
+            <h1>Hi, {displayName}</h1>
+            <p>{lead}</p>
           </div>
 
           <div className="nami-entry-actions">

@@ -1,12 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-let fixturesEnabled = true;
-let testLaunchMode = false;
-
-vi.mock('./app-config.js', () => ({
-  shouldUseDevFixtures: () => fixturesEnabled,
-  isTestLaunchMode: () => testLaunchMode,
+const { fixturesEnabled, testLaunchMode } = vi.hoisted(() => ({
+  fixturesEnabled: { value: true },
+  testLaunchMode: { value: false },
 }));
+
+vi.mock('./app-config.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./app-config.js')>();
+
+  return {
+    ...actual,
+    shouldUseDevFixtures: () => fixturesEnabled.value,
+    isTestLaunchMode: () => testLaunchMode.value,
+    shouldUseTestLaunchShowcaseCatalog: () => false,
+  };
+});
 
 import {
   findSeedChannelById,
@@ -16,8 +24,8 @@ import {
 
 describe('fixture-catalog-access', () => {
   beforeEach(() => {
-    fixturesEnabled = true;
-    testLaunchMode = false;
+    fixturesEnabled.value = true;
+    testLaunchMode.value = false;
   });
 
   it('returns seed catalogs when dev fixtures are enabled', () => {
@@ -27,8 +35,8 @@ describe('fixture-catalog-access', () => {
   });
 
   it('returns empty catalogs during test launch when dev fixtures are disabled', () => {
-    fixturesEnabled = false;
-    testLaunchMode = true;
+    fixturesEnabled.value = false;
+    testLaunchMode.value = true;
 
     expect(readSeedChannels()).toEqual([]);
     expect(readSeedMembers()).toEqual([]);
@@ -36,8 +44,8 @@ describe('fixture-catalog-access', () => {
   });
 
   it('returns empty catalogs when dev fixtures and test launch showcase are disabled', () => {
-    fixturesEnabled = false;
-    testLaunchMode = false;
+    fixturesEnabled.value = false;
+    testLaunchMode.value = false;
 
     expect(readSeedChannels()).toEqual([]);
     expect(readSeedMembers()).toEqual([]);

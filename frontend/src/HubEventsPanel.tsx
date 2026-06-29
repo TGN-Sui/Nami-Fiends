@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
 import { isDemoSimulationEnabled } from './app-config.js';
-import { EventCardActionBar } from './EventCardActionBar.js';
+import { EventInterestedButton } from './EventInterestedButton.js';
+import { HubUpcomingEventsStrip } from './HubUpcomingEventsStrip.js';
 import {
   canEditOfficialEvent,
   createOfficialEvent,
@@ -10,29 +11,90 @@ import {
   isEventLive,
   isEventStartingSoon,
   readViewerTimezone,
-  saveViewerTimezone,
   simulateLiveInterestedEventPopup,
   simulateStartingSoonInterestedEvent,
   updateStoredEvent,
-  formatLiveEventInterestedLabel,
+  deleteOfficialEvent,
   useEventsStore,
   type StoredEvent,
 } from './events-store.js';
 import { useSelfMember } from './member-avatar-store.js';
+import type { NamiChannel } from './uiMockData.js';
 
 function officialEventStatusLabel(event: StoredEvent): string {
   if (isEventLive(event)) {
-    return 'Live now';
+    return 'Live';
   }
 
   if (isEventStartingSoon(event)) {
-    return 'Starting soon';
+    return 'Soon';
   }
 
   return event.status;
 }
 
+function HubOfficialEventCard(props: {
+  canManageOfficial: boolean;
+  event: StoredEvent;
+  onEdit: (event: StoredEvent) => void;
+  onView: () => void;
+}): ReactElement {
+  const live = isEventLive(props.event);
+  const soon = isEventStartingSoon(props.event);
+
+  return (
+    <article
+      className={
+        'nami-hub-official-card' +
+        (live ? ' is-event-live-importance' : soon ? ' is-event-soon-importance' : '')
+      }
+    >
+      <div className="nami-hub-official-card-main">
+        <span className="nami-hub-official-badge">Official Nami</span>
+        <div className="nami-hub-official-card-copy">
+          <strong>{props.event.title}</strong>
+          <time dateTime={props.event.startsAtUtc}>
+            {formatEventTimeInTimezone(props.event.startsAtUtc)}
+          </time>
+        </div>
+        <span className="nami-hub-official-status-pill">{officialEventStatusLabel(props.event)}</span>
+      </div>
+
+      <div className="nami-hub-official-card-actions">
+        <EventInterestedButton eventId={props.event.id} layout="inline" />
+        <button className="nami-hub-3d-button" onClick={props.onView} type="button">
+          View
+        </button>
+        {props.canManageOfficial ? (
+          <>
+            <button
+              className="nami-hub-3d-button is-hub-3d-button-secondary"
+              onClick={() => props.onEdit(props.event)}
+              type="button"
+            >
+              Edit
+            </button>
+            <button
+              className="nami-hub-3d-button is-hub-3d-button-ghost"
+              onClick={() => {
+                if (window.confirm('Delete "' + props.event.title + '"?')) {
+                  deleteOfficialEvent(props.event.id);
+                }
+              }}
+              type="button"
+            >
+              Delete
+            </button>
+          </>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 export function HubEventsPanel(props: {
+  onOpenCalendar?: () => void;
+  onOpenChannel?: (channel: NamiChannel) => void;
   onViewEvent: (event: StoredEvent) => void;
 }): ReactElement {
   const { revision: eventsRevision } = useEventsStore();
@@ -47,6 +109,7 @@ export function HubEventsPanel(props: {
   const [notice, setNotice] = useState('');
 
   const officialEvents = useMemo(() => getOfficialHubEvents(), [eventsRevision]);
+  const timezone = readViewerTimezone();
 
   function resetForm(): void {
     setTitle('');
@@ -101,7 +164,7 @@ export function HubEventsPanel(props: {
 
       setNotice(
         created
-          ? 'Official event published. Subscribed members were notified.'
+          ? 'Official event published.'
           : 'Only Nami officials can publish official events.'
       );
     }
@@ -109,169 +172,113 @@ export function HubEventsPanel(props: {
     resetForm();
   }
 
-  function handleDelete(eventId: string): void {
-    if (editingEventId === eventId) {
-      resetForm();
-    }
-
-    setNotice('Official event deleted.');
-  }
-
   return (
     <article className="panel nami-hub-events-panel">
-      <div className="profile-panel-heading is-hub-panel-heading nami-hub-events-panel-heading">
-        <div className="is-hub-panel-heading-copy">
-          <h2>Official Nami Events</h2>
-          <p>Cross-community events hosted by Nami. Times display in your timezone.</p>
-          <small className="event-timezone-note">Your timezone: {readViewerTimezone()}</small>
+      <header className="nami-hub-events-panel-top">
+        <div className="nami-hub-events-panel-heading">
+          <h2>Events</h2>
+          <p>Official Nami hosts up top · universal feed scrolls below · {timezone}</p>
         </div>
         {canManageOfficial ? (
           <button
-            className="nami-surface-button"
+            className="nami-hub-3d-button is-hub-3d-button-compact"
             onClick={() => {
               resetForm();
               setShowCreate((value) => !value);
             }}
             type="button"
           >
-            {showCreate ? 'Close editor' : 'Create official event'}
+            {showCreate ? 'Close' : 'New official'}
           </button>
         ) : null}
-      </div>
-
-      <label className="event-timezone-field">
-        <span>Event timezone</span>
-        <input
-          onChange={(event) => saveViewerTimezone(event.target.value)}
-          placeholder="America/Los_Angeles"
-          type="text"
-          value={readViewerTimezone()}
-        />
-      </label>
+      </header>
 
       {showCreate && canManageOfficial ? (
-        <div className="event-creator-form panel official-event-creator-form">
+        <div className="nami-hub-official-editor panel">
           <h3>{editingEventId ? 'Edit official event' : 'New official event'}</h3>
-          <label>
-            <span>Title</span>
-            <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
-          </label>
-          <label>
-            <span>Description</span>
-            <input
-              onChange={(event) => setDescription(event.target.value)}
-              type="text"
-              value={description}
-            />
-          </label>
-          <label>
-            <span>Details</span>
-            <textarea onChange={(event) => setBody(event.target.value)} rows={3} value={body} />
-          </label>
-          <label>
-            <span>Starts at (your local time)</span>
-            <input
-              onChange={(event) => setStartsAtLocal(event.target.value)}
-              type="datetime-local"
-              value={startsAtLocal}
-            />
-          </label>
-          <button className="nami-surface-button is-primary-surface-button" onClick={handleSubmit} type="button">
-            {editingEventId ? 'Save official event' : 'Publish official event'}
+          <div className="nami-hub-official-editor-grid">
+            <label>
+              <span>Title</span>
+              <input onChange={(event) => setTitle(event.target.value)} type="text" value={title} />
+            </label>
+            <label>
+              <span>Starts at</span>
+              <input
+                onChange={(event) => setStartsAtLocal(event.target.value)}
+                type="datetime-local"
+                value={startsAtLocal}
+              />
+            </label>
+            <label className="is-hub-editor-wide">
+              <span>Short description</span>
+              <input
+                onChange={(event) => setDescription(event.target.value)}
+                type="text"
+                value={description}
+              />
+            </label>
+          </div>
+          <button className="nami-hub-3d-button is-hub-3d-button-primary" onClick={handleSubmit} type="button">
+            {editingEventId ? 'Save' : 'Publish'}
           </button>
         </div>
       ) : null}
 
-      {notice ? <p className="event-creator-notice">{notice}</p> : null}
+      {notice ? <p className="nami-hub-events-notice">{notice}</p> : null}
 
-      {officialEvents.length === 0 ? (
-        <article className="panel official-events-empty-state">
-          <strong>No official events scheduled</strong>
-          <p>Cross-community Nami events will appear here when published.</p>
-        </article>
-      ) : (
-        <div className="official-events-list">
-          {officialEvents.map((event, eventIndex) => (
-            <article
-              className={
-                'official-event-card panel' +
-                (isEventLive(event)
-                  ? ' is-event-live-importance'
-                  : isEventStartingSoon(event)
-                    ? ' is-event-soon-importance'
-                    : '')
-              }
-              key={event.id}
-            >
-              <div className="official-event-card-top">
-                <span className="mini-badge">Official Nami</span>
-                <span className="official-event-status-pill">{officialEventStatusLabel(event)}</span>
-              </div>
+      <section className="nami-hub-events-official-zone">
+        <header className="nami-hub-events-official-head">
+          <h3>Official Nami</h3>
+          <span className="nami-hub-events-official-count">{officialEvents.length} scheduled</span>
+        </header>
 
-              <div className="official-event-card-copy">
-                <h3>{event.title}</h3>
-                <time dateTime={event.startsAtUtc}>{formatEventTimeInTimezone(event.startsAtUtc)}</time>
-                <p>{event.description}</p>
-              </div>
-
-              <div className="official-event-meta-row">
-                <span>Cross-community</span>
-                <strong>{formatLiveEventInterestedLabel(event.id, event.seats)}</strong>
-              </div>
-
-              <EventCardActionBar
+        {officialEvents.length === 0 ? (
+          <p className="nami-hub-official-empty">No official Nami events scheduled yet.</p>
+        ) : (
+          <div className="nami-hub-official-list">
+            {officialEvents.map((event) => (
+              <HubOfficialEventCard
                 canManageOfficial={canManageOfficial}
                 event={event}
-                eventCount={officialEvents.length}
-                eventIndex={eventIndex}
-                onDelete={handleDelete}
+                key={event.id}
                 onEdit={loadForEdit}
                 onView={() => props.onViewEvent(event)}
               />
-            </article>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
 
-      {!canManageOfficial ? (
-        <p className="protocol-hint">Official Nami events can only be created or edited by Nami officials.</p>
-      ) : null}
+      <HubUpcomingEventsStrip
+        {...(props.onOpenChannel ? { onOpenChannel: props.onOpenChannel } : {})}
+        onViewEvent={props.onViewEvent}
+      />
 
       {isDemoSimulationEnabled() ? (
         <div className="event-demo-sim-actions">
           <button
-            className="nami-surface-button"
+            className="nami-hub-3d-button is-hub-3d-button-compact"
             onClick={() => {
               const simulated = simulateLiveInterestedEventPopup();
-
               setNotice(
                 simulated.length > 0
-                  ? 'Live event popup simulated for ' +
-                    simulated.map((event) => event.title).join(' and ') +
-                    '.'
-                  : 'Could not simulate the live event popup.'
+                  ? 'Live popup simulated.'
+                  : 'Could not simulate live popup.'
               );
             }}
             type="button"
           >
-            Simulate live event popup (demo)
+            Simulate live popup
           </button>
           <button
             className="profile-secondary-link"
             onClick={() => {
               const simulated = simulateStartingSoonInterestedEvent();
-
-              setNotice(
-                simulated
-                  ? '"' +
-                    simulated.title +
-                    '" is starting soon — check event notifications in 30s sync.'
-                  : 'Could not simulate the starting-soon reminder.'
-              );
+              setNotice(simulated ? 'Starting-soon reminder simulated.' : 'Could not simulate.');
             }}
             type="button"
           >
-            Simulate starting-soon reminder (demo)
+            Simulate starting-soon
           </button>
         </div>
       ) : null}

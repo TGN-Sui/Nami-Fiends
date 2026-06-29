@@ -13,6 +13,8 @@ Index of product and protocol documentation for the Nami Chat repository.
 | [systems.md](./systems.md) | On-chain system map |
 | [protocol.md](./protocol.md) | Protocol overview |
 | [roadmap.md](./roadmap.md) | Delivery phases and status |
+| [arcade-cabinets.md](./arcade-cabinets.md) | Game Hub arcade — cabinet flow, live games, media slots |
+| [walrus-sites-deploy.md](./walrus-sites-deploy.md) | Phase 9.1 Walrus Sites SPA deploy |
 | [testnet-launch-checklist.md](./testnet-launch-checklist.md) | Official testnet build and deploy steps |
 | [testnet-zklogin.md](./testnet-zklogin.md) | Google OAuth + zkLogin for testnet origin |
 | [admincap-custody.md](./admincap-custody.md) | AdminCap holder + backup runbook |

@@ -256,7 +256,9 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 | BA-12 | Complete | Equip picker border previews + equips store as single source of truth. |
 | BA-13 | Complete | Official grant picker uses member directory roster (fixture fallback preserved). |
 | BA-14.1 | Complete | Walrus quilt publisher + projection `*ArtRef` + `resolveBorderArtUrl()` (Render fallback when Walrus unset). |
-| BA-14.2+ | Planned | Migration script, `NAMI_WALRUS_BORDER_ART_REQUIRED`, integrity checks — see [border-art-ba14-walrus-quilt.md](./border-art-ba14-walrus-quilt.md). |
+| BA-14.2 | Complete | Migration script, `NAMI_WALRUS_BORDER_ART_REQUIRED`, Launch Ops Walrus card, hackathon demo console. |
+| BA-14.3 | Complete | 384×384 upload enforcement + testnet `contentHash` warn. |
+| BA-14.4 | Code complete (deferred) | Move + PTB wired; `NAMI_CATALOG_ATTEST_ENABLED=false` for frozen hackathon package. |
 
 ## Phase 8 — Launch Ops (UI-C27)
 
@@ -270,7 +272,38 @@ Incremental off-chain Border Art work (distinct from Test-Launch Polish slices a
 
 Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `NamiOwnerAdvancedPanel.tsx`, `IndexedDataPanel.tsx`.
 
-Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **297** unit tests passing; `node scripts/verify-testnet-ready.mjs` — all checks green.
+Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **488** unit tests (arcade + cabinet media suites included); `node scripts/verify-testnet-ready.mjs` — all checks green.
+
+## Phase 7 — Arcade cabinets (in progress)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| ARC-1 | Complete | Attract → picker → intro → stage → cabinet menu flow (`ArcadeScreen.tsx`) |
+| ARC-2 | Complete | Per-cabinet intro/stage/viewport media + public fallbacks (`arcade-cabinet-media.ts`, `frontend/public/arcade/cabinets/`) |
+| ARC-3 | Complete | **Goon Pop** live — modes, G scoring, per-cabinet accent + `stageFit` |
+| ARC-4 | Complete | **Alley Push** live — Street Pass / Heat Chase, vertical rows in hard mode, track-aware collision |
+| ARC-5 | Complete | Lobby + per-game MP3 slots, audio controls, cabinet-aware owner edit targets |
+| ARC-6 | Planned | Tier 2 cabinet game boards (Stash Defense, Drop Window, …) |
+
+Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeAlleyPushGame.tsx`, `ArcadeBubbleGame.tsx`. See [arcade-cabinets.md](./arcade-cabinets.md).
+
+## Phase 9.1 — Walrus Sites (in progress)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| 9.1.1 | Complete | `frontend/ws-resources.json` SPA routes + asset cache headers |
+| 9.1.2 | Complete | `scripts/prepare-walrus-sites-dist.mjs` + `scripts/deploy-walrus-sites.mjs` |
+| 9.1.3 | Complete | Launch Ops `walrus_sites` card + `walrus-sites.service.ts` projection |
+| 9.1.4 | Ops | First testnet `site-builder deploy` recorded in `deployments/testnet/walrus-sites-deploy.json`; portal URL + zkLogin redirect update pending |
+| 9.1.5 | Complete | Helper scripts: `verify-walrus-sites-ready.mjs`, `setup-walrus-sites-config.mjs`, `install-walrus-clis.ps1`, `start-walrus-portal.ps1`, `apply-walrus-sites-cutover.mjs` |
+
+## Phase 9.2 — Seal privacy (in progress)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| 9.2.1 | Complete | `nami-seal-v1-dev` envelopes, `/api/privacy/evidence/*`, Launch Ops card |
+| 9.2.2 | Planned | Mysten Seal policy ids + Walrus ciphertext blobs |
+| 9.2.3 | Planned | Officials / jury UI for sealed appeal evidence |
 
 ## Phase 7 — Arcade cabinets (continued)
 
@@ -290,7 +323,7 @@ Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelSta
 
 **Recommended next lane:**
 
-1. Set Render payment secrets (treasury, Stripe, PayPal) — verify script warns until green.
-2. Assign AdminCap backup holder + legal review of privacy draft (Phase 8.4).
-3. Phase 9.1 Walrus Sites frontend hosting once Phase 8 exit criteria are met.
+1. `node scripts/verify-walrus-sites-ready.mjs --build` — green checks before redeploy.
+2. Run local testnet portal (`scripts/start-walrus-portal.ps1`) and update zkLogin redirect to portal origin.
+3. Tier 2 arcade cabinet or Phase 9.2 Seal privacy proofs in parallel.
 

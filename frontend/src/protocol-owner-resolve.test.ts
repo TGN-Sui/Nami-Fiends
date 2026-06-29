@@ -122,7 +122,11 @@ describe('protocol-owner-resolve', () => {
       maxEpoch: 1,
       provider: 'google',
       createdAtMs: Date.now(),
+      ephemeralSecretKey: 'ephemeral-secret',
     });
+    canZkLoginSignForOwnerMock.mockImplementation(
+      (owner) => owner?.toLowerCase() === OFFICIAL_OWNER.toLowerCase()
+    );
 
     expect(resolveProtocolOwnerState()).toEqual({
       owner: OFFICIAL_OWNER,

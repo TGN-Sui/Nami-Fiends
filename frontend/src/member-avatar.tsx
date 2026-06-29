@@ -48,6 +48,7 @@ export function isMemberFoilEligible(member: NamiMember, signal: ConductSignal =
 export function memberTierSurfaceClass(member: NamiMember): string {
   if (member.tier === 'Elite') return 'is-elite-surface';
   if (member.tier === 'Pro') return 'is-pro-surface';
+  if (member.tier === 'Adventurer') return 'is-adventurer-surface';
 
   return '';
 }

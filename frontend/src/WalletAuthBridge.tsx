@@ -3,6 +3,7 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { isMemberVerified } from './member-access.js';
+import { isOfficialOwner } from './nami-capabilities.js';
 import { useSelfMember } from './member-avatar-store.js';
 import { notifyEquipSyncAuthReady } from './member-cosmetic-equip-retry-queue.js';
 import { notifyCatalogSyncAuthReady } from './chat-overlay-rewards-retry-queue.js';
@@ -12,7 +13,7 @@ import {
   registerWalletAuthSigner,
   setWalletAuthContext,
 } from './wallet-auth.js';
-import { getZkLoginSession } from './zklogin.js';
+import { canZkLoginSignForOwner, getZkLoginSession } from './zklogin.js';
 
 function useZkLoginSessionRevision(): number {
   const [revision, setRevision] = useState(0);
@@ -59,14 +60,9 @@ export function WalletAuthBridge(): ReactElement | null {
         owner &&
         walletAccount.address.toLowerCase() === owner.toLowerCase()
     );
-    const zkSession = getZkLoginSession();
-    const zkSessionMatchesOwner = Boolean(
-      owner &&
-        zkSession?.ephemeralSecretKey &&
-        zkSession.address.toLowerCase() === owner.toLowerCase()
-    );
+    const zkCanSign = canZkLoginSignForOwner(owner);
 
-    if (zkSessionMatchesOwner) {
+    if (zkCanSign) {
       registerWalletAuthSigner(async (signOwner) => {
         const session = getZkLoginSession();
 
@@ -97,7 +93,7 @@ export function WalletAuthBridge(): ReactElement | null {
       };
     }
 
-    if (extensionMatchesOwner) {
+    if (extensionMatchesOwner && !zkCanSign && !isOfficialOwner(owner)) {
       registerWalletAuthSigner(async (signOwner) => {
         const timestampMs = Date.now();
         const message = buildWalletAuthMessage(signOwner, timestampMs);

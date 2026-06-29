@@ -1,0 +1,8 @@
+{
+  "site_object_id": "0xa928727110b0d64d04a5117f500f5a15a838364bf311384123eabd6f916ce995",
+  "network": "testnet",
+  "storage_epochs": 5,
+  "last_deploy_ms": 1782624337059,
+  "portal_url": null,
+  "dist_path": "frontend\\dist"
+}

@@ -29,6 +29,42 @@ function readBooleanEnv(name: string, defaultValue = false): boolean {
   return value.toLowerCase() === 'true' || value === '1';
 }
 
+/** True when the receiving server URL points at this machine (localhost / 127.0.0.1). */
+export function isLocalIndexerUrl(indexerUrl: string | null | undefined): boolean {
+  if (!indexerUrl?.trim()) {
+    return false;
+  }
+
+  try {
+    const host = new URL(indexerUrl.trim()).hostname.toLowerCase();
+
+    return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+  } catch {
+    const normalized = indexerUrl.toLowerCase();
+
+    return normalized.includes('127.0.0.1') || normalized.includes('localhost');
+  }
+}
+
+/**
+ * Local testnet dev on latest code: keep test-launch policy but surface showcase
+ * chats, events, and discovery fixtures. Auto-detected from VITE_NAMI_INDEXER_URL;
+ * override with VITE_NAMI_LOCAL_DEV=true|false.
+ */
+export function isLocalDevEnvironment(config: AppConfig = readAppConfig()): boolean {
+  const explicit = import.meta.env.VITE_NAMI_LOCAL_DEV;
+
+  if (explicit !== undefined && explicit !== '') {
+    if (explicit.toLowerCase() === 'false' || explicit === '0') {
+      return false;
+    }
+
+    return explicit.toLowerCase() === 'true' || explicit === '1';
+  }
+
+  return isLocalIndexerUrl(config.indexerUrl);
+}
+
 let cachedConfig: AppConfig | null = null;
 
 export function readAppConfig(): AppConfig {
@@ -94,10 +130,25 @@ export function isTestLaunchMode(config: AppConfig = readAppConfig()): boolean {
   return config.testLaunch;
 }
 
+/** Temporary lounge layout QA roster on testnet — disable with VITE_NAMI_LOUNGE_LAYOUT_MOCKS=false. */
+export function shouldUseTestLaunchLoungeMocks(config: AppConfig = readAppConfig()): boolean {
+  if (!isTestLaunchMode(config)) {
+    return false;
+  }
+
+  const value = import.meta.env.VITE_NAMI_LOUNGE_LAYOUT_MOCKS;
+
+  if (value === undefined || value === '') {
+    return true;
+  }
+
+  return value.toLowerCase() === 'true' || value === '1';
+}
+
 /** Auto-populate local message/event/chat stores on first load (dev demo only). */
 export function shouldAutoSeedLocalData(config: AppConfig = readAppConfig()): boolean {
   if (isTestLaunchMode(config)) {
-    return false;
+    return isLocalDevEnvironment(config);
   }
 
   return shouldUseDevFixtures(config);
@@ -108,9 +159,9 @@ export function shouldUseFunctionalMockCatalog(_config: AppConfig = readAppConfi
   return false;
 }
 
-/** Showcase mock catalogs are disabled — test launch uses server-hydrated created content. */
-export function shouldUseTestLaunchShowcaseCatalog(_config: AppConfig = readAppConfig()): boolean {
-  return false;
+/** Showcase catalogs for local testnet when live discovery is still empty. */
+export function shouldUseTestLaunchShowcaseCatalog(config: AppConfig = readAppConfig()): boolean {
+  return isTestLaunchMode(config) && isLocalDevEnvironment(config);
 }
 
 /** Keep fixture catalogs visible while polishing even if live discovery returns no rows yet. */

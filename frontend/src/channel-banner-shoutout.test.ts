@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatMemberAtTag,
   normalizeBannerShoutoutFields,
   resolveBannerShoutoutMember,
 } from './channel-banner-shoutout.js';
@@ -13,6 +14,7 @@ describe('channel-banner-shoutout', () => {
     expect(resolveBannerShoutoutMember(member.id)).toEqual({
       memberId: member.id,
       memberName: member.name,
+      memberAtTag: formatMemberAtTag(member.name),
     });
   });
 

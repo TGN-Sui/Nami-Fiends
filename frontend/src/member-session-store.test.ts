@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   authenticateMemberCredentials,
   clearMemberSession,
+  compactMemberSessionForRegistry,
   readMemberSession,
   saveMemberSession,
   type MemberSession,
@@ -49,6 +50,17 @@ const sampleSession: MemberSession = {
   playerScoreIssuedAtMs: 1_700_000_000_000,
   signedUpAtMs: 1_700_000_000_000,
 };
+
+describe('compactMemberSessionForRegistry', () => {
+  it('drops inline avatar uploads from the registry payload', () => {
+    const compacted = compactMemberSessionForRegistry({
+      ...sampleSession,
+      avatarUrl: 'data:image/png;base64,' + 'a'.repeat(10_000),
+    });
+
+    expect(compacted.avatarUrl).toBeUndefined();
+  });
+});
 
 describe('authenticateMemberCredentials', () => {
   beforeEach(() => {

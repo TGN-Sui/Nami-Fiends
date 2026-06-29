@@ -1,6 +1,10 @@
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 
 import { isMockMembershipCheckoutEnabled } from './app-config.js';
+import {
+  defaultCheckoutRail,
+  resolveVisibleCheckoutRails,
+} from './membership-checkout-visibility.js';
 import { ChannelOwnerPromotionsStatusCard } from './ChannelOwnerPromotionsStatusCard.js';
 import { useChannelOwnerSettings } from './channel-owner-settings-context.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
@@ -28,6 +32,7 @@ import { PreApprovedGameOwnerLockedPanel } from './PreApprovedGameOwnerLockedPan
 import { FeaturedPlacementAuctionPanel } from './FeaturedPlacementAuctionPanel.js';
 import { PartnerCarouselPreviewOverlay } from './PartnerCarouselPreviewOverlay.js';
 import type { MembershipCheckoutRail, MembershipCryptoAsset } from './membership-plans-store.js';
+import { usePublicPaymentConfig } from './use-public-payment-config.js';
 import type { NamiChannel } from './uiMockData.js';
 
 const DURATIONS: PromotionDuration[] = ['24h', '72h', 'weekly'];
@@ -70,7 +75,17 @@ export function ChannelOwnerPromotionsPanel(props: {
   const promotions = useChannelOwnerPromotionsState(props.channel.id);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
-  const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>('card');
+  const paymentConfig = usePublicPaymentConfig();
+  const visibleCheckoutRails = resolveVisibleCheckoutRails(paymentConfig);
+  const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
+    defaultCheckoutRail(paymentConfig)
+  );
+
+  useEffect(() => {
+    if (!visibleCheckoutRails.includes(checkoutRail)) {
+      setCheckoutRail(defaultCheckoutRail(paymentConfig));
+    }
+  }, [checkoutRail, paymentConfig, visibleCheckoutRails]);
   const [superDuration] = useState<PromotionDuration>('weekly');
   const [hubDuration, setHubDuration] = useState<PromotionDuration>('72h');
   const [partnerDuration, setPartnerDuration] = useState<PromotionDuration>('weekly');
@@ -437,19 +452,21 @@ export function ChannelOwnerPromotionsPanel(props: {
         </div>
       </article>
 
-      <div className="channel-owner-checkout-rail-row" role="group" aria-label="Payment method">
-        {(['card', 'paypal', 'other'] as MembershipCheckoutRail[]).map((rail) => (
-          <button
-            aria-pressed={checkoutRail === rail}
-            className={'channel-owner-checkout-rail' + (checkoutRail === rail ? ' is-active' : '')}
-            key={rail}
-            onClick={() => setCheckoutRail(rail)}
-            type="button"
-          >
-            {rail === 'card' ? 'Card' : rail === 'paypal' ? 'PayPal' : 'Crypto'}
-          </button>
-        ))}
-      </div>
+      {visibleCheckoutRails.length > 1 ? (
+        <div className="channel-owner-checkout-rail-row" role="group" aria-label="Payment method">
+          {visibleCheckoutRails.map((rail) => (
+            <button
+              aria-pressed={checkoutRail === rail}
+              className={'channel-owner-checkout-rail' + (checkoutRail === rail ? ' is-active' : '')}
+              key={rail}
+              onClick={() => setCheckoutRail(rail)}
+              type="button"
+            >
+              {rail === 'card' ? 'Card' : rail === 'paypal' ? 'PayPal' : 'Crypto'}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {notice ? <p className="channel-owner-tool-notice is-success">{notice}</p> : null}
       {error ? <p className="channel-owner-tool-notice is-error">{error}</p> : null}

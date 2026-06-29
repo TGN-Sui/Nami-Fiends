@@ -116,6 +116,17 @@ import {
   listDiscoveryChannelCategories,
 } from './services/discovery.service.js';
 import { buildLaunchOpsSummary } from './services/launch-ops.service.js';
+import {
+  handleWalletAuthProbeOptions,
+  handleWalletAuthProbePost,
+} from './routes/wallet-auth-probe.routes.js';
+import {
+  handleSealEvidenceListPost,
+  handleSealEvidenceOpenPost,
+  handleSealEvidenceSealPost,
+  handleSealPrivacyOptions,
+  handleSealPrivacyStatusGet,
+} from './routes/seal-privacy.routes.js';
 import type { IndexerRuntime } from './indexer-runtime.js';
 import { collectIndexerStats } from './stats.js';
 
@@ -149,12 +160,24 @@ function routeMethods(method: HttpMethod | HttpMethod[]): HttpMethod[] {
   return Array.isArray(method) ? method : [method];
 }
 
+function applyCorsHeaders(response: ServerResponse): void {
+  response.setHeader('access-control-allow-origin', '*');
+  response.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+  response.setHeader(
+    'access-control-allow-headers',
+    'Content-Type, X-Nami-Officials-Sync, Stripe-Signature'
+  );
+}
+
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
   const payload = `${JSON.stringify(body, null, 2)}\n`;
 
   response.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
     'content-length': Buffer.byteLength(payload),
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'access-control-allow-headers': 'Content-Type, X-Nami-Officials-Sync, Stripe-Signature',
   });
   response.end(payload);
 }
@@ -939,6 +962,49 @@ const routes: Route[] = [
     },
   },
   {
+    method: 'OPTIONS',
+    pattern: /^\/api\/privacy\/.*$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealPrivacyOptions(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/privacy\/status$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealPrivacyStatusGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/seal$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceSealPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/list$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceListPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/privacy\/evidence\/open$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleSealEvidenceOpenPost(request, response),
+  },
+  {
+    method: ['OPTIONS', 'POST'],
+    pattern: /^\/api\/ops\/wallet-auth-probe$/,
+    paramNames: [],
+    handler: (_registry, request, response) => {
+      if (request.method === 'OPTIONS') {
+        handleWalletAuthProbeOptions(request, response);
+        return;
+      }
+
+      return handleWalletAuthProbePost(request, response);
+    },
+  },
+  {
     method: 'GET',
     pattern: /^\/api\/discovery\/guilds$/,
     paramNames: [],
@@ -1427,6 +1493,8 @@ export function startReadOnlyServer(
 ): void {
   const server = createServer((request, response) => {
     void (async () => {
+      applyCorsHeaders(response);
+
       const method = request.method ?? 'GET';
 
       if (method === 'OPTIONS') {

@@ -1,14 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   isDemoSimulationEnabled,
   isDemoWalletOnboardingEnabled,
+  isLocalDevEnvironment,
+  isLocalIndexerUrl,
   isMockMembershipCheckoutEnabled,
   shouldAutoSeedLocalData,
   shouldUseDemoOwnerFallback,
   shouldUseDevFixtures,
   shouldUseFixtureCatalogFallback,
   shouldUseFunctionalMockCatalog,
+  shouldUseTestLaunchShowcaseCatalog,
   type AppConfig,
 } from './app-config.js';
 
@@ -32,8 +35,22 @@ describe('app-config seed policy', () => {
     expect(shouldAutoSeedLocalData(createConfig({}))).toBe(true);
   });
 
-  it('blocks auto-seed during test launch', () => {
-    expect(shouldAutoSeedLocalData(createConfig({ testLaunch: true }))).toBe(false);
+  it('blocks auto-seed during public test launch', () => {
+    expect(
+      shouldAutoSeedLocalData(
+        createConfig({ testLaunch: true, indexerUrl: 'https://nami-backend.example' })
+      )
+    ).toBe(false);
+  });
+
+  it('allows auto-seed during local test launch', () => {
+    vi.stubEnv('VITE_NAMI_LOCAL_DEV', '');
+
+    expect(
+      shouldAutoSeedLocalData(
+        createConfig({ testLaunch: true, indexerUrl: 'http://127.0.0.1:8787' })
+      )
+    ).toBe(true);
   });
 
   it('blocks auto-seed when dev fixtures are disabled', () => {
@@ -63,14 +80,31 @@ describe('app-config directory fallback', () => {
     );
   });
 
-  it('disables fixture fallback during test launch when live discovery is empty', () => {
+  it('disables fixture fallback during public test launch when live discovery is empty', () => {
     expect(
       shouldUseFixtureCatalogFallback(
         0,
         'ready',
-        createConfig({ testLaunch: true, devFixtures: false })
+        createConfig({
+          testLaunch: true,
+          devFixtures: false,
+          indexerUrl: 'https://nami-backend.example',
+        })
       )
     ).toBe(false);
+  });
+
+  it('enables showcase fallback during local test launch when live discovery is empty', () => {
+    vi.stubEnv('VITE_NAMI_LOCAL_DEV', '');
+
+    const config = createConfig({
+      testLaunch: true,
+      devFixtures: false,
+      indexerUrl: 'http://127.0.0.1:8787',
+    });
+
+    expect(shouldUseTestLaunchShowcaseCatalog(config)).toBe(true);
+    expect(shouldUseFixtureCatalogFallback(0, 'ready', config)).toBe(true);
   });
 
   it('keeps fixture catalogs visible while discovery is still loading', () => {
@@ -85,6 +119,34 @@ describe('app-config mock checkout policy', () => {
 
   it('blocks mock checkout during test launch', () => {
     expect(isMockMembershipCheckoutEnabled(createConfig({ testLaunch: true }))).toBe(false);
+  });
+});
+
+describe('app-config local indexer detection', () => {
+  it('detects localhost and loopback indexer URLs', () => {
+    expect(isLocalIndexerUrl('http://127.0.0.1:8787')).toBe(true);
+    expect(isLocalIndexerUrl('http://localhost:8787')).toBe(true);
+    expect(isLocalIndexerUrl('https://nami-backend-rv0o.onrender.com')).toBe(false);
+  });
+
+  it('treats local indexer as local dev during test launch', () => {
+    vi.stubEnv('VITE_NAMI_LOCAL_DEV', '');
+
+    expect(
+      isLocalDevEnvironment(
+        createConfig({ testLaunch: true, indexerUrl: 'http://127.0.0.1:8787' })
+      )
+    ).toBe(true);
+  });
+
+  it('honors VITE_NAMI_LOCAL_DEV=false on localhost indexer URLs', () => {
+    vi.stubEnv('VITE_NAMI_LOCAL_DEV', 'false');
+
+    expect(
+      isLocalDevEnvironment(
+        createConfig({ testLaunch: true, indexerUrl: 'http://127.0.0.1:8787' })
+      )
+    ).toBe(false);
   });
 });
 

@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import { config } from '../config.js';
 import {
   readUploadedMediaFile,
   saveAvatarUpload,
@@ -145,12 +146,25 @@ export async function handleStudioLogoUploadPost(
   }
 }
 
+function isLegacyBorderArtFilename(filename: string): boolean {
+  return filename.startsWith('border-art-');
+}
+
 export async function handleMediaFileGet(
   _request: IncomingMessage,
   response: ServerResponse,
   owner: string,
   filename: string
 ): Promise<void> {
+  if (isLegacyBorderArtFilename(filename) && config.walrus.borderArtRequired) {
+    sendJson(response, 410, {
+      error: 'border_art_legacy_media_retired',
+      message:
+        'Border art is served from Walrus aggregator URLs. Re-publish the catalog quilt or migrate legacy files.',
+    });
+    return;
+  }
+
   const file = await readUploadedMediaFile(owner, filename);
 
   if (!file) {
@@ -158,11 +172,18 @@ export async function handleMediaFileGet(
     return;
   }
 
+  const cacheControl = isLegacyBorderArtFilename(filename)
+    ? 'public, max-age=300, stale-while-revalidate=60'
+    : 'public, max-age=3600';
+
   response.writeHead(200, {
     'content-type': file.contentType,
     'content-length': file.buffer.byteLength,
-    'cache-control': 'public, max-age=3600',
+    'cache-control': cacheControl,
     'access-control-allow-origin': '*',
+    ...(isLegacyBorderArtFilename(filename)
+      ? { 'x-nami-legacy-media': 'border-art' }
+      : {}),
   });
   response.end(file.buffer);
 }

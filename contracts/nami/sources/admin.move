@@ -7,6 +7,7 @@ module nami::admin {
     use nami::appeals;
     use nami::badge_issuer;
     use nami::channel;
+    use nami::chat_overlay_catalog;
     use nami::conduct;
     use nami::cosmetics;
     use nami::jury;
@@ -33,6 +34,7 @@ module nami::admin {
     const ACTION_VERIFY_CHANNEL: u8 = 13;
     const ACTION_DELEGATE_MODERATION_CAP: u8 = 14;
     const ACTION_DELEGATE_MEMBERSHIP_CAP: u8 = 15;
+    const ACTION_PUBLISH_CHAT_OVERLAY_CATALOG: u8 = 16;
 
     // =========================================================
     // ADMIN CAPABILITY
@@ -492,6 +494,34 @@ module nami::admin {
             admin,
             ACTION_GRANT_COSMETIC,
             passport::get_id(passport_obj)
+        );
+    }
+
+    // =========================================================
+    // BORDER ART CATALOG ATTESTATION (BA-14.4)
+    // =========================================================
+    public fun publish_chat_overlay_catalog(
+        admin: &AdminCap,
+        official_owner: address,
+        catalog_version_ms: u64,
+        quilt_blob_id: vector<u8>,
+        content_root_hash: vector<u8>,
+        patch_count: u64,
+        ctx: &mut TxContext
+    ) {
+        chat_overlay_catalog::publish_catalog_attestation(
+            official_owner,
+            catalog_version_ms,
+            quilt_blob_id,
+            content_root_hash,
+            patch_count,
+            ctx
+        );
+
+        emit_admin_action(
+            admin,
+            ACTION_PUBLISH_CHAT_OVERLAY_CATALOG,
+            official_owner
         );
     }
 

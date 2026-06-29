@@ -5,6 +5,7 @@ import {
   refreshPlatformSync,
   removePlatformSyncSnapshot,
 } from './player-platform-sync-store.js';
+import type { VerifiedPlatformLinkRecord } from './player-score-platform-eligibility.js';
 
 const STORAGE_KEY = 'nami.player.platform-links';
 
@@ -29,10 +30,13 @@ const PLATFORM_IDS: ReadonlySet<string> = new Set([
   'itch',
 ]);
 
-let cachedLinks: PlayerLinkPlatform[] | undefined;
+let cachedLinks: VerifiedPlatformLinkRecord[] | undefined;
+let cachedPlatformIds: PlayerLinkPlatform[] | undefined;
+const EMPTY_LINKED_PLATFORMS: PlayerLinkPlatform[] = [];
 
 function invalidateCache(): void {
   cachedLinks = undefined;
+  cachedPlatformIds = undefined;
 }
 
 function emitChange(): void {
@@ -40,7 +44,69 @@ function emitChange(): void {
   window.dispatchEvent(new CustomEvent('nami-player-platform-links-changed'));
 }
 
-export function readLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
+function isPlayerLinkPlatform(value: unknown): value is PlayerLinkPlatform {
+  return typeof value === 'string' && PLATFORM_IDS.has(value);
+}
+
+function normalizeLinkRecord(entry: unknown): VerifiedPlatformLinkRecord | null {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+
+  const record = entry as Partial<VerifiedPlatformLinkRecord>;
+
+  if (!isPlayerLinkPlatform(record.platformId)) {
+    return null;
+  }
+
+  const normalized: VerifiedPlatformLinkRecord = {
+    platformId: record.platformId,
+    linkedAtMs: typeof record.linkedAtMs === 'number' ? record.linkedAtMs : Date.now(),
+    verified: record.verified === true,
+  };
+
+  if (typeof record.platformUserId === 'string') {
+    normalized.platformUserId = record.platformUserId;
+  }
+
+  if (typeof record.accountCreatedAtMs === 'number') {
+    normalized.accountCreatedAtMs = record.accountCreatedAtMs;
+  }
+
+  if (typeof record.scoreEligible === 'boolean') {
+    normalized.scoreEligible = record.scoreEligible;
+  }
+
+  if (typeof record.hasPostPassportActivity === 'boolean') {
+    normalized.hasPostPassportActivity = record.hasPostPassportActivity;
+  }
+
+  return normalized;
+}
+
+function migrateLegacyLinks(parsed: { linked?: unknown; links?: unknown }): VerifiedPlatformLinkRecord[] {
+  if (Array.isArray(parsed.links)) {
+    return parsed.links
+      .map((entry) => normalizeLinkRecord(entry))
+      .filter((entry): entry is VerifiedPlatformLinkRecord => entry !== null);
+  }
+
+  if (!Array.isArray(parsed.linked)) {
+    return [];
+  }
+
+  const migratedAtMs = Date.now();
+
+  return parsed.linked
+    .filter((entry): entry is PlayerLinkPlatform => isPlayerLinkPlatform(entry))
+    .map((platformId) => ({
+      platformId,
+      linkedAtMs: migratedAtMs,
+      verified: false,
+    }));
+}
+
+export function readPlayerPlatformLinks(): VerifiedPlatformLinkRecord[] {
   if (cachedLinks) {
     return cachedLinks;
   }
@@ -53,17 +119,8 @@ export function readLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
       return cachedLinks;
     }
 
-    const parsed = JSON.parse(stored) as { linked?: unknown };
-
-    if (!Array.isArray(parsed.linked)) {
-      cachedLinks = [];
-      return cachedLinks;
-    }
-
-    cachedLinks = parsed.linked.filter((entry): entry is PlayerLinkPlatform => {
-      return typeof entry === 'string' && PLATFORM_IDS.has(entry);
-    });
-
+    const parsed = JSON.parse(stored) as { linked?: unknown; links?: unknown };
+    cachedLinks = migrateLegacyLinks(parsed);
     return cachedLinks;
   } catch {
     cachedLinks = [];
@@ -71,23 +128,63 @@ export function readLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
   }
 }
 
+export function readLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
+  if (cachedPlatformIds) {
+    return cachedPlatformIds;
+  }
+
+  const links = readPlayerPlatformLinks();
+
+  if (links.length === 0) {
+    cachedPlatformIds = EMPTY_LINKED_PLATFORMS;
+    return cachedPlatformIds;
+  }
+
+  cachedPlatformIds = links.map((entry) => entry.platformId);
+  return cachedPlatformIds;
+}
+
 export function isPlayerPlatformLinked(platformId: PlayerLinkPlatform): boolean {
   return readLinkedPlayerPlatforms().includes(platformId);
 }
 
-export function linkPlayerPlatform(platformId: PlayerLinkPlatform): void {
-  const next = new Set(readLinkedPlayerPlatforms());
-  next.add(platformId);
+function writePlayerPlatformLinks(links: VerifiedPlatformLinkRecord[]): void {
   window.localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({
-      linked: [...next],
+      links,
       updatedAtMs: Date.now(),
-    }),
+    })
   );
   emitChange();
+}
+
+export function linkPlayerPlatform(platformId: PlayerLinkPlatform): void {
+  const existing = readPlayerPlatformLinks();
+  const next = existing.filter((entry) => entry.platformId !== platformId);
+
+  next.push({
+    platformId,
+    linkedAtMs: Date.now(),
+    verified: false,
+  });
+
+  writePlayerPlatformLinks(next);
   ensurePlatformSyncSnapshot(platformId);
   refreshPlatformSync(platformId);
+}
+
+export function upsertVerifiedPlayerPlatformLink(
+  record: VerifiedPlatformLinkRecord
+): void {
+  const next = readPlayerPlatformLinks().filter(
+    (entry) => entry.platformId !== record.platformId
+  );
+
+  next.push(record);
+  writePlayerPlatformLinks(next);
+  ensurePlatformSyncSnapshot(record.platformId);
+  refreshPlatformSync(record.platformId);
 }
 
 export function canUnlinkPlayerPlatform(platformId: PlayerLinkPlatform): boolean {
@@ -99,15 +196,8 @@ export function unlinkPlayerPlatform(platformId: PlayerLinkPlatform): boolean {
     return false;
   }
 
-  const next = readLinkedPlayerPlatforms().filter((entry) => entry !== platformId);
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      linked: next,
-      updatedAtMs: Date.now(),
-    }),
-  );
-  emitChange();
+  const next = readPlayerPlatformLinks().filter((entry) => entry.platformId !== platformId);
+  writePlayerPlatformLinks(next);
   removePlatformSyncSnapshot(platformId);
   return true;
 }
@@ -135,5 +225,9 @@ function subscribe(onStoreChange: () => void): () => void {
 }
 
 export function useLinkedPlayerPlatforms(): PlayerLinkPlatform[] {
-  return useSyncExternalStore(subscribe, readLinkedPlayerPlatforms, () => []);
+  return useSyncExternalStore(subscribe, readLinkedPlayerPlatforms, () => EMPTY_LINKED_PLATFORMS);
+}
+
+export function usePlayerPlatformLinks(): VerifiedPlatformLinkRecord[] {
+  return useSyncExternalStore(subscribe, readPlayerPlatformLinks, () => []);
 }

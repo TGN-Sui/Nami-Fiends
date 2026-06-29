@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 
 import { useMemberSession } from './member-session-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
-import { useLinkedPlayerPlatforms } from './player-link-store.js';
+import { usePlayerPlatformLinks } from './player-link-store.js';
 import { computePlayerScore, type PlayerScoreBreakdown } from './player-score.js';
+import { filterScoreEligiblePlatformIds } from './player-score-platform-eligibility.js';
 import { usePassportQuery } from './protocol-query.js';
 import { useProtocolOwner } from './wallet.js';
 import { useXVerificationState } from './x-verification-store.js';
@@ -12,7 +13,7 @@ export function usePlayerScoreSnapshot(options?: {
   guildStandingVerified?: boolean;
 }): PlayerScoreBreakdown | null {
   const session = useMemberSession();
-  const linkedPlatforms = useLinkedPlayerPlatforms();
+  const platformLinks = usePlayerPlatformLinks();
   const xVerification = useXVerificationState();
   const { owner, source } = useProtocolOwner();
   const { userClaimStatus } = useNamiAdminStore();
@@ -23,11 +24,19 @@ export function usePlayerScoreSnapshot(options?: {
       return null;
     }
 
+    const linkedPlatforms = platformLinks.map((entry) => entry.platformId);
+    const passportCreatedAtMs =
+      passportView?.passport?.createdAtMs ?? session.playerScoreIssuedAtMs ?? null;
+    const scoreEligiblePlatforms = filterScoreEligiblePlatformIds(platformLinks, {
+      passportCreatedAtMs,
+    });
+
     return computePlayerScore({
       displayName: session.displayName,
       email: session.email,
       quizAnswers: session.quizAnswers,
       linkedPlatforms,
+      scoreEligiblePlatforms,
       xVerified: xVerification.verified,
       walletLinked: owner !== null,
       walletSource: (source ?? null) as any,
@@ -38,7 +47,7 @@ export function usePlayerScoreSnapshot(options?: {
     });
   }, [
     session,
-    linkedPlatforms,
+    platformLinks,
     xVerification.verified,
     owner,
     source,

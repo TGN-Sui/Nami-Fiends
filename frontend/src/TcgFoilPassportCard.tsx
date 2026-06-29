@@ -29,6 +29,7 @@ import {
 } from './PassportDisplayNameControls.js';
 import { resolvePassportPlayerScore } from './player-star-display.js';
 import { PlayerStarScoreDisplay } from './PlayerStarScoreDisplay.js';
+import { MemberTierBubbleLane, MemberTierGlitterLane } from './member-tier-card-effects.js';
 import { members, type ConductSignal, type NamiMember } from './uiMockData.js';
 
 function isPassportInteractive(member: NamiMember, signal: ConductSignal): boolean {
@@ -42,6 +43,7 @@ function isPassportInteractive(member: NamiMember, signal: ConductSignal): boole
 function passportTierFoilClass(member: NamiMember): string {
   if (member.tier === 'Elite') return 'is-elite-passport-foil';
   if (member.tier === 'Pro') return 'is-pro-passport-foil';
+  if (member.tier === 'Adventurer') return 'is-adventurer-passport-foil';
 
   return '';
 }
@@ -117,6 +119,7 @@ type TcgFoilPassportCardProps = {
   layout?: 'vertical' | 'horizontal';
   onOpenPassport?: () => void;
   playerScore?: number | null;
+  pokesReceived?: number | null;
   children?: ReactNode;
 };
 
@@ -139,10 +142,10 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   const displaySubtitle = ownerPassport
     ? displayBadge + ' · Nami Official'
     : displayBadge + ' · ' + (reviewedSignal === 'Green' ? 'Verified member' : 'Under review');
-  const tierFoilClass = passportTierFoilClass(props.member);
-  const tierSurfaceClass = memberTierSurfaceClass(props.member);
   const isOfficialGalaxy = isOfficialNamiGalaxyMember(props.member);
   const hasGalaxyRainbowShell = isOfficialGalaxy || ownerPassport;
+  const tierFoilClass = hasGalaxyRainbowShell ? '' : passportTierFoilClass(props.member);
+  const tierSurfaceClass = hasGalaxyRainbowShell ? '' : memberTierSurfaceClass(props.member);
   const isClickable = Boolean(props.onOpenPassport);
   const resolvedPlayerScore = resolvePassportPlayerScore(props.member, props.playerScore);
   const passportTiltRef = useRef<HTMLDivElement | null>(null);
@@ -412,6 +415,26 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
   </div>
 )}
 
+        {!hasGalaxyRainbowShell && props.member.tier === 'Pro' ? (
+          <MemberTierBubbleLane
+            bubbleClassName="passport-tier-float-bubble"
+            keyPrefix={'passport-bubble-' + props.member.id}
+            laneClassName="passport-tier-bubble-lane member-spotlight-bubble-lane"
+            loopClassName="passport-tier-bubble-loop member-spotlight-bubble-loop"
+            passClassName="passport-tier-bubble-pass member-spotlight-bubble-pass"
+          />
+        ) : null}
+
+        {!hasGalaxyRainbowShell && props.member.tier === 'Elite' ? (
+          <MemberTierGlitterLane
+            glitterClassName="passport-tier-glitter-shard member-spotlight-glitter-shard"
+            keyPrefix={'passport-glitter-' + props.member.id}
+            laneClassName="passport-tier-glitter-lane member-spotlight-glitter-lane"
+            loopClassName="passport-tier-glitter-loop member-spotlight-glitter-loop"
+            passClassName="passport-tier-glitter-pass member-spotlight-glitter-pass"
+          />
+        ) : null}
+
         <div className="nami-profile-card-header tcg-passport-card-header">
           <div className="tcg-passport-card-header-mark-slot">
             <PassportHoverDetail
@@ -532,6 +555,14 @@ export function TcgFoilPassportCard(props: TcgFoilPassportCardProps): ReactEleme
             <div>
               <span>Arcade Bubbles</span>
               <strong>{arcadeBubbleStats.totalBubblesPopped.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Pokes received</span>
+              <strong>
+                {typeof props.pokesReceived === 'number'
+                  ? props.pokesReceived.toLocaleString()
+                  : '—'}
+              </strong>
             </div>
             <div>
               <span>Verification</span>

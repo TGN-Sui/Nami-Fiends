@@ -49,6 +49,7 @@ export const KNOWN_EVENT_NAMES = [
   'CosmeticUnlocked',
   'CosmeticLoadoutCreated',
   'CosmeticEquipped',
+  'ChatOverlayCatalogPublished',
   'RecoveryRequested',
   'RecoveryResolved',
 ] as const;
@@ -305,6 +306,13 @@ const EVENT_SCHEMAS: Record<NamiEventName, EventSchema> = {
     passport_id: 'address',
     cosmetic_type: 'u8',
     cosmetic_code: 'u64',
+  },
+  ChatOverlayCatalogPublished: {
+    official_owner: 'address',
+    catalog_version_ms: 'u64',
+    quilt_blob_id: 'bytes',
+    content_root_hash: 'bytes',
+    patch_count: 'u64',
   },
   RecoveryRequested: {
     recovery_id: 'address',

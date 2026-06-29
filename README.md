@@ -1,12 +1,18 @@
-# Nami Chat
+# Nami
 
-Nami Chat is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol.
+Nami is a Sui-powered gaming identity, reputation, access, moderation, customization, and social protocol.
 
 Nami is designed for gamers, developers, channels, squads, guilds, creators, and future game-connected communities.
 
 The goal is not only to build a chat app.
 
 The goal is to build a portable gamer identity and trust layer with the help of the sui stack.
+
+---
+
+## Local testnet (latest code)
+
+Pull `main`, sync env, run backend + frontend on localhost — **[docs/local-testnet-dev.md](docs/local-testnet-dev.md)**.
 
 ---
 

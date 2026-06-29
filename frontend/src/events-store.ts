@@ -17,6 +17,8 @@ import {
   subscribedUserEvents,
   type NamiEvent,
 } from './events-data.js';
+import { listAllGuildEvents } from './guild-events-store.js';
+import { guildsForMember } from './nami-affiliations.js';
 import { readSubscribedChannelIds } from './subscriptions-store.js';
 import { channels, members, type NamiChannel } from './uiMockData.js';
 
@@ -260,7 +262,94 @@ function readCatalogEventsMap(): Record<string, StoredEvent> {
     merged[event.id] = enrichEvent(event, stored[event.id]);
   }
 
+  for (const channel of channels) {
+    for (const event of channelOwnerEvents(channel)) {
+      if (deletedEventIds.has(event.id)) {
+        continue;
+      }
+
+      merged[event.id] = enrichEvent(event, stored[event.id] ?? merged[event.id]);
+    }
+  }
+
+  for (const guildEvent of listAllGuildEvents()) {
+    if (deletedEventIds.has(guildEvent.id)) {
+      continue;
+    }
+
+    merged[guildEvent.id] = enrichEvent(guildEvent, stored[guildEvent.id] ?? merged[guildEvent.id]);
+  }
+
   return merged;
+}
+
+function viewerSubscribedChannelIds(): Set<string> {
+  return new Set(readSubscribedChannelIds());
+}
+
+function viewerSubscribedGuildIds(memberId = getSelfMember().id): Set<string> {
+  return new Set(guildsForMember(memberId).map((guild) => guild.id));
+}
+
+export function isEventInViewerSubscriptions(
+  event: StoredEvent,
+  memberId = getSelfMember().id
+): boolean {
+  if (event.subscribed === true) {
+    return true;
+  }
+
+  if (event.channelId && viewerSubscribedChannelIds().has(event.channelId)) {
+    return true;
+  }
+
+  if (event.guildId && viewerSubscribedGuildIds(memberId).has(event.guildId)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function withViewerSubscriptionFlags(
+  event: StoredEvent,
+  memberId = getSelfMember().id
+): StoredEvent {
+  const subscribed = isEventInViewerSubscriptions(event, memberId);
+
+  if (event.subscribed === subscribed) {
+    return event;
+  }
+
+  return { ...event, subscribed };
+}
+
+export function isUniversalCatalogEvent(event: StoredEvent): boolean {
+  return event.source === 'official' || event.source === 'channel';
+}
+
+export function getUniversalCalendarEvents(): StoredEvent[] {
+  return getAllCatalogEvents().filter(isUniversalCatalogEvent);
+}
+
+export function getPersonalCalendarEvents(memberId = getSelfMember().id): StoredEvent[] {
+  const interestedIds = new Set(readInterestedEventIds(memberId));
+  const merged = new Map<string, StoredEvent>();
+
+  for (const event of getUniversalCalendarEvents()) {
+    merged.set(event.id, withViewerSubscriptionFlags(event, memberId));
+  }
+
+  for (const event of getAllCatalogEvents()) {
+    if (!interestedIds.has(event.id)) {
+      continue;
+    }
+
+    merged.set(event.id, withViewerSubscriptionFlags(event, memberId));
+  }
+
+  return [...merged.values()].sort(
+    (left, right) => new Date(left.startsAtUtc).getTime() - new Date(right.startsAtUtc).getTime()
+  );
 }
 
 export function getAllCatalogEvents(): StoredEvent[] {

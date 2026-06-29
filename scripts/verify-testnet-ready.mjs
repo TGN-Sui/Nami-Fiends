@@ -161,6 +161,18 @@ if (!backendEnv) {
     warn('NAMI_PAYMENT_TREASURY_ADDRESS configured', 'Set treasury wallet for crypto + $GOON tips');
   }
 
+  if (!isPlaceholder(backendEnv.NAMI_ADMIN_CAP_BACKUP_HOLDER)) {
+    pass('NAMI_ADMIN_CAP_BACKUP_HOLDER configured');
+  } else {
+    warn('NAMI_ADMIN_CAP_BACKUP_HOLDER configured', 'Set backup holder wallet on Render');
+  }
+
+  if (backendEnv.NAMI_CARD_CHECKOUT_ENABLED === 'false' || !backendEnv.NAMI_CARD_CHECKOUT_ENABLED) {
+    pass('NAMI_CARD_CHECKOUT_ENABLED=false');
+  } else {
+    warn('NAMI_CARD_CHECKOUT_ENABLED=false', 'Card checkout should stay off for $0 testnet beta');
+  }
+
   if (
     !isPlaceholder(backendEnv.STRIPE_SECRET_KEY) &&
     !isPlaceholder(backendEnv.STRIPE_PUBLISHABLE_KEY)
@@ -272,12 +284,31 @@ if (indexerUrl && !isPlaceholder(indexerUrl)) {
           'Set NAMI_WALRUS_NETWORK=testnet on Render (see render.yaml)',
         );
       }
+
+      const walrusSites = summary?.walrus_sites;
+
+      if (walrusSites?.configured && walrusSites?.site_object_id) {
+        pass('Walrus Sites configured', walrusSites.site_object_id);
+      } else {
+        warn(
+          'Walrus Sites configured',
+          'Run node scripts/deploy-walrus-sites.mjs and set NAMI_WALRUS_SITE_OBJECT_ID on Render',
+        );
+      }
     } else {
       fail('launch ops summary API', 'HTTP ' + launchSummary.status);
     }
   } catch (error) {
     fail('receiving server reachable', error instanceof Error ? error.message : 'fetch failed');
   }
+}
+
+const walrusPrepScript = path.join(rootDir, 'scripts', 'verify-walrus-sites-prep.mjs');
+
+if (fs.existsSync(walrusPrepScript)) {
+  pass('verify-walrus-sites-prep.mjs present');
+} else {
+  fail('verify-walrus-sites-prep.mjs present');
 }
 
 console.log('');

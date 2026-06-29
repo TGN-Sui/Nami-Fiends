@@ -87,11 +87,19 @@ function readGuildEventsMap(): Record<string, StoredGuildEvent[]> {
 
     const parsed = JSON.parse(stored);
 
-    return typeof parsed === 'object' && parsed !== null
-      ? (parsed as Record<string, StoredGuildEvent[]>)
-      : shouldAutoSeedLocalData()
-        ? seedGuildEvents()
-        : emptyGuildEventsMap();
+    if (typeof parsed !== 'object' || parsed === null) {
+      return shouldAutoSeedLocalData() ? seedGuildEvents() : emptyGuildEventsMap();
+    }
+
+    const eventsMap = parsed as Record<string, StoredGuildEvent[]>;
+
+    if (Object.keys(eventsMap).length === 0 && shouldAutoSeedLocalData()) {
+      const seeded = seedGuildEvents();
+      window.localStorage.setItem(EVENTS_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+
+    return eventsMap;
   } catch {
     return shouldAutoSeedLocalData() ? seedGuildEvents() : emptyGuildEventsMap();
   }
@@ -125,6 +133,17 @@ function writeNotifications(notifications: GuildEventNotifications): void {
 
 export function getGuildEvents(guildId: string): StoredGuildEvent[] {
   return readGuildEventsMap()[guildId] ?? [];
+}
+
+export function listAllGuildEvents(): StoredGuildEvent[] {
+  return Object.values(readGuildEventsMap())
+    .flat()
+    .sort((left, right) => {
+      const leftTime = left.startsAtUtc ? new Date(left.startsAtUtc).getTime() : 0;
+      const rightTime = right.startsAtUtc ? new Date(right.startsAtUtc).getTime() : 0;
+
+      return leftTime - rightTime;
+    });
 }
 
 export function canEditGuildEvent(

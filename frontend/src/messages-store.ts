@@ -96,6 +96,10 @@ function readThreads(): StoredThread[] {
       return shouldAutoSeedLocalData() ? seedThreads() : [];
     }
 
+    if (parsed.length === 0 && shouldAutoSeedLocalData()) {
+      return seedThreads();
+    }
+
     return parsed as StoredThread[];
   } catch {
     return shouldAutoSeedLocalData() ? seedThreads() : [];

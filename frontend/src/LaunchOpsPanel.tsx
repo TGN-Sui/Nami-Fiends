@@ -100,7 +100,13 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
               </li>
               <li className="protocol-timeline-item">
                 Card checkout (Stripe){' '}
-                <strong>{summary.exit_gates.card_checkout_ready ? 'ready' : 'blocked'}</strong>
+                <strong>
+                  {!summary.payment_readiness.card_checkout_enabled
+                    ? 'disabled'
+                    : summary.exit_gates.card_checkout_ready
+                      ? 'ready'
+                      : 'blocked'}
+                </strong>
               </li>
               <li className="protocol-timeline-item">
                 Crypto checkout (treasury){' '}
@@ -122,6 +128,65 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
             ) : null}
           </section>
 
+          {summary.seal_privacy ? (
+            <section className="launch-ops-card">
+              <h3>Seal privacy (Phase 9.2)</h3>
+              <ul className="protocol-timeline-list">
+                <li className="protocol-timeline-item">
+                  Lane enabled <strong>{summary.seal_privacy.enabled ? 'yes' : 'no'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Evidence key <strong>{summary.seal_privacy.key_configured ? 'configured' : 'missing'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Sealed packets <strong>{summary.seal_privacy.sealed_count}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Policies in use <strong>{summary.seal_privacy.policies_in_use.length}</strong>
+                </li>
+              </ul>
+              <p className="protocol-hint">{summary.seal_privacy.stack_note}</p>
+            </section>
+          ) : null}
+
+          {summary.walrus_sites ? (
+            <section className="launch-ops-card">
+              <h3>Walrus Sites (SPA)</h3>
+              <ul className="protocol-timeline-list">
+                <li className="protocol-timeline-item">
+                  Site deployed <strong>{summary.walrus_sites.configured ? 'yes' : 'no'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  ws-resources.json{' '}
+                  <strong>{summary.walrus_sites.ws_resources_present ? 'present' : 'missing'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Site object{' '}
+                  <strong>
+                    {summary.walrus_sites.site_object_id
+                      ? summary.walrus_sites.site_object_id.slice(0, 12) + '…'
+                      : 'none'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Network <strong>{summary.walrus_sites.network ?? 'unset'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Storage epochs <strong>{summary.walrus_sites.storage_epochs ?? '—'}</strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Last deploy{' '}
+                  <strong>
+                    {summary.walrus_sites.last_deploy_ms
+                      ? new Date(summary.walrus_sites.last_deploy_ms).toLocaleString()
+                      : 'never'}
+                  </strong>
+                </li>
+              </ul>
+              <p className="protocol-hint">{summary.walrus_sites.portal_note}</p>
+            </section>
+          ) : null}
+
           <section className="launch-ops-card">
             <h3>Walrus border art</h3>
             <ul className="protocol-timeline-list">
@@ -139,6 +204,37 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
                 Render fallback blocked{' '}
                 <strong>{summary.walrus_border_art.border_art_required ? 'yes' : 'no'}</strong>
               </li>
+              <li className="protocol-timeline-item">
+                Catalog quilt blob{' '}
+                <strong>
+                  {summary.walrus_border_art.catalog_quilt_blob_id
+                    ? summary.walrus_border_art.catalog_quilt_blob_id.slice(0, 12) + '…'
+                    : 'none'}
+                </strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Catalog patches <strong>{summary.walrus_border_art.catalog_patch_count}</strong>
+              </li>
+              <li className="protocol-timeline-item">
+                Last publish{' '}
+                <strong>
+                  {summary.walrus_border_art.catalog_last_publish_ms
+                    ? new Date(summary.walrus_border_art.catalog_last_publish_ms).toLocaleString()
+                    : 'never'}
+                </strong>
+              </li>
+              <li className="protocol-timeline-item">
+                On-chain attestation{' '}
+                <strong>{summary.walrus_border_art.catalog_attestation_status ?? 'none'}</strong>
+              </li>
+              {summary.walrus_border_art.catalog_attestation_tx_digest ? (
+                <li className="protocol-timeline-item">
+                  Attest tx{' '}
+                  <strong>
+                    {summary.walrus_border_art.catalog_attestation_tx_digest.slice(0, 12)}…
+                  </strong>
+                </li>
+              ) : null}
             </ul>
           </section>
 

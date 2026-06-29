@@ -699,6 +699,34 @@ npm --prefix frontend test — 296 passing
 sui move test — 80 passing
 ```
 
+# Phase 7.3 — Arcade cabinets (in progress)
+
+Status:
+
+```text
+In progress — Tier 1 live: Goon Pop + Alley Push; Tier 2+ offline on picker
+```
+
+Shipped:
+
+```text
+Attract → picker → intro → stage → play session flow
+Per-cabinet intro/stage/viewport media (owner upload or /arcade/cabinets/{id}/ public fallbacks)
+Goon Pop (Alley Run / Heat Run) + Alley Push (Street Pass / Heat Chase with vertical rows)
+Lobby + per-game MP3 owner slots, audio controls, leaderboard + passport stats per game
+```
+
+Docs: [arcade-cabinets.md](./arcade-cabinets.md) · checkpoint ARC-1–ARC-5 in [ui-build-checkpoint.md](./ui-build-checkpoint.md)
+
+Planned:
+
+```text
+Tier 2 cabinet game boards (Pro membership)
+Passport badge hooks for arcade run stats
+```
+
+---
+
 Planned — Gifting:
 
 ```text
@@ -996,7 +1024,7 @@ zkLogin redirect URIs registered for production portal domains
 Status:
 
 ```text
-Planned
+In progress — ws-resources.json, prepare/deploy scripts, Launch Ops card, first testnet deploy metadata, verify/setup helper scripts (docs/walrus-sites-deploy.md)
 ```
 
 Scope:
@@ -1038,7 +1066,7 @@ Walrus Sites docs: site-builder deploy, ws-resources.json routes, wal.app portal
 Status:
 
 ```text
-Planned — evaluate as Sui privacy primitives mature
+In progress — nami-seal-v1-dev envelopes + /api/privacy/evidence/* + Launch Ops card (docs/seal-privacy.md)
 ```
 
 Goal:

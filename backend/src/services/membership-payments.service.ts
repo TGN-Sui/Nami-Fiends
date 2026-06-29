@@ -110,7 +110,9 @@ export function getPublicPaymentConfig(): PublicPaymentConfig {
     goonCoinType: paymentConfig.goonCoinType,
     stripePublishableKey: stripeConfigured ? paymentConfig.stripePublishableKey : null,
     paypalClientId: paypalConfigured ? paymentConfig.paypalClientId : null,
-    cardEnabled: stripeConfigured || paymentConfig.allowMockProviders,
+    cardEnabled:
+      paymentConfig.cardCheckoutEnabled &&
+      (stripeConfigured || paymentConfig.allowMockProviders),
     paypalEnabled: paypalConfigured || paymentConfig.allowMockProviders,
     cryptoEnabled: treasuryConfigured,
     mockProviders: paymentConfig.allowMockProviders,
@@ -360,6 +362,20 @@ function buildCryptoPayload(intent: MembershipPaymentIntent): CryptoCheckoutPayl
 export async function createMembershipPaymentIntent(
   input: CreatePaymentIntentInput
 ): Promise<PaymentIntentResponse> {
+  const publicConfig = getPublicPaymentConfig();
+
+  if (input.rail === 'card' && !publicConfig.cardEnabled) {
+    throw new Error('Card checkout is not available on this build.');
+  }
+
+  if (input.rail === 'paypal' && !publicConfig.paypalEnabled) {
+    throw new Error('PayPal checkout is not available on this build.');
+  }
+
+  if (input.rail === 'other' && !publicConfig.cryptoEnabled) {
+    throw new Error('Crypto checkout is not available on this build.');
+  }
+
   const amountUsd = tierAmountUsd(input.tier, input.billingCycle);
   const now = Date.now();
 

@@ -6,13 +6,13 @@ export function BannerShoutoutBadge(props: {
   shoutout: BannerShoutoutTarget;
   onOpenMember?: (memberId: string) => void;
 }): ReactElement {
-  const label = 'Shoutout · ' + props.shoutout.memberName;
+  const label = 'Shoutout · ' + props.shoutout.memberAtTag;
 
   if (!props.onOpenMember) {
     return (
       <span className="channel-banner-shoutout-badge" title={label}>
         <span className="mini-badge">Shoutout</span>
-        <strong>{props.shoutout.memberName}</strong>
+        <strong>{props.shoutout.memberAtTag}</strong>
       </span>
     );
   }
@@ -24,11 +24,11 @@ export function BannerShoutoutBadge(props: {
         event.stopPropagation();
         props.onOpenMember?.(props.shoutout.memberId);
       }}
-      title={'Open ' + props.shoutout.memberName + ' profile'}
+      title={'Open ' + props.shoutout.memberAtTag + ' profile'}
       type="button"
     >
       <span className="mini-badge">Shoutout</span>
-      <strong>{props.shoutout.memberName}</strong>
+      <strong>{props.shoutout.memberAtTag}</strong>
     </button>
   );
 }

@@ -21,6 +21,7 @@ import {
   emptyChatMessages,
   emptyDevelopers,
 } from './fixtures/empty-catalog.js';
+import { resolveMembersForCatalog } from './fixtures/test-launch-lounge-mocks.js';
 import { createShellDeveloper, createShellSelfMember } from './fixtures/shell-catalog.js';
 import {
   channels as seedChannels,
@@ -53,7 +54,7 @@ function resolveMembers(): NamiMember[] {
     return seedMembers;
   }
 
-  return [createShellSelfMember()];
+  return resolveMembersForCatalog(createShellSelfMember());
 }
 
 export const channels = resolveChannels();

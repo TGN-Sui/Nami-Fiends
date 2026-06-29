@@ -38,6 +38,8 @@ import {
 import { tagSuggestionHint } from './nami-tag-registry.js';
 import { saveSafetyReport } from './safety-report-store.js';
 import { resolveChatEmojisForChannel, useChannelCustomEmojis } from './channel-custom-emojis-store.js';
+import { ChatPokeButton } from './ChatPokeButton.js';
+import { useExpandedChatMemberFocus } from './expanded-chat-member-focus.js';
 import { TaggedMessageBody, type TagNavigationHandlers } from './TaggedMessageBody.js';
 
 import { members, type ChatMessage, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
@@ -128,6 +130,12 @@ export function ChannelProfileChatSection(props: {
     return channelPresenceMembers.filter((member) => !readMemberPreference(member.id).blocked);
   }, [channelPresenceMembers, preferencesVersion]);
   const [chatDraft, setChatDraft] = useState('');
+  const [chatExpanded, setChatExpanded] = useState(false);
+  const memberFocus = useExpandedChatMemberFocus({
+    active: chatExpanded,
+    onOpenMember: props.onOpenMember,
+    tagHandlers: props.tagHandlers,
+  });
   const canSend = canSendChatMessages();
 
   const resolveChatMessageMember = useCallback((message: ChatMessage): NamiMember | undefined => {
@@ -205,22 +213,27 @@ export function ChannelProfileChatSection(props: {
             const preference = readMemberPreference(member.id);
 
             return (
-              <button
+              <div
                 className={
-                  'chat-member-card' +
+                  'chat-member-card-wrap' +
                   chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
               >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>
-                  {preference.muted ? 'Muted' : memberPassportTierLabel(member, connectedOwner)}
-                </span>
-              </button>
+                <button
+                  className={'chat-member-card' + chatMemberCardTierClass(member)}
+                  onClick={() => props.onOpenMember(member)}
+                  type="button"
+                >
+                  <UniformMemberAvatar member={member} />
+                  <strong>{member.name}</strong>
+                  <span>
+                    {preference.muted ? 'Muted' : memberPassportTierLabel(member, connectedOwner)}
+                  </span>
+                </button>
+                <ChatPokeButton compact target={member} />
+              </div>
             );
           })}
 
@@ -228,20 +241,25 @@ export function ChannelProfileChatSection(props: {
             const preference = readMemberPreference(member.id);
 
             return (
-              <button
+              <div
                 className={
-                  'chat-member-card is-offline' +
+                  'chat-member-card-wrap is-offline' +
                   chatMemberCardTierClass(member) +
                   (preference.muted ? ' is-muted-member-card' : '')
                 }
                 key={member.id}
-                onClick={() => props.onOpenMember(member)}
-                type="button"
               >
-                <UniformMemberAvatar member={member} />
-                <strong>{member.name}</strong>
-                <span>{preference.muted ? 'Muted' : 'Offline'}</span>
-              </button>
+                <button
+                  className={'chat-member-card is-offline' + chatMemberCardTierClass(member)}
+                  onClick={() => props.onOpenMember(member)}
+                  type="button"
+                >
+                  <UniformMemberAvatar member={member} />
+                  <strong>{member.name}</strong>
+                  <span>{preference.muted ? 'Muted' : 'Offline'}</span>
+                </button>
+                <ChatPokeButton compact target={member} />
+              </div>
             );
           })}
         </div>
@@ -249,7 +267,15 @@ export function ChannelProfileChatSection(props: {
 
       <section className="chat-shell chat-shell-buildout channel-profile-chat-shell">
         <div className="chat-layout chat-layout-buildout">
-          <ChatWindowExpandable className="chat-theme-channel-brand">
+          <ChatWindowExpandable
+            className="chat-theme-channel-brand"
+            onEscape={memberFocus.handleChatEscape}
+            onExpandedChange={(expanded) => {
+              setChatExpanded(expanded);
+              memberFocus.handleExpandedChange(expanded);
+            }}
+            renderExpandedAside={memberFocus.renderExpandedAside}
+          >
             <div className="chat-window-heading">
               <div>
                 <h2>{props.channel.name} Main Chat</h2>
@@ -283,7 +309,7 @@ export function ChannelProfileChatSection(props: {
                   >
                     <UniformMemberAvatarButton
                       member={member}
-                      onClick={() => props.onOpenMember(member)}
+                      onClick={() => memberFocus.handleOpenMember(member)}
                       signal={message.signal}
                     />
 
@@ -291,7 +317,7 @@ export function ChannelProfileChatSection(props: {
                       <div className="message-meta">
                         <button
                           className={'message-author-button signal-text-' + message.signal.toLowerCase()}
-                          onClick={() => props.onOpenMember(member)}
+                          onClick={() => memberFocus.handleOpenMember(member)}
                           type="button"
                         >
                           {message.author}
@@ -314,7 +340,7 @@ export function ChannelProfileChatSection(props: {
                         <TaggedMessageBody
                           body={message.body}
                           customEmojis={channelEmojis}
-                          handlers={props.tagHandlers}
+                          handlers={memberFocus.mergedTagHandlers ?? props.tagHandlers}
                           {...(adultLanguageMode === 'censor'
                             ? { transformText: censorAdultLanguage }
                             : {})}
@@ -346,7 +372,7 @@ export function ChannelProfileChatSection(props: {
                   ? 'Message ' + props.channel.name + ' · ' + tagSuggestionHint()
                   : 'Sign in and verify to send messages'
               }
-              sendButtonClassName=""
+              sendButtonClassName="channel-chat-send-button"
               value={chatDraft}
             />
           </ChatWindowExpandable>

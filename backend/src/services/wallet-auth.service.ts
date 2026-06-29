@@ -1,5 +1,7 @@
 import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
 
+import { config } from '../config.js';
+
 function readBoolean(name: string, fallback: boolean): boolean {
   const value = process.env[name];
 
@@ -145,11 +147,58 @@ export async function assertWalletAuth(owner: string, auth: WalletAuthInput | nu
   }
 }
 
+export type WalletAuthFailureReason =
+  | 'missing_signature'
+  | 'missing_signer_address'
+  | 'invalid_timestamp'
+  | 'timestamp_skew'
+  | 'signature_mismatch';
+
+export function diagnoseWalletAuthFailure(
+  owner: string,
+  auth: WalletAuthInput | null | undefined
+): WalletAuthFailureReason | null {
+  if (!walletAuthConfig.requireSignature) {
+    return null;
+  }
+
+  if (!auth || typeof auth.signature !== 'string' || !auth.signature.trim()) {
+    return 'missing_signature';
+  }
+
+  if (typeof auth.timestampMs !== 'number' || !Number.isFinite(auth.timestampMs)) {
+    return 'invalid_timestamp';
+  }
+
+  const skew = Math.abs(Date.now() - auth.timestampMs);
+
+  if (skew > walletAuthConfig.maxSkewMs) {
+    return 'timestamp_skew';
+  }
+
+  if (!auth.signerAddress?.trim()) {
+    return 'missing_signer_address';
+  }
+
+  return 'signature_mismatch';
+}
+
 export async function assertWalletAuthFromBody(
   owner: string,
   body: Record<string, unknown>
 ): Promise<void> {
-  await assertWalletAuth(owner, readWalletAuthFromBody(body));
+  const auth = readWalletAuthFromBody(body);
+
+  try {
+    await assertWalletAuth(owner, auth);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'wallet_auth_invalid' && config.testLaunch) {
+      const reason = diagnoseWalletAuthFailure(owner, auth);
+      throw new Error(reason ? 'wallet_auth_invalid:' + reason : 'wallet_auth_invalid');
+    }
+
+    throw error;
+  }
 }
 
 export function walletAuthPublicConfig(): { requireSignature: boolean } {

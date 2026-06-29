@@ -55,7 +55,9 @@ services:
       - key: NAMI_PAYMENT_TREASURY_ADDRESS
         value: '0x6bff7988b87ffce3af4eaee7853f77b6d0d9ebb0e70a2a5924e5bdc7f68c75b4'
       - key: NAMI_ADMIN_CAP_BACKUP_HOLDER
-        sync: false
+        value: '0x258608d20931e37c9eb3ded2aa05c20d27ae9570efd86b56080b5b062d9caca1'
+      - key: NAMI_CARD_CHECKOUT_ENABLED
+        value: 'false'
       - key: NAMI_OFFICIALS_SYNC_SECRET
         sync: false
       - key: STRIPE_SECRET_KEY
@@ -82,4 +84,11 @@ services:
       - key: NAMI_WALRUS_PUBLISHER_URL
         value: 'https://publisher.walrus-testnet.walrus.space'
       - key: NAMI_WALRUS_STORAGE_EPOCHS
+        value: '5'
+      # Phase 9.1 — Walrus Sites static SPA (set after site-builder deploy)
+      - key: NAMI_WALRUS_SITE_OBJECT_ID
+        sync: false
+      - key: NAMI_WALRUS_SITE_NETWORK
+        value: testnet
+      - key: NAMI_WALRUS_SITE_EPOCHS
         value: '5'

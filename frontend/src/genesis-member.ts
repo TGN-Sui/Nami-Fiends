@@ -1,4 +1,6 @@
 import { readAppConfig, shouldUseDevFixtures, isTestLaunchMode } from './app-config.js';
+import { estimateLocalStorageBytes, pruneLocalStorageForQuota } from './local-storage-safe.js';
+import { repairMemberAccountsRegistryStorage } from './member-session-store.js';
 import { resolveNamiAdminRole } from './nami-capabilities.js';
 import { readLinkedMemberDisplayName } from './linked-member-store.js';
 import { resolveMemberDisplayName } from './member-display-name-store.js';
@@ -60,15 +62,19 @@ export function ensureGenesisLocalDataOnTestLaunch(): void {
   }
 
   try {
-    if (window.localStorage.getItem(GENESIS_DATA_PURGE_KEY) === 'done') {
-      return;
+    if (window.localStorage.getItem(GENESIS_DATA_PURGE_KEY) !== 'done') {
+      for (const key of DEMO_MESSAGE_STORE_KEYS) {
+        window.localStorage.removeItem(key);
+      }
+
+      window.localStorage.setItem(GENESIS_DATA_PURGE_KEY, 'done');
     }
 
-    for (const key of DEMO_MESSAGE_STORE_KEYS) {
-      window.localStorage.removeItem(key);
-    }
+    repairMemberAccountsRegistryStorage();
 
-    window.localStorage.setItem(GENESIS_DATA_PURGE_KEY, 'done');
+    if (estimateLocalStorageBytes() > 4 * 1024 * 1024) {
+      pruneLocalStorageForQuota(512 * 1024);
+    }
   } catch {
     // Ignore storage failures in restricted environments.
   }

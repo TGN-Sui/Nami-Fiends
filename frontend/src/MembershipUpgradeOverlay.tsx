@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
 import { getSelfMember } from './member-access.js';
+import {
+  defaultCheckoutRail,
+  membershipCheckoutMethodsSummary,
+  resolveVisibleCheckoutRails,
+} from './membership-checkout-visibility.js';
 import { MembershipAdventurerClaimCard } from './MembershipAdventurerClaimCard.js';
 import { MembershipPurchaseLockedPanel } from './MembershipPurchaseLockedPanel.js';
 import { MembershipCheckoutPanel } from './MembershipCheckoutPanel.js';
@@ -31,6 +36,7 @@ import {
   closeMembershipUpgradeOverlay,
   useMembershipUpgradeOverlayOpen,
 } from './membership-upgrade-store.js';
+import { usePublicPaymentConfig } from './use-public-payment-config.js';
 import { useProtocolOwner } from './wallet.js';
 
 const TIER_RANK: Record<PaidMembershipTier, number> = {
@@ -41,13 +47,14 @@ const TIER_RANK: Record<PaidMembershipTier, number> = {
 
 export function MembershipUpgradeOverlay(): ReactElement | null {
   const open = useMembershipUpgradeOverlayOpen();
+  const paymentConfig = usePublicPaymentConfig();
   const { owner } = useProtocolOwner();
   const complimentaryAccess = hasComplimentaryMembershipAccess(owner);
   const canPurchaseMembership = canPurchasePaidMembership(getSelfMember());
   const planState = useMembershipPlanState();
   const [billingCycle, setBillingCycle] = useState<MembershipBillingCycle>(planState.billingCycle);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
-    planState.pendingCheckoutRail ?? 'card'
+    planState.pendingCheckoutRail ?? defaultCheckoutRail(paymentConfig)
   );
   const [cryptoAsset, setCryptoAsset] = useState<MembershipCryptoAsset | null>(
     planState.pendingCryptoAsset ?? null
@@ -89,7 +96,7 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
     }
 
     setBillingCycle(planState.billingCycle);
-    setCheckoutRail(planState.pendingCheckoutRail ?? 'card');
+    setCheckoutRail(planState.pendingCheckoutRail ?? defaultCheckoutRail(paymentConfig));
     setCryptoAsset(planState.pendingCryptoAsset ?? null);
     setNotice(null);
     setError(null);
@@ -110,7 +117,15 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, planState.billingCycle, planState.pendingCheckoutRail, planState.pendingCryptoAsset, planState.status]);
+  }, [open, paymentConfig, planState.billingCycle, planState.pendingCheckoutRail, planState.pendingCryptoAsset, planState.status]);
+
+  useEffect(() => {
+    const visible = resolveVisibleCheckoutRails(paymentConfig);
+
+    if (!visible.includes(checkoutRail)) {
+      setCheckoutRail(defaultCheckoutRail(paymentConfig));
+    }
+  }, [checkoutRail, paymentConfig]);
 
   if (!open) {
     return null;
@@ -202,8 +217,8 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
           <span className="mini-badge">Membership Plans</span>
           <h2 id="membership-upgrade-title">Upgrade your Nami access</h2>
           <p>
-            Credit/debit card, PayPal, or Other (SUI, USDC, $GOON). Adventurer is $3 USDC/month — or
-            claim free after X.com authorization. Card/PayPal settle server-side; crypto uses wallet
+            Pay with {membershipCheckoutMethodsSummary(paymentConfig)}. Adventurer is $3 USDC/month — or
+            claim free after X.com authorization. Fiat rails settle server-side; crypto uses wallet
             signatures to the treasury address.
           </p>
         </header>
@@ -234,6 +249,7 @@ export function MembershipUpgradeOverlay(): ReactElement | null {
           compact
           onSelectCryptoAsset={setCryptoAsset}
           onSelectRail={setCheckoutRail}
+          paymentConfig={paymentConfig}
           selectedCryptoAsset={cryptoAsset}
           selectedRail={checkoutRail}
         />

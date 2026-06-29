@@ -50,6 +50,35 @@ export function normalizeZkLoginRedirectUrl(originOrUrl: string): string {
   }
 }
 
+/**
+ * OAuth redirect URIs must match the page origin exactly. A build-time http:// redirect
+ * on an https:// deploy splits localStorage and breaks zkLogin session persistence.
+ */
+export function alignZkLoginRedirectWithPageOrigin(
+  redirectUrl: string,
+  pageHref?: string
+): string {
+  const pageUrl =
+    pageHref ?? (typeof window !== 'undefined' ? window.location.href : '');
+
+  if (!pageUrl) {
+    return redirectUrl;
+  }
+
+  try {
+    const configured = new URL(redirectUrl);
+    const page = new URL(pageUrl);
+
+    if (configured.host === page.host && configured.protocol !== page.protocol) {
+      return normalizeZkLoginRedirectUrl(`${page.origin}/`);
+    }
+  } catch {
+    // Keep the configured redirect when parsing fails.
+  }
+
+  return redirectUrl;
+}
+
 export function readZkLoginEnvConfig(): ZkLoginEnvConfig {
   const clientIdRaw = import.meta.env.VITE_ZKLOGIN_CLIENT_ID;
   const redirectRaw = import.meta.env.VITE_ZKLOGIN_REDIRECT_URL;
@@ -67,6 +96,8 @@ export function readZkLoginEnvConfig(): ZkLoginEnvConfig {
   } else if (typeof window !== 'undefined') {
     redirectUrl = normalizeZkLoginRedirectUrl(`${window.location.origin}/`);
   }
+
+  redirectUrl = alignZkLoginRedirectWithPageOrigin(redirectUrl);
 
   const saltUrl =
     typeof saltRaw === 'string' && saltRaw.trim() !== ''
@@ -113,6 +144,18 @@ export function validateZkLoginEnv(config: ZkLoginEnvConfig = readZkLoginEnvConf
       issues.push({
         code: 'redirect_missing_trailing_slash',
         message: 'VITE_ZKLOGIN_REDIRECT_URL should end with / to match Google OAuth registration.',
+      });
+    }
+
+    if (
+      redirect.protocol === 'http:' &&
+      redirect.hostname !== 'localhost' &&
+      redirect.hostname !== '127.0.0.1'
+    ) {
+      issues.push({
+        code: 'redirect_http_on_public_origin',
+        message:
+          'Public zkLogin redirect URIs must use https:// or OAuth will return on a different origin than the app.',
       });
     }
   } catch {

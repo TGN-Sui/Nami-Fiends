@@ -4,6 +4,10 @@ import {
   buildChannelDiscoveryRankings,
   buildGuildDiscoveryRankings,
 } from './discovery.service.js';
+import { isCatalogAttestationEnabled } from './chat-overlay-catalog-attestation.service.js';
+import { readBorderArtCatalogQuiltSnapshot } from './chat-overlay-rewards.service.js';
+import { readSealPrivacyReadiness, type SealPrivacyReadiness } from './seal-privacy.service.js';
+import { buildWalrusSitesReadiness } from './walrus-sites.service.js';
 import { getOfficialsSubmissions } from './officials-submissions.service.js';
 import { paymentConfig } from '../payment-config.js';
 import { getPublicPaymentConfig } from './membership-payments.service.js';
@@ -35,6 +39,16 @@ export interface LaunchOpsPaymentReadiness {
   paypal_checkout_enabled: boolean;
 }
 
+export interface LaunchOpsWalrusSitesReadiness {
+  configured: boolean;
+  site_object_id: string | null;
+  network: string | null;
+  storage_epochs: number | string | null;
+  last_deploy_ms: number | null;
+  portal_note: string;
+  ws_resources_present: boolean;
+}
+
 export interface LaunchOpsWalrusBorderArtReadiness {
   configured: boolean;
   network: string | null;
@@ -42,6 +56,12 @@ export interface LaunchOpsWalrusBorderArtReadiness {
   publisher_url: string;
   border_art_required: boolean;
   storage_epochs: number;
+  catalog_quilt_blob_id: string | null;
+  catalog_version_ms: number | null;
+  catalog_patch_count: number;
+  catalog_last_publish_ms: number | null;
+  catalog_attestation_status: string | null;
+  catalog_attestation_tx_digest: string | null;
 }
 
 export interface LaunchOpsExitGates {
@@ -59,6 +79,8 @@ export interface LaunchOpsSummary {
   package_id: string;
   official_owner_configured: boolean;
   payment_readiness: LaunchOpsPaymentReadiness;
+  walrus_sites: LaunchOpsWalrusSitesReadiness;
+  seal_privacy: SealPrivacyReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
   pending_actions: string[];
@@ -120,7 +142,9 @@ export async function buildLaunchOpsSummary(
   const publicPayment = getPublicPaymentConfig();
   const corePolicyReady =
     config.testLaunch && !paymentConfig.allowMockProviders && config.officialOwner.trim() !== '';
-  const cardCheckoutReady = publicPayment.cardEnabled && publicPayment.stripePublishableKey !== null;
+  const cardCheckoutReady =
+    !paymentConfig.cardCheckoutEnabled ||
+    (publicPayment.cardEnabled && publicPayment.stripePublishableKey !== null);
   const cryptoCheckoutReady = publicPayment.cryptoEnabled;
 
   const pendingActions: string[] = [];
@@ -131,7 +155,7 @@ export async function buildLaunchOpsSummary(
     );
   }
 
-  if (!publicPayment.stripePublishableKey) {
+  if (paymentConfig.cardCheckoutEnabled && !publicPayment.stripePublishableKey) {
     pendingActions.push('Set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, and STRIPE_WEBHOOK_SECRET on Render.');
   }
 
@@ -144,10 +168,34 @@ export async function buildLaunchOpsSummary(
   }
 
   const walrusBorderArt = config.walrus;
+  const catalogQuilt = await readBorderArtCatalogQuiltSnapshot();
 
   if (!isWalrusBorderArtConfigured(walrusBorderArt)) {
     pendingActions.push(
       'Set NAMI_WALRUS_NETWORK=testnet (or explicit aggregator/publisher URLs) on Render for Walrus border art.',
+    );
+  }
+
+  if (!isCatalogAttestationEnabled()) {
+    pendingActions.push(
+      'On-chain border art catalog attestation is deferred (NAMI_CATALOG_ATTEST_ENABLED=false). Walrus + projection remain the demo path until a post-hackathon package upgrade.',
+    );
+  }
+
+  const walrusSites = buildWalrusSitesReadiness();
+  const sealPrivacy = await readSealPrivacyReadiness();
+
+  if (!sealPrivacy.enabled) {
+    pendingActions.push(
+      'Phase 9.2: enable Seal privacy lane (NAMI_SEAL_PRIVACY_ENABLED + NAMI_SEAL_EVIDENCE_KEY) for encrypted appeal/moderation evidence.',
+    );
+  } else if (!sealPrivacy.key_configured) {
+    pendingActions.push('Set NAMI_SEAL_EVIDENCE_KEY on Render for Seal privacy envelopes.');
+  }
+
+  if (!walrusSites.configured) {
+    pendingActions.push(
+      'Phase 9.1: deploy static SPA to Walrus Sites (node scripts/deploy-walrus-sites.mjs) and set NAMI_WALRUS_SITE_OBJECT_ID.',
     );
   }
 
@@ -168,6 +216,8 @@ export async function buildLaunchOpsSummary(
       card_checkout_enabled: publicPayment.cardEnabled,
       paypal_checkout_enabled: publicPayment.paypalEnabled,
     },
+    walrus_sites: walrusSites,
+    seal_privacy: sealPrivacy,
     walrus_border_art: {
       configured: isWalrusBorderArtConfigured(walrusBorderArt),
       network: walrusBorderArt.network,
@@ -175,6 +225,12 @@ export async function buildLaunchOpsSummary(
       publisher_url: walrusBorderArt.publisherUrl,
       border_art_required: walrusBorderArt.borderArtRequired,
       storage_epochs: walrusBorderArt.storageEpochs,
+      catalog_quilt_blob_id: catalogQuilt.quiltBlobId,
+      catalog_version_ms: catalogQuilt.catalogVersionMs,
+      catalog_patch_count: catalogQuilt.patchCount,
+      catalog_last_publish_ms: catalogQuilt.lastPublishMs,
+      catalog_attestation_status: catalogQuilt.attestationStatus,
+      catalog_attestation_tx_digest: catalogQuilt.attestationTxDigest,
     },
     exit_gates: {
       core_policy_ready: corePolicyReady,

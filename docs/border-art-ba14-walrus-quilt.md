@@ -1,6 +1,6 @@
 # BA-14 — Border Art on Walrus Quilt (Draft Design)
 
-Status: **BA-14.1 implemented** — quilt publisher + projection refs + client resolve (Render fallback when Walrus unset)  
+Status: **BA-14.1–14.4 code complete** — quilt publisher, migration, integrity, attestation (on-chain gated by `NAMI_CATALOG_ATTEST_ENABLED` until package upgrade)  
 Owner: Border Art / Platform ops lane  
 Aligns with: Phase 9 Sui stack priority (Walrus > web2 disk), BA-1–13 complete
 

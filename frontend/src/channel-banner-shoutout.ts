@@ -3,7 +3,18 @@ import { members } from './uiMockData.js';
 export type BannerShoutoutTarget = {
   memberId: string;
   memberName: string;
+  memberAtTag: string;
 };
+
+export function formatMemberAtTag(name: string): string {
+  const trimmed = name.trim();
+
+  if (!trimmed) {
+    return '@member';
+  }
+
+  return trimmed.startsWith('@') ? trimmed : '@' + trimmed;
+}
 
 export function resolveBannerShoutoutMember(
   memberId: string | null | undefined,
@@ -21,6 +32,7 @@ export function resolveBannerShoutoutMember(
   return {
     memberId: member.id,
     memberName: member.name,
+    memberAtTag: formatMemberAtTag(member.name),
   };
 }
 

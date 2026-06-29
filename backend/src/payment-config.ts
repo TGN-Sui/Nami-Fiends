@@ -75,6 +75,8 @@ export const paymentConfig = {
   allowMockProviders: baseConfig.testLaunch
     ? false
     : readBoolean('NAMI_PAYMENT_ALLOW_MOCK', true),
+  /** When false, card/Stripe checkout stays off even if keys are configured. */
+  cardCheckoutEnabled: readBoolean('NAMI_CARD_CHECKOUT_ENABLED', false),
 
   httpPort: baseConfig.httpPort,
 } as const;

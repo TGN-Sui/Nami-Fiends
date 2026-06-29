@@ -1,15 +1,24 @@
 import { isIndexerLive, isTestLaunchMode, readAppConfig } from './app-config.js';
 import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
 import type { OfficialChatOverlayReward } from './official-chat-overlay-rewards-store.js';
-import {
-  canPromptWalletSignature,
-  createCatalogSyncAuthPayload,
-  readWalletAuthOwner,
-} from './wallet-auth.js';
+import { createCatalogSyncAuthPayload, readWalletAuthOwner } from './wallet-auth.js';
+import { canZkLoginSignForOwner } from './zklogin.js';
+
+export type ChatOverlayCatalogAttestation = {
+  quiltBlobId: string;
+  catalogVersionMs: number;
+  contentRootHash: string;
+  patchCount: number;
+  txDigest: string | null;
+  publishedAtMs: number;
+  status: 'on-chain' | 'pending-package' | 'skipped';
+  detail?: string;
+};
 
 export type ChatOverlayRewardsCatalog = {
   rewards: OfficialChatOverlayReward[];
   updatedAtMs: number;
+  catalogAttestation?: ChatOverlayCatalogAttestation | null;
 };
 
 export type ChatOverlayRewardsApiErrorCode =
@@ -66,12 +75,18 @@ function mapResponseError(status: number, body: Record<string, unknown>): ChatOv
     );
   }
 
-  if (error === 'wallet_auth_invalid') {
-    return new ChatOverlayRewardsApiError(
-      'wallet_auth_invalid',
-      status,
-      'Wallet signature was rejected. Reconnect zkLogin or your wallet extension, then save again.'
-    );
+  if (error === 'wallet_auth_invalid' || message.startsWith('wallet_auth_invalid')) {
+    const reason = message.includes(':') ? message.split(':').slice(1).join(':') : '';
+    const detail =
+      reason === 'missing_signer_address'
+        ? 'zkLogin signature was missing signer metadata. Disconnect any Sui wallet extension, sign out of zkLogin, sign in with Google again, then save.'
+        : reason === 'timestamp_skew'
+          ? 'Wallet signature expired. Save again immediately after signing in.'
+          : reason === 'signature_mismatch'
+            ? 'A different wallet may be signing than the official owner address. Disconnect browser wallet extensions and use zkLogin only.'
+            : 'Wallet signature was rejected. Disconnect any Sui wallet extension, reconnect zkLogin, then save again.';
+
+    return new ChatOverlayRewardsApiError('wallet_auth_invalid', status, detail);
   }
 
   if (error === 'official_owner_required') {
@@ -87,6 +102,14 @@ function mapResponseError(status: number, body: Record<string, unknown>): ChatOv
       'invalid_file_size',
       status,
       'One of the border art files is too large for the receiving server. Upload a smaller image.'
+    );
+  }
+
+  if (message.includes('invalid_art_dimensions')) {
+    return new ChatOverlayRewardsApiError(
+      'invalid_art_value',
+      status,
+      'Border art must be exactly 384×384 px. Re-export your 9-patch frame, then upload again.'
     );
   }
 
@@ -170,18 +193,18 @@ async function resolveWalletAuthForSync(owner: string) {
     return null;
   }
 
-  if (!canPromptWalletSignature(owner)) {
-    throw new ChatOverlayRewardsApiError(
-      'wallet_auth_unavailable',
-      0,
-      'Reconnect zkLogin or your official owner wallet to authorize border art uploads, then save again.'
-    );
-  }
-
   try {
     const auth = await createCatalogSyncAuthPayload(owner);
 
     if (!auth?.signature || !Number.isFinite(auth.timestampMs)) {
+      throw new ChatOverlayRewardsApiError(
+        'wallet_auth_unavailable',
+        0,
+        'Reconnect zkLogin or your official owner wallet to authorize border art uploads, then save again.'
+      );
+    }
+
+    if (canZkLoginSignForOwner(owner) && !auth.signerAddress) {
       throw new ChatOverlayRewardsApiError(
         'wallet_auth_unavailable',
         0,

@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+
 import {
   canPromptEquipSyncSignature,
   canPromptWalletSignature,
+  createCatalogSyncAuthPayload,
   createEquipSyncAuthPayload,
   createWalletAuthPayload,
   registerWalletAuthSigner,
@@ -25,6 +28,16 @@ vi.mock('./member-session-store.js', () => ({
   hasActiveMemberSession: vi.fn(() => true),
 }));
 
+const { canZkLoginSignForOwnerMock, getZkLoginSessionMock } = vi.hoisted(() => ({
+  canZkLoginSignForOwnerMock: vi.fn(() => false),
+  getZkLoginSessionMock: vi.fn(() => null),
+}));
+
+vi.mock('./zklogin.js', () => ({
+  canZkLoginSignForOwner: canZkLoginSignForOwnerMock,
+  getZkLoginSession: getZkLoginSessionMock,
+}));
+
 import { readWalletAuthRequired } from './protocol-env.js';
 
 const readWalletAuthRequiredMock = vi.mocked(readWalletAuthRequired);
@@ -41,6 +54,8 @@ describe('wallet-auth', () => {
   beforeEach(() => {
     resetWalletAuthStateForTests();
     readWalletAuthRequiredMock.mockReturnValue(true);
+    canZkLoginSignForOwnerMock.mockReturnValue(false);
+    getZkLoginSessionMock.mockReturnValue(null);
   });
 
   afterEach(() => {
@@ -199,6 +214,38 @@ describe('wallet-auth', () => {
     expect(payload).toBeNull();
     expect(signer).not.toHaveBeenCalled();
     expect(canPromptWalletSignature(TEST_OWNER)).toBe(false);
+  });
+
+  it('catalog sync signs directly with zkLogin and ignores extension bridge signers', async () => {
+    const keypair = Ed25519Keypair.generate();
+    const signerAddress = keypair.getPublicKey().toSuiAddress();
+
+    canZkLoginSignForOwnerMock.mockReturnValue(true);
+    getZkLoginSessionMock.mockReturnValue({
+      address: OFFICIAL_OWNER,
+      ephemeralSecretKey: keypair.getSecretKey(),
+      maxEpoch: 999,
+      provider: 'google',
+      createdAtMs: Date.now(),
+    });
+
+    const extensionSigner = vi.fn(async () => ({
+      signature: 'extension-sig',
+      timestampMs: Date.now(),
+    }));
+
+    registerWalletAuthSigner(extensionSigner);
+    setWalletAuthContext({
+      owner: OFFICIAL_OWNER,
+      source: 'wallet',
+      memberVerified: false,
+    });
+
+    const payload = await createCatalogSyncAuthPayload(OFFICIAL_OWNER);
+
+    expect(payload?.signerAddress).toBe(signerAddress);
+    expect(payload?.signature).not.toBe('extension-sig');
+    expect(extensionSigner).not.toHaveBeenCalled();
   });
 
   it('always mints a fresh zkLogin signature with signerAddress', async () => {

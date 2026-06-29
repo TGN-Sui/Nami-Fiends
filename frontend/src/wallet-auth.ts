@@ -1,5 +1,8 @@
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
+import { canZkLoginSignForOwner, getZkLoginSession } from './zklogin.js';
 
 export type WalletAuthPayload = {
   signature: string;
@@ -35,6 +38,38 @@ let inFlightOwner: string | null = null;
 
 export function buildWalletAuthMessage(owner: string, timestampMs: number): string {
   return 'nami-auth:v1:' + owner.toLowerCase() + ':' + String(timestampMs);
+}
+
+/** Sign with zkLogin ephemeral keys directly so browser wallets cannot intercept official-owner auth. */
+export async function signWalletAuthWithZkLogin(owner: string): Promise<WalletAuthPayload> {
+  const session = getZkLoginSession();
+
+  if (
+    !session?.ephemeralSecretKey ||
+    session.address.toLowerCase() !== owner.toLowerCase()
+  ) {
+    throw new Error(
+      'Reconnect Google zkLogin to authorize this upload. Your session is missing signing keys.'
+    );
+  }
+
+  const keypair = Ed25519Keypair.fromSecretKey(session.ephemeralSecretKey);
+  const signerAddress = keypair.getPublicKey().toSuiAddress();
+  const timestampMs = Date.now();
+  const message = buildWalletAuthMessage(owner, timestampMs);
+  const { signature } = await keypair.signPersonalMessage(new TextEncoder().encode(message));
+
+  return {
+    signature,
+    timestampMs,
+    signerAddress,
+  };
+}
+
+export function canSignWalletAuthWithZkLogin(owner?: string): boolean {
+  const resolvedOwner = owner ?? authContext.owner;
+
+  return Boolean(resolvedOwner?.startsWith('0x') && canZkLoginSignForOwner(resolvedOwner));
 }
 
 export function registerWalletAuthSigner(signer: WalletAuthSigner | null): void {
@@ -169,9 +204,9 @@ async function createSignedAuthPayload(
   return signPromise;
 }
 
-function shouldBypassWalletAuthCache(): boolean {
+function shouldBypassWalletAuthCache(owner: string): boolean {
   // zkLogin signs with an ephemeral key; the backend must receive signerAddress every time.
-  return authContext.source === 'zklogin';
+  return authContext.source === 'zklogin' || canZkLoginSignForOwner(owner);
 }
 
 export async function createWalletAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
@@ -179,7 +214,7 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
     return null;
   }
 
-  if (shouldBypassWalletAuthCache()) {
+  if (shouldBypassWalletAuthCache(owner)) {
     return walletAuthSigner(owner);
   }
 
@@ -187,20 +222,40 @@ export async function createWalletAuthPayload(owner: string): Promise<WalletAuth
 }
 
 export async function createCatalogSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
-  if (!readWalletAuthRequired() || !canPromptWalletSignature(owner) || !walletAuthSigner) {
+  if (!readWalletAuthRequired()) {
     return null;
   }
 
-  // Border art catalog saves can include large data URLs — always mint a fresh zkLogin signature.
+  if (canZkLoginSignForOwner(owner)) {
+    return signWalletAuthWithZkLogin(owner);
+  }
+
+  if (isOfficialOwner(owner)) {
+    throw new Error(
+      'Official owner border art requires Google zkLogin signing keys. Disconnect any Sui wallet extension (Nightly), reconnect Google from Settings → Account, then save again.'
+    );
+  }
+
+  if (!canPromptWalletSignature(owner) || !walletAuthSigner) {
+    return null;
+  }
+
   return walletAuthSigner(owner);
 }
 
 export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
-  if (!readWalletAuthRequired() || !canPromptEquipSyncSignature(owner) || !walletAuthSigner) {
+  if (!readWalletAuthRequired()) {
     return null;
   }
 
-  // Always mint a fresh signature for equip sync so zkLogin signerAddress is never skipped.
+  if (canZkLoginSignForOwner(owner)) {
+    return signWalletAuthWithZkLogin(owner);
+  }
+
+  if (!canPromptEquipSyncSignature(owner) || !walletAuthSigner) {
+    return null;
+  }
+
   return walletAuthSigner(owner);
 }
 

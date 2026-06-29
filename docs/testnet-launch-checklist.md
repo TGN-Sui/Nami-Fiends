@@ -29,18 +29,29 @@ Republish when contracts change:
 
 ## 2. Sync environment files
 
+**Local development:** see [local-testnet-dev.md](./local-testnet-dev.md) for the full pull → install → env → run workflow.
+
 ```bash
 node scripts/sync-testnet-env.mjs \
   --indexer-url http://127.0.0.1:8787 \
-  --official-owner 0xYOUR_OFFICIAL_OWNER \
+  --official-owner 0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca \
+  --official-owner-email robbier640@gmail.com \
   --zklogin-origin http://localhost:5173/
 ```
 
-Writes `backend/.env` and `frontend/.env.local` with test-launch flags and package IDs from `latest.json`.
+Writes `backend/.env` and `frontend/.env.local` with test-launch flags, Walrus border-art endpoints, and package IDs from `latest.json`.
 
 Templates: `backend/.env.testnet.example`, `frontend/.env.testnet.example`
 
 zkLogin OAuth setup: [testnet-zklogin.md](./testnet-zklogin.md)
+
+**Public deploy bulk env** (Render + Vercel paste files):
+
+```bash
+node scripts/sync-deploy-env.mjs \
+  --render-url https://nami-backend-rv0o.onrender.com \
+  --vercel-url https://nami-fiends.vercel.app
+```
 
 ---
 
@@ -66,6 +77,42 @@ Verify readiness:
 ```bash
 node scripts/verify-testnet-ready.mjs
 ```
+
+**Hackathon demo gate (BA-14 + testnet):**
+
+```bash
+node scripts/hackathon-demo-ready.mjs
+```
+
+Runs testnet env checks plus live Walrus border-art smoke. For bytes proof without browser zkLogin:
+
+```bash
+npx --prefix backend tsx scripts/smoke-border-art-walrus-local.mjs
+```
+
+In-app: official owner → Settings → **Hackathon demo**. See [mvp-demo-flow.md](./mvp-demo-flow.md).
+
+**BA-14.2 migration (optional before `NAMI_WALRUS_BORDER_ART_REQUIRED=true`):**
+
+```bash
+node scripts/migrate-border-art-to-walrus.mjs --dry-run
+node scripts/migrate-border-art-to-walrus.mjs
+```
+
+**Walrus quilt epoch renewal:** extend the catalog quilt blob before epochs expire (`walrus extend --blob-id {quiltBlobId}`). Launch Ops shows quilt blob id, patch count, and last publish ms.
+
+**BA-14.4 attestation (post-hackathon):** keep `NAMI_CATALOG_ATTEST_ENABLED=false` until the submitted Move package is upgraded with `chat_overlay_catalog.move`.
+
+**Phase 9.1 Walrus Sites (optional before hackathon):**
+
+```bash
+node scripts/verify-walrus-sites-ready.mjs
+node scripts/verify-walrus-sites-ready.mjs --build
+node scripts/deploy-walrus-sites.mjs --dry-run
+node scripts/deploy-walrus-sites.mjs --epochs 5 --context testnet
+```
+
+See [walrus-sites-deploy.md](./walrus-sites-deploy.md). Set `NAMI_WALRUS_SITE_OBJECT_ID` on Render after first deploy. Deploy metadata: `deployments/testnet/walrus-sites-deploy.json`.
 
 ---
 
@@ -189,6 +236,8 @@ node scripts/verify-public-deploy.mjs
 
 ## Related docs
 
+- [local-testnet-dev.md](./local-testnet-dev.md) — day-to-day local testnet on latest `main`
 - [roadmap.md](./roadmap.md) — Phase 8.1
 - [officials-submissions.md](./officials-submissions.md)
 - [mvp-smoke-checklist.md](./mvp-smoke-checklist.md)
+- [walrus-sites-deploy.md](./walrus-sites-deploy.md) — Phase 9.1 Walrus Sites (optional)

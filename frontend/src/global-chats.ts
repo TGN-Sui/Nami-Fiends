@@ -1,4 +1,9 @@
-import { isTestLaunchMode, shouldAutoSeedLocalData } from './app-config.js';
+import {
+  isLocalDevEnvironment,
+  isTestLaunchMode,
+  shouldAutoSeedLocalData,
+  shouldUseTestLaunchLoungeMocks,
+} from './app-config.js';
 import { shouldUseGenesisSelfMember } from './genesis-member.js';
 import { canManageTemporaryGlobalChats, getSelfMember } from './member-access.js';
 import { readMemberSession } from './member-session-store.js';
@@ -97,9 +102,9 @@ export const hubGlobalChats: GlobalChatRoom[] = [
   },
 ];
 
-/** Official test launch exposes only the primary global room — no demo lounges. */
+/** Public test launch exposes only the primary global room; local dev keeps full lounges. */
 export function listHubGlobalChats(testLaunch = isTestLaunchMode()): GlobalChatRoom[] {
-  if (testLaunch) {
+  if (testLaunch && !isLocalDevEnvironment()) {
     return [officialNamiGlobalChat];
   }
 
@@ -303,7 +308,9 @@ export function getGlobalChatMessages(chatId: string): GlobalChatMessage[] {
     signal: message.signal,
   }));
 
-  if (isMemberPublicLiveChatId(chatId) || !shouldAutoSeedLocalData()) {
+  const useFixtureMessages = shouldAutoSeedLocalData() || shouldUseTestLaunchLoungeMocks();
+
+  if (isMemberPublicLiveChatId(chatId) || !useFixtureMessages) {
     return mergeGlobalChatMessages(shared, overlay);
   }
 
