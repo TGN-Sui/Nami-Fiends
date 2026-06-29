@@ -48,7 +48,11 @@ Intro, stage, and CRT viewport resolve by **cabinet id**:
 | `arcade-cabinet-{id}-stage` | Looping stage MP4/WebM | `/arcade/cabinets/{id}/stage.mp4` |
 | `arcade-cabinet-{id}-viewport` | CRT interior image/video | — (uses global arcade background) |
 
-Owner uploads in the artwork catalog override public fallbacks. Only **game music** remains per `gameId` (`arcade-game-music-{gameId}`).
+Owner uploads override public fallbacks. **Platform** artwork (badges, logos, nav icons) lives in Settings → **Visual assets**. **Arcade** shell, music, cabinet media, and Bricked Up sprites live in Settings → **Arcade media** (`NamiOwnerArcadeAssetEditPanel.tsx`, sections from `readArcadeOwnerAssetSlotSections()`). Only **game music** remains per `gameId` (`arcade-game-music-{gameId}`).
+
+### Stage fit (`stageFit` in `arcade-cabinets.ts`)
+
+During `cabinet-active`, each machine applies per-cabinet `scaleX`, `scaleY`, `offsetX`, and `offsetY` so the CRT box aligns with the stage video closeup. CSS vars are written on `.nami-arcade-box` via `arcadeCabinetStageFitBoxStyle()`. Tune offsets in the registry, then hard-refresh and verify on the live stage loop.
 
 ---
 
@@ -118,6 +122,8 @@ Steer with arrow keys or WASD. Each crew link extends the chain for +2 G. Wall, 
 
 Steer with arrow keys or WASD. Each list token banks +3 G. Bouncer hits cost a life and respawn at the entrance. +8 G bonus for surviving the full 60s with score above zero.
 
+The 15×15 maze is **fully connected** from spawn `(1, 1)` — every open floor tile is reachable so list tokens never spawn in sealed pockets (`listArcadeGobMarketOpenCellsFrom()` + connectivity tests in `arcade-gob-market-game.test.ts`).
+
 ---
 
 ## Intel Stack — signal tower puzzle
@@ -162,9 +168,10 @@ Cabinet picker high scores read both modes per game (`N … · H …`, `S … ·
 | Registry + gating | `arcade-cabinets.ts`, `nami-arcade-games.ts` |
 | Screen flow | `ArcadeScreen.tsx`, `ArcadeCabinetSelect.tsx`, `ArcadeCabinetIntro.tsx` |
 | Play session | `ArcadeCabinetPlaySession.tsx`, `ArcadeCabinetGame.tsx` |
-| Games | `ArcadeBubbleGame.tsx`, `ArcadeAlleyPushGame.tsx`, `ArcadeStashDefenseGame.tsx`, `ArcadeDropWindowGame.tsx`, `ArcadeBrickedUpGame.tsx` |
+| Games | `ArcadeBubbleGame.tsx`, `ArcadeAlleyPushGame.tsx`, `ArcadeStashDefenseGame.tsx`, `ArcadeDropWindowGame.tsx`, `ArcadeBrickedUpGame.tsx`, `ArcadeStealthGoonGame.tsx`, `ArcadeGobMarketGame.tsx`, `ArcadeIntelStackGame.tsx` |
 | Media resolve | `arcade-cabinet-media.ts`, `arcade-cabinet-media-store.ts` |
 | Stage / CRT | `ArcadeStageBackground.tsx`, `ArcadeBackgroundMedia.tsx`, `arcade-cabinet-stage-fit.ts` |
+| Owner uploads | `NamiOwnerArcadeAssetEditPanel.tsx`, `OwnerAssetSlotCatalog.tsx`, `nami-owner-assets-store.ts` |
 | Session | `arcade-session-store.ts` |
 | Audio | `ArcadeMusicPlayer.tsx`, `ArcadeAudioControls.tsx`, `arcade-music.ts`, `arcade-audio-store.ts` |
 
@@ -184,6 +191,10 @@ frontend/public/arcade/cabinets/
   drop-window/stage.mp4
   hawkeye-gallery/intro.mp4
   hawkeye-gallery/stage.mp4
+  stealth-goon/intro.mp4
+  stealth-goon/stage.mp4
+  squid-market/intro.mp4
+  squid-market/stage.mp4
 ```
 
 Vite serves these at `/arcade/cabinets/...` in dev and copies them into `frontend/dist` for Walrus Sites / Vercel builds.
@@ -194,5 +205,5 @@ Vite serves these at `/arcade/cabinets/...` in dev and copies them into `fronten
 
 ```bash
 npm --prefix frontend run typecheck
-npm --prefix frontend test -- src/arcade-cabinets.test.ts src/arcade-cabinet-intro.test.ts src/arcade-cabinet-media.test.ts src/arcade-cabinet-stage-fit.test.ts src/arcade-alley-push-game.test.ts src/arcade-bubble-game.test.ts src/arcade-stash-defense-game.test.ts src/arcade-drop-window-game.test.ts src/arcade-bricked-up-game.test.ts src/arcade-bricked-up-sprites.test.ts src/nami-arcade-games.test.ts
+npm --prefix frontend test -- src/arcade-cabinets.test.ts src/arcade-cabinet-intro.test.ts src/arcade-cabinet-media.test.ts src/arcade-cabinet-stage-fit.test.ts src/arcade-alley-push-game.test.ts src/arcade-bubble-game.test.ts src/arcade-stash-defense-game.test.ts src/arcade-drop-window-game.test.ts src/arcade-bricked-up-game.test.ts src/arcade-bricked-up-sprites.test.ts src/arcade-stealth-goon-game.test.ts src/arcade-gob-market-game.test.ts src/arcade-intel-stack-game.test.ts src/arcade-passport-badge-hooks.test.ts src/nami-arcade-games.test.ts src/nami-owner-assets-store.test.ts src/settings-navigation.test.ts
 ```

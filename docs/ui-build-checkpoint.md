@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 8 in progress** — Phase 7 complete (`347511f`); entry gate, game onboarding, officials submissions, and pre-approval workspace shipped (`dd96c12`). Post-Phase 7 owner-settings and media-persistence wave shipped. Sidebar, global chat, and profile polish wave shipped (`9c417a4`). Launch ops dashboard + discovery tab wiring shipped. **297** frontend unit tests passing.
+Status: **Phase 8 in progress** — Phase 7 arcade cabinets **code-complete** (ARC-1–ARC-10, commits `3dca50f` + `9fde083` merged with `origin/main`). Walrus Sites prep (9.1) and Seal privacy envelopes (9.2.1) in progress. **550+** frontend unit tests passing (`npm --prefix frontend test`).
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -274,19 +274,6 @@ Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `
 
 Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **488** unit tests (arcade + cabinet media suites included); `node scripts/verify-testnet-ready.mjs` — all checks green.
 
-## Phase 7 — Arcade cabinets (in progress)
-
-| Slice | Status | Result |
-| --- | --- | --- |
-| ARC-1 | Complete | Attract → picker → intro → stage → cabinet menu flow (`ArcadeScreen.tsx`) |
-| ARC-2 | Complete | Per-cabinet intro/stage/viewport media + public fallbacks (`arcade-cabinet-media.ts`, `frontend/public/arcade/cabinets/`) |
-| ARC-3 | Complete | **Goon Pop** live — modes, G scoring, per-cabinet accent + `stageFit` |
-| ARC-4 | Complete | **Alley Push** live — Street Pass / Heat Chase, vertical rows in hard mode, track-aware collision |
-| ARC-5 | Complete | Lobby + per-game MP3 slots, audio controls, cabinet-aware owner edit targets |
-| ARC-6 | Planned | Tier 2 cabinet game boards (Stash Defense, Drop Window, …) |
-
-Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeAlleyPushGame.tsx`, `ArcadeBubbleGame.tsx`. See [arcade-cabinets.md](./arcade-cabinets.md).
-
 ## Phase 9.1 — Walrus Sites (in progress)
 
 | Slice | Status | Result |
@@ -318,12 +305,16 @@ Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeAlleyPus
 | ARC-7 | Complete | Passport badge hooks + **Stealth Goon** live |
 | ARC-8 | Complete | **Gob Market** live for Elite |
 | ARC-9 | Complete | **Intel Stack** live for Elite — Clean Stack / Surge Stack / Skill Diff |
+| ARC-10 | Complete | Live **stageFit** alignment pass, connected **Gob Market** maze, **Settings → Arcade media** owner catalog (`NamiOwnerArcadeAssetEditPanel.tsx`) |
 
-Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelStackGame.tsx`, `arcade-intel-stack-game.ts`. See [arcade-cabinets.md](./arcade-cabinets.md).
+Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelStackGame.tsx`, `NamiOwnerArcadeAssetEditPanel.tsx`, `arcade-cabinet-stage-fit.ts`. See [arcade-cabinets.md](./arcade-cabinets.md).
+
+Verification: `npm --prefix frontend test -- src/arcade-*.test.ts src/nami-arcade-games.test.ts src/nami-owner-assets-store.test.ts src/settings-navigation.test.ts` — **128** arcade/settings tests passing.
 
 **Recommended next lane:**
 
 1. `node scripts/verify-walrus-sites-ready.mjs --build` — green checks before redeploy.
 2. Run local testnet portal (`scripts/start-walrus-portal.ps1`) and update zkLogin redirect to portal origin.
-3. Tier 2 arcade cabinet or Phase 9.2 Seal privacy proofs in parallel.
+3. Owner upload pass — Settings → **Arcade media** (intro/stage loops, lobby + game MP3s).
+4. Phase 9.2 Seal privacy proofs in parallel.
 
