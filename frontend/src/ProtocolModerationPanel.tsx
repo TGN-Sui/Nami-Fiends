@@ -31,8 +31,8 @@ export function ProtocolModerationPanel(): ReactElement {
       />
 
       <p className="protocol-hint">
-        Private appeal evidence uses the Seal privacy lane (<code>/api/privacy/evidence/seal</code>)
-        when <code>NAMI_SEAL_PRIVACY_ENABLED</code> is on — see Launch Ops.
+        Private appeal evidence uses the Seal privacy lane. Open Indexed Data → Seal to seal context,
+        then paste the returned <code>seal-…</code> id into the on-chain <code>public_reference</code>.
       </p>
 
       <div className="protocol-moderation-grid">

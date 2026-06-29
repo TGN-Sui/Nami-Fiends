@@ -12,6 +12,7 @@ import { ProtocolModerationPanel } from './ProtocolModerationPanel.js';
 import { ProtocolModerationRecordsPanel } from './ProtocolModerationRecordsPanel.js';
 import { ProtocolProfilePanel } from './ProtocolProfilePanel.js';
 import { ProtocolRecoveryPanel } from './ProtocolRecoveryPanel.js';
+import { SealPrivacyEvidencePanel } from './SealPrivacyEvidencePanel.js';
 import { useProtocolOwner } from './wallet.js';
 
 const INDEXED_TABS = [
@@ -25,12 +26,14 @@ const INDEXED_TABS = [
   { id: 'moderation', label: 'Moderation' },
   { id: 'records', label: 'Records' },
   { id: 'recovery', label: 'Recovery' },
+  { id: 'seal', label: 'Seal' },
   { id: 'discovery', label: 'Discovery' },
 ] as const;
 
 type IndexedTabId = (typeof INDEXED_TABS)[number]['id'];
 
 const MODERATION_QUEUE_TABS = new Set<IndexedTabId>(['moderation', 'records']);
+const OWNER_REQUIRED_TABS = new Set<IndexedTabId>(['seal']);
 
 export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactElement {
   const { owner } = useProtocolOwner();
@@ -39,10 +42,18 @@ export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactEleme
 
   const visibleTabs = useMemo(
     () =>
-      INDEXED_TABS.filter(
-        (tab) => canAccessModeration || !MODERATION_QUEUE_TABS.has(tab.id)
-      ),
-    [canAccessModeration]
+      INDEXED_TABS.filter((tab) => {
+        if (!canAccessModeration && MODERATION_QUEUE_TABS.has(tab.id)) {
+          return false;
+        }
+
+        if (OWNER_REQUIRED_TABS.has(tab.id) && !owner) {
+          return false;
+        }
+
+        return true;
+      }),
+    [canAccessModeration, owner]
   );
 
   useEffect(() => {
@@ -91,6 +102,7 @@ export function IndexedDataPanel(props: { embedded?: boolean } = {}): ReactEleme
         {activeTab === 'moderation' ? <ProtocolModerationPanel /> : null}
         {activeTab === 'records' ? <ProtocolModerationRecordsPanel /> : null}
         {activeTab === 'recovery' ? <ProtocolRecoveryPanel /> : null}
+        {activeTab === 'seal' ? <SealPrivacyEvidencePanel /> : null}
         {activeTab === 'discovery' ? <ProtocolDiscoveryPanel /> : null}
       </div>
     </article>

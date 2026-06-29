@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 
 import { isIndexerLive, readAppConfig } from './app-config.js';
 import { fetchLaunchOpsSummary, type LaunchOpsSummary } from './launch-ops-api.js';
+import { PortalZkLoginCutoverCard } from './PortalZkLoginCutoverCard.js';
 
 function formatTimestamp(ms: number): string {
   return new Date(ms).toLocaleString();
@@ -148,6 +149,8 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
               <p className="protocol-hint">{summary.seal_privacy.stack_note}</p>
             </section>
           ) : null}
+
+          <PortalZkLoginCutoverCard />
 
           {summary.walrus_sites ? (
             <section className="launch-ops-card">
