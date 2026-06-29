@@ -165,12 +165,12 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  opacity: 0.38;
+  opacity: 0.44;
   mix-blend-mode: screen;
   background:
-    radial-gradient(72% 58% at -4% -6%, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.1) 30%, transparent 68%),
-    radial-gradient(56% 46% at 104% -2%, rgba(255, 255, 255, 0.14) 0%, transparent 64%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, transparent 12%) 0 0 / 14% 14% no-repeat;
+    radial-gradient(72% 58% at -4% -6%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.14) 30%, transparent 68%),
+    radial-gradient(56% 46% at 104% -2%, rgba(255, 255, 255, 0.18) 0%, transparent 64%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, transparent 12%) 0 0 / 14% 14% no-repeat;
 }
 
 .settings-appearance-shell-preview-pixel {
@@ -8745,6 +8745,26 @@ button.gamehub-swipe-card.gamehub-swipe-cover-card.is-swipe-card-open:hover {
   box-shadow: 0 0 16px rgba(63, 162, 255, 0.22);
 }
 
+[data-nami-ui='glass'] .nami-surface-button:hover:not(:disabled) {
+  border-color: var(--nami-glass-button-border);
+}
+
+[data-nami-ui='glass'] .sidebar-brand:not(.sidebar-hub-swap):not(.sidebar-brand-home):hover,
+[data-nami-ui='glass'] .sidebar-nav button:hover,
+[data-nami-ui='glass'] .sidebar-toggle:hover,
+[data-nami-ui='glass'] .module-card:hover,
+[data-nami-ui='glass'] .discovery-card:hover,
+[data-nami-ui='glass'] .action-row button:hover,
+[data-nami-ui='glass'] .filter-row button:hover,
+[data-nami-ui='glass'] .tab-row button:hover,
+[data-nami-ui='glass'] .add-module-button:hover {
+  transform: none;
+  box-shadow:
+    var(--nami-glass-inset-highlight),
+    var(--nami-glass-epoxy-depth, none),
+    var(--nami-glass-button-hover-lift);
+}
+
 .nami-surface-button.is-primary-surface-button,
 .nami-surface-button.is-active-filter,
 .nami-surface-button.is-active-view {
@@ -11918,14 +11938,19 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   --nami-glass-button-tint: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05));
   --nami-glass-button-border: rgba(255, 255, 255, 0.2);
   --nami-glass-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  --nami-glass-epoxy-depth: inset 0 -18px 30px rgba(0, 0, 0, 0.34);
   --nami-glass-outer-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
-  --nami-glass-corner-glare-opacity: 0.38;
-  --nami-glass-corner-glare-tail-opacity: 0.28;
-  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.34);
-  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.14);
-  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.08);
-  --nami-glass-corner-rim: rgba(255, 255, 255, 0.22);
-  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.1);
+  --nami-glass-button-hover-brightness: 1.06;
+  --nami-glass-button-hover-lift: 0 10px 22px rgba(0, 0, 0, 0.24);
+  --nami-glass-button-active-lift: 0 10px 24px rgba(67, 245, 167, 0.14);
+  --nami-glass-button-pressed-lift: 0 4px 10px rgba(0, 0, 0, 0.2);
+  --nami-glass-corner-glare-opacity: 0.44;
+  --nami-glass-corner-glare-tail-opacity: 0.32;
+  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.4);
+  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.18);
+  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.1);
+  --nami-glass-corner-rim: rgba(255, 255, 255, 0.28);
+  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.14);
   --nami-glass-corner-glare-blend: screen;
 }
 
@@ -11948,13 +11973,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   --nami-glass-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
   --nami-glass-epoxy-depth: inset 0 -20px 36px rgba(0, 0, 0, 0.62);
   --nami-glass-outer-shadow: 0 24px 56px rgba(0, 0, 0, 0.68);
-  --nami-glass-corner-glare-opacity: 0.32;
-  --nami-glass-corner-glare-tail-opacity: 0.22;
-  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.26);
-  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.1);
-  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.05);
-  --nami-glass-corner-rim: rgba(255, 255, 255, 0.16);
-  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.07);
+  --nami-glass-button-hover-lift: 0 10px 22px rgba(0, 0, 0, 0.5);
+  --nami-glass-button-active-lift: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --nami-glass-button-pressed-lift: 0 4px 10px rgba(0, 0, 0, 0.38);
+  --nami-glass-corner-glare-opacity: 0.38;
+  --nami-glass-corner-glare-tail-opacity: 0.28;
+  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.32);
+  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.14);
+  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.07);
+  --nami-glass-corner-rim: rgba(255, 255, 255, 0.2);
+  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.1);
   --nami-glass-corner-glare-blend: screen;
 }
 
@@ -11982,13 +12010,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   --nami-glass-outer-shadow:
     0 22px 52px rgba(19, 40, 70, 0.14),
     0 1px 0 rgba(255, 255, 255, 0.92);
-  --nami-glass-corner-glare-opacity: 0.58;
-  --nami-glass-corner-glare-tail-opacity: 0.4;
-  --nami-glass-corner-glare-strong: rgba(40, 118, 255, 0.68);
-  --nami-glass-corner-glare-mid: rgba(72, 148, 255, 0.34);
-  --nami-glass-corner-glare-faint: rgba(96, 168, 255, 0.18);
-  --nami-glass-corner-rim: rgba(24, 111, 255, 0.52);
-  --nami-glass-corner-rim-soft: rgba(56, 132, 255, 0.28);
+  --nami-glass-button-hover-lift: 0 10px 24px rgba(19, 40, 70, 0.12);
+  --nami-glass-button-active-lift: 0 10px 24px color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
+  --nami-glass-button-pressed-lift: 0 4px 12px rgba(19, 40, 70, 0.1);
+  --nami-glass-corner-glare-opacity: 0.64;
+  --nami-glass-corner-glare-tail-opacity: 0.46;
+  --nami-glass-corner-glare-strong: rgba(40, 118, 255, 0.76);
+  --nami-glass-corner-glare-mid: rgba(72, 148, 255, 0.4);
+  --nami-glass-corner-glare-faint: rgba(96, 168, 255, 0.22);
+  --nami-glass-corner-rim: rgba(24, 111, 255, 0.58);
+  --nami-glass-corner-rim-soft: rgba(56, 132, 255, 0.32);
   --nami-glass-corner-glare-blend: normal;
 }
 
@@ -12016,13 +12047,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   --nami-glass-outer-shadow:
     0 22px 52px var(--nami-theme-shadow),
     0 1px 0 rgba(255, 255, 255, 0.92);
-  --nami-glass-corner-glare-opacity: 0.58;
-  --nami-glass-corner-glare-tail-opacity: 0.4;
-  --nami-glass-corner-glare-strong: rgba(40, 118, 255, 0.68);
-  --nami-glass-corner-glare-mid: rgba(72, 148, 255, 0.34);
-  --nami-glass-corner-glare-faint: rgba(96, 168, 255, 0.18);
-  --nami-glass-corner-rim: rgba(24, 111, 255, 0.52);
-  --nami-glass-corner-rim-soft: rgba(56, 132, 255, 0.28);
+  --nami-glass-button-hover-lift: 0 10px 24px rgba(19, 40, 70, 0.12);
+  --nami-glass-button-active-lift: 0 10px 24px color-mix(in srgb, var(--nami-theme-accent) 18%, transparent);
+  --nami-glass-button-pressed-lift: 0 4px 12px rgba(19, 40, 70, 0.1);
+  --nami-glass-corner-glare-opacity: 0.64;
+  --nami-glass-corner-glare-tail-opacity: 0.46;
+  --nami-glass-corner-glare-strong: rgba(40, 118, 255, 0.76);
+  --nami-glass-corner-glare-mid: rgba(72, 148, 255, 0.4);
+  --nami-glass-corner-glare-faint: rgba(96, 168, 255, 0.22);
+  --nami-glass-corner-rim: rgba(24, 111, 255, 0.58);
+  --nami-glass-corner-rim-soft: rgba(56, 132, 255, 0.32);
   --nami-glass-corner-glare-blend: normal;
 }
 
@@ -12045,13 +12079,16 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   --nami-glass-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
   --nami-glass-epoxy-depth: inset 0 -20px 36px rgba(0, 0, 0, 0.62);
   --nami-glass-outer-shadow: 0 24px 56px rgba(0, 0, 0, 0.68);
-  --nami-glass-corner-glare-opacity: 0.32;
-  --nami-glass-corner-glare-tail-opacity: 0.22;
-  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.26);
-  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.1);
-  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.05);
-  --nami-glass-corner-rim: rgba(255, 255, 255, 0.16);
-  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.07);
+  --nami-glass-button-hover-lift: 0 10px 22px rgba(0, 0, 0, 0.5);
+  --nami-glass-button-active-lift: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --nami-glass-button-pressed-lift: 0 4px 10px rgba(0, 0, 0, 0.38);
+  --nami-glass-corner-glare-opacity: 0.38;
+  --nami-glass-corner-glare-tail-opacity: 0.28;
+  --nami-glass-corner-glare-strong: rgba(255, 255, 255, 0.32);
+  --nami-glass-corner-glare-mid: rgba(255, 255, 255, 0.14);
+  --nami-glass-corner-glare-faint: rgba(255, 255, 255, 0.07);
+  --nami-glass-corner-rim: rgba(255, 255, 255, 0.2);
+  --nami-glass-corner-rim-soft: rgba(255, 255, 255, 0.1);
 }
 
 [data-nami-ui='glass'] .nami-pinned-profile-stack,
@@ -12184,7 +12221,21 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 [data-nami-ui='glass'] .chat-member-card,
 [data-nami-ui='glass'] .gamehub-feature-card,
 [data-nami-ui='glass'] .profile-secondary-link,
-[data-nami-ui='glass'] .settings-action-button {
+[data-nami-ui='glass'] .settings-action-button,
+[data-nami-ui='glass'] .primary-action,
+[data-nami-ui='glass'] .secondary-action,
+[data-nami-ui='glass'] .embedded-feed-toggle,
+[data-nami-ui='glass'] .event-interested-button,
+[data-nami-ui='glass'] .my-profile-tab,
+[data-nami-ui='glass'] .profile-passport-view-tab,
+[data-nami-ui='glass'] .add-module-button,
+[data-nami-ui='glass'] .profile-return-button,
+[data-nami-ui='glass'] .sidebar-profile-menu button,
+[data-nami-ui='glass'] .profile-section-drag-bar button,
+[data-nami-ui='glass'] .nami-profile-layout-switch button,
+[data-nami-ui='glass'] .mobile-bottom-nav-item,
+[data-nami-ui='glass'] .channel-profile-nav-tab,
+[data-nami-ui='glass'] button.owner-tool-action {
   color: var(--nami-theme-text);
   background: var(--nami-glass-button-tint), var(--nami-glass-button-fill);
   border-color: var(--nami-glass-button-border);
@@ -12193,10 +12244,142 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   box-shadow: var(--nami-glass-inset-highlight), var(--nami-glass-epoxy-depth, none);
 }
 
+[data-nami-ui='glass'] :is(
+  .sidebar-brand,
+  .sidebar-nav button,
+  .sidebar-toggle,
+  .sidebar-radio-toggle,
+  .nami-surface-button,
+  .tab-row button,
+  .filter-row button,
+  .gamehub-browser .filter-row button,
+  .gamehub-module-filter-row button,
+  .gamehub-view-toggle button,
+  .gamehub-swipe-actions button,
+  .settings-appearance-option,
+  .settings-action-button,
+  .profile-secondary-link,
+  .primary-action,
+  .secondary-action,
+  .embedded-feed-toggle,
+  .event-interested-button,
+  .my-profile-tab,
+  .profile-passport-view-tab,
+  .add-module-button,
+  .profile-return-button,
+  .hub-featured-placement-winner-chip,
+  .hub-featured-placement-carousel-dot,
+  .featured-placement-auction-pool-option,
+  .sidebar-profile-menu button,
+  .profile-section-drag-bar button,
+  .nami-profile-layout-switch button,
+  .mobile-bottom-nav-item,
+  .channel-profile-nav-tab,
+  button.owner-tool-action
+) {
+  transition:
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    transform 120ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+[data-nami-ui='glass'] :is(
+  .sidebar-brand,
+  .sidebar-nav button,
+  .sidebar-toggle,
+  .sidebar-radio-toggle,
+  .nami-surface-button,
+  .tab-row button,
+  .filter-row button,
+  .gamehub-browser .filter-row button,
+  .gamehub-module-filter-row button,
+  .gamehub-view-toggle button,
+  .gamehub-swipe-actions button,
+  .settings-appearance-option,
+  .settings-action-button,
+  .profile-secondary-link,
+  .primary-action,
+  .secondary-action,
+  .embedded-feed-toggle,
+  .event-interested-button,
+  .my-profile-tab,
+  .profile-passport-view-tab,
+  .add-module-button,
+  .profile-return-button,
+  .hub-featured-placement-winner-chip,
+  .hub-featured-placement-carousel-dot,
+  .featured-placement-auction-pool-option,
+  .sidebar-profile-menu button,
+  .profile-section-drag-bar button,
+  .nami-profile-layout-switch button,
+  .mobile-bottom-nav-item,
+  .channel-profile-nav-tab,
+  button.owner-tool-action
+):hover:not(:disabled) {
+  transform: none;
+  filter: brightness(var(--nami-glass-button-hover-brightness, 1.06));
+  box-shadow:
+    var(--nami-glass-inset-highlight),
+    var(--nami-glass-epoxy-depth, none),
+    var(--nami-glass-button-hover-lift);
+}
+
+[data-nami-ui='glass'] :is(
+  .sidebar-brand,
+  .sidebar-nav button,
+  .sidebar-toggle,
+  .sidebar-radio-toggle,
+  .nami-surface-button,
+  .tab-row button,
+  .filter-row button,
+  .gamehub-browser .filter-row button,
+  .gamehub-module-filter-row button,
+  .gamehub-view-toggle button,
+  .gamehub-swipe-actions button,
+  .settings-appearance-option,
+  .settings-action-button,
+  .profile-secondary-link,
+  .primary-action,
+  .secondary-action,
+  .embedded-feed-toggle,
+  .event-interested-button,
+  .my-profile-tab,
+  .profile-passport-view-tab,
+  .add-module-button,
+  .profile-return-button,
+  .hub-featured-placement-winner-chip,
+  .hub-featured-placement-carousel-dot,
+  .featured-placement-auction-pool-option,
+  .sidebar-profile-menu button,
+  .profile-section-drag-bar button,
+  .nami-profile-layout-switch button,
+  .mobile-bottom-nav-item,
+  .channel-profile-nav-tab,
+  button.owner-tool-action
+):active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(1.02);
+  box-shadow:
+    var(--nami-glass-inset-highlight),
+    var(--nami-glass-button-pressed-lift, 0 4px 10px rgba(0, 0, 0, 0.18));
+}
+
 [data-nami-ui='glass'] .nami-surface-button,
 [data-nami-ui='glass'] .embedded-feed-toggle,
 [data-nami-ui='glass'] .event-interested-button {
   color: var(--nami-theme-text);
+}
+
+[data-nami-ui='glass'] .my-profile-tab.is-active,
+[data-nami-ui='glass'] .channel-profile-nav-tab.is-active-profile-tab,
+[data-nami-ui='glass'] .nami-profile-layout-switch button.is-selected-profile-layout {
+  border-color: var(--nami-theme-accent-border, var(--nami-glass-button-border));
+  box-shadow:
+    var(--nami-glass-inset-highlight),
+    var(--nami-glass-epoxy-depth, none),
+    var(--nami-glass-button-active-lift);
 }
 
 [data-nami-ui='glass'] .nami-surface-button.is-primary-surface-button,
@@ -12211,7 +12394,8 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   border-color: rgba(255, 255, 255, 0.28);
   box-shadow:
     var(--nami-glass-inset-highlight),
-    0 0 20px rgba(67, 245, 167, 0.12);
+    var(--nami-glass-epoxy-depth, none),
+    var(--nami-glass-button-active-lift);
 }
 
 [data-nami-ui='glass'][data-nami-theme='dark'] .nami-surface-button.is-primary-surface-button,
@@ -12242,7 +12426,7 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   box-shadow:
     var(--nami-glass-inset-highlight),
     var(--nami-glass-epoxy-depth),
-    0 10px 24px rgba(0, 0, 0, 0.45);
+    var(--nami-glass-button-active-lift);
 }
 
 [data-nami-ui='glass'][data-nami-theme='light'] .nami-surface-button.is-primary-surface-button,
@@ -12271,10 +12455,80 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
   box-shadow:
     var(--nami-glass-inset-highlight),
     var(--nami-glass-epoxy-depth, none),
-    0 10px 24px var(--nami-theme-accent-glow);
+    var(--nami-glass-button-active-lift);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-nami-ui='glass'] :is(
+    .sidebar-brand,
+    .sidebar-nav button,
+    .sidebar-toggle,
+    .sidebar-radio-toggle,
+    .nami-surface-button,
+    .tab-row button,
+    .filter-row button,
+    .gamehub-browser .filter-row button,
+    .gamehub-module-filter-row button,
+    .gamehub-view-toggle button,
+    .gamehub-swipe-actions button,
+    .settings-appearance-option,
+    .settings-action-button,
+    .profile-secondary-link,
+    .primary-action,
+    .secondary-action,
+    .embedded-feed-toggle,
+    .event-interested-button,
+    .my-profile-tab,
+    .profile-passport-view-tab,
+    .add-module-button,
+    .profile-return-button,
+    .hub-featured-placement-winner-chip,
+    .hub-featured-placement-carousel-dot,
+    .featured-placement-auction-pool-option,
+    .sidebar-profile-menu button,
+    .profile-section-drag-bar button,
+    .nami-profile-layout-switch button,
+    .mobile-bottom-nav-item,
+    .channel-profile-nav-tab,
+    button.owner-tool-action
+  ):hover:not(:disabled),
+  [data-nami-ui='glass'] :is(
+    .sidebar-brand,
+    .sidebar-nav button,
+    .sidebar-toggle,
+    .sidebar-radio-toggle,
+    .nami-surface-button,
+    .tab-row button,
+    .filter-row button,
+    .gamehub-browser .filter-row button,
+    .gamehub-module-filter-row button,
+    .gamehub-view-toggle button,
+    .gamehub-swipe-actions button,
+    .settings-appearance-option,
+    .settings-action-button,
+    .profile-secondary-link,
+    .primary-action,
+    .secondary-action,
+    .embedded-feed-toggle,
+    .event-interested-button,
+    .my-profile-tab,
+    .profile-passport-view-tab,
+    .add-module-button,
+    .profile-return-button,
+    .hub-featured-placement-winner-chip,
+    .hub-featured-placement-carousel-dot,
+    .featured-placement-auction-pool-option,
+    .sidebar-profile-menu button,
+    .profile-section-drag-bar button,
+    .nami-profile-layout-switch button,
+    .mobile-bottom-nav-item,
+    .channel-profile-nav-tab,
+    button.owner-tool-action
+  ):active:not(:disabled) {
+    transform: none;
+    filter: none;
+  }
+
   body.is-hub-spotlight-burst::after {
     animation: none;
   }
