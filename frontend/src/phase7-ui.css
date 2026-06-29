@@ -1051,9 +1051,8 @@
 }
 
 .chat-window-expanded-heading {
-  margin: 0 14px 8px;
-  padding: 2px 2px 0;
-  padding-right: 76px;
+  margin: 0;
+  padding: 14px 76px 8px 14px;
 }
 
 .chat-window-expanded-heading-copy h2,
@@ -1148,6 +1147,95 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Expanded chat chrome — classic layout parity across Modern Glass and Classic UI */
+.chat-window-expand-host.is-chat-window-expanded .chat-window.is-chat-window-expanded-panel {
+  background: var(--nami-theme-card-surface, var(--nami-theme-panel));
+  border: 1px solid var(--nami-theme-border-strong, rgba(117, 188, 224, 0.32));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: auto;
+}
+
+[data-nami-ui='glass'] .chat-window-expand-host.is-chat-window-expanded .chat-window.is-chat-window-expanded-panel::before,
+[data-nami-ui='glass'] .chat-window-expand-host.is-chat-window-expanded .chat-window.is-chat-window-expanded-panel::after {
+  content: none !important;
+  display: none !important;
+}
+
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle {
+  position: absolute !important;
+  top: 10px;
+  right: 10px;
+  z-index: 6 !important;
+  min-height: 28px;
+  padding: 0 10px;
+  transform: none !important;
+  background: var(--nami-theme-surface-raised, rgba(5, 9, 15, 0.62)) !important;
+  border: 1px solid var(--nami-theme-border, rgba(117, 188, 224, 0.32)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition:
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease !important;
+}
+
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle:hover:not(:disabled),
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle:focus-visible,
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle:active:not(:disabled) {
+  transform: none !important;
+  z-index: 6 !important;
+}
+
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle:hover:not(:disabled),
+.chat-window-expand-host .nami-surface-button.chat-window-expand-toggle:focus-visible {
+  background: var(--nami-theme-surface-raised, rgba(5, 9, 15, 0.62)) !important;
+  border-color: rgba(117, 215, 255, 0.42) !important;
+  box-shadow: 0 0 16px rgba(63, 162, 255, 0.22) !important;
+}
+
+.chat-window-expand-host.is-chat-window-expanded .chat-window.is-chat-window-expanded-panel .chat-window-heading,
+.chat-window-expand-host.is-chat-window-expanded .chat-window.is-chat-window-expanded-panel .chat-window-expanded-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 14px 14px 8px;
+  padding-right: 76px;
+}
+
+.chat-window-expand-host.is-chat-window-expanded
+  .chat-window.is-chat-window-expanded-panel
+  .chat-window-expanded-heading
+  .chat-window-expanded-heading-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chat-window-expand-host.is-chat-window-expanded
+  .chat-window.is-chat-window-expanded-panel
+  .chat-window-expanded-heading
+  .chat-window-expanded-heading-copy.is-centered-hub-chat-heading {
+  text-align: left;
+}
+
+.chat-window-expand-host.is-chat-window-expanded
+  .chat-window.is-chat-window-expanded-panel
+  .chat-window-expanded-heading-copy
+  h2 {
+  margin-top: 0;
+  color: var(--nami-theme-heading, #75d7ff);
+}
+
+.chat-window-expand-host.is-chat-window-expanded
+  .chat-window.is-chat-window-expanded-panel
+  .chat-window-expanded-heading-copy
+  p {
+  color: var(--nami-theme-muted, rgba(180, 205, 230, 0.78));
 }
 
 @keyframes chatWindowExpandFadeIn {
@@ -13675,6 +13763,12 @@ body.is-hub-spotlight-burst.is-hub-spotlight-arcade::after {
 
 .chat-window-expanded-heading-copy.is-centered-hub-chat-heading {
   text-align: center;
+}
+
+.chat-window-expand-host.is-chat-window-expanded
+  .chat-window.is-chat-window-expanded-panel
+  .chat-window-expanded-heading-copy.is-centered-hub-chat-heading {
+  text-align: left;
 }
 
 .gamehub-discovery-eyebrow {
