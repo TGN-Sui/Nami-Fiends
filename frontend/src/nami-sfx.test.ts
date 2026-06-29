@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isNamiSoundEnabled,
+  playArcadeDropWindowBuzzerSfx,
+  playArcadeGameCountdownTickSfx,
   playBubbleCollisionSfx,
   playBubbleMotionSfx,
   playButtonHoverSfx,
@@ -26,6 +28,8 @@ describe('nami-sfx', () => {
     expect(() => playTypeKeySfx()).not.toThrow();
     expect(() => playBubbleCollisionSfx(0.8)).not.toThrow();
     expect(() => playBubbleMotionSfx(0.7)).not.toThrow();
+    expect(() => playArcadeGameCountdownTickSfx(3)).not.toThrow();
+    expect(() => playArcadeDropWindowBuzzerSfx()).not.toThrow();
 
     setNamiSoundEnabled(true);
   });

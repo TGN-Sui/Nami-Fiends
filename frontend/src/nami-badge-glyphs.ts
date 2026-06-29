@@ -16,6 +16,20 @@ const BADGE_GLYPHS: Record<string, string> = {
   'Night Owl': '☾',
   'Quest Runner': '→',
   'Badge Hunter': '◆',
+  'Goon Pop Debut': '◎',
+  'Alley Pass Debut': '→',
+  'Stash Guard Debut': '⬡',
+  'Signal Catcher Debut': '◇',
+  'Wall Breaker Debut': '▣',
+  'Stealth Chain Debut': '☾',
+  'Gob Market Debut': '◎',
+  'List Clearer': '→',
+  'Skill Diff Survivor': '▲',
+  'Crew Record': '★',
+  'Glow Ghoster': '✦',
+  'Brick Smasher': '▣',
+  'Squad Linker': '⬡',
+  'Arcade Regular': 'N',
 };
 
 export function badgeGlyphImageUrl(badge: CollectedBadge): string | null {

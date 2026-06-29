@@ -1,5 +1,12 @@
 import { useMemo, useRef, type ChangeEvent, type ReactElement } from 'react';
 
+import { arcadeCabinetMediaSlotId } from './arcade-cabinet-media.js';
+import {
+  arcadeCabinetMediaAcceptAttribute,
+  prepareArcadeCabinetMediaUpload,
+  resolveArcadeCabinetViewportMedia,
+  validateArcadeCabinetMediaFile,
+} from './arcade-cabinet-media-store.js';
 import {
   arcadeBackgroundAcceptAttribute,
   ARCADE_BACKGROUND_SLOT_ID,
@@ -8,6 +15,7 @@ import {
   validateArcadeBackgroundFile,
 } from './arcade-background-store.js';
 import { DEFAULT_ARCADE_BACKGROUND_URL } from './arcade-background.js';
+import { readArcadeCabinetById } from './arcade-cabinets.js';
 import { useChannelOwnerMediaVersion } from './channel-owner-media-store.js';
 import {
   OWNER_ASSET_ACCEPTED_FORMATS,
@@ -19,19 +27,40 @@ import {
   useNamiOwnerEditMode,
 } from './nami-owner-edit-mode-store.js';
 
-export function ArcadeBackgroundMedia(): ReactElement {
+type ArcadeBackgroundMediaProps = {
+  cabinetId?: string | null;
+};
+
+export function ArcadeBackgroundMedia(props: ArcadeBackgroundMediaProps): ReactElement {
   const editMode = useNamiOwnerEditMode();
   const persistedAssets = useNamiOwnerAssets();
   const mediaVersion = useChannelOwnerMediaVersion();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cabinet = props.cabinetId ? readArcadeCabinetById(props.cabinetId) : null;
+  const editSlotId = props.cabinetId
+    ? arcadeCabinetMediaSlotId(props.cabinetId, 'viewport')
+    : ARCADE_BACKGROUND_SLOT_ID;
 
-  const storedValue = resolveOwnerAssetUrl(ARCADE_BACKGROUND_SLOT_ID, persistedAssets);
-  const media = useMemo(
-    () => resolveArcadeBackgroundMedia(storedValue),
-    [storedValue, mediaVersion],
-  );
+  const globalStoredValue = resolveOwnerAssetUrl(ARCADE_BACKGROUND_SLOT_ID, persistedAssets);
+  const cabinetStoredValue = props.cabinetId
+    ? resolveOwnerAssetUrl(editSlotId, persistedAssets)
+    : null;
+
+  const media = useMemo(() => {
+    if (props.cabinetId) {
+      const cabinetMedia = resolveArcadeCabinetViewportMedia(props.cabinetId, cabinetStoredValue);
+
+      if (cabinetMedia.kind !== 'default') {
+        return cabinetMedia;
+      }
+    }
+
+    return resolveArcadeBackgroundMedia(globalStoredValue);
+  }, [cabinetStoredValue, globalStoredValue, mediaVersion, props.cabinetId]);
+
   const editable = editMode.active;
   const hasCustomMedia = media.kind !== 'default';
+  const editLabel = cabinet ? cabinet.title + ' cabinet viewport' : 'Arcade background';
 
   function openPicker(event?: { stopPropagation?: () => void; preventDefault?: () => void }): void {
     if (!editable) {
@@ -51,7 +80,9 @@ export function ArcadeBackgroundMedia(): ReactElement {
       return;
     }
 
-    const validationError = validateArcadeBackgroundFile(file);
+    const validationError = props.cabinetId
+      ? validateArcadeCabinetMediaFile(editSlotId, file)
+      : validateArcadeBackgroundFile(file);
 
     if (validationError) {
       window.alert(validationError);
@@ -59,8 +90,10 @@ export function ArcadeBackgroundMedia(): ReactElement {
     }
 
     try {
-      const storedAsset = await prepareArcadeBackgroundUpload(file);
-      setOwnerAssetDraft(ARCADE_BACKGROUND_SLOT_ID, storedAsset);
+      const storedAsset = props.cabinetId
+        ? await prepareArcadeCabinetMediaUpload(editSlotId, file)
+        : await prepareArcadeBackgroundUpload(file);
+      setOwnerAssetDraft(editSlotId, storedAsset);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not read that media file.';
       window.alert(message);
@@ -71,17 +104,18 @@ export function ArcadeBackgroundMedia(): ReactElement {
     'arcade-screen-background-media owner-editable-image' +
     (editable ? ' is-edit-target' : '') +
     (hasCustomMedia ? ' has-owner-asset-image' : ' is-owner-asset-placeholder') +
-    (media.kind === 'video' ? ' has-arcade-background-video' : '');
+    (media.kind === 'video' ? ' has-arcade-background-video' : '') +
+    (props.cabinetId ? ' is-cabinet-viewport-media' : '');
 
   return (
     <>
       <span
         aria-label={
           editable
-            ? 'Upload image or video for Arcade background'
+            ? 'Upload image or video for ' + editLabel
             : hasCustomMedia
-              ? 'Arcade background'
-              : 'Arcade background placeholder'
+              ? editLabel
+              : editLabel + ' placeholder'
         }
         className={className}
         onClick={(event) => openPicker(event)}
@@ -129,7 +163,7 @@ export function ArcadeBackgroundMedia(): ReactElement {
 
         {editable ? (
           <span className="owner-editable-image-hint">
-            <strong>Arcade background</strong>
+            <strong>{editLabel}</strong>
             <small>
               Click to upload · {OWNER_ASSET_ACCEPTED_FORMATS} · MP4 or WebM
             </small>
@@ -138,7 +172,11 @@ export function ArcadeBackgroundMedia(): ReactElement {
       </span>
 
       <input
-        accept={arcadeBackgroundAcceptAttribute()}
+        accept={
+          props.cabinetId
+            ? arcadeCabinetMediaAcceptAttribute(editSlotId)
+            : arcadeBackgroundAcceptAttribute()
+        }
         className="owner-editable-image-input"
         onChange={(event) => {
           void handleFileChange(event);

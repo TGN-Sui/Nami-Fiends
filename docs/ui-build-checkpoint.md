@@ -272,6 +272,22 @@ Key files: `launch-ops.service.ts`, `launch-ops-api.ts`, `LaunchOpsPanel.tsx`, `
 
 Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test` — **297** unit tests passing; `node scripts/verify-testnet-ready.mjs` — all checks green.
 
+## Phase 7 — Arcade cabinets (continued)
+
+| Slice | Status | Result |
+| --- | --- | --- |
+| ARC-1 | Complete | Attract → picker → intro → stage → cabinet menu flow (`ArcadeScreen.tsx`) |
+| ARC-2 | Complete | Per-cabinet intro/stage/viewport media + public fallbacks |
+| ARC-3 | Complete | **Goon Pop** live — modes, G scoring, per-cabinet accent + `stageFit` |
+| ARC-4 | Complete | **Alley Push** live — Street Pass / Heat Chase |
+| ARC-5 | Complete | Lobby + per-game MP3 slots, audio controls |
+| ARC-6 | Complete | **Stash Defense**, **Drop Window**, **Bricked Up** live for Pro |
+| ARC-7 | Complete | Passport badge hooks + **Stealth Goon** live |
+| ARC-8 | Complete | **Gob Market** live for Elite |
+| ARC-9 | Complete | **Intel Stack** live for Elite — Clean Stack / Surge Stack / Skill Diff |
+
+Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelStackGame.tsx`, `arcade-intel-stack-game.ts`. See [arcade-cabinets.md](./arcade-cabinets.md).
+
 **Recommended next lane:**
 
 1. Set Render payment secrets (treasury, Stripe, PayPal) — verify script warns until green.

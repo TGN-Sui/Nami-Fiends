@@ -1,17 +1,67 @@
 import { describe, expect, it } from 'vitest';
 
+import { ARCADE_ALLEY_PUSH_GAME_ID } from './arcade-alley-push-game.js';
+import { resetArcadeAlleyPushGameStoreForTests } from './arcade-alley-push-game-store.js';
 import { ARCADE_BUBBLE_GAME_ID } from './arcade-bubble-game.js';
 import { resetArcadeBubbleGameStoreForTests } from './arcade-bubble-game-store.js';
+import { ARCADE_BRICKED_UP_GAME_ID } from './arcade-bricked-up-game.js';
+import { resetArcadeBrickedUpGameStoreForTests } from './arcade-bricked-up-game-store.js';
+import { ARCADE_GOB_MARKET_GAME_ID } from './arcade-gob-market-game.js';
+import { resetArcadeGobMarketGameStoreForTests } from './arcade-gob-market-game-store.js';
+import { ARCADE_INTEL_STACK_GAME_ID } from './arcade-intel-stack-game.js';
+import { resetArcadeIntelStackGameStoreForTests } from './arcade-intel-stack-game-store.js';
+import { ARCADE_STEALTH_GOON_GAME_ID } from './arcade-stealth-goon-game.js';
+import { resetArcadeStealthGoonGameStoreForTests } from './arcade-stealth-goon-game-store.js';
+import { ARCADE_DROP_WINDOW_GAME_ID } from './arcade-drop-window-game.js';
+import { resetArcadeDropWindowGameStoreForTests } from './arcade-drop-window-game-store.js';
+import { ARCADE_STASH_DEFENSE_GAME_ID } from './arcade-stash-defense-game.js';
+import { resetArcadeStashDefenseGameStoreForTests } from './arcade-stash-defense-game-store.js';
 import { readOfficialNamiArcadeGames } from './nami-arcade-games.js';
 
 describe('nami-arcade-games', () => {
-  it('lists the live Nami Bubble Pop cabinet', () => {
+  it('lists the live arcade cabinets for the signed-in member', () => {
     resetArcadeBubbleGameStoreForTests();
+    resetArcadeAlleyPushGameStoreForTests();
+    resetArcadeStashDefenseGameStoreForTests();
+    resetArcadeDropWindowGameStoreForTests();
+    resetArcadeBrickedUpGameStoreForTests();
+    resetArcadeStealthGoonGameStoreForTests();
+    resetArcadeGobMarketGameStoreForTests();
+    resetArcadeIntelStackGameStoreForTests();
     const games = readOfficialNamiArcadeGames();
 
-    expect(games).toHaveLength(1);
+    expect(games).toHaveLength(8);
     expect(games[0]?.id).toBe(ARCADE_BUBBLE_GAME_ID);
+    expect(games[0]?.cabinetId).toBe('goon-pop');
     expect(games[0]?.status).toBe('live');
-    expect(games[0]?.title).toBe('Nami Bubble Pop');
+    expect(games[0]?.title).toBe('Goon Pop');
+    expect(games[1]?.id).toBe(ARCADE_ALLEY_PUSH_GAME_ID);
+    expect(games[1]?.cabinetId).toBe('alley-push');
+    expect(games[1]?.status).toBe('live');
+    expect(games[1]?.title).toBe('Alley Push');
+    expect(games[2]?.id).toBe(ARCADE_STASH_DEFENSE_GAME_ID);
+    expect(games[2]?.cabinetId).toBe('stash-defense');
+    expect(games[2]?.status).toBe('live');
+    expect(games[2]?.title).toBe('Stash Defense');
+    expect(games[3]?.id).toBe(ARCADE_DROP_WINDOW_GAME_ID);
+    expect(games[3]?.cabinetId).toBe('drop-window');
+    expect(games[3]?.status).toBe('live');
+    expect(games[3]?.title).toBe('Drop Window');
+    expect(games[4]?.id).toBe(ARCADE_BRICKED_UP_GAME_ID);
+    expect(games[4]?.cabinetId).toBe('hawkeye-gallery');
+    expect(games[4]?.status).toBe('live');
+    expect(games[4]?.title).toBe('Bricked Up');
+    expect(games[5]?.id).toBe(ARCADE_STEALTH_GOON_GAME_ID);
+    expect(games[5]?.cabinetId).toBe('stealth-goon');
+    expect(games[5]?.status).toBe('live');
+    expect(games[5]?.title).toBe('Stealth Goon');
+    expect(games[6]?.id).toBe(ARCADE_GOB_MARKET_GAME_ID);
+    expect(games[6]?.cabinetId).toBe('squid-market');
+    expect(games[6]?.status).toBe('live');
+    expect(games[6]?.title).toBe('Gob Market');
+    expect(games[7]?.id).toBe(ARCADE_INTEL_STACK_GAME_ID);
+    expect(games[7]?.cabinetId).toBe('intel-stack');
+    expect(games[7]?.status).toBe('live');
+    expect(games[7]?.title).toBe('Intel Stack');
   });
 });

@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
+import { ARCADE_BRICKED_UP_SPRITE_SLOTS } from './arcade-bricked-up-sprites.js';
+import {
+  OFFICIAL_ARCADE_CABINETS,
+  readArcadeCabinetOwnerAssetSlots,
+} from './arcade-cabinets.js';
+
 import { isOfficialOwner } from './nami-capabilities.js';
 import { isPlatformOwnerAssetsApiAvailable } from './platform-owner-assets-api.js';
 import {
@@ -14,8 +20,14 @@ import {
   readPersistedOwnerAssets,
   resetOwnerAssetsPersistenceForTests,
 } from './owner-assets-persistence.js';
+import {
+  validateOwnerAssetFile,
+  type OwnerAssetCategory,
+} from './owner-asset-validation.js';
 
 export { prepareOwnerAssetImage, readImageFileAsDataUrl } from './owner-asset-image.js';
+export type { OwnerAssetCategory } from './owner-asset-validation.js';
+export { validateOwnerAssetFile } from './owner-asset-validation.js';
 
 export async function ensureOwnerAssetsHydrated(): Promise<void> {
   await hydrateOwnerAssetsPersistence();
@@ -27,12 +39,6 @@ export async function ensureOwnerAssetsHydrated(): Promise<void> {
   }
 }
 
-const MAX_LOGO_BYTES = 1024 * 1024;
-const MAX_ICON_BYTES = 512 * 1024;
-const MAX_SCENE_BYTES = 2 * 1024 * 1024;
-
-export type OwnerAssetCategory = 'brand' | 'profile' | 'badge' | 'button' | 'scene';
-
 export type OwnerAssetSlot = {
   id: string;
   label: string;
@@ -40,7 +46,50 @@ export type OwnerAssetSlot = {
   hint: string;
 };
 
-export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
+export type OwnerAssetSlotSection = {
+  id: string;
+  label: string;
+  hint: string;
+  slots: OwnerAssetSlot[];
+};
+
+const ARCADE_SHELL_OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
+  {
+    id: 'arcade-background',
+    label: 'Arcade CRT background',
+    category: 'scene',
+    hint:
+      'Full background inside the Nami Arcade cabinet viewport. Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
+  },
+  {
+    id: 'arcade-stage-background',
+    label: 'Arcade title stage',
+    category: 'scene',
+    hint:
+      'Full-page backdrop on attract and cabinet select. Per-cabinet stage loops replace this only while a machine is active.',
+  },
+];
+
+function readArcadeMusicOwnerAssetSlots(): OwnerAssetSlot[] {
+  return [
+    {
+      id: 'arcade-lobby-music',
+      label: 'Arcade lobby music',
+      category: 'scene',
+      hint:
+        'MP3 loop for the title screen and cabinet picker. Ducks during walk-up intros and pauses when a run starts.',
+    },
+    ...OFFICIAL_ARCADE_CABINETS.filter((cabinet) => cabinet.gameId).map((cabinet) => ({
+      id: 'arcade-game-music-' + cabinet.gameId,
+      label: cabinet.title + ' game music',
+      category: 'scene' as const,
+      hint:
+        'MP3 loop for ' + cabinet.title + ' gameplay. Replaces lobby music during an active run.',
+    })),
+  ];
+}
+
+const CORE_PLATFORM_OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
   {
     id: 'sidebar-official-logo',
     label: 'Official Nami logo',
@@ -70,20 +119,6 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
     label: 'Arcade nav icon',
     category: 'button',
     hint: 'Sidebar icon for the Nami Arcade destination.',
-  },
-  {
-    id: 'arcade-background',
-    label: 'Arcade background',
-    category: 'scene',
-    hint:
-      'Full background inside the Nami Arcade cabinet viewport. Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
-  },
-  {
-    id: 'arcade-stage-background',
-    label: 'Arcade stage background',
-    category: 'scene',
-    hint:
-      'Full-page backdrop behind the arcade cabinet on the Arcade route (where the platform grid used to be). Recommended 1920 × 1080 (16:9) image or looping MP4/WebM video.',
   },
   {
     id: 'sidebar-nav-userProfile',
@@ -213,6 +248,64 @@ export const OWNER_ASSET_SLOTS: OwnerAssetSlot[] = [
   },
 ];
 
+let cachedArcadeOwnerAssetSlots: OwnerAssetSlot[] | null = null;
+
+export function readPlatformOwnerAssetSlots(): OwnerAssetSlot[] {
+  return CORE_PLATFORM_OWNER_ASSET_SLOTS;
+}
+
+export function readArcadeOwnerAssetSlots(): OwnerAssetSlot[] {
+  if (cachedArcadeOwnerAssetSlots) {
+    return cachedArcadeOwnerAssetSlots;
+  }
+
+  cachedArcadeOwnerAssetSlots = [
+    ...ARCADE_SHELL_OWNER_ASSET_SLOTS,
+    ...readArcadeMusicOwnerAssetSlots(),
+    ...readArcadeCabinetOwnerAssetSlots(),
+    ...ARCADE_BRICKED_UP_SPRITE_SLOTS,
+  ];
+  return cachedArcadeOwnerAssetSlots;
+}
+
+export function readArcadeOwnerAssetSlotSections(): OwnerAssetSlotSection[] {
+  return [
+    {
+      id: 'shell',
+      label: 'Arcade shell',
+      hint: 'CRT interior and the global title-screen stage backdrop.',
+      slots: ARCADE_SHELL_OWNER_ASSET_SLOTS,
+    },
+    {
+      id: 'music',
+      label: 'Music loops',
+      hint: 'Lobby MP3 plus one gameplay loop per live cabinet game id.',
+      slots: readArcadeMusicOwnerAssetSlots(),
+    },
+    {
+      id: 'cabinets',
+      label: 'Cabinet media',
+      hint: 'Per-machine walk-up intro, active stage loop, and CRT viewport overrides.',
+      slots: readArcadeCabinetOwnerAssetSlots(),
+    },
+    {
+      id: 'bricked-up-sprites',
+      label: 'Bricked Up sprites',
+      hint:
+        'Per-object gameplay sprites for bricks, paddle, ball, hazards, mystery drops, shots, and blasts. Upload in Owner edit mode or from Settings → Arcade artwork.',
+      slots: ARCADE_BRICKED_UP_SPRITE_SLOTS,
+    },
+  ];
+}
+
+/** Platform badges, logos, portraits, and nav icons — excludes arcade media. */
+export function readOwnerAssetSlots(): OwnerAssetSlot[] {
+  return readPlatformOwnerAssetSlots();
+}
+
+/** @deprecated Use readPlatformOwnerAssetSlots(). */
+export const OWNER_ASSET_SLOTS = CORE_PLATFORM_OWNER_ASSET_SLOTS;
+
 export type OwnerAssetMap = Record<string, string>;
 
 const listeners = new Set<() => void>();
@@ -267,37 +360,10 @@ export function ownerAssetBadgeSlotId(badgeName: string): string {
 }
 
 export function readOwnerAssetSlot(slotId: string): OwnerAssetSlot | undefined {
-  return OWNER_ASSET_SLOTS.find((slot) => slot.id === slotId);
-}
-
-export function validateOwnerAssetFile(
-  file: File,
-  category: OwnerAssetCategory = 'brand'
-): string | null {
-  const accepted = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
-
-  if (!accepted.has(file.type)) {
-    return 'Use a PNG, JPG, WebP, or GIF image.';
-  }
-
-  const maxBytes =
-    category === 'scene'
-      ? MAX_SCENE_BYTES
-      : category === 'brand' || category === 'profile'
-        ? MAX_LOGO_BYTES
-        : MAX_ICON_BYTES;
-
-  if (file.size > maxBytes) {
-    if (category === 'scene') {
-      return 'Image must be 2 MB or smaller.';
-    }
-
-    return category === 'brand' || category === 'profile'
-      ? 'Image must be 1 MB or smaller.'
-      : 'Image must be 512 KB or smaller.';
-  }
-
-  return null;
+  return (
+    readPlatformOwnerAssetSlots().find((slot) => slot.id === slotId) ??
+    readArcadeOwnerAssetSlots().find((slot) => slot.id === slotId)
+  );
 }
 
 export type OwnerAssetSaveError = 'unauthorized' | 'quota' | 'storage' | 'sync';

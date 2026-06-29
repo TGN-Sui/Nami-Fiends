@@ -1,6 +1,14 @@
 export const ARCADE_BUBBLE_GAME_ID = 'nami-bubble-pop';
 
-export type ArcadeBubbleMode = 'normal' | 'hard';
+import {
+  arcadeSkillDiffDoubledSpawnCount,
+  arcadeSkillDiffFasterSpawnInterval,
+  arcadeSkillDiffScaledSpeed,
+  ARCADE_SKILL_DIFF_MODE,
+  ARCADE_SKILL_DIFF_MODE_LABEL,
+} from './arcade-skill-diff.js';
+
+export type ArcadeBubbleMode = 'normal' | 'hard' | typeof ARCADE_SKILL_DIFF_MODE;
 
 export const ARCADE_BUBBLE_GAME_DURATION_MS = 60_000;
 export const ARCADE_BUBBLE_LEADERBOARD_SIZE = 10;
@@ -23,6 +31,7 @@ export type ArcadeBubbleGameConfig = {
   lifetimeMaxMs: number;
   maxBubbles: number;
   spawnIntervalMs: number;
+  spawnsPerTick: number;
 };
 
 export type ArcadeBubbleEntity = {
@@ -46,7 +55,16 @@ export type ArcadeBubbleEntity = {
   lastClickAt: number;
 };
 
-const BUBBLE_LABELS = ['POP', 'BLIP', 'ORB', 'FIZZ', 'GLOW', 'RISE', 'DRIFT', 'PEARL'] as const;
+export const GOON_POP_BUBBLE_LABELS = [
+  'G',
+  'CREW',
+  'HEAT',
+  'GHOST',
+  'GLOW',
+  'COIN',
+  'DRIFT',
+  'RISE',
+] as const;
 
 export function arcadeBubbleGameConfig(mode: ArcadeBubbleMode): ArcadeBubbleGameConfig {
   if (mode === 'hard') {
@@ -62,6 +80,24 @@ export function arcadeBubbleGameConfig(mode: ArcadeBubbleMode): ArcadeBubbleGame
       lifetimeMaxMs: 12_500,
       maxBubbles: 16,
       spawnIntervalMs: 1_700,
+      spawnsPerTick: 1,
+    };
+  }
+
+  if (mode === ARCADE_SKILL_DIFF_MODE) {
+    return {
+      mode,
+      smallClicksRequired: 1,
+      bigClicksRequired: 3,
+      smallPoints: 1,
+      bigPoints: 2,
+      riseSpeedMin: arcadeSkillDiffScaledSpeed(0.55),
+      riseSpeedMax: arcadeSkillDiffScaledSpeed(1.9),
+      lifetimeMinMs: 5_500,
+      lifetimeMaxMs: 12_000,
+      maxBubbles: 22,
+      spawnIntervalMs: arcadeSkillDiffFasterSpawnInterval(2_000),
+      spawnsPerTick: arcadeSkillDiffDoubledSpawnCount(1),
     };
   }
 
@@ -77,15 +113,26 @@ export function arcadeBubbleGameConfig(mode: ArcadeBubbleMode): ArcadeBubbleGame
     lifetimeMaxMs: 16_500,
     maxBubbles: 14,
     spawnIntervalMs: 2_000,
+    spawnsPerTick: 1,
   };
 }
 
 export function arcadeBubbleModeLabel(mode: ArcadeBubbleMode): string {
-  return mode === 'hard' ? 'Hard Mode' : 'Normal Mode';
+  if (mode === 'hard') {
+    return 'Heat Run';
+  }
+
+  if (mode === ARCADE_SKILL_DIFF_MODE) {
+    return ARCADE_SKILL_DIFF_MODE_LABEL;
+  }
+
+  return 'Alley Run';
 }
 
+export { formatArcadeG, formatArcadeG as formatGoonPopG } from './arcade-score.js';
+
 function randomBubbleLabel(): string {
-  return BUBBLE_LABELS[Math.floor(Math.random() * BUBBLE_LABELS.length)]!;
+  return GOON_POP_BUBBLE_LABELS[Math.floor(Math.random() * GOON_POP_BUBBLE_LABELS.length)]!;
 }
 
 function randomLifetimeMs(config: ArcadeBubbleGameConfig): number {

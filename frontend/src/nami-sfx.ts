@@ -1,3 +1,5 @@
+import { duckArcadeGameMusic, readArcadeAudioPreferences } from './arcade-audio-store.js';
+
 type SfxKind = 'button' | 'bubble' | 'chat';
 
 type TonePatch = {
@@ -152,6 +154,21 @@ const ARCADE_GAME_TICK_PATCHES: TonePatch[][] = [
   [{ frequency: 440, durationMs: 48, type: 'square', gainPeak: 0.03, frequencyEnd: 330, filterFreq: 1200 }],
 ];
 
+const ARCADE_GAME_COUNTDOWN_TICK_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 660, durationMs: 78, type: 'square', gainPeak: 0.068, frequencyEnd: 440, filterFreq: 1500 },
+    { frequency: 990, durationMs: 42, type: 'triangle', gainPeak: 0.034, delayMs: 36, filterFreq: 1800 },
+  ],
+];
+
+const ARCADE_GAME_COUNTDOWN_URGENT_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 880, durationMs: 92, type: 'square', gainPeak: 0.082, frequencyEnd: 520, filterFreq: 1700 },
+    { frequency: 1320, durationMs: 56, type: 'square', gainPeak: 0.048, delayMs: 44, filterFreq: 2200 },
+    { frequency: 220, durationMs: 110, type: 'sine', gainPeak: 0.04, delayMs: 18, frequencyEnd: 140 },
+  ],
+];
+
 const ARCADE_GAME_OVER_PATCHES: TonePatch[][] = [
   [
     { frequency: 210, durationMs: 160, type: 'triangle', gainPeak: 0.05, frequencyEnd: 120 },
@@ -169,6 +186,23 @@ const ARCADE_SCORE_REVEAL_PATCHES: TonePatch[][] = [
 
 const ARCADE_MENU_SELECT_PATCHES: TonePatch[][] = [
   [{ frequency: 270, durationMs: 54, type: 'square', gainPeak: 0.034, frequencyEnd: 360, filterFreq: 800 }],
+];
+
+const ARCADE_DROP_WINDOW_BUZZER_PATCHES: TonePatch[][] = [
+  [
+    { frequency: 210, durationMs: 280, type: 'square', gainPeak: 0.128, frequencyEnd: 72, filterFreq: 520 },
+    { frequency: 148, durationMs: 220, type: 'sawtooth', gainPeak: 0.078, delayMs: 42, frequencyEnd: 58 },
+    { frequency: 92, durationMs: 180, type: 'square', gainPeak: 0.052, delayMs: 88, frequencyEnd: 48, filterFreq: 280 },
+  ],
+  [
+    { frequency: 180, durationMs: 300, type: 'square', gainPeak: 0.122, frequencyEnd: 68, filterFreq: 420 },
+    { frequency: 120, durationMs: 200, type: 'triangle', gainPeak: 0.072, delayMs: 52, frequencyEnd: 54 },
+    { frequency: 84, durationMs: 160, type: 'sawtooth', gainPeak: 0.048, delayMs: 96, frequencyEnd: 42 },
+  ],
+];
+
+const ARCADE_STASH_BULLET_HIT_PATCHES: TonePatch[][] = [
+  [{ frequency: 520, durationMs: 36, type: 'square', gainPeak: 0.028, frequencyEnd: 360, filterFreq: 1100 }],
 ];
 
 function getAudioContext(): AudioContext | null {
@@ -318,6 +352,26 @@ function playPatchSet(patches: TonePatch[][], intensity = 1): void {
   }
 }
 
+function readArcadeSfxIntensityScale(): number {
+  const preferences = readArcadeAudioPreferences();
+
+  if (preferences.muted) {
+    return 0;
+  }
+
+  return preferences.volume;
+}
+
+function playArcadePatchSet(patches: TonePatch[][], intensity = 1): void {
+  const arcadeScale = readArcadeSfxIntensityScale();
+
+  if (arcadeScale <= 0) {
+    return;
+  }
+
+  playPatchSet(patches, intensity * arcadeScale);
+}
+
 function shouldThrottle(lastAt: number, throttleMs: number): boolean {
   const now = performance.now();
 
@@ -384,14 +438,20 @@ export function playChatSendSfx(): void {
 }
 
 export function playArcadeGameStartSfx(): void {
-  playPatchSet(ARCADE_GAME_START_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_START_PATCHES);
 }
 
 export function playArcadeBubbleChargeSfx(progress = 0.5): void {
+  const arcadeScale = readArcadeSfxIntensityScale();
+
+  if (arcadeScale <= 0) {
+    return;
+  }
+
   const patches = pickRandomPatch(ARCADE_BUBBLE_CHARGE_PATCHES).map((patch) => ({
     ...patch,
     frequency: patch.frequency + progress * 80,
-    gainPeak: patch.gainPeak + progress * 0.01,
+    gainPeak: (patch.gainPeak + progress * 0.01) * arcadeScale,
   }));
 
   for (const patch of patches) {
@@ -400,23 +460,53 @@ export function playArcadeBubbleChargeSfx(progress = 0.5): void {
 }
 
 export function playArcadeBubblePopSfx(size: 'small' | 'big' = 'small'): void {
-  playPatchSet(size === 'big' ? ARCADE_BUBBLE_BIG_POP_PATCHES : ARCADE_BUBBLE_SMALL_POP_PATCHES);
+  playArcadePatchSet(size === 'big' ? ARCADE_BUBBLE_BIG_POP_PATCHES : ARCADE_BUBBLE_SMALL_POP_PATCHES);
 }
 
 export function playArcadeGameTickSfx(): void {
-  playPatchSet(ARCADE_GAME_TICK_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_TICK_PATCHES);
+}
+
+export function playArcadeGameCountdownTickSfx(secondsRemaining: number): void {
+  const arcadeScale = readArcadeSfxIntensityScale();
+
+  if (arcadeScale <= 0) {
+    return;
+  }
+
+  const clampedSeconds = Math.min(10, Math.max(1, secondsRemaining));
+  const urgency = (10 - clampedSeconds) / 9;
+  const intensity = 2.4 + urgency * 2.4;
+
+  duckArcadeGameMusic(360 + urgency * 220, 0.08 + urgency * 0.05);
+  playArcadePatchSet(
+    urgency >= 0.55 ? ARCADE_GAME_COUNTDOWN_URGENT_PATCHES : ARCADE_GAME_COUNTDOWN_TICK_PATCHES,
+    intensity,
+  );
+
+  if (urgency >= 0.35) {
+    playNoiseBurst(12 + urgency * 18, 0.02 + urgency * 0.035, 1100 + urgency * 700);
+  }
 }
 
 export function playArcadeGameOverSfx(): void {
-  playPatchSet(ARCADE_GAME_OVER_PATCHES);
+  playArcadePatchSet(ARCADE_GAME_OVER_PATCHES);
 }
 
 export function playArcadeScoreRevealSfx(): void {
-  playPatchSet(ARCADE_SCORE_REVEAL_PATCHES);
+  playArcadePatchSet(ARCADE_SCORE_REVEAL_PATCHES);
 }
 
 export function playArcadeMenuSelectSfx(): void {
-  playPatchSet(ARCADE_MENU_SELECT_PATCHES);
+  playArcadePatchSet(ARCADE_MENU_SELECT_PATCHES);
+}
+
+export function playArcadeDropWindowBuzzerSfx(): void {
+  playArcadePatchSet(ARCADE_DROP_WINDOW_BUZZER_PATCHES, 1.45);
+}
+
+export function playArcadeStashBulletHitSfx(): void {
+  playArcadePatchSet(ARCADE_STASH_BULLET_HIT_PATCHES, 0.9);
 }
 
 export function playSfx(kind: SfxKind): void {

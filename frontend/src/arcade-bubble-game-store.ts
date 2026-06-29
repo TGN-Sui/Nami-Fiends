@@ -4,6 +4,7 @@ import {
   ARCADE_BUBBLE_LEADERBOARD_SIZE,
   type ArcadeBubbleMode,
 } from './arcade-bubble-game.js';
+import { ARCADE_SKILL_DIFF_MODE, isArcadeCabinetPlayMode } from './arcade-skill-diff.js';
 
 const LEADERBOARD_KEY = 'nami.arcade.bubble-leaderboard';
 const PASSPORT_STATS_KEY = 'nami.arcade.bubble-passport-stats';
@@ -22,8 +23,10 @@ export type MemberArcadeBubblePassportStats = {
   totalScore: number;
   bestNormalScore: number;
   bestHardScore: number;
+  bestSkillScore: number;
   normalGamesPlayed: number;
   hardGamesPlayed: number;
+  skillGamesPlayed: number;
 };
 
 export type ArcadeBubbleGameResult = {
@@ -39,8 +42,10 @@ const EMPTY_PASSPORT_STATS: MemberArcadeBubblePassportStats = {
   totalScore: 0,
   bestNormalScore: 0,
   bestHardScore: 0,
+  bestSkillScore: 0,
   normalGamesPlayed: 0,
   hardGamesPlayed: 0,
+  skillGamesPlayed: 0,
 };
 
 const listeners = new Set<() => void>();
@@ -78,7 +83,7 @@ function readLeaderboardRegistry(): ArcadeBubbleLeaderboardEntry[] {
         typeof entry.memberId === 'string' &&
         typeof entry.displayName === 'string' &&
         typeof entry.score === 'number' &&
-        (entry.mode === 'normal' || entry.mode === 'hard') &&
+        isArcadeCabinetPlayMode(entry.mode) &&
         typeof entry.playedAtMs === 'number',
     );
   } catch {
@@ -114,9 +119,12 @@ function readPassportStatsRegistry(): Record<string, MemberArcadeBubblePassportS
           totalScore: typeof stats?.totalScore === 'number' ? stats.totalScore : 0,
           bestNormalScore: typeof stats?.bestNormalScore === 'number' ? stats.bestNormalScore : 0,
           bestHardScore: typeof stats?.bestHardScore === 'number' ? stats.bestHardScore : 0,
+          bestSkillScore: typeof stats?.bestSkillScore === 'number' ? stats.bestSkillScore : 0,
           normalGamesPlayed:
             typeof stats?.normalGamesPlayed === 'number' ? stats.normalGamesPlayed : 0,
           hardGamesPlayed: typeof stats?.hardGamesPlayed === 'number' ? stats.hardGamesPlayed : 0,
+          skillGamesPlayed:
+            typeof stats?.skillGamesPlayed === 'number' ? stats.skillGamesPlayed : 0,
         },
       ]),
     );
@@ -207,7 +215,11 @@ export function recordArcadeBubbleGameResult(input: {
   const registry = readPassportStatsRegistry();
   const existing = registry[input.memberId] ?? EMPTY_PASSPORT_STATS;
   const previousBest =
-    input.mode === 'hard' ? existing.bestHardScore : existing.bestNormalScore;
+    input.mode === 'hard'
+      ? existing.bestHardScore
+      : input.mode === ARCADE_SKILL_DIFF_MODE
+        ? existing.bestSkillScore
+        : existing.bestNormalScore;
   const isPersonalBest = input.score > previousBest;
 
   registry[input.memberId] = {
@@ -219,10 +231,18 @@ export function recordArcadeBubbleGameResult(input: {
         : existing.bestNormalScore,
     bestHardScore:
       input.mode === 'hard' ? Math.max(existing.bestHardScore, input.score) : existing.bestHardScore,
+    bestSkillScore:
+      input.mode === ARCADE_SKILL_DIFF_MODE
+        ? Math.max(existing.bestSkillScore, input.score)
+        : existing.bestSkillScore,
     normalGamesPlayed:
       input.mode === 'normal' ? existing.normalGamesPlayed + 1 : existing.normalGamesPlayed,
     hardGamesPlayed:
       input.mode === 'hard' ? existing.hardGamesPlayed + 1 : existing.hardGamesPlayed,
+    skillGamesPlayed:
+      input.mode === ARCADE_SKILL_DIFF_MODE
+        ? existing.skillGamesPlayed + 1
+        : existing.skillGamesPlayed,
   };
 
   writePassportStatsRegistry(registry);

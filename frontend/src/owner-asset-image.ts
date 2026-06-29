@@ -1,4 +1,4 @@
-import type { OwnerAssetCategory } from './nami-owner-assets-store.js';
+import type { OwnerAssetCategory } from './owner-asset-validation.js';
 
 export function readImageFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

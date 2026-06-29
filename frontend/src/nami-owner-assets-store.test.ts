@@ -1,94 +1,34 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
+import { OFFICIAL_ARCADE_CABINETS } from './arcade-cabinets.js';
 import {
-  ownerAssetBadgeSlotId,
-  ownerAssetNavSlotId,
-  readOwnerAsset,
-  resetOwnerAssetsForTests,
-  saveOwnerAssets,
-  validateOwnerAssetFile,
+  readArcadeOwnerAssetSlotSections,
+  readArcadeOwnerAssetSlots,
+  readPlatformOwnerAssetSlots,
 } from './nami-owner-assets-store.js';
-const OFFICIAL_OWNER = '0xbcf5a725b72f88fd50c7146a48822fc61e3691cbe44193a668887de4573764ca';
-const SAMPLE_IMAGE = 'data:image/png;base64,AAAA';
 
-function createLocalStorageMock(): Storage {
-  const store = new Map<string, string>();
+describe('nami-owner-assets-store', () => {
+  it('keeps platform and arcade owner asset catalogs separate', () => {
+    const platformSlots = readPlatformOwnerAssetSlots();
+    const arcadeSlots = readArcadeOwnerAssetSlots();
 
-  return {
-    get length() {
-      return store.size;
-    },
-    clear() {
-      store.clear();
-    },
-    getItem(key: string) {
-      return store.has(key) ? store.get(key)! : null;
-    },
-    key(index: number) {
-      return [...store.keys()][index] ?? null;
-    },
-    removeItem(key: string) {
-      store.delete(key);
-    },
-    setItem(key: string, value: string) {
-      store.set(key, value);
-    },
-  };
-}
-
-beforeEach(() => {
-  const localStorage = createLocalStorageMock();
-
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: { localStorage },
+    expect(platformSlots.some((slot) => slot.id === 'arcade-background')).toBe(false);
+    expect(platformSlots.some((slot) => slot.id === 'arcade-lobby-music')).toBe(false);
+    expect(arcadeSlots.some((slot) => slot.id === 'badge-default')).toBe(false);
+    expect(arcadeSlots.some((slot) => slot.id === 'arcade-stage-background')).toBe(true);
+    expect(arcadeSlots.some((slot) => slot.id === 'arcade-game-music-nami-stash-defense')).toBe(
+      true,
+    );
   });
 
-  resetOwnerAssetsForTests();
-});
+  it('groups arcade media into shell, music, and cabinet sections', () => {
+    const sections = readArcadeOwnerAssetSlotSections();
+    const liveGameCount = OFFICIAL_ARCADE_CABINETS.filter((cabinet) => cabinet.gameId).length;
 
-afterEach(() => {
-  window.localStorage.clear();
-  resetOwnerAssetsForTests();
-});
-
-describe('ownerAssetNavSlotId', () => {
-  it('maps nav pages to stable sidebar asset slot ids', () => {
-    expect(ownerAssetNavSlotId('messages')).toBe('sidebar-nav-messages');
-    expect(ownerAssetNavSlotId('settings')).toBe('sidebar-nav-settings');
-  });
-});
-
-describe('ownerAssetBadgeSlotId', () => {
-  it('maps badge names to stable asset slot ids', () => {
-    expect(ownerAssetBadgeSlotId('First Quest')).toBe('badge-first-quest');
-    expect(ownerAssetBadgeSlotId('Raid Captain')).toBe('badge-raid-captain');
-  });
-});
-
-describe('validateOwnerAssetFile', () => {
-  it('rejects unsupported mime types', () => {
-    const file = {
-      type: 'image/svg+xml',
-      size: 1200,
-    } as File;
-
-    expect(validateOwnerAssetFile(file, 'badge')).toMatch(/PNG, JPG, WebP, or GIF/);
-  });
-});
-
-describe('saveOwnerAssets', () => {
-  it('persists artwork for the official owner', async () => {
-    await expect(
-      saveOwnerAssets({ 'hub-sidebar-logo': SAMPLE_IMAGE }, OFFICIAL_OWNER)
-    ).resolves.toBeNull();
-    expect(readOwnerAsset('hub-sidebar-logo')).toBe(SAMPLE_IMAGE);
-  });
-
-  it('rejects saves from non-official owners', async () => {
-    await expect(
-      saveOwnerAssets({ 'hub-sidebar-logo': SAMPLE_IMAGE }, '0x1234')
-    ).resolves.toBe('unauthorized');
-    expect(readOwnerAsset('hub-sidebar-logo')).toBeNull();
+    expect(sections).toHaveLength(4);
+    expect(sections[3]?.id).toBe('bricked-up-sprites');
+    expect(sections[3]?.slots.length).toBeGreaterThanOrEqual(10);
+    expect(sections[1]?.slots).toHaveLength(1 + liveGameCount);
+    expect(sections[2]?.slots).toHaveLength(OFFICIAL_ARCADE_CABINETS.length * 3);
   });
 });

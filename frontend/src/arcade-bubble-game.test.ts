@@ -28,9 +28,13 @@ function createLocalStorageMock(): Storage {
 import {
   ARCADE_BUBBLE_GAME_DURATION_MS,
   ARCADE_BUBBLE_GAME_ID,
+  GOON_POP_BUBBLE_LABELS,
   arcadeBubbleGameConfig,
+  arcadeBubbleModeLabel,
+  formatGoonPopG,
   spawnArcadeBubble,
 } from './arcade-bubble-game.js';
+import { ARCADE_SKILL_DIFF_MODE, ARCADE_SKILL_DIFF_MODE_LABEL } from './arcade-skill-diff.js';
 import {
   readArcadeBubbleLeaderboard,
   readMemberArcadeBubblePassportStats,
@@ -69,6 +73,25 @@ describe('arcade-bubble-game', () => {
     expect(bubble.lifetimeMs).toBeGreaterThanOrEqual(7_500);
     expect(bubble.lifetimeMs).toBeLessThanOrEqual(16_500);
     expect([1, 2]).toContain(bubble.points);
+    expect(GOON_POP_BUBBLE_LABELS).toContain(bubble.label);
+  });
+
+  it('uses Goon Pop run labels and G formatting', () => {
+    expect(arcadeBubbleModeLabel('normal')).toBe('Alley Run');
+    expect(arcadeBubbleModeLabel('hard')).toBe('Heat Run');
+    expect(arcadeBubbleModeLabel(ARCADE_SKILL_DIFF_MODE)).toBe(ARCADE_SKILL_DIFF_MODE_LABEL);
+    expect(formatGoonPopG(2)).toBe('2 G');
+    expect(formatGoonPopG(2, true)).toBe('+2 G');
+  });
+
+  it('ramps spawn rate, speed, and batch size in skill diff', () => {
+    const normal = arcadeBubbleGameConfig('normal');
+    const skill = arcadeBubbleGameConfig(ARCADE_SKILL_DIFF_MODE);
+
+    expect(skill.spawnsPerTick).toBe(2);
+    expect(skill.spawnIntervalMs).toBeLessThan(normal.spawnIntervalMs);
+    expect(skill.riseSpeedMin).toBeGreaterThan(normal.riseSpeedMin);
+    expect(skill.riseSpeedMax).toBeGreaterThan(normal.riseSpeedMax);
   });
 });
 
@@ -115,5 +138,17 @@ describe('arcade-bubble-game-store', () => {
     expect(readArcadeBubbleLeaderboard('hard')[0]?.score).toBe(11);
     expect(readMemberArcadeBubblePassportStats('m1').bestHardScore).toBe(11);
     expect(readMemberArcadeBubblePassportStats('m1').totalBubblesPopped).toBe(3);
+
+    const skillResult = recordArcadeBubbleGameResult({
+      memberId: 'm1',
+      displayName: 'Nozomi',
+      mode: ARCADE_SKILL_DIFF_MODE,
+      score: 24,
+      bubblesPopped: 12,
+    });
+
+    expect(skillResult.rank).toBe(1);
+    expect(readArcadeBubbleLeaderboard(ARCADE_SKILL_DIFF_MODE)[0]?.score).toBe(24);
+    expect(readMemberArcadeBubblePassportStats('m1').bestSkillScore).toBe(24);
   });
 });

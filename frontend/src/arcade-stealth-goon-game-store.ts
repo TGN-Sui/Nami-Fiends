@@ -1,0 +1,261 @@
+import { useSyncExternalStore } from 'react';
+
+import {
+  ARCADE_STEALTH_GOON_LEADERBOARD_SIZE,
+  type ArcadeStealthGoonMode,
+} from './arcade-stealth-goon-game.js';
+import { ARCADE_SKILL_DIFF_MODE, isArcadeCabinetPlayMode } from './arcade-skill-diff.js';
+
+const LEADERBOARD_KEY = 'nami.arcade.stealth-goon-leaderboard';
+const PASSPORT_STATS_KEY = 'nami.arcade.stealth-goon-passport-stats';
+
+export type ArcadeStealthGoonLeaderboardEntry = {
+  id: string;
+  memberId: string;
+  displayName: string;
+  score: number;
+  mode: ArcadeStealthGoonMode;
+  playedAtMs: number;
+};
+
+export type MemberArcadeStealthGoonPassportStats = {
+  totalLinksCollected: number;
+  totalScore: number;
+  bestLowProfileScore: number;
+  bestHeatPatrolScore: number;
+  bestSkillScore: number;
+  lowProfileGamesPlayed: number;
+  heatPatrolGamesPlayed: number;
+  skillGamesPlayed: number;
+};
+
+export type ArcadeStealthGoonGameResult = {
+  score: number;
+  linksCollected: number;
+  mode: ArcadeStealthGoonMode;
+  rank: number;
+  isPersonalBest: boolean;
+};
+
+const EMPTY_PASSPORT_STATS: MemberArcadeStealthGoonPassportStats = {
+  totalLinksCollected: 0,
+  totalScore: 0,
+  bestLowProfileScore: 0,
+  bestHeatPatrolScore: 0,
+  bestSkillScore: 0,
+  lowProfileGamesPlayed: 0,
+  heatPatrolGamesPlayed: 0,
+  skillGamesPlayed: 0,
+};
+
+const listeners = new Set<() => void>();
+let storeVersion = 0;
+
+function emit(): void {
+  storeVersion += 1;
+  listeners.forEach((listener) => listener());
+  window.dispatchEvent(new CustomEvent('nami-arcade-stealth-goon-game-changed'));
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+
+  return () => listeners.delete(listener);
+}
+
+function readLeaderboardRegistry(): ArcadeStealthGoonLeaderboardEntry[] {
+  try {
+    const stored = window.localStorage.getItem(LEADERBOARD_KEY);
+
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored) as ArcadeStealthGoonLeaderboardEntry[];
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(
+      (entry) =>
+        typeof entry.id === 'string' &&
+        typeof entry.memberId === 'string' &&
+        typeof entry.displayName === 'string' &&
+        typeof entry.score === 'number' &&
+        isArcadeCabinetPlayMode(entry.mode) &&
+        typeof entry.playedAtMs === 'number',
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeLeaderboardRegistry(entries: ArcadeStealthGoonLeaderboardEntry[]): void {
+  window.localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries.slice(0, 80)));
+  emit();
+}
+
+function readPassportStatsRegistry(): Record<string, MemberArcadeStealthGoonPassportStats> {
+  try {
+    const stored = window.localStorage.getItem(PASSPORT_STATS_KEY);
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored) as Record<string, Partial<MemberArcadeStealthGoonPassportStats>>;
+
+    if (!parsed || typeof parsed !== 'object') {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).map(([memberId, stats]) => [
+        memberId,
+        {
+          totalLinksCollected:
+            typeof stats?.totalLinksCollected === 'number' ? stats.totalLinksCollected : 0,
+          totalScore: typeof stats?.totalScore === 'number' ? stats.totalScore : 0,
+          bestLowProfileScore:
+            typeof stats?.bestLowProfileScore === 'number' ? stats.bestLowProfileScore : 0,
+          bestHeatPatrolScore:
+            typeof stats?.bestHeatPatrolScore === 'number' ? stats.bestHeatPatrolScore : 0,
+          bestSkillScore: typeof stats?.bestSkillScore === 'number' ? stats.bestSkillScore : 0,
+          lowProfileGamesPlayed:
+            typeof stats?.lowProfileGamesPlayed === 'number' ? stats.lowProfileGamesPlayed : 0,
+          heatPatrolGamesPlayed:
+            typeof stats?.heatPatrolGamesPlayed === 'number' ? stats.heatPatrolGamesPlayed : 0,
+          skillGamesPlayed:
+            typeof stats?.skillGamesPlayed === 'number' ? stats.skillGamesPlayed : 0,
+        },
+      ]),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function writePassportStatsRegistry(registry: Record<string, MemberArcadeStealthGoonPassportStats>): void {
+  window.localStorage.setItem(PASSPORT_STATS_KEY, JSON.stringify(registry));
+  emit();
+}
+
+export function readMemberArcadeStealthGoonPassportStats(
+  memberId: string,
+): MemberArcadeStealthGoonPassportStats {
+  return readPassportStatsRegistry()[memberId] ?? EMPTY_PASSPORT_STATS;
+}
+
+export function readArcadeStealthGoonLeaderboard(
+  mode: ArcadeStealthGoonMode,
+  limit = ARCADE_STEALTH_GOON_LEADERBOARD_SIZE,
+): ArcadeStealthGoonLeaderboardEntry[] {
+  return readLeaderboardRegistry()
+    .filter((entry) => entry.mode === mode)
+    .sort((left, right) => right.score - left.score || right.playedAtMs - left.playedAtMs)
+    .slice(0, limit);
+}
+
+export function readArcadeStealthGoonHighScore(mode: ArcadeStealthGoonMode): number {
+  const [top] = readArcadeStealthGoonLeaderboard(mode, 1);
+
+  return top?.score ?? 0;
+}
+
+export function recordArcadeStealthGoonGameResult(input: {
+  memberId: string;
+  displayName: string;
+  mode: ArcadeStealthGoonMode;
+  score: number;
+  linksCollected: number;
+  playedAtMs?: number;
+}): ArcadeStealthGoonGameResult {
+  const playedAtMs = input.playedAtMs ?? Date.now();
+  const registry = readPassportStatsRegistry();
+  const existing = registry[input.memberId] ?? EMPTY_PASSPORT_STATS;
+  const previousBest =
+    input.mode === 'hard'
+      ? existing.bestHeatPatrolScore
+      : input.mode === ARCADE_SKILL_DIFF_MODE
+        ? existing.bestSkillScore
+        : existing.bestLowProfileScore;
+  const isPersonalBest = input.score > previousBest;
+
+  registry[input.memberId] = {
+    totalLinksCollected: existing.totalLinksCollected + input.linksCollected,
+    totalScore: existing.totalScore + input.score,
+    bestLowProfileScore:
+      input.mode === 'normal'
+        ? Math.max(existing.bestLowProfileScore, input.score)
+        : existing.bestLowProfileScore,
+    bestHeatPatrolScore:
+      input.mode === 'hard'
+        ? Math.max(existing.bestHeatPatrolScore, input.score)
+        : existing.bestHeatPatrolScore,
+    bestSkillScore:
+      input.mode === ARCADE_SKILL_DIFF_MODE
+        ? Math.max(existing.bestSkillScore, input.score)
+        : existing.bestSkillScore,
+    lowProfileGamesPlayed:
+      input.mode === 'normal' ? existing.lowProfileGamesPlayed + 1 : existing.lowProfileGamesPlayed,
+    heatPatrolGamesPlayed:
+      input.mode === 'hard' ? existing.heatPatrolGamesPlayed + 1 : existing.heatPatrolGamesPlayed,
+    skillGamesPlayed:
+      input.mode === ARCADE_SKILL_DIFF_MODE
+        ? existing.skillGamesPlayed + 1
+        : existing.skillGamesPlayed,
+  };
+
+  writePassportStatsRegistry(registry);
+
+  const leaderboard = readLeaderboardRegistry();
+  const nextEntry: ArcadeStealthGoonLeaderboardEntry = {
+    id: input.memberId + '-' + playedAtMs,
+    memberId: input.memberId,
+    displayName: input.displayName.trim() || 'Arcade Player',
+    score: input.score,
+    mode: input.mode,
+    playedAtMs,
+  };
+
+  const merged = [...leaderboard, nextEntry]
+    .filter((entry) => entry.mode === input.mode)
+    .sort((left, right) => right.score - left.score || right.playedAtMs - left.playedAtMs)
+    .slice(0, ARCADE_STEALTH_GOON_LEADERBOARD_SIZE);
+
+  const otherModes = leaderboard.filter((entry) => entry.mode !== input.mode);
+  writeLeaderboardRegistry([...otherModes, ...merged]);
+
+  const updatedBoard = readArcadeStealthGoonLeaderboard(input.mode);
+  const rankIndex = updatedBoard.findIndex(
+    (entry) =>
+      entry.memberId === input.memberId &&
+      entry.score === input.score &&
+      entry.playedAtMs === playedAtMs,
+  );
+  const rank = rankIndex >= 0 ? rankIndex + 1 : updatedBoard.length + 1;
+
+  return {
+    score: input.score,
+    linksCollected: input.linksCollected,
+    mode: input.mode,
+    rank,
+    isPersonalBest,
+  };
+}
+
+export function useArcadeStealthGoonGameVersion(): number {
+  return useSyncExternalStore(subscribe, () => storeVersion, () => storeVersion);
+}
+
+export function resetArcadeStealthGoonGameStoreForTests(): void {
+  try {
+    window.localStorage.removeItem(LEADERBOARD_KEY);
+    window.localStorage.removeItem(PASSPORT_STATS_KEY);
+  } catch {
+    // Ignore restricted storage environments.
+  }
+
+  storeVersion = 0;
+}

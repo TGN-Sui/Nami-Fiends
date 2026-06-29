@@ -11,7 +11,8 @@ import {
   ARCADE_BACKGROUND_SLOT_ID,
   DEFAULT_ARCADE_BACKGROUND_URL,
 } from './arcade-background.js';
-import { prepareOwnerAssetImage, validateOwnerAssetFile } from './nami-owner-assets-store.js';
+import { prepareOwnerAssetImage } from './owner-asset-image.js';
+import { validateOwnerAssetFile } from './owner-asset-validation.js';
 
 export const ARCADE_BACKGROUND_MEDIA_KEY = 'nami.owner.arcade-background';
 export const ARCADE_BACKGROUND_VIDEO_ACCEPTED_LABEL = 'MP4 or WebM';

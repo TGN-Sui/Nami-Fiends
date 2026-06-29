@@ -11,14 +11,15 @@ import {
   ARCADE_STAGE_BACKGROUND_SLOT_ID,
   DEFAULT_ARCADE_STAGE_BACKGROUND_URL,
 } from './arcade-stage-background.js';
-import { prepareOwnerAssetImage, validateOwnerAssetFile } from './nami-owner-assets-store.js';
+import { prepareOwnerAssetImage } from './owner-asset-image.js';
+import { validateOwnerAssetFile } from './owner-asset-validation.js';
 
 export const ARCADE_STAGE_BACKGROUND_MEDIA_KEY = 'nami.owner.arcade-stage-background';
 export const ARCADE_STAGE_BACKGROUND_VIDEO_ACCEPTED_LABEL = 'MP4 or WebM';
 export const ARCADE_STAGE_BACKGROUND_VIDEO_ACCEPTED_TYPES = new Set(['video/mp4', 'video/webm']);
 export const ARCADE_STAGE_BACKGROUND_VIDEO_MAX_BYTES = 48 * 1024 * 1024;
 
-export type ArcadeStageBackgroundMediaKind = 'default' | 'image' | 'video';
+export type ArcadeStageBackgroundMediaKind = 'default' | 'image' | 'video' | 'loading';
 
 export type ArcadeStageBackgroundMedia = {
   kind: ArcadeStageBackgroundMediaKind;
