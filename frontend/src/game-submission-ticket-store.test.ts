@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('./app-config.js', () => ({
   shouldUseDevFixtures: () => false,
   isTestLaunchMode: () => true,
+  shouldUseTestLaunchLoungeMocks: () => false,
+  shouldUseTestLaunchShowcaseCatalog: () => false,
 }));
 
 import { buildOfficialGameSubmissionTicket, isChannelHiddenFromPublic } from './game-submission-ticket-store.js';

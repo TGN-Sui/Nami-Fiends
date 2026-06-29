@@ -42,7 +42,7 @@ describe('chatOverlayRewardsSyncErrorMessage', () => {
   it('maps invalid art values to re-upload guidance', async () => {
     const { chatOverlayRewardsSyncErrorMessage } = await import('./chat-overlay-rewards-sync.js');
 
-    expect(chatOverlayRewardsSyncErrorMessage('invalid_art_value')).toContain('Re-upload');
+    expect(chatOverlayRewardsSyncErrorMessage('invalid_art_value')).toMatch(/re-upload/i);
   });
 
   it('maps quilt publish failures to retry guidance', async () => {

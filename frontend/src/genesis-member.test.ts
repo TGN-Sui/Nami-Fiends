@@ -40,6 +40,7 @@ vi.mock('./app-config.js', () => ({
   shouldUseFunctionalMockCatalog: () => true,
   shouldUseDemoOwnerFallback: () => false,
   isTestLaunchMode: () => true,
+  shouldUseTestLaunchLoungeMocks: () => false,
 }));
 
 vi.mock('./protocol-env.js', () => ({
@@ -114,6 +115,7 @@ describe('genesis-member', () => {
       shouldUseFunctionalMockCatalog: () => true,
       shouldUseDemoOwnerFallback: () => false,
       isTestLaunchMode: () => true,
+      shouldUseTestLaunchLoungeMocks: () => false,
     }));
     vi.doMock('./protocol-env.js', () => ({
       readOfficialOwner: () => OFFICIAL_OWNER,

@@ -22,6 +22,7 @@ vi.mock('./app-config.js', () => ({
   shouldUseFunctionalMockCatalog: () => true,
   shouldUseDemoOwnerFallback: () => false,
   isTestLaunchMode: () => true,
+  shouldUseTestLaunchLoungeMocks: () => false,
 }));
 
 function createLocalStorageMock(): Storage {
