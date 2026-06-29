@@ -10,6 +10,7 @@ export type SettingsNavId =
   | 'owner-platform'
   | 'owner-border-art'
   | 'owner-visual-assets'
+  | 'owner-arcade-assets'
   | 'owner-emojis'
   | 'owner-submissions'
   | 'owner-security'
@@ -29,6 +30,7 @@ export type SettingsSection =
 
 export type OwnerAdvancedTabId =
   | 'assets'
+  | 'arcade'
   | 'emojis'
   | 'borders'
   | 'submissions'
@@ -51,6 +53,7 @@ const NAV_IDS: ReadonlySet<string> = new Set([
   'owner-platform',
   'owner-border-art',
   'owner-visual-assets',
+  'owner-arcade-assets',
   'owner-emojis',
   'owner-submissions',
   'owner-security',
@@ -71,6 +74,7 @@ const LEGACY_SECTION_TO_NAV: Record<string, SettingsNavId> = {
 
 const LEGACY_TAB_TO_NAV: Record<OwnerAdvancedTabId, SettingsNavId> = {
   assets: 'owner-visual-assets',
+  arcade: 'owner-arcade-assets',
   emojis: 'owner-emojis',
   borders: 'owner-border-art',
   submissions: 'owner-submissions',
@@ -210,6 +214,12 @@ export const OWNER_CONSOLE_GROUP: SettingsNavGroup = {
       id: 'owner-visual-assets',
       label: 'Visual assets',
       hint: 'Badges, logos, portraits, button accents',
+      ownerOnly: true,
+    },
+    {
+      id: 'owner-arcade-assets',
+      label: 'Arcade media',
+      hint: 'CRT backgrounds, cabinet intros, stage loops, and MP3 loops',
       ownerOnly: true,
     },
     {

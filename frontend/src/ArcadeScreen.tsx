@@ -18,7 +18,7 @@ import {
   type ArcadeCabinetView,
 } from './arcade-cabinets.js';
 import {
-  arcadeCabinetStageFitStyle,
+  arcadeCabinetStageFitBoxStyle,
   readArcadeCabinetStageFit,
 } from './arcade-cabinet-stage-fit.js';
 import {
@@ -421,13 +421,15 @@ export function ArcadeScreen(props: ArcadeScreenProps): ReactElement {
   }
 
   const stageCabinetId = useArcadeStageCabinetId();
-  const isCabinetStageFit = screenPhase === 'cabinet-active' && stageCabinetId !== null;
+  const stageFitCabinetId =
+    screenPhase === 'cabinet-active' ? activeCabinet.id : stageCabinetId;
+  const isCabinetStageFit = screenPhase === 'cabinet-active' && stageFitCabinetId !== null;
   const cabinetStageFit = useMemo(
-    () => readArcadeCabinetStageFit(stageCabinetId),
-    [stageCabinetId],
+    () => readArcadeCabinetStageFit(stageFitCabinetId),
+    [stageFitCabinetId],
   );
-  const cabinetStageFitCss = useMemo(
-    () => arcadeCabinetStageFitStyle(cabinetStageFit) as CSSProperties,
+  const cabinetStageFitBoxCss = useMemo(
+    () => arcadeCabinetStageFitBoxStyle(cabinetStageFit) as CSSProperties,
     [cabinetStageFit],
   );
 
@@ -495,9 +497,13 @@ export function ArcadeScreen(props: ArcadeScreenProps): ReactElement {
             (isCabinetStageFit ? ' is-cabinet-stage-fit' : '') +
             (isCabinetStageFit && cabinetStageFit.hideBezel ? ' is-cabinet-stage-fit-bezelless' : '')
           }
-          style={isCabinetStageFit ? cabinetStageFitCss : undefined}
+          data-active-cabinet-id={activeCabinet.id}
         >
-          <div className={'nami-arcade-box' + (isGameActive ? ' is-arcade-game-active' : '')}>
+          <div
+            className={'nami-arcade-box' + (isGameActive ? ' is-arcade-game-active' : '')}
+            data-stage-fit-offset-y={isCabinetStageFit ? cabinetStageFit.offsetY : undefined}
+            style={isCabinetStageFit ? cabinetStageFitBoxCss : undefined}
+          >
             <div className="nami-arcade-box-bezel">
               <div className="nami-arcade-box-viewport">
                 <ArcadeBackgroundMedia cabinetId={activeCabinet.id} />

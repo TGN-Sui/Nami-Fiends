@@ -53,3 +53,10 @@ export function arcadeCabinetStageFitStyle(
     '--arcade-cabinet-fit-aspect': fit.aspectRatio,
   };
 }
+
+/** Inline fit vars on the cabinet box — same element that applies the stage-fit transform. */
+export function arcadeCabinetStageFitBoxStyle(
+  fit: ArcadeCabinetStageFit,
+): Record<string, string | number> {
+  return arcadeCabinetStageFitStyle(fit);
+}

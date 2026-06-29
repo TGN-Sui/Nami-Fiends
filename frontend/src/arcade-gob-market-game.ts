@@ -71,21 +71,22 @@ const OPPOSITE_DIRECTION: Record<ArcadeGobMarketDirection, ArcadeGobMarketDirect
 
 const BOUNCER_DIRECTIONS: ArcadeGobMarketDirection[] = ['up', 'down', 'left', 'right'];
 
+/** Fully connected VIP-floor maze — every open cell is reachable from spawn. */
 const GOB_MARKET_MAZE = [
   '###############',
-  '#.....#.....#.#',
-  '#.###.#.###.#.#',
-  '#.#...#...#...#',
-  '#.#.#####.#.###',
+  '#.............#',
+  '#.#.###.###.#.#',
   '#...#...#...#.#',
-  '###.#.#.#.###.#',
-  '#...#.#.#...#.#',
+  '###.#.#.#.#.#.#',
+  '#...#.#.#.#...#',
   '#.###.#.#.###.#',
-  '#...#...#...#.#',
-  '#.#.#####.#.#.#',
-  '#...#...#.#...#',
-  '#.#.###.#.#.###',
-  '#.....#.....#.#',
+  '#.....#.#.....#',
+  '#.#####.#####.#',
+  '#.....#.#.....#',
+  '#.###.#.#.###.#',
+  '#...#.#.#.#...#',
+  '#.#.###.###.#.#',
+  '#.............#',
   '###############',
 ] as const;
 
@@ -150,6 +151,58 @@ export function isArcadeGobMarketWall(x: number, y: number): boolean {
   }
 
   return GOB_MARKET_MAZE[y]?.[x] === '#';
+}
+
+const GOB_MARKET_DIRECTION_DELTAS: ArcadeGobMarketPoint[] = [
+  { x: 0, y: -1 },
+  { x: 0, y: 1 },
+  { x: -1, y: 0 },
+  { x: 1, y: 0 },
+];
+
+export function listArcadeGobMarketOpenCellsFrom(
+  origin: ArcadeGobMarketPoint = GOB_MARKET_SPAWN,
+): ArcadeGobMarketPoint[] {
+  const visited = new Set<string>();
+  const openCells: ArcadeGobMarketPoint[] = [];
+  const queue: ArcadeGobMarketPoint[] = [{ ...origin }];
+
+  while (queue.length > 0) {
+    const point = queue.shift()!;
+
+    if (isArcadeGobMarketWall(point.x, point.y)) {
+      continue;
+    }
+
+    const key = point.x + ':' + point.y;
+
+    if (visited.has(key)) {
+      continue;
+    }
+
+    visited.add(key);
+    openCells.push(point);
+
+    for (const delta of GOB_MARKET_DIRECTION_DELTAS) {
+      queue.push({ x: point.x + delta.x, y: point.y + delta.y });
+    }
+  }
+
+  return openCells;
+}
+
+export function countArcadeGobMarketOpenCells(): number {
+  let count = 0;
+
+  for (let y = 0; y < ARCADE_GOB_MARKET_GRID_SIZE; y += 1) {
+    for (let x = 0; x < ARCADE_GOB_MARKET_GRID_SIZE; x += 1) {
+      if (!isArcadeGobMarketWall(x, y)) {
+        count += 1;
+      }
+    }
+  }
+
+  return count;
 }
 
 function pointsEqual(left: ArcadeGobMarketPoint, right: ArcadeGobMarketPoint): boolean {

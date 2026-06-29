@@ -46,6 +46,13 @@ describe('settings-navigation', () => {
     expect(consumeSettingsNavFocus()).toBe('owner-border-art');
   });
 
+  it('maps arcade media deep links to a flat nav id', () => {
+    requestOwnerAdvancedTab('arcade');
+
+    expect(consumeSettingsNavFocus()).toBe('owner-arcade-assets');
+    expect(settingsNavLabel('owner-arcade-assets')).toBe('Arcade media');
+  });
+
   it('labels border art for sidebar display', () => {
     expect(settingsNavLabel('owner-border-art')).toBe('Border Art');
   });

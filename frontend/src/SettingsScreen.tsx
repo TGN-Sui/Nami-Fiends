@@ -12,6 +12,7 @@ import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { MembershipAccessCard } from './MembershipAccessCard.js';
 import { MembershipFulfillmentPanel } from './MembershipFulfillmentPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
+import { NamiOwnerArcadeAssetEditPanel } from './NamiOwnerArcadeAssetEditPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
@@ -524,6 +525,12 @@ export function SettingsScreen(props: {
         return renderOwnerWorkspace(
           'owner-visual-assets',
           <NamiOwnerAssetEditPanel embedded onEnterEditMode={() => props.onNavigate?.('hub')} />
+        );
+
+      case 'owner-arcade-assets':
+        return renderOwnerWorkspace(
+          'owner-arcade-assets',
+          <NamiOwnerArcadeAssetEditPanel embedded onEnterEditMode={() => props.onNavigate?.('arcade')} />
         );
 
       case 'owner-emojis':

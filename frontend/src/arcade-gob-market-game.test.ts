@@ -2,12 +2,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   ARCADE_GOB_MARKET_GAME_ID,
+  ARCADE_GOB_MARKET_GRID_SIZE,
   ARCADE_GOB_MARKET_SURVIVE_BONUS,
   ARCADE_GOB_MARKET_TOKEN_SCORE,
   arcadeGobMarketGameConfig,
   arcadeGobMarketModeLabel,
+  countArcadeGobMarketOpenCells,
   createArcadeGobMarketState,
   finalizeArcadeGobMarketRun,
+  isArcadeGobMarketWall,
+  listArcadeGobMarketOpenCellsFrom,
   resetArcadeGobMarketIdCounterForTests,
   setArcadeGobMarketDirection,
   updateArcadeGobMarketState,
@@ -46,6 +50,27 @@ function createLocalStorageMock(): Storage {
 describe('arcade-gob-market-game', () => {
   beforeEach(() => {
     resetArcadeGobMarketIdCounterForTests();
+  });
+
+  it('keeps every floor tile connected from the spawn so tokens are always reachable', () => {
+    expect(countArcadeGobMarketOpenCells()).toBeGreaterThan(0);
+    expect(listArcadeGobMarketOpenCellsFrom({ x: 1, y: 1 })).toHaveLength(
+      countArcadeGobMarketOpenCells(),
+    );
+  });
+
+  it('seals the outer border and leaves spawn walkable', () => {
+    for (let x = 0; x < ARCADE_GOB_MARKET_GRID_SIZE; x += 1) {
+      expect(isArcadeGobMarketWall(x, 0)).toBe(true);
+      expect(isArcadeGobMarketWall(x, ARCADE_GOB_MARKET_GRID_SIZE - 1)).toBe(true);
+    }
+
+    for (let y = 0; y < ARCADE_GOB_MARKET_GRID_SIZE; y += 1) {
+      expect(isArcadeGobMarketWall(0, y)).toBe(true);
+      expect(isArcadeGobMarketWall(ARCADE_GOB_MARKET_GRID_SIZE - 1, y)).toBe(true);
+    }
+
+    expect(isArcadeGobMarketWall(1, 1)).toBe(false);
   });
 
   it('exposes the official gob market cabinet id and mode labels', () => {
