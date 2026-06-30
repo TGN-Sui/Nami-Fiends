@@ -197,13 +197,28 @@ export async function handlePaymentIntentCryptoConfirm(
       return;
     }
 
+    const { assertWalletAuthFromBody } = await import('../services/wallet-auth.service.js');
+    await assertWalletAuthFromBody(sender, body);
+
     const intent = await confirmCryptoPayment(paymentId, txDigest, sender);
     sendJson(response, 200, { intent });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'tx_digest_already_used') {
+      sendJson(response, 409, { error: message });
+      return;
+    }
+
     console.error('[nami-payments] crypto confirm failed', error);
     sendJson(response, 400, {
       error: 'crypto_confirm_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message,
     });
   }
 }
@@ -236,7 +251,8 @@ export async function handlePayPalWebhookPost(
 ): Promise<void> {
   try {
     const rawBody = await readRawBody(request);
-    const intent = await handlePayPalWebhook(rawBody);
+    const { readPayPalWebhookHeaders } = await import('../services/paypal-webhook.service.js');
+    const intent = await handlePayPalWebhook(rawBody, readPayPalWebhookHeaders(request));
     sendJson(response, 200, { received: true, intent });
   } catch (error) {
     console.error('[nami-payments] paypal webhook failed', error);

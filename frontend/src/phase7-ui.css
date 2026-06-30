@@ -21598,6 +21598,87 @@ body:has(.sidebar.is-icon-rail) .nami-pinned-profile-card {
   line-height: 1.5;
 }
 
+.nami-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12100;
+  pointer-events: none;
+}
+
+.nami-tutorial-spotlight {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 14px;
+  border: 2px solid rgba(117, 215, 255, 0.82);
+  box-shadow:
+    0 0 0 9999px rgba(3, 6, 10, 0.74),
+    0 0 28px rgba(117, 215, 255, 0.32);
+  transition:
+    top 180ms ease,
+    left 180ms ease,
+    width 180ms ease,
+    height 180ms ease;
+}
+
+.nami-tutorial-card {
+  position: fixed;
+  z-index: 1;
+  width: min(340px, calc(100vw - 32px));
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(117, 215, 255, 0.28);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(117, 215, 255, 0.16), transparent 44%),
+    rgba(8, 14, 22, 0.97);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.48);
+  pointer-events: auto;
+}
+
+.nami-tutorial-card.is-centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.nami-tutorial-card.is-anchored h2,
+.nami-tutorial-card.is-centered h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.nami-tutorial-card p {
+  margin: 0;
+  color: rgba(223, 236, 250, 0.9);
+  line-height: 1.5;
+}
+
+.nami-tutorial-progress {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.nami-tutorial-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(117, 215, 255, 0.22);
+}
+
+.nami-tutorial-progress-dot.is-active {
+  background: rgba(117, 215, 255, 0.92);
+  box-shadow: 0 0 10px rgba(117, 215, 255, 0.45);
+}
+
+.nami-tutorial-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 760px) {
   .channel-owner-settings-nav {
     grid-template-columns: 1fr 1fr;

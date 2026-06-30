@@ -1,4 +1,5 @@
 import { isAllowedChatRoomId } from '../chat-rooms.js';
+import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 
 export type GlobalChatConductSignal = 'Green' | 'Yellow' | 'Red' | 'Black';
@@ -91,8 +92,29 @@ export async function listGlobalChatMessages(input: {
     .slice(-limit);
 }
 
+function normalizeOwner(owner: string): string {
+  return owner.trim().toLowerCase();
+}
+
+export function assertGlobalChatAuthorAllowed(owner: string, author: string): void {
+  const normalizedAuthor = author.trim().toLowerCase();
+  const officialNodename = (process.env.NAMI_OFFICIAL_NODENAME ?? '').trim().toLowerCase();
+  const reserved =
+    normalizedAuthor === 'fiend' ||
+    (officialNodename.length > 0 && normalizedAuthor === officialNodename);
+
+  if (!reserved) {
+    return;
+  }
+
+  if (normalizeOwner(owner) !== normalizeOwner(config.officialOwner)) {
+    throw new Error('global_chat_author_reserved');
+  }
+}
+
 export async function appendGlobalChatMessage(input: {
   roomId: string;
+  owner: string;
   author: string;
   body: string;
   signal?: GlobalChatConductSignal;
@@ -102,11 +124,17 @@ export async function appendGlobalChatMessage(input: {
     throw new Error('global_chat_room_not_allowed');
   }
 
+  if (!input.owner.startsWith('0x')) {
+    throw new Error('global_chat_owner_invalid');
+  }
+
   const author = input.author.trim();
 
   if (author.length === 0 || author.length > MAX_AUTHOR_LENGTH) {
     throw new Error('global_chat_author_invalid');
   }
+
+  assertGlobalChatAuthorAllowed(input.owner, author);
 
   const body = input.body.trim();
 
@@ -124,7 +152,7 @@ export async function appendGlobalChatMessage(input: {
     time: formatMessageTime(createdAtMs),
     signal: normalizeSignal(input.signal),
     createdAtMs,
-    ...(input.memberId?.trim() ? { memberId: input.memberId.trim() } : {}),
+    memberId: normalizeOwner(input.owner),
   };
 
   const roomMessages = [...(projection.rooms[input.roomId] ?? []), message].slice(-MAX_MESSAGES_PER_ROOM);

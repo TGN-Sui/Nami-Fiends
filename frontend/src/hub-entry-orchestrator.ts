@@ -1,15 +1,31 @@
 import { playHubSuperBannerQueue } from './hub-super-banner-queue.js';
 import { consumeTutorialReplaySkipBanners, playTutorialIfPending } from './tutorial-queue.js';
 
-/** Hub entry: super banners (return visits) then tutorial v1 when pending. */
-export async function playHubEntrySequence(owner: string): Promise<void> {
+let hubEntryInFlight: Promise<void> | null = null;
+
+async function playHubEntrySequenceInner(owner: string): Promise<void> {
   const skipBannersForReplay = consumeTutorialReplaySkipBanners();
 
-  if (!skipBannersForReplay) {
-    await playHubSuperBannerQueue(owner);
+  try {
+    if (!skipBannersForReplay) {
+      await playHubSuperBannerQueue(owner);
+    }
+
     await playTutorialIfPending(owner);
-    return;
+  } catch (error) {
+    console.warn('[nami-hub-entry] sequence failed; continuing to hub', error);
+  }
+}
+
+/** Hub entry: super banners (return visits) then tutorial v1 when pending. */
+export async function playHubEntrySequence(owner: string): Promise<void> {
+  if (hubEntryInFlight) {
+    return hubEntryInFlight;
   }
 
-  // Settings replay already dispatched the overlay; skip banner queue and auto-pending play.
+  hubEntryInFlight = playHubEntrySequenceInner(owner).finally(() => {
+    hubEntryInFlight = null;
+  });
+
+  return hubEntryInFlight;
 }

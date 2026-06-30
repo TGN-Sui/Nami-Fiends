@@ -54,6 +54,7 @@ import { useDemoPerspective } from './demo-perspective-store.js';
 import { useNamiAdminStore } from './nami-admin-store.js';
 import { countPendingGameSubmissionTickets } from './nami-officials-submission-counts.js';
 import { countPendingPartnerBannerSubmissions } from './partner-banner-submission-store.js';
+import { TutorialReplaySettingsCard } from './TutorialReplaySettingsCard.js';
 import { ThemeSettingsPanel } from './theme.js';
 import { members, type NamiChannel, type NamiMember, type NamiPage } from './uiMockData.js';
 import { SettingsSidebar } from './SettingsSidebar.js';
@@ -399,6 +400,10 @@ export function SettingsScreen(props: {
             {channelOwnerView && ownedGameChannelId ? (
               <ChannelOwnerPromotionsStatusCard channelId={ownedGameChannelId} />
             ) : null}
+            <TutorialReplaySettingsCard
+              owner={owner}
+              onNavigateHub={() => props.onNavigate?.('hub')}
+            />
             <BoostCycleSettingsCard />
             <AccountConnectSection />
             <PartnerIntegrationPanel />

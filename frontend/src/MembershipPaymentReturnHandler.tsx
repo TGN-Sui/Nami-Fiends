@@ -1,10 +1,15 @@
 import { useEffect, type ReactElement } from 'react';
 
+import { confirmPromotionPurchase } from './channel-owner-promotions-store.js';
 import {
   confirmMockMembershipPayment,
   fetchMembershipPaymentIntent,
   isPaymentApiAvailable,
 } from './membership-payments-api.js';
+import {
+  confirmMockPromotionPayment,
+  fetchPromotionPaymentIntent,
+} from './promotion-payments-api.js';
 import {
   fetchMembershipSubscription,
   isMembershipSubscriptionApiAvailable,
@@ -32,6 +37,26 @@ export function MembershipPaymentReturnHandler(): ReactElement | null {
 
     void (async () => {
       try {
+        const promotionIntent = await fetchPromotionPaymentIntent(paymentId);
+
+        if (promotionIntent) {
+          let settledIntent = promotionIntent;
+
+          if (settledIntent.status !== 'paid' && params.has('mock_session')) {
+            settledIntent = await confirmMockPromotionPayment(paymentId);
+          }
+
+          if (settledIntent.status === 'paid') {
+            const result = confirmPromotionPurchase(settledIntent.product, paymentId);
+
+            if (!result.ok) {
+              console.warn('[nami-promotion-return] local fulfillment failed', result.reason);
+            }
+          }
+
+          return;
+        }
+
         let intent = await fetchMembershipPaymentIntent(paymentId);
 
         if (intent.status !== 'paid' && params.has('mock_session')) {
@@ -62,6 +87,7 @@ export function MembershipPaymentReturnHandler(): ReactElement | null {
         params.delete('payment_id');
         params.delete('mock_session');
         params.delete('mock_paypal_order');
+        params.delete('promotion');
 
         const next =
           window.location.pathname +

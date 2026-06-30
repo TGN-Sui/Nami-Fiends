@@ -4,6 +4,7 @@ import {
   appendGlobalChatMessage,
   listGlobalChatMessages,
 } from '../services/global-chat-messages.service.js';
+import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -80,26 +81,44 @@ export async function handleGlobalChatMessagesPost(
 ): Promise<void> {
   try {
     const body = await readJsonBody(request);
+    const owner = typeof body.owner === 'string' ? body.owner : '';
     const author = typeof body.author === 'string' ? body.author : '';
     const messageBody = typeof body.body === 'string' ? body.body : '';
-    const memberId = typeof body.memberId === 'string' ? body.memberId : undefined;
+
+    if (!owner.startsWith('0x')) {
+      sendJson(response, 400, { error: 'global_chat_owner_invalid' });
+      return;
+    }
+
+    await assertWalletAuthFromBody(owner, body);
 
     const message = await appendGlobalChatMessage({
       roomId,
+      owner,
       author,
       body: messageBody,
       ...(typeof body.signal === 'string' ? { signal: body.signal as 'Green' | 'Yellow' | 'Red' | 'Black' } : {}),
-      ...(memberId ? { memberId } : {}),
     });
 
     sendJson(response, 201, { message });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'global_chat_post_failed';
 
+    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'global_chat_author_reserved') {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
     if (
       message === 'global_chat_room_not_allowed' ||
       message === 'global_chat_author_invalid' ||
-      message === 'global_chat_body_invalid'
+      message === 'global_chat_body_invalid' ||
+      message === 'global_chat_owner_invalid'
     ) {
       sendJson(response, 400, { error: message });
       return;

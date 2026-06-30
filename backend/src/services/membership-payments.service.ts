@@ -458,6 +458,11 @@ async function markIntentPaid(
   }
 
   const intent = store.intents[index]!;
+
+  if (intent.status === 'paid') {
+    return intent;
+  }
+
   const now = Date.now();
 
   store.intents[index] = {
@@ -573,12 +578,21 @@ export async function confirmCryptoPayment(
     }
   }
 
-  return markIntentPaid(paymentId, {
+  const { assertTxDigestUnused, recordTxDigestUse } = await import('./crypto-tx-dedup.service.js');
+  await assertTxDigestUnused(txDigest, paymentId);
+
+  const paid = await markIntentPaid(paymentId, {
     provider: 'sui_chain',
     providerRef: txDigest,
     txDigest,
     receiptUrl: null,
   });
+
+  if (paid) {
+    await recordTxDigestUse(txDigest, paymentId);
+  }
+
+  return paid;
 }
 
 function parseStripeSignatureHeader(header: string): { timestamp: string; signatures: string[] } {
@@ -690,7 +704,18 @@ export async function handleStripeWebhook(
   });
 }
 
-export async function handlePayPalWebhook(rawBody: string): Promise<MembershipPaymentIntent | null> {
+export async function handlePayPalWebhook(
+  rawBody: string,
+  headers: import('./paypal-webhook.service.js').PayPalWebhookHeaders | null,
+): Promise<MembershipPaymentIntent | null> {
+  const { verifyPayPalWebhookSignature } = await import('./paypal-webhook.service.js');
+
+  if (!headers) {
+    throw new Error('Missing PayPal webhook transmission headers.');
+  }
+
+  await verifyPayPalWebhookSignature(rawBody, headers);
+
   const payload = JSON.parse(rawBody) as {
     event_type?: string;
     resource?: { custom_id?: string; id?: string };

@@ -13,6 +13,11 @@ import {
   handleStripeWebhookPost,
 } from './routes/membership-payments.routes.js';
 import {
+  handlePromotionPaymentIntentCreate,
+  handlePromotionPaymentIntentGet,
+  handlePromotionPaymentMockConfirmPost,
+} from './routes/promotion-payments.routes.js';
+import {
   handleGiftCatalogGet,
   handleGiftCatalogSync,
   handleGiftOptions,
@@ -34,6 +39,7 @@ import {
   handleMemberPreferencesUpsert,
 } from './routes/member-preferences.routes.js';
 import {
+  handleHubSuperBannersActivatePost,
   handleHubSuperBannersActiveGet,
   handleHubSuperBannersPublishPost,
 } from './routes/hub-super-banners.routes.js';
@@ -1067,6 +1073,26 @@ const routes: Route[] = [
   },
   {
     method: 'POST',
+    pattern: /^\/api\/payments\/promotions\/intents$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePromotionPaymentIntentCreate(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/payments\/promotions\/intents\/([^/]+)$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handlePromotionPaymentIntentGet(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/payments\/promotions\/intents\/([^/]+)\/mock\/confirm$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handlePromotionPaymentMockConfirmPost(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
     pattern: /^\/api\/payments\/webhooks\/stripe$/,
     paramNames: [],
     handler: (_registry, request, response) => handleStripeWebhookPost(request, response),
@@ -1180,7 +1206,15 @@ const routes: Route[] = [
     method: 'POST',
     pattern: /^\/api\/hub\/super-banners\/publish$/,
     paramNames: [],
-    handler: (_registry, request, response) => handleHubSuperBannersPublishPost(request, response),
+    handler: (registry, request, response) =>
+      handleHubSuperBannersPublishPost(registry, request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/hub\/super-banners\/activate$/,
+    paramNames: [],
+    handler: (registry, request, response) =>
+      handleHubSuperBannersActivatePost(registry, request, response),
   },
   {
     method: 'OPTIONS',

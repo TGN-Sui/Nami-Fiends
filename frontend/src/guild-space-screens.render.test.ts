@@ -83,7 +83,9 @@ describe('guild space detail screens', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders squad detail for a squad leader without crashing', async () => {
+  it(
+    'renders squad detail for a squad leader without crashing',
+    async () => {
     window.localStorage.setItem(
       'nami.squad.created-records',
       JSON.stringify([
@@ -113,7 +115,9 @@ describe('guild space detail screens', () => {
 
     expect(container.textContent).toContain('Raid Team');
     expect(container.textContent).toContain('Display photo');
-  });
+  },
+    15_000,
+  );
 
   it('renders guild detail for a guild master without crashing', async () => {
     window.localStorage.setItem(

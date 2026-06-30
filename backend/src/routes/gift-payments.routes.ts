@@ -379,7 +379,8 @@ export async function handleGiftPayPalWebhookPost(
 ): Promise<void> {
   try {
     const rawBody = await readRawBody(request);
-    const result = await handleGiftPayPalWebhook(rawBody);
+    const { readPayPalWebhookHeaders } = await import('../services/paypal-webhook.service.js');
+    const result = await handleGiftPayPalWebhook(rawBody, readPayPalWebhookHeaders(request));
     sendJson(response, 200, { received: true, result });
   } catch (error) {
     console.error('[nami-gifts] paypal webhook failed', error);

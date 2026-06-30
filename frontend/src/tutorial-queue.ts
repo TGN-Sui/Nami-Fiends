@@ -72,9 +72,9 @@ export async function persistTutorialStatus(
   });
 }
 
-export async function resetTutorialForReplay(owner: string): Promise<void> {
+export async function resetTutorialForReplay(owner: string): Promise<boolean> {
   if (!isMemberPreferencesApiAvailable()) {
-    return;
+    return false;
   }
 
   try {
@@ -83,19 +83,33 @@ export async function resetTutorialForReplay(owner: string): Promise<void> {
       tutorialStatus: 'pending',
       tutorialVersion: 0,
     });
+    return true;
   } catch {
-    // Replay still works locally when prefs sync fails (e.g. wallet auth prompt declined).
+    return false;
   }
 }
 
-export function scheduleTutorialReplay(owner: string): void {
+export function scheduleTutorialReplay(_owner: string): void {
   markTutorialReplayFromSettings();
+}
 
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      dispatchTutorialRestart(owner);
-    });
-  });
+/** Settings replay: reset prefs, skip banners on next Hub entry, then navigate to Hub. */
+export async function replayTutorialFromSettings(
+  owner: string,
+  onNavigateHub?: () => void,
+): Promise<void> {
+  if (!owner.startsWith('0x')) {
+    throw new Error('invalid_owner');
+  }
+
+  const resetOk = await resetTutorialForReplay(owner);
+
+  if (!resetOk) {
+    throw new Error('tutorial_reset_failed');
+  }
+
+  markTutorialReplayFromSettings();
+  onNavigateHub?.();
 }
 
 export function dispatchTutorialPlay(owner: string, force = false): void {

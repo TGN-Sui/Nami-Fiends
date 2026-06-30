@@ -91,6 +91,11 @@ export async function handleChannelPreferencesUpsert(
       return;
     }
 
+    if (message === 'channel_not_found' || message === 'not_channel_owner') {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
     console.error('[nami-channel-preferences] upsert failed', error);
     sendJson(response, 500, {
       error: 'channel_preferences_upsert_failed',

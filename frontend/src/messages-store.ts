@@ -282,13 +282,22 @@ export function appendGlobalChatMessage(
   const selfMember = getSelfMember();
 
   if (isGlobalChatMessagesApiAvailable()) {
-    void sendSharedGlobalChatMessage({
-      roomId: chatId,
-      author,
-      body: trimmedBody,
-      signal,
-      memberId: selfMember.id,
-    })
+    void import('./protocol-owner-resolve.js')
+      .then(({ resolveProtocolOwnerState }) => {
+        const owner = resolveProtocolOwnerState().owner;
+
+        if (!owner?.startsWith('0x')) {
+          throw new Error('wallet_auth_unavailable');
+        }
+
+        return sendSharedGlobalChatMessage({
+          roomId: chatId,
+          owner,
+          author,
+          body: trimmedBody,
+          signal,
+        });
+      })
       .then((sharedMessage) => {
         if (!sharedMessage) {
           return;

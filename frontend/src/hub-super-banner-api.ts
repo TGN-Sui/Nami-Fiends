@@ -36,6 +36,40 @@ export async function fetchActiveHubSuperBanners(): Promise<HubSuperBannerCampai
   return Array.isArray(payload.campaigns) ? payload.campaigns : [];
 }
 
+export async function activateHubSuperBannerOnBackend(input: {
+  owner: string;
+  channelId: string;
+}): Promise<{ status: string; expiresAtMs: number } | null> {
+  const base = apiBaseUrl();
+
+  if (!base) {
+    return null;
+  }
+
+  const auth = await createWalletAuthPayload(input.owner);
+
+  const response = await fetch(base + '/api/hub/super-banners/activate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      ...input,
+      auth,
+    }),
+  });
+
+  const payload = (await response.json()) as {
+    entitlement?: { status: string; expiresAtMs: number };
+    error?: string;
+    message?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? payload.message ?? 'Super Banner activation failed.');
+  }
+
+  return payload.entitlement ?? null;
+}
+
 export async function publishHubSuperBannerToBackend(input: {
   owner: string;
   channelId: string;
@@ -60,10 +94,15 @@ export async function publishHubSuperBannerToBackend(input: {
     }),
   });
 
+  const payload = (await response.json()) as {
+    campaign?: HubSuperBannerCampaign;
+    error?: string;
+    message?: string;
+  };
+
   if (!response.ok) {
-    return null;
+    throw new Error(payload.error ?? payload.message ?? 'Super Banner publish failed.');
   }
 
-  const payload = (await response.json()) as { campaign?: HubSuperBannerCampaign };
   return payload.campaign ?? null;
 }

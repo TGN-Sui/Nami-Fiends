@@ -13,7 +13,7 @@ import {
   confirmPromotionPurchase,
   formatPromotionPrice,
   PROMOTION_DURATION_LABELS,
-  requestPromotionPurchase,
+  startPromotionCheckout,
   resolvePartnerCarouselCoverUrl,
   resolveSuperBannerCoverUrl,
   savePartnerCarouselTicket,
@@ -34,6 +34,7 @@ import { PartnerCarouselPreviewOverlay } from './PartnerCarouselPreviewOverlay.j
 import type { MembershipCheckoutRail, MembershipCryptoAsset } from './membership-plans-store.js';
 import { usePublicPaymentConfig } from './use-public-payment-config.js';
 import type { NamiChannel } from './uiMockData.js';
+import { useProtocolOwner } from './wallet.js';
 
 const DURATIONS: PromotionDuration[] = ['24h', '72h', 'weekly'];
 
@@ -75,6 +76,7 @@ export function ChannelOwnerPromotionsPanel(props: {
   const promotions = useChannelOwnerPromotionsState(props.channel.id);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const { owner } = useProtocolOwner();
   const paymentConfig = usePublicPaymentConfig();
   const visibleCheckoutRails = resolveVisibleCheckoutRails(paymentConfig);
   const [checkoutRail, setCheckoutRail] = useState<MembershipCheckoutRail>(
@@ -119,15 +121,29 @@ export function ChannelOwnerPromotionsPanel(props: {
     setError('');
   }
 
-  function purchase(product: PromotionProduct, duration: PromotionDuration): void {
+  async function purchase(product: PromotionProduct, duration: PromotionDuration): Promise<void> {
     clearMessages();
-    const result = requestPromotionPurchase(props.channel.id, product, duration, checkoutRail, null);
+
+    const result = await startPromotionCheckout(
+      props.channel.id,
+      product,
+      duration,
+      checkoutRail,
+      null,
+      owner,
+    );
 
     if (result.ok) {
+      if (result.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+        return;
+      }
+
       setNotice(result.message);
-    } else {
-      setError(result.reason);
+      return;
     }
+
+    setError(result.reason);
   }
 
   function persistSuperCover(coverUrl: string): void {

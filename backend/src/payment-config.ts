@@ -65,6 +65,7 @@ export const paymentConfig = {
 
   paypalClientId: readString('PAYPAL_CLIENT_ID'),
   paypalClientSecret: readString('PAYPAL_CLIENT_SECRET'),
+  paypalWebhookId: readString('PAYPAL_WEBHOOK_ID'),
   paypalApiBase:
     paypalMode === 'live'
       ? 'https://api-m.paypal.com'

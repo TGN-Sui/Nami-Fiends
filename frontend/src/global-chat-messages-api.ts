@@ -1,4 +1,5 @@
 import { readIndexerUrl } from './protocol-env.js';
+import { createWalletAuthPayload } from './wallet-auth.js';
 import type { ConductSignal } from './uiMockData.js';
 
 export type SharedGlobalChatMessage = {
@@ -63,20 +64,23 @@ export async function fetchSharedGlobalChatMessages(
 
 export async function postSharedGlobalChatMessage(input: {
   roomId: string;
+  owner: string;
   author: string;
   body: string;
   signal: ConductSignal;
-  memberId?: string;
 }): Promise<SharedGlobalChatMessage | null> {
+  const auth = await createWalletAuthPayload(input.owner);
+
   const payload = await globalChatFetch<{ message: SharedGlobalChatMessage }>(
     '/api/global-chats/' + encodeURIComponent(input.roomId) + '/messages',
     {
       method: 'POST',
       body: JSON.stringify({
+        owner: input.owner,
+        auth,
         author: input.author,
         body: input.body,
         signal: input.signal,
-        ...(input.memberId ? { memberId: input.memberId } : {}),
       }),
     }
   );

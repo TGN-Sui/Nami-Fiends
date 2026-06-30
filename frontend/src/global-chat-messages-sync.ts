@@ -113,10 +113,10 @@ export function startSharedGlobalChatPolling(roomId: string): () => void {
 
 export async function sendSharedGlobalChatMessage(input: {
   roomId: string;
+  owner: string;
   author: string;
   body: string;
   signal: ConductSignal;
-  memberId?: string;
 }): Promise<SharedGlobalChatMessage | null> {
   if (!isGlobalChatMessagesApiAvailable()) {
     return null;

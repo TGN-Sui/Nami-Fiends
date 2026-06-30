@@ -90,6 +90,11 @@ export async function handleStudioPreferencesUpsert(
       return;
     }
 
+    if (message === 'not_studio_owner') {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
     console.error('[nami-studio-preferences] upsert failed', error);
     sendJson(response, 500, {
       error: 'studio_preferences_upsert_failed',

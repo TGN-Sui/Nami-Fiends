@@ -93,6 +93,9 @@ export async function handleChannelCoverUploadPost(
 
     await assertWalletAuthFromBody(owner, body);
 
+    const { assertChannelOwnerWallet } = await import('../services/channel-ownership.service.js');
+    await assertChannelOwnerWallet(channelId, owner);
+
     const result = await saveChannelCoverUpload({ owner, channelId, contentType, dataBase64 });
     sendJson(response, 201, result);
   } catch (error) {
@@ -100,6 +103,11 @@ export async function handleChannelCoverUploadPost(
 
     if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
       sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'channel_not_found' || message === 'not_channel_owner') {
+      sendJson(response, 403, { error: message });
       return;
     }
 
@@ -128,6 +136,9 @@ export async function handleStudioLogoUploadPost(
 
     await assertWalletAuthFromBody(owner, body);
 
+    const { assertStudioOwnerWallet } = await import('../services/studio-preferences.service.js');
+    await assertStudioOwnerWallet(studioId, owner);
+
     const result = await saveStudioLogoUpload({ owner, studioId, contentType, dataBase64 });
     sendJson(response, 201, result);
   } catch (error) {
@@ -135,6 +146,11 @@ export async function handleStudioLogoUploadPost(
 
     if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
       sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'not_studio_owner') {
+      sendJson(response, 403, { error: message });
       return;
     }
 

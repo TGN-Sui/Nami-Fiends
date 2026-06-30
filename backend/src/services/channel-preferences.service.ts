@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
+import { assertChannelOwnerWallet } from './channel-ownership.service.js';
 
 export type ChannelPreferences = {
   channelId: string;
@@ -48,6 +49,8 @@ export async function upsertChannelPreferences(
   if (!input.owner.startsWith('0x') || !input.channelId.trim()) {
     throw new Error('invalid_payload');
   }
+
+  await assertChannelOwnerWallet(input.channelId, input.owner);
 
   const owner = normalizeOwner(input.owner);
   const store = await readStore();

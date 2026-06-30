@@ -41,12 +41,22 @@ export type UpsertStudioPreferencesInput = {
   logoUrl?: string | null;
 };
 
+export async function assertStudioOwnerWallet(studioId: string, owner: string): Promise<void> {
+  const existing = await getStudioPreferences(studioId);
+
+  if (existing && normalizeOwner(existing.owner) !== normalizeOwner(owner)) {
+    throw new Error('not_studio_owner');
+  }
+}
+
 export async function upsertStudioPreferences(
   input: UpsertStudioPreferencesInput
 ): Promise<StudioPreferences> {
   if (!input.owner.startsWith('0x') || !input.studioId.trim()) {
     throw new Error('invalid_payload');
   }
+
+  await assertStudioOwnerWallet(input.studioId, input.owner);
 
   const owner = normalizeOwner(input.owner);
   const store = await readStore();

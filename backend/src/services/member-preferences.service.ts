@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
+import { listActiveHubSuperBanners } from './hub-super-banners.service.js';
 
 export type TutorialStatus = 'pending' | 'completed' | 'skipped';
 
@@ -80,18 +81,31 @@ export async function upsertMemberPreferences(
   const existing = index >= 0 ? store.preferences[index]! : defaultPreferences(input.owner);
   const now = Date.now();
 
-  const seenIds = [...existing.superBannerSeenIds];
-
   if (input.superBannerSeenIds) {
-    seenIds.splice(0, seenIds.length, ...input.superBannerSeenIds.filter((id) => id.trim()));
+    throw new Error('super_banner_seen_ids_replace_forbidden');
   }
+
+  const seenIds = [...existing.superBannerSeenIds];
 
   if (input.appendSuperBannerSeenId?.trim()) {
     const nextId = input.appendSuperBannerSeenId.trim();
+    const activeCampaigns = await listActiveHubSuperBanners();
+    const campaignExists = activeCampaigns.some((campaign) => campaign.id === nextId);
+
+    if (!campaignExists) {
+      throw new Error('invalid_super_banner_seen_id');
+    }
 
     if (!seenIds.includes(nextId)) {
       seenIds.push(nextId);
     }
+  }
+
+  if (
+    existing.hubFirstVisitCompleted &&
+    input.hubFirstVisitCompleted === false
+  ) {
+    throw new Error('hub_first_visit_locked');
   }
 
   const next: MemberPreferences = {

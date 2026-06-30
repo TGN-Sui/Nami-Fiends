@@ -585,6 +585,12 @@ async function markGiftIntentPaid(
   }
 
   const intent = store.intents[index]!;
+
+  if (intent.status === 'paid') {
+    const fulfillment = store.fulfillments.find((row) => row.intentId === intent.id) ?? null;
+    return fulfillment ? { intent, fulfillment } : null;
+  }
+
   const gift = await findGiftCatalogEntry(intent.giftId);
 
   if (!gift) {
@@ -757,12 +763,21 @@ export async function fulfillGoonWalletGift(
 
   await verifyGoonTreasuryReceipt(intent, txDigest);
 
-  return markGiftIntentPaid(paymentId, {
+  const { assertTxDigestUnused, recordTxDigestUse } = await import('./crypto-tx-dedup.service.js');
+  await assertTxDigestUnused(txDigest, paymentId);
+
+  const result = await markGiftIntentPaid(paymentId, {
     provider: 'goon_wallet',
     providerRef: txDigest,
     txDigest,
     receiptUrl: null,
   });
+
+  if (result) {
+    await recordTxDigestUse(txDigest, paymentId);
+  }
+
+  return result;
 }
 
 export async function confirmGiftCryptoPayment(
@@ -786,12 +801,21 @@ export async function confirmGiftCryptoPayment(
 
   await verifyCryptoTreasuryReceipt(intent, txDigest);
 
-  return markGiftIntentPaid(paymentId, {
+  const { assertTxDigestUnused, recordTxDigestUse } = await import('./crypto-tx-dedup.service.js');
+  await assertTxDigestUnused(txDigest, paymentId);
+
+  const result = await markGiftIntentPaid(paymentId, {
     provider: 'sui_chain',
     providerRef: txDigest,
     txDigest,
     receiptUrl: null,
   });
+
+  if (result) {
+    await recordTxDigestUse(txDigest, paymentId);
+  }
+
+  return result;
 }
 
 function parseStripeSignatureHeader(header: string): { timestamp: string; signatures: string[] } {
@@ -886,8 +910,17 @@ export async function handleGiftStripeWebhook(
 }
 
 export async function handleGiftPayPalWebhook(
-  rawBody: string
+  rawBody: string,
+  headers: import('./paypal-webhook.service.js').PayPalWebhookHeaders | null,
 ): Promise<{ intent: GiftPaymentIntent; fulfillment: GiftFulfillment } | null> {
+  const { verifyPayPalWebhookSignature } = await import('./paypal-webhook.service.js');
+
+  if (!headers) {
+    throw new Error('Missing PayPal webhook transmission headers.');
+  }
+
+  await verifyPayPalWebhookSignature(rawBody, headers);
+
   const payload = JSON.parse(rawBody) as {
     event_type?: string;
     resource?: { custom_id?: string; id?: string };
