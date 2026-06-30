@@ -8,6 +8,7 @@ import {
   getOfficialsSubmissions,
   syncOfficialsSubmissions,
 } from '../services/officials-submissions.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -60,6 +61,7 @@ export async function handleOfficialsSubmissionsSync(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'officials-sync');
     const body = await readJsonBody(request);
     const { scope, owner } = await resolveOfficialsSyncScope(request, body);
     const syncEmail = typeof body.syncEmail === 'string' ? body.syncEmail : '';
@@ -103,6 +105,11 @@ export async function handleOfficialsSubmissionsSync(
       message === 'officials_sync_auth_invalid'
     ) {
       sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
       return;
     }
 

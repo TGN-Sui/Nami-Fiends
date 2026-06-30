@@ -86,7 +86,7 @@ export function PassportClaimFulfillmentCard(): ReactElement | null {
         nodenameRegistryId,
       });
       const result = await signAndExecute({ transaction: tx });
-      await completePassportFulfillment(fulfillment.id, result.digest);
+      await completePassportFulfillment(fulfillment.id, result.digest, owner);
       setNotice('Passport mint submitted on-chain. Badge book access is unlocked.');
       setFulfillment({ ...fulfillment, status: 'completed', onchainTxDigest: result.digest });
     } catch (cause) {

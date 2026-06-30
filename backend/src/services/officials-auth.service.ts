@@ -2,6 +2,7 @@ import type { IncomingMessage } from 'node:http';
 
 import { config } from '../config.js';
 import {
+  assertMandatoryWalletAuthFromBody,
   type WalletAuthPayload,
   verifyWalletAuthPayload,
 } from './wallet-auth.service.js';
@@ -47,14 +48,26 @@ async function assertOfficialsWalletAuth(
   }
 }
 
+export async function assertOfficialOwnerFromBody(body: Record<string, unknown>): Promise<string> {
+  const owner = typeof body.owner === 'string' ? body.owner : '';
+
+  if (!owner.startsWith('0x')) {
+    throw new Error('invalid_owner');
+  }
+
+  if (!isOfficialOwnerAddress(owner)) {
+    throw new Error('official_owner_required');
+  }
+
+  await assertMandatoryWalletAuthFromBody(owner, body);
+
+  return owner;
+}
+
 export async function resolveOfficialsSyncScope(
   request: IncomingMessage,
   body: { owner?: unknown; auth?: unknown }
 ): Promise<{ scope: OfficialsSyncScope; owner: string | null }> {
-  if (!config.testLaunch) {
-    return { scope: 'open', owner: null };
-  }
-
   if (officialsAuthConfig.syncSecret !== '') {
     if (readSyncSecretHeader(request) === officialsAuthConfig.syncSecret) {
       return { scope: 'secret', owner: null };

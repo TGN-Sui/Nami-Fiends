@@ -31,10 +31,10 @@ export function PassportFulfillmentPanel(): ReactElement | null {
       return;
     }
 
-    void fetchPendingPassportFulfillments()
+    void fetchPendingPassportFulfillments(owner!)
       .then(setFulfillments)
       .catch(() => setFulfillments([]));
-  }, [canOperate]);
+  }, [canOperate, owner]);
 
   if (!canOperate) {
     return null;
@@ -46,7 +46,7 @@ export function PassportFulfillmentPanel(): ReactElement | null {
     setError(null);
 
     try {
-      const updated = await retryPassportSuinsProvision(fulfillment.id);
+      const updated = await retryPassportSuinsProvision(fulfillment.id, owner!);
 
       if (!updated) {
         setError('Could not retry SuiNS provisioning.');

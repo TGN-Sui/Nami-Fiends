@@ -94,6 +94,14 @@ export async function listPendingMembershipFulfillments(): Promise<MembershipFul
   return store.fulfillments.filter((row) => row.status === 'pending_onchain');
 }
 
+export async function getMembershipFulfillmentById(
+  fulfillmentId: string
+): Promise<MembershipFulfillment | null> {
+  const store = await readStore();
+
+  return store.fulfillments.find((row) => row.id === fulfillmentId) ?? null;
+}
+
 export async function getPendingFulfillmentForOwner(
   owner: string
 ): Promise<MembershipFulfillment | null> {

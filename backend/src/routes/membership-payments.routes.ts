@@ -11,6 +11,7 @@ import {
   type MembershipCryptoAsset,
   type MembershipPaymentRail,
 } from '../services/membership-payments.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -80,6 +81,7 @@ export async function handlePaymentIntentCreate(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'membership-payment-intent');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const tier = typeof body.tier === 'string' ? body.tier : '';
@@ -136,10 +138,17 @@ export async function handlePaymentIntentCreate(
 
     sendJson(response, 201, result);
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
+      return;
+    }
+
     console.error('[nami-payments] create intent failed', error);
     sendJson(response, 500, {
       error: 'payment_intent_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message,
     });
   }
 }

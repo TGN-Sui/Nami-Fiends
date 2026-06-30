@@ -333,6 +333,10 @@ export function approvePendingClaims(
   });
 
   void import('./passport-fulfillment-api.js').then(({ queuePassportFulfillmentsForClaims }) => {
+    if (!reviewerOwner?.startsWith('0x')) {
+      return;
+    }
+
     void queuePassportFulfillmentsForClaims(
       approvedClaims.map((claim) => ({
         claimId: claim.id,
@@ -341,7 +345,8 @@ export function approvePendingClaims(
         nodename: claim.nodename,
         submitterAddress: claim.submitterAddress,
         archetype: claim.archetype,
-      }))
+      })),
+      reviewerOwner
     );
   });
 

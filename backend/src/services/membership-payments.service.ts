@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -9,6 +8,7 @@ import {
 import { createSuiClient } from '../sui.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 import { activateMembershipFromPaymentIntent } from './membership-subscriptions.service.js';
+import { verifyStripeWebhookSignature } from './stripe-webhook-signature.service.js';
 
 export type MembershipPaymentRail = 'card' | 'paypal' | 'other';
 
@@ -595,26 +595,6 @@ export async function confirmCryptoPayment(
   return paid;
 }
 
-function parseStripeSignatureHeader(header: string): { timestamp: string; signatures: string[] } {
-  const parts = header.split(',').map((part) => part.trim());
-  let timestamp = '';
-  const signatures: string[] = [];
-
-  for (const part of parts) {
-    const [key, value] = part.split('=');
-
-    if (key === 't') {
-      timestamp = value ?? '';
-    }
-
-    if (key === 'v1' && value) {
-      signatures.push(value);
-    }
-  }
-
-  return { timestamp, signatures };
-}
-
 export async function handleStripeWebhook(
   rawBody: string,
   signatureHeader: string | null
@@ -656,23 +636,7 @@ export async function handleStripeWebhook(
     throw new Error('Missing Stripe signature header.');
   }
 
-  const { timestamp, signatures } = parseStripeSignatureHeader(signatureHeader);
-  const signedPayload = timestamp + '.' + rawBody;
-  const expected = createHmac('sha256', paymentConfig.stripeWebhookSecret)
-    .update(signedPayload)
-    .digest('hex');
-
-  const verified = signatures.some((signature) => {
-    try {
-      return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
-    } catch {
-      return false;
-    }
-  });
-
-  if (!verified) {
-    throw new Error('Invalid Stripe webhook signature.');
-  }
+  verifyStripeWebhookSignature(rawBody, signatureHeader, paymentConfig.stripeWebhookSecret);
 
   const event = JSON.parse(rawBody) as {
     type: string;

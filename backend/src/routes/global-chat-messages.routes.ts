@@ -4,6 +4,7 @@ import {
   appendGlobalChatMessage,
   listGlobalChatMessages,
 } from '../services/global-chat-messages.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -80,6 +81,7 @@ export async function handleGlobalChatMessagesPost(
   roomId: string
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'global-chat-post');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const author = typeof body.author === 'string' ? body.author : '';
@@ -106,6 +108,11 @@ export async function handleGlobalChatMessagesPost(
 
     if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
       sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
       return;
     }
 

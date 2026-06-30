@@ -115,17 +115,24 @@ function readYamlEnvValue(filePath, key) {
   return '';
 }
 
-function resolveIndexerUrl(frontendEnv, backendEnv) {
+function isLocalIndexerUrl(url) {
+  if (!url) {
+    return false;
+  }
+
+  try {
+    const { hostname } = new URL(url);
+    return hostname === '127.0.0.1' || hostname === 'localhost';
+  } catch {
+    return /localhost|127\.0\.0\.1/.test(url);
+  }
+}
+
+function resolveLiveProbeUrl(frontendEnv, backendEnv) {
   const cli = readArg('--indexer-url').trim().replace(/\/$/, '');
 
   if (cli) {
     return cli;
-  }
-
-  const fromFrontend = frontendEnv?.VITE_NAMI_INDEXER_URL ?? '';
-
-  if (!isPlaceholder(fromFrontend)) {
-    return fromFrontend.replace(/\/$/, '');
   }
 
   const fromBackend = backendEnv?.NAMI_PUBLIC_API_URL ?? '';
@@ -149,6 +156,16 @@ function resolveIndexerUrl(frontendEnv, backendEnv) {
     } catch {
       // ignore
     }
+  }
+
+  const fromFrontend = frontendEnv?.VITE_NAMI_INDEXER_URL ?? '';
+
+  if (!isPlaceholder(fromFrontend) && !isLocalIndexerUrl(fromFrontend)) {
+    return fromFrontend.replace(/\/$/, '');
+  }
+
+  if (!isPlaceholder(fromFrontend)) {
+    return fromFrontend.replace(/\/$/, '');
   }
 
   return '';
@@ -320,7 +337,11 @@ async function probeLiveSecurityReview(indexerUrl) {
     if (security.backup_holder_configured) {
       pass('live backup holder configured');
     } else {
-      fail('live backup holder configured', 'Set NAMI_ADMIN_CAP_BACKUP_HOLDER on Render');
+      const target = isLocalIndexerUrl(indexerUrl) ? 'backend/.env (local dev)' : 'Render';
+      fail(
+        'live backup holder configured',
+        'Set NAMI_ADMIN_CAP_BACKUP_HOLDER on ' + target + ' — probed ' + indexerUrl,
+      );
     }
 
     if (security.mock_payments_disabled) {
@@ -402,6 +423,23 @@ if (backendEnv?.NAMI_PAYMENT_ALLOW_MOCK === 'false' || backendEnv?.NAMI_TEST_LAU
   fail('NAMI_PAYMENT_ALLOW_MOCK=false', 'Mock providers must be disabled on test launch');
 }
 
+const renderWalletAuth = readYamlEnvValue(path.join(rootDir, 'render.yaml'), 'NAMI_REQUIRE_WALLET_AUTH');
+const backendWalletAuth = backendEnv?.NAMI_REQUIRE_WALLET_AUTH ?? '';
+const walletAuthEnabled =
+  backendWalletAuth === 'true' ||
+  backendWalletAuth === '1' ||
+  renderWalletAuth === 'true' ||
+  renderWalletAuth === '1';
+
+if (walletAuthEnabled) {
+  pass('NAMI_REQUIRE_WALLET_AUTH=true (signed writes required)');
+} else {
+  fail(
+    'NAMI_REQUIRE_WALLET_AUTH=true',
+    'Set NAMI_REQUIRE_WALLET_AUTH=true on Render and backend env for test launch',
+  );
+}
+
 const officialOwner = backendEnv?.NAMI_OFFICIAL_OWNER ?? '';
 
 if (isConfiguredWalletAddress(officialOwner)) {
@@ -456,7 +494,7 @@ if (fs.existsSync(path.join(rootDir, 'docs', 'admincap-custody.md'))) {
   fail('docs/admincap-custody.md present');
 }
 
-const indexerUrl = resolveIndexerUrl(frontendEnv, backendEnv);
+const indexerUrl = resolveLiveProbeUrl(frontendEnv, backendEnv);
 
 if (indexerUrl) {
   await probeLiveCors(indexerUrl);

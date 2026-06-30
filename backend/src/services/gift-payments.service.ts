@@ -1,4 +1,4 @@
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 import {
   giftRevenueSplitPercents,
@@ -9,6 +9,7 @@ import { createSuiClient } from '../sui.js';
 import { readJsonFile, writeJsonFile } from '../storage.js';
 import type { MembershipCryptoAsset } from './membership-payments.service.js';
 import { getPublicPaymentConfig } from './membership-payments.service.js';
+import { verifyStripeWebhookSignature } from './stripe-webhook-signature.service.js';
 import {
   DEFAULT_OFFICIAL_GIFT_CATALOG,
   findGiftCatalogEntry,
@@ -818,26 +819,6 @@ export async function confirmGiftCryptoPayment(
   return result;
 }
 
-function parseStripeSignatureHeader(header: string): { timestamp: string; signatures: string[] } {
-  const parts = header.split(',').map((part) => part.trim());
-  let timestamp = '';
-  const signatures: string[] = [];
-
-  for (const part of parts) {
-    const [key, value] = part.split('=');
-
-    if (key === 't') {
-      timestamp = value ?? '';
-    }
-
-    if (key === 'v1' && value) {
-      signatures.push(value);
-    }
-  }
-
-  return { timestamp, signatures };
-}
-
 export async function handleGiftStripeWebhook(
   rawBody: string,
   signatureHeader: string | null
@@ -868,23 +849,7 @@ export async function handleGiftStripeWebhook(
     throw new Error('Missing Stripe signature header.');
   }
 
-  const { timestamp, signatures } = parseStripeSignatureHeader(signatureHeader);
-  const signedPayload = timestamp + '.' + rawBody;
-  const expected = createHmac('sha256', paymentConfig.stripeWebhookSecret)
-    .update(signedPayload)
-    .digest('hex');
-
-  const verified = signatures.some((signature) => {
-    try {
-      return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
-    } catch {
-      return false;
-    }
-  });
-
-  if (!verified) {
-    throw new Error('Invalid Stripe webhook signature.');
-  }
+  verifyStripeWebhookSignature(rawBody, signatureHeader, paymentConfig.stripeWebhookSecret);
 
   const event = JSON.parse(rawBody) as {
     type: string;

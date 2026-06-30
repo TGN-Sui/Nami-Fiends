@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { config } from '../config.js';
 import { syncRegisteredMemberAccount } from '../services/officials-submissions.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
@@ -50,6 +51,7 @@ export async function handleMemberRegistrySync(
   }
 
   try {
+    assertRateLimit(request, 'member-registry-sync');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
 
@@ -67,6 +69,11 @@ export async function handleMemberRegistrySync(
 
     if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
       sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
       return;
     }
 

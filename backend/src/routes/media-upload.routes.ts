@@ -7,6 +7,7 @@ import {
   saveChannelCoverUpload,
   saveStudioLogoUpload,
 } from '../services/media-upload.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 import {
   assertWalletAuthFromBody,
 } from '../services/wallet-auth.service.js';
@@ -47,6 +48,7 @@ export async function handleAvatarUploadPost(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'media-avatar-upload');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const contentType = typeof body.contentType === 'string' ? body.contentType : '';
@@ -68,6 +70,11 @@ export async function handleAvatarUploadPost(
       return;
     }
 
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
+      return;
+    }
+
     console.error('[nami-media] avatar upload failed', error);
     sendJson(response, 400, {
       error: 'avatar_upload_failed',
@@ -81,6 +88,7 @@ export async function handleChannelCoverUploadPost(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'media-channel-cover-upload');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const channelId = typeof body.channelId === 'string' ? body.channelId : '';
@@ -111,6 +119,11 @@ export async function handleChannelCoverUploadPost(
       return;
     }
 
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
+      return;
+    }
+
     console.error('[nami-media] channel cover upload failed', error);
     sendJson(response, 400, {
       error: 'channel_cover_upload_failed',
@@ -124,6 +137,7 @@ export async function handleStudioLogoUploadPost(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'media-studio-logo-upload');
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
     const studioId = typeof body.studioId === 'string' ? body.studioId : '';
@@ -151,6 +165,11 @@ export async function handleStudioLogoUploadPost(
 
     if (message === 'not_studio_owner') {
       sendJson(response, 403, { error: message });
+      return;
+    }
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
       return;
     }
 

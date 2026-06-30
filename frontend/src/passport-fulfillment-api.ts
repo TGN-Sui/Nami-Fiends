@@ -1,4 +1,11 @@
-import { readIndexerUrl } from './protocol-env.js';
+import { readIndexerUrl, readWalletAuthRequired } from './protocol-env.js';
+import {
+  canSignWalletAuthWithZkLogin,
+  createCatalogSyncAuthPayload,
+  createEquipSyncAuthPayload,
+  signWalletAuthWithZkLogin,
+  type WalletAuthPayload,
+} from './wallet-auth.js';
 
 export type PassportFulfillment = {
   id: string;
@@ -58,13 +65,44 @@ async function fulfillmentFetch<T>(path: string, init?: RequestInit): Promise<T 
   return payload;
 }
 
+async function resolveOfficialOwnerAuth(owner: string): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired()) {
+    return null;
+  }
+
+  if (canSignWalletAuthWithZkLogin(owner)) {
+    return signWalletAuthWithZkLogin(owner);
+  }
+
+  return createCatalogSyncAuthPayload(owner);
+}
+
+async function resolveFulfillmentOperatorAuth(owner: string): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired()) {
+    return null;
+  }
+
+  if (canSignWalletAuthWithZkLogin(owner)) {
+    return signWalletAuthWithZkLogin(owner);
+  }
+
+  return createEquipSyncAuthPayload(owner);
+}
+
 export function isPassportFulfillmentApiAvailable(): boolean {
   return apiBaseUrl() !== null;
 }
 
-export async function fetchPendingPassportFulfillments(): Promise<PassportFulfillment[]> {
+export async function fetchPendingPassportFulfillments(
+  operatorOwner: string
+): Promise<PassportFulfillment[]> {
+  const auth = await resolveOfficialOwnerAuth(operatorOwner);
   const payload = await fulfillmentFetch<{ fulfillments: PassportFulfillment[] }>(
-    '/api/passport/fulfillment/pending'
+    '/api/passport/fulfillment/pending',
+    {
+      method: 'POST',
+      body: JSON.stringify({ owner: operatorOwner, auth }),
+    }
   );
 
   return payload?.fulfillments ?? [];
@@ -91,17 +129,19 @@ export async function fetchPendingPassportFulfillmentForEmail(
 }
 
 export async function queuePassportFulfillmentsForClaims(
-  claims: QueuePassportFulfillmentClaim[]
+  claims: QueuePassportFulfillmentClaim[],
+  operatorOwner: string
 ): Promise<PassportFulfillment[]> {
   if (claims.length === 0) {
     return [];
   }
 
+  const auth = await resolveOfficialOwnerAuth(operatorOwner);
   const payload = await fulfillmentFetch<{ fulfillments: PassportFulfillment[] }>(
     '/api/passport/fulfillment/queue',
     {
       method: 'POST',
-      body: JSON.stringify({ claims }),
+      body: JSON.stringify({ owner: operatorOwner, auth, claims }),
     }
   );
 
@@ -109,11 +149,16 @@ export async function queuePassportFulfillmentsForClaims(
 }
 
 export async function retryPassportSuinsProvision(
-  fulfillmentId: string
+  fulfillmentId: string,
+  operatorOwner: string
 ): Promise<PassportFulfillment | null> {
+  const auth = await resolveOfficialOwnerAuth(operatorOwner);
   const payload = await fulfillmentFetch<{ fulfillment: PassportFulfillment }>(
     '/api/passport/fulfillment/' + encodeURIComponent(fulfillmentId) + '/retry-suins',
-    { method: 'POST', body: '{}' }
+    {
+      method: 'POST',
+      body: JSON.stringify({ owner: operatorOwner, auth }),
+    }
   );
 
   return payload?.fulfillment ?? null;
@@ -121,13 +166,15 @@ export async function retryPassportSuinsProvision(
 
 export async function completePassportFulfillment(
   fulfillmentId: string,
-  txDigest: string
+  txDigest: string,
+  operatorOwner: string
 ): Promise<PassportFulfillment | null> {
+  const auth = await resolveFulfillmentOperatorAuth(operatorOwner);
   const payload = await fulfillmentFetch<{ fulfillment: PassportFulfillment }>(
     '/api/passport/fulfillment/' + encodeURIComponent(fulfillmentId) + '/complete',
     {
       method: 'POST',
-      body: JSON.stringify({ txDigest }),
+      body: JSON.stringify({ owner: operatorOwner, auth, txDigest }),
     }
   );
 

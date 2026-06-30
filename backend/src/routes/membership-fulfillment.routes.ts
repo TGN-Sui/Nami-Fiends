@@ -1,10 +1,18 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
+  assertFulfillmentOperatorFromBody,
+  assertOfficialOwnerFulfillmentAccess,
+  fulfillmentPendingListRequiresAuth,
+  readFulfillmentAuthErrorStatus,
+} from '../services/fulfillment-auth.service.js';
+import {
   completeMembershipFulfillment,
+  getMembershipFulfillmentById,
   getPendingFulfillmentForOwner,
   listPendingMembershipFulfillments,
 } from '../services/membership-fulfillment.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -37,12 +45,62 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonRecord> {
   return JSON.parse(raw) as JsonRecord;
 }
 
+function handleFulfillmentAuthError(
+  response: ServerResponse,
+  error: unknown,
+  logLabel: string
+): void {
+  const message = error instanceof Error ? error.message : 'fulfillment_request_failed';
+
+  if (
+    message === 'wallet_auth_required' ||
+    message === 'wallet_auth_invalid' ||
+    message === 'official_owner_required' ||
+    message === 'fulfillment_operator_required' ||
+    message === 'invalid_owner'
+  ) {
+    sendJson(response, readFulfillmentAuthErrorStatus(message), { error: message });
+    return;
+  }
+
+  if (message === 'rate_limit_exceeded') {
+    sendJson(response, 429, { error: message });
+    return;
+  }
+
+  console.error(logLabel, error);
+  sendJson(response, 500, {
+    error: 'fulfillment_request_failed',
+    message,
+  });
+}
+
 export async function handleMembershipFulfillmentPendingGet(
-  _request: IncomingMessage,
+  request: IncomingMessage,
   response: ServerResponse
 ): Promise<void> {
+  if (fulfillmentPendingListRequiresAuth()) {
+    sendJson(response, 401, { error: 'fulfillment_auth_required' });
+    return;
+  }
+
   const fulfillments = await listPendingMembershipFulfillments();
   sendJson(response, 200, { fulfillments });
+}
+
+export async function handleMembershipFulfillmentPendingPost(
+  request: IncomingMessage,
+  response: ServerResponse
+): Promise<void> {
+  try {
+    assertRateLimit(request, 'membership-fulfillment-pending');
+    const body = await readJsonBody(request);
+    await assertOfficialOwnerFulfillmentAccess(body);
+    const fulfillments = await listPendingMembershipFulfillments();
+    sendJson(response, 200, { fulfillments });
+  } catch (error) {
+    handleFulfillmentAuthError(response, error, '[nami-fulfillment] pending list failed');
+  }
 }
 
 export async function handleMembershipFulfillmentOwnerGet(
@@ -66,7 +124,24 @@ export async function handleMembershipFulfillmentComplete(
   fulfillmentId: string
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'membership-fulfillment-complete');
     const body = await readJsonBody(request);
+    const owner = typeof body.owner === 'string' ? body.owner : '';
+
+    if (!owner.startsWith('0x')) {
+      sendJson(response, 400, { error: 'invalid_owner' });
+      return;
+    }
+
+    const fulfillment = await getMembershipFulfillmentById(fulfillmentId);
+
+    if (!fulfillment) {
+      sendJson(response, 404, { error: 'not_found' });
+      return;
+    }
+
+    await assertFulfillmentOperatorFromBody(body, fulfillment.owner);
+
     const txDigest = typeof body.txDigest === 'string' ? body.txDigest : '';
 
     if (!txDigest) {
@@ -74,19 +149,15 @@ export async function handleMembershipFulfillmentComplete(
       return;
     }
 
-    const fulfillment = await completeMembershipFulfillment(fulfillmentId, txDigest);
+    const completed = await completeMembershipFulfillment(fulfillmentId, txDigest);
 
-    if (!fulfillment) {
+    if (!completed) {
       sendJson(response, 404, { error: 'not_found' });
       return;
     }
 
-    sendJson(response, 200, { fulfillment });
+    sendJson(response, 200, { fulfillment: completed });
   } catch (error) {
-    console.error('[nami-fulfillment] complete failed', error);
-    sendJson(response, 500, {
-      error: 'fulfillment_complete_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleFulfillmentAuthError(response, error, '[nami-fulfillment] complete failed');
   }
 }

@@ -201,6 +201,43 @@ export async function assertWalletAuthFromBody(
   }
 }
 
+/** Always verify wallet signatures — used for admin routes regardless of NAMI_REQUIRE_WALLET_AUTH. */
+export async function assertMandatoryWalletAuthFromBody(
+  owner: string,
+  body: Record<string, unknown>
+): Promise<void> {
+  const auth = readWalletAuthFromBody(body);
+
+  if (!auth || typeof auth.signature !== 'string' || typeof auth.timestampMs !== 'number') {
+    throw new Error('wallet_auth_required');
+  }
+
+  if (!auth.signature.trim()) {
+    throw new Error('wallet_auth_required');
+  }
+
+  const verifyPayload: WalletAuthPayload = {
+    owner,
+    signature: auth.signature,
+    timestampMs: auth.timestampMs,
+  };
+
+  if (auth.signerAddress !== undefined) {
+    verifyPayload.signerAddress = auth.signerAddress;
+  }
+
+  const verified = await verifyWalletAuthPayload(verifyPayload);
+
+  if (!verified) {
+    if (config.testLaunch) {
+      const reason = diagnoseWalletAuthFailure(owner, auth);
+      throw new Error(reason ? 'wallet_auth_invalid:' + reason : 'wallet_auth_invalid');
+    }
+
+    throw new Error('wallet_auth_invalid');
+  }
+}
+
 export function walletAuthPublicConfig(): { requireSignature: boolean } {
   return {
     requireSignature: walletAuthConfig.requireSignature,

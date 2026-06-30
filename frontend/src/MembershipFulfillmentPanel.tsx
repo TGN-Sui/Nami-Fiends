@@ -43,10 +43,10 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
       return;
     }
 
-    void fetchPendingMembershipFulfillments()
+    void fetchPendingMembershipFulfillments(owner!)
       .then(setFulfillments)
       .catch(() => setFulfillments([]));
-  }, [canOperate]);
+  }, [canOperate, owner]);
 
   if (!canOperate) {
     return null;
@@ -86,7 +86,7 @@ export function MembershipFulfillmentPanel(): ReactElement | null {
       });
 
       const result = await signAndExecute({ transaction: tx });
-      await completeMembershipFulfillment(fulfillment.id, result.digest);
+      await completeMembershipFulfillment(fulfillment.id, result.digest, owner!);
 
       setNotice(
         'On-chain ' +

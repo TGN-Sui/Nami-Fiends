@@ -143,6 +143,14 @@ export async function getPassportFulfillmentForClaim(
   return store.fulfillments.find((row) => row.claimId === claimId) ?? null;
 }
 
+export async function getPassportFulfillmentById(
+  fulfillmentId: string
+): Promise<PassportFulfillment | null> {
+  const store = await readStore();
+
+  return store.fulfillments.find((row) => row.id === fulfillmentId) ?? null;
+}
+
 export async function getPendingPassportFulfillmentForEmail(
   email: string
 ): Promise<PassportFulfillment | null> {

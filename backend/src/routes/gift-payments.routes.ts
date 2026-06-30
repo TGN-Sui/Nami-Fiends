@@ -16,6 +16,7 @@ import {
 } from '../services/gift-payments.service.js';
 import type { MembershipCryptoAsset } from '../services/membership-payments.service.js';
 import { isOfficialOwnerAddress } from '../services/officials-auth.service.js';
+import { assertRateLimit } from '../services/rate-limit.service.js';
 import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -135,6 +136,7 @@ export async function handleGiftIntentCreate(
   response: ServerResponse
 ): Promise<void> {
   try {
+    assertRateLimit(request, 'gift-payment-intent');
     const body = await readJsonBody(request);
     const senderOwner = typeof body.senderOwner === 'string' ? body.senderOwner : '';
     const senderMemberId = typeof body.senderMemberId === 'string' ? body.senderMemberId : '';
@@ -228,6 +230,11 @@ export async function handleGiftIntentCreate(
 
     if (message === 'wallet_auth_required' || message.startsWith('wallet_auth_invalid')) {
       sendJson(response, 401, { error: 'wallet_auth_invalid', message });
+      return;
+    }
+
+    if (message === 'rate_limit_exceeded') {
+      sendJson(response, 429, { error: message });
       return;
     }
 

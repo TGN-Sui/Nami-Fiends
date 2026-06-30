@@ -77,7 +77,7 @@ export function MembershipOnChainFulfillmentCard(): ReactElement | null {
       });
 
       const result = await signAndExecute({ transaction: tx });
-      await completeMembershipFulfillment(fulfillment.id, result.digest);
+      await completeMembershipFulfillment(fulfillment.id, result.digest, owner);
 
       setNotice('On-chain ' + fulfillment.tier + ' upgrade applied to your passport.');
       setFulfillment(null);

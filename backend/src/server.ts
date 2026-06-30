@@ -61,12 +61,14 @@ import {
   handleMembershipFulfillmentComplete,
   handleMembershipFulfillmentOwnerGet,
   handleMembershipFulfillmentPendingGet,
+  handleMembershipFulfillmentPendingPost,
 } from './routes/membership-fulfillment.routes.js';
 import {
   handlePassportFulfillmentClaimGet,
   handlePassportFulfillmentComplete,
   handlePassportFulfillmentEmailGet,
   handlePassportFulfillmentPendingGet,
+  handlePassportFulfillmentPendingPost,
   handlePassportFulfillmentQueuePost,
   handlePassportFulfillmentRetrySuinsPost,
 } from './routes/passport-fulfillment.routes.js';
@@ -1337,6 +1339,12 @@ const routes: Route[] = [
     handler: (_registry, request, response) => handleMembershipFulfillmentPendingGet(request, response),
   },
   {
+    method: 'POST',
+    pattern: /^\/api\/memberships\/fulfillment\/pending$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleMembershipFulfillmentPendingPost(request, response),
+  },
+  {
     method: 'GET',
     pattern: /^\/api\/memberships\/fulfillment\/owner\/([^/]+)$/,
     paramNames: ['owner'],
@@ -1355,6 +1363,12 @@ const routes: Route[] = [
     pattern: /^\/api\/passport\/fulfillment\/pending$/,
     paramNames: [],
     handler: (_registry, request, response) => handlePassportFulfillmentPendingGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/passport\/fulfillment\/pending$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handlePassportFulfillmentPendingPost(request, response),
   },
   {
     method: 'POST',
