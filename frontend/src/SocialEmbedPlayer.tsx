@@ -119,8 +119,8 @@ export function SocialEmbedPlayer(props: SocialEmbedPlayerProps): ReactElement {
     >
       {showGiftOverlay ? (
         <GiftOverlay
-          streamKey={props.streamKey}
-          targetMemberId={props.giftTargetMember?.id}
+          {...(props.streamKey ? { streamKey: props.streamKey } : {})}
+          {...(props.giftTargetMember?.id ? { targetMemberId: props.giftTargetMember.id } : {})}
         />
       ) : null}
 
@@ -184,8 +184,8 @@ export function SocialEmbedPlayer(props: SocialEmbedPlayerProps): ReactElement {
             target={{
               targetType: isStreamGiftContext ? 'stream' : 'member',
               targetMember: props.giftTargetMember,
-              streamKey: isStreamGiftContext ? props.streamKey : undefined,
-              streamTitle: isStreamGiftContext ? props.embed.title : undefined,
+              ...(isStreamGiftContext && props.streamKey ? { streamKey: props.streamKey } : {}),
+              ...(isStreamGiftContext ? { streamTitle: props.embed.title } : {}),
             }}
           />
         </div>

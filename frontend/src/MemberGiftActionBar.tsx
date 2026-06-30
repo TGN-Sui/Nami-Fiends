@@ -54,8 +54,8 @@ export function MemberGiftActionBar(props: {
           target={{
             targetType,
             targetMember: props.member,
-            streamKey: props.giftTarget?.streamKey,
-            streamTitle: props.giftTarget?.streamTitle,
+            ...(props.giftTarget?.streamKey ? { streamKey: props.giftTarget.streamKey } : {}),
+            ...(props.giftTarget?.streamTitle ? { streamTitle: props.giftTarget.streamTitle } : {}),
           }}
         />
       ) : null}

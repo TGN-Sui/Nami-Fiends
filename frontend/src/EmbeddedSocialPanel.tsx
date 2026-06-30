@@ -351,9 +351,9 @@ export function EmbeddedSocialPanel(props: {
             <SocialEmbedPlayer
               embed={embed}
               featured={featured}
-              giftTargetMember={feedOwner}
               streamKey={cardKey}
               surface={props.surface}
+              {...(feedOwner ? { giftTargetMember: feedOwner } : {})}
             />
 
             <div className="embedded-social-card-actions">

@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 
 export function GiftIcon(props: {
   emoji: string;
-  iconUrl?: string | null;
+  iconUrl?: string | null | undefined;
   className?: string;
   imageClassName?: string;
 }): ReactElement {

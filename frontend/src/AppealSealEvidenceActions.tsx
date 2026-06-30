@@ -32,7 +32,7 @@ export function AppealSealEvidenceActions(props: AppealSealEvidenceActionsProps)
   const linkedEvidence = sealedEvidenceForAppeal(props.evidenceItems, props.appealId);
   const official = isOfficialOwner(owner);
   const isAppellant =
-    Boolean(owner && props.appellant) &&
+    owner?.startsWith('0x') === true &&
     owner.toLowerCase() === props.appellant.toLowerCase();
   const canSeal =
     props.sealEnabled &&

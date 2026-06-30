@@ -23,7 +23,7 @@ export function canMockStreamGifts(config: AppConfig = readAppConfig()): boolean
 
 /** Official owner catalog preview — still gated to the configured owner wallet. */
 export function canPreviewMockStreamGifts(owner: string | null | undefined): boolean {
-  if (!isOfficialOwner(owner)) {
+  if (!isOfficialOwner(owner ?? null)) {
     return false;
   }
 

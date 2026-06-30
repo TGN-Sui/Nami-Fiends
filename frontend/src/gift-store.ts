@@ -116,7 +116,7 @@ function spawnGiftOverlayFloat(
       hitCount,
       spawnXPercent,
       spawnBottomPercent,
-      phase: 'rise',
+      phase: 'rise' as const,
       phaseStartedAtMs: nowMs,
       createdAtMs: nowMs,
     },
