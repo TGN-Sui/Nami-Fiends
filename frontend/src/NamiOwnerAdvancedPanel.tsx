@@ -5,6 +5,7 @@ import { IndexedDataPanel } from './IndexedDataPanel.js';
 import { LaunchOpsPanel } from './LaunchOpsPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
+import { NamiOwnerGiftCatalogPanel } from './NamiOwnerGiftCatalogPanel.js';
 import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.js';
 import { OfficialsRewardStudioPanel } from './OfficialsRewardStudioPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
@@ -31,6 +32,11 @@ const ADVANCED_TABS = [
     id: 'emojis',
     label: 'Chat Emojis',
     hint: 'Upload custom emojis for every member chat picker.',
+  },
+  {
+    id: 'gifts',
+    label: 'Gifts',
+    hint: 'Edit gift icons, titles, and $GOON prices for profiles and live streams.',
   },
   {
     id: 'borders',
@@ -112,6 +118,7 @@ export function NamiOwnerAdvancedPanel(props: {
           <NamiOwnerAssetEditPanel embedded onEnterEditMode={props.onEnterEditMode} />
         ) : null}
         {activeTab === 'emojis' ? <NamiOwnerEmojiPanel embedded /> : null}
+        {activeTab === 'gifts' ? <NamiOwnerGiftCatalogPanel embedded /> : null}
         {activeTab === 'borders' ? <OfficialsRewardStudioPanel embedded /> : null}
         {activeTab === 'submissions' ? <NamiOfficialsSubmissionsPanel embedded /> : null}
         {activeTab === 'security' ? (

@@ -1,6 +1,8 @@
 import { useRef, type KeyboardEvent, type ReactElement } from 'react';
 
 import { ChatEmojiPicker } from './ChatEmojiPicker.js';
+import { ChatGiftPicker } from './ChatGiftPicker.js';
+import type { GiftSendTarget } from './GiftSendPanel.js';
 import type { NamiCustomEmoji } from './nami-custom-emojis-store.js';
 
 type ChatComposerWithEmojisProps = {
@@ -9,6 +11,7 @@ type ChatComposerWithEmojisProps = {
   className?: string;
   customEmojis?: NamiCustomEmoji[];
   emojiPickerLabel?: string;
+  giftTarget?: GiftSendTarget;
   onChange: (value: string) => void;
   onSend: () => void;
   placeholder: string;
@@ -53,12 +56,15 @@ export function ChatComposerWithEmojis(props: ChatComposerWithEmojisProps): Reac
 
   return (
     <div className={'chat-composer-with-emojis' + (props.className ? ' ' + props.className : '')}>
-      <ChatEmojiPicker
-        disabled={!props.canSend}
-        {...(props.customEmojis ? { emojis: props.customEmojis } : {})}
-        {...(props.emojiPickerLabel ? { pickerLabel: props.emojiPickerLabel } : {})}
-        onSelect={insertEmojiToken}
-      />
+      <div className="chat-composer-tools">
+        <ChatEmojiPicker
+          disabled={!props.canSend}
+          {...(props.customEmojis ? { emojis: props.customEmojis } : {})}
+          {...(props.emojiPickerLabel ? { pickerLabel: props.emojiPickerLabel } : {})}
+          onSelect={insertEmojiToken}
+        />
+        {props.giftTarget ? <ChatGiftPicker target={props.giftTarget} /> : null}
+      </div>
       <div className="chat-composer-field-row">
         <input
           aria-label={props.ariaLabel}

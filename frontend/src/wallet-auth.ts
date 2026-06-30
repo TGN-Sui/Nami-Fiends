@@ -3,7 +3,7 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { isEnokiSigningPreferred } from './enoki-config.js';
 import { isOfficialOwner } from './nami-capabilities.js';
 import { readWalletAuthRequired } from './protocol-env.js';
-import { canZkLoginSignForOwner, getZkLoginSession } from './zklogin.js';
+import { canZkLoginSignForOwner, getZkLoginSession, isZkLoginSessionSignable } from './zklogin.js';
 
 export type WalletAuthPayload = {
   signature: string;
@@ -247,6 +247,113 @@ export async function createCatalogSyncAuthPayload(owner: string): Promise<Walle
   }
 
   return walletAuthSigner(owner);
+}
+
+function giftAuthOwnerCandidates(owner: string): string[] {
+  const sessionAddress = getZkLoginSession()?.address ?? null;
+  const candidates = [owner, sessionAddress, readWalletAuthOwner(), authContext.owner];
+
+  return candidates.filter(
+    (value, index, list): value is string =>
+      typeof value === 'string' &&
+      value.startsWith('0x') &&
+      list.findIndex((entry) => entry?.toLowerCase() === value.toLowerCase()) === index
+  );
+}
+
+async function waitForWalletAuthSigner(maxWaitMs = 2500): Promise<boolean> {
+  if (walletAuthSigner) {
+    return true;
+  }
+
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < maxWaitMs) {
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 75);
+    });
+
+    if (walletAuthSigner) {
+      return true;
+    }
+  }
+
+  return walletAuthSigner !== null;
+}
+
+export function describeGiftPaymentAuthFailure(owner: string | null | undefined): string {
+  if (!owner?.startsWith('0x')) {
+    return 'Connect a Sui wallet extension or sign in with Google under Settings → Account.';
+  }
+
+  const session = getZkLoginSession();
+
+  if (session?.address && !isZkLoginSessionSignable(session)) {
+    return 'zkLogin signing key is missing on this device. Sign out, then sign in with Google again from this tab.';
+  }
+
+  if (isOfficialOwner(owner) && !canZkLoginSignForOwner(owner)) {
+    return 'Official owner gifts require Google zkLogin signing keys. Disconnect any Sui wallet extension, sign out, then sign in with Google again from this tab.';
+  }
+
+  if (authContext.source === 'zklogin' && !session?.address) {
+    return 'zkLogin session expired on this device. Sign out, then sign in with Google again from this tab.';
+  }
+
+  const contextOwner = readWalletAuthOwner();
+
+  if (
+    contextOwner &&
+    contextOwner.toLowerCase() !== owner.toLowerCase() &&
+    canZkLoginSignForOwner(contextOwner)
+  ) {
+    return 'Disconnect any other Sui wallet extension so gifts use your Google-connected account.';
+  }
+
+  if (!hasWalletAuthSigner() && !canZkLoginSignForOwner(owner)) {
+    return 'Wallet signer is not ready. Refresh the page. If this persists, sign out and sign in with Google again under Settings → Account.';
+  }
+
+  return 'Wallet signature is required. Reconnect Google zkLogin or your Sui wallet in Settings → Account.';
+}
+
+/** Gift checkout and fulfillment for any signed-in member with a live signer. */
+export async function createGiftPaymentAuthPayload(owner: string): Promise<WalletAuthPayload | null> {
+  if (!readWalletAuthRequired()) {
+    return null;
+  }
+
+  for (const candidate of giftAuthOwnerCandidates(owner)) {
+    if (canZkLoginSignForOwner(candidate)) {
+      return signWalletAuthWithZkLogin(candidate);
+    }
+  }
+
+  const session = getZkLoginSession();
+
+  if (session?.address && !isZkLoginSessionSignable(session)) {
+    return null;
+  }
+
+  if (isOfficialOwner(owner)) {
+    return null;
+  }
+
+  const resolvedOwner = giftAuthOwnerCandidates(owner)[0];
+
+  if (!resolvedOwner) {
+    return null;
+  }
+
+  if (!walletAuthSigner) {
+    await waitForWalletAuthSigner();
+  }
+
+  if (!canPromptEquipSyncSignature(resolvedOwner) || !walletAuthSigner) {
+    return null;
+  }
+
+  return walletAuthSigner(resolvedOwner);
 }
 
 export async function createEquipSyncAuthPayload(owner: string): Promise<WalletAuthPayload | null> {

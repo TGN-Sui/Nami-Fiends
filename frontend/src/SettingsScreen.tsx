@@ -15,6 +15,7 @@ import { NamiOfficialsSubmissionsPanel } from './NamiOfficialsSubmissionsPanel.j
 import { NamiOwnerArcadeAssetEditPanel } from './NamiOwnerArcadeAssetEditPanel.js';
 import { NamiOwnerAssetEditPanel } from './NamiOwnerAssetEditPanel.js';
 import { NamiOwnerEmojiPanel } from './NamiOwnerEmojiPanel.js';
+import { NamiOwnerGiftCatalogPanel } from './NamiOwnerGiftCatalogPanel.js';
 import { NamiOwnerSettingsPanel } from './NamiOwnerSettingsPanel.js';
 import { OfficialsRewardStudioPanel } from './OfficialsRewardStudioPanel.js';
 import { OwnerAccessPrompt } from './OwnerAccessPrompt.js';
@@ -561,6 +562,9 @@ export function SettingsScreen(props: {
 
       case 'owner-emojis':
         return renderOwnerWorkspace('owner-emojis', <NamiOwnerEmojiPanel embedded />);
+
+      case 'owner-gifts':
+        return renderOwnerWorkspace('owner-gifts', <NamiOwnerGiftCatalogPanel embedded />);
 
       case 'owner-submissions':
         return renderOwnerWorkspace(

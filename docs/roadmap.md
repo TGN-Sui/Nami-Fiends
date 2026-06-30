@@ -555,7 +555,7 @@ Discovery should be mostly off-chain and anchored by on-chain signals.
 Status:
 
 ```text
-Complete — UI-B21 surfaces shipped; test-launch polish slices 1–10 landed (commit 347511f)
+Complete — UI-B21 surfaces shipped; test-launch polish slices 1–10 landed; Phase 7.3 arcade cabinets complete
 ```
 
 Checkpoint: `docs/ui-build-checkpoint.md` (UI-A20.5 + UI-B21 + test-launch polish complete).
@@ -651,20 +651,24 @@ Provider interfaces (affiliation, channel directory, member directory) are the p
 
 ---
 
-# Phase 7.1 — $GOON Economy & Gifting (Planned)
+# Phase 7.1 — $GOON Economy & Gifting (Shipped)
 
 Status:
 
 ```text
-Planned — live-stream and user gifting next; Buy Goon + profile tips shipped
+Shipped — profile + live-stream gifting, GOON wallet + fiat rails, revenue-split projection
 ```
 
-Shipped (UI slice):
+Shipped:
 
 ```text
 Wallet connect lives in Settings only — landing and onboarding avoid "wallet" copy
 Buy Goon on member profiles when a Sui wallet is connected (GoonQuickBuy swap flow)
 Tip $GOON to members from connected wallet (treasury-routed, local activity ledger)
+Send gifts to member profiles and live Twitch/YouTube embeds (GiftSendPanel, GiftOverlay)
+Gift catalog (8 tiered gifts), GOON wallet + card/PayPal checkout, backend fulfillment projection
+Configurable revenue split defaults 70/20/10 (creator / channel owner / platform treasury)
+Recent gift showcase on member profiles; stream overlay bursts on live embeds
 ```
 
 ---
@@ -699,12 +703,12 @@ npm --prefix frontend test — 296 passing
 sui move test — 80 passing
 ```
 
-# Phase 7.3 — Arcade cabinets (in progress)
+# Phase 7.3 — Arcade cabinets (Complete)
 
 Status:
 
 ```text
-In progress — Tier 1 live: Goon Pop + Alley Push; Tier 2+ offline on picker
+Complete — all 8 official cabinets live; Tier 2 Pro + Tier 3 Elite gated; passport badge hooks shipped
 ```
 
 Shipped:
@@ -712,18 +716,14 @@ Shipped:
 ```text
 Attract → picker → intro → stage → play session flow
 Per-cabinet intro/stage/viewport media (owner upload or /arcade/cabinets/{id}/ public fallbacks)
-Goon Pop (Alley Run / Heat Run) + Alley Push (Street Pass / Heat Chase with vertical rows)
+Tier 1: Goon Pop + Alley Push
+Tier 2 (Pro): Stash Defense, Drop Window, Bricked Up, Stealth Goon
+Tier 3 (Elite): Gob Market, Intel Stack
 Lobby + per-game MP3 owner slots, audio controls, leaderboard + passport stats per game
+Passport badge hooks for arcade run stats (arcade-passport-badge-hooks.ts)
 ```
 
 Docs: [arcade-cabinets.md](./arcade-cabinets.md) · checkpoint ARC-1–ARC-5 in [ui-build-checkpoint.md](./ui-build-checkpoint.md)
-
-Planned:
-
-```text
-Tier 2 cabinet game boards (Pro membership)
-Passport badge hooks for arcade run stats
-```
 
 ---
 
@@ -763,7 +763,7 @@ Phase 8 progress
 8.1 Testnet launch mode      ███████████████████░  ~99%
 8.2 Deploy + public URL      ███████████████████░  ~95%
 8.3 zkLogin production       ████████████████████  100%
-8.4 Security + custody       ████████████░░░░░░░░  ~60%
+8.4 Security + custody       ███████████████████░  ~95%
 ```
 
 Launch requirements:
@@ -884,12 +884,13 @@ See [testnet-zklogin.md](./testnet-zklogin.md). Run `node scripts/verify-zklogin
 
 ---
 
-## Phase 8.4 — Security & Custody (In progress)
+## Phase 8.4 — Security & Custody (Code complete)
 
 Status:
 
 ```text
-~60% — custody runbook + privacy/community drafts shipped; human backup holder + legal review pending
+~95% code deliverables — automated security gate + expanded audit docs + Launch Ops security_review block shipped
+Human-only: legal counsel sign-off (LEGAL_REVIEW_STATUS in privacy draft) + live Render env confirmation on deploy day
 ```
 
 Shipped:
@@ -899,16 +900,22 @@ Officials POST /sync wallet auth on NAMI_TEST_LAUNCH=true
 Official owner full merge; member-scoped merge for tickets, claims, suggestions
 Optional NAMI_OFFICIALS_SYNC_SECRET for ops-only server sync
 NAMI_PAYMENT_ALLOW_MOCK=false enforced when NAMI_TEST_LAUNCH=true
-docs/admincap-custody.md — primary/backup holder runbook
-docs/privacy-guidelines-draft.md + docs/community-guidelines-draft.md
+NAMI_ADMIN_CAP_BACKUP_HOLDER assigned (testnet) — render.yaml + sync-testnet-env + .env.testnet.example
+docs/admincap-custody.md — primary/backup runbook + incident response one-pager
+docs/privacy-guidelines-draft.md — gift/seal/Walrus rows + LEGAL_REVIEW_STATUS counsel checklist
+docs/community-guidelines-draft.md
+docs/security-audit.md — backend/gifting/Seal/Walrus sections + pre-launch manual checklist
+scripts/verify-security-review.mjs — pre-launch security gate (env, CORS, gift routes, live launch-summary)
+GET /api/ops/launch-summary → security_review (backup_holder, mock_payments_disabled, seal_key, script last run)
+Launch Ops panel — Security & Custody card (Phase 8.4)
 ```
 
-Remaining:
+Human-only (not code):
 
 ```text
-Assign named backup holder (human step)
-Legal review of privacy draft before mainnet
-Full security review before public URL
+Legal review of privacy draft before mainnet — counsel sign-off on LEGAL_REVIEW_STATUS table
+Confirm NAMI_ADMIN_CAP_BACKUP_HOLDER + NAMI_SEAL_EVIDENCE_KEY on live Render after redeploy
+Run node scripts/verify-security-review.mjs on release day and archive owner sign-off checklist
 ```
 
 ---
@@ -991,12 +998,12 @@ Discovery:        featured_placement projection merges into Hub panel only — n
 
 ---
 
-# Phase 9 — Sui Stack Integrations (Planned)
+# Phase 9 — Sui Stack Integrations (Complete)
 
 Status:
 
 ```text
-Not started — documented for future exploration; no implementation yet
+Complete — 9.1 Walrus Sites + renewal ops shipped; 9.2 Seal dev envelopes + optional Walrus ciphertext shipped; 9.3 MemWal scoped deferred
 ```
 
 Goal:
@@ -1024,7 +1031,17 @@ zkLogin redirect URIs registered for production portal domains
 Status:
 
 ```text
-In progress — ws-resources.json, prepare/deploy scripts, Launch Ops card, first testnet deploy metadata, verify/setup helper scripts (docs/walrus-sites-deploy.md)
+Complete — deploy + renewal ops, Launch Ops renewal status, verify-walrus-sites-ready epoch checks (docs/walrus-sites-deploy.md)
+```
+
+Shipped:
+
+```text
+ws-resources.json SPA fallback + prepare/deploy scripts
+deployments/testnet/walrus-sites-deploy.json testnet metadata
+scripts/renew-walrus-sites.mjs — epoch renewal helper (--run updates last_renew_ms)
+scripts/verify-walrus-sites-ready.mjs — renewal readiness warnings
+walrus-sites.service.ts — last_renew_ms, renewal_due, expires_at_ms on Launch Ops card
 ```
 
 Scope:
@@ -1066,7 +1083,16 @@ Walrus Sites docs: site-builder deploy, ws-resources.json routes, wal.app portal
 Status:
 
 ```text
-In progress — nami-seal-v1-dev envelopes + /api/privacy/evidence/* + Launch Ops card (docs/seal-privacy.md)
+Complete (MVP) — nami-seal-v1-dev envelopes + optional Walrus ciphertext offload; Mysten Seal policy ids remain future 9.2.x (docs/seal-privacy.md)
+```
+
+Shipped:
+
+```text
+seal-walrus-storage.service.ts — publisher upload + aggregator fetch with projection fallback
+seal-privacy.service.ts — walrus_blob_id on seal; open fetches Walrus when configured
+seal-policy-registry migration_stage → walrus-ciphertext when publisher configured
+scripts/verify-seal-privacy-ready.mjs — readiness probe
 ```
 
 Goal:
@@ -1120,7 +1146,7 @@ Appeals / moderation backend persistence (localStorage is insufficient for encry
 Status:
 
 ```text
-Planned — scoped experimentation only
+Scoped deferred — not in Phase 9 MVP; revisit post-launch for Officials assistant / moderation triage memory only
 ```
 
 What MemWal is:

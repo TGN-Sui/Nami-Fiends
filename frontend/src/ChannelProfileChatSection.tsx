@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { channelChatGiftTarget } from './chat-composer-gift-target.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { ChatOverlayEquipPicker } from './ChatOverlayEquipPicker.js';
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -358,6 +359,7 @@ export function ChannelProfileChatSection(props: {
               className="chat-composer-row chat-input-placeholder"
               customEmojis={channelEmojis}
               emojiPickerLabel={props.channel.name + ' emojis'}
+              giftTarget={channelChatGiftTarget(props.channel)}
               onChange={setChatDraft}
               onSend={() => {
                 if (!canSend || !chatDraft.trim()) {

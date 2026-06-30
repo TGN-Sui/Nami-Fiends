@@ -25,8 +25,8 @@ AppealCase `public_reference` may point at a **sealed evidence id** (`seal-…`)
 | `nami-seal-v1-dev` AES-256-GCM envelopes | Shipped |
 | Projection `data/projections/sealed-evidence.json` | Shipped |
 | API `/api/privacy/evidence/*` | Shipped |
-| Mysten Seal policy decryption | Planned 9.2.x |
-| Walrus blob storage for ciphertext | Planned 9.2.x |
+| Walrus ciphertext offload (`walrus_blob_id` + projection fallback) | Shipped when `NAMI_WALRUS_PUBLISHER_URL` set |
+| Mysten Seal policy decryption | Future 9.2.x when Mysten APIs stabilize |
 
 Gate: **`NAMI_SEAL_PRIVACY_ENABLED=false`** by default (same pattern as catalog attestation).
 
@@ -100,9 +100,25 @@ POST /api/privacy/evidence/open
 
 ---
 
+## Walrus ciphertext (9.2 groundwork)
+
+When `NAMI_WALRUS_PUBLISHER_URL` (or `NAMI_WALRUS_NETWORK=testnet`) is configured on Render:
+
+1. `sealEvidencePacket` encrypts locally, then uploads raw ciphertext bytes to Walrus via the publisher HTTP API.
+2. The projection stores `walrus_blob_id` on `SealedEvidenceRecord` and keeps `ciphertext_b64` as a fallback when Walrus is disabled or upload fails.
+3. `openSealedEvidencePacket` fetches ciphertext from the Walrus aggregator when `walrus_blob_id` is present, then decrypts with `NAMI_SEAL_EVIDENCE_KEY`.
+
+Verify readiness:
+
+```bash
+node scripts/verify-seal-privacy-ready.mjs --indexer-url https://nami-backend-rv0o.onrender.com
+```
+
+---
+
 ## Launch Ops
 
-Settings → Launch ops → **Seal privacy** card shows enabled flag, key configured, sealed count, and migration note.
+Settings → Launch ops → **Seal privacy** card shows enabled flag, key configured, sealed count, Walrus ciphertext count, migration stage, and stack note.
 
 ---
 
@@ -110,7 +126,7 @@ Settings → Launch ops → **Seal privacy** card shows enabled flag, key config
 
 1. Define Seal **policy ids** per role (official, jury, subject)
 2. Replace `nami-seal-v1-dev` encrypt with Seal client encrypt
-3. Store ciphertext on **Walrus**; projection holds `blob_id` + `content_hash` only
+3. Walrus ciphertext offload is already wired — projection holds `walrus_blob_id` + `content_hash`
 4. Jury decrypt path uses Seal threshold / role keys
 
-Until then, dev envelopes keep appeal evidence off public projections and out of Move objects.
+Until Mysten Seal policy ids ship, dev envelopes + optional Walrus blobs keep appeal evidence off public projections and out of Move objects.

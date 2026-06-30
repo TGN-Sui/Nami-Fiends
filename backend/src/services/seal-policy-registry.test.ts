@@ -19,6 +19,16 @@ describe('seal-policy-registry', () => {
 
     assert.equal(summary.stage, 'dev-envelope');
     assert.equal(summary.policies_with_mysten_ids, 0);
-    assert.match(summary.next_step, /9\.2\.2/);
+    assert.match(summary.next_step, /9\.2\.x/);
+  });
+
+  it('reports walrus-ciphertext stage when publisher is configured', () => {
+    const summary = sealPolicyMigrationSummary({
+      walrus_publisher_configured: true,
+      walrus_ciphertext_count: 0,
+    });
+
+    assert.equal(summary.stage, 'walrus-ciphertext');
+    assert.match(summary.next_step, /Mysten Seal policy ids/);
   });
 });

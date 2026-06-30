@@ -4,6 +4,11 @@ import path from 'node:path';
 
 import { config } from '../config.js';
 import { isOfficialOwnerAddress } from './officials-auth.service.js';
+import {
+  fetchSealCiphertextFromWalrus,
+  isSealWalrusStorageConfigured,
+  uploadSealCiphertextToWalrus,
+} from './seal-walrus-storage.service.js';
 import { listSealPolicyDefinitions, sealPolicyMigrationSummary } from './seal-policy-registry.js';
 
 export type SealEvidencePolicy =
@@ -30,6 +35,7 @@ export type SealedEvidenceRecord = {
   ciphertext_b64: string;
   iv_b64: string;
   auth_tag_b64: string;
+  walrus_blob_id?: string | null;
   created_at_ms: number;
   seal_version: 'nami-seal-v1-dev';
 };
@@ -38,6 +44,8 @@ export type SealPrivacyReadiness = {
   enabled: boolean;
   key_configured: boolean;
   sealed_count: number;
+  walrus_publisher_configured: boolean;
+  walrus_ciphertext_count: number;
   policies_in_use: SealEvidencePolicy[];
   policies_registered: number;
   migration_stage: string;
@@ -150,7 +158,7 @@ function encryptPlaintext(plaintext: string, key: Buffer): {
   };
 }
 
-function decryptCiphertext(record: SealedEvidenceRecord, key: Buffer): string {
+function decryptCiphertextBytes(record: SealedEvidenceRecord, key: Buffer, ciphertext: Buffer): string {
   const decipher = createDecipheriv(
     'aes-256-gcm',
     key,
@@ -159,12 +167,25 @@ function decryptCiphertext(record: SealedEvidenceRecord, key: Buffer): string {
 
   decipher.setAuthTag(Buffer.from(record.auth_tag_b64, 'base64'));
 
-  const plaintext = Buffer.concat([
-    decipher.update(Buffer.from(record.ciphertext_b64, 'base64')),
-    decipher.final(),
-  ]);
+  const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
   return plaintext.toString('utf8');
+}
+
+function decryptCiphertext(record: SealedEvidenceRecord, key: Buffer): string {
+  return decryptCiphertextBytes(record, key, Buffer.from(record.ciphertext_b64, 'base64'));
+}
+
+async function resolveCiphertextBytes(record: SealedEvidenceRecord): Promise<Buffer> {
+  if (record.walrus_blob_id && isSealWalrusStorageConfigured()) {
+    try {
+      return await fetchSealCiphertextFromWalrus(record.walrus_blob_id);
+    } catch {
+      // Fall back to projection ciphertext when Walrus read fails.
+    }
+  }
+
+  return Buffer.from(record.ciphertext_b64, 'base64');
 }
 
 export function canReadSealedEvidence(record: SealedEvidenceRecord, readerOwner: string): boolean {
@@ -197,6 +218,18 @@ export async function sealEvidencePacket(input: {
 
   const encrypted = encryptPlaintext(input.plaintext, key);
   const id = 'seal-' + randomBytes(12).toString('hex');
+  let walrusBlobId: string | null = null;
+
+  if (isSealWalrusStorageConfigured()) {
+    try {
+      const ciphertextBytes = Buffer.from(encrypted.ciphertext_b64, 'base64');
+      const uploaded = await uploadSealCiphertextToWalrus(ciphertextBytes);
+      walrusBlobId = uploaded.blob_id;
+    } catch {
+      // Projection ciphertext remains the fallback when Walrus upload fails.
+    }
+  }
+
   const record: SealedEvidenceRecord = {
     id,
     policy: input.policy,
@@ -204,6 +237,7 @@ export async function sealEvidencePacket(input: {
     related_id: input.relatedId ?? null,
     content_hash: hashPlaintext(input.plaintext),
     ...encrypted,
+    walrus_blob_id: walrusBlobId,
     created_at_ms: Date.now(),
     seal_version: 'nami-seal-v1-dev',
   };
@@ -231,7 +265,8 @@ export async function openSealedEvidencePacket(
     throw new Error('sealed_evidence_forbidden');
   }
 
-  const plaintext = decryptCiphertext(record, key);
+  const ciphertextBytes = await resolveCiphertextBytes(record);
+  const plaintext = decryptCiphertextBytes(record, key, ciphertextBytes);
 
   if (hashPlaintext(plaintext) !== record.content_hash) {
     throw new Error('sealed_evidence_integrity_failed');
@@ -270,18 +305,29 @@ export async function listSealedEvidenceMetadata(readerOwner: string): Promise<
 export function buildSealPrivacyReadiness(store?: SealedEvidenceStore): SealPrivacyReadiness {
   const records = store ? Object.values(store) : [];
   const policies = [...new Set(records.map((record) => record.policy))];
-  const migration = sealPolicyMigrationSummary();
+  const walrusCiphertextCount = records.filter((record) => Boolean(record.walrus_blob_id)).length;
+  const walrusConfigured = isSealWalrusStorageConfigured();
+  const migration = sealPolicyMigrationSummary({
+    walrus_publisher_configured: walrusConfigured,
+    walrus_ciphertext_count: walrusCiphertextCount,
+  });
+
+  const stackNote =
+    migration.stage === 'walrus-ciphertext'
+      ? 'nami-seal-v1-dev envelopes with optional Walrus ciphertext blobs — Mysten Seal policy ids remain future 9.2.x.'
+      : 'nami-seal-v1-dev envelopes on disk — enable NAMI_WALRUS_PUBLISHER_URL for Walrus ciphertext offload.';
 
   return {
     enabled: isSealPrivacyEnabled(),
     key_configured: readSealKey() !== null,
     sealed_count: records.length,
+    walrus_publisher_configured: walrusConfigured,
+    walrus_ciphertext_count: walrusCiphertextCount,
     policies_in_use: policies,
     policies_registered: listSealPolicyDefinitions().length,
     migration_stage: migration.stage,
     migration_next_step: migration.next_step,
-    stack_note:
-      'nami-seal-v1-dev envelopes on disk — migrate to Mysten Seal policy IDs + Walrus blobs in 9.2.x.',
+    stack_note: stackNote,
   };
 }
 
@@ -295,7 +341,14 @@ export function publicSealedEvidenceRef(
   record: SealedEvidenceRecord
 ): Pick<
   SealedEvidenceRecord,
-  'id' | 'policy' | 'subject_owner' | 'related_id' | 'content_hash' | 'created_at_ms' | 'seal_version'
+  | 'id'
+  | 'policy'
+  | 'subject_owner'
+  | 'related_id'
+  | 'content_hash'
+  | 'walrus_blob_id'
+  | 'created_at_ms'
+  | 'seal_version'
 > {
   return {
     id: record.id,
@@ -303,6 +356,7 @@ export function publicSealedEvidenceRef(
     subject_owner: record.subject_owner,
     related_id: record.related_id,
     content_hash: record.content_hash,
+    walrus_blob_id: record.walrus_blob_id ?? null,
     created_at_ms: record.created_at_ms,
     seal_version: record.seal_version,
   };

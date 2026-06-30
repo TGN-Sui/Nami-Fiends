@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  computeWalrusSitesRenewalDue,
   defaultWalrusSitesConfigPath,
   exampleWalrusSitesConfigPath,
   readWalrusSiteProjection,
@@ -159,9 +160,52 @@ if (commandExists('sui')) {
 }
 
 const projection = readWalrusSiteProjection(rootDir);
+const deployManifestPath = path.join(rootDir, 'deployments', 'testnet', 'walrus-sites-deploy.json');
+let deployManifest = null;
 
-if (projection?.site_object_id) {
-  pass('local walrus-site projection', projection.site_object_id);
+if (fs.existsSync(deployManifestPath)) {
+  try {
+    deployManifest = JSON.parse(fs.readFileSync(deployManifestPath, 'utf8'));
+  } catch {
+    deployManifest = null;
+  }
+}
+
+const renewalProjection = {
+  ...(projection ?? {}),
+  site_object_id: projection?.site_object_id ?? deployManifest?.site_object_id ?? null,
+  storage_epochs: projection?.storage_epochs ?? deployManifest?.storage_epochs ?? null,
+  last_deploy_ms: projection?.last_deploy_ms ?? deployManifest?.last_deploy_ms ?? null,
+  last_renew_ms: projection?.last_renew_ms ?? deployManifest?.last_renew_ms ?? null,
+};
+
+if (renewalProjection?.site_object_id) {
+  pass('local walrus-site projection', renewalProjection.site_object_id);
+
+  const renewal = computeWalrusSitesRenewalDue(renewalProjection);
+
+  if (renewal.expires_at_ms) {
+    const expiryLabel = new Date(renewal.expires_at_ms).toISOString();
+
+    if (renewal.renewal_due) {
+      warn(
+        'walrus-site epoch renewal',
+        'Storage epochs expiring — run node scripts/renew-walrus-sites.mjs --run (expires ' +
+          expiryLabel +
+          ')',
+      );
+    } else {
+      pass(
+        'walrus-site epoch renewal',
+        '~' + renewal.epochs_remaining_approx + ' epoch(s) remaining (expires ' + expiryLabel + ')',
+      );
+    }
+  } else if (!renewalProjection.last_deploy_ms && !renewalProjection.last_renew_ms) {
+    warn(
+      'walrus-site epoch renewal',
+      'Projection missing last_deploy_ms — cannot estimate renewal window',
+    );
+  }
 } else {
   warn('local walrus-site projection', 'No deploy yet — run deploy-walrus-sites.mjs after site-builder setup');
 }

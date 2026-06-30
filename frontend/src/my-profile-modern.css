@@ -442,6 +442,14 @@
   overflow-y: auto;
 }
 
+.member-audience-inline-chat-pane .global-chat-composer-bar,
+.audience-lounge-chat-pane .global-chat-composer-bar,
+.global-chat-conversation .chat-composer-with-emojis {
+  overflow: visible;
+  position: relative;
+  z-index: 6;
+}
+
 .member-audience-inline-chat-pane .global-chat-composer-bar {
   flex-shrink: 0;
 }

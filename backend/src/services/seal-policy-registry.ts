@@ -65,22 +65,43 @@ export function resolveSealPolicyDefinition(policy: SealEvidencePolicy): SealPol
   return SEAL_POLICY_REGISTRY[policy];
 }
 
-export function sealPolicyMigrationSummary(): {
+export type SealPolicyMigrationContext = {
+  walrus_publisher_configured?: boolean;
+  walrus_ciphertext_count?: number;
+};
+
+export function sealPolicyMigrationSummary(
+  context: SealPolicyMigrationContext = {}
+): {
   stage: SealPolicyMigrationStage;
   policies_with_mysten_ids: number;
   policies_total: number;
+  walrus_ciphertext_count: number;
   next_step: string;
 } {
   const policies = listSealPolicyDefinitions();
   const withMystenIds = policies.filter((entry) => Boolean(entry.mysten_policy_id)).length;
+  const walrusCount = context.walrus_ciphertext_count ?? 0;
+  const walrusConfigured = context.walrus_publisher_configured ?? false;
+
+  let stage: SealPolicyMigrationStage = 'dev-envelope';
+  let nextStep =
+    'Publish Mysten Seal policy objects and set mysten_policy_id per policy (9.2.x when APIs stabilize).';
+
+  if (withMystenIds > 0) {
+    stage = 'mysten-seal-v1';
+    nextStep = 'Wire Mysten Seal decrypt path for jury and officials roles.';
+  } else if (walrusConfigured || walrusCount > 0) {
+    stage = 'walrus-ciphertext';
+    nextStep =
+      'Mysten Seal policy ids remain future 9.2.x — ciphertext already offloaded to Walrus when publisher is configured.';
+  }
 
   return {
-    stage: withMystenIds > 0 ? 'mysten-seal-v1' : 'dev-envelope',
+    stage,
     policies_with_mysten_ids: withMystenIds,
     policies_total: policies.length,
-    next_step:
-      withMystenIds > 0
-        ? 'Wire Mysten Seal decrypt path and Walrus ciphertext upload in 9.2.3.'
-        : 'Publish Mysten Seal policy objects and set mysten_policy_id per policy (9.2.2).',
+    walrus_ciphertext_count: walrusCount,
+    next_step: nextStep,
   };
 }

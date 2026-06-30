@@ -31,6 +31,8 @@ nodenameRegistryId: 0x68e1b656a5fbb5534577f64321fb466512e8534da8749821b085ac8687
 
 ## Backup holder
 
+**Status: assigned (testnet)** — named backup holder configured in `render.yaml`, `backend/.env.testnet.example`, and `scripts/sync-testnet-env.mjs`. Launch Ops + `verify-security-review.mjs` treat custody as complete when `NAMI_ADMIN_CAP_BACKUP_HOLDER` is set on Render.
+
 **Named testnet backup (2026-06-27)**
 
 | Role | Wallet | Contact |
@@ -79,6 +81,32 @@ Publish wallet:    Used once per republish; fund minimally on testnet
 
 ---
 
+## Incident response (one-pager)
+
+Use this for Sev-1/2 custody or secret-compromise events. Full adversarial checks: [security-audit.md](./security-audit.md).
+
+| Step | Action | Owner |
+|------|--------|-------|
+| 1 | **Detect** — failed owner sign-in, suspicious officials merge, webhook anomaly, or leaked env | On-call (primary) |
+| 2 | **Contain** — pause public URL banner if needed; rotate `NAMI_OFFICIALS_SYNC_SECRET` + payment webhook secrets | Primary owner |
+| 3 | **Assess** — check AdminCap owner on explorer; audit `officials-submissions.json` + payment projections | Primary + backup |
+| 4 | **Notify** — email backup holder + infra contacts within 1h for Sev-1 | Primary owner |
+| 5 | **Recover** — zkLogin Google recovery for primary; or AdminCap `public_transfer` to backup wallet if compromised | Backup holder |
+| 6 | **Verify** — `node scripts/verify-security-review.mjs` green; Launch Ops `security_review.review_ready` | Primary owner |
+| 7 | **Document** — post-incident notes (no secrets); update runbook dates | Primary owner |
+
+**Escalation contacts**
+
+```text
+Primary:  robbier640@gmail.com (FIEND zkLogin / NAMI_OFFICIAL_OWNER)
+Backup:   ailed.orozco53@gmail.com (NAMI_ADMIN_CAP_BACKUP_HOLDER)
+Infra:    Render + Vercel dashboards (repo collaborators with deploy access)
+```
+
+**Do not** paste mnemonics, OAuth secrets, or `NAMI_SEAL_EVIDENCE_KEY` into tickets or chat logs.
+
+---
+
 ## Loss scenarios
 
 | Scenario | Impact | Response |
@@ -94,6 +122,7 @@ Publish wallet:    Used once per republish; fund minimally on testnet
 
 ```bash
 node scripts/verify-testnet-ready.mjs
+node scripts/verify-security-review.mjs
 node scripts/verify-public-deploy.mjs
 ```
 

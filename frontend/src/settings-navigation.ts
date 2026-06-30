@@ -13,6 +13,7 @@ export type SettingsNavId =
   | 'owner-visual-assets'
   | 'owner-arcade-assets'
   | 'owner-emojis'
+  | 'owner-gifts'
   | 'owner-submissions'
   | 'owner-security'
   | 'owner-data'
@@ -34,6 +35,7 @@ export type OwnerAdvancedTabId =
   | 'assets'
   | 'arcade'
   | 'emojis'
+  | 'gifts'
   | 'borders'
   | 'submissions'
   | 'security'
@@ -58,6 +60,7 @@ const NAV_IDS: ReadonlySet<string> = new Set([
   'owner-visual-assets',
   'owner-arcade-assets',
   'owner-emojis',
+  'owner-gifts',
   'owner-submissions',
   'owner-security',
   'owner-data',
@@ -80,6 +83,7 @@ const LEGACY_TAB_TO_NAV: Record<OwnerAdvancedTabId, SettingsNavId> = {
   assets: 'owner-visual-assets',
   arcade: 'owner-arcade-assets',
   emojis: 'owner-emojis',
+  gifts: 'owner-gifts',
   borders: 'owner-border-art',
   submissions: 'owner-submissions',
   security: 'owner-security',
@@ -236,6 +240,12 @@ export const OWNER_CONSOLE_GROUP: SettingsNavGroup = {
       id: 'owner-emojis',
       label: 'Chat emojis',
       hint: 'Shared emoji library for all chat pickers',
+      ownerOnly: true,
+    },
+    {
+      id: 'owner-gifts',
+      label: 'Gifts',
+      hint: 'Gift icons, titles, and $GOON prices for profiles and live streams',
       ownerOnly: true,
     },
     {

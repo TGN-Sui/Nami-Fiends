@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { memberChatGiftTarget } from './chat-composer-gift-target.js';
 import { UniformMemberAvatar } from './member-avatar.js';
 import { canSendPrivateMessages } from './member-access.js';
 import { messageComposeCandidates } from './message-compose.js';
@@ -119,6 +120,7 @@ export function MessageComposeOverlay(props: MessageComposeOverlayProps): ReactE
               ariaLabel={'First private message to ' + selectedMember.name}
               canSend={canSend}
               className="chat-composer-row message-log-composer message-compose-composer"
+              giftTarget={memberChatGiftTarget(selectedMember)}
               onChange={setDraft}
               onSend={startConversation}
               placeholder={

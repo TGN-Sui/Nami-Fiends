@@ -93,11 +93,24 @@ function useZkLoginSessionState(): {
   redirectError: string | null;
   setRedirectError: (message: string | null) => void;
 } {
-  const [session, setSession] = useState<ZkLoginSession | null>(() => getZkLoginSession());
+  const [session, setSession] = useState<ZkLoginSession | null>(() => {
+    reconcileZkLoginSessionOnLoad();
+    return getZkLoginSession();
+  });
   const [redirectError, setRedirectError] = useState<string | null>(() => readZkLoginLastError());
 
   useEffect(() => {
     let cancelled = false;
+
+    function syncSessionFromStorage(): void {
+      if (!cancelled) {
+        setSession(getZkLoginSession());
+      }
+    }
+
+    reconcileZkLoginSessionOnLoad();
+    syncSessionFromStorage();
+    window.addEventListener('nami-zklogin-session-ready', syncSessionFromStorage);
 
     void completeZkLoginFromRedirect().then((nextSession) => {
       if (cancelled) {
@@ -125,6 +138,7 @@ function useZkLoginSessionState(): {
 
     return () => {
       cancelled = true;
+      window.removeEventListener('nami-zklogin-session-ready', syncSessionFromStorage);
       window.removeEventListener('storage', onStorage);
     };
   }, []);

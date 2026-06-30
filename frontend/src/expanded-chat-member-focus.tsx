@@ -8,6 +8,9 @@ import {
 import { withMemberAvatar } from './member-avatar-store.js';
 import { memberWatchableLiveFeed } from './member-public-chat.js';
 import { resolveMemberPublicBio, withMemberProfile } from './member-profile-store.js';
+import { canMockStreamGifts } from './gift-mock-preview.js';
+import { MemberGiftActionBar } from './MemberGiftActionBar.js';
+import { MockStreamGiftPanel } from './MockStreamGiftPanel.js';
 import { SocialEmbedPlayer } from './SocialEmbedPlayer.js';
 import { TcgFoilPassportCard } from './TcgFoilPassportCard.js';
 import type { TagNavigationHandlers } from './TaggedMessageBody.js';
@@ -44,6 +47,10 @@ export function ExpandedChatMemberLivePanel(props: {
   onClear?: () => void;
 }): ReactElement | null {
   const liveFeed = memberWatchableLiveFeed(props.member.id);
+  const streamKey = 'expanded-chat-live:' + props.member.id;
+  const mockGiftsEnabled = canMockStreamGifts();
+  const [mockGiftsOpen, setMockGiftsOpen] = useState(false);
+  const [giftStatus, setGiftStatus] = useState<string | null>(null);
 
   if (!liveFeed) {
     return null;
@@ -57,15 +64,50 @@ export function ExpandedChatMemberLivePanel(props: {
           <strong>{props.member.name}</strong>
           <small>{liveFeed.handle}</small>
         </div>
-        {props.onClear ? (
-          <button className="nami-surface-button" onClick={props.onClear} type="button">
-            Back
-          </button>
-        ) : null}
+        <div className="expanded-chat-member-aside-actions">
+          {mockGiftsEnabled ? (
+            <button
+              aria-expanded={mockGiftsOpen}
+              className={
+                'nami-surface-button is-primary-surface-button expanded-chat-live-gift-button' +
+                (mockGiftsOpen ? ' is-active-surface-button' : '')
+              }
+              onClick={() => setMockGiftsOpen((open) => !open)}
+              type="button"
+            >
+              {mockGiftsOpen ? 'Close mock gifts' : 'Simulate gift'}
+            </button>
+          ) : null}
+          {props.onClear ? (
+            <button className="nami-surface-button" onClick={props.onClear} type="button">
+              Back
+            </button>
+          ) : null}
+        </div>
       </header>
+
+      {mockGiftsEnabled && mockGiftsOpen ? (
+        <MockStreamGiftPanel
+          className="expanded-chat-live-mock-gift-panel"
+          onSent={setGiftStatus}
+          streamKey={streamKey}
+          targetMember={props.member}
+        />
+      ) : null}
+
       <div className="expanded-chat-member-live-shell">
-        <SocialEmbedPlayer embed={liveFeed} featured surface="member" key={props.member.id} />
+        <SocialEmbedPlayer
+          embed={liveFeed}
+          enableMockGifts={mockGiftsEnabled}
+          featured
+          giftTargetMember={props.member}
+          key={props.member.id}
+          streamKey={streamKey}
+          surface="member"
+        />
       </div>
+
+      {giftStatus ? <p className="expanded-chat-live-gift-status">{giftStatus}</p> : null}
     </div>
   );
 }
@@ -152,6 +194,8 @@ export function ExpandedChatMemberPassportPanel(props: {
           <span className="mini-badge">Bio</span>
           <p>{memberBio}</p>
         </div>
+
+        <MemberGiftActionBar className="expanded-chat-member-gift-bar" member={props.member} />
       </div>
     </section>
   );

@@ -60,7 +60,10 @@ export function WalletAuthBridge(): ReactElement | null {
         owner &&
         walletAccount.address.toLowerCase() === owner.toLowerCase()
     );
-    const zkCanSign = canZkLoginSignForOwner(owner);
+    const zkSession = getZkLoginSession();
+    const zkCanSign =
+      canZkLoginSignForOwner(owner) ||
+      (zkSession?.address ? canZkLoginSignForOwner(zkSession.address) : false);
 
     if (zkCanSign) {
       registerWalletAuthSigner(async (signOwner) => {

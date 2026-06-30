@@ -2,12 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { config } from '../config.js';
+import { computeWalrusSitesRenewalStatus } from './walrus-sites-renewal.js';
 
 export type WalrusSiteProjection = {
   site_object_id: string | null;
   network: string | null;
   storage_epochs: number | string | null;
   last_deploy_ms: number | null;
+  last_renew_ms?: number | null;
   portal_note: string | null;
   dist_path?: string | null;
 };
@@ -18,6 +20,10 @@ export type LaunchOpsWalrusSitesReadiness = {
   network: string | null;
   storage_epochs: number | string | null;
   last_deploy_ms: number | null;
+  last_renew_ms: number | null;
+  renewal_due: boolean;
+  expires_at_ms: number | null;
+  epochs_remaining_approx: number | null;
   portal_note: string;
   ws_resources_present: boolean;
 };
@@ -69,8 +75,15 @@ export function readWalrusSiteProjection(): WalrusSiteProjection | null {
     network: process.env.NAMI_WALRUS_SITE_NETWORK ?? config.network,
     storage_epochs: process.env.NAMI_WALRUS_SITE_EPOCHS ?? null,
     last_deploy_ms: null,
+    last_renew_ms: null,
     portal_note: null,
   };
+}
+
+export function writeWalrusSiteProjection(projection: WalrusSiteProjection): void {
+  const filePath = projectionFilePath();
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(projection, null, 2) + '\n');
 }
 
 export function readWsResourcesObjectId(): string | null {
@@ -87,6 +100,11 @@ export function buildWalrusSitesReadiness(): LaunchOpsWalrusSitesReadiness {
   const siteObjectId =
     projection?.site_object_id ?? (envObjectId || wsObjectId || null);
   const wsResourcesPresent = fs.existsSync(wsResourcesSourcePath());
+  const renewal = computeWalrusSitesRenewalStatus({
+    last_deploy_ms: projection?.last_deploy_ms ?? null,
+    last_renew_ms: projection?.last_renew_ms ?? null,
+    storage_epochs: projection?.storage_epochs ?? null,
+  });
 
   return {
     configured: Boolean(siteObjectId),
@@ -94,6 +112,10 @@ export function buildWalrusSitesReadiness(): LaunchOpsWalrusSitesReadiness {
     network: projection?.network ?? config.network,
     storage_epochs: projection?.storage_epochs ?? null,
     last_deploy_ms: projection?.last_deploy_ms ?? null,
+    last_renew_ms: projection?.last_renew_ms ?? null,
+    renewal_due: renewal.renewal_due,
+    expires_at_ms: renewal.expires_at_ms,
+    epochs_remaining_approx: renewal.epochs_remaining_approx,
     portal_note: projection?.portal_note ?? DEFAULT_PORTAL_NOTE,
     ws_resources_present: wsResourcesPresent,
   };

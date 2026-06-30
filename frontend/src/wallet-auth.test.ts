@@ -7,7 +7,9 @@ import {
   canPromptWalletSignature,
   createCatalogSyncAuthPayload,
   createEquipSyncAuthPayload,
+  createGiftPaymentAuthPayload,
   createWalletAuthPayload,
+  describeGiftPaymentAuthFailure,
   registerWalletAuthSigner,
   resetWalletAuthStateForTests,
   setWalletAuthContext,
@@ -36,6 +38,10 @@ const { canZkLoginSignForOwnerMock, getZkLoginSessionMock } = vi.hoisted(() => (
 vi.mock('./zklogin.js', () => ({
   canZkLoginSignForOwner: canZkLoginSignForOwnerMock,
   getZkLoginSession: getZkLoginSessionMock,
+  isZkLoginSessionSignable: vi.fn(
+    (session: { ephemeralSecretKey?: string } | null) =>
+      typeof session?.ephemeralSecretKey === 'string' && session.ephemeralSecretKey.trim() !== ''
+  ),
 }));
 
 import { readWalletAuthRequired } from './protocol-env.js';
@@ -327,5 +333,28 @@ describe('wallet-auth', () => {
     expect(second).toEqual(first);
     expect(third).toEqual(first);
     expect(signer).toHaveBeenCalledTimes(1);
+  });
+
+  it('explains when official owner gifts need zkLogin signing keys', () => {
+    setWalletAuthContext({
+      owner: OFFICIAL_OWNER,
+      source: 'zklogin',
+      memberVerified: true,
+    });
+
+    expect(describeGiftPaymentAuthFailure(OFFICIAL_OWNER)).toContain('Google zkLogin signing keys');
+  });
+
+  it('signs gift checkout directly with zkLogin when the session is signable', async () => {
+    canZkLoginSignForOwnerMock.mockReturnValue(true);
+    getZkLoginSessionMock.mockReturnValue({
+      address: TEST_OWNER,
+      ephemeralSecretKey: Ed25519Keypair.generate().getSecretKey(),
+    });
+
+    const payload = await createGiftPaymentAuthPayload(TEST_OWNER);
+
+    expect(payload?.signature).toBeTruthy();
+    expect(payload?.signerAddress).toBeTruthy();
   });
 });

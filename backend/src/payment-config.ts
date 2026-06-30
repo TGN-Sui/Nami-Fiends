@@ -78,5 +78,39 @@ export const paymentConfig = {
   /** When false, card/Stripe checkout stays off even if keys are configured. */
   cardCheckoutEnabled: readBoolean('NAMI_CARD_CHECKOUT_ENABLED', false),
 
+  /**
+   * Gift revenue split defaults (creator / channel owner / platform treasury).
+   * When no channel owner is attached to a gift target, the channel-owner share
+   * rolls into the platform treasury share for MVP settlement.
+   */
+  giftRevenueSplitCreatorPercent: readNumber('NAMI_GIFT_SPLIT_CREATOR_PERCENT', 70),
+  giftRevenueSplitChannelOwnerPercent: readNumber('NAMI_GIFT_SPLIT_CHANNEL_OWNER_PERCENT', 20),
+  giftRevenueSplitPlatformPercent: readNumber('NAMI_GIFT_SPLIT_PLATFORM_PERCENT', 10),
+
   httpPort: baseConfig.httpPort,
 } as const;
+
+export function giftRevenueSplitPercents(): {
+  creator: number;
+  channelOwner: number;
+  platform: number;
+} {
+  const creator = paymentConfig.giftRevenueSplitCreatorPercent;
+  const channelOwner = paymentConfig.giftRevenueSplitChannelOwnerPercent;
+  const platform = paymentConfig.giftRevenueSplitPlatformPercent;
+  const total = creator + channelOwner + platform;
+
+  if (Math.abs(total - 100) > 0.01) {
+    throw new Error(
+      'Gift revenue split must total 100% (got ' +
+        creator +
+        '/' +
+        channelOwner +
+        '/' +
+        platform +
+        ').'
+    );
+  }
+
+  return { creator, channelOwner, platform };
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
+import { ChatComposerAnchorPopover } from './chat-composer-anchor-popover.js';
 import { mergeQualifiedChatEmojis } from './chat-composer-emojis.js';
 import { emojiShortcodeToken, useNamiCustomEmojis, type NamiCustomEmoji } from './nami-custom-emojis-store.js';
 
@@ -10,7 +11,7 @@ type ChatEmojiPickerProps = {
   onSelect: (token: string) => void;
 };
 
-export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | null {
+export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement {
   useNamiCustomEmojis();
   const emojis = mergeQualifiedChatEmojis(props.emojis ?? []);
   const [open, setOpen] = useState(false);
@@ -22,7 +23,9 @@ export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | nul
     }
 
     function handlePointerDown(event: MouseEvent): void {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (!rootRef.current?.contains(target) && !(target instanceof Element && target.closest('.chat-emoji-picker-popover'))) {
         setOpen(false);
       }
     }
@@ -42,11 +45,11 @@ export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | nul
     };
   }, [open]);
 
-  if (emojis.length === 0) {
-    return null;
-  }
-
   function selectEmoji(shortcode: string): void {
+    if (props.disabled) {
+      return;
+    }
+
     props.onSelect(emojiShortcodeToken(shortcode));
     setOpen(false);
   }
@@ -57,24 +60,31 @@ export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | nul
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Insert emoji"
-        className="chat-emoji-picker-toggle"
-        disabled={props.disabled}
+        className={'chat-emoji-picker-toggle' + (open ? ' is-open-chat-emoji-picker' : '')}
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
         <span aria-hidden="true">☺</span>
       </button>
 
-      {open ? (
-        <div className="chat-emoji-picker-popover" role="dialog" aria-label="Emoji picker">
-          <div className="chat-emoji-picker-heading">
-            <strong>{props.pickerLabel ?? 'Nami emojis'}</strong>
-            <span>{emojis.length} available</span>
-          </div>
+      <ChatComposerAnchorPopover
+        anchorRef={rootRef}
+        ariaLabel="Emoji picker"
+        className="chat-emoji-picker-popover"
+        open={open}
+      >
+        <div className="chat-emoji-picker-heading">
+          <strong>{props.pickerLabel ?? 'Nami emojis'}</strong>
+          <span>{emojis.length} available</span>
+        </div>
+        {emojis.length === 0 ? (
+          <p className="chat-composer-picker-empty">No emojis are available in this chat yet.</p>
+        ) : (
           <div className="chat-emoji-picker-grid">
             {emojis.map((emoji) => (
               <button
                 className="chat-emoji-picker-option"
+                disabled={props.disabled}
                 key={emoji.id}
                 onClick={() => selectEmoji(emoji.shortcode)}
                 title={emoji.label + ' (' + emojiShortcodeToken(emoji.shortcode) + ')'}
@@ -84,8 +94,11 @@ export function ChatEmojiPicker(props: ChatEmojiPickerProps): ReactElement | nul
               </button>
             ))}
           </div>
-        </div>
-      ) : null}
+        )}
+        {props.disabled ? (
+          <p className="chat-composer-picker-empty">Sign in and verify to insert emojis.</p>
+        ) : null}
+      </ChatComposerAnchorPopover>
     </div>
   );
 }

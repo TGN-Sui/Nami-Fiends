@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { BadgeCollectorsBook } from './BadgeCollectorsBook.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { memberChatGiftTarget } from './chat-composer-gift-target.js';
 import { ChatPokeButton } from './ChatPokeButton.js';
 import { EmbeddedSocialPanel } from './EmbeddedSocialPanel.js';
 import { MemberAudienceSubchannelHub } from './MemberAudienceSubchannelHub.js';
@@ -329,6 +330,7 @@ export function VisitorProfileScreen(props: {
                           ariaLabel={'Private message to ' + props.member.name}
                           canSend={canMessage}
                           className="chat-composer-row message-log-composer"
+                          giftTarget={memberChatGiftTarget(props.member)}
                           onChange={setPrivateDraft}
                           onSend={() => {
                             if (!privateDraft.trim()) {

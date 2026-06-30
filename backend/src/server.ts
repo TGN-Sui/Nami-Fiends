@@ -13,6 +13,19 @@ import {
   handleStripeWebhookPost,
 } from './routes/membership-payments.routes.js';
 import {
+  handleGiftCatalogGet,
+  handleGiftCatalogSync,
+  handleGiftOptions,
+  handleGiftIntentCreate,
+  handleGiftIntentCryptoConfirm,
+  handleGiftIntentGet,
+  handleGiftIntentGoonFulfill,
+  handleGiftIntentMockConfirm,
+  handleGiftPayPalWebhookPost,
+  handleGiftRecentGet,
+  handleGiftStripeWebhookPost,
+} from './routes/gift-payments.routes.js';
+import {
   handleMembershipSubscriptionGet,
   handleMembershipSubscriptionSync,
 } from './routes/membership-subscriptions.routes.js';
@@ -1065,6 +1078,73 @@ const routes: Route[] = [
     handler: (_registry, request, response) => handlePayPalWebhookPost(request, response),
   },
   {
+    method: ['GET', 'OPTIONS'],
+    pattern: /^\/api\/gifts\/catalog$/,
+    paramNames: [],
+    handler: (_registry, request, response) =>
+      request.method === 'OPTIONS'
+        ? handleGiftOptions(request, response)
+        : handleGiftCatalogGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/catalog\/sync$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleGiftCatalogSync(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/intents$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleGiftIntentCreate(request, response),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/gifts\/intents\/([^/]+)$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handleGiftIntentGet(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/intents\/([^/]+)\/fulfill$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handleGiftIntentGoonFulfill(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/intents\/([^/]+)\/mock\/confirm$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handleGiftIntentMockConfirm(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/intents\/([^/]+)\/crypto\/confirm$/,
+    paramNames: ['paymentId'],
+    handler: (_registry, request, response, params) =>
+      handleGiftIntentCryptoConfirm(request, response, params.paymentId ?? ''),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/api\/gifts\/recent$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleGiftRecentGet(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/webhooks\/stripe$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleGiftStripeWebhookPost(request, response),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/api\/gifts\/webhooks\/paypal$/,
+    paramNames: [],
+    handler: (_registry, request, response) => handleGiftPayPalWebhookPost(request, response),
+  },
+  {
     method: 'GET',
     pattern: /^\/api\/memberships\/subscriptions\/owner\/([^/]+)$/,
     paramNames: ['owner'],
@@ -1531,6 +1611,6 @@ export function startReadOnlyServer(
 
   server.listen(config.httpPort, '0.0.0.0', () => {
     console.log(`[nami-http] read-only API listening on http://0.0.0.0:${config.httpPort}`);
-    console.log('[nami-http] routes: /health, /ready, /stats, /api/payments/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
+    console.log('[nami-http] routes: /health, /ready, /stats, /api/payments/*, /api/gifts/*, /api/memberships/*, /api/member-preferences/*, /api/media/*, /api/guilds/*, /api/squads/*, /api/recovery/*, /api/appeals/*, /api/jury/*, /api/passports/*, /api/profiles/*, /api/channels/*, /api/channel-access/*, /api/moderation/*, /api/badges/history/*, /api/boosts/history/*');
   });
 }

@@ -92,6 +92,56 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
             </ul>
           </section>
 
+          {summary.security_review ? (
+            <section className="launch-ops-card">
+              <h3>Security &amp; Custody (Phase 8.4)</h3>
+              <ul className="protocol-timeline-list">
+                <li className="protocol-timeline-item">
+                  Backup holder{' '}
+                  <strong>
+                    {summary.security_review.backup_holder_configured ? 'assigned' : 'missing'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Mock payments{' '}
+                  <strong>
+                    {summary.security_review.mock_payments_disabled ? 'disabled' : 'allowed'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Seal evidence key{' '}
+                  <strong>
+                    {summary.security_review.seal_key_configured ? 'configured' : 'missing'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Officials sync secret{' '}
+                  <strong>
+                    {summary.security_review.officials_sync_secret_server_only
+                      ? 'server-only'
+                      : 'check frontend env'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Security script{' '}
+                  <strong>
+                    {summary.security_review.security_script_last_run_ms
+                      ? formatTimestamp(summary.security_review.security_script_last_run_ms)
+                      : 'not recorded'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Review gate{' '}
+                  <strong>{summary.security_review.review_ready ? 'ready' : 'blocked'}</strong>
+                </li>
+              </ul>
+              <p className="protocol-hint">
+                Run <code>node scripts/verify-security-review.mjs</code> before public URL. See{' '}
+                <code>docs/security-audit.md</code>.
+              </p>
+            </section>
+          ) : null}
+
           <section className="launch-ops-card">
             <h3>Phase 8 exit gates</h3>
             <ul className="protocol-timeline-list">
@@ -145,6 +195,15 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
                 <li className="protocol-timeline-item">
                   Policies in use <strong>{summary.seal_privacy.policies_in_use.length}</strong>
                 </li>
+                {summary.seal_privacy.migration_stage ? (
+                  <li className="protocol-timeline-item">
+                    Migration stage <strong>{summary.seal_privacy.migration_stage}</strong>
+                  </li>
+                ) : null}
+                <li className="protocol-timeline-item">
+                  Walrus ciphertext blobs{' '}
+                  <strong>{summary.seal_privacy.walrus_ciphertext_count ?? 0}</strong>
+                </li>
               </ul>
               <p className="protocol-hint">{summary.seal_privacy.stack_note}</p>
             </section>
@@ -185,6 +244,30 @@ export function LaunchOpsPanel(props: { embedded?: boolean } = {}): ReactElement
                       : 'never'}
                   </strong>
                 </li>
+                <li className="protocol-timeline-item">
+                  Last renew{' '}
+                  <strong>
+                    {summary.walrus_sites.last_renew_ms
+                      ? new Date(summary.walrus_sites.last_renew_ms).toLocaleString()
+                      : 'never'}
+                  </strong>
+                </li>
+                <li className="protocol-timeline-item">
+                  Renewal status{' '}
+                  <strong>
+                    {summary.walrus_sites.renewal_due
+                      ? 'due — run renew-walrus-sites.mjs'
+                      : summary.walrus_sites.epochs_remaining_approx !== null
+                        ? '~' + summary.walrus_sites.epochs_remaining_approx + ' epoch(s) left'
+                        : 'unknown'}
+                  </strong>
+                </li>
+                {summary.walrus_sites.expires_at_ms ? (
+                  <li className="protocol-timeline-item">
+                    Expires approx{' '}
+                    <strong>{new Date(summary.walrus_sites.expires_at_ms).toLocaleString()}</strong>
+                  </li>
+                ) : null}
               </ul>
               <p className="protocol-hint">{summary.walrus_sites.portal_note}</p>
             </section>

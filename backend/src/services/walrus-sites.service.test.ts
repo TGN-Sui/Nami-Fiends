@@ -66,4 +66,58 @@ describe('walrus-sites.service', () => {
     assert.equal(readiness.configured, true);
     assert.equal(readiness.site_object_id, '0xenvsite');
   });
+
+  it('reports renewal_due when storage epochs are near expiry', async () => {
+    const projectionDir = path.join(tempDir, 'projections');
+    fs.mkdirSync(projectionDir, { recursive: true });
+
+    const { WALRUS_SITE_EPOCH_DURATION_MS } = await import('./walrus-sites-renewal.js');
+    const expiredAnchor = Date.now() - 6 * WALRUS_SITE_EPOCH_DURATION_MS;
+
+    fs.writeFileSync(
+      path.join(projectionDir, 'walrus-site.json'),
+      JSON.stringify({
+        site_object_id: '0xrenewme',
+        network: 'testnet',
+        storage_epochs: 5,
+        last_deploy_ms: expiredAnchor,
+        last_renew_ms: null,
+        portal_note: 'Renew soon.',
+      }),
+    );
+
+    const { buildWalrusSitesReadiness } = await import('./walrus-sites.service.js');
+    const readiness = buildWalrusSitesReadiness();
+
+    assert.equal(readiness.renewal_due, true);
+    assert.ok(readiness.expires_at_ms);
+    assert.equal(readiness.epochs_remaining_approx, 0);
+  });
+
+  it('prefers last_renew_ms over last_deploy_ms for renewal anchor', async () => {
+    const projectionDir = path.join(tempDir, 'projections');
+    fs.mkdirSync(projectionDir, { recursive: true });
+
+    const { WALRUS_SITE_EPOCH_DURATION_MS } = await import('./walrus-sites-renewal.js');
+    const oldDeploy = Date.now() - 10 * WALRUS_SITE_EPOCH_DURATION_MS;
+    const recentRenew = Date.now() - WALRUS_SITE_EPOCH_DURATION_MS;
+
+    fs.writeFileSync(
+      path.join(projectionDir, 'walrus-site.json'),
+      JSON.stringify({
+        site_object_id: '0xrenewed',
+        network: 'testnet',
+        storage_epochs: 5,
+        last_deploy_ms: oldDeploy,
+        last_renew_ms: recentRenew,
+        portal_note: 'Recently renewed.',
+      }),
+    );
+
+    const { buildWalrusSitesReadiness } = await import('./walrus-sites.service.js');
+    const readiness = buildWalrusSitesReadiness();
+
+    assert.equal(readiness.renewal_due, false);
+    assert.ok(readiness.epochs_remaining_approx && readiness.epochs_remaining_approx > 0);
+  });
 });

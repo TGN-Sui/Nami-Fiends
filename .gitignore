@@ -7,5 +7,8 @@ deployments/testnet/render.env
 deployments/testnet/vercel.env
 deployments/testnet/seal-evidence-key.txt
 deployments/testnet/deploy-urls.json
+deployments/testnet/security-review-last-run.json
+backend/data/projections/security-review.json
+data/
 
 agent-tools/

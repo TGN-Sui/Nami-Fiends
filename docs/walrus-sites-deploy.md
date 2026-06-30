@@ -57,6 +57,7 @@ Prints the `site-builder deploy` command without uploading.
 | `scripts/install-walrus-clis.ps1` | Install Walrus + site-builder on Windows |
 | `scripts/start-walrus-portal.ps1` | Run local testnet Walrus Sites portal |
 | `scripts/apply-walrus-sites-cutover.mjs` | Sync deploy metadata into env / projection after deploy |
+| `scripts/renew-walrus-sites.mjs` | Epoch renewal ops — prints deploy command, `--run` updates `last_renew_ms` |
 | `scripts/walrus-sites-config-path.mjs` | Shared config + projection path helpers (imported by deploy scripts) |
 
 Quick readiness check:
@@ -131,10 +132,13 @@ See [testnet-zklogin.md](./testnet-zklogin.md).
 Walrus Sites re-upload the **entire quilt** on each `deploy` — even unchanged files. Re-run deploy before epochs expire:
 
 ```bash
-node scripts/deploy-walrus-sites.mjs --epochs 5 --context testnet
+node scripts/renew-walrus-sites.mjs
+node scripts/renew-walrus-sites.mjs --run --epochs 5 --context testnet
 ```
 
-Launch Ops → **Walrus Sites (SPA)** shows last deploy time and site object id.
+`renew-walrus-sites.mjs` reads `walrus-site.json` + `deployments/testnet/walrus-sites-deploy.json`, warns when epochs are expiring, and with `--run` invokes `site-builder deploy` then writes `last_renew_ms`.
+
+Launch Ops → **Walrus Sites (SPA)** shows last deploy/renew time, renewal status, and site object id.
 
 ---
 

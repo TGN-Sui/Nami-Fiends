@@ -22,7 +22,11 @@ export type LaunchOpsSealPrivacyReadiness = {
   enabled: boolean;
   key_configured: boolean;
   sealed_count: number;
+  walrus_publisher_configured?: boolean;
+  walrus_ciphertext_count?: number;
   policies_in_use: string[];
+  migration_stage?: string;
+  migration_next_step?: string;
   stack_note: string;
 };
 
@@ -32,6 +36,10 @@ export type LaunchOpsWalrusSitesReadiness = {
   network: string | null;
   storage_epochs: number | string | null;
   last_deploy_ms: number | null;
+  last_renew_ms: number | null;
+  renewal_due: boolean;
+  expires_at_ms: number | null;
+  epochs_remaining_approx: number | null;
   portal_note: string;
   ws_resources_present: boolean;
 };
@@ -58,6 +66,15 @@ export type LaunchOpsExitGates = {
   phase_8_launch_ready: boolean;
 };
 
+export type LaunchOpsSecurityReview = {
+  backup_holder_configured: boolean;
+  mock_payments_disabled: boolean;
+  seal_key_configured: boolean;
+  officials_sync_secret_server_only: boolean;
+  security_script_last_run_ms: number | null;
+  review_ready: boolean;
+};
+
 export type LaunchOpsSummary = {
   generated_at_ms: number;
   network: string;
@@ -70,6 +87,7 @@ export type LaunchOpsSummary = {
   seal_privacy: LaunchOpsSealPrivacyReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
+  security_review: LaunchOpsSecurityReview;
   pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;
   discovery: {

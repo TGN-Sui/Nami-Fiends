@@ -1,6 +1,8 @@
 import { useSignAndExecuteTransaction, useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
+import { GiftSendPanel } from './GiftSendPanel.js';
+import { GiftShowcaseRow } from './GiftShowcaseRow.js';
 import { GoonQuickBuy } from './GoonQuickBuy.js';
 import { isMemberVerified } from './member-access.js';
 import { guildMaxMembers } from './nami-affiliations.js';
@@ -29,6 +31,7 @@ import {
 } from './squad-roster-store.js';
 import { isSelfMember } from './surface-preferences.js';
 import { type NamiMember } from './uiMockData.js';
+import { useProtocolOwner } from './wallet.js';
 
 
 type MemberProfileActionsProps = {
@@ -38,13 +41,17 @@ type MemberProfileActionsProps = {
 
 export function MemberProfileActions(props: MemberProfileActionsProps): ReactElement | null {
   const selfMember = useSelfMember();
+  const { owner } = useProtocolOwner();
   const walletAccount = useCurrentAccount();
+  const payerAddress = walletAccount?.address ?? owner ?? null;
   const suiClient = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
 
-  const showBuy = Boolean(walletAccount?.address);
+  const showBuy = Boolean(payerAddress?.startsWith('0x'));
   const showTip =
-    !isSelfMember(props.member.id) && Boolean(walletAccount?.address) && isMemberVerified(selfMember);
+    !isSelfMember(props.member.id) && Boolean(payerAddress?.startsWith('0x')) && isMemberVerified(selfMember);
+  const showGift =
+    !isSelfMember(props.member.id) && Boolean(payerAddress?.startsWith('0x')) && isMemberVerified(selfMember);
   const guildInvites = useGuildInvites();
   const squadRoster = useSquadRosterStore();
   const [inviteGuildId, setInviteGuildId] = useState('');
@@ -56,7 +63,9 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
   const [goonCoinType, setGoonCoinType] = useState(readConfiguredGoonCoinType());
   const [tipTreasuryAddress, setTipTreasuryAddress] = useState<string | null>(null);
   const [goonLoading, setGoonLoading] = useState(false);
-  const [activePanel, setActivePanel] = useState<'invite' | 'squad-invite' | 'buy' | 'tip' | null>(null);
+  const [activePanel, setActivePanel] = useState<
+    'invite' | 'squad-invite' | 'buy' | 'tip' | 'gift' | null
+  >(null);
 
   const invitableGuilds = useMemo(
     () => invitableGuildsForTarget(props.member.id),
@@ -86,7 +95,7 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
       });
   }, []);
 
-  if (!showGuildInvite && !showSquadInvite && !showBuy && !showTip) {
+  if (!showGuildInvite && !showSquadInvite && !showBuy && !showTip && !showGift) {
     return null;
   }
 
@@ -252,7 +261,24 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
             Tip {NAMI_GOON_SYMBOL}
           </button>
         ) : null}
+
+        {showGift ? (
+          <button
+            className={
+              'nami-surface-button' + (activePanel === 'gift' ? ' is-active-surface-button' : '')
+            }
+            onClick={() => {
+              setGoonStatus(null);
+              setActivePanel(activePanel === 'gift' ? null : 'gift');
+            }}
+            type="button"
+          >
+            Send Gift
+          </button>
+        ) : null}
       </div>
+
+      <GiftShowcaseRow memberId={props.member.id} memberName={props.member.name} />
 
       {tipsTotal > 0 ? (
         <p className="member-profile-goon-total">
@@ -319,6 +345,17 @@ export function MemberProfileActions(props: MemberProfileActionsProps): ReactEle
 
       {activePanel === 'buy' ? (
         <GoonQuickBuy onClose={() => setActivePanel(null)} />
+      ) : null}
+
+      {activePanel === 'gift' ? (
+        <GiftSendPanel
+          onClose={() => setActivePanel(null)}
+          onSent={setGoonStatus}
+          target={{
+            targetType: 'member',
+            targetMember: props.member,
+          }}
+        />
       ) : null}
 
       {activePanel === 'tip' ? (

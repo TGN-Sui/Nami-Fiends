@@ -1,4 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { config } from '../config.js';
+import { isConfiguredWalletAddress, paymentConfig } from '../payment-config.js';
 import { isWalrusBorderArtConfigured } from '../walrus-config.js';
 import {
   buildChannelDiscoveryRankings,
@@ -9,7 +13,6 @@ import { readBorderArtCatalogQuiltSnapshot } from './chat-overlay-rewards.servic
 import { readSealPrivacyReadiness, type SealPrivacyReadiness } from './seal-privacy.service.js';
 import { buildWalrusSitesReadiness } from './walrus-sites.service.js';
 import { getOfficialsSubmissions } from './officials-submissions.service.js';
-import { paymentConfig } from '../payment-config.js';
 import { getPublicPaymentConfig } from './membership-payments.service.js';
 import type { ProjectionRegistry } from '../projection-registry.js';
 
@@ -45,6 +48,10 @@ export interface LaunchOpsWalrusSitesReadiness {
   network: string | null;
   storage_epochs: number | string | null;
   last_deploy_ms: number | null;
+  last_renew_ms: number | null;
+  renewal_due: boolean;
+  expires_at_ms: number | null;
+  epochs_remaining_approx: number | null;
   portal_note: string;
   ws_resources_present: boolean;
 }
@@ -71,6 +78,15 @@ export interface LaunchOpsExitGates {
   phase_8_launch_ready: boolean;
 }
 
+export interface LaunchOpsSecurityReview {
+  backup_holder_configured: boolean;
+  mock_payments_disabled: boolean;
+  seal_key_configured: boolean;
+  officials_sync_secret_server_only: boolean;
+  security_script_last_run_ms: number | null;
+  review_ready: boolean;
+}
+
 export interface LaunchOpsSummary {
   generated_at_ms: number;
   network: string;
@@ -83,6 +99,7 @@ export interface LaunchOpsSummary {
   seal_privacy: SealPrivacyReadiness;
   walrus_border_art: LaunchOpsWalrusBorderArtReadiness;
   exit_gates: LaunchOpsExitGates;
+  security_review: LaunchOpsSecurityReview;
   pending_actions: string[];
   officials_pending: LaunchOpsOfficialsPending;
   discovery: LaunchOpsDiscoverySnapshot;
@@ -95,6 +112,55 @@ export interface LaunchOpsSummary {
     appeals_open: number;
     recovery_open: number;
     jury_open: number;
+  };
+}
+
+function readSecurityScriptLastRunMs(): number | null {
+  const fromEnv = (process.env.NAMI_SECURITY_REVIEW_LAST_RUN_MS ?? '').trim();
+
+  if (/^\d+$/.test(fromEnv)) {
+    return Number(fromEnv);
+  }
+
+  const dataDir = (process.env.NAMI_DATA_DIR ?? config.dataDir).trim().replace(/\/$/, '') || 'data';
+  const projectionPath = path.join(dataDir, 'projections', 'security-review.json');
+
+  if (!fs.existsSync(projectionPath)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(projectionPath, 'utf8')) as {
+      last_run_ms?: unknown;
+    };
+
+    return typeof parsed.last_run_ms === 'number' ? parsed.last_run_ms : null;
+  } catch {
+    return null;
+  }
+}
+
+export function buildSecurityReviewReadiness(
+  sealPrivacy: SealPrivacyReadiness,
+): LaunchOpsSecurityReview {
+  const backup_holder_configured = isConfiguredWalletAddress(
+    process.env.NAMI_ADMIN_CAP_BACKUP_HOLDER ?? '',
+  );
+  const mock_payments_disabled = config.testLaunch ? !paymentConfig.allowMockProviders : true;
+  const seal_key_configured = sealPrivacy.key_configured;
+  const security_script_last_run_ms = readSecurityScriptLastRunMs();
+  const review_ready =
+    backup_holder_configured &&
+    mock_payments_disabled &&
+    config.officialOwner.trim() !== '';
+
+  return {
+    backup_holder_configured,
+    mock_payments_disabled,
+    seal_key_configured,
+    officials_sync_secret_server_only: true,
+    security_script_last_run_ms,
+    review_ready,
   };
 }
 
@@ -163,12 +229,19 @@ export async function buildLaunchOpsSummary(
     pendingActions.push('Optional: set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET for PayPal checkout.');
   }
 
-  if (!process.env.NAMI_ADMIN_CAP_BACKUP_HOLDER?.trim()) {
+  const walrusBorderArt = config.walrus;
+  const catalogQuilt = await readBorderArtCatalogQuiltSnapshot();
+  const walrusSites = buildWalrusSitesReadiness();
+  const sealPrivacy = await readSealPrivacyReadiness();
+  const securityReview = buildSecurityReviewReadiness(sealPrivacy);
+
+  if (!securityReview.backup_holder_configured) {
     pendingActions.push('Assign AdminCap backup holder (see docs/admincap-custody.md).');
   }
 
-  const walrusBorderArt = config.walrus;
-  const catalogQuilt = await readBorderArtCatalogQuiltSnapshot();
+  if (!securityReview.review_ready) {
+    pendingActions.push('Run node scripts/verify-security-review.mjs before sharing public URL.');
+  }
 
   if (!isWalrusBorderArtConfigured(walrusBorderArt)) {
     pendingActions.push(
@@ -182,9 +255,6 @@ export async function buildLaunchOpsSummary(
     );
   }
 
-  const walrusSites = buildWalrusSitesReadiness();
-  const sealPrivacy = await readSealPrivacyReadiness();
-
   if (!sealPrivacy.enabled) {
     pendingActions.push(
       'Phase 9.2: enable Seal privacy lane (NAMI_SEAL_PRIVACY_ENABLED + NAMI_SEAL_EVIDENCE_KEY) for encrypted appeal/moderation evidence.',
@@ -196,6 +266,10 @@ export async function buildLaunchOpsSummary(
   if (!walrusSites.configured) {
     pendingActions.push(
       'Phase 9.1: deploy static SPA to Walrus Sites (node scripts/deploy-walrus-sites.mjs) and set NAMI_WALRUS_SITE_OBJECT_ID.',
+    );
+  } else if (walrusSites.renewal_due) {
+    pendingActions.push(
+      'Phase 9.1: Walrus Sites storage epochs expiring — run node scripts/renew-walrus-sites.mjs --run.',
     );
   }
 
@@ -238,6 +312,7 @@ export async function buildLaunchOpsSummary(
       crypto_checkout_ready: cryptoCheckoutReady,
       phase_8_launch_ready: corePolicyReady && cardCheckoutReady,
     },
+    security_review: securityReview,
     pending_actions: pendingActions,
     officials_pending: {
       suggestions,

@@ -288,6 +288,7 @@ import { UniversalCalendarPanel } from './UniversalCalendarPanel.js';
 import { openUniversalCalendarOverlay } from './universal-calendar-overlay-store.js';
 import { NamiFavoritedChatDock } from './NamiFavoritedChatDock.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { memberChatGiftTarget } from './chat-composer-gift-target.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -4035,6 +4036,7 @@ function MessageLogScreen(props: {
           ariaLabel={'Private message to ' + props.member.name}
           canSend={canSend}
           className="chat-composer-row message-log-composer"
+          giftTarget={memberChatGiftTarget(props.member)}
           onChange={setDraft}
           onSend={sendPrivateReply}
           placeholder={

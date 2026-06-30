@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { guildChatGiftTarget } from './chat-composer-gift-target.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 
 import { ChatWindowExpandable } from './ChatWindowExpandable.js';
@@ -302,6 +303,7 @@ function GuildChatPanel(props: {
           ariaLabel={'Message ' + props.guild.name + ' guild chat'}
           canSend={canSend}
           className="chat-composer-row guild-chat-composer"
+          giftTarget={guildChatGiftTarget(props.guild)}
           onChange={setDraft}
           onSend={sendMessage}
           placeholder={

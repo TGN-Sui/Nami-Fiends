@@ -23,6 +23,7 @@ import {
 } from './member-feed-abuse-store.js';
 import { getSelfMember } from './member-access.js';
 import { members } from './uiMockData.js';
+import { MemberGiftActionBar } from './MemberGiftActionBar.js';
 import { SocialEmbedPlayer } from './SocialEmbedPlayer.js';
 import { resolveSocialEmbed } from './social-embed.js';
 import {
@@ -347,9 +348,30 @@ export function EmbeddedSocialPanel(props: {
 
         {!collapsed ? (
           <div className="embedded-social-accordion-body">
-            <SocialEmbedPlayer embed={embed} featured={featured} surface={props.surface} />
+            <SocialEmbedPlayer
+              embed={embed}
+              featured={featured}
+              giftTargetMember={feedOwner}
+              streamKey={cardKey}
+              surface={props.surface}
+            />
 
             <div className="embedded-social-card-actions">
+              {feedOwner && !resolved.playable ? (
+                <MemberGiftActionBar
+                  className="embedded-social-card-gift-bar"
+                  giftTarget={
+                    embed.live && (embed.platform === 'twitch' || embed.platform === 'youtube')
+                      ? {
+                          targetType: 'stream',
+                          streamKey: cardKey,
+                          streamTitle: embed.title,
+                        }
+                      : { targetType: 'member' }
+                  }
+                  member={feedOwner}
+                />
+              ) : null}
               <a
                 className="nami-surface-button embedded-social-open-external"
                 href={resolved.externalUrl}

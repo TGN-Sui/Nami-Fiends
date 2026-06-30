@@ -86,6 +86,7 @@ import {
   useMemberTemporaryGlobalChats,
 } from './global-chat-rooms-store.js';
 import { ChatComposerWithEmojis } from './ChatComposerWithEmojis.js';
+import { globalChatGiftTarget } from './chat-composer-gift-target.js';
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 
 import { ChatWindowExpandable, type ChatExpandControl } from './ChatWindowExpandable.js';
@@ -336,6 +337,7 @@ export function GlobalChatRoomView(props: {
               emojiPickerLabel: props.chat.title + ' genre emojis',
             }
           : {})}
+        giftTarget={globalChatGiftTarget(props.chat)}
         onChange={setDraft}
         onSend={sendMessage}
         placeholder={
