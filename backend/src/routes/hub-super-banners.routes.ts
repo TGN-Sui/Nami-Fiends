@@ -1,5 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import type { ProjectionRegistry } from '../projection-registry.js';
+import {
+  assertCanPublishSuperBanner,
+  recordSuperBannerSend,
+} from '../services/hub-super-banner-gate.service.js';
 import {
   listActiveHubSuperBanners,
   publishHubSuperBanner,
@@ -47,27 +52,53 @@ export async function handleHubSuperBannersActiveGet(
   sendJson(response, 200, { campaigns });
 }
 
+export async function handleHubSuperBannersActivatePost(
+  _registry: ProjectionRegistry,
+  _request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  sendJson(response, 403, {
+    error: 'super_banner_activate_requires_payment',
+    message: 'Super Banner entitlement unlocks only after promotion payment fulfillment.',
+  });
+}
+
 export async function handleHubSuperBannersPublishPost(
+  registry: ProjectionRegistry,
   request: IncomingMessage,
   response: ServerResponse,
 ): Promise<void> {
   try {
     const body = await readJsonBody(request);
     const owner = typeof body.owner === 'string' ? body.owner : '';
+    const channelId = typeof body.channelId === 'string' ? body.channelId : '';
 
     if (!owner.startsWith('0x')) {
       sendJson(response, 400, { error: 'invalid_owner' });
       return;
     }
 
+    if (!channelId.trim()) {
+      sendJson(response, 400, { error: 'invalid_channel_id' });
+      return;
+    }
+
     await assertWalletAuthFromBody(owner, body);
 
+    await assertCanPublishSuperBanner({
+      registry,
+      channelId,
+      owner,
+    });
+
     const campaign = await publishHubSuperBanner({
-      channelId: typeof body.channelId === 'string' ? body.channelId : '',
+      channelId,
       coverUrl: typeof body.coverUrl === 'string' ? body.coverUrl : '',
       headline: typeof body.headline === 'string' ? body.headline : '',
       body: typeof body.body === 'string' ? body.body : '',
     });
+
+    await recordSuperBannerSend(channelId);
 
     sendJson(response, 200, { campaign });
   } catch (error) {
@@ -78,7 +109,22 @@ export async function handleHubSuperBannersPublishPost(
       return;
     }
 
-    if (message === 'invalid_super_banner_copy' || message === 'invalid_channel_id') {
+    if (
+      message === 'channel_not_found' ||
+      message === 'not_channel_owner' ||
+      message === 'super_banner_not_entitled' ||
+      message === 'super_banner_entitlement_expired' ||
+      message === 'super_banner_daily_limit'
+    ) {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
+    if (
+      message === 'invalid_super_banner_copy' ||
+      message === 'invalid_channel_id' ||
+      message === 'invalid_super_banner_cover'
+    ) {
       sendJson(response, 400, { error: message });
       return;
     }

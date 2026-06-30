@@ -624,7 +624,7 @@ export function resolveSuperBannerCoverUrl(channelId: string, coverUrl: string):
 }
 
 export type PromotionActionResult =
-  | { ok: true; message: string }
+  | { ok: true; message: string; checkoutUrl?: string | null }
   | { ok: false; reason: string };
 
 export function formatPromotionPrice(product: PromotionProduct, duration: PromotionDuration): string {
@@ -673,13 +673,41 @@ export function requestPromotionPurchase(
     };
   }
 
-  const state = readChannelOwnerPromotionsState(channelId);
-
   if (checkoutRail === 'other' && !cryptoAsset) {
     return { ok: false, reason: 'Choose SUI, USDC on Sui, or $GOON under Other.' };
   }
 
   const paymentId = 'promo-' + product + '-' + Date.now();
+
+  queuePromotionPendingPayment(
+    channelId,
+    product,
+    duration,
+    paymentId,
+    checkoutRail,
+    cryptoAsset,
+  );
+
+  return {
+    ok: true,
+    message:
+      'Checkout queued for ' +
+      PROMOTION_DURATION_LABELS[duration] +
+      ' (' +
+      formatPromotionPrice(product, duration) +
+      '). Continue to payment.',
+  };
+}
+
+function queuePromotionPendingPayment(
+  channelId: string,
+  product: PromotionProduct,
+  duration: PromotionDuration,
+  paymentId: string,
+  checkoutRail: MembershipCheckoutRail,
+  cryptoAsset: MembershipCryptoAsset | null,
+): void {
+  const state = readChannelOwnerPromotionsState(channelId);
 
   if (product === 'super-banner') {
     updateChannelPromotionBundle(channelId, (current) => ({
@@ -693,7 +721,10 @@ export function requestPromotionPurchase(
         updatedAtMs: Date.now(),
       },
     }));
-  } else if (product === 'hub-featured') {
+    return;
+  }
+
+  if (product === 'hub-featured') {
     updateChannelPromotionBundle(channelId, (current) => ({
       ...current,
       hubFeatured: {
@@ -706,42 +737,104 @@ export function requestPromotionPurchase(
         updatedAtMs: Date.now(),
       },
     }));
-  } else {
-    const ticket: PartnerCarouselTicket = state.partnerCarousel.ticket ?? {
-      id: 'partner-ticket-' + channelId,
-      channelId,
-      coverUrl: '',
-      title: '',
-      description: '',
-      duration,
-      status: 'draft',
-      submittedAtMs: null,
-      expiresAtMs: null,
-      updatedAtMs: Date.now(),
-    };
-
-    updateChannelPromotionBundle(channelId, (current) => ({
-      ...current,
-      partnerCarousel: {
-        ...current.partnerCarousel,
-        ticket: { ...ticket, channelId, duration, updatedAtMs: Date.now() },
-        pendingPaymentId: paymentId,
-        pendingCheckoutRail: checkoutRail,
-        pendingCryptoAsset: checkoutRail === 'other' ? cryptoAsset : null,
-        updatedAtMs: Date.now(),
-      },
-    }));
+    return;
   }
 
-  return {
-    ok: true,
-    message:
-      'Checkout queued for ' +
-      PROMOTION_DURATION_LABELS[duration] +
-      ' (' +
-      formatPromotionPrice(product, duration) +
-      '). Continue to payment.',
+  const ticket: PartnerCarouselTicket = state.partnerCarousel.ticket ?? {
+    id: 'partner-ticket-' + channelId,
+    channelId,
+    coverUrl: '',
+    title: '',
+    description: '',
+    duration,
+    status: 'draft',
+    submittedAtMs: null,
+    expiresAtMs: null,
+    updatedAtMs: Date.now(),
   };
+
+  updateChannelPromotionBundle(channelId, (current) => ({
+    ...current,
+    partnerCarousel: {
+      ...current.partnerCarousel,
+      ticket: { ...ticket, channelId, duration, updatedAtMs: Date.now() },
+      pendingPaymentId: paymentId,
+      pendingCheckoutRail: checkoutRail,
+      pendingCryptoAsset: checkoutRail === 'other' ? cryptoAsset : null,
+      updatedAtMs: Date.now(),
+    },
+  }));
+}
+
+export async function startPromotionCheckout(
+  channelId: string,
+  product: PromotionProduct,
+  duration: PromotionDuration,
+  checkoutRail: MembershipCheckoutRail = 'card',
+  cryptoAsset: MembershipCryptoAsset | null = null,
+  owner: string | null = null,
+): Promise<PromotionActionResult> {
+  const purchaseCapability =
+    product === 'partner-carousel' ? 'submit-partner-ticket' : 'purchase-promotions';
+
+  if (!preApprovedOwnerCapabilityAllowed(purchaseCapability, channelId)) {
+    return {
+      ok: false,
+      reason: preApprovedOwnerRestrictionMessage(
+        product === 'partner-carousel' ? 'Partner banner ticket submission' : 'Promotion purchases',
+      ),
+    };
+  }
+
+  if (checkoutRail === 'other' && !cryptoAsset) {
+    return { ok: false, reason: 'Choose SUI, USDC on Sui, or $GOON under Other.' };
+  }
+
+  const useLiveCardCheckout =
+    checkoutRail === 'card' &&
+    !isMockMembershipCheckoutEnabled() &&
+    owner?.startsWith('0x');
+
+  if (!useLiveCardCheckout) {
+    return requestPromotionPurchase(channelId, product, duration, checkoutRail, cryptoAsset);
+  }
+
+  const { createPromotionPaymentIntent, isPromotionPaymentApiAvailable } = await import(
+    './promotion-payments-api.js'
+  );
+
+  if (!isPromotionPaymentApiAvailable()) {
+    return requestPromotionPurchase(channelId, product, duration, checkoutRail, cryptoAsset);
+  }
+
+  try {
+    const response = await createPromotionPaymentIntent({
+      owner: owner!,
+      channelId,
+      product,
+      duration,
+    });
+
+    queuePromotionPendingPayment(
+      channelId,
+      product,
+      duration,
+      response.intent.id,
+      checkoutRail,
+      cryptoAsset,
+    );
+
+    return {
+      ok: true,
+      message: 'Redirecting to secure checkout…',
+      checkoutUrl: response.card?.checkoutUrl ?? null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : 'Promotion checkout failed.',
+    };
+  }
 }
 
 export function confirmPromotionPurchase(
@@ -767,13 +860,6 @@ export function confirmPromotionPurchase(
   }
 
   const state = readChannelOwnerPromotionsState(channelId);
-
-  if (!isMockMembershipCheckoutEnabled()) {
-    return {
-      ok: false,
-      reason: 'Complete checkout through the payment API. Local mock checkout is disabled.',
-    };
-  }
 
   if (product === 'super-banner') {
     if (state.superBanner.pendingPaymentId !== paymentId) {
@@ -994,28 +1080,29 @@ export function sendSuperBanner(channelId: string): PromotionActionResult {
   );
 
   void import('./hub-super-banner-api.js')
-    .then(({ isHubSuperBannerApiAvailable, publishHubSuperBannerToBackend }) => {
+    .then(async ({ isHubSuperBannerApiAvailable, publishHubSuperBannerToBackend }) => {
       if (!isHubSuperBannerApiAvailable()) {
-        return null;
+        return;
       }
 
-      return import('./protocol-owner-resolve.js').then(({ resolveProtocolOwnerState }) => {
-        const owner = resolveProtocolOwnerState().owner;
+      const { resolveProtocolOwnerState } = await import('./protocol-owner-resolve.js');
+      const owner = resolveProtocolOwnerState().owner;
 
-        if (!owner?.startsWith('0x')) {
-          return null;
-        }
+      if (!owner?.startsWith('0x')) {
+        return;
+      }
 
-        return publishHubSuperBannerToBackend({
-          owner,
-          channelId,
-          coverUrl: draft.coverUrl,
-          headline: draft.headline,
-          body: draft.body,
-        });
+      await publishHubSuperBannerToBackend({
+        owner,
+        channelId,
+        coverUrl: draft.coverUrl,
+        headline: draft.headline,
+        body: draft.body,
       });
     })
-    .catch(() => null);
+    .catch((error: unknown) => {
+      console.warn('[nami-super-banner] publish failed', error);
+    });
 
   return {
     ok: true,

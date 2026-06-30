@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { config } from '../config.js';
 import { syncRegisteredMemberAccount } from '../services/officials-submissions.service.js';
+import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
   const payload = `${JSON.stringify(body, null, 2)}\n`;
@@ -50,12 +51,31 @@ export async function handleMemberRegistrySync(
 
   try {
     const body = await readJsonBody(request);
-    const projection = await syncRegisteredMemberAccount(body.account);
+    const owner = typeof body.owner === 'string' ? body.owner : '';
+
+    if (!owner.startsWith('0x')) {
+      sendJson(response, 400, { error: 'invalid_owner' });
+      return;
+    }
+
+    await assertWalletAuthFromBody(owner, body);
+
+    const projection = await syncRegisteredMemberAccount(body.account, owner);
     sendJson(response, 200, { submissions: projection });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not sync member registry.';
 
-    if (message === 'invalid_member_account') {
+    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (message === 'member_registry_owner_mismatch') {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
+    if (message === 'invalid_member_account' || message === 'invalid_owner') {
       sendJson(response, 400, { error: message });
       return;
     }

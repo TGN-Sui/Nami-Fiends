@@ -4,6 +4,7 @@ import {
   getMembershipSubscription,
   syncMembershipSubscription,
 } from '../services/membership-subscriptions.service.js';
+import { assertWalletAuthFromBody } from '../services/wallet-auth.service.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -64,6 +65,8 @@ export async function handleMembershipSubscriptionSync(
       return;
     }
 
+    await assertWalletAuthFromBody(owner, body);
+
     const patch: Parameters<typeof syncMembershipSubscription>[0] = { owner };
 
     if (typeof body.activeTier === 'string') {
@@ -106,10 +109,27 @@ export async function handleMembershipSubscriptionSync(
 
     sendJson(response, 200, { subscription });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message === 'wallet_auth_required' || message === 'wallet_auth_invalid') {
+      sendJson(response, 401, { error: message });
+      return;
+    }
+
+    if (
+      message === 'subscription_tier_escalation_forbidden' ||
+      message === 'subscription_renewal_extension_forbidden' ||
+      message === 'subscription_activation_forbidden' ||
+      message === 'x_claim_adventurer_only'
+    ) {
+      sendJson(response, 403, { error: message });
+      return;
+    }
+
     console.error('[nami-membership] sync failed', error);
     sendJson(response, 500, {
       error: 'subscription_sync_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message,
     });
   }
 }

@@ -123,6 +123,15 @@ export async function handleMemberPreferencesUpsert(
       return;
     }
 
+    if (
+      message === 'hub_first_visit_locked' ||
+      message === 'super_banner_seen_ids_replace_forbidden' ||
+      message === 'invalid_super_banner_seen_id'
+    ) {
+      sendJson(response, 400, { error: message });
+      return;
+    }
+
     console.error('[nami-preferences] upsert failed', error);
     sendJson(response, 500, {
       error: 'preferences_upsert_failed',

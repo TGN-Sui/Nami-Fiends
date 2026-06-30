@@ -1,4 +1,5 @@
 import { readIndexerUrl } from './protocol-env.js';
+import { createWalletAuthPayload } from './wallet-auth.js';
 
 import type {
   AdventurerAccessSource,
@@ -70,12 +71,15 @@ export async function syncMembershipSubscriptionToBackend(
   state: MembershipPlanState,
   owner: string
 ): Promise<MembershipSubscription | null> {
+  const auth = await createWalletAuthPayload(owner);
+
   const payload = await subscriptionFetch<{ subscription: MembershipSubscription }>(
     '/api/memberships/subscriptions/sync',
     {
       method: 'POST',
       body: JSON.stringify({
         owner,
+        auth,
         activeTier: state.activeTier,
         billingCycle: state.billingCycle,
         status: state.status,

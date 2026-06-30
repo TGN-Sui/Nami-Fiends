@@ -80,12 +80,20 @@ export async function syncRegisteredMemberAccountToServer(
     return;
   }
 
+  const owner = readWalletAuthOwner();
+
+  if (!owner?.startsWith('0x')) {
+    return;
+  }
+
+  const auth = await createWalletAuthPayload(owner);
+
   const response = await fetch(base + '/api/test-launch/member-registry', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ account }),
+    body: JSON.stringify({ owner, auth, account }),
   });
 
   if (!response.ok) {

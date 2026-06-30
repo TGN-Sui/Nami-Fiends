@@ -164,6 +164,14 @@ export async function handlePaymentIntentMockConfirm(
   response: ServerResponse,
   paymentId: string
 ): Promise<void> {
+  try {
+    const { assertMockProvidersAllowed } = await import('../services/payment-mock-guard.js');
+    assertMockProvidersAllowed();
+  } catch {
+    sendJson(response, 403, { error: 'mock_payments_disabled' });
+    return;
+  }
+
   const intent = await confirmMockProviderPayment(paymentId);
 
   if (!intent) {
