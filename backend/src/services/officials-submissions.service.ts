@@ -76,8 +76,11 @@ type RegisteredMemberAccountRecord = {
   issuedPlayerScoreTier: 'basic' | 'verified' | 'premium';
   playerScoreIssuedAtMs: number;
   signedUpAtMs: number;
+  submitterAddress?: string;
   avatarUrl?: string;
 };
+
+const MAX_CLIENT_ISSUED_PLAYER_SCORE = 100;
 
 function normalizeRegisteredMemberAccount(value: unknown): RegisteredMemberAccountRecord | null {
   if (value === null || typeof value !== 'object') {
@@ -297,14 +300,66 @@ export async function syncOfficialsSubmissions(
   return next;
 }
 
+function sanitizeClientMemberAccountSync(
+  incoming: RegisteredMemberAccountRecord,
+  existing: RegisteredMemberAccountRecord | null,
+  owner: string,
+): RegisteredMemberAccountRecord {
+  const submitterAddress = owner.trim().toLowerCase();
+
+  if (existing?.submitterAddress && existing.submitterAddress !== submitterAddress) {
+    throw new Error('member_registry_owner_mismatch');
+  }
+
+  if (existing) {
+    return {
+      ...existing,
+      displayName: incoming.displayName,
+      archetype: incoming.archetype,
+      archetypeLabel: incoming.archetypeLabel,
+      flavorBadgeId: incoming.flavorBadgeId,
+      quizAnswers: incoming.quizAnswers,
+      submitterAddress: existing.submitterAddress ?? submitterAddress,
+      ...(incoming.avatarUrl ? { avatarUrl: incoming.avatarUrl } : {}),
+    };
+  }
+
+  return {
+    ...incoming,
+    issuedPlayerScore: Math.min(
+      Math.max(0, incoming.issuedPlayerScore),
+      MAX_CLIENT_ISSUED_PLAYER_SCORE,
+    ),
+    issuedPlayerScoreTier:
+      incoming.issuedPlayerScoreTier === 'premium' ? 'verified' : incoming.issuedPlayerScoreTier,
+    submitterAddress,
+  };
+}
+
 export async function syncRegisteredMemberAccount(
-  account: unknown
+  account: unknown,
+  owner: string,
 ): Promise<OfficialsSubmissionsProjection> {
+  if (!owner.startsWith('0x')) {
+    throw new Error('invalid_owner');
+  }
+
   const normalized = normalizeRegisteredMemberAccount(account);
 
   if (!normalized) {
     throw new Error('invalid_member_account');
   }
 
-  return syncOfficialsSubmissions({ registeredMemberAccounts: [normalized] });
+  const projection = await getOfficialsSubmissions();
+  const existing =
+    projection.registeredMemberAccounts.find(
+      (entry) =>
+        typeof entry === 'object' &&
+        entry !== null &&
+        (entry as RegisteredMemberAccountRecord).email === normalized.email,
+    ) as RegisteredMemberAccountRecord | undefined;
+
+  const sanitized = sanitizeClientMemberAccountSync(normalized, existing ?? null, owner);
+
+  return syncOfficialsSubmissions({ registeredMemberAccounts: [sanitized] });
 }

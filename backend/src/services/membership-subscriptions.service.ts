@@ -222,6 +222,36 @@ export type SyncMembershipSubscriptionInput = {
   renewsAtMs?: number;
 };
 
+const RENEWAL_EXTENSION_TOLERANCE_MS = 60_000;
+
+export function assertClientSubscriptionPatchAllowed(
+  existing: MembershipSubscription,
+  input: SyncMembershipSubscriptionInput,
+): void {
+  const nextActiveTier = input.activeTier
+    ? normalizeSubscriptionTier(input.activeTier) ?? existing.activeTier
+    : existing.activeTier;
+
+  if (TIER_RANK[nextActiveTier] > TIER_RANK[existing.activeTier]) {
+    throw new Error('subscription_tier_escalation_forbidden');
+  }
+
+  if (
+    typeof input.renewsAtMs === 'number' &&
+    input.renewsAtMs > existing.renewsAtMs + RENEWAL_EXTENSION_TOLERANCE_MS
+  ) {
+    throw new Error('subscription_renewal_extension_forbidden');
+  }
+
+  if (input.status === 'active' && TIER_RANK[nextActiveTier] > TIER_RANK[existing.activeTier]) {
+    throw new Error('subscription_activation_forbidden');
+  }
+
+  if (input.adventurerSource === 'x-claim' && nextActiveTier !== 'Adventurer') {
+    throw new Error('x_claim_adventurer_only');
+  }
+}
+
 export async function syncMembershipSubscription(
   input: SyncMembershipSubscriptionInput
 ): Promise<MembershipSubscription> {
@@ -233,6 +263,7 @@ export async function syncMembershipSubscription(
   const store = await readStore();
   const index = store.subscriptions.findIndex((row) => row.owner === owner);
   const existing = index >= 0 ? store.subscriptions[index]! : defaultSubscription(input.owner);
+  assertClientSubscriptionPatchAllowed(existing, input);
   const now = Date.now();
 
   const activeTier = input.activeTier

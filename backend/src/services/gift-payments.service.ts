@@ -613,6 +613,9 @@ async function markGiftIntentPaid(
 export async function confirmMockGiftPayment(
   paymentId: string
 ): Promise<{ intent: GiftPaymentIntent; fulfillment: GiftFulfillment } | null> {
+  const { assertMockProvidersAllowed } = await import('./payment-mock-guard.js');
+  assertMockProvidersAllowed();
+
   const intent = await getGiftPaymentIntent(paymentId);
 
   if (!intent || intent.status === 'paid') {

@@ -482,6 +482,9 @@ async function markIntentPaid(
 }
 
 export async function confirmMockProviderPayment(paymentId: string): Promise<MembershipPaymentIntent | null> {
+  const { assertMockProvidersAllowed } = await import('./payment-mock-guard.js');
+  assertMockProvidersAllowed();
+
   const intent = await getMembershipPaymentIntent(paymentId);
 
   if (!intent || intent.status === 'paid') {
@@ -621,7 +624,18 @@ export async function handleStripeWebhook(
       payload.data?.object?.client_reference_id ??
       null;
 
-    return paymentId ? confirmMockProviderPayment(paymentId) : null;
+    if (!paymentId) {
+      return null;
+    }
+
+    const promotionPayments = await import('./promotion-payments.service.js');
+
+    if (await promotionPayments.getPromotionPaymentIntent(paymentId)) {
+      await promotionPayments.confirmMockPromotionPayment(paymentId);
+      return null;
+    }
+
+    return confirmMockProviderPayment(paymentId);
   }
 
   if (!signatureHeader) {
@@ -659,6 +673,13 @@ export async function handleStripeWebhook(
     event.data.object.metadata?.payment_id ?? event.data.object.client_reference_id ?? null;
 
   if (!paymentId) {
+    return null;
+  }
+
+  const promotionPayments = await import('./promotion-payments.service.js');
+
+  if (await promotionPayments.getPromotionPaymentIntent(paymentId)) {
+    await promotionPayments.tryMarkPromotionPaidFromStripe(paymentId);
     return null;
   }
 
