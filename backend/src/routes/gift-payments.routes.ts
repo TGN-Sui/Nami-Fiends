@@ -330,13 +330,13 @@ export async function handleGiftRecentGet(
   response: ServerResponse
 ): Promise<void> {
   const url = new URL(request.url ?? '/', 'http://localhost');
-  const memberId = url.searchParams.get('memberId') ?? undefined;
-  const streamKey = url.searchParams.get('streamKey') ?? undefined;
+  const memberId = url.searchParams.get('memberId');
+  const streamKey = url.searchParams.get('streamKey');
   const limit = Number(url.searchParams.get('limit') ?? '20');
 
   const gifts = await listRecentGiftFulfillments({
-    memberId,
-    streamKey,
+    ...(memberId ? { memberId } : {}),
+    ...(streamKey ? { streamKey } : {}),
     limit: Number.isFinite(limit) ? limit : 20,
   });
 
