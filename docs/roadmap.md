@@ -721,29 +721,12 @@ Tier 2 (Pro): Stash Defense, Drop Window, Bricked Up, Stealth Goon
 Tier 3 (Elite): Gob Market, Intel Stack
 Lobby + per-game MP3 owner slots, audio controls, leaderboard + passport stats per game
 Passport badge hooks for arcade run stats (arcade-passport-badge-hooks.ts)
+Intel Stack stage-fit tuning + CRT viewport layout (ARC-11 — no clipped Stack buttons on stage closeup)
 ```
 
-Docs: [arcade-cabinets.md](./arcade-cabinets.md) · checkpoint ARC-1–ARC-5 in [ui-build-checkpoint.md](./ui-build-checkpoint.md)
+Docs: [arcade-cabinets.md](./arcade-cabinets.md) · checkpoint ARC-1–ARC-11 in [ui-build-checkpoint.md](./ui-build-checkpoint.md)
 
----
-
-Planned — Gifting:
-
-```text
-Send gifts to live streams and to member profiles
-Gifts must be purchased with $GOON or typical payment options (Stripe, PayPal, card)
-Gift catalog with tiered animations surfaced on stream embeds and profile showcases
-Gift revenue split: creator / channel owner / platform treasury (policy TBD)
-Backend fulfillment + on-chain $GOON settlement where wallet is connected
-```
-
-Depends on:
-
-```text
-Phase 8 receiving server payment webhooks (fiat → $GOON credit or direct gift purchase)
-Treasury + $GOON coin type configured on testnet/mainnet
-Embedded social / live embed player hooks for real-time gift overlays
-```
+Gifting shipped under Phase 7.1 — see above.
 
 ---
 

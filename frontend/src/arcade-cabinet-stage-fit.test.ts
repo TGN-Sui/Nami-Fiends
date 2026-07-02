@@ -55,4 +55,12 @@ describe('arcade-cabinet-stage-fit', () => {
 
     expect(arcadeCabinetStageFitBoxStyle(fit)['--arcade-cabinet-fit-offset-y']).toBe('-2%');
   });
+
+  it('applies intel stack stage fit from the cabinet registry', () => {
+    const fit = readArcadeCabinetStageFit('intel-stack');
+
+    expect(fit.scaleY).toBe(1.553);
+    expect(fit.scaleX).toBe(1.545);
+    expect(fit.offsetY).toBe('-2%');
+  });
 });

@@ -214,6 +214,12 @@ export const OFFICIAL_ARCADE_CABINETS: ArcadeCabinetDefinition[] = [
     cabinetAccent: '#00e5ff',
     cabinetGlow: 'rgba(0, 229, 255, 0.46)',
     stageFallbackUrl: DEFAULT_ARCADE_STAGE_BACKGROUND_URL,
+    stageFit: {
+      scaleX: 1.545,
+      scaleY: 1.553,
+      offsetX: '3.5%',
+      offsetY: '-2%',
+    },
   },
 ];
 

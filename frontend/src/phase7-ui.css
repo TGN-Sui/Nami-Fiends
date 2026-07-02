@@ -26846,8 +26846,13 @@ html.is-nami-arcade-surface:has(.arcade-screen-cabinet-active) body {
   --arcade-intel-accent: #00e5ff;
   --arcade-intel-glow: rgba(0, 229, 255, 0.46);
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.65rem;
+  width: 100%;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .arcade-intel-stack-game-hud {
@@ -26888,8 +26893,8 @@ html.is-nami-arcade-surface:has(.arcade-screen-cabinet-active) body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
   gap: 0.55rem;
-  flex: 1;
-  min-height: 16rem;
+  min-height: 0;
+  overflow: hidden;
   padding: 0.65rem;
   border-radius: 0.8rem;
   border: 2px solid color-mix(in srgb, var(--arcade-intel-accent) 28%, transparent);
@@ -26900,10 +26905,10 @@ html.is-nami-arcade-surface:has(.arcade-screen-cabinet-active) body {
 
 .arcade-intel-stack-game-column {
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 0.35rem;
   align-items: end;
-  min-height: 12rem;
+  min-height: 0;
   padding: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--arcade-intel-accent) 18%, transparent);
   background: rgba(4, 8, 14, 0.55);
@@ -26924,7 +26929,8 @@ html.is-nami-arcade-surface:has(.arcade-screen-cabinet-active) body {
   flex-direction: column-reverse;
   justify-content: flex-start;
   gap: 0.18rem;
-  min-height: 7rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .arcade-intel-stack-game-block {
@@ -26988,6 +26994,19 @@ html.is-nami-arcade-surface:has(.arcade-screen-cabinet-active) body {
   margin: 0;
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.82rem;
+}
+
+.arcade-screen.is-cabinet-stage-fit[data-active-cabinet-id='intel-stack'] .arcade-screen-shell.is-cabinet-game-playing {
+  padding: 6px;
+}
+
+.arcade-screen.is-cabinet-stage-fit[data-active-cabinet-id='intel-stack'] .arcade-intel-stack-game {
+  gap: 0.45rem;
+}
+
+.arcade-screen.is-cabinet-stage-fit[data-active-cabinet-id='intel-stack'] .arcade-intel-stack-game-hint {
+  font-size: 0.74rem;
+  line-height: 1.2;
 }
 
 .arcade-bricked-up-game-ball.is-spotlight {

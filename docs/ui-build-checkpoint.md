@@ -1,6 +1,6 @@
 # Nami Chat UI Build Checkpoint
 
-Status: **Phase 8 in progress** — Phase 7 arcade cabinets **code-complete** (ARC-1–ARC-10, commits `3dca50f` + `9fde083` merged with `origin/main`). Walrus Sites prep (9.1) and Seal privacy envelopes (9.2.1) in progress. **550+** frontend unit tests passing (`npm --prefix frontend test`).
+Status: **Phase 8 in progress** — synced with `origin/main` at `f779d9e` (Phase 7.1 gifting, P0–P2 security hardening, Seal Walrus offload, Classic/Glass shell polish). Phase 7 arcade cabinets **code-complete** (ARC-1–ARC-11). Walrus Sites cutover (9.1.4) and Mysten Seal policy ids remain ops/future. **550+** frontend unit tests passing (`npm --prefix frontend test`).
 
 This checkpoint records the completed frontend UI polish pass for Nami Chat, the shipped Phase 7 product surfaces, and the unified architecture prepared for test launch. It confirms the current UI build is clean, provider-backed where the receiving server is live, and aligned with the project rule that paid features add capability or customization only and never create verification or trust.
 
@@ -289,8 +289,8 @@ Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test
 | Slice | Status | Result |
 | --- | --- | --- |
 | 9.2.1 | Complete | `nami-seal-v1-dev` envelopes, `/api/privacy/evidence/*`, Launch Ops card |
-| 9.2.2 | Planned | Mysten Seal policy ids + Walrus ciphertext blobs |
-| 9.2.3 | Planned | Officials / jury UI for sealed appeal evidence |
+| 9.2.2 | Complete | Walrus ciphertext offload (`seal-walrus-storage.service.ts`, `walrus_blob_id` projection); `scripts/verify-seal-privacy-ready.mjs` |
+| 9.2.3 | Partial | Appeal seal actions (`AppealSealEvidenceActions.tsx`, `EventRewardAttachmentsPanel.tsx`); Mysten Seal policy ids remain future |
 
 ## Phase 7 — Arcade cabinets (continued)
 
@@ -306,8 +306,9 @@ Verification: `npm --prefix frontend run typecheck && npm --prefix frontend test
 | ARC-8 | Complete | **Gob Market** live for Elite |
 | ARC-9 | Complete | **Intel Stack** live for Elite — Clean Stack / Surge Stack / Skill Diff |
 | ARC-10 | Complete | Live **stageFit** alignment pass, connected **Gob Market** maze, **Settings → Arcade media** owner catalog (`NamiOwnerArcadeAssetEditPanel.tsx`) |
+| ARC-11 | Complete | **Intel Stack** stage-fit tuning (`scaleX` 1.545, `scaleY` 1.553, `offsetY` −2%) + CRT viewport layout fix (flex grid; Stack buttons no longer clipped) |
 
-Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelStackGame.tsx`, `NamiOwnerArcadeAssetEditPanel.tsx`, `arcade-cabinet-stage-fit.ts`. See [arcade-cabinets.md](./arcade-cabinets.md).
+Key files: `arcade-cabinets.ts`, `ArcadeCabinetPlaySession.tsx`, `ArcadeIntelStackGame.tsx`, `NamiOwnerArcadeAssetEditPanel.tsx`, `arcade-cabinet-stage-fit.ts`, `phase7-ui.css`. See [arcade-cabinets.md](./arcade-cabinets.md).
 
 Verification: `npm --prefix frontend test -- src/arcade-*.test.ts src/nami-arcade-games.test.ts src/nami-owner-assets-store.test.ts src/settings-navigation.test.ts` — **128** arcade/settings tests passing.
 

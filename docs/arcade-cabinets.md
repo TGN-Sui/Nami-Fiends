@@ -54,6 +54,19 @@ Owner uploads override public fallbacks. **Platform** artwork (badges, logos, na
 
 During `cabinet-active`, each machine applies per-cabinet `scaleX`, `scaleY`, `offsetX`, and `offsetY` so the CRT box aligns with the stage video closeup. CSS vars are written on `.nami-arcade-box` via `arcadeCabinetStageFitBoxStyle()`. Tune offsets in the registry, then hard-refresh and verify on the live stage loop.
 
+| Cabinet id | scaleX | scaleY | offsetX | offsetY | Notes |
+|------------|--------|--------|---------|---------|-------|
+| `goon-pop` | 1.6 | 1.49 | 3.5% | 1.5% | Tier 1 reference fit |
+| `alley-push` | 1.6 | 1.49 | 3.5% | 1.5% | Matches Goon Pop |
+| `stash-defense` | 1.54 | 1.482 | 4% | −1% | Pro tier |
+| `drop-window` | 1.55 | 1.469 | 5% | −0.5% | Pro tier |
+| `hawkeye-gallery` | 1.528 | 1.476 | 4.5% | −1.5% | Bricked Up |
+| `stealth-goon` | 1.52 | 1.5 | 2.5% | −2% | Pro tier |
+| `squid-market` | 1.52 | 1.469 | 3% | −1.5% | Gob Market maze |
+| `intel-stack` | 1.545 | 1.553 | 3.5% | −2% | Tuned 2026-07 — widened CRT; playfield uses flex grid so Stack buttons are not clipped |
+
+**Intel Stack viewport:** `.arcade-intel-stack-game` uses `grid-template-rows: auto minmax(0, 1fr) auto` (no rigid `min-height` on the field or towers) so column **Stack** buttons stay inside the CRT viewport when `overflow: hidden` is active on the shell. Stage-fit overrides live under `[data-active-cabinet-id='intel-stack']` in `phase7-ui.css`.
+
 ---
 
 ## Alley Push — Heat Chase vertical rows
@@ -195,6 +208,8 @@ frontend/public/arcade/cabinets/
   stealth-goon/stage.mp4
   squid-market/intro.mp4
   squid-market/stage.mp4
+  intel-stack/intro.mp4
+  intel-stack/stage.mp4
 ```
 
 Vite serves these at `/arcade/cabinets/...` in dev and copies them into `frontend/dist` for Walrus Sites / Vercel builds.
